@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module runtimeroot
 
-import androidhost as ah
+import hostvalue as ah
 import json2
 
 // Named Python locals retain their objects until replacement or function return.

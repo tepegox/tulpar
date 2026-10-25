@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module kpihost
 
-import gamehost
+import vmfixture as gamehost
 import os
 import sourcecommand
 

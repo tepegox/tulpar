@@ -6,7 +6,7 @@ import json2
 import os
 import ui2
 import time
-import desktop.packagecore
+import userland.packagecore
 import tools.packages.pkgprotocol
 import tools.packages.appsdk
 

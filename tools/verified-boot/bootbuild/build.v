@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module bootbuild
 
-import androidhost as ah
+import hostvalue as ah
 
 fn any_identity(values []string, operation string) !bool {
 	iter := iterator(collection('tuple', values)!)!

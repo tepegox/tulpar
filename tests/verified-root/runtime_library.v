@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module main
 
-import androidhost as ah
+import hostvalue as ah
 import runtimeroot
 import cpythonhost as cpython
 import json2

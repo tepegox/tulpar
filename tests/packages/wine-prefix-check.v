@@ -55,7 +55,7 @@ fn check() ! {
 	os.mkdir_all(out)!
 	os.chmod(out, 0o700)!
 	mut inputs := map[string]string{}
-	for path in [v, os.executable(), @FILE, root + '/desktop/tools/tests/heap_tracker.h',
+	for path in [v, os.executable(), @FILE, root + '/tests/support/heap_tracker.h',
 		root + '/tools/packages/wineadapter/prefix.c.v', root + '/tools/packages/wineadapter/patch.v',
 		root + '/tools/packages/wineadapter/prefix_test.v'] {
 		inputs[path] = digest(path)!
@@ -71,7 +71,7 @@ fn check() ! {
 		os.mkdir(module_dir)!
 		os.write_file(module_dir + '/v.mod', "Module { name: 'wineadapter' }\n")!
 		mut source := prefix
-		mut variant := test.replace('@VMODROOT/../../../desktop/tools/tests/heap_tracker.h', root + '/desktop/tools/tests/heap_tracker.h')
+		mut variant := test.replace('@VMODROOT/../../../tests/support/heap_tracker.h', root + '/tests/support/heap_tracker.h')
 		if name == 'old-control' {
 			source = source.replace('C.fstat(fd, unsafe { &info })', 'C.fstat(fd, &info)')
 			source = source.replace('C.fstat(fd, unsafe { &source })', 'C.fstat(fd, &source)')

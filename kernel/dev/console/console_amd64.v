@@ -9,6 +9,7 @@ import wakesrc
 import event
 import klock
 import flanterm as _
+import dev.serial
 
 const capslock = 0x3a
 const numlock = 0x45
@@ -542,8 +543,21 @@ fn caps_lock_on() bool {
 
 fn num_lock_on() bool { return console_numlock_active }
 
-// The framebuffer is the console here; the serial port is a device of its own.
-fn mirror_to_serial(_ voidptr, _ u64) {}
+// COM1 and the local keyboard share the same terminal discipline and job
+// control, so a headless shell has the same semantics as a local console.
+pub fn poll_serial_input() {
+	if console_res == unsafe { nil } { return }
+	for _ in 0 .. 64 {
+		mut byte := serial.console_byte() or { break }
+		if byte == 0x7f { byte = `\b` }
+		add_to_buf(unsafe { &byte }, 1, true)
+	}
+}
+
+fn mirror_to_serial(buf voidptr, count u64) {
+	bytes := unsafe { &u8(buf) }
+	for i := u64(0); i < count; i++ { serial.out(unsafe { bytes[i] }) }
+}
 
 // Linux's codes for the keys that a PS/2 keyboard sends behind 0xe0, and the
 // byte that follows the prefix. The keys with codes below 89 need no table:

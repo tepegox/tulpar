@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module cpythonhost
 
-import androidhost as ah
+import hostvalue as ah
 
 fn C.PyDict_CheckExact(voidptr) i32
 fn C.PyErr_Format(voidptr, &char, ...voidptr) voidptr

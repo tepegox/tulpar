@@ -5,7 +5,7 @@ import json2
 import os
 import time
 import ui2
-import desktop.packagecore
+import userland.packagecore
 import tools.packages.pkgprotocol
 
 const launch_navigation_arguments = '--title "λ; $(literal)" "" --flag'

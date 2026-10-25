@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module packageserver
 
-import hosttest
 import os
 import sourcecommand
-import stagehost
 import tarcore
 import tarstream
 
@@ -55,24 +53,10 @@ fn walk_extra(root string, relative string, mut output []string) ! {
 	}
 }
 
-pub fn stage_sources(root string, ui2 string, work string) !string {
-	for path in [root + '/desktop/tools/stage_app', root + '/desktop/tools/stage_ui2', root + '/desktop/tools/ui2_headless_bounds.v', ui2 + '/v.mod', ui2 + '/examples/calculator/main.v'] {
-		if !os.is_file(path) { return error('cannot stage desktop sources; required host file is missing: ' + path) }
-	}
-	linked := work + '/linked'
-	stagehost.ui_main([linked + '/vmodules/ui2', ui2, root + '/desktop/tools/ui2_headless_bounds.v'])!
-	stagehost.app_main([linked + '/desktop', root + '/desktop', ui2 + '/examples/calculator'])!
-	checkpoint()!
-	materialized := work + '/materialized'
-	hosttest.module_copy_tree(linked, materialized)!
-	return materialized
-}
-
 pub fn snapshot(config Config, output string, work string) ! {
 	mut files := git_files(config.source)!
 	for extra in config.extras { files << extra_files(config.source, extra)! }
 	files.sort()
-	staged := stage_sources(config.source, config.ui2, work)!
 	mut writer := tarcore.create_stream(output)!
 	defer { writer.close() }
 	mut previous := ''
@@ -87,7 +71,6 @@ pub fn snapshot(config Config, output string, work string) ! {
 		if state.size > maximum_shared_file { eprintln('qemu-package-store: not sharing ' + relative + ' (${state.size} bytes)'); continue }
 		add_source_member(mut writer, source, relative, mut links)!
 	}
-	add_tree(mut writer, staged, '.vinix-build')!
 	writer.finish()!
 	writer.close_checked()!
 }

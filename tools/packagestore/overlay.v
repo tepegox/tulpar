@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module packagestore
 
-import androidhost as ah
+import hostvalue as ah
 
 struct Count {
 mut:

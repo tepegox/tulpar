@@ -2,8 +2,8 @@
 // Boot this as PID 1 with the three static service executables in /usr/bin.
 module main
 
-import desktop.sessioncore
-import desktop.sessionipc
+import userland.sessioncore
+import userland.sessionipc
 import os
 import time
 

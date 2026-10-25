@@ -46,7 +46,7 @@ fn qualify() ! {
 		}
 	}
 	for path in os.walk_ext(modules + '/ui2', '.v') { if !path.ends_with('_test.v') { paths << path } }
-	paths << root + '/desktop/tools/tests/heap_tracker.h'
+	paths << root + '/tests/support/heap_tracker.h'
 	paths.sort(); mut inputs := []Pin{}
 	for path in paths { inputs << pin(path)! }
 	os.write_file(work + '/inputs.json', json2.encode(inputs) + '\n')!

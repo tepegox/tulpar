@@ -1,124 +1,43 @@
-name: Nightly Vinix rebuild
-
+name: Tulpar terminal images
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '0 0 * * *'
-
+  push:
+    branches: [main]
+    paths-ignore: ["**.md"]
+  pull_request:
+    paths-ignore: ["**.md"]
 permissions:
-  contents: write
-
+  contents: read
 env:
-  UI2_COMMIT: d13259f6167367ad8ebd6b2aa4a1f35c59bb1551
-  V_COMMIT: 9bfa1dc3f3455d5733d5c226662b6aaba8544f2c
-
+  V_COMMIT: f7e9ee96c22ca6db47b56d28332e7553715c659f
 jobs:
-  check-build-needed:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Check if build is necessary
-        run: test "$(git tag --points-at HEAD)" = ""
-
-  vinix-build:
-    needs: check-build-needed
-    name: Build ${{ matrix.release_arch }} desktop ISO
+  terminal:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - architecture: x86_64
-            release_arch: amd64
-          - architecture: aarch64
-            release_arch: arm64
+        arch: [amd64, arm64]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
-
-      - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install -y clang lld llvm make diffutils curl git rsync xorriso xz-utils python3 pkg-config meson ninja-build bison flex
-
-      - name: Build pinned V compiler and ui2
+      - uses: actions/checkout@v7
+      - name: Install build and QEMU dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential clang llvm lld git curl file rsync xorriso xz-utils mtools libarchive-dev qemu-system-x86 qemu-system-arm ovmf qemu-efi-aarch64
+      - name: Build the pinned V compiler
         run: |
           git clone https://github.com/vlang/v "$RUNNER_TEMP/v"
           git -C "$RUNNER_TEMP/v" checkout "$V_COMMIT"
           make -C "$RUNNER_TEMP/v"
-          git clone https://github.com/vlang/ui2 third_party/ui2
-          git -C third_party/ui2 checkout "$UI2_COMMIT"
-
-      - name: Build amd64 Alpine desktop ISO
-        if: matrix.architecture == 'x86_64'
-        shell: bash
-        run: V="$RUNNER_TEMP/v/v" ./scripts/build-desktop-amd64.sh
-
-      - name: Build aarch64 Alpine desktop ISO
-        if: matrix.architecture == 'aarch64'
-        shell: bash
-        run: |
-          set -euo pipefail
-          export V="$RUNNER_TEMP/v/v"
-          export LLVM_BIN=/usr/bin
-          ./scripts/build-aarch64.sh --no-iso
-          ./scripts/build-x11-aarch64.sh
-          ./scripts/build-network-tools-aarch64.sh
-          ./scripts/build-python-aarch64.sh
-          ./scripts/build-v-aarch64.sh
-          ./scripts/build-firefox-aarch64.sh
-          ./scripts/build-desktop-aarch64.sh --compact-initramfs
-          VINIX_AARCH64_KERNEL="$PWD/build-aarch64-kernel/bin/vinix" \
-          VINIX_AARCH64_INITRAMFS="$PWD/build-support/init-aarch64/initramfs-desktop.tar" \
-          VINIX_AARCH64_ISO="$PWD/vinix-aarch64.iso" \
-            ./build-support/build-aarch64-iso.sh
-
-      - name: Rename ISO
-        shell: bash
-        run: |
-          image=vinix.iso
-          if [ "${{ matrix.architecture }}" = x86_64 ]; then
-            image=vinix-desktop-amd64.iso
-          else
-            image=vinix-aarch64.iso
-          fi
-          mv "$image" "vinix-nightly-${{ matrix.release_arch }}-desktop-$(date +'%Y%m%d').iso"
-
-      - name: Upload ISO
+          echo "V=$RUNNER_TEMP/v/v" >> "$GITHUB_ENV"
+      - name: Build and test the terminal OS
+        run: make ARCH=${{ matrix.arch }} test-terminal STATE_DIR="$RUNNER_TEMP/tulpar-evidence"
+      - name: Upload terminal image
         uses: actions/upload-artifact@v4
         with:
-          name: vinix-${{ matrix.release_arch }}-desktop
-          path: vinix-nightly-${{ matrix.release_arch }}-desktop-*.iso
+          name: tulpar-${{ matrix.arch }}
+          path: tulpar-${{ matrix.arch }}.iso
           if-no-files-found: error
-
-  publish-nightly:
-    needs: vinix-build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v7
+      - name: Upload QEMU evidence
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          fetch-depth: 0
-
-      - name: Download desktop ISOs
-        uses: actions/download-artifact@v4
-        with:
-          path: nightly-artifacts
-
-      - name: Set TAG_DATE variable
-        run: echo "TAG_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
-
-      - name: Tag new nightly release
-        run: git tag nightly-$TAG_DATE && git push --tags
-
-      - name: Create nightly release
-        uses: softprops/action-gh-release@v3
-        with:
-          name: Nightly desktop build ${{ env.TAG_DATE }}
-          tag_name: nightly-${{ env.TAG_DATE }}
-          body: Desktop-enabled AMD64 and ARM64 images of the current Vinix nightly build.
-          files: nightly-artifacts/**/*.iso
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: terminal-evidence-${{ matrix.arch }}
+          path: ${{ runner.temp }}/tulpar-evidence/

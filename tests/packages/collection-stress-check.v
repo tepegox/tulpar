@@ -26,7 +26,7 @@ fn qualify() ! {
 	root := os.dir(os.dir(os.dir(@FILE))); work := os.abs_path(os.args[1])
 	assert !os.exists(work) && !os.is_link(work); os.mkdir_all(work)!
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
-	mut paths := [v, @FILE, root + '/tools/packages/pkgcore/collection_request_test.v', root + '/desktop/tools/tests/heap_tracker.h',
+	mut paths := [v, @FILE, root + '/tools/packages/pkgcore/collection_request_test.v', root + '/tests/support/heap_tracker.h',
 		root + '/tools/packages/pkgcore/collection_retirement_test.v', root + '/tools/packages/pkgcore/collection_limit_test.v', root + '/tools/packages/pkgcore/service_test.v',
 		root + '/tests/packages/collection-stress-runtime-check.v', root + '/tests/packages/collection-stress-guest/main.v']
 	for directory in ['tools/packages', 'tools/accounts', 'compat/ios/plist', 'tests/packages/collectionstress']! {

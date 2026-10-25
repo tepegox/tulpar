@@ -3,7 +3,7 @@
 // ui2 constructs real element trees; presentation and Terminal are not exercised.
 module main
 
-import desktop.packagecore
+import userland.packagecore
 import crypto.sha256
 import json2
 import os

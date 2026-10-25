@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module cpythonhost
 
-import androidhost as ah
+import hostvalue as ah
 import json2
 
 fn C.PyObject_GetItem(voidptr, voidptr) voidptr

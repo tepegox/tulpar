@@ -5,7 +5,7 @@ import json2
 import os
 import time
 import tools.packages.pkgcore
-import desktop.ptycore
+import userland.ptycore
 import tools.packages.pkgprotocol
 
 fn media_command(id string, argv []string, documents []string) Ran {

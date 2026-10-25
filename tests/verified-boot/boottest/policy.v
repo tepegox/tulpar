@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module boottest
 
-import androidhost as ah
+import hostvalue as ah
 
 fn verify(target string, output string, developer bool) ! {
 	mut args := [o(output), v(ah.Value('x86_64'))!, v(none_value())!, v(ah.Value('sbsign'))!]

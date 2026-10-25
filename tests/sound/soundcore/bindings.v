@@ -2,7 +2,7 @@
 @[has_globals]
 module soundcore
 
-import androidhost as ah
+import hostvalue as ah
 import json2
 import packagestore
 

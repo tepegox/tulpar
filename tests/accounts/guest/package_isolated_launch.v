@@ -2,7 +2,7 @@
 module main
 
 import accountcore
-import desktop.ptycore
+import userland.ptycore
 import json2
 import net.unix
 import os

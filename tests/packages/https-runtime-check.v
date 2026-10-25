@@ -180,7 +180,7 @@ fn check() ! {
 	os.setenv('V_MACOS_V3_CALLER_VEXE', v, true)
 	os.setenv('V_MACOS_V3_CALLER_VCHILD_PRESENT', '0', true)
 	mut inputs := [pin(v)!, pin(os.find_abs_path_of_executable('openssl')!)!,
-		pin(root + '/desktop/tools/tests/heap_tracker.h')!]
+		pin(root + '/tests/support/heap_tracker.h')!]
 	compiler_root := os.dir(v)
 	inputs << pin(compiler_root + '/v.mod')!
 	for directory in ['vlib', 'thirdparty']! {

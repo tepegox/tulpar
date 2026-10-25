@@ -60,7 +60,7 @@ fn qualify() ! {
 		jobs << WorkspaceJob{ name: name, source: repository + '/tools/packages/pkgcore/' + name + '_test.v' }
 	}
 	jobs << WorkspaceJob{ name: 'distribution-cli', source: repository + '/tests/packages/distribution-cli.v' }
-	mut paths := [compiler, @FILE, repository + '/tools/packages/main.v', repository + '/desktop/tools/tests/heap_tracker.h']
+	mut paths := [compiler, @FILE, repository + '/tools/packages/main.v', repository + '/tests/support/heap_tracker.h']
 	for name in ['hello', 'counter', 'memo']! { for arch in ['aarch64', 'x86_64']! { paths << repository + '/examples/package-' + name + '/manifest-' + arch + '.json' } }
 	for directory in ['tools/packages/pkgcore', 'tools/packages/pkgprotocol', 'tools/packages/signing', 'tools/packages/appsdk', 'tools/packages/pkglaunch', 'tools/packages/pkgadmin', 'tests/packages/elffixture', 'tests/packages/applefixture', 'compat/ios/plist', 'tools/accounts']! {
 		for name in os.walk_ext(repository + '/' + directory, '.v') { if !name.ends_with('_test.v') { paths << name } }

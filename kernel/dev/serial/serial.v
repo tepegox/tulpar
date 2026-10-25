@@ -132,6 +132,13 @@ fn is_data_received(port u16) bool {
 	return kio.port_in[u8](port + 5) & 0b00000001 != 0
 }
 
+// Nonblocking COM1 input for the console line discipline. The scheduler's
+// device poll serializes callers; reading this never waits for another byte.
+pub fn console_byte() ?u8 {
+	if !is_data_received(com1_port) { return none }
+	return kio.port_in[u8](com1_port)
+}
+
 // Resource functions for serial COMPort s
 struct COMPort {
 pub mut:

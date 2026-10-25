@@ -75,6 +75,7 @@ kernel/tmp.v
 /build-aarch64-userland/
 
 # Screenshots stay out of git.
+/tulpar-*.iso
 /docker-vinix-terminal.png
 /build-release/
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module jobcore
 
-import desktop.sessioncore
+import userland.sessioncore
 import devcore
 import json2
 import os

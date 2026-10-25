@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module packagestore
 
-import androidhost as ah
+import hostvalue as ah
 
 fn git_files(root string) !string {
 	command := collection('list', [literal(ah.Value('git'))!, literal(ah.Value('-C'))!,
@@ -75,67 +75,8 @@ fn extra_files(root string, relative string) !string {
 	return collection('list', files)!
 }
 
-fn stage_desktop(root string, ui2 string, destination string) ! {
-	stage_app := join(root, 'desktop/tools/stage_app')!
-	stage_ui2 := join(root, 'desktop/tools/stage_ui2')!
-	bridge := join(root, 'desktop/tools/ui2_headless_bounds.v')!
-	calculator := join(ui2, 'examples/calculator')!
-	for required in [stage_app, stage_ui2, bridge, join(ui2, 'v.mod')!, join(calculator, 'main.v')!] {
-		if !truth(method(required, 'is_file', [], {})!)! {
-			display := method(required, 'relative_to', [o(root)], {}) or {
-				if kind(err, 'value_error') {
-					required
-				} else {
-					return err
-				}
-			}
-			failed('SourceSnapshotError', 'cannot stage desktop sources; required host file is missing: ' + text(display)!, none)!
-		}
-	}
-	linked := join(attribute(destination, 'parent')!, 'linked')!
-	commands := [
-		collection('tuple', [call('os.fspath', o(stage_ui2))!,
-			call('os.fspath', o(join(linked, 'vmodules/ui2')!))!, call('os.fspath', o(ui2))!,
-			call('os.fspath', o(bridge))!])!,
-		collection('tuple', [call('os.fspath', o(stage_app))!,
-			call('os.fspath', o(join(linked, 'desktop')!))!,
-			call('os.fspath', o(join(root, 'desktop')!))!, call('os.fspath', o(calculator))!])!,
-	]
-	stage_commands(commands, linked, destination) or {
-		if kind(err, 'os_error') || kind(err, 'shutil_error') || kind(err, 'called_process') {
-			activate(err)!
-			mut extra := ''
-			if kind(err, 'called_process') {
-				stderr := callback('error_attribute', {
-					'error': detail(err)
-					'name':  ah.Value('stderr')
-				})!.text()
-				content := if truth(stderr)! { stderr } else { literal(ah.Value(''))! }
-				stripped := method(content, 'strip', [], {})!
-				if truth(stripped)! { extra = text(stripped)! }
-			}
-			failed('SourceSnapshotError', 'cannot stage desktop sources: ' + (if extra != '' {
-				extra
-			} else {
-				err.msg()
-			}), err)!
-		}
-		return err
-	}
-}
-
-fn stage_commands(commands []string, linked string, destination string) ! {
-	for command in commands {
-		invoke('subprocess.run', [o(command)], {
-			'check':  v(ah.Value(true))
-			'stdout': o(call('subprocess.DEVNULL')!)
-			'stderr': o(call('subprocess.PIPE')!)
-			'text':   v(ah.Value(true))
-		})!
-	}
-	invoke('shutil.copytree', [o(linked), o(destination)], {
-		'symlinks': v(ah.Value(false))
-	})!
+fn stage_desktop(_root string, _ui2 string, destination string) ! {
+ method(destination, "mkdir", [], {"parents": v(ah.Value(true)), "exist_ok": v(ah.Value(true))})!
 }
 
 fn normalize(member string) !string {

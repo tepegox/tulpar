@@ -3,49 +3,50 @@ Tulpar is an operating system under development, forked from
 The goal is a lightweight, secure server OS with a command-line interface
 and no GUI. Its name and winged-horse emblem come from the legendary Tulpar.
 
-## Build
+## Build and run
 
-These instructions target an x86_64 Linux host. On Debian or Ubuntu, install:
+Install a current V compiler with V3 support and put `v` on your `PATH`.
+The qualified compiler revision is `f7e9ee96c22ca6db47b56d28332e7553715c659f`.
 
-```sh
-sudo apt install build-essential clang llvm lld git curl file xz-utils \
-    rsync patch xorriso qemu-system-x86 ovmf libarchive-dev musl-tools
-```
-
-Install a current V compiler and put `v` on your `PATH`, then:
+On Debian or Ubuntu:
 
 ```sh
+sudo apt install build-essential clang llvm lld git curl file rsync \
+    xorriso xz-utils mtools libarchive-dev qemu-system-x86 ovmf \
+    qemu-system-arm qemu-efi-aarch64
 git clone https://github.com/tepegox/tulpar.git
 cd tulpar
-export V="$(command -v v)"
-export VINIX_MUSL_CC_X86_64=musl-gcc
-export VINIX_AMD64_ISO="$PWD/tulpar.iso"
 make all
+make run-no-build
 ```
 
-This downloads the required dependencies and Alpine userland, builds the
-kernel, and creates `tulpar.iso` with a console userland and no desktop.
-Build scripts and internal paths still use inherited `vinix` names.
-
-## Run in QEMU
-
-From the same terminal, boot the image into the development shell:
+This produces `tulpar-amd64.iso`. Build and run ARM64 with:
 
 ```sh
-./scripts/run-amd64-alpine.sh --no-build --interactive
+make ARCH=arm64 all
+make ARCH=arm64 run-no-build
 ```
 
-For KVM acceleration on Linux, use:
+The guest boots into a BusyBox shell through a small V init. No desktop,
+X11, Hyprland, Android runtime, guest compiler, or editor is included.
+QEMU runs entirely in the terminal; press **Ctrl+A, then X** to exit.
+Set `TULPAR_ACCEL=kvm` on a matching Linux host for hardware acceleration,
+or `TULPAR_ACCEL=hvf` on a matching macOS host. The default is TCG.
+Set `TULPAR_FIRMWARE` if UEFI firmware is outside the standard locations.
+
+## Verify
 
 ```sh
-VINIX_QEMU_ACCEL=kvm VINIX_QEMU_CPU=host \
-    ./scripts/run-amd64-alpine.sh --no-build --interactive
+make test-terminal
+make ARCH=arm64 test-terminal
 ```
 
-The launcher uses OVMF firmware; set `VINIX_OVMF_CODE` if it is installed
-outside the standard locations. Use the QEMU window for keyboard input;
-boot messages and shell output appear in the host terminal.
+These boot QEMU and test serial input, commands, pipes, background jobs,
+Ctrl-C, shell restart, and poweroff. Logs go under
+`~/.local/state/tulpar/`; use `STATE_DIR=/external/fresh-directory` to choose
+another location. Guest files live in RAM unless a disk is configured.
 
 ## License
 
-[GNU GPL v2](LICENSE)
+[GNU GPL v2](LICENSE). Tulpar retains the work and attribution of Vinix
+and its contributors.

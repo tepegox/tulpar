@@ -66,6 +66,7 @@ import security
 // The scheduler's device poll: hand what the network card received to the IP
 // stack, then run the stack's timers -- DHCP, ARP, TCP retransmission.
 fn poll_network() {
+	console.poll_serial_input()
 	e1000.poll()
 	rtl8169.poll()
 	ath10k.poll()

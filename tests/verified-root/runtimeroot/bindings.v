@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 module runtimeroot
 
-import androidhost as ah
+import hostvalue as ah
 import json2
 import packagestore
 import cpythonhost

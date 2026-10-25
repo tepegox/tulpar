@@ -4,7 +4,7 @@ module pkgcore
 import json2
 import os
 import time
-import desktop.packagecore
+import userland.packagecore
 
 fn test_real_package_generations_update_uninstall_and_rollback_have_coherent_desktop_registration() {
 	work := os.real_path(os.temp_dir()) + '/vinix-registration-lifecycle-' + os.getpid().str()

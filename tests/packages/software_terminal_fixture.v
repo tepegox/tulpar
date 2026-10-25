@@ -2,7 +2,7 @@
 // Software-only worker fixture; the desktop launcher tests use real TerminalApp.
 module main
 
-import desktop.packagecore
+import userland.packagecore
 import ui2
 import tools.packages.pkgprotocol
 

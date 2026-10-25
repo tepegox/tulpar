@@ -5,7 +5,7 @@ import encoding.utf8
 import json2
 import os
 import ui2
-import desktop.packagecore
+import userland.packagecore
 import tools.packages.pkgprotocol
 
 // Read the labels the native renderer actually draws, not the container's

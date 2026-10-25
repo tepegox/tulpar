@@ -5,8 +5,8 @@ import json2
 import os
 import time
 import tools.packages.pkgcore
-import desktop.packagecore
-import desktop.sessioncore
+import userland.packagecore
+import userland.sessioncore
 import tools.packages.pkgprotocol
 
 struct Reply {

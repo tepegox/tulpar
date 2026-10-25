@@ -2,7 +2,7 @@
 module servicecore
 
 import crypto.sha256
-import desktop.sessioncore
+import userland.sessioncore
 import encoding.hex
 import json2
 import os

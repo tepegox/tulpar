@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module gapcore
 
-import androidhost as ah
+import hostvalue as ah
 import json2
 
 fn generator_function(module_id string, name string) !string {

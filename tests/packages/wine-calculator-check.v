@@ -93,7 +93,7 @@ fn capture(v string, cc string, root string, pe string, producer string) !map[st
 		root + '/tests/packages/wine-calculator/program.v',
 		root + '/tests/packages/wine-calculator/program_test.v',
 		root + '/tests/packages/wine-calculator/v.mod',
-		root + '/desktop/tools/tests/heap_tracker.h', pe + '/proof.json'] {
+		root + '/tests/support/heap_tracker.h', pe + '/proof.json'] {
 		inputs[path] = Input{kind: 'file', sha256: digest(path)!}
 	}
 	return inputs

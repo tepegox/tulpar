@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module jobcore
 
-import desktop.sessioncore
+import userland.sessioncore
 import os
 
 fn unit_argument(value string) !string {

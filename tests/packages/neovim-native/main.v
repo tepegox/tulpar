@@ -2,7 +2,7 @@
 // Real signed Neovim, its sealed runtime and an ordinary-account terminal.
 module main
 
-import desktop.ptycore
+import userland.ptycore
 import os
 import time
 import tools.packages.pkgcore

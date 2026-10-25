@@ -2,7 +2,7 @@
 module main
 
 import ui2
-import desktop.packagecore
+import userland.packagecore
 
 fn report_fixture_selected(a &SoftwareApp) int {
 	return if a.data_mode { a.data_selected } else if a.health_mode { a.health_selected } else { a.audit_selected }

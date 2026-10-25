@@ -14,7 +14,7 @@ fn C.pwrite(int, voidptr, uint, i64) int
 struct WineBuilderLimit { current u64 maximum u64 }
 
 $if track_heap ? {
-	#include "@VMODROOT/../../../desktop/tools/tests/heap_tracker.h"
+	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 	fn C.vinix_heap_begin()
 	fn C.vinix_heap_end() u64
 	fn C.vinix_heap_count() u32

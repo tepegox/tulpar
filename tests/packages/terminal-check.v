@@ -2,7 +2,7 @@
 // Host PTY contract: literal exec arguments, geometry, input and fd retirement.
 module main
 
-import desktop.ptycore
+import userland.ptycore
 import os
 import time
 

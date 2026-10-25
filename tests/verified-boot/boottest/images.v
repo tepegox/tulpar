@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module boottest
 
-import androidhost as ah
+import hostvalue as ah
 
 fn elf(arch string, pins string) !string {
 	mut f := Frame{ pins: pins }

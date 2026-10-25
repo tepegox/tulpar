@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module soundcore
 
-import androidhost as ah
+import hostvalue as ah
 
 fn binary(name string, left string, right ah.Value) !string { return call('operator.' + name, o(left), right)! }
 fn calculated(name string, left string, right ah.Value) !string {

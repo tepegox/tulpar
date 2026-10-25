@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module main
 
-import androidhost as ah
-import boothost
+import hostvalue as ah
+import hostbridge
 import json2
 import os
 import packagestore
@@ -19,7 +19,7 @@ fn main() {
 	}
 	previous := unsafe { C.signal(C.SIGINT, C.SIG_IGN) }
 	defer { unsafe { C.signal(C.SIGINT, previous) } }
-	row := boothost.unpack(json2.decode[ah.Value](os.get_raw_line()) or { panic(err) }) or { panic(err) }
+	row := hostbridge.unpack(json2.decode[ah.Value](os.get_raw_line()) or { panic(err) }) or { panic(err) }
 	result := packagestore.dispatch(row.object()) or {
 		failure := if err is packagestore.BindingError {
 			err.value
@@ -29,12 +29,12 @@ fn main() {
 				'message': ah.Value(err.msg())
 			}
 		}
-		println(ah.encode(boothost.pack(ah.Value({
+		println(ah.encode(hostbridge.pack(ah.Value({
 			'error': ah.Value(failure)
 		}))))
 		return
 	}
-	println(ah.encode(boothost.pack(ah.Value({
+	println(ah.encode(hostbridge.pack(ah.Value({
 		'value': result
 	}))))
 }

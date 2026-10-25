@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module main
 
-import androidhost as ah
-import boothost
+import hostvalue as ah
+import hostbridge
 import gapcore
 import json2
 import os
@@ -14,7 +14,7 @@ fn main() {
 		return
 	}
 	gapcore.ignore_interrupt()
-	row := boothost.unpack(json2.decode[ah.Value](os.get_raw_line()) or { panic(err) }) or { panic(err) }
+	row := hostbridge.unpack(json2.decode[ah.Value](os.get_raw_line()) or { panic(err) }) or { panic(err) }
 	value := gapcore.dispatch(row.object()) or {
 		failure := if err is gapcore.BindingError {
 			err.value
@@ -25,13 +25,13 @@ fn main() {
 			}
 		}
 		gapcore.finished() or { panic(err) }
-		println(ah.encode(boothost.pack(ah.Value({
+		println(ah.encode(hostbridge.pack(ah.Value({
 			'error': ah.Value(failure)
 		}))))
 		return
 	}
 	gapcore.finished() or { panic(err) }
-	println(ah.encode(boothost.pack(ah.Value({
+	println(ah.encode(hostbridge.pack(ah.Value({
 		'value': value
 	}))))
 }

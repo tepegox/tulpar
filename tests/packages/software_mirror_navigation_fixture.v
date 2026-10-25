@@ -6,7 +6,7 @@ import os
 import time
 import ui2
 import tools.packages.pkgprotocol
-import desktop.packagecore
+import userland.packagecore
 
 fn mirror_reader_text(a &SoftwareApp) string {
 	mut bytes := []u8{cap: 20000}

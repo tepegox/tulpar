@@ -8,7 +8,7 @@ import net.unix
 import os
 import strconv
 import time
-import desktop.sessionipc
+import userland.sessionipc
 
 struct ServiceUnitResult {
 	unit_sha256            string

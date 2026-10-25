@@ -2,7 +2,7 @@
 module xtcontroller
 
 import cachecli
-import gamehost
+import vmfixture as gamehost
 import os
 import qmpclient
 import sourcecommand

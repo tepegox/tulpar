@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module bootbuild
 
-import androidhost as ah
+import hostvalue as ah
 
 pub fn dispatch(row map[string]ah.Value) !ah.Value {
 	args := ah.field(row, 'arguments').items().map(it.text())

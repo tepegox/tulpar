@@ -5,7 +5,7 @@ import json2
 import os
 import time
 import tools.packages.pkgcore
-import desktop.ptycore
+import userland.ptycore
 
 fn sqlite_run_sql(statement string) Ran {
 	return run(['/usr/bin/vinix-package', 'run', pkgcore.sqlite_application_id], '.bail on\n' + statement + '\n', none, none)

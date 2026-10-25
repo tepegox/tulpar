@@ -5,7 +5,7 @@ module main
 import agxhost
 import cachecli
 import encoding.hex
-import gamehost
+import vmfixture as gamehost
 import json2
 import os
 import time

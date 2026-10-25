@@ -4,7 +4,7 @@ module main
 
 import cachecli
 import encoding.binary
-import gamehost
+import vmfixture as gamehost
 import json2
 import net.unix
 import os

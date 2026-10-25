@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module packagestore
 
-import androidhost as ah
-import boothost
+import hostvalue as ah
+import hostbridge
 import json2
 import os
 
@@ -16,11 +16,11 @@ pub fn (e BindingError) msg() string { return ah.field(e.value, 'message').text(
 pub fn (e BindingError) code() int { return 0 }
 
 fn callback(name string, args map[string]ah.Value) !ah.Value {
-	println(ah.encode(boothost.pack(ah.Value({
+	println(ah.encode(hostbridge.pack(ah.Value({
 		'callback':  ah.Value(name)
 		'arguments': ah.Value(args)
 	}))))
-	row := boothost.unpack(json2.decode[ah.Value](os.get_raw_line())!)!.object()
+	row := hostbridge.unpack(json2.decode[ah.Value](os.get_raw_line())!)!.object()
 	if 'error' in row { return BindingError{ah.field(row, 'error').object()} }
 	return ah.field(row, 'value')
 }

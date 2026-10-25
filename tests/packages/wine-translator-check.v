@@ -56,7 +56,7 @@ fn check() ! {
 	os.mkdir_all(out)!
 	os.chmod(out, 0o700)!
 	mut inputs := map[string]string{}
-	for path in [v, os.executable(), @FILE, input, objdump, root + '/desktop/tools/tests/heap_tracker.h',
+	for path in [v, os.executable(), @FILE, input, objdump, root + '/tests/support/heap_tracker.h',
 		root + '/tools/packages/wineadapter/patch.v', root + '/tools/packages/wineadapter/patch_test.v'] {
 		inputs[path] = digest(path)!
 	}
@@ -93,7 +93,7 @@ fn check() ! {
 		os.mkdir(directory)!
 		os.write_file(directory + '/v.mod', "Module { name: 'wineadapter' }\n")!
 		os.cp(root + '/tools/packages/wineadapter/patch.v', directory + '/patch.v')!
-		os.write_file(directory + '/patch_test.v', test.replace('@VMODROOT/../../../desktop/tools/tests/heap_tracker.h', root + '/desktop/tools/tests/heap_tracker.h'))!
+		os.write_file(directory + '/patch_test.v', test.replace('@VMODROOT/../../../tests/support/heap_tracker.h', root + '/tests/support/heap_tracker.h'))!
 		mut argv := [v, '-backend', 'c', '-cc', 'clang', '-nocache', '-gc', 'none', '-manualfree',
 			'-d', 'track_heap', '-d', 'no_backtrace', '-d', 'no_segfault_handler', '-keepc']
 		if name == 'sanitized' { argv << ['-cflags', '-fsanitize=address,undefined', '-ldflags', '-fsanitize=address,undefined'] }

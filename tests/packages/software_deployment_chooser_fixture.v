@@ -4,8 +4,8 @@ module main
 import os
 import time
 import ui2
-import desktop.sessioncore
-import desktop.sessionipc
+import userland.sessioncore
+import userland.sessionipc
 
 fn deployment_choice_request(directory string) ! {
 	reply := sessionipc.session_call('take', [])!

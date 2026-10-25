@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module pcivm
 
-import androidhost as ah
+import hostvalue as ah
 import json2
 
 // The original main frame owns these locals through its outer report cleanup.

@@ -6,7 +6,7 @@ import os
 import time
 import ui2
 import encoding.utf8
-import desktop.packagecore
+import userland.packagecore
 import tools.packages.pkgprotocol
 
 const policy_fixture_path = '/private/tmp/company policy; $literal é.json'

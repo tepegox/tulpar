@@ -92,7 +92,7 @@ fn capture(v string, cc string, root string) !map[string]Input {
 		inventory(root + '/tools/packages/' + module_name, true, 0, mut inputs)!
 	}
 	for path in [v, cc, '/usr/bin/ld', os.executable(), @FILE,
-		root + '/desktop/tools/tests/heap_tracker.h'] {
+		root + '/tests/support/heap_tracker.h'] {
 		inputs[path] = Input{kind: 'file', sha256: digest(path)!}
 	}
 	for name in ['vlib', 'thirdparty']! {
@@ -143,8 +143,8 @@ fn freeze(root string, directory string, inputs map[string]Input) ! {
 	test_path := directory + '/tools/packages/wineadapter/pe_proof_test.v'
 	test_source := os.read_file(test_path)!
 	defer { unsafe { test_source.free() } }
-	os.write_file(test_path, test_source.replace('@VMODROOT/../../../desktop/tools/tests/heap_tracker.h',
-		directory + '/desktop/tools/tests/heap_tracker.h'))!
+	os.write_file(test_path, test_source.replace('@VMODROOT/../../../tests/support/heap_tracker.h',
+		directory + '/tests/support/heap_tracker.h'))!
 }
 
 fn check() ! {
@@ -238,7 +238,7 @@ fn check() ! {
 	for path, input in inputs {
 		defer { unsafe { path.free() } }
 		if input.kind != 'file' { continue }
-		if path.starts_with(root + '/tools/packages/') || path == root + '/desktop/tools/tests/heap_tracker.h' {
+		if path.starts_with(root + '/tools/packages/') || path == root + '/tests/support/heap_tracker.h' {
 			sources[path[root.len + 1..]] = input.sha256
 		} else if path in [v, cc, '/usr/bin/ld', os.executable(), @FILE] {
 			tool_pins[path] = input.sha256

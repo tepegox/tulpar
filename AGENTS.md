@@ -14,10 +14,11 @@
 - Other sessions edit this checkout at the same time. Commit only the files you
   changed (`git commit -- <paths>`), and read each file's `git diff` first so
   no one else's uncommitted edits go in with yours.
-- Commits that change Files, Activity Monitor or Settings run
-  `.githooks/post-commit`, which cross-compiles the app and publishes it to the
-  running QEMU guest (see `desktop/README.md`). Name the app in the subject
-  (`Files:`, `Activity Monitor:`, `Settings:`) so the hook picks it up.
+- Tulpar builds terminal-only amd64 and ARM64 images. Verify boot changes with
+  `make test-terminal` and `make ARCH=arm64 test-terminal`. QEMU evidence belongs
+  outside Git; `STATE_DIR=/external/fresh-directory` selects its destination.
+- X11, Hyprland, Android and desktop applications are unsupported. Do not add
+  their build layers or restore automatic desktop publication hooks.
 
 ## Test artifacts
 

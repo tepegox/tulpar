@@ -4,7 +4,7 @@ module xtcontroller
 import cachecli
 import cachekey
 import encoding.binary
-import gamehost
+import vmfixture as gamehost
 import generators
 import json2
 import os

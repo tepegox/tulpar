@@ -5,7 +5,7 @@ import json2
 import os
 import time
 import ui2
-import desktop.packagecore
+import userland.packagecore
 import tools.packages.pkgprotocol
 
 fn fixture_cleanup_review() pkgprotocol.CleanupReview {

@@ -5,7 +5,7 @@ import tools.packages.pkgprotocol
 import tools.packages.pkglaunch
 
 $if track_heap ? {
-	#include "@VMODROOT/../../../desktop/tools/tests/heap_tracker.h"
+	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 	fn C.vinix_heap_begin()
 	fn C.vinix_heap_end() u64
 }

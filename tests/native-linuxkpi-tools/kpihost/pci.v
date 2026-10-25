@@ -3,7 +3,7 @@ module kpihost
 
 import cachecli
 import crypto.sha256
-import gamehost
+import vmfixture as gamehost
 import hosttest
 import json2
 import os

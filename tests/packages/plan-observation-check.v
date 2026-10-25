@@ -28,7 +28,7 @@ fn qualify() ! {
 	root := os.dir(os.dir(os.dir(@FILE))); work := os.abs_path(os.args[1])
 	assert !os.exists(work) && !os.is_link(work); os.mkdir_all(work)!
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
-	mut paths := [v, @FILE, root + '/tests/packages/distribution-cli.v', root + '/tests/packages/repair-check.v', root + '/desktop/tools/tests/heap_tracker.h']
+	mut paths := [v, @FILE, root + '/tests/packages/distribution-cli.v', root + '/tests/packages/repair-check.v', root + '/tests/support/heap_tracker.h']
 	for directory in ['tools/packages', 'tools/accounts', 'compat/ios/plist']! {
 		for path in os.walk_ext(root + '/' + directory, '.v') { if !path.ends_with('_test.v') { paths << path } }
 	}
