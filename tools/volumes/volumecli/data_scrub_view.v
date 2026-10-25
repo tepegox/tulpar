@@ -115,7 +115,7 @@ fn show_data_scrub_file(path &char) i32 {
 	}
 	mut text := [32768]u8{}; mut done := i64(0)
 	for done < info.st_size {
-		read := C.read(source.source, unsafe { &text[done] }, usize(info.st_size - done))
+		read := C.read(source.source, unsafe { &text[done] }, uint(info.st_size - done))
 		if read < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if read <= 0 || read > info.st_size - done { return 1 }; done += read
 	}

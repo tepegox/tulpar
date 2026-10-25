@@ -45,8 +45,8 @@ fn C.openat(i32, &char, i32, ...voidptr) i32
 fn C.fcntl(i32, i32, ...voidptr) i32
 fn C.flock(i32, i32) i32
 fn C.mkdirat(i32, &char, u32) i32
-fn C.read(i32, voidptr, usize) i64
-fn C.write(i32, voidptr, usize) i64
+fn C.read(i32, voidptr, uint) i64
+fn C.write(i32, voidptr, uint) i64
 fn C.close(i32) i32
 fn C.fsync(i32) i32
 fn C.getuid() u32
@@ -85,7 +85,7 @@ pub fn stat_fd(fd i32, out &C.vka_stat) i32 {
  }
 }
 @[export: 'vka_path_max']
-pub fn path_max() usize { return usize(C.PATH_MAX) }
+pub fn path_max() uint { return uint(C.PATH_MAX) }
 @[export: 'vka_token']
 pub fn tokenize(text &char, delimiters &char, save &&char) &char { return C.strtok_r(text, delimiters, save) }
 fn error_code(selector i32) i32 {
@@ -118,9 +118,9 @@ pub fn lock_file(fd i32) i32 { return C.flock(fd, C.LOCK_EX | C.LOCK_NB) }
 @[export: 'vka_mkdir']
 pub fn make_dir(parent i32, name &char) i32 { return C.mkdirat(parent, name, 0o700) }
 @[export: 'vka_read']
-pub fn read_fd(fd i32, buffer voidptr, size usize) i64 { return C.read(fd, buffer, size) }
+pub fn read_fd(fd i32, buffer voidptr, size uint) i64 { return C.read(fd, buffer, size) }
 @[export: 'vka_write']
-pub fn write_fd(fd i32, buffer voidptr, size usize) i64 { return C.write(fd, buffer, size) }
+pub fn write_fd(fd i32, buffer voidptr, size uint) i64 { return C.write(fd, buffer, size) }
 @[export: 'vka_close']
 pub fn close_fd(fd i32) i32 { return C.close(fd) }
 @[export: 'vka_fsync']

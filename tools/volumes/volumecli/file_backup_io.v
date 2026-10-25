@@ -7,10 +7,10 @@ mut:
 	tv_sec i64
 	tv_nsec i64
 }
-fn C.pwrite(i32, voidptr, usize, i64) i64
+fn C.pwrite(i32, voidptr, uint, i64) i64
 fn C.fchown(i32, u32, u32) i32
 fn C.futimens(i32, &C.timespec) i32
-fn C.memset(voidptr, i32, usize) voidptr
+fn C.memset(voidptr, i32, uint) voidptr
 
 // Regular-file identity and mutation evidence are checked on the held inode.
 // Callers must quiesce writers; timestamp checks are not an atomic snapshot.
@@ -34,7 +34,7 @@ fn file_backup_same(fd i32, before &C.stat) bool {
 fn file_backup_read(fd i32, output &u8, size u64, offset u64) bool {
 	mut done := u64(0)
 	for done < size {
-		n := C.pread(fd, unsafe { output + done }, usize(size - done), i64(offset + done))
+		n := C.pread(fd, unsafe { output + done }, uint(size - done), i64(offset + done))
 		if n < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if n <= 0 || u64(n) > size - done { return false }; done += u64(n)
 	}; return true
@@ -44,7 +44,7 @@ fn file_backup_read(fd i32, output &u8, size u64, offset u64) bool {
 fn file_backup_write(fd i32, input &u8, size u64, offset u64) bool {
 	mut done := u64(0)
 	for done < size {
-		n := C.pwrite(fd, unsafe { input + done }, usize(size - done), i64(offset + done))
+		n := C.pwrite(fd, unsafe { input + done }, uint(size - done), i64(offset + done))
 		if n < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if n <= 0 || u64(n) > size - done { return false }; done += u64(n)
 	}; return true
@@ -71,8 +71,8 @@ fn read_file_archive(fd i32, mut version FileVersion, mut info C.stat, digest &[
 		index := get_le(&record[0], 0, 8); length := get_le(&record[0], 8, 4)
 		if (at != 0 && index <= previous) || (!candidate.delta && index != at) || length == 0 || length != file_backup_length(candidate.size, index) || get_le(&record[0], 12, 4) != 0 { return false }
 		previous = index
-		if !file_backup_read(fd, &bytes[0], length, offset) || !data_sha_update(mut whole, &record[0], 16) || !data_sha_update(mut whole, &bytes[0], usize(length))
-			|| !data_sha_update(mut body, &record[0], 16) || !data_sha_update(mut body, &bytes[0], usize(length)) || (!candidate.delta && !data_sha_update(mut content, &bytes[0], usize(length))) { return false }
+		if !file_backup_read(fd, &bytes[0], length, offset) || !data_sha_update(mut whole, &record[0], 16) || !data_sha_update(mut whole, &bytes[0], uint(length))
+			|| !data_sha_update(mut body, &record[0], 16) || !data_sha_update(mut body, &bytes[0], uint(length)) || (!candidate.delta && !data_sha_update(mut content, &bytes[0], uint(length))) { return false }
 		offset += length
 	}
 	mut body_sum := [32]u8{}; mut content_sum := [32]u8{}; mut sum := [32]u8{}
@@ -121,16 +121,16 @@ fn backup_file(source_path &char, base_path &char, destination_path &char) i32 {
 	mut content := unsafe { &DataSha256(C.alloca(sizeof(DataSha256))) }; mut body := unsafe { &DataSha256(C.alloca(sizeof(DataSha256))) }; data_sha_init(mut content); data_sha_init(mut body)
 	for index := u64(0); index < file_backup_chunks(version.size); index++ {
 		length := file_backup_length(version.size, index)
-		if !file_backup_read(source.source, &bytes[0], length, index * file_backup_chunk) || !data_sha_update(mut content, &bytes[0], usize(length)) { return plan_error(c'backup source read failed') }
+		if !file_backup_read(source.source, &bytes[0], length, index * file_backup_chunk) || !data_sha_update(mut content, &bytes[0], uint(length)) { return plan_error(c'backup source read failed') }
 		mut same := false
 		if version.delta && length == file_backup_length(base_version.size, index) {
 			if !file_backup_read(base.source, &prior[0], length, 272 + index * (file_backup_chunk + 16)) { return plan_error(c'backup base read failed') }
-			same = C.memcmp(&bytes[0], &prior[0], usize(length)) == 0
+			same = C.memcmp(&bytes[0], &prior[0], uint(length)) == 0
 		}
 		if same { continue }
 		put_le(&record[0], 0, 8, index); put_le(&record[0], 8, 4, length)
 		if !file_backup_write(fd, &record[0], 16, offset) || !file_backup_write(fd, &bytes[0], length, offset + 16)
-			|| !data_sha_update(mut body, &record[0], 16) || !data_sha_update(mut body, &bytes[0], usize(length)) { return plan_error(c'backup write failed') }
+			|| !data_sha_update(mut body, &record[0], 16) || !data_sha_update(mut body, &bytes[0], uint(length)) { return plan_error(c'backup write failed') }
 		offset += 16 + length; version.records++
 	}
 	mut header := [256]u8{}
@@ -180,7 +180,7 @@ fn restore_file(archive_path &char, base_path &char, destination_path &char) i32
 		} else {
 			if !version.delta || length != file_backup_length(base_version.size, index) || !file_backup_read(base.source, &bytes[0], length, 272 + index * (file_backup_chunk + 16)) { return plan_error(c'delta has an uncovered changed-length chunk') }
 		}
-		if !data_sha_update(mut content, &bytes[0], usize(length)) || !file_backup_write(fd, &bytes[0], length, index * file_backup_chunk) { return plan_error(c'restoration write failed') }
+		if !data_sha_update(mut content, &bytes[0], uint(length)) || !file_backup_write(fd, &bytes[0], length, index * file_backup_chunk) { return plan_error(c'restoration write failed') }
 	}
 	mut restored := [32]u8{}
 	if at != version.records || offset != u64(info.st_size) || !data_sha_finish(content, unsafe { &restored }) || restored != version.content

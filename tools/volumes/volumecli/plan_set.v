@@ -2,7 +2,7 @@
 module volumecli
 
 fn C.fcntl(i32, i32, ...voidptr) i32
-fn C.strlen(&char) usize
+fn C.strlen(&char) uint
 
 struct PlanSet {
 mut:

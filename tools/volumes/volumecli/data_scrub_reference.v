@@ -27,17 +27,17 @@ fn encode_data_scrub_reference(manifest &DataManifest, report &DataScrubReport, 
 	mut reference := [65]char{}; mut fingerprint := [65]char{}
 	if !data_reference_fingerprint(manifest, &reference[0]) || !data_scrub_fingerprint(report, &fingerprint[0]) { return 0 }
 	mut changed := 0; for i in 0 .. report.count { if report.expected[i] != report.actual[i] { changed++ } }
-	mut length := int(C.snprintf(output, usize(scrub_report_max), c'format=VINIXSR1 operation=verified-data-scrub-reference disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s report_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &reference[0], &fingerprint[0]))
+	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=VINIXSR1 operation=verified-data-scrub-reference disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s report_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &reference[0], &fingerprint[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut identity := [41]char{}; mut expected := [65]char{}; mut actual := [65]char{}; mut record := 0
 	for disk in 0 .. manifest.set.count {
 		key := unsafe { &manifest.set.plans[disk].key }; disk_identity(key, &identity[0])
-		written := int(C.snprintf(unsafe { output + length }, usize(scrub_report_max - length), c'disk=%u disk_bytes=%lu sector=%lu identity=%s\n', u32(disk), key.bytes, key.sector, &identity[0]))
+		written := int(C.snprintf(unsafe { output + length }, uint(scrub_report_max - length), c'disk=%u disk_bytes=%lu sector=%lu identity=%s\n', u32(disk), key.bytes, key.sector, &identity[0]))
 		if written <= 0 || written >= scrub_report_max - length { return 0 }; length += written
 		for at := u32(0); at < manifest.set.plans[disk].count; at++ {
 			row := report.rows[record]
 			if !scrub_digest_text(unsafe { &report.expected[record] }, &expected[0]) || !scrub_digest_text(unsafe { &report.actual[record] }, &actual[0]) { return 0 }
-			count := int(C.snprintf(unsafe { output + length }, usize(scrub_report_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n', u32(disk), row.slot, row.offset, row.length, row.flags, if report.expected[record] == report.actual[record] { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]))
+			count := int(C.snprintf(unsafe { output + length }, uint(scrub_report_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n', u32(disk), row.slot, row.offset, row.length, row.flags, if report.expected[record] == report.actual[record] { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]))
 			if count <= 0 || count >= scrub_report_max - length { return 0 }; length += count; record++
 		}
 	}

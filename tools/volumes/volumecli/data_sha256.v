@@ -17,15 +17,15 @@ fn data_sha_init(mut context DataSha256) {
 }
 
 @[direct_array_access]
-fn data_sha_update(mut context DataSha256, data &u8, length usize) bool {
+fn data_sha_update(mut context DataSha256, data &u8, length uint) bool {
 	if context.used < 0 || context.used >= 64 || context.bytes > data_sha_max_bytes
 		|| context.bytes % 64 != u64(context.used) || u64(length) > data_sha_max_bytes - context.bytes
 		|| (length != 0 && data == unsafe { nil }) { return false }
-	context.bytes += u64(length); mut at := usize(0)
+	context.bytes += u64(length); mut at := uint(0)
 	if context.used != 0 {
-		part := if length < usize(64 - context.used) { int(length) } else { 64 - context.used }
-		if part != 0 { unsafe { C.memcpy(&context.block[context.used], data, usize(part)) } }
-		context.used += part; at += usize(part)
+		part := if length < uint(64 - context.used) { int(length) } else { 64 - context.used }
+		if part != 0 { unsafe { C.memcpy(&context.block[context.used], data, uint(part)) } }
+		context.used += part; at += uint(part)
 		if context.used == 64 { data_sha_compress(unsafe { &context.state }, unsafe { &context.block[0] }); context.used = 0 }
 	}
 	for length - at >= 64 { data_sha_compress(unsafe { &context.state }, unsafe { data + at }); at += 64 }
@@ -42,7 +42,7 @@ fn data_sha_finish(context &DataSha256, output &[32]u8) bool {
 		|| context.bytes % 64 != u64(context.used) { return false }
 	mut state := context.state; mut padding := [128]u8{}
 	defer { erase_key(unsafe { &state[0] }, sizeof(state)); erase_key(unsafe { &padding[0] }, sizeof(padding)) }
-	if context.used != 0 { unsafe { C.memcpy(&padding[0], &context.block[0], usize(context.used)) } }
+	if context.used != 0 { unsafe { C.memcpy(&padding[0], &context.block[0], uint(context.used)) } }
 	padding[context.used] = 0x80; size := if context.used < 56 { 64 } else { 128 }; bits := context.bytes * 8
 	for i in 0 .. 8 { padding[size - 1 - i] = u8(bits >> u64(i * 8)) }
 	data_sha_compress(unsafe { &state }, &padding[0]); if size == 128 { data_sha_compress(unsafe { &state }, &padding[64]) }

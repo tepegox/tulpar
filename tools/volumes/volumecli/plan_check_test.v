@@ -7,7 +7,7 @@ fn C.fork() i32
 fn C.dup2(i32, i32) i32
 fn C.waitpid(i32, &i32, i32) i32
 fn C._exit(i32)
-fn C.setvbuf(voidptr, &char, i32, usize) i32
+fn C.setvbuf(voidptr, &char, i32, uint) i32
 
 fn check_sample(mut set PlanSet) {
 	mut plan := Plan{

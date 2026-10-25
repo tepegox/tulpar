@@ -246,7 +246,7 @@ fn securelevel_host(mut suite HostSuite, family string) ! {
 		write(suite.work + '/ext2/production.v', 'module ext2\nimport errno\nimport katomic\nimport resource as resource_mod\n'
 			+ original_function_slice(source, 'fn (mut this EXT2Resource) set_attribute_bits(')! + '\n'
 			+ original_function_slice(cache_source, 'fn (mut filesystem EXT2Filesystem) raw_device_write(')!
-			+ '\nfn C.memset(voidptr, int, usize) voidptr\nfn C.__builtin_alloca(usize) voidptr\n')!
+			+ '\nfn C.memset(voidptr, int, uint) voidptr\nfn C.__builtin_alloca(uint) voidptr\n')!
 		write(suite.work + '/errno/errno.v', 'module errno\npub const ebusy = 16\npub const eio = 5\npub const erofs = 30\npub fn set(_ int) {}\n')!
 		write(suite.work + '/katomic/katomic.v', 'module katomic\npub fn store[T](mut value T, wanted T) { value = wanted }\n')!
 		write(suite.work + '/resource/resource.v', 'module resource\npub const attributes_kept = u32(0x30)\n')!

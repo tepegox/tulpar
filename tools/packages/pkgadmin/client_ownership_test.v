@@ -13,7 +13,7 @@ fn C.dup2(int, int) int
 fn C.lseek(int, i64, int) i64
 fn C.fork() int
 fn C.waitpid(int, &i32, int) int
-fn C.setgroups(usize, voidptr) int
+fn C.setgroups(uint, voidptr) int
 fn C.setgid(u32) int
 fn C.setuid(u32) int
 fn C._exit(int)
@@ -44,7 +44,7 @@ fn admin_client_settle() {
 fn admin_fixture_input(text string) int {
 	mut pipes := [2]i32{}
 	assert C.pipe(unsafe { &pipes[0] }) == 0
-	assert C.write(pipes[1], text.str, usize(text.len)) == text.len
+	assert C.write(pipes[1], text.str, uint(text.len)) == text.len
 	C.close(pipes[1]); return pipes[0]
 }
 fn test_admin_password_owners_and_refusals() {
@@ -235,7 +235,7 @@ fn admin_fixture_serve(listener int, mode int, arguments []string, directory str
 	admin_fixture_reply(fd, authproto.status_ok, result)!
 	receipt := request.receipt(if mode == 13 { 0 } else { 37 }); defer { unsafe { receipt.free() } }
 	line := if mode == 11 { 'X' + receipt + '\n' } else { receipt + '\n' }; defer { unsafe { line.free() } }
-	if C.write(channel, line.str, usize(line.len)) != line.len { return error('fixture receipt write failed') }
+	if C.write(channel, line.str, uint(line.len)) != line.len { return error('fixture receipt write failed') }
 }
 fn admin_case_name(mode int) string {
 	return match mode { 0 { 'status 37' } 1 { 'description denied' } 2 { 'description fields' } 3 { 'account denied' }

@@ -24,16 +24,16 @@ mut:
 @[c_extern] __global C.errno i32
 fn C.fstat(i32, &C.stat) i32
 fn C.S_ISREG(u32) i32
-fn C.read(i32, voidptr, usize) i64
-fn C.write(i32, voidptr, usize) i64
-fn C.pread(i32, voidptr, usize, i64) i64
+fn C.read(i32, voidptr, uint) i64
+fn C.write(i32, voidptr, uint) i64
+fn C.pread(i32, voidptr, uint, i64) i64
 fn C.fsync(i32) i32
 fn C.openat(i32, &char, i32, ...voidptr) i32
 fn C.renameat(i32, &char, i32, &char) i32
 fn C.unlinkat(i32, &char, i32) i32
-fn C.snprintf(&char, usize, &char, ...voidptr) i32
+fn C.snprintf(&char, uint, &char, ...voidptr) i32
 fn C.getpid() i32
-fn C.alloca(usize) voidptr
+fn C.alloca(uint) voidptr
 
 fn plan_error(message &char) i32 { C.printf(c'vinix-volume: %s\n', message); return 1 }
 
@@ -55,7 +55,7 @@ fn probe_disk(fd i32, mut key DiskKey, mut status Status) bool {
 	size := status.sector * 2
 	mut read := i64(-1)
 	for {
-		read = C.pread(fd, &sectors[0], usize(size), 0)
+		read = C.pread(fd, &sectors[0], uint(size), 0)
 		if read >= 0 || unsafe { C.errno != C.EINTR } { break }
 	}
 	if read != i64(size) { C.perror(c'vinix-volume: disk identity read'); return false }
@@ -86,7 +86,7 @@ fn read_plan(fd i32, mut plan Plan, trusted bool) bool {
 	mut bytes := [2112]u8{}
 	mut done := i64(0)
 	for done < info.st_size {
-		read := C.read(fd, unsafe { &bytes[done] }, usize(info.st_size - done))
+		read := C.read(fd, unsafe { &bytes[done] }, uint(info.st_size - done))
 		if read < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if read <= 0 { plan_error(c'short plan read'); return false }
 		done += read
@@ -146,7 +146,7 @@ fn publish_bytes_at(directory i32, name &char, bytes &u8, size int) bool {
 	}
 	mut done := 0
 	for done < size {
-		written := C.write(fd, unsafe { bytes + done }, usize(size - done))
+		written := C.write(fd, unsafe { bytes + done }, uint(size - done))
 		if written < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if written <= 0 { C.perror(c'vinix-volume: write plan'); return false }
 		done += int(written)

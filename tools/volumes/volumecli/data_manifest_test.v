@@ -26,7 +26,7 @@ fn test_streaming_sha256_matches_independent_standard_library_in_8192_boundary_c
 		data := []u8{len: length, init: u8(index * 31 + (index >> 4))}; expected := sha256.sum(data)
 		for step in [1, 55, 56, 63, 64, 65, 511, 65536] {
 			mut context := DataSha256{}; data_sha_init(mut context); mut at := 0
-			for at < length { part := if length - at < step { length - at } else { step }; assert data_sha_update(mut context, unsafe { &data[at] }, usize(part)); at += part }
+			for at < length { part := if length - at < step { length - at } else { step }; assert data_sha_update(mut context, unsafe { &data[at] }, uint(part)); at += part }
 			assert data_sha_update(mut context, unsafe { nil }, 0)
 			mut output := [32]u8{}; before := context
 			assert data_sha_finish(&context, &output) && output[..] == expected && context == before
@@ -34,7 +34,7 @@ fn test_streaming_sha256_matches_independent_standard_library_in_8192_boundary_c
 		}
 	}
 	million := []u8{len: 1000000, init: `a`}; mut context := DataSha256{}; data_sha_init(mut context)
-	assert data_sha_update(mut context, million.data, usize(million.len)); mut output := [32]u8{}
+	assert data_sha_update(mut context, million.data, uint(million.len)); mut output := [32]u8{}
 	assert data_sha_finish(&context, &output) && output[..] == sha256.sum(million)
 }
 

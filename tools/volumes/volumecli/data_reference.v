@@ -18,7 +18,7 @@ fn data_reference_fingerprint(manifest &DataManifest, output &char) bool {
 	mut bytes := [11392]u8{}; size := encode_data_manifest(manifest, &bytes[0]); if size == 0 { return false }
 	mut context := unsafe { &DataSha256(C.alloca(sizeof(DataSha256))) }; unsafe { *context = DataSha256{} }
 	mut digest := [32]u8{}; data_sha_init(mut context)
-	return data_sha_update(mut context, &bytes[0], usize(size)) && data_sha_finish(context, unsafe { &digest })
+	return data_sha_update(mut context, &bytes[0], uint(size)) && data_sha_finish(context, unsafe { &digest })
 		&& scrub_digest_text(unsafe { &digest }, output)
 }
 
@@ -30,21 +30,21 @@ fn encode_data_reference_comparison(before &DataManifest, after &DataManifest, o
 	if !compare_data_references(before, after, mut summary) { return 0 }
 	mut first := [65]char{}; mut second := [65]char{}
 	if !data_reference_fingerprint(before, &first[0]) || !data_reference_fingerprint(after, &second[0]) { return 0 }
-	mut length := int(C.snprintf(output, usize(scrub_report_max),
+	mut length := int(C.snprintf(output, uint(scrub_report_max),
 		c'format=VINIXDH1 operation=compared-data-references disks=%d mappings=%d stable=%d changed=%d algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\n',
 		before.set.count, before.digests.count, before.digests.count - summary.changed, summary.changed, &first[0], &second[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut record := 0; mut old := [65]char{}; mut next := [65]char{}; mut identity := [41]char{}
 	for disk in 0 .. before.set.count {
 		key := unsafe { &before.set.plans[disk].key }; disk_identity(key, &identity[0])
-		written := int(C.snprintf(unsafe { output + length }, usize(scrub_report_max - length),
+		written := int(C.snprintf(unsafe { output + length }, uint(scrub_report_max - length),
 			c'disk=%u disk_bytes=%lu sector=%lu identity=%s\n', u32(disk), key.bytes, key.sector, &identity[0]))
 		if written <= 0 || written >= scrub_report_max - length { return 0 }; length += written
 		for at := u32(0); at < before.set.plans[disk].count; at++ {
 			row := before.set.plans[disk].rows[at]
 			if !scrub_digest_text(unsafe { &before.digests.values[record] }, &old[0]) || !scrub_digest_text(unsafe { &after.digests.values[record] }, &next[0]) { return 0 }
 			result := if summary.bits & (u64(1) << record) != 0 { unsafe { &char(c'changed') } } else { unsafe { &char(c'stable') } }
-			count := int(C.snprintf(unsafe { output + length }, usize(scrub_report_max - length),
+			count := int(C.snprintf(unsafe { output + length }, uint(scrub_report_max - length),
 				c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu result=%s before_sha256=%s after_sha256=%s\n',
 				u32(disk), row.slot, row.offset, row.length, row.flags, result, &old[0], &next[0]))
 			if count <= 0 || count >= scrub_report_max - length { return 0 }; length += count; record++

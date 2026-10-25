@@ -3,7 +3,7 @@ module fixturehost
 
 import os
 
-fn C.posix_spawnattr_getbinpref_np(voidptr, usize, &i32, &usize) i32
+fn C.posix_spawnattr_getbinpref_np(voidptr, uint, &i32, &uint) i32
 
 fn test_sdk_preference_is_copied_and_default_is_unchanged() {
 	$if darwin {
@@ -12,7 +12,7 @@ fn test_sdk_preference_is_copied_and_default_is_unchanged() {
 		defer { C.posix_spawnattr_destroy(&attributes) }
 		apply_arch_preference(&attributes, 'x86_64') or { panic(err) }
 		mut values := [i32(0), i32(0)]!
-		mut count := usize(0)
+		mut count := uint(0)
 		assert C.posix_spawnattr_getbinpref_np(&attributes, 2, &values[0], &count) == 0
 		assert count == 2 && values[0] == i32(C.CPU_TYPE_X86_64) && values[1] == i32(C.CPU_TYPE_ANY)
 		apply_arch_preference(&attributes, '') or { panic(err) }

@@ -11,8 +11,8 @@ fn C.geteuid() u32
 
 struct KeyByte { mut: volatile value u8 }
 
-fn erase_key(pointer voidptr, bytes usize) {
-	unsafe { for i in usize(0) .. bytes { (&KeyByte(pointer))[i].value = 0 } }
+fn erase_key(pointer voidptr, bytes uint) {
+	unsafe { for i in uint(0) .. bytes { (&KeyByte(pointer))[i].value = 0 } }
 }
 
 // Import exactly one private binary key through a pinned regular descriptor.
@@ -26,7 +26,7 @@ fn read_volume_key(path &char, output &u8) bool {
 		|| info.st_mode & 0o077 != 0 || info.st_uid != C.geteuid() { plan_error(c'key must be a private owned regular 64-byte file'); return false }
 	mut done := 0
 	for done < 64 {
-		count := C.read(fd, unsafe { output + done }, usize(64 - done))
+		count := C.read(fd, unsafe { output + done }, uint(64 - done))
 		if count < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if count <= 0 || count > 64 - done { plan_error(c'incomplete key read'); return false }; done += int(count)
 	}

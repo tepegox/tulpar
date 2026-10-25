@@ -11,6 +11,12 @@ fn main() {
 	}
 	output := os.abs_path(os.args[1])
 	os.mkdir_all(output) or { panic(err) }
+	// ui2's CPU text measurement imports fontstash even for a headless build.
+	// Its implementation headers must come from the selected compiler as well.
+	for name in ['fontstash.h', 'stb_truetype.h'] {
+		os.cp(os.join_path(@VEXEROOT, 'thirdparty', 'fontstash', name),
+			os.join_path(output, name)) or { panic(err) }
+	}
 	builtin := os.join_path(@VEXEROOT, 'vlib', 'builtin')
 	source := builtin + '/segfault_handler_nix.c'
 	if os.is_file(source) {

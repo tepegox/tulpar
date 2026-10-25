@@ -12,7 +12,7 @@ import time
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/wait.h>
-fn C.write(i32, voidptr, usize) isize
+fn C.write(i32, voidptr, uint) int
 fn C.close(i32) i32
 fn C.kill(i32, i32) i32
 fn C.getppid() i32
@@ -36,8 +36,8 @@ fn child(mode string) ! {
 		mut buffer := [8192]u8{}
 		for i in 0 .. buffer.len { buffer[i] = u8(i) }
 		for _ in 0 .. 96 {
-			assert C.write(1, &buffer[0], usize(buffer.len)) == buffer.len
-			assert C.write(2, &buffer[0], usize(buffer.len)) == buffer.len
+			assert C.write(1, &buffer[0], uint(buffer.len)) == buffer.len
+			assert C.write(2, &buffer[0], uint(buffer.len)) == buffer.len
 		}
 	} else if mode == 'signal' { C.kill(os.getpid(), C.SIGTERM) }
 	else if mode == 'exit' { print('stdout'); eprint('stderr'); exit(7) }

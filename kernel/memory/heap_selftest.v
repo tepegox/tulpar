@@ -29,6 +29,27 @@ fn heap_test_bytes(ptr voidptr, size u64, value u8) {
 fn heap_selftest() {
 	heap_trim()
 	baseline := free_bytes()
+	for alignment in [uint(8), 16, 64, uint(page_size)]! {
+		mut aligned := voidptr(0)
+		heap_test_require(posix_memalign(unsafe { &aligned }, alignment, 37) == 0)
+		heap_test_require(aligned != unsafe { nil } && uint(aligned) % alignment == 0)
+		heap_test_bytes(aligned, 37, 0)
+		free(aligned)
+		heap_test_require(posix_memalign(unsafe { &aligned }, alignment, 0) == 0)
+		heap_test_require(aligned != unsafe { nil } && uint(aligned) % alignment == 0)
+		free(aligned)
+	}
+	mut sentinel := voidptr(1)
+	for alignment in [uint(0), 1, 3, 12]! {
+		heap_test_require(posix_memalign(unsafe { &sentinel }, alignment, 37) == 22)
+		heap_test_require(sentinel == voidptr(1))
+	}
+	heap_test_require(posix_memalign(unsafe { &sentinel }, uint(page_size * 2), 37) == 12)
+	heap_test_require(sentinel == voidptr(1))
+	heap_test_require(posix_memalign(unsafe { &sentinel }, 16, uint(-1)) == 12)
+	heap_test_require(sentinel == voidptr(1))
+	heap_trim()
+	heap_test_require(free_bytes() == baseline)
 	for mut slab in slabs {
 		if slab.ent_size == 0 {
 			continue

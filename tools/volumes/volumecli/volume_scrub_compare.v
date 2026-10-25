@@ -21,10 +21,10 @@ fn show_volume_scrub_comparison(before &u8, after &u8, disk &DiskKey, row &Reque
 	mut identity := [41]char{}; mut expected := [65]char{}; mut old_digest := [65]char{}; mut new_digest := [65]char{}; mut fingerprint := [65]char{}
 	disk_identity(disk, &identity[0])
 	unsafe { for i in 0 .. 32 {
-		if C.snprintf(&expected[i * 2], usize(65 - i * 2), c'%02x', u32(before[112 + i])) != 2
-			|| C.snprintf(&old_digest[i * 2], usize(65 - i * 2), c'%02x', u32(before[160 + i])) != 2
-			|| C.snprintf(&new_digest[i * 2], usize(65 - i * 2), c'%02x', u32(after[160 + i])) != 2
-			|| C.snprintf(&fingerprint[i * 2], usize(65 - i * 2), c'%02x', u32(before[192 + i])) != 2 { return false }
+		if C.snprintf(&expected[i * 2], uint(65 - i * 2), c'%02x', u32(before[112 + i])) != 2
+			|| C.snprintf(&old_digest[i * 2], uint(65 - i * 2), c'%02x', u32(before[160 + i])) != 2
+			|| C.snprintf(&new_digest[i * 2], uint(65 - i * 2), c'%02x', u32(after[160 + i])) != 2
+			|| C.snprintf(&fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(before[192 + i])) != 2 { return false }
 	} }
 	old_changed := get_le(before, 16, 4) != 0; new_changed := get_le(after, 16, 4) != 0
 	result := if !changed { &char(c'stable') } else if !new_changed { &char(c'restored') }

@@ -3,12 +3,12 @@
 module maccli
 
 #include "mac_v.h"
-fn C.strlen(&char) usize
+fn C.strlen(&char) uint
 fn C.strcmp(&char, &char) i32
 fn C.strchr(&char, i32) &char
-fn C.memcmp(voidptr, voidptr, usize) i32
+fn C.memcmp(voidptr, voidptr, uint) i32
 fn C.vm_prctl(u64, u64, u64, u64) i64
-fn C.vm_lsetxattr(&char, &char, voidptr, usize, i32) i32
+fn C.vm_lsetxattr(&char, &char, voidptr, uint, i32) i32
 fn C.vm_execvp(&char, &&char) i32
 fn C.vm_error(&char)
 fn C.vm_usage(&char)
@@ -52,7 +52,7 @@ pub fn permissions(text &char, mask &u32) i32 {
   mut p := text
   for p[0] != 0 {
    end := C.strchr(p, 44)
-   length := if usize(end) != 0 { usize(end) - usize(p) } else { C.strlen(p) }
+   length := if uint(end) != 0 { uint(end) - uint(p) } else { C.strlen(p) }
    mut found := false
    for i := 0; i < 9; i++ {
     candidate := name(i)
@@ -65,7 +65,7 @@ pub fn permissions(text &char, mask &u32) i32 {
     }
    }
    if !found { return -1 }
-   if usize(end) == 0 { *mask = result; return 0 }
+   if uint(end) == 0 { *mask = result; return 0 }
    p = end + 1
   }
   return -1

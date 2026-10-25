@@ -19,7 +19,11 @@ fn checked(args []string) ! {
 	}
 	cc := options.value('--cc', os.getenv_opt('VINIX_MUSL_CC_' + arch.to_upper()) or { arch + '-linux-musl-gcc' })
 	machine := bh.capture([cc, '-dumpmachine'])!.trim_space()
-	if !machine.starts_with(arch + '-') || !machine.contains('linux') || !machine.contains('musl') {
+	// Debian's musl GCC uses the host GCC target name (x86_64-linux-gnu).
+	// Inspect the selected libc headers rather than requiring a musl triplet.
+	macros := bh.capture([cc, '-dM', '-E', '-include', 'features.h', '-x', 'c', '/dev/null'])!
+	if !machine.starts_with(arch + '-') || !machine.contains('linux')
+		|| !macros.contains('#define __linux__ 1') || macros.contains('#define __GLIBC__ ') {
 		return error('Expected target Linux musl compiler, got ' + machine)
 	}
 	work := bh.temporary(os.temp_dir(), 'vinix-minecraft-stage-')!

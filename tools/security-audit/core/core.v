@@ -16,24 +16,24 @@ mut:
  dropped u64
  started i32
  pending [128]C.record
- pending_count usize
+ pending_count uint
  observed [128]C.record
- observed_count usize
+ observed_count uint
 }
-struct C.output { mut: bytes [139264]char used usize }
+struct C.output { mut: bytes [139264]char used uint }
 struct C.vka_stat { mut: mode u64 owner u64 links u64 device u64 inode u64 regular i32 directory i32 }
-fn C.strlen(&char) usize
+fn C.strlen(&char) uint
 fn C.strcmp(&char, &char) i32
 fn C.strchr(&char, i32) &char
 fn C.strcpy(&char, &char) &char
 fn C.vka_token(&char, &char, &&char) &char
-fn C.memset(voidptr, i32, usize) voidptr
-fn C.memcmp(voidptr, voidptr, usize) i32
-fn C.memcpy(voidptr, voidptr, usize) voidptr
-fn C.__builtin_alloca(usize) voidptr
-fn C.memchr(voidptr, i32, usize) voidptr
+fn C.memset(voidptr, i32, uint) voidptr
+fn C.memcmp(voidptr, voidptr, uint) i32
+fn C.memcpy(voidptr, voidptr, uint) voidptr
+fn C.__builtin_alloca(uint) voidptr
+fn C.memchr(voidptr, i32, uint) voidptr
 fn C.vka_stat(i32, &C.vka_stat) i32
-fn C.vka_path_max() usize
+fn C.vka_path_max() uint
 fn C.vka_errno() i32
 fn C.vka_is_error(i32) i32
 fn C.vka_set_errno(i32)
@@ -45,8 +45,8 @@ fn C.vka_open_log_file(i32, &char, i32) i32
 fn C.vka_dup(i32) i32
 fn C.vka_lock(i32) i32
 fn C.vka_mkdir(i32, &char) i32
-fn C.vka_read(i32, voidptr, usize) i64
-fn C.vka_write(i32, voidptr, usize) i64
+fn C.vka_read(i32, voidptr, uint) i64
+fn C.vka_write(i32, voidptr, uint) i64
 fn C.vka_close(i32) i32
 fn C.vka_fsync(i32) i32
 fn C.vka_uid() u32
@@ -91,11 +91,11 @@ pub fn parse_snapshot(text &char, snapshot &C.snapshot) i32 {
   mut line_save := &char(nil)
   mut token_save := &char(nil)
   mut line := C.vka_token(text, c'\n', &line_save)
-  if usize(line) == 0 { return -1 }
+  if uint(line) == 0 { return -1 }
   mut seen := u32(0)
-  for token := C.vka_token(line, c' ', &token_save); usize(token) != 0; token = C.vka_token(nil, c' ', &token_save) {
+  for token := C.vka_token(line, c' ', &token_save); uint(token) != 0; token = C.vka_token(nil, c' ', &token_save) {
    mut equals := C.strchr(token, 61)
-   if usize(equals) == 0 { return -1 }
+   if uint(equals) == 0 { return -1 }
    equals[0] = 0; equals++
    mut bit := u32(0)
    mut value := u64(0)
@@ -115,21 +115,21 @@ pub fn parse_snapshot(text &char, snapshot &C.snapshot) i32 {
   if (seen & 31) != 31 || snapshot.retained != (if snapshot.total < 128 { snapshot.total } else { u64(128) })
    || snapshot.dropped != snapshot.total - snapshot.retained { return -1 }
   line = C.vka_token(nil, c'\n', &line_save)
-  if usize(line) == 0 || C.strcmp(line, c'# sequence ns arch syscall ip pid tid uid euid gid egid action completed result errno') != 0 { return -1 }
+  if uint(line) == 0 || C.strcmp(line, c'# sequence ns arch syscall ip pid tid uid euid gid egid action completed result errno') != 0 { return -1 }
   for i := u64(0); i < snapshot.retained; i++ {
    line = C.vka_token(nil, c'\n', &line_save)
-   if usize(line) == 0 { return -1 }
+   if uint(line) == 0 { return -1 }
    for j := 0; j < 15; j++ {
     token := C.vka_token(if j == 0 { line } else { &char(nil) }, c' ', &token_save)
-    if usize(token) == 0 || number(token, &snapshot.records[i].v[j]) != 0 { return -1 }
+    if uint(token) == 0 || number(token, &snapshot.records[i].v[j]) != 0 { return -1 }
    }
-   if usize(C.vka_token(nil, c' ', &token_save)) != 0 { return -1 }
+   if uint(C.vka_token(nil, c' ', &token_save)) != 0 { return -1 }
    v := &snapshot.records[i].v[0]
    if v[0] != snapshot.total - snapshot.retained + i + 1 || v[12] > 1 || v[2] > u32(-1)
     || v[5] > 0x7fffffff || v[6] > 0x7fffffff || v[7] > u32(-1) || v[8] > u32(-1)
     || v[9] > u32(-1) || v[10] > u32(-1) || v[11] > u32(-1) || (v[12] == 0 && (v[13] != 0 || v[14] != 0)) { return -1 }
   }
-  return if usize(C.vka_token(nil, c'\n', &line_save)) != 0 { -1 } else { 0 }
+  return if uint(C.vka_token(nil, c'\n', &line_save)) != 0 { -1 } else { 0 }
  }
 }
 fn put(output &C.output, text &char) i32 {
@@ -142,7 +142,7 @@ fn put(output &C.output, text &char) i32 {
 fn decimal(output &C.output, value u64) i32 {
  unsafe {
   mut digits := [21]char{}
-  mut index := usize(20); mut n := value
+  mut index := uint(20); mut n := value
   for { index--; digits[index] = char(48 + n % 10); n /= 10; if n == 0 { break } }
   return put(output, &digits[index])
  }
@@ -160,7 +160,7 @@ fn unavailable(output &C.output, collector &C.collector, sequence u64, reason &c
 @[export: 'vka_end_pending']
 pub fn end_pending(output &C.output, collector &C.collector, reason &char) i32 {
  unsafe {
-  for i := usize(0); i < collector.pending_count; i++ { if unavailable(output, collector, collector.pending[i].v[0], reason) != 0 { return -1 } }
+  for i := uint(0); i < collector.pending_count; i++ { if unavailable(output, collector, collector.pending[i].v[0], reason) != 0 { return -1 } }
   return 0
  }
 }
@@ -186,7 +186,7 @@ pub fn collect(collector &C.collector, snapshot &C.snapshot, output &C.output) i
    collector.started = 1
   }
   first := snapshot.total - snapshot.retained + 1
-  for i := usize(0); i < collector.observed_count; i++ {
+  for i := uint(0); i < collector.observed_count; i++ {
    old := &collector.observed[i]; seq := old.v[0]
    if seq < first || seq > snapshot.total { continue }
    now := &snapshot.records[seq - first]
@@ -197,7 +197,7 @@ pub fn collect(collector &C.collector, snapshot &C.snapshot, output &C.output) i
     || put(output, c' last=') != 0 || decimal(output, first - 1) != 0 || put(output, c' count=') != 0
     || decimal(output, first - collector.last - 1) != 0 || put(output, c' reason=not_observed\n') != 0 { return -1 }
   }
-  for i := usize(0); i < collector.pending_count; i++ {
+  for i := uint(0); i < collector.pending_count; i++ {
    old := &collector.pending[i]; seq := old.v[0]
    if seq < first || seq > snapshot.total { if unavailable(output, collector, seq, c'ring_eviction') != 0 { return -1 }; continue }
    now := &snapshot.records[seq - first]
@@ -216,7 +216,7 @@ pub fn collect(collector &C.collector, snapshot &C.snapshot, output &C.output) i
     || decimal(output, snapshot.dropped) != 0 || put(output, c'\n') != 0 { return -1 }
   }
   collector.last = snapshot.total; collector.total = snapshot.total; collector.dropped = snapshot.dropped
-  collector.observed_count = usize(snapshot.retained)
+  collector.observed_count = uint(snapshot.retained)
   C.memcpy(&collector.observed[0], &snapshot.records[0], collector.observed_count * sizeof(C.record))
   return 0
  }
@@ -240,7 +240,7 @@ fn close_error(fd i32) i32 { e := C.vka_errno(); C.vka_close(fd); C.vka_restore_
 pub fn open_log_at(parent i32, name &char, owner u32, previous i32) i32 {
  unsafe {
   if directory_stat(parent, owner) != 0 { return -1 }
-  if name[0] == 0 || usize(C.strchr(name, 47)) != 0 || C.strcmp(name, c'.') == 0 || C.strcmp(name, c'..') == 0 { C.vka_set_errno(6); return -1 }
+  if name[0] == 0 || uint(C.strchr(name, 47)) != 0 || C.strcmp(name, c'.') == 0 || C.strcmp(name, c'..') == 0 { C.vka_set_errno(6); return -1 }
   mut fd := C.vka_open_log_file(parent, name, 1); created := fd >= 0
   if fd < 0 && C.vka_is_error(1) != 0 { fd = C.vka_open_log_file(parent, name, 0) }
   if fd < 0 { return -1 }
@@ -262,12 +262,12 @@ pub fn open_log(path &char, previous i32) i32 {
   mut copy := [4096]char{}; C.strcpy(&copy[0], path + 1)
   mut dir := C.vka_open_root(); if dir < 0 { return -1 }
   mut save := &char(nil); mut part := C.vka_token(&copy[0], c'/', &save)
-  if usize(part) == 0 { C.vka_close(dir); C.vka_set_errno(6); return -1 }
+  if uint(part) == 0 { C.vka_close(dir); C.vka_set_errno(6); return -1 }
   for {
    next := C.vka_token(nil, c'/', &save)
    if directory_stat(dir, 0) != 0 { break }
    if C.strcmp(part, c'.') == 0 || C.strcmp(part, c'..') == 0 { C.vka_set_errno(6); break }
-   if usize(next) == 0 { fd := open_log_at(dir, part, 0, previous); e := C.vka_errno(); C.vka_close(dir); C.vka_restore_errno(e); return fd }
+   if uint(next) == 0 { fd := open_log_at(dir, part, 0, previous); e := C.vka_errno(); C.vka_close(dir); C.vka_restore_errno(e); return fd }
    mut child := C.vka_open_dir(dir, part)
    if child < 0 && C.vka_is_error(2) != 0 {
     if C.vka_mkdir(dir, part) != 0 { break }
@@ -286,11 +286,11 @@ pub fn append(fd i32, output &C.output, owner u32) i32 {
  unsafe {
   if output.used == 0 { return 0 }
   if log_stat(fd, owner) != 0 { return -1 }
-  for done := usize(0); done < output.used; {
+  for done := uint(0); done < output.used; {
    n := C.vka_write(fd, &output.bytes[done], output.used - done)
    if n < 0 && C.vka_is_error(0) != 0 { continue }
    if n <= 0 { if n == 0 { C.vka_set_errno(7) }; return -1 }
-   done += usize(n)
+   done += uint(n)
   }
   return C.vka_fsync(fd)
  }
@@ -299,16 +299,16 @@ pub fn append(fd i32, output &C.output, owner u32) i32 {
 pub fn read_snapshot(path &char, snapshot &C.snapshot) i32 {
  unsafe {
   fd := C.vka_open_read(path); if fd < 0 { return -1 }
-  mut buffer := [65536]char{}; mut used := usize(0)
+  mut buffer := [65536]char{}; mut used := uint(0)
   for {
    n := C.vka_read(fd, &buffer[used], 65536 - used - 1)
    if n < 0 && C.vka_is_error(0) != 0 { continue }
    if n < 0 { return close_error(fd) }; if n == 0 { break }
-   used += usize(n)
+   used += uint(n)
    if used == 65535 { C.vka_close(fd); C.vka_set_errno(3); return -1 }
   }
   if C.vka_close(fd) != 0 { return -1 }
-  if used == 0 || buffer[used - 1] != 10 || usize(C.memchr(&buffer[0], 0, used)) != 0 { C.vka_set_errno(4); return -1 }
+  if used == 0 || buffer[used - 1] != 10 || uint(C.memchr(&buffer[0], 0, used)) != 0 { C.vka_set_errno(4); return -1 }
   buffer[used] = 0
   if parse_snapshot(&buffer[0], snapshot) != 0 { C.vka_set_errno(4); return -1 }
   return 0
@@ -318,10 +318,10 @@ fn session_id(out &char) i32 {
  unsafe {
   fd := C.vka_open_read(c'/dev/urandom'); if fd < 0 { return -1 }
   mut bytes := [16]u8{}
-  for done := usize(0); done < 16; {
+  for done := uint(0); done < 16; {
    n := C.vka_read(fd, &bytes[done], 16 - done)
    if n < 0 && C.vka_is_error(0) != 0 { continue }
-   if n <= 0 { if n == 0 { C.vka_set_errno(7) }; return close_error(fd) }; done += usize(n)
+   if n <= 0 { if n == 0 { C.vka_set_errno(7) }; return close_error(fd) }; done += uint(n)
   }
   C.vka_close(fd); hex := &char(c'0123456789abcdef')
   for i := 0; i < 16; i++ { out[i * 2] = hex[bytes[i] >> 4]; out[i * 2 + 1] = hex[bytes[i] & 15] }

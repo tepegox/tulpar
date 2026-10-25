@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module volumecli
 
-fn C.memcmp(voidptr, voidptr, usize) i32
+fn C.memcmp(voidptr, voidptr, uint) i32
 
 struct CipherMonitorHistory {
 mut:
@@ -36,7 +36,7 @@ fn accept_ciphertext_monitor(reference &u8, data &u8, size int, prefix int, mut 
 	changed := volume_ciphertext_scrub_changed(reference, &actual[0])
 	if changed_samples != history.changed_samples + u64(changed) || latched != u64(changed_samples != 0) { return false }
 	mut canonical := [2048]char{}
-	if encode_ciphertext_monitor(reference, &actual[0], recovery, sample, changed_samples, &canonical[0]) != size || C.memcmp(data, &canonical[0], usize(size)) != 0 { return false }
+	if encode_ciphertext_monitor(reference, &actual[0], recovery, sample, changed_samples, &canonical[0]) != size || C.memcmp(data, &canonical[0], uint(size)) != 0 { return false }
 	if history.samples != 0 {
 		if history.actual == actual { history.stable++ }
 		else if !changed { history.restored++ }

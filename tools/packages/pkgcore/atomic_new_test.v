@@ -37,7 +37,7 @@ fn new_metadata_flush_failure(fd int) int {
 	return if info.st_mode & 0o170000 == 0o040000 { -1 } else { C.fsync(fd) }
 }
 
-fn new_metadata_write_failure(_ int, _ voidptr, _ usize) isize { C.errno = C.ENOSPC; return -1 }
+fn new_metadata_write_failure(_ int, _ voidptr, _ uint) int { C.errno = C.ENOSPC; return -1 }
 
 fn test_new_metadata_never_replaces_existing_files_aliases_fifo_directories_or_hardlinks() {
 	work := new_metadata_work()!; defer { os.rmdir_all(work) or {} }

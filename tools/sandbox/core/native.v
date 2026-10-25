@@ -37,7 +37,7 @@ pub fn capget(data voidptr) i32 {
  $if security_fixture ? { return C.sb_capget(data) }
  $else {
   header := CapHeader{version: 0x20080522, pid: 0}
-  return i32(C.syscall(i64(C.SYS_capget), unsafe { voidptr(usize(&header)) }, data))
+  return i32(C.syscall(i64(C.SYS_capget), unsafe { voidptr(uint(&header)) }, data))
  }
 }
 @[export: 'vksb_capset']
@@ -45,7 +45,7 @@ pub fn capset(data voidptr) i32 {
  $if security_fixture ? { return C.sb_capset(data) }
  $else {
   header := CapHeader{version: 0x20080522, pid: 0}
-  return i32(C.syscall(i64(C.SYS_capset), unsafe { voidptr(usize(&header)) }, data))
+  return i32(C.syscall(i64(C.SYS_capset), unsafe { voidptr(uint(&header)) }, data))
  }
 }
 @[export: 'vksb_verify_ambient']

@@ -8,7 +8,7 @@ import time
 #include <sys/wait.h>
 #include <grp.h>
 fn C.waitpid(int, &int, int) int
-fn C.setgroups(usize, &u32) int
+fn C.setgroups(uint, &u32) int
 fn C.setgid(u32) int
 fn C.setuid(u32) int
 fn C.alarm(u32) u32

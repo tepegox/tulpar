@@ -79,7 +79,7 @@ fn test_native_text_reader_negotiates_versions_and_closes_on_eof() {
 	assert C.pipe(&pipe[0]) == 0
 	encoded := WindowEvent{ format: 2, kind: 'text', sequence: 7, id: 'memo' }.encode()!
 	line := encoded + '\n'
-	assert C.write(pipe[1], line.str, usize(line.len)) == line.len
+	assert C.write(pipe[1], line.str, uint(line.len)) == line.len
 	C.close(pipe[1])
 	assert C.dup2(pipe[0], 0) == 0
 	if pipe[0] != 0 { C.close(pipe[0]) }
@@ -94,7 +94,7 @@ fn test_native_text_reader_negotiates_versions_and_closes_on_eof() {
 	assert C.pipe(&pipe[0]) == 0
 	legacy := WindowEvent{ kind: 'close' }.encode()!
 	legacy_line := legacy + '\n'
-	assert C.write(pipe[1], legacy_line.str, usize(legacy_line.len)) == legacy_line.len
+	assert C.write(pipe[1], legacy_line.str, uint(legacy_line.len)) == legacy_line.len
 	C.close(pipe[1])
 	assert C.dup2(pipe[0], 0) == 0
 	if pipe[0] != 0 { C.close(pipe[0]) }

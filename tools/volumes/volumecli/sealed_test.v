@@ -22,7 +22,7 @@ fn scrypt_oracle(password []u8, salt []u8, n int, r int, p int) []u8 {
 fn test_scrypt_standard_vectors_and_independent_parameter_password_boundaries() {
 	// RFC 7914 section 12: complete 64-byte output, including empty inputs.
 	mut vector := []u32{len: 512}; mut output := [66]u8{init: 0xa1}
-	assert scrypt_core(unsafe { nil }, 0, unsafe { nil }, 0, 16, 1, 1, vector.data, usize(vector.len * 4), &output[1])
+	assert scrypt_core(unsafe { nil }, 0, unsafe { nil }, 0, 16, 1, 1, vector.data, uint(vector.len * 4), &output[1])
 	expected := hex.decode('77d6576238657b203b19ca42c18a0497f16b4844e3074ae8dfdffa3fede21442' +
 		' fcd0069ded0948f8326a753a0fc81f17e8d3e0fb2e0d3628cf35e20c38d18906'.replace(' ', ''))!
 	assert output[0] == 0xa1 && output[65] == 0xa1
@@ -32,23 +32,23 @@ fn test_scrypt_standard_vectors_and_independent_parameter_password_boundaries() 
 			password := []u8{len: size, init: u8(index * 17 + size)}
 			salt := []u8{len: 16, init: u8(index * 11 + size)}
 			vector = []u32{len: parameters[0] * 32 * parameters[1]}
-			assert scrypt_core(password.data, size, salt.data, 16, parameters[0], parameters[1], parameters[2], vector.data, usize(vector.len * 4), &output[1])
+			assert scrypt_core(password.data, size, salt.data, 16, parameters[0], parameters[1], parameters[2], vector.data, uint(vector.len * 4), &output[1])
 			oracle := scrypt_oracle(password, salt, parameters[0], parameters[1], parameters[2])
 			for i in 0 .. 64 { assert output[i + 1] == oracle[i] }
 		}
 	}
 	// The second RFC vector exercises sixteen independently mixed lanes.
 	vector = []u32{len: 1024 * 32 * 8}
-	assert scrypt_core(c'password', 8, c'NaCl', 4, 1024, 8, 16, vector.data, usize(vector.len * 4), &output[1])
+	assert scrypt_core(c'password', 8, c'NaCl', 4, 1024, 8, 16, vector.data, uint(vector.len * 4), &output[1])
 	expected2 := hex.decode('fdbabe1c9d3472007856e7190d01e9fe7c6ad7cbc8237830e77376634b373162' +
 		'2eaf30d92e22a3886ff109279d9830dac727afb94a83ee6d8360cbdfa2cc0640')!
 	for i in 0 .. 64 { assert output[i + 1] == expected2[i] }
 	output = [66]u8{init: 0xa1}
-	for n in [0, 1, 3, 32769, 65536] { assert !scrypt_core(c'x', 1, c'y', 1, n, 8, 3, vector.data, usize(vector.len * 4), &output[1]) }
-	for r in [0, 9] { assert !scrypt_core(c'x', 1, c'y', 1, 16, r, 3, vector.data, usize(vector.len * 4), &output[1]) }
-	for p in [0, 17] { assert !scrypt_core(c'x', 1, c'y', 1, 16, 8, p, vector.data, usize(vector.len * 4), &output[1]) }
+	for n in [0, 1, 3, 32769, 65536] { assert !scrypt_core(c'x', 1, c'y', 1, n, 8, 3, vector.data, uint(vector.len * 4), &output[1]) }
+	for r in [0, 9] { assert !scrypt_core(c'x', 1, c'y', 1, 16, r, 3, vector.data, uint(vector.len * 4), &output[1]) }
+	for p in [0, 17] { assert !scrypt_core(c'x', 1, c'y', 1, 16, 8, p, vector.data, uint(vector.len * 4), &output[1]) }
 	assert !scrypt_core(c'x', 1, c'y', 1, 16, 8, 3, vector.data, 16383, &output[1])
-	assert !scrypt_core(unsafe { nil }, 1, c'y', 1, 16, 8, 3, vector.data, usize(vector.len * 4), &output[1])
+	assert !scrypt_core(unsafe { nil }, 1, c'y', 1, 16, 8, 3, vector.data, uint(vector.len * 4), &output[1])
 	for value in output { assert value == 0xa1 }
 }
 

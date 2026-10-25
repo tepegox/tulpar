@@ -147,8 +147,20 @@ wrapper before it compiles the kernel.
 
 ### Build prerequisites for Ubuntu, Debian, and derivatives
 ```bash
-sudo apt install -y clang llvm lld make findutils curl git file xz-utils rsync xorriso qemu-system-x86 python3
+sudo apt install -y clang llvm lld make findutils curl git file xz-utils rsync \
+    xorriso qemu-system-x86 libarchive-dev libturbojpeg0-dev musl-tools python3
 ```
+
+The native V host tools link against libarchive. The static amd64 guest
+utilities and optimized libc use the musl compiler supplied by `musl-tools`.
+The wallpaper encoder uses the TurboJPEG development library.
+For cross builds, set `VINIX_MUSL_CC_X86_64` or `VINIX_MUSL_CC_AARCH64` to
+the corresponding Linux musl compiler.
+Package image staging also requires a checkout and build directories whose
+ancestors are owned by you or root and have no group or world write access
+(shared ancestors need the sticky bit). The amd64 launcher, userland builder
+and network-layer builder use `umask 022` for newly created directories.
+Account staging makes an imported `/etc/shadow` owner-readable and writable only.
 
 ### Build prerequisites for Arch Linux and derivatives
 ```bash

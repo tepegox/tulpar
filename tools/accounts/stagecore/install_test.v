@@ -7,15 +7,50 @@ fn fixture() !string {
 	base := os.join_path(os.temp_dir(), 'vinix-account-stage-${os.getpid()}')
 	os.rmdir_all(base) or {}
 	os.mkdir_all(base + '/image/usr/sbin')!
+	// The installer deliberately rejects group-writable image directories.
+	// Make the controlled fixture independent of the host's umask (e.g. 0002).
+	for relative in ['image', 'image/usr', 'image/usr/sbin'] {
+		os.chmod(base + '/' + relative, 0o755)!
+	}
 	os.mkdir(base + '/outside')!
 	os.write_file(base + '/source', 'new account executable')!
 	os.write_file(base + '/image/usr/sbin/vinix-authd', 'old account executable')!
+	os.chmod(base + '/image/usr/sbin/vinix-authd', 0o755)!
 	os.write_file(base + '/outside/marker', 'outside preserved')!
 	os.setenv('VINIX_ACCOUNT_STAGE_FIXTURE', base, true)
 	return base
 }
 
 fn dispose(err IError) { message := err.msg(); unsafe { message.free(); err.free() } }
+
+fn test_imported_shadow_is_private_and_aliases_are_refused() {
+	for kind in ['regular', 'symlink', 'hardlink', 'directory'] {
+		base := fixture()!
+		defer { os.rmdir_all(base) or {} }
+		os.mkdir(base + '/image/etc')!
+		os.chmod(base + '/image/etc', 0o755)!
+		shadow := base + '/image/etc/shadow'
+		outside := base + '/outside/marker'
+		os.chmod(outside, 0o640)!
+		match kind {
+			'regular' { os.write_file(shadow, 'root:*:0:0:99999:7:::\n')!; os.chmod(shadow, 0o640)! }
+			'symlink' { os.symlink(outside, shadow)! }
+			'hardlink' { assert C.link(outside.str, shadow.str) == 0 }
+			else { os.mkdir(shadow)! }
+		}
+		mut installer := open(base + '/image')!
+		defer { installer.close() }
+		if kind == 'regular' {
+			installer.restrict_shadow()!
+			assert os.read_file(shadow)! == 'root:*:0:0:99999:7:::\n'
+			assert os.stat(shadow)!.mode & 0o777 == 0o600
+		} else {
+			if _ := installer.restrict_shadow() { assert false } else { dispose(err) }
+		}
+		assert os.stat(outside)!.mode & 0o777 == 0o640
+		assert os.read_file(outside)! == 'outside preserved'
+	}
+}
 
 fn refuse(installer &Installer, source string, relative string) {
 	if _ := installer.put(source, relative, 0o755) { assert false } else { dispose(err) }
@@ -49,8 +84,8 @@ fn replace(phase string) ! {
 	}
 }
 
-fn short_write(fd int, data voidptr, count usize) isize { return C.write(fd, data, if count > 3 { 3 } else { count }) }
-fn refuse_write(_ int, _ voidptr, _ usize) isize { return 0 }
+fn short_write(fd int, data voidptr, count uint) int { return C.write(fd, data, if count > 3 { 3 } else { count }) }
+fn refuse_write(_ int, _ voidptr, _ uint) int { return 0 }
 fn refuse_flush(_ int) int { return -1 }
 fn refuse_directory_flush(fd int) int {
 	mut info := C.stat{}

@@ -9,7 +9,7 @@ import time
 fn C.fork() int
 fn C.waitpid(int, &int, int) int
 fn C._exit(int)
-fn C.setgroups(usize, voidptr) int
+fn C.setgroups(uint, voidptr) int
 fn C.setgid(u32) int
 fn C.setuid(u32) int
 fn C.chown(&char, i32, i32) int

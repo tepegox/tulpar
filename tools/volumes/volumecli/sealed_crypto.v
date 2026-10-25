@@ -2,8 +2,8 @@
 module volumecli
 
 #include <sys/mman.h>
-fn C.mmap(voidptr, usize, i32, i32, i32, i64) voidptr
-fn C.munmap(voidptr, usize) i32
+fn C.mmap(voidptr, uint, i32, i32, i32, i64) voidptr
+fn C.munmap(voidptr, uint) i32
 
 const sealed_bytes = 192
 

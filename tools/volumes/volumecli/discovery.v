@@ -28,7 +28,7 @@ fn candidate_disk(fd i32, expected &DiskKey, mut key DiskKey, mut status Status)
 	mut bytes := [8192]u8{}
 	mut count := i64(-1)
 	for {
-		count = C.pread(fd, &bytes[0], usize(expected.sector * 2), 0)
+		count = C.pread(fd, &bytes[0], uint(expected.sector * 2), 0)
 		if count >= 0 || unsafe { C.errno != C.EINTR } { break }
 	}
 	if count != i64(expected.sector * 2) { plan_error(c'cannot read discovery candidate identity'); return -1 }

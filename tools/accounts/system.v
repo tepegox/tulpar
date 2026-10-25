@@ -19,7 +19,7 @@ import os
 fn C.sync()
 fn C.reboot(command int) int
 fn C.geteuid() u32
-fn C.sethostname(name &char, length usize) int
+fn C.sethostname(name &char, length uint) int
 
 fn fail(message string) {
 	eprintln('vinix-system: ${message}')
@@ -85,7 +85,7 @@ fn main() {
 		if !valid_hostname(args[1]) {
 			fail('invalid host name')
 		}
-		if C.sethostname(&char(args[1].str), usize(args[1].len)) != 0 {
+		if C.sethostname(&char(args[1].str), uint(args[1].len)) != 0 {
 			fail('the kernel refused the host name')
 		}
 		os.write_file('/etc/hostname.new', args[1] + '\n') or { fail('cannot write /etc/hostname') }

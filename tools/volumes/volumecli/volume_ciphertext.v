@@ -46,11 +46,11 @@ fn read_volume_ciphertext(fd i32, disk &DiskKey, row &Request, digest &[32]u8) b
 	unsafe { *context = DataSha256{} }; data_sha_init(mut context)
 	mut bytes := [65536]u8{}; mut done := u64(0)
 	for done < row.length {
-		wanted := if row.length - done > 65536 { usize(65536) } else { usize(row.length - done) }
+		wanted := if row.length - done > 65536 { uint(65536) } else { uint(row.length - done) }
 		read := C.pread(fd, &bytes[0], wanted, i64(row.offset + done))
 		if read < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if read <= 0 || u64(read) > u64(wanted) || u64(read) % disk.sector != 0
-			|| !data_sha_update(mut context, &bytes[0], usize(read)) {
+			|| !data_sha_update(mut context, &bytes[0], uint(read)) {
 			plan_error(c'ciphertext read failed or returned an invalid native-sector transfer'); return false
 		}
 		done += u64(read)
@@ -62,7 +62,7 @@ fn read_volume_ciphertext(fd i32, disk &DiskKey, row &Request, digest &[32]u8) b
 fn show_volume_ciphertext(disk &DiskKey, row &Request, digest &u8, recovery bool, verify bool) bool {
 	mut identity := [41]char{}; mut text := [65]char{}
 	disk_identity(disk, &identity[0])
-	unsafe { for i in 0 .. 32 { C.snprintf(&text[i * 2], usize(65 - i * 2), c'%02x', u32(digest[i])) } }
+	unsafe { for i in 0 .. 32 { C.snprintf(&text[i * 2], uint(65 - i * 2), c'%02x', u32(digest[i])) } }
 	return C.printf(c'operation=%s format=%s algorithm=sha256\n',
 		if verify { &char(c'verified-ciphertext') } else { &char(c'recorded-ciphertext') },
 		if recovery { &char(c'recovery') } else { &char(c'volume') }) >= 0

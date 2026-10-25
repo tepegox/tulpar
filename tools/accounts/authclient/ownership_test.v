@@ -84,7 +84,7 @@ fn client_server(path string, response []u8, empty_request bool) ClientServer {
 				if request.code != authproto.op_verify || request.fields.len != 2
 					|| request.fields[0] != [u8(0), 1, 255] || request.fields[1] != [u8(7), 0, 8] { C._exit(83) }
 				request.close()
-				if response.len > 0 && C.write(peer, response.data, usize(response.len)) != response.len { C._exit(84) }
+				if response.len > 0 && C.write(peer, response.data, uint(response.len)) != response.len { C._exit(84) }
 			}
 			C.close(peer)
 			byte := u8(1)

@@ -45,7 +45,7 @@ fn disk_identity(key &DiskKey, output &char) {
 			}
 			at++
 		}
-		C.snprintf(unsafe { output + at }, usize(41 - at), c'%02x', u32(key.id[order[i]]))
+		C.snprintf(unsafe { output + at }, uint(41 - at), c'%02x', u32(key.id[order[i]]))
 		at += 2
 	}
 }

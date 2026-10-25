@@ -9,6 +9,11 @@
 module ui2
 
 $if (linux || vinix) && ui2_headless ? {
+	__global g_key_modifiers = KeyModifiers{}
+
+	// Vinix owns the frame loop and redraws hosted trees when it presents them.
+	pub fn request_refresh() {}
+
 	pub fn bounds() Rect {
 		return Rect{
 			width: 800

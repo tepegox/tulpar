@@ -1,6 +1,7 @@
 #!/bin/bash
 # Stage network-facing developer tools for the Vinix aarch64 (or amd64) userland.
 set -euo pipefail
+umask 022
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 # VINIX_ARCH=x86_64 stages the same layer for amd64; scripts/build-network-tools-amd64.sh
@@ -113,7 +114,7 @@ install -m755 "$SCRIPT_DIR/build-support/minecraft/run-minecraft" \
 install -m755 "$SCRIPT_DIR/build-support/minecraft/minecraft-xinitrc" \
     "$STAGING/usr/libexec/vinix-minecraft/minecraft-xinitrc"
 "$SCRIPT_DIR/build-support/run-v-tool.sh" "$SCRIPT_DIR/build-support/java-cacerts-stage.v" \
-    --arch aarch64 --staging "$STAGING"
+    --arch "$VINIX_ARCH" --staging "$STAGING"
 
 install -m755 "$SCRIPT_DIR/tests/network/tools-smoke.sh" \
     "$STAGING/root/network-tools-smoke.sh"

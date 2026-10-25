@@ -83,7 +83,7 @@ fn enrollment_source_unchanged(fd i32, plan &Plan) bool {
 	if size == 0 || C.fstat(fd, &info) != 0 || C.S_ISREG(info.st_mode) == 0 || info.st_size != size { return false }
 	mut done := i64(0)
 	for done < size {
-		count := C.pread(fd, unsafe { &current[done] }, usize(i64(size) - done), done)
+		count := C.pread(fd, unsafe { &current[done] }, uint(i64(size) - done), done)
 		if count < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if count <= 0 { return false }; done += count
 	}

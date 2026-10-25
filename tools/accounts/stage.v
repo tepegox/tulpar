@@ -84,6 +84,7 @@ fn stage() ! {
 	}
 	mut installer := stagecore.open(staging)!
 	defer { installer.close() }
+	installer.restrict_shadow()!
 	if cc.len == 0 { cc = [architecture + '-linux-musl-gcc', '-w', '-Wno-error=incompatible-pointer-types'] }
 	compiler := os.find_abs_path_of_executable(cc[0])!
 	configured_v := os.getenv('V')

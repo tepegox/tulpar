@@ -30,7 +30,7 @@ fn read_private_key_fd(fd i32, output &u8, minimum int, maximum int) int {
 	size := int(info.st_size)
 	mut done := 0
 	for done < size {
-		count := C.read(fd, unsafe { output + done }, usize(size - done))
+		count := C.read(fd, unsafe { output + done }, uint(size - done))
 		if count < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if count <= 0 || count > size - done { plan_error(c'incomplete key input'); return 0 }; done += int(count)
 	}
@@ -58,7 +58,7 @@ fn key_random_bytes(output &u8, size int) bool {
 	if C.fstat(fd, unsafe { &info }) != 0 || info.st_mode & C.S_IFMT != C.S_IFCHR { plan_error(c'nonce source must be a character device'); return false }
 	mut done := 0
 	for done < size {
-		count := C.read(fd, unsafe { output + done }, usize(size - done))
+		count := C.read(fd, unsafe { output + done }, uint(size - done))
 		if count < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if count <= 0 || count > size - done { plan_error(c'nonce source failed'); return false }; done += int(count)
 	}
@@ -91,7 +91,7 @@ fn publish_recovery(edit &PlanEdit, bytes &u8, size int) bool {
 	if C.fchmod(fd, 0o600) != 0 { C.perror(c'vinix-volume: private output permissions'); return false }
 	mut done := 0
 	for done < size {
-		count := C.write(fd, unsafe { bytes + done }, usize(size - done))
+		count := C.write(fd, unsafe { bytes + done }, uint(size - done))
 		if count < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if count <= 0 || count > size - done { plan_error(c'incomplete recovery output'); return false }; done += int(count)
 	}

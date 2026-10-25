@@ -7,13 +7,13 @@ import time
 fn C.socketpair(int, int, int, &i32) int
 fn C.pipe(&i32) int
 fn C.shutdown(int, int) int
-fn C.recvfrom(int, voidptr, usize, int, voidptr, voidptr) isize
+fn C.recvfrom(int, voidptr, uint, int, voidptr, voidptr) int
 
 fn eof_read(fd int, receiver int, count int) int {
 	mut bytes := [8]u8{}
-	if receiver == 0 { return int(C.read(fd, unsafe { &bytes[0] }, usize(count))) }
-	if receiver == 1 { return int(C.recvfrom(fd, unsafe { &bytes[0] }, usize(count), 0, unsafe { nil }, unsafe { nil })) }
-	mut vector := C.vinix_launch_iovec{ iov_base: unsafe { &bytes[0] }, iov_len: usize(count) }
+	if receiver == 0 { return int(C.read(fd, unsafe { &bytes[0] }, uint(count))) }
+	if receiver == 1 { return int(C.recvfrom(fd, unsafe { &bytes[0] }, uint(count), 0, unsafe { nil }, unsafe { nil })) }
+	mut vector := C.vinix_launch_iovec{ iov_base: unsafe { &bytes[0] }, iov_len: uint(count) }
 	mut message := C.vinix_launch_msghdr{ msg_iov: unsafe { &vector }, msg_iovlen: 1 }
 	return int(C.vinix_launch_recvmsg(fd, unsafe { &message }, 0))
 }
@@ -83,7 +83,7 @@ fn test_half_closed_partial_request_is_interrupted_promptly() {
 		mut pair := [2]i32{}
 		assert C.socketpair(C.AF_UNIX, C.SOCK_STREAM, 0, unsafe { &pair[0] }) == 0
 		defer { C.close(pair[0]); C.close(pair[1]) }
-		if packet.len != 0 { assert C.write(pair[1], packet.data, usize(packet.len)) == packet.len }
+		if packet.len != 0 { assert C.write(pair[1], packet.data, uint(packet.len)) == packet.len }
 		assert C.shutdown(pair[1], C.SHUT_WR) == 0
 		started := time.sys_mono_now()
 		if mut accepted := receive_request(pair[0]) { accepted.close(); assert false }
@@ -98,7 +98,7 @@ fn test_completion_distinguishes_missing_and_malformed_receipts() {
 		mut pair := [2]i32{}
 		assert C.socketpair(C.AF_UNIX, C.SOCK_STREAM, 0, &pair[0]) == 0
 		defer { C.close(pair[0]); C.close(pair[1]) }
-		if text.len > 0 { assert C.write(pair[1], text.str, usize(text.len)) == text.len }
+		if text.len > 0 { assert C.write(pair[1], text.str, uint(text.len)) == text.len }
 		assert C.shutdown(pair[1], C.SHUT_WR) == 0
 		if _ := receive_result(pair[0], request) { assert false }
 		else {
@@ -160,7 +160,7 @@ fn test_extra_rights_are_refused_without_retaining_descriptors() {
 	header := C.vinix_launch_firsthdr(&message)
 	unsafe {
 		header.cmsg_level = C.SOL_SOCKET; header.cmsg_type = C.SCM_RIGHTS; header.cmsg_len = C.vinix_launch_len(sizeof(rights))
-		vmemcpy(C.vinix_launch_data(header), &rights[0], sizeof(rights))
+		vmemcpy(C.vinix_launch_data(header), &rights[0], int(sizeof(rights)))
 	}
 	assert C.vinix_launch_sendmsg(pair[0], &message, 0) == 1
 	mut failed := false

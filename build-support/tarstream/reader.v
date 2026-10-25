@@ -22,7 +22,7 @@ mut:
 	revents i16
 }
 
-fn C.poll(&C.pollfd, usize, i32) i32
+fn C.poll(&C.pollfd, uint, i32) i32
 
 struct C.archive {}
 
@@ -32,9 +32,9 @@ fn C.archive_read_new() &C.archive
 fn C.archive_read_support_filter_all(&C.archive) int
 fn C.archive_read_support_filter_none(&C.archive) int
 fn C.archive_read_support_format_raw(&C.archive) int
-fn C.archive_read_open_filename(&C.archive, &char, usize) int
+fn C.archive_read_open_filename(&C.archive, &char, uint) int
 fn C.archive_read_next_header(&C.archive, &&C.archive_entry) int
-fn C.archive_read_data(&C.archive, voidptr, usize) isize
+fn C.archive_read_data(&C.archive, voidptr, uint) int
 fn C.archive_error_string(&C.archive) &char
 fn C.archive_read_free(&C.archive) int
 
@@ -172,9 +172,9 @@ fn (mut reader Reader) exact(mut buffer []u8, allow_eof bool) !bool {
 		if reader.cancel != unsafe { nil } && reader.cancel() {
 			return error('archive input interrupted')
 		}
-		mut count := isize(0)
+		mut count := int(0)
 		if reader.descriptor >= 0 {
-			count = unsafe { C.read(reader.descriptor, &buffer[position], usize(buffer.len - position)) }
+			count = unsafe { C.read(reader.descriptor, &buffer[position], uint(buffer.len - position)) }
 			if count < 0 {
 				if C.errno == C.EINTR { continue }
 				if C.errno in [C.EAGAIN, C.EWOULDBLOCK] {
@@ -190,7 +190,7 @@ fn (mut reader Reader) exact(mut buffer []u8, allow_eof bool) !bool {
 			$if tarstream_fd_only ? {
 				return error('archive stream is closed')
 			} $else {
-				count = unsafe { C.archive_read_data(reader.stream, &buffer[position], usize(buffer.len - position)) }
+				count = unsafe { C.archive_read_data(reader.stream, &buffer[position], uint(buffer.len - position)) }
 				if count < 0 { return filter_error(reader.stream) }
 			}
 		}

@@ -10,7 +10,7 @@ fn encode_data_monitor(manifest &DataManifest, observed &DataDigests, sample u64
 	mut summary := DataScrub{}
 	if sample == 0 || changed_samples > sample || !compare_scrub_digests(manifest, observed, mut summary)
 		|| (summary.changed != 0 && changed_samples == 0) { return 0 }
-	length := int(C.snprintf(output, usize(256), c'format=VINIXDM1 operation=monitored-data sample=%lu changed_samples=%lu session_changed=%lu\n', sample, changed_samples, u64(changed_samples != 0)))
+	length := int(C.snprintf(output, uint(256), c'format=VINIXDM1 operation=monitored-data sample=%lu changed_samples=%lu session_changed=%lu\n', sample, changed_samples, u64(changed_samples != 0)))
 	if length <= 0 || length >= 256 { return 0 }
 	report := encode_scrub_report(manifest, observed, unsafe { output + length })
 	return if report > 0 { length + report } else { 0 }

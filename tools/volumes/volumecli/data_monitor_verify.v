@@ -67,10 +67,10 @@ fn data_monitor_line(mut reader DataMonitorReader, output &u8, maximum int) int 
 	for {
 		if reader.at == reader.count {
 			if reader.remaining == 0 { if length != 0 { reader.failed = true }; return length }
-			wanted := if reader.remaining > 65536 { usize(65536) } else { usize(reader.remaining) }
+			wanted := if reader.remaining > 65536 { uint(65536) } else { uint(reader.remaining) }
 			mut count := i64(0)
 			for { count = C.read(reader.fd, &reader.bytes[0], wanted); if count < 0 && unsafe { C.errno == C.EINTR } { continue }; break }
-			if count <= 0 || count > i64(wanted) || !data_sha_update(mut reader.hash, &reader.bytes[0], usize(count)) { reader.failed = true; return 0 }
+			if count <= 0 || count > i64(wanted) || !data_sha_update(mut reader.hash, &reader.bytes[0], uint(count)) { reader.failed = true; return 0 }
 			reader.remaining -= count; reader.at = 0; reader.count = int(count)
 		}
 		byte := reader.bytes[reader.at]; reader.at++
@@ -123,17 +123,17 @@ fn encode_data_monitor_history(manifest &DataManifest, history &DataMonitorHisto
 	}
 	mut reference := [65]char{}; mut transcript := [65]char{}
 	if !data_reference_fingerprint(manifest, &reference[0]) || !scrub_digest_text(digest, &transcript[0]) { return 0 }
-	mut length := int(C.snprintf(output, usize(data_monitor_history_max), c'format=VINIXDM1 operation=verified-data-monitor disks=%d mappings=%d samples=%lu changed_samples=%lu session_changed=%lu final_changed=%d algorithm=sha256 reference_sha256=%s transcript_sha256=%s\n', manifest.set.count, manifest.digests.count, history.samples, history.changed_samples, u64(history.changed_samples != 0), final_changed, &reference[0], &transcript[0]))
+	mut length := int(C.snprintf(output, uint(data_monitor_history_max), c'format=VINIXDM1 operation=verified-data-monitor disks=%d mappings=%d samples=%lu changed_samples=%lu session_changed=%lu final_changed=%d algorithm=sha256 reference_sha256=%s transcript_sha256=%s\n', manifest.set.count, manifest.digests.count, history.samples, history.changed_samples, u64(history.changed_samples != 0), final_changed, &reference[0], &transcript[0]))
 	if length <= 0 || length >= data_monitor_history_max { return 0 }
 	mut identity := [41]char{}; mut expected := [65]char{}; mut actual := [65]char{}; mut record := 0
 	for disk in 0 .. manifest.set.count {
 		key := unsafe { &manifest.set.plans[disk].key }; disk_identity(key, &identity[0])
-		written := int(C.snprintf(unsafe { output + length }, usize(data_monitor_history_max - length), c'disk=%u disk_bytes=%lu sector=%lu identity=%s\n', u32(disk), key.bytes, key.sector, &identity[0]))
+		written := int(C.snprintf(unsafe { output + length }, uint(data_monitor_history_max - length), c'disk=%u disk_bytes=%lu sector=%lu identity=%s\n', u32(disk), key.bytes, key.sector, &identity[0]))
 		if written <= 0 || written >= data_monitor_history_max - length { return 0 }; length += written
 		for at := u32(0); at < manifest.set.plans[disk].count; at++ {
 			row := manifest.set.plans[disk].rows[at]
 			if !scrub_digest_text(unsafe { &manifest.digests.values[record] }, &expected[0]) || !scrub_digest_text(unsafe { &history.actual[record] }, &actual[0]) { return 0 }
-			n := int(C.snprintf(unsafe { output + length }, usize(data_monitor_history_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu changed_samples=%lu stable=%lu new_changes=%lu restored=%lu changed_again=%lu final=%s expected_sha256=%s final_sha256=%s\n', u32(disk), row.slot, row.offset, row.length, row.flags, history.changed[record], history.stable[record], history.new_changes[record], history.restored[record], history.changed_again[record], if history.actual[record] == manifest.digests.values[record] { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]))
+			n := int(C.snprintf(unsafe { output + length }, uint(data_monitor_history_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu changed_samples=%lu stable=%lu new_changes=%lu restored=%lu changed_again=%lu final=%s expected_sha256=%s final_sha256=%s\n', u32(disk), row.slot, row.offset, row.length, row.flags, history.changed[record], history.stable[record], history.new_changes[record], history.restored[record], history.changed_again[record], if history.actual[record] == manifest.digests.values[record] { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]))
 			if n <= 0 || n >= data_monitor_history_max - length { return 0 }; length += n; record++
 		}
 	}

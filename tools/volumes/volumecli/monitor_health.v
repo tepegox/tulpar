@@ -4,7 +4,7 @@ module volumecli
 #include <string.h>
 
 fn C.fputs(&char, voidptr) i32
-fn C.memcpy(voidptr, voidptr, usize) voidptr
+fn C.memcpy(voidptr, voidptr, uint) voidptr
 
 struct MonitorHealthCounters {
 mut:
@@ -90,10 +90,10 @@ fn monitor_health_delta(mut previous MonitorHealthCounters, report &Health,
 // are controller-wide; ATA vendor attributes are deliberately not interpreted.
 @[direct_array_access]
 fn monitor_health_format(report &Health, delta &MonitorHealthDelta, output &char,
-	capacity usize) i32 {
+	capacity uint) i32 {
 	if !delta.available {
 		written := C.snprintf(output, capacity, c' telemetry=unavailable\n')
-		return if written < 0 || usize(written) >= capacity { i32(-1) } else { written }
+		return if written < 0 || uint(written) >= capacity { i32(-1) } else { written }
 	}
 	temperature := u32(report.data[1]) | (u32(report.data[2]) << 8)
 	mut thermal := [12]char{}
@@ -107,7 +107,7 @@ fn monitor_health_format(report &Health, delta &MonitorHealthDelta, output &char
 		c' telemetry=nvme scope=controller health_baseline=%u health_counters_reset=%u temperature_kelvin=%s available_spare_percent=%u spare_threshold_percent=%u percentage_used=%u',
 		u32(delta.baseline), u32(delta.reset), unsafe { &thermal[0] }, u32(report.data[3]),
 		u32(report.data[4]), u32(report.data[5]))
-	if written < 0 || usize(written) >= capacity { return -1 }
+	if written < 0 || uint(written) >= capacity { return -1 }
 	names := [&char(c'data_units_read'), &char(c'data_units_written'), &char(c'host_read_commands'),
 		&char(c'host_write_commands'), &char(c'controller_busy_minutes'), &char(c'power_cycles'),
 		&char(c'power_on_hours'), &char(c'unsafe_shutdowns'), &char(c'media_errors'),
@@ -117,13 +117,13 @@ fn monitor_health_format(report &Health, delta &MonitorHealthDelta, output &char
 	for i in 0 .. 10 {
 		nvme_counter(unsafe { &report.data[32 + i * 16] }, unsafe { &current[0] })
 		nvme_counter(unsafe { &delta.values[i * 16] }, unsafe { &difference[0] })
-		next := C.snprintf(unsafe { output + written }, capacity - usize(written),
+		next := C.snprintf(unsafe { output + written }, capacity - uint(written),
 			c' %s=0x%s %s_delta=0x%s', names[i], unsafe { &current[0] }, names[i],
 			unsafe { &difference[0] })
-		if next < 0 || usize(next) >= capacity - usize(written) { return -1 }
+		if next < 0 || uint(next) >= capacity - uint(written) { return -1 }
 		written += next
 	}
-	if capacity - usize(written) < 2 { return -1 }
+	if capacity - uint(written) < 2 { return -1 }
 	unsafe {
 		output[written] = char(`\n`)
 		output[written + 1] = 0

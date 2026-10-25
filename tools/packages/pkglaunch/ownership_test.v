@@ -167,7 +167,7 @@ fn test_transport_incomplete_wire_and_completion_refusals_retire_storage() {
 		$if track_heap ? { C.vinix_heap_begin() }
 		for _ in 0 .. transport_cycles() {
 			pair := transport_pair()
-			assert C.write(pair[1], text.str, usize(text.len)) == text.len
+			assert C.write(pair[1], text.str, uint(text.len)) == text.len
 			assert C.shutdown(pair[1], C.SHUT_WR) == 0
 			if _ := receive_result(pair[0], request) { assert false } else { transport_error(err) }
 			C.close(pair[0]); C.close(pair[1])
@@ -181,7 +181,7 @@ fn test_transport_incomplete_wire_and_completion_refusals_retire_storage() {
 		$if track_heap ? { C.vinix_heap_begin() }
 		for _ in 0 .. transport_cycles() {
 			pair := transport_pair()
-			if packet.len != 0 { assert C.write(pair[1], packet.data, usize(packet.len)) == packet.len }
+			if packet.len != 0 { assert C.write(pair[1], packet.data, uint(packet.len)) == packet.len }
 			C.close(pair[1])
 			if mut accepted := receive_request(pair[0]) { accepted.close(); assert false } else { transport_error(err) }
 			C.close(pair[0])

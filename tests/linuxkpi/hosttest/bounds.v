@@ -353,7 +353,7 @@ pub fn bounds_publish(path string, data []u8) ! {
 	}
 	mut closed := false
 	defer { if !closed { C.fclose(stream) } }
-	if C.fwrite(data.data, 1, usize(data.len), stream) != usize(data.len) {
+	if C.fwrite(data.data, 1, uint(data.len), stream) != uint(data.len) {
 		return os.error_posix()
 	}
 	status := C.fclose(stream)

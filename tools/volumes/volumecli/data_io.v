@@ -99,13 +99,13 @@ fn read_data_digests(set &PlanSet, pins &DataPins, expected &DataDigests, mut di
 		for at := u32(0); at < set.plans[disk].count; at++ {
 			row := set.plans[disk].rows[at]; data_sha_init(mut context); mut done := u64(0)
 			for done < row.length {
-				wanted := if row.length - done > 65536 { usize(65536) } else { usize(row.length - done) }
+				wanted := if row.length - done > 65536 { uint(65536) } else { uint(row.length - done) }
 				read := C.pread(fd, &workspace[0], wanted, i64(row.offset + done))
 				if read < 0 && unsafe { C.errno == C.EINTR } { continue }
 				if read <= 0 || u64(read) > u64(wanted) || u64(read) % set.plans[disk].key.sector != 0 {
 					plan_error(c'checksum data read failed or returned an invalid short transfer'); return false
 				}
-				if !data_sha_update(mut context, &workspace[0], usize(read)) { return false }; done += u64(read)
+				if !data_sha_update(mut context, &workspace[0], uint(read)) { return false }; done += u64(read)
 			}
 			i := result.count
 			if !data_sha_finish(context, unsafe { &result.values[i] }) { return false }
@@ -135,7 +135,7 @@ fn show_data_digests(manifest &DataManifest, operation &char) bool {
 	mut record := 0
 	for disk in 0 .. manifest.set.count { for at := u32(0); at < manifest.set.plans[disk].count; at++ {
 		row := manifest.set.plans[disk].rows[at]; mut text := [65]char{}
-		for byte in 0 .. 32 { C.snprintf(unsafe { &text[byte * 2] }, usize(65 - byte * 2), c'%02x', u32(manifest.digests.values[record][byte])) }
+		for byte in 0 .. 32 { C.snprintf(unsafe { &text[byte * 2] }, uint(65 - byte * 2), c'%02x', u32(manifest.digests.values[record][byte])) }
 		if C.printf(c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu sha256=%s\n', u32(disk), row.slot, row.offset, row.length, row.flags, &text[0]) < 0 { ok = false }
 		record++
 	} }

@@ -5,6 +5,7 @@ import crypto.rand
 import os
 
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -59,12 +60,49 @@ pub fn (installer &Installer) check() ! {
 }
 
 fn no_checkpoint(_ string) ! {}
-fn write_bytes(fd int, data voidptr, size usize) isize { return C.write(fd, data, size) }
+
+// restrict_shadow keeps an imported Alpine password database private without
+// following image links or changing the database's contents.
+pub fn (installer &Installer) restrict_shadow() ! {
+	installer.check()!
+	parent := C.openat(installer.root, c'etc', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
+	if parent < 0 {
+		if C.errno == C.ENOENT { return }
+		return error('cannot capture account database directory')
+	}
+	defer { C.close(parent) }
+	mut directory := C.stat{}
+	if C.fstat(parent, &directory) != 0 || !controlled(&directory) || u64(directory.st_dev) != installer.device {
+		return error('account database directory must be owned and controlled')
+	}
+	fd := C.openat(parent, c'shadow', C.O_RDONLY | C.O_NOFOLLOW | C.O_NONBLOCK | C.O_CLOEXEC)
+	if fd < 0 {
+		if C.errno == C.ENOENT { return }
+		return error('cannot capture ordinary shadow database')
+	}
+	defer { C.close(fd) }
+	mut info := C.stat{}
+	if C.fstat(fd, &info) != 0 || info.st_mode & 0o170000 != 0o100000 || info.st_nlink != 1
+		|| u64(info.st_dev) != installer.device || (info.st_uid != 0 && info.st_uid != u32(C.geteuid())) {
+		return error('shadow database must be an owned single-link regular file')
+	}
+	if C.fchmod(fd, 0o600) != 0 || C.fsync(fd) != 0 { return error('cannot make shadow database private') }
+	installer.check()!
+	mut named := C.stat{}
+	if C.fstatat(installer.root, c'etc', &named, C.AT_SYMLINK_NOFOLLOW) != 0
+		|| named.st_dev != directory.st_dev || named.st_ino != directory.st_ino
+		|| C.fstatat(parent, c'shadow', &named, C.AT_SYMLINK_NOFOLLOW) != 0
+		|| named.st_dev != info.st_dev || named.st_ino != info.st_ino {
+		return error('account database changed during staging')
+	}
+}
+
+fn write_bytes(fd int, data voidptr, size uint) int { return C.write(fd, data, size) }
 fn flush(fd int) int { return C.fsync(fd) }
 
 struct InstallOptions {
 	checkpoint fn (string) ! = no_checkpoint
-	write fn (int, voidptr, usize) isize = write_bytes
+	write fn (int, voidptr, uint) int = write_bytes
 	flush fn (int) int = flush
 }
 
@@ -153,7 +191,7 @@ fn (installer &Installer) put_with(source string, relative string, mode u32, opt
 	defer { unsafe { data.free() } }
 	mut sent := 0
 	for sent < data.len {
-		written := options.write(fd, unsafe { &data[sent] }, usize(data.len - sent))
+		written := options.write(fd, unsafe { &data[sent] }, uint(data.len - sent))
 		if written < 0 && C.errno == C.EINTR { continue }
 		if written <= 0 || written > data.len - sent { return error('cannot write staged account tool') }
 		sent += int(written)

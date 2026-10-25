@@ -10,6 +10,7 @@
 #
 # Remaining arguments are passed directly to qemu-system-x86_64.
 set -euo pipefail
+umask 022
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ISO="${VINIX_AMD64_DESKTOP_ISO:-$SCRIPT_DIR/vinix-desktop-amd64.iso}"
@@ -57,6 +58,7 @@ else
     for candidate in \
         "$QEMU_PREFIX/share/qemu/edk2-x86_64-code.fd" \
         /usr/share/OVMF/OVMF_CODE.fd \
+        /usr/share/OVMF/OVMF_CODE_4M.fd \
         /usr/share/edk2/x64/OVMF_CODE.fd; do
         if [ -f "$candidate" ]; then
             OVMF_CODE="$candidate"

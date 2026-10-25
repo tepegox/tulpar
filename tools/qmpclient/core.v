@@ -12,7 +12,7 @@ import time
 #include <errno.h>
 #include <sys/socket.h>
 struct C.pollfd { mut: fd i32 events i16 revents i16 }
-fn C.poll(&C.pollfd, usize, i32) i32
+fn C.poll(&C.pollfd, uint, i32) i32
 pub struct Monitor {
 mut:
 	connection &unix.StreamConn = unsafe { nil }
@@ -135,7 +135,7 @@ fn (mut monitor Monitor) send_text(request string) ! {
 	mut position := 0
 	for position < request.len {
 		monitor.ready(true)!
-		count := unsafe { C.send(monitor.connection.sock.handle, request.str + position, usize(request.len - position), 0) }
+		count := unsafe { C.send(monitor.connection.sock.handle, request.str + position, uint(request.len - position), 0) }
 		if count < 0 { if C.errno in [C.EINTR, C.EAGAIN] { continue }; return os.error_posix() }
 		if count == 0 { return error('QMP closed') }
 		position += int(count)

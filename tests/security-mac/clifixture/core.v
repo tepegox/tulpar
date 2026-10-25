@@ -14,9 +14,9 @@ struct C.mac_cli_const_pointer {}
 @[c_extern] __global C.errno i32
 fn C.assert(bool)
 fn C.strcmp(&char, &char) i32
-fn C.memcmp(voidptr, voidptr, usize) i32
+fn C.memcmp(voidptr, voidptr, uint) i32
 fn C.puts(&char) i32
-fn C.__builtin_alloca(usize) voidptr
+fn C.__builtin_alloca(uint) voidptr
 fn C.vm_main(i32, &&char) i32
 fn C.vm_number(&char, u32, &u32) i32
 fn C.vm_permissions(&char, &u32) i32
@@ -43,7 +43,7 @@ pub fn capture(option i32, command u64, domain u64, kind u64, mask u64) i32 {
 }
 
 @[export: 'mock_lsetxattr']
-pub fn label(path &C.mac_cli_const_char, name &C.mac_cli_const_char, value &C.mac_cli_const_void, size usize, flags i32) i32 {
+pub fn label(path &C.mac_cli_const_char, name &C.mac_cli_const_char, value &C.mac_cli_const_void, size uint, flags i32) i32 {
 	C.assert(C.strcmp(unsafe { &char(path) }, c'/test') == 0 && C.strcmp(unsafe { &char(name) }, c'security.vinix') == 0)
 	C.assert(size == 2 && C.memcmp(unsafe { voidptr(value) }, c'28', 2) == 0 && flags == 0)
 	mac_fixture_labeling++
@@ -81,11 +81,11 @@ pub fn entry() i32 {
 		C.assert(C.vm_number(c'0', 32, value) == 0 && *value == 0)
 		C.assert(C.vm_number(c'31', 32, value) == 0 && *value == 31)
 		mut bad := [&char(c''), &char(c'01'), &char(c'-1'), &char(c'+1'), &char(c'32'), &char(c'99999999999999'), &char(c' 1'), &char(c'1x')]!
-		for i := usize(0); i < usize(bad.len); i++ { C.assert(C.vm_number(bad[i], 32, value) != 0) }
+		for i := uint(0); i < uint(bad.len); i++ { C.assert(C.vm_number(bad[i], 32, value) != 0) }
 		C.assert(C.vm_permissions(c'inspect,read,write,execute,search,create,remove,metadata,ioctl', value) == 0 && *value == 511)
 		C.assert(C.vm_permissions(c'none', value) == 0 && *value == 0)
 		mut bad_permissions := [&char(c''), &char(c'read,'), &char(c',read'), &char(c'read,,write'), &char(c'read,read'), &char(c'unknown'), &char(c'all'), &char(c'none,read')]!
-		for i := usize(0); i < usize(bad_permissions.len); i++ { C.assert(C.vm_permissions(bad_permissions[i], value) != 0) }
+		for i := uint(0); i < uint(bad_permissions.len); i++ { C.assert(C.vm_permissions(bad_permissions[i], value) != 0) }
 		mut rule := [&char(c'vinix-mac'), &char(c'rule'), &char(c'15'), &char(c'31'), &char(c'inspect,read,search')]!
 		C.assert(invoke(5, &rule[0]) == 0 && mac_fixture_calls == 1 && mac_fixture_command == 1 && mac_fixture_domain == 15 && mac_fixture_kind == 31 && mac_fixture_mask == 259)
 		mut invalid_rule := [&char(c'vinix-mac'), &char(c'rule'), &char(c'0'), &char(c'31'), &char(c'read')]!

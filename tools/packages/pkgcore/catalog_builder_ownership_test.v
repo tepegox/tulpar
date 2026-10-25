@@ -69,7 +69,7 @@ fn builder_descriptors() int {
 fn builder_write(path string, text string) ! {
 	fd := C.open(path.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC | C.O_CLOEXEC | C.O_NOFOLLOW, 0o644)
 	if fd < 0 { return error('cannot write catalog owner fixture') }
-	defer { C.close(fd) }; assert C.write(fd, text.str, usize(text.len)) == text.len
+	defer { C.close(fd) }; assert C.write(fd, text.str, uint(text.len)) == text.len
 }
 
 fn builder_checkpoint(phase string, stage string) ! {

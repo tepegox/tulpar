@@ -93,13 +93,13 @@ fn encode_data_scrub_snapshot(report &DataScrubReport, output &char) int {
 	mut changed := 0; for i in 0 .. report.count { if report.expected[i] != report.actual[i] { changed++ } }
 	mut fingerprint := [65]char{}
 	if !scrub_digest_text(unsafe { &report.reference }, &fingerprint[0]) { return 0 }
-	mut length := int(C.snprintf(output, usize(scrub_report_max), c'format=VINIXSR1 operation=scrubbed-data disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &fingerprint[0]))
+	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=VINIXSR1 operation=scrubbed-data disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &fingerprint[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut expected := [65]char{}; mut actual := [65]char{}
 	for i in 0 .. report.count {
 		row := report.rows[i]
 		if !scrub_digest_text(unsafe { &report.expected[i] }, &expected[0]) || !scrub_digest_text(unsafe { &report.actual[i] }, &actual[0]) { return 0 }
-		written := int(C.snprintf(unsafe { output + length }, usize(scrub_report_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n', report.indices[i], row.slot, row.offset, row.length, row.flags, if report.expected[i] == report.actual[i] { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]))
+		written := int(C.snprintf(unsafe { output + length }, uint(scrub_report_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n', report.indices[i], row.slot, row.offset, row.length, row.flags, if report.expected[i] == report.actual[i] { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]))
 		if written <= 0 || written >= scrub_report_max - length { return 0 }; length += written
 	}
 	return length
@@ -128,7 +128,7 @@ fn data_scrub_fingerprint(report &DataScrubReport, output &char) bool {
 	mut text := [32768]char{}; size := encode_data_scrub_snapshot(report, &text[0]); if size == 0 { return false }
 	mut context := unsafe { &DataSha256(C.alloca(sizeof(DataSha256))) }; unsafe { *context = DataSha256{} }
 	mut digest := [32]u8{}; data_sha_init(mut context)
-	return data_sha_update(mut context, unsafe { &u8(&text[0]) }, usize(size)) && data_sha_finish(context, unsafe { &digest })
+	return data_sha_update(mut context, unsafe { &u8(&text[0]) }, uint(size)) && data_sha_finish(context, unsafe { &digest })
 		&& scrub_digest_text(unsafe { &digest }, output)
 }
 
@@ -137,14 +137,14 @@ fn encode_data_scrub_comparison(before &DataScrubReport, after &DataScrubReport,
 	mut history := DataScrubHistory{}; if !compare_data_scrubs(before, after, mut history) { return 0 }
 	mut reference := [65]char{}; mut first := [65]char{}; mut second := [65]char{}
 	if !scrub_digest_text(unsafe { &before.reference }, &reference[0]) || !data_scrub_fingerprint(before, &first[0]) || !data_scrub_fingerprint(after, &second[0]) { return 0 }
-	mut length := int(C.snprintf(output, usize(scrub_report_max), c'format=VINIXSR1 operation=compared-data-scrubs disks=%d mappings=%d stable=%d changed=%d new_changes=%d restored=%d changed_again=%d algorithm=sha256 reference_sha256=%s before_report_sha256=%s after_report_sha256=%s\n', before.disks, before.count, history.stable, before.count - history.stable, history.new_changes, history.restored, history.changed_again, &reference[0], &first[0], &second[0]))
+	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=VINIXSR1 operation=compared-data-scrubs disks=%d mappings=%d stable=%d changed=%d new_changes=%d restored=%d changed_again=%d algorithm=sha256 reference_sha256=%s before_report_sha256=%s after_report_sha256=%s\n', before.disks, before.count, history.stable, before.count - history.stable, history.new_changes, history.restored, history.changed_again, &reference[0], &first[0], &second[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut expected := [65]char{}; mut old := [65]char{}; mut next := [65]char{}
 	for i in 0 .. before.count {
 		row := before.rows[i]; old_changed := before.actual[i] != before.expected[i]; new_changed := after.actual[i] != after.expected[i]
 		result := if history.differences & (u64(1) << i) == 0 { &char(c'stable') } else if !new_changed { &char(c'restored') } else if !old_changed { &char(c'new-change') } else { &char(c'changed-again') }
 		if !scrub_digest_text(unsafe { &before.expected[i] }, &expected[0]) || !scrub_digest_text(unsafe { &before.actual[i] }, &old[0]) || !scrub_digest_text(unsafe { &after.actual[i] }, &next[0]) { return 0 }
-		written := int(C.snprintf(unsafe { output + length }, usize(scrub_report_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu before=%s after=%s result=%s expected_sha256=%s before_sha256=%s after_sha256=%s\n', before.indices[i], row.slot, row.offset, row.length, row.flags, if old_changed { &char(c'changed') } else { &char(c'match') }, if new_changed { &char(c'changed') } else { &char(c'match') }, result, &expected[0], &old[0], &next[0]))
+		written := int(C.snprintf(unsafe { output + length }, uint(scrub_report_max - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu before=%s after=%s result=%s expected_sha256=%s before_sha256=%s after_sha256=%s\n', before.indices[i], row.slot, row.offset, row.length, row.flags, if old_changed { &char(c'changed') } else { &char(c'match') }, if new_changed { &char(c'changed') } else { &char(c'match') }, result, &expected[0], &old[0], &next[0]))
 		if written <= 0 || written >= scrub_report_max - length { return 0 }; length += written
 	}
 	return length
@@ -156,7 +156,7 @@ fn read_data_scrub_report(fd i32, mut report DataScrubReport) bool {
 	if C.fstat(fd, &info) != 0 || C.S_ISREG(info.st_mode) == 0 || info.st_size <= 0 || info.st_size >= scrub_report_max { return false }
 	mut text := [32768]u8{}; mut done := i64(0)
 	for done < info.st_size {
-		read := C.read(fd, unsafe { &text[done] }, usize(info.st_size - done))
+		read := C.read(fd, unsafe { &text[done] }, uint(info.st_size - done))
 		if read < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if read <= 0 || read > info.st_size - done { return false }; done += read
 	}

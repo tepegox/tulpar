@@ -25,13 +25,13 @@ fn encode_volume_scrub_reference(reference &u8, report &u8, output &char) int {
 	mut identity := [41]char{}; mut expected := [65]char{}; mut actual := [65]char{}; mut fingerprint := [65]char{}; mut report_hash := [65]char{}
 	disk_identity(&disk, &identity[0])
 	unsafe { for i in 0 .. 32 {
-		if C.snprintf(&expected[i * 2], usize(65 - i * 2), c'%02x', u32(reference[80 + i])) != 2
-			|| C.snprintf(&actual[i * 2], usize(65 - i * 2), c'%02x', u32(report[160 + i])) != 2
-			|| C.snprintf(&fingerprint[i * 2], usize(65 - i * 2), c'%02x', u32(report[192 + i])) != 2
-			|| C.snprintf(&report_hash[i * 2], usize(65 - i * 2), c'%02x', u32(digest[i])) != 2 { return 0 }
+		if C.snprintf(&expected[i * 2], uint(65 - i * 2), c'%02x', u32(reference[80 + i])) != 2
+			|| C.snprintf(&actual[i * 2], uint(65 - i * 2), c'%02x', u32(report[160 + i])) != 2
+			|| C.snprintf(&fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(report[192 + i])) != 2
+			|| C.snprintf(&report_hash[i * 2], uint(65 - i * 2), c'%02x', u32(digest[i])) != 2 { return 0 }
 	} }
 	changed := get_le(report, 16, 4)
-	length := int(C.snprintf(output, usize(2048), c'format=VINIXCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s report_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
+	length := int(C.snprintf(output, uint(2048), c'format=VINIXCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s report_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
 		u64(1) - changed, changed, &fingerprint[0], &report_hash[0], disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags,
 		if changed == 0 { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]))
 	return if length > 0 && length < 2048 { length } else { 0 }

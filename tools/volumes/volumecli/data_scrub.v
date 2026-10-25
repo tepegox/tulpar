@@ -27,7 +27,7 @@ fn compare_scrub_digests(manifest &DataManifest, observed &DataDigests, mut summ
 @[direct_array_access]
 fn scrub_digest_text(value &[32]u8, output &char) bool {
 	for byte in 0 .. 32 {
-		if C.snprintf(unsafe { output + byte * 2 }, usize(65 - byte * 2), c'%02x', u32(value[byte])) != 2 { return false }
+		if C.snprintf(unsafe { output + byte * 2 }, uint(65 - byte * 2), c'%02x', u32(value[byte])) != 2 { return false }
 	}
 	return true
 }
@@ -41,9 +41,9 @@ fn encode_scrub_report(manifest &DataManifest, observed &DataDigests, output &ch
 	mut bytes := [11392]u8{}; size := encode_data_manifest(manifest, &bytes[0]); if size == 0 { return 0 }
 	mut context := unsafe { &DataSha256(C.alloca(sizeof(DataSha256))) }; unsafe { *context = DataSha256{} }
 	data_sha_init(mut context); mut digest := [32]u8{}; mut fingerprint := [65]char{}
-	if !data_sha_update(mut context, &bytes[0], usize(size)) || !data_sha_finish(context, unsafe { &digest })
+	if !data_sha_update(mut context, &bytes[0], uint(size)) || !data_sha_finish(context, unsafe { &digest })
 		|| !scrub_digest_text(unsafe { &digest }, &fingerprint[0]) { return 0 }
-	mut length := int(C.snprintf(output, usize(scrub_report_max),
+	mut length := int(C.snprintf(output, uint(scrub_report_max),
 		c'format=VINIXSR1 operation=scrubbed-data disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s\n',
 		manifest.set.count, observed.count, observed.count - summary.changed, summary.changed, &fingerprint[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
@@ -52,7 +52,7 @@ fn encode_scrub_report(manifest &DataManifest, observed &DataDigests, output &ch
 		row := manifest.set.plans[disk].rows[at]
 		if !scrub_digest_text(unsafe { &manifest.digests.values[record] }, &expected[0]) || !scrub_digest_text(unsafe { &observed.values[record] }, &actual[0]) { return 0 }
 		result := if summary.bits & (u64(1) << record) != 0 { unsafe { &char(c'changed') } } else { unsafe { &char(c'match') } }
-		written := int(C.snprintf(unsafe { output + length }, usize(scrub_report_max - length),
+		written := int(C.snprintf(unsafe { output + length }, uint(scrub_report_max - length),
 			c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
 			u32(disk), row.slot, row.offset, row.length, row.flags, result, &expected[0], &actual[0]))
 		if written <= 0 || written >= scrub_report_max - length { return 0 }; length += written; record++

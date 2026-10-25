@@ -22,7 +22,10 @@ fn command(arguments []string) !string {
 fn stage(arch string, staging string, cc string) ! {
 	root := os.dir(os.dir(@FILE))
 	machine := command([cc, '-dumpmachine'])!.trim_space()
-	if !machine.starts_with(arch + '-') || !machine.contains('linux') || !machine.contains('musl') {
+	// Debian's musl GCC reports the host GCC triplet; its headers select musl.
+	macros := command([cc, '-dM', '-E', '-include', 'features.h', '-x', 'c', '/dev/null'])!
+	if !machine.starts_with(arch + '-') || !machine.contains('linux')
+		|| !macros.contains('#define __linux__ 1') || macros.contains('#define __GLIBC__ ') {
 		return error('expected a ${arch} Linux musl compiler, got ${machine}')
 	}
 	work := os.join_path(os.temp_dir(), 'vinix-java-cacerts-stage-${os.getpid()}')

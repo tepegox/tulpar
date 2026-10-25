@@ -145,7 +145,7 @@ fn test_interrupted_streams_and_io_errors_retire_partial_frames() {
 		$if track_heap ? { C.vinix_heap_begin() }
 		for _ in 0 .. frame_cycles() {
 			pair := frame_pair()
-			if cut != 0 { assert C.write(pair[0], encoded.data, usize(cut)) == cut }
+			if cut != 0 { assert C.write(pair[0], encoded.data, uint(cut)) == cut }
 			assert C.shutdown(pair[0], C.SHUT_WR) == 0
 			if mut received := read_frame(pair[1]) { received.close(); assert false }
 			else { frame_error(err) }
@@ -163,7 +163,7 @@ fn test_interrupted_streams_and_io_errors_retire_partial_frames() {
 		$if track_heap ? { C.vinix_heap_begin() }
 		for _ in 0 .. frame_cycles() {
 			pair := frame_pair()
-			assert C.write(pair[0], data.data, usize(data.len)) == data.len
+			assert C.write(pair[0], data.data, uint(data.len)) == data.len
 			assert C.shutdown(pair[0], C.SHUT_WR) == 0
 			if mut received := read_frame(pair[1]) { received.close(); assert false }
 			else { frame_error(err) }

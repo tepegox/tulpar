@@ -18,7 +18,7 @@ fn C.accept(int, voidptr, voidptr) int
 fn C.unlink(&char) int
 fn C.fork() int
 fn C.waitpid(int, &i32, int) int
-fn C.setgroups(usize, voidptr) int
+fn C.setgroups(uint, voidptr) int
 fn C.setgid(u32) int
 fn C.setuid(u32) int
 fn C._exit(int)

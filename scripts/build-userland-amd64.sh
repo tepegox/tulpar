@@ -2,6 +2,7 @@
 # Assemble the amd64 Vinix userland from official Alpine binaries and create
 # an initramfs that boots directly into Alpine BusyBox.
 set -euo pipefail
+umask 022
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 BUILD_DIR="${VINIX_AMD64_USERLAND_BUILD_DIR:-$SCRIPT_DIR/build-amd64-userland}"

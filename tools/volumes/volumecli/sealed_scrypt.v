@@ -41,7 +41,7 @@ fn scrypt_mac_init(password &u8, size int, mut mac ScryptMac) bool {
 	for i in 0 .. 64 { mac.pad[i] = 0x36 }
 	if size > 64 {
 		data_sha_init(mut mac.context)
-		if !data_sha_update(mut mac.context, password, usize(size)) || !data_sha_finish(&mac.context, unsafe { &mac.digest }) { return false }
+		if !data_sha_update(mut mac.context, password, uint(size)) || !data_sha_finish(&mac.context, unsafe { &mac.digest }) { return false }
 		for i in 0 .. 32 { mac.pad[i] ^= mac.digest[i] }
 	} else { unsafe { for i in 0 .. size { mac.pad[i] ^= password[i] } } }
 	data_sha_init(mut mac.inner)
@@ -57,14 +57,14 @@ fn scrypt_pbkdf_once(mut mac ScryptMac, salt &u8, size int, output &u8, length i
 		counter := u32(at / 32 + 1)
 		for i in 0 .. 4 { mac.counter[i] = u8(counter >> u32(24 - i * 8)) }
 		unsafe { C.memcpy(&mac.context, &mac.inner, sizeof(DataSha256)) }
-		if !data_sha_update(mut mac.context, salt, usize(size))
+		if !data_sha_update(mut mac.context, salt, uint(size))
 			|| !data_sha_update(mut mac.context, &mac.counter[0], 4)
 			|| !data_sha_finish(&mac.context, unsafe { &mac.digest }) { return false }
 		unsafe { C.memcpy(&mac.context, &mac.outer, sizeof(DataSha256)) }
 		if !data_sha_update(mut mac.context, &mac.digest[0], 32)
 			|| !data_sha_finish(&mac.context, unsafe { &mac.tag }) { return false }
 		part := if length - at < 32 { length - at } else { 32 }
-		unsafe { C.memcpy(output + at, &mac.tag[0], usize(part)) }
+		unsafe { C.memcpy(output + at, &mac.tag[0], uint(part)) }
 	}
 	return true
 }
@@ -132,7 +132,7 @@ fn scrypt_block_mix(mut work ScryptWork, r int) {
 			at := (i / 2 + if i % 2 == 0 { 0 } else { r }) * 16
 			C.memcpy(&work.y[at], &work.salsa[0], 64)
 		}
-		C.memcpy(&work.x[0], &work.y[0], usize(128 * r))
+		C.memcpy(&work.x[0], &work.y[0], uint(128 * r))
 	}
 }
 
@@ -140,10 +140,10 @@ fn scrypt_block_mix(mut work ScryptWork, r int) {
 // N=32768,r=8,p=3 profile; file metadata cannot choose an allocation or work cost.
 @[direct_array_access]
 fn scrypt_core(password &u8, size int, salt &u8, salt_size int, n int, r int, p int,
-	vector &u32, vector_bytes usize, output &u8) bool {
+	vector &u32, vector_bytes uint, output &u8) bool {
 	if size < 0 || size > 1024 || salt_size < 0 || salt_size > 1024 || n < 2 || n > sealed_scrypt_n
 		|| n & (n - 1) != 0 || r < 1 || r > 8 || p < 1 || p > 16
-		|| vector_bytes < usize(n * 128 * r) || vector == unsafe { nil } || unsafe { usize(vector) } % 4 != 0 || output == unsafe { nil }
+		|| vector_bytes < uint(n * 128 * r) || vector == unsafe { nil } || unsafe { uint(vector) } % 4 != 0 || output == unsafe { nil }
 		|| (size != 0 && password == unsafe { nil }) || (salt_size != 0 && salt == unsafe { nil }) { return false }
 	mut work := unsafe { &ScryptWork(C.alloca(sizeof(ScryptWork))) }
 	unsafe { *work = ScryptWork{} }
@@ -153,7 +153,7 @@ fn scrypt_core(password &u8, size int, salt &u8, salt_size int, n int, r int, p 
 	for lane in 0 .. p {
 		for i in 0 .. 32 * r { work.x[i] = u32(get_le(&work.b[0], lane * 128 * r + i * 4, 4)) }
 		unsafe {
-			for i in 0 .. n { C.memcpy(vector + i * 32 * r, &work.x[0], usize(128 * r)); scrypt_block_mix(mut *work, r) }
+			for i in 0 .. n { C.memcpy(vector + i * 32 * r, &work.x[0], uint(128 * r)); scrypt_block_mix(mut *work, r) }
 			for _ in 0 .. n {
 				// N<=32768: Integerify's low 32 bits determine the same N-1 mask.
 				row := int(work.x[(2 * r - 1) * 16] & u32(n - 1))

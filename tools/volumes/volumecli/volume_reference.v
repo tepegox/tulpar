@@ -25,10 +25,10 @@ fn show_volume_reference(before &u8, after &u8, disk &DiskKey, row &Request, cha
 		|| (after != unsafe { nil } && !volume_ciphertext_reference_fingerprint(after, unsafe { &new_hash })) { return false }
 	disk_identity(disk, &identity[0])
 	unsafe { for i in 0 .. 32 {
-		if C.snprintf(&old_digest[i * 2], usize(65 - i * 2), c'%02x', u32(before[80 + i])) != 2
-			|| C.snprintf(&old_fingerprint[i * 2], usize(65 - i * 2), c'%02x', u32(old_hash[i])) != 2 { return false }
-		if after != nil && (C.snprintf(&new_digest[i * 2], usize(65 - i * 2), c'%02x', u32(after[80 + i])) != 2
-			|| C.snprintf(&new_fingerprint[i * 2], usize(65 - i * 2), c'%02x', u32(new_hash[i])) != 2) { return false }
+		if C.snprintf(&old_digest[i * 2], uint(65 - i * 2), c'%02x', u32(before[80 + i])) != 2
+			|| C.snprintf(&old_fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(old_hash[i])) != 2 { return false }
+		if after != nil && (C.snprintf(&new_digest[i * 2], uint(65 - i * 2), c'%02x', u32(after[80 + i])) != 2
+			|| C.snprintf(&new_fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(new_hash[i])) != 2) { return false }
 	} }
 	if after == unsafe { nil } {
 		return C.printf(c'format=VINIXCH1 operation=show-ciphertext-reference mappings=1 algorithm=sha256 reference_sha256=%s\n', &old_fingerprint[0]) >= 0

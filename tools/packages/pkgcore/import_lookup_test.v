@@ -73,7 +73,7 @@ fn import_lookup_attempt(root int, item ImportLookupCase) {
 		if item.kind == 0o100000 {
 			assert node.bytes == 11 && node.mode & 0o111 == 0o111
 			mut bytes := [11]u8{}
-			assert C.read(node.fd, unsafe { &bytes[0] }, usize(bytes.len)) == bytes.len
+			assert C.read(node.fd, unsafe { &bytes[0] }, uint(bytes.len)) == bytes.len
 			assert unsafe { tos(&bytes[0], bytes.len) } == 'guest bytes'
 		}
 	} else {
@@ -136,9 +136,9 @@ fn test_prepared_lookup_returned_descriptors_survive_retired_inputs_and_host_roo
 	defer { C.close(rechecked) }
 	assert node.bytes == 11
 	mut bytes := [11]u8{}
-	assert C.read(node.fd, unsafe { &bytes[0] }, usize(bytes.len)) == bytes.len
+	assert C.read(node.fd, unsafe { &bytes[0] }, uint(bytes.len)) == bytes.len
 	assert unsafe { tos(&bytes[0], bytes.len) } == 'guest bytes'
-	assert C.read(rechecked, unsafe { &bytes[0] }, usize(bytes.len)) == bytes.len
+	assert C.read(rechecked, unsafe { &bytes[0] }, uint(bytes.len)) == bytes.len
 	assert unsafe { tos(&bytes[0], bytes.len) } == 'guest bytes'
 	println('IMPORT LOOKUP independent descriptors survive retired source text, path scratch and host namespace replacement PASS')
 }

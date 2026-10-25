@@ -13,11 +13,11 @@ fn encode_ciphertext_monitor(reference &u8, observed &u8, recovery bool, sample 
 	mut identity := [41]char{}; mut expected := [65]char{}; mut actual := [65]char{}; mut fingerprint := [65]char{}
 	disk_identity(&disk, &identity[0])
 	unsafe { for i in 0 .. 32 {
-		if C.snprintf(&expected[i * 2], usize(65 - i * 2), c'%02x', u32(reference[80 + i])) != 2
-			|| C.snprintf(&actual[i * 2], usize(65 - i * 2), c'%02x', u32(observed[i])) != 2
-			|| C.snprintf(&fingerprint[i * 2], usize(65 - i * 2), c'%02x', u32(digest[i])) != 2 { return 0 }
+		if C.snprintf(&expected[i * 2], uint(65 - i * 2), c'%02x', u32(reference[80 + i])) != 2
+			|| C.snprintf(&actual[i * 2], uint(65 - i * 2), c'%02x', u32(observed[i])) != 2
+			|| C.snprintf(&fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(digest[i])) != 2 { return 0 }
 	} }
-	length := int(C.snprintf(output, usize(2048), c'format=VINIXCM1 operation=monitored-ciphertext source=%s sample=%lu changed_samples=%lu session_changed=%lu\nformat=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
+	length := int(C.snprintf(output, uint(2048), c'format=VINIXCM1 operation=monitored-ciphertext source=%s sample=%lu changed_samples=%lu session_changed=%lu\nformat=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
 		if recovery { &char(c'recovery') } else { &char(c'volume') }, sample, changed_samples, u64(changed_samples != 0), u64(!changed), u64(changed), &fingerprint[0], disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags,
 		if changed { &char(c'changed') } else { &char(c'match') }, &expected[0], &actual[0]))
 	return if length > 0 && length < 2048 { length } else { 0 }

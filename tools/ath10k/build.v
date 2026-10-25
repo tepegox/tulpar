@@ -67,7 +67,9 @@ fn main() {
 		}
 	}
 	if gcc == '' { panic('No x86_64 musl libgcc in sysroot') }
-	linker := os.getenv_opt('LD_LLD') or { '/opt/homebrew/bin/ld.lld' }
+	linker := os.getenv_opt('LD_LLD') or {
+		os.find_abs_path_of_executable('ld.lld') or { panic('ld.lld is required to build wifi-ctl') }
+	}
 	run('clang', ['--target=x86_64-linux-musl', '--sysroot=' + sysroot, '-fuse-ld=' + linker, '-static',
 		'-Os', '-pthread', '-Wno-pointer-sign', '-Wno-incompatible-pointer-types', '-L' + gcc,
 		'-B' + gcc + '/', generated, '-o', out + '/rootfs/usr/bin/wifi-ctl'])

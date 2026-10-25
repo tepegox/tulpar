@@ -9,7 +9,7 @@ import tests.packages.elffixture
 fn C.getrlimit(int, voidptr) int
 fn C.setrlimit(int, voidptr) int
 fn C.setenv(&char, &char, int) int
-fn C.pwrite(int, voidptr, usize, i64) isize
+fn C.pwrite(int, voidptr, uint, i64) int
 struct SqliteBuilderLimit { current u64 maximum u64 }
 
 $if track_heap ? {
@@ -50,7 +50,7 @@ fn builder_write(path string, text string) ! {
 	fd := C.open(path.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC | C.O_CLOEXEC | C.O_NOFOLLOW, 0o644)
 	if fd < 0 { return error('cannot create SQLite builder fault fixture') }
 	defer { C.close(fd) }
-	assert C.write(fd, text.str, usize(text.len)) == text.len
+	assert C.write(fd, text.str, uint(text.len)) == text.len
 }
 
 fn builder_replace(path string, saved string) ! {

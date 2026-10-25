@@ -49,13 +49,13 @@ fn test_recovery_hmac_rfc4231_and_independent_streaming_boundaries() {
 	for case in 0 .. 4 {
 		key = [32]u8{}
 		for i in 0 .. keys[case].len { key[i] = keys[case][i] }
-		assert recovery_hmac(&key[0], data[case].data, usize(data[case].len), unsafe { &tag })
+		assert recovery_hmac(&key[0], data[case].data, uint(data[case].len), unsafe { &tag })
 		assert hex.encode(tag[..]) == digests[case]
 	}
 	for size in 0 .. 1024 {
 		for i in 0 .. 32 { key[i] = u8(i * 19 + size) }
 		message := []u8{len: size, init: u8(index * 23 + size)}
-		assert recovery_hmac(&key[0], message.data, usize(size), unsafe { &tag })
+		assert recovery_hmac(&key[0], message.data, uint(size), unsafe { &tag })
 		assert tag[..] == hmac.new(key[..], message, sha256.sum256, 64)
 	}
 	tag = [32]u8{init: 0xa1}

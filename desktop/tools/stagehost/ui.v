@@ -7,6 +7,11 @@ const subdirs_pattern = '\\bsubdirs\\s*:\\s*\\[([^]]*)\\]'
 const entries_pattern = '[\'"]([^\'"]+)[\'"]'
 
 pub fn staged_source(name string, source string) !json2.Any {
+	if name == 'monitor_linux.v' {
+		// Native Vinix presentation owns the display; the headless ui2 module
+		// must not pull X11 headers or libraries into the static desktop.
+		return json2.Any('module ui2\nfn native_monitor_refresh_rate() f64 { return 0 }\n'.bytes().hex())
+	}
 	if name in ['file_dialog_linux.v', 'message_box_linux.v'] {
 		return json2.Any(read(source, '')!.replace('os.execute(command)', "os.exec(['/bin/sh', '-c', command])").bytes().hex())
 	}

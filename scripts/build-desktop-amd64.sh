@@ -182,7 +182,7 @@ BUILD_STAMP="${VINIX_BUILD_STAMP:-$(date '+%m-%d %H:%M')}"
 echo "==> Compiling for x86_64-linux-musl..."
 "$CLANG" --target=x86_64-linux-musl -static -nostdinc -nostdlib \
     -isystem "$GCCLIB/include" -isystem "$SYSROOT/usr/include" \
-    -I "$APP_SRC" \
+    -I "$APP_SRC" -I "$BUILD_DIR/v-runtime" \
     -D_GNU_SOURCE -O2 -fno-stack-protector -w \
     "$SYSROOT/usr/lib/crt1.o" "$SYSROOT/usr/lib/crti.o" "$GCCLIB/crtbeginT.o" \
     "$BUILD_DIR/desktop.c" "$BUILD_DIR/execinfo.c" "$BUILD_DIR/gpu-present-soft.c" \

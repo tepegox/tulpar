@@ -96,7 +96,7 @@ fn read_data_manifest(fd i32, mut manifest DataManifest) bool {
 	}
 	mut bytes := [11392]u8{}; mut done := i64(0)
 	for done < info.st_size {
-		read := C.read(fd, unsafe { &bytes[done] }, usize(info.st_size - done))
+		read := C.read(fd, unsafe { &bytes[done] }, uint(info.st_size - done))
 		if read < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if read <= 0 || read > info.st_size - done { return false }; done += read
 	}

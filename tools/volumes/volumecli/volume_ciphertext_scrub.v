@@ -63,9 +63,9 @@ fn show_volume_ciphertext_scrub(data &u8, disk &DiskKey, row &Request) bool {
 	mut identity := [41]char{}; mut expected := [65]char{}; mut actual := [65]char{}; mut fingerprint := [65]char{}
 	disk_identity(disk, &identity[0])
 	unsafe { for i in 0 .. 32 {
-		if C.snprintf(&expected[i * 2], usize(65 - i * 2), c'%02x', u32(data[112 + i])) != 2
-			|| C.snprintf(&actual[i * 2], usize(65 - i * 2), c'%02x', u32(data[160 + i])) != 2
-			|| C.snprintf(&fingerprint[i * 2], usize(65 - i * 2), c'%02x', u32(data[192 + i])) != 2 { return false }
+		if C.snprintf(&expected[i * 2], uint(65 - i * 2), c'%02x', u32(data[112 + i])) != 2
+			|| C.snprintf(&actual[i * 2], uint(65 - i * 2), c'%02x', u32(data[160 + i])) != 2
+			|| C.snprintf(&fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(data[192 + i])) != 2 { return false }
 	} }
 	changed := get_le(data, 16, 4)
 	return C.printf(c'format=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s\n', u64(1) - changed, changed, &fingerprint[0]) >= 0

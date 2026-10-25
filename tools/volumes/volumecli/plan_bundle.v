@@ -146,7 +146,7 @@ fn read_bundle(fd i32, mut set PlanSet, trusted bool) bool {
 	mut bytes := [8768]u8{}
 	mut done := i64(0)
 	for done < info.st_size {
-		read := C.read(fd, unsafe { &bytes[done] }, usize(info.st_size - done))
+		read := C.read(fd, unsafe { &bytes[done] }, uint(info.st_size - done))
 		if read < 0 && unsafe { C.errno == C.EINTR } { continue
 		 }
 		if read <= 0 {

@@ -64,7 +64,7 @@ mut:
 
 // RFC 2104 HMAC with an exact 32-byte key and a full SHA-256 tag.
 @[direct_array_access]
-fn recovery_hmac(key &u8, data &u8, size usize, output &[32]u8) bool {
+fn recovery_hmac(key &u8, data &u8, size uint, output &[32]u8) bool {
 	mut work := unsafe { &RecoveryHmac(C.alloca(sizeof(RecoveryHmac))) }
 	unsafe { *work = RecoveryHmac{} }
 	defer { erase_key(work, sizeof(RecoveryHmac)) }

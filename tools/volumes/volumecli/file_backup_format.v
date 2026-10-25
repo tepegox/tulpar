@@ -37,7 +37,7 @@ fn file_version_valid(version &FileVersion) bool {
 }
 
 @[direct_array_access]
-fn file_backup_hash(bytes &u8, size usize, output &[32]u8) bool {
+fn file_backup_hash(bytes &u8, size uint, output &[32]u8) bool {
 	mut hash := unsafe { &DataSha256(C.alloca(sizeof(DataSha256))) }; data_sha_init(mut hash)
 	return data_sha_update(mut hash, bytes, size) && data_sha_finish(hash, output)
 }

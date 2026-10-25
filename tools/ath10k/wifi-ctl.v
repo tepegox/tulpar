@@ -14,7 +14,7 @@ import term.termios
 fn C.open(&char, int, ...int) int
 fn C.close(int) int
 fn C.ioctl(int, u64, ...voidptr) int
-fn C.read(int, voidptr, usize) isize
+fn C.read(int, voidptr, uint) int
 fn C.isatty(int) int
 fn C.perror(&char)
 fn C.signal(int, fn (int)) voidptr
@@ -61,7 +61,7 @@ fn set_word(data &u8, offset int, value u32) {
 	}
 }
 
-fn checked(fd int, request usize, data voidptr) {
+fn checked(fd int, request uint, data voidptr) {
 	if C.ioctl(fd, u64(request), data) < 0 {
 		C.perror(c'wifi-ctl')
 		exit(1)
