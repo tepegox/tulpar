@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module corepolicy
 
-pub const core_pass_marker = 'VINIX QEMU CORE: PASS'
-pub const core_persist_marker = 'VINIX QEMU CORE PERSIST: PASS'
+pub const core_pass_marker = 'TULPAR QEMU CORE: PASS'
+pub const core_persist_marker = 'TULPAR QEMU CORE PERSIST: PASS'
 pub const core_fail_markers = [
-	'VINIX QEMU CORE: FAIL'
+	'TULPAR QEMU CORE: FAIL'
 	'QEMU CORE FAIL line'
 	'FATAL EXCEPTION'
 	'KERNEL PANIC',

@@ -122,7 +122,7 @@ fn test_identity_parser_round_trips_all_guid_bytes_and_rejects_malformed_cli_bef
 		mut key := forget_key(8, 1); previous := key
 		assert !parse_disk_identity(text.str, mut key) && key == previous
 		unsafe {
-			mut args := [&char(c'vinix-volume'), &char(c'plan-forget-batch'), &char(c'/absent'), &char(c'mbr:12345678'), text.str, &char(nil)]!
+			mut args := [&char(c'tulpar-volume'), &char(c'plan-forget-batch'), &char(c'/absent'), &char(c'mbr:12345678'), text.str, &char(nil)]!
 			for command in [c'plan-forget-batch', c'plan-preview-forget-batch'] {
 				args[1] = &char(command)
 				assert run(5, &args[0]) == 2
@@ -133,7 +133,7 @@ fn test_identity_parser_round_trips_all_guid_bytes_and_rejects_malformed_cli_bef
 }
 
 fn test_full_v2_64_identity_cli_compacts_63_disks_and_retries_without_selecting_survivor() {
-	work := os.join_path(os.temp_dir(), 'vinix-forget-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-forget-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut set := PlanSet{}; mut names := []string{cap: 64}
@@ -155,7 +155,7 @@ fn test_full_v2_64_identity_cli_compacts_63_disks_and_retries_without_selecting_
 	mut expected := PlanSet{count: 1, slots: set.slots, regions: 64}; expected.plans[0] = set.plans[63]
 	for at in 0 .. 64 { expected.windows[at] = set.windows[at]; expected.windows[at].disk = 0 }
 	unsafe {
-		mut args := [68]&char{}; args[0] = &char(c'vinix-volume'); args[2] = path.str
+		mut args := [68]&char{}; args[0] = &char(c'tulpar-volume'); args[2] = path.str
 		for i in 0 .. 63 { args[3 + i] = names[62 - i].str }; args[66] = &char(c'mbr:ffffffff')
 		args[1] = &char(c'plan-preview-forget-batch'); assert run(67, &args[0]) == 0 && os.read_bytes(path)! == original
 		args[1] = &char(c'plan-forget-batch'); assert run(67, &args[0]) == 0

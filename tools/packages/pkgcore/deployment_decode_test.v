@@ -5,8 +5,8 @@ import json2
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 const deployment_decode_fixture = '{"format":2,"architecture":"aarch64","packages":["runtime","app"],"locked":[{"id":"runtime","version":"1.0.0","architecture":"all","repository":"publisher","public_key":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","minimum_sequence":18446744073709551615,"metadata_sha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"},{"id":"app","version":"2.0.0","architecture":"aarch64","repository":"publisher","public_key":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","minimum_sequence":1,"metadata_sha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"}]}'
@@ -150,7 +150,7 @@ fn test_deployment_decode_retires_success_and_refusal_allocations() {
 		large := deployment_decode_large(512, true)
 		wide := deployment_decode_large(4096, false)
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				mut document := decode_deployment(deployment_decode_fixture, 'aarch64')!
 				document.close()
@@ -174,7 +174,7 @@ fn test_deployment_decode_retires_success_and_refusal_allocations() {
 				if mut result := decode_deployment(prefix, 'aarch64') { result.close(); assert false } else { unsafe { err.free() } }
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('Deployment decode: 1000 format-1/2 success/refusal cycles, pin-512/root-4096 growth and all truncated prefixes retained ${kept} bytes')
 		assert kept == 0
 		unsafe { for text in invalid { text.free() }; (&array(&invalid)).free(); large.free(); wide.free() }

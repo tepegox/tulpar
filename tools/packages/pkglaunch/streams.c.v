@@ -7,29 +7,29 @@ import time
 #include <unistd.h>
 #include <fcntl.h>
 #include <poll.h>
-#define vinix_launch_iovec iovec
-#define vinix_launch_msghdr msghdr
-#define vinix_launch_cmsghdr cmsghdr
-#define vinix_launch_sendmsg sendmsg
-#define vinix_launch_recvmsg recvmsg
-#define vinix_launch_firsthdr CMSG_FIRSTHDR
-#define vinix_launch_nexthdr CMSG_NXTHDR
-#define vinix_launch_data CMSG_DATA
-#define vinix_launch_len CMSG_LEN
-#define vinix_launch_space CMSG_SPACE
-#define vinix_launch_poll poll
+#define tulpar_launch_iovec iovec
+#define tulpar_launch_msghdr msghdr
+#define tulpar_launch_cmsghdr cmsghdr
+#define tulpar_launch_sendmsg sendmsg
+#define tulpar_launch_recvmsg recvmsg
+#define tulpar_launch_firsthdr CMSG_FIRSTHDR
+#define tulpar_launch_nexthdr CMSG_NXTHDR
+#define tulpar_launch_data CMSG_DATA
+#define tulpar_launch_len CMSG_LEN
+#define tulpar_launch_space CMSG_SPACE
+#define tulpar_launch_poll poll
 
-struct C.vinix_launch_iovec { mut: iov_base voidptr iov_len uint }
-struct C.vinix_launch_msghdr { mut: msg_iov &C.vinix_launch_iovec msg_iovlen uint msg_control voidptr msg_controllen uint msg_flags int }
-struct C.vinix_launch_cmsghdr { mut: cmsg_len uint cmsg_level int cmsg_type int }
-fn C.vinix_launch_sendmsg(int, &C.vinix_launch_msghdr, int) int
-fn C.vinix_launch_recvmsg(int, &C.vinix_launch_msghdr, int) int
-fn C.vinix_launch_firsthdr(&C.vinix_launch_msghdr) &C.vinix_launch_cmsghdr
-fn C.vinix_launch_nexthdr(&C.vinix_launch_msghdr, &C.vinix_launch_cmsghdr) &C.vinix_launch_cmsghdr
-fn C.vinix_launch_data(&C.vinix_launch_cmsghdr) voidptr
-fn C.vinix_launch_len(uint) uint
-fn C.vinix_launch_space(uint) uint
-fn C.vinix_launch_poll(voidptr, u64, int) int
+struct C.tulpar_launch_iovec { mut: iov_base voidptr iov_len uint }
+struct C.tulpar_launch_msghdr { mut: msg_iov &C.tulpar_launch_iovec msg_iovlen uint msg_control voidptr msg_controllen uint msg_flags int }
+struct C.tulpar_launch_cmsghdr { mut: cmsg_len uint cmsg_level int cmsg_type int }
+fn C.tulpar_launch_sendmsg(int, &C.tulpar_launch_msghdr, int) int
+fn C.tulpar_launch_recvmsg(int, &C.tulpar_launch_msghdr, int) int
+fn C.tulpar_launch_firsthdr(&C.tulpar_launch_msghdr) &C.tulpar_launch_cmsghdr
+fn C.tulpar_launch_nexthdr(&C.tulpar_launch_msghdr, &C.tulpar_launch_cmsghdr) &C.tulpar_launch_cmsghdr
+fn C.tulpar_launch_data(&C.tulpar_launch_cmsghdr) voidptr
+fn C.tulpar_launch_len(uint) uint
+fn C.tulpar_launch_space(uint) uint
+fn C.tulpar_launch_poll(voidptr, u64, int) int
 fn C.getgroups(int, &u32) int
 fn C.read(int, voidptr, uint) int
 fn C.write(int, voidptr, uint) int
@@ -48,7 +48,7 @@ fn ready(fd int, deadline u64) ! {
 	now := time.sys_mono_now()
 	if now >= deadline { return error('isolated package input timed out') }
 	mut polling := Poll{ fd: i32(fd), events: 1 }
-	if C.vinix_launch_poll(voidptr(&polling), 1, int((deadline - now) / 1_000_000)) <= 0 { return error('isolated package input timed out') }
+	if C.tulpar_launch_poll(voidptr(&polling), 1, int((deadline - now) / 1_000_000)) <= 0 { return error('isolated package input timed out') }
 }
 
 fn read_exact(fd int, data voidptr, length int, deadline u64) ! {
@@ -99,42 +99,42 @@ pub fn receive_request(fd int) !Request {
 pub fn send_streams(fd int, streams [3]i32) ! {
 	mut byte := u8(`s`)
 	mut control := [8]u64{}
-	mut vector := C.vinix_launch_iovec{ iov_base: &byte, iov_len: 1 }
-	mut message := C.vinix_launch_msghdr{ msg_iov: &vector, msg_iovlen: 1, msg_control: &control[0], msg_controllen: C.vinix_launch_space(3 * sizeof(i32)) }
-	header := C.vinix_launch_firsthdr(&message)
+	mut vector := C.tulpar_launch_iovec{ iov_base: &byte, iov_len: 1 }
+	mut message := C.tulpar_launch_msghdr{ msg_iov: &vector, msg_iovlen: 1, msg_control: &control[0], msg_controllen: C.tulpar_launch_space(3 * sizeof(i32)) }
+	header := C.tulpar_launch_firsthdr(&message)
 	unsafe {
-		header.cmsg_level = C.SOL_SOCKET; header.cmsg_type = C.SCM_RIGHTS; header.cmsg_len = C.vinix_launch_len(3 * sizeof(i32))
-		vmemcpy(C.vinix_launch_data(header), &streams[0], int(3 * sizeof(i32)))
+		header.cmsg_level = C.SOL_SOCKET; header.cmsg_type = C.SCM_RIGHTS; header.cmsg_len = C.tulpar_launch_len(3 * sizeof(i32))
+		vmemcpy(C.tulpar_launch_data(header), &streams[0], int(3 * sizeof(i32)))
 	}
-	if C.vinix_launch_sendmsg(fd, &message, 0) != 1 { return error('cannot pass application standard streams') }
+	if C.tulpar_launch_sendmsg(fd, &message, 0) != 1 { return error('cannot pass application standard streams') }
 }
 
 pub fn receive_streams(fd int) ![3]i32 {
 	ready(fd, time.sys_mono_now() + 5_000_000_000)!
 	mut byte := u8(0)
 	mut control := [128]u64{} // collect and close all delivered rights on malformed input
-	mut vector := C.vinix_launch_iovec{ iov_base: &byte, iov_len: 1 }
-	mut message := C.vinix_launch_msghdr{ msg_iov: &vector, msg_iovlen: 1, msg_control: &control[0], msg_controllen: uint(sizeof(control)) }
-	count := C.vinix_launch_recvmsg(fd, &message, 0)
+	mut vector := C.tulpar_launch_iovec{ iov_base: &byte, iov_len: 1 }
+	mut message := C.tulpar_launch_msghdr{ msg_iov: &vector, msg_iovlen: 1, msg_control: &control[0], msg_controllen: uint(sizeof(control)) }
+	count := C.tulpar_launch_recvmsg(fd, &message, 0)
 	mut streams := [i32(-1), -1, -1]!
 	mut found := 0
 	mut headers := 0
 	mut valid := count == 1 && byte == `s` && message.msg_flags & C.MSG_CTRUNC == 0
 	mut accepted := false
 	defer { if !accepted { for stream in streams { if stream >= 0 { C.close(stream) } } } }
-	mut header := C.vinix_launch_firsthdr(&message)
+	mut header := C.tulpar_launch_firsthdr(&message)
 	unsafe {
 		for header != nil {
 			headers++
-			if header.cmsg_level != C.SOL_SOCKET || header.cmsg_type != C.SCM_RIGHTS || header.cmsg_len < C.vinix_launch_len(0) { valid = false; break }
-			bytes := header.cmsg_len - C.vinix_launch_len(0)
+			if header.cmsg_level != C.SOL_SOCKET || header.cmsg_type != C.SCM_RIGHTS || header.cmsg_len < C.tulpar_launch_len(0) { valid = false; break }
+			bytes := header.cmsg_len - C.tulpar_launch_len(0)
 			if bytes % sizeof(i32) != 0 { valid = false }
 			for index in 0 .. int(bytes / sizeof(i32)) {
-				stream := (&i32(C.vinix_launch_data(header)))[index]
+				stream := (&i32(C.tulpar_launch_data(header)))[index]
 				if found < 3 { streams[found] = stream } else { C.close(stream); valid = false }
 				found++
 			}
-			header = C.vinix_launch_nexthdr(&message, header)
+			header = C.tulpar_launch_nexthdr(&message, header)
 		}
 	}
 	if !valid || found != 3 || headers != 1 { return error('isolated launch requires exactly three standard streams') }

@@ -16,11 +16,11 @@ struct C.pthread_barrier_t {}
 
 @[c_extern]
 __global C.stdout &C.FILE
-struct C.vinix_hv_create {
+struct C.tulpar_hv_create {
 	memory_size u64
 }
 
-struct C.vinix_hv_exit {
+struct C.tulpar_hv_exit {
 	reason u32
 }
 
@@ -81,7 +81,7 @@ fn slab_snapshot() [32]u64 {
 			mut size := u64(0)
 			mut repeated_size := u64(0)
 			mut objects := u64(0)
-			if C.sscanf(&buffer[i], &char(C.VINIX_HV_SLAB_INPUT), &size, &repeated_size, &objects) == 3 {
+			if C.sscanf(&buffer[i], &char(C.TULPAR_HV_SLAB_INPUT), &size, &repeated_size, &objects) == 3 {
 				check(row < 32 && size == repeated_size, 73)
 				live[row] = objects
 				row++
@@ -96,8 +96,8 @@ fn create_worker(argument voidptr) voidptr {
 	unsafe {
 		mut race := &Race(argument)
 		C.pthread_barrier_wait(race.barrier)
-		mut request := C.vinix_hv_create{ memory_size: 16 * 1024 * 1024 }
-		race.result = C.ioctl(race.fd, usize(C.VINIX_HV_CREATE_VM), &request)
+		mut request := C.tulpar_hv_create{ memory_size: 16 * 1024 * 1024 }
+		race.result = C.ioctl(race.fd, usize(C.TULPAR_HV_CREATE_VM), &request)
 		race.error = *C.__errno_location()
 		return nil
 	}
@@ -107,13 +107,13 @@ fn exercise(iteration int) {
 	unsafe {
 		fd := C.open(c'/dev/hypervisor', C.O_RDWR)
 		check(fd >= 0, 72)
-		mut request := C.vinix_hv_create{}
-		check(C.ioctl(fd, usize(C.VINIX_HV_CREATE_VM), &request) == -1 && *C.__errno_location() == C.EINVAL, 74)
-		request.memory_size = u64(C.VINIX_HV_MAX_GUEST_MEMORY) + 1
-		check(C.ioctl(fd, usize(C.VINIX_HV_CREATE_VM), &request) == -1 && *C.__errno_location() == C.EINVAL, 76)
+		mut request := C.tulpar_hv_create{}
+		check(C.ioctl(fd, usize(C.TULPAR_HV_CREATE_VM), &request) == -1 && *C.__errno_location() == C.EINVAL, 74)
+		request.memory_size = u64(C.TULPAR_HV_MAX_GUEST_MEMORY) + 1
+		check(C.ioctl(fd, usize(C.TULPAR_HV_CREATE_VM), &request) == -1 && *C.__errno_location() == C.EINVAL, 76)
 		request.memory_size = 8 * 1024 * 1024 + 1
-		check(C.ioctl(fd, usize(C.VINIX_HV_CREATE_VM), &request) == 0, 78)
-		check(C.ioctl(fd, usize(C.VINIX_HV_CREATE_VM), &request) == -1 && *C.__errno_location() == C.EBUSY, 79)
+		check(C.ioctl(fd, usize(C.TULPAR_HV_CREATE_VM), &request) == 0, 78)
+		check(C.ioctl(fd, usize(C.TULPAR_HV_CREATE_VM), &request) == -1 && *C.__errno_location() == C.EBUSY, 79)
 		mut input := [8192]u8{}
 		mut output := [8192]u8{}
 		for i in 0 .. input.len { input[i] = u8(i * 31 + iteration + 1) }
@@ -124,8 +124,8 @@ fn exercise(iteration int) {
 		}
 		check(C.pwrite(fd, &input[0], 1, 8 * 1024 * 1024 + 4096) == -1 && *C.__errno_location() == C.EFBIG, 88)
 		check(C.pread(fd, &output[0], 1, 8 * 1024 * 1024 + 4096) == 0, 89)
-		mut exit := C.vinix_hv_exit{}
-		check(C.ioctl(fd, usize(C.VINIX_HV_RUN), &exit) == -1 && *C.__errno_location() == C.EIO, 91)
+		mut exit := C.tulpar_hv_exit{}
+		check(C.ioctl(fd, usize(C.TULPAR_HV_RUN), &exit) == -1 && *C.__errno_location() == C.EIO, 91)
 		check(C.mmap(nil, 4096, C.PROT_READ | C.PROT_WRITE, C.MAP_PRIVATE, fd, 0) == voidptr(C.MAP_FAILED)
 			&& *C.__errno_location() == C.EINVAL, 92)
 		check(C.mmap(nil, 4096, C.PROT_READ, C.MAP_SHARED, fd, 8 * 1024 * 1024 + 4096) == voidptr(C.MAP_FAILED)
@@ -159,8 +159,8 @@ pub fn run() i32 {
 	unsafe {
 		C.setvbuf(C.stdout, nil, C._IONBF, 0)
 		large := C.open(c'/dev/hypervisor', C.O_RDWR)
-		mut maximum := C.vinix_hv_create{ memory_size: u64(C.VINIX_HV_MAX_GUEST_MEMORY) }
-		check(large >= 0 && C.ioctl(large, usize(C.VINIX_HV_CREATE_VM), &maximum) == 0, 170)
+		mut maximum := C.tulpar_hv_create{ memory_size: u64(C.TULPAR_HV_MAX_GUEST_MEMORY) }
+		check(large >= 0 && C.ioctl(large, usize(C.TULPAR_HV_CREATE_VM), &maximum) == 0, 170)
 		mut edge := u8(0x8d)
 		check(C.pwrite(large, &edge, 1, isize(maximum.memory_size - 1)) == 1, 172)
 		edge = 0
@@ -200,7 +200,7 @@ pub fn run() i32 {
 		C.usleep(8_000_000)
 		after := slab_snapshot()
 		for i in 0 .. before.len {
-			C.printf(&char(C.VINIX_HV_SLAB_OUTPUT), i, before[i], after[i])
+			C.printf(&char(C.TULPAR_HV_SLAB_OUTPUT), i, before[i], after[i])
 			// Timer/reaper and the one pthread race introduce bounded noise.
 			// One retained VM/session/box per iteration would grow by 100.
 			check(after[i] <= before[i] + 4, 151)

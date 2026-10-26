@@ -37,7 +37,7 @@ the existing append encoder with an explicitly owned, growing buffer.
 v -nocache -no-skip-unused -gc none -manualfree \
   -path '@vlib|@vmodules|.|tools/accounts' \
   -o /tmp/state-preflight tests/packages/state-preflight-check.v
-/tmp/state-preflight /tmp/new-preflight-work /path/to/vinix-package
+/tmp/state-preflight /tmp/new-preflight-work /path/to/tulpar-package
 ```
 
 The [target controller](state-preflight-runtime-check.v) runs the core and signed

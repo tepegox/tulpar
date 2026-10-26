@@ -72,7 +72,7 @@ fn deployment_navigation_review(empty bool) pkgprotocol.Review {
 }
 
 fn software_deployment_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_DEPLOYMENT_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_DEPLOYMENT_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if mode.starts_with('review-') && args[1] == 'deployment-review' {
 		assert args.len == 3
@@ -91,7 +91,7 @@ fn software_deployment_navigation_service_fixture(args []string) !bool {
 		flush_stdout()
 		mut release := u8(0); assert C.read(0, &release, 1) == 1 && release == `!`
 		if mode == 'apply-failed' { eprintln('Deployment was not activated: disk space changed. Review again.'); exit(23) }
-		os.write_file(os.getenv('VINIX_SOFTWARE_DEPLOYMENT_FIXTURE'), json2.encode(args[2..]))!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_DEPLOYMENT_FIXTURE'), json2.encode(args[2..]))!
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete', current: 1, total: 1 }))
 		return true
 	}
@@ -109,9 +109,9 @@ fn wait_for_deployment_output(mut app SoftwareApp, progress bool) {
 
 fn check_software_deployment_navigation() ! {
 	check_software_distribution_path_paste()!
-	receipt := os.temp_dir() + '/vinix-deployment-navigation-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_DEPLOYMENT_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_DEPLOYMENT_FIXTURE'); os.unsetenv('VINIX_SOFTWARE_DEPLOYMENT_NAVIGATION') }
+	receipt := os.temp_dir() + '/tulpar-deployment-navigation-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_DEPLOYMENT_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_DEPLOYMENT_FIXTURE'); os.unsetenv('TULPAR_SOFTWARE_DEPLOYMENT_NAVIGATION') }
 	mut app := SoftwareApp{ service_path: os.executable(), output: []u8{cap: 8192}, query: 'kept search'.bytes(), filter: 1 }
 	defer { app.close_app() }
 	for path in [deployment_navigation_path, '/empty.json']! {
@@ -122,7 +122,7 @@ fn check_software_deployment_navigation() ! {
 				form := app.build(ui2.rect(0, 0, 320, 240))!
 				assert form.children.any(it.id == 'software.deployment.back') && form.children.any(it.id == 'software.status')
 				free_window_tree(form)
-				os.setenv('VINIX_SOFTWARE_DEPLOYMENT_NAVIGATION', mode, true)
+				os.setenv('TULPAR_SOFTWARE_DEPLOYMENT_NAVIGATION', mode, true)
 				app.handle('software.deployment.review')!; pid := app.worker.pid
 				wait_for_deployment_output(mut app, false)
 				assert app.deployment_review_running() && app.prepare_close() && !app.review_ready && !app.admin_prompt
@@ -143,7 +143,7 @@ fn check_software_deployment_navigation() ! {
 				assert app.review == '' && app.deployment_pending == '' && app.output.len == 0 && !app.output_truncated && !app.poll()
 				assert app.deployment_mode && editor_bytes_text(app.deployment_path) == path && app.status.contains('review stopped')
 				// Fresh retry preserves the literal filename and obtains a new proposal.
-				os.unsetenv('VINIX_SOFTWARE_DEPLOYMENT_NAVIGATION')
+				os.unsetenv('TULPAR_SOFTWARE_DEPLOYMENT_NAVIGATION')
 				app.handle('software.deployment.review')!; wait_for_software(mut app)
 				assert app.review_ready && app.review_snapshot.operation == 'deploy'
 				for input in ['\x1b', '\r', '\n', '\x01', '\x08', '\x7f']! { app.paste_input(input) }
@@ -168,7 +168,7 @@ fn check_software_deployment_navigation() ! {
 			assert app.review_ready
 			// Confirmation uses the reviewed filename even if form storage changes.
 			software_repository_text(mut app.deployment_path, '/changed-form.json')
-			os.setenv('VINIX_SOFTWARE_DEPLOYMENT_NAVIGATION', mode, true)
+			os.setenv('TULPAR_SOFTWARE_DEPLOYMENT_NAVIGATION', mode, true)
 			app.handle('software.confirm')!; pid := app.worker.pid
 			wait_for_deployment_output(mut app, true)
 			assert !app.deployment_review_running() && !app.prepare_close() && app.worker.args == ['--progress', 'deployment-apply', 'c'.repeat(64), path]
@@ -198,7 +198,7 @@ fn check_software_deployment_navigation() ! {
 				assert !app.deployment_mode && app.review == ''
 				os.rm(receipt)!
 			}
-			os.unsetenv('VINIX_SOFTWARE_DEPLOYMENT_NAVIGATION')
+			os.unsetenv('TULPAR_SOFTWARE_DEPLOYMENT_NAVIGATION')
 		}
 	}
 	// Subflows keep their own compact views and lifecycle controls.
@@ -227,7 +227,7 @@ fn check_software_deployment_navigation_memory() ! {
 		app.initialize_deployment_field()
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for text in texts {
 					app.deployment_mode = true
@@ -255,7 +255,7 @@ fn check_software_deployment_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'deployment navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'deployment navigation retained ${kept} bytes'
 		println('Software deployment navigation: 1000 normal/empty form/review/details/failure render, cancel and retirement cycles retain zero tracked bytes')
 		println('Software deployment path paste: 1000 literal/rejected/selected/empty input cycles retain zero tracked bytes')
 		println('Software deployment plan reader: 1000 normal/removal-only/decode/read/item/page/render/resize/ignored-confirm/Back/cancel/cache-retirement cycles retain zero tracked bytes')

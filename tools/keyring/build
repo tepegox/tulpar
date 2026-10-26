@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Build vinix-keyring as a static program for a Vinix machine.
+# Build tulpar-keyring as a static program for a Tulpar machine.
 #
 #   tools/keyring/build aarch64|x86_64 ROOT
 #
@@ -17,14 +17,14 @@ root=$2
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 . "$repo/build-support/find-v.sh"
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-keyring.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-keyring.XXXXXX")
 trap 'rm -rf "$work"' 0
 mkdir -p "$root/usr/bin"
-output="$root/usr/bin/vinix-keyring"
+output="$root/usr/bin/tulpar-keyring"
 
 case "$arch" in
     aarch64)
-        sysroot=${VINIX_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
+        sysroot=${TULPAR_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
         "$V" -os linux -arch arm64 -gc none -d no_backtrace -path "@vlib|@vmodules|$repo/tools/accounts" \
             -o "$work/program.c" \
             "$repo/tools/keyring/keyring.v"

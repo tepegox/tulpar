@@ -46,7 +46,7 @@ fn recovery_inspect_check(backup string, key string, directory string, sector u6
 	saved := C.dup(1); target := C.open(output.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	assert saved >= 0 && target >= 0 && C.dup2(target, 1) == 1 && C.close(target) == 0
 	unsafe {
-		args := [&char(c'vinix-volume'), if online { &char(c'discover-recovery-volume') } else { &char(c'show-recovery-volume') }, backup.str, key.str, &char(nil)]!
+		args := [&char(c'tulpar-volume'), if online { &char(c'discover-recovery-volume') } else { &char(c'show-recovery-volume') }, backup.str, key.str, &char(nil)]!
 		assert run(4, &args[0]) == expected
 	}
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
@@ -58,7 +58,7 @@ fn recovery_inspect_check(backup string, key string, directory string, sector u6
 }
 
 fn test_recovery_inspection_reports_only_authenticated_metadata_and_discovers_without_import_or_writable_open() {
-	work := os.join_path(os.temp_dir(), 'vinix-recovery-inspect-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-recovery-inspect-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; os.mkdir(work + '/dev')!; defer { os.rmdir_all(work) or {} }
 	backup := work + '/backup'; key := work + '/key'; directory := work + '/dev'
 	mut recovery := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}

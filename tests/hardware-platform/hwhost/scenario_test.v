@@ -183,7 +183,7 @@ fn test_an_unknown_placeholder_is_an_error() {
 }
 
 fn test_a_state_path_that_would_need_quoting_is_refused() {
-	check_state_path('/tmp/vinix-hwtest/x86_64/ahci')!
+	check_state_path('/tmp/tulpar-hwtest/x86_64/ahci')!
 	check_state_path('/tmp/with space/and-dash_1.2')!
 	for bad in ['/tmp/a,b', '/tmp/a"b', '/tmp/a\\b', '/tmp/{state}', '/tmp/a\nb'] {
 		check_state_path(bad) or { continue }
@@ -290,7 +290,7 @@ fn test_the_d3_scenarios_look_at_the_card_in_the_middle_of_each_sleep() {
 	}
 	// The same machine told not to: the card must still be there.
 	off := find_scenario(scenarios, 'pci-d3-off') or { panic('no pci-d3-off scenario') }
-	assert off.cmdline.contains('vinix.pci_d3=off')
+	assert off.cmdline.contains('tulpar.pci_d3=off')
 	assert off.actions.len == 1 && off.actions[0].answer_has == d3_card_memory
 }
 
@@ -305,7 +305,7 @@ fn test_the_wake_scenarios_read_the_enable_register_while_the_machine_is_suspend
 	off := find_scenario(scenarios, 'suspend-deep-wake-off') or {
 		panic('no suspend-deep-wake-off scenario')
 	}
-	assert off.cmdline.contains('vinix.acpi_wake=off')
+	assert off.cmdline.contains('tulpar.acpi_wake=off')
 	assert off.actions.len == 1 && off.actions[0].answer_has == wake_none
 	assert off.writings.len == 1 && off.writings[0].text == ''
 }
@@ -353,7 +353,7 @@ fn test_the_backlight_record_is_what_the_two_panels_are_told() {
 	off := find_scenario(scenarios, 'acpi-backlight-off') or {
 		panic('no acpi-backlight-off scenario')
 	}
-	assert off.cmdline.contains('vinix.acpi_backlight=off') && off.writings[0].text == ''
+	assert off.cmdline.contains('tulpar.acpi_backlight=off') && off.writings[0].text == ''
 }
 
 fn test_the_usb_scenario_gives_the_machine_no_other_keyboard() {

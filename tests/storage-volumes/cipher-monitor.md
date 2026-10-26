@@ -10,10 +10,10 @@ physical ciphertext with retained original reference/device owners. See
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-cipher-monitor --work /tmp/cipher-monitor-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --cipher-monitor --work /tmp/cipher-monitor-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --cipher-monitor --work /tmp/cipher-monitor-x86
 ```
 

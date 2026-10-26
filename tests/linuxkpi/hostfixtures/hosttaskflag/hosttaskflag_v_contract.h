@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUXKPI_HOSTTASKFLAG_V_CONTRACT_H
-#define VINIX_LINUXKPI_HOSTTASKFLAG_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_HOSTTASKFLAG_V_CONTRACT_H
+#define TULPAR_LINUXKPI_HOSTTASKFLAG_V_CONTRACT_H
 #include "host_model_v_contract.h"
 #include <linux/vtime.h>
 _Static_assert(PF_VCPU == 0x00000001, "Linux 6.6 guest-task flag");

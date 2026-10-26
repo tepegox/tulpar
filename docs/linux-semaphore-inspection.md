@@ -4,14 +4,14 @@ The 2026-10-24 qualification covers native musl ELF64 applications on AArch64
 and x86-64. `semctl(IPC_INFO)`, `SEM_INFO`, `SEM_STAT` and `SEM_STAT_ANY` now
 report semaphore limits, usage and metadata instead of returning `EINVAL`.
 The [maintained probe](../tests/linux-compat/seminfofixture/core.v) uses raw
-syscalls; the same executable runs on each Vinix candidate, its baseline and
+syscalls; the same executable runs on each Tulpar candidate, its baseline and
 Linux 6.12.51.
 
 | Result per architecture | Checks | Failures |
 | --- | ---: | ---: |
 | Linux reference | 11,965 | 0 |
-| Original Vinix kernel | 11,965 | 11,130 |
-| Fixed production Vinix kernel | 11,965 | 0 |
+| Original Tulpar kernel | 11,965 | 11,130 |
+| Fixed production Tulpar kernel | 11,965 | 0 |
 
 The probe covers the 40-byte native `seminfo` layout, configured limits and
 live set/semaphore counts; metadata matches `IPC_STAT` byte for byte (104 bytes
@@ -68,7 +68,7 @@ v run tests/linux-compat/seminfo-evidence.v --self-test
 v run tests/linux-compat/seminfo-evidence.v check /Users/alex/.cache/vinix-linux-compat/seminfo-20261024/evidence-final
 ```
 
-Vinix reports its own ceilings: 4,096 sets, 32 semaphores per set, 32 operations
+Tulpar reports its own ceilings: 4,096 sets, 32 semaphores per set, 32 operations
 per vector and a maximum value of 32,767. Live counts concern the initial IPC
 namespace. `SEM_UNDO`, IPC namespace isolation/mapping, independent filesystem
 IDs, concurrent credential/removal races, GNU libc, ELF32 and translated

@@ -15,13 +15,13 @@ struct OutputLimit { current u64 maximum u64 }
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn test_https_failure_explanations_retire_owned_errors() {
 	$if track_heap ? {
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for code in [1, 2, 3, 4, 5, 6, 7, 16, 18, 22, 23, 27, 28, 33, 35, 36, 47, 48, 52, 55, 56, 58, 59, 60, 63, 67, 77, 80, 82, 83, 90, 91, 92, 94, 95, 96, 97, 98, 126, 127, 143, 199, 42]! {
 					err := https_transport_failure(code, 'https://fixture/repository', '/usr/bin/curl')
@@ -31,7 +31,7 @@ fn test_https_failure_explanations_retire_owned_errors() {
 				}
 			}
 		}
-		assert C.vinix_heap_end() == 0
+		assert C.tulpar_heap_end() == 0
 		println('HTTPS DIAGNOSTICS 1000 cycles across 43 statuses retire owned messages and errors with zero tracked bytes PASS')
 	}
 }
@@ -39,8 +39,8 @@ fn test_https_failure_explanations_retire_owned_errors() {
 fn test_https_transport_diagnostics_preserve_prefixes_and_bounded_retry() {
 	work := output_work()!; defer { os.rmdir_all(work) or {} }
 	fixture := output_fixture(work)!
-	os.write_file(work + '/calls', '')!; os.setenv('VINIX_OUTPUT_CALLS', work + '/calls', true)
-	defer { os.unsetenv('VINIX_OUTPUT_CALLS') }
+	os.write_file(work + '/calls', '')!; os.setenv('TULPAR_OUTPUT_CALLS', work + '/calls', true)
+	defer { os.unsetenv('TULPAR_OUTPUT_CALLS') }
 	path := work + '/payload'; prefix := 'retained authenticated prefix'
 	for code, expected in {1: 'redirect protocol', 2: 'initialize', 3: 'URL is malformed', 4: 'required feature',
 		5: 'proxy hostname', 6: 'repository hostname', 7: 'cannot connect', 16: 'protocol connection',
@@ -81,14 +81,14 @@ fn test_https_transport_diagnostics_preserve_prefixes_and_bounded_retry() {
 }
 
 fn output_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-output-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-output-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }
 
 fn output_fixture(work string) !string {
 	if os.args.len == 3 && os.args[1] == '--producer' { return os.args[2] }
-	if executable := os.getenv_opt('VINIX_PACKAGE_OUTPUT_FIXTURE') { return executable }
+	if executable := os.getenv_opt('TULPAR_PACKAGE_OUTPUT_FIXTURE') { return executable }
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
 	mut compiler := os.new_process(v)
 	compiler.set_args(['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-o', work + '/fixture', 'tests/packages/output-fixture.v'])
@@ -99,7 +99,7 @@ fn output_fixture(work string) !string {
 
 fn output_event(event pkgprotocol.Progress) {
 	event.validate() or { panic(err) }
-	mut file := os.open_append(os.getenv('VINIX_OUTPUT_EVENTS')) or { panic(err) }
+	mut file := os.open_append(os.getenv('TULPAR_OUTPUT_EVENTS')) or { panic(err) }
 	file.writeln(event.current.str()) or { panic(err) }; file.close()
 }
 
@@ -109,16 +109,16 @@ fn output_mutate(phase string, path string) ! {
 	os.write_file(path + '.changed', 'once')!
 	if os.file_name(path) == 'grow' {
 		mut file := os.open_file(path, 'a', 0o600)!
-		assert C.ftruncate(file.fd, os.file_size(os.getenv('VINIX_OUTPUT_SOURCE')) + 1) == 0
+		assert C.ftruncate(file.fd, os.file_size(os.getenv('TULPAR_OUTPUT_SOURCE')) + 1) == 0
 		file.close(); return
 	}
 	os.rename(path, path + '.saved')!
-	os.symlink(os.getenv('VINIX_OUTPUT_OUTSIDE'), path)!
+	os.symlink(os.getenv('TULPAR_OUTPUT_OUTSIDE'), path)!
 }
 
 fn output_no_children() {
 	mut status := i32(0)
-	assert C.vinix_package_waitpid(-1, &status, C.WNOHANG) == -1 && C.errno == C.ECHILD
+	assert C.tulpar_package_waitpid(-1, &status, C.WNOHANG) == -1 && C.errno == C.ECHILD
 }
 
 fn test_https_output_capture_bounded_writes_recovery_progress_and_descriptor_retirement() {
@@ -129,14 +129,14 @@ fn test_https_output_capture_bounded_writes_recovery_progress_and_descriptor_ret
 	os.write_file(work + '/source', text)!
 	os.write_file(work + '/calls', '')!
 	os.write_file(work + '/events', '')!
-	for key, value in {'VINIX_OUTPUT_SOURCE': work + '/source', 'VINIX_OUTPUT_CALLS': work + '/calls',
-		'VINIX_OUTPUT_EVENTS': work + '/events', 'VINIX_OUTPUT_OUTSIDE': work + '/outside'} { os.setenv(key, value, true) }
-	defer { for key in ['VINIX_OUTPUT_SOURCE', 'VINIX_OUTPUT_CALLS', 'VINIX_OUTPUT_EVENTS', 'VINIX_OUTPUT_OUTSIDE', 'VINIX_OUTPUT_TARGET', 'VINIX_OUTPUT_LOCK'] { os.unsetenv(key) } }
+	for key, value in {'TULPAR_OUTPUT_SOURCE': work + '/source', 'TULPAR_OUTPUT_CALLS': work + '/calls',
+		'TULPAR_OUTPUT_EVENTS': work + '/events', 'TULPAR_OUTPUT_OUTSIDE': work + '/outside'} { os.setenv(key, value, true) }
+	defer { for key in ['TULPAR_OUTPUT_SOURCE', 'TULPAR_OUTPUT_CALLS', 'TULPAR_OUTPUT_EVENTS', 'TULPAR_OUTPUT_OUTSIDE', 'TULPAR_OUTPUT_TARGET', 'TULPAR_OUTPUT_LOCK'] { os.unsetenv(key) } }
 	path := work + '/payload'
-	os.setenv('VINIX_OUTPUT_TARGET', path, true)
+	os.setenv('TULPAR_OUTPUT_TARGET', path, true)
 	guard := acquire(work + '/store')!
 	defer { guard.release() }
-	os.setenv('VINIX_OUTPUT_LOCK', work + '/store/lock', true)
+	os.setenv('TULPAR_OUTPUT_LOCK', work + '/store/lock', true)
 	options := HttpsOutputOptions{ program: fixture }
 	event := pkgprotocol.Progress{ phase: 'download', package: 'app', path: 'payload', total: u64(text.len) }
 	for mode in ['full', 'slow', 'no-range'] {
@@ -180,14 +180,14 @@ fn test_https_output_capture_bounded_writes_recovery_progress_and_descriptor_ret
 		for kind in ['alias', 'grow'] {
 			target := work + '/' + phase + '/' + kind
 			os.write_file(target, '')!; os.write_file(work + '/outside', 'preserved')!
-			os.setenv('VINIX_OUTPUT_TARGET', target, true)
+			os.setenv('TULPAR_OUTPUT_TARGET', target, true)
 			mut message := ''
 			fetch_https_with('https://fixture/full', target, u64(text.len), false, false, event, no_progress, HttpsOutputOptions{ program: fixture, checkpoint: output_mutate }) or { message = err.msg() }
 			assert message.contains('destination changed') && os.read_file(work + '/outside')! == 'preserved', phase + '/' + kind + ': ' + message
 			output_no_children()
 		}
 	}
-	os.setenv('VINIX_OUTPUT_TARGET', path, true)
+	os.setenv('TULPAR_OUTPUT_TARGET', path, true)
 	mut original := OutputLimit{}
 	assert C.getrlimit(C.RLIMIT_NOFILE, voidptr(&original)) == 0
 	limited := OutputLimit{ current: 32, maximum: original.maximum }
@@ -209,15 +209,15 @@ fn test_https_output_capture_bounded_writes_recovery_progress_and_descriptor_ret
 }
 
 fn output_guard_change(phase string, path string) ! {
-	if phase != os.getenv('VINIX_OUTPUT_GUARD_PHASE') || os.exists(path + '.before') { return }
+	if phase != os.getenv('TULPAR_OUTPUT_GUARD_PHASE') || os.exists(path + '.before') { return }
 	os.write_file(path + '.before', os.read_file(path)!)!
-	match os.getenv('VINIX_OUTPUT_GUARD_KIND') {
+	match os.getenv('TULPAR_OUTPUT_GUARD_KIND') {
 		'link' { assert C.link(path.str, (path + '.linked').str) == 0 }
 		'grow' { mut file := os.open_append(path)!; file.write_string('extra')!; file.close() }
 		else {
 			os.rename(path, path + '.saved')!
-			match os.getenv('VINIX_OUTPUT_GUARD_KIND') {
-				'alias' { os.symlink(os.getenv('VINIX_OUTPUT_OUTSIDE'), path)! }
+			match os.getenv('TULPAR_OUTPUT_GUARD_KIND') {
+				'alias' { os.symlink(os.getenv('TULPAR_OUTPUT_OUTSIDE'), path)! }
 				'fifo' { assert C.mkfifo(path.str, 0o600) == 0 }
 				'ordinary' { os.write_file(path, 'replacement')! }
 				'missing' {}
@@ -229,7 +229,7 @@ fn output_guard_change(phase string, path string) ! {
 
 fn output_guard_event(event pkgprotocol.Progress) {
 	phase := if event.current == event.total { 'finish' } else if event.current == 0 || event.current == 4096 { 'start' } else { 'middle' }
-	output_guard_change(phase, os.getenv('VINIX_OUTPUT_TARGET')) or { panic(err) }
+	output_guard_change(phase, os.getenv('TULPAR_OUTPUT_TARGET')) or { panic(err) }
 }
 
 fn test_https_output_callbacks_refuse_changes_before_further_writes_and_after_final_progress() {
@@ -238,10 +238,10 @@ fn test_https_output_callbacks_refuse_changes_before_further_writes_and_after_fi
 	text := '0123456789abcdef'.repeat(16384)
 	os.write_file(work + '/source', text)!; os.write_file(work + '/calls', '')!
 	os.write_file(work + '/outside', 'preserved')!; os.chmod(work + '/outside', 0o640)!
-	for key, value in {'VINIX_OUTPUT_SOURCE': work + '/source', 'VINIX_OUTPUT_CALLS': work + '/calls',
-		'VINIX_OUTPUT_OUTSIDE': work + '/outside'} { os.setenv(key, value, true) }
-	defer { for key in ['VINIX_OUTPUT_SOURCE', 'VINIX_OUTPUT_CALLS', 'VINIX_OUTPUT_OUTSIDE',
-		'VINIX_OUTPUT_TARGET', 'VINIX_OUTPUT_GUARD_PHASE', 'VINIX_OUTPUT_GUARD_KIND'] { os.unsetenv(key) } }
+	for key, value in {'TULPAR_OUTPUT_SOURCE': work + '/source', 'TULPAR_OUTPUT_CALLS': work + '/calls',
+		'TULPAR_OUTPUT_OUTSIDE': work + '/outside'} { os.setenv(key, value, true) }
+	defer { for key in ['TULPAR_OUTPUT_SOURCE', 'TULPAR_OUTPUT_CALLS', 'TULPAR_OUTPUT_OUTSIDE',
+		'TULPAR_OUTPUT_TARGET', 'TULPAR_OUTPUT_GUARD_PHASE', 'TULPAR_OUTPUT_GUARD_KIND'] { os.unsetenv(key) } }
 	for phase in ['opened', 'written', 'finished', 'start', 'middle', 'finish'] {
 		for kind in ['link', 'grow', 'alias', 'fifo', 'ordinary', 'missing'] {
 			for resume in [false, true] {
@@ -249,8 +249,8 @@ fn test_https_output_callbacks_refuse_changes_before_further_writes_and_after_fi
 				path := work + '/' + name
 				prefix := if resume { text[..4096] } else { 'retained prefix' }
 				os.write_file(path, prefix)!
-				os.setenv('VINIX_OUTPUT_TARGET', path, true); os.setenv('VINIX_OUTPUT_GUARD_PHASE', phase, true)
-				os.setenv('VINIX_OUTPUT_GUARD_KIND', kind, true)
+				os.setenv('TULPAR_OUTPUT_TARGET', path, true); os.setenv('TULPAR_OUTPUT_GUARD_PHASE', phase, true)
+				os.setenv('TULPAR_OUTPUT_GUARD_KIND', kind, true)
 				calls := os.read_file(work + '/calls')!.split_into_lines().len
 				mut message := ''
 				fetch_https_with('https://fixture/slow', path, u64(text.len), resume, false,
@@ -274,7 +274,7 @@ fn test_https_output_callbacks_refuse_changes_before_further_writes_and_after_fi
 				if kind == 'link' { os.rm(path + '.linked')! }
 				else if kind == 'grow' { mut file := os.open_file(path, 'w', 0o600)!; file.write_string(before)!; file.close() }
 				else { if os.exists(path) || os.is_link(path) { os.rm(path)! }; os.rename(path + '.saved', path)! }
-				os.setenv('VINIX_OUTPUT_GUARD_PHASE', '', true)
+				os.setenv('TULPAR_OUTPUT_GUARD_PHASE', '', true)
 				fetch_https_with('https://fixture/full', path, u64(text.len), resume, false, pkgprotocol.Progress{}, no_progress,
 					HttpsOutputOptions{ program: fixture })!
 				assert os.read_file(path)! == text
@@ -286,14 +286,14 @@ fn test_https_output_callbacks_refuse_changes_before_further_writes_and_after_fi
 }
 
 fn output_guard_flush(fd int) int {
-	marker := os.getenv('VINIX_OUTPUT_GUARD_FLUSH')
-	mode := os.getenv('VINIX_OUTPUT_GUARD_FLUSH_MODE')
+	marker := os.getenv('TULPAR_OUTPUT_GUARD_FLUSH')
+	mode := os.getenv('TULPAR_OUTPUT_GUARD_FLUSH_MODE')
 	first := !os.exists(marker)
 	os.write_file(marker, if first { 'once' } else { 'retried' }) or { panic(err) }
 	if mode == 'interrupted' && first { C.errno = C.EINTR; return -1 }
 	if mode == 'failure' { C.errno = C.EIO; return -1 }
 	if mode == 'link' {
-		path := os.getenv('VINIX_OUTPUT_TARGET')
+		path := os.getenv('TULPAR_OUTPUT_TARGET')
 		assert C.link(path.str, (path + '.linked').str) == 0
 	}
 	return C.fsync(fd)
@@ -304,10 +304,10 @@ fn test_https_output_flush_retries_interruptions_preserves_failures_and_retires_
 	fixture := output_fixture(work)!
 	text := 'payload'.repeat(8192)
 	os.write_file(work + '/source', text)!; os.write_file(work + '/calls', '')!
-	for key, value in {'VINIX_OUTPUT_SOURCE': work + '/source', 'VINIX_OUTPUT_CALLS': work + '/calls',
-		'VINIX_OUTPUT_TARGET': work + '/target', 'VINIX_OUTPUT_GUARD_FLUSH': work + '/flushed'} { os.setenv(key, value, true) }
-	defer { for key in ['VINIX_OUTPUT_SOURCE', 'VINIX_OUTPUT_CALLS', 'VINIX_OUTPUT_TARGET',
-		'VINIX_OUTPUT_GUARD_FLUSH', 'VINIX_OUTPUT_GUARD_FLUSH_MODE'] { os.unsetenv(key) } }
+	for key, value in {'TULPAR_OUTPUT_SOURCE': work + '/source', 'TULPAR_OUTPUT_CALLS': work + '/calls',
+		'TULPAR_OUTPUT_TARGET': work + '/target', 'TULPAR_OUTPUT_GUARD_FLUSH': work + '/flushed'} { os.setenv(key, value, true) }
+	defer { for key in ['TULPAR_OUTPUT_SOURCE', 'TULPAR_OUTPUT_CALLS', 'TULPAR_OUTPUT_TARGET',
+		'TULPAR_OUTPUT_GUARD_FLUSH', 'TULPAR_OUTPUT_GUARD_FLUSH_MODE'] { os.unsetenv(key) } }
 	mut original := OutputLimit{}
 	assert C.getrlimit(C.RLIMIT_NOFILE, voidptr(&original)) == 0
 	limit := OutputLimit{ current: 32, maximum: original.maximum }
@@ -318,7 +318,7 @@ fn test_https_output_flush_retries_interruptions_preserves_failures_and_retires_
 			for resume in [false, true] {
 				os.write_file(work + '/target', text[..4096])!
 				if os.exists(work + '/flushed') { os.rm(work + '/flushed')! }
-				os.setenv('VINIX_OUTPUT_GUARD_FLUSH_MODE', mode, true)
+				os.setenv('TULPAR_OUTPUT_GUARD_FLUSH_MODE', mode, true)
 				mut message := ''
 				resumed := fetch_https_with('https://fixture/full', work + '/target', u64(text.len), resume, false,
 					pkgprotocol.Progress{}, no_progress, HttpsOutputOptions{ program: fixture, flush: output_guard_flush }) or { message = err.msg(); false }

@@ -136,7 +136,7 @@ fn run(argv []string, input string, db ?accountcore.Database, user ?accountcore.
 		}
 		mut environment := ['PATH=/usr/sbin:/usr/bin:/sbin:/bin']
 		// What a program run from inside a session needs of that session.
-		for variable in ['HOME', 'XDG_RUNTIME_DIR', 'VINIX_KEYRING_TEST_COST'] {
+		for variable in ['HOME', 'XDG_RUNTIME_DIR', 'TULPAR_KEYRING_TEST_COST'] {
 			if user == none && os.getenv(variable) != '' {
 				environment << '${variable}=${os.getenv(variable)}'
 			}
@@ -221,12 +221,12 @@ const alex_password = 'alex has a password'
 const sam_password = 'sam has another'
 
 fn (mut t Test) make_accounts() accountcore.Database {
-	init := run(['/usr/sbin/vinix-account', 'init'], '', none, none)
-	t.check(init.status == 0, 'vinix-account init: ${init.output}')
-	alex := run(['/usr/sbin/vinix-account', 'add', 'alex', 'Alex Example', 'admin'], alex_password +
+	init := run(['/usr/sbin/tulpar-account', 'init'], '', none, none)
+	t.check(init.status == 0, 'tulpar-account init: ${init.output}')
+	alex := run(['/usr/sbin/tulpar-account', 'add', 'alex', 'Alex Example', 'admin'], alex_password +
 		'\n', none, none)
 	t.check(alex.status == 0, 'adding alex: ${alex.output}')
-	sam := run(['/usr/sbin/vinix-account', 'add', 'sam', 'Sam Example'], sam_password + '\n',
+	sam := run(['/usr/sbin/tulpar-account', 'add', 'sam', 'Sam Example'], sam_password + '\n',
 		none, none)
 	t.check(sam.status == 0, 'adding sam: ${sam.output}')
 	return load_db()
@@ -251,13 +251,13 @@ fn has_shadow(db accountcore.Database, name string) bool {
 fn (mut t Test) start_authd() {
 	child := C.fork()
 	if child == 0 {
-		argv := [&char(c'/usr/sbin/vinix-authd'), &char(unsafe { nil })]
+		argv := [&char(c'/usr/sbin/tulpar-authd'), &char(unsafe { nil })]
 		envp := [&char(c'PATH=/usr/sbin:/usr/bin:/sbin:/bin'), &char(unsafe { nil })]
 		C.execve(argv[0], &argv[0], &envp[0])
 		C._exit(127)
 	}
 	for _ in 0 .. 100 {
-		if os.exists('/run/vinix/auth.sock') {
+		if os.exists('/run/tulpar/auth.sock') {
 			// An installed root can retain yesterday's socket. Require a live,
 			// root-authenticated response rather than only the pathname.
 			mut reply := authclient.ask_root(authclient.default_socket, authproto.op_info) or {

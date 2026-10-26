@@ -14,7 +14,7 @@ fn proof_fixture(phase int) !map[string]string {
 	proof := Proof{schema: 1, uid: 1000, phase: phase, guardian: 10, watcher: 11, parent: 12, child: 13,
 		stop_millis: 50, before: if phase == 1 { '' } else { hex.encode(enabled_record()!.bytes()) },
 		running: hex.encode(enabled_record()!.bytes()),
-		after: hex.encode((if phase == 3 { 'vinix-services\t1\n' } else { enabled_record()! }).bytes())}
+		after: hex.encode((if phase == 3 { 'tulpar-services\t1\n' } else { enabled_record()! }).bytes())}
 	mut receipts := {'/home/developer/service-cold-proof.json': json2.encode(proof),
 		'/home/developer/service-after.json': state_fixture(phase, 'a'.repeat(64))}
 	if phase > 1 { receipts['/home/developer/service-state/state.json'] = state_fixture(phase - 1, 'a'.repeat(64)) }

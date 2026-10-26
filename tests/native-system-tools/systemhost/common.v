@@ -35,7 +35,7 @@ fn positive(options guesthost.Options, name string, fallback int) !int {
 }
 
 fn env_timeout(options guesthost.Options, fallback int) !int {
-	value := strconv.atoi(os.getenv_opt('VINIX_QEMU_TIMEOUT') or { fallback.str() }) or { return argument('invalid VINIX_QEMU_TIMEOUT') }
+	value := strconv.atoi(os.getenv_opt('TULPAR_QEMU_TIMEOUT') or { fallback.str() }) or { return argument('invalid TULPAR_QEMU_TIMEOUT') }
 	return positive(options, '--timeout', value)!
 }
 
@@ -55,7 +55,7 @@ fn private_cleanup(state string, options guesthost.Options) {
 
 fn compiler(arch string) []string {
 	if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		return [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk,
 			'-L' + sdk + '/lib', '-fuse-ld=lld']
 	}
@@ -91,13 +91,13 @@ fn ext2_tool(name string) !string {
 
 fn snapshot(state string, path string, arch string) !string {
 	source := resolve(path)!
-	binary := if os.is_dir(source) { source + '/bin/vinix' } else { source }
+	binary := if os.is_dir(source) { source + '/bin/tulpar' } else { source }
 	bytes := os.read_bytes(binary)!
 	if bytes.len < 20 || bytes[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1]
 		|| u16(bytes[18]) + (u16(bytes[19]) << 8) != if arch == 'aarch64' { 183 } else { 62 } {
 		return argument('Kernel ELF architecture does not match --arch')
 	}
-	target := state + '/kernel/bin/vinix'
+	target := state + '/kernel/bin/tulpar'
 	if os.real_path(binary) == os.real_path(target) {
 		return argument('Kernel source must be outside its private snapshot')
 	}
@@ -109,9 +109,9 @@ fn snapshot(state string, path string, arch string) !string {
 
 fn kernel_source(options guesthost.Options, arch string) string {
 	return options.value('--kernel-dir', if arch == 'aarch64' {
-		os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' }
+		os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' }
 	} else {
-		os.getenv_opt('VINIX_AMD64_KERNEL') or { root() + '/kernel/bin/vinix' }
+		os.getenv_opt('TULPAR_AMD64_KERNEL') or { root() + '/kernel/bin/tulpar' }
 	})
 }
 
@@ -138,7 +138,7 @@ fn receipt(state string, configured guesthost.Launch, kernel string, init string
 	hosttest.write_json(state + '/launch.json', json2.Any({
 		'command':                  json2.Any(hosttest.strings(configured.command))
 		'timeout':                  json2.Any(seconds)
-		'kernel_sha256':            json2.Any(hosttest.sha(kernel + '/bin/vinix')!)
+		'kernel_sha256':            json2.Any(hosttest.sha(kernel + '/bin/tulpar')!)
 		'kernel_rebuilt_by_runner': json2.Any(false)
 		'init_sha256':              json2.Any(if init != '' { hosttest.sha(init)! } else { '' })
 		'archive_sha256':           json2.Any(hosttest.sha(archive)!)

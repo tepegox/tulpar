@@ -4,7 +4,7 @@
 // The account database: users, groups and the password records that go with
 // them, as the three files a Unix system keeps in /etc. This module reads,
 // checks and writes them and knows nothing about who is asking: the programs
-// that use it (vinix-account, vinix-authd, vinix-session) decide that.
+// that use it (tulpar-account, tulpar-authd, tulpar-session) decide that.
 module accountcore
 
 // Identifiers. A person's account is one of first_user_uid..last_user_uid;
@@ -49,7 +49,7 @@ pub mut:
 	members []string
 }
 
-// A shadow record. Only `hash` and `changed` mean anything to Vinix; the
+// A shadow record. Only `hash` and `changed` mean anything to Tulpar; the
 // ageing fields are kept as they were read so that a file another tool wrote
 // is written back unchanged.
 pub struct Shadow {

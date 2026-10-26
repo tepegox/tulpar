@@ -37,7 +37,7 @@ fn data_auto_check(input string, output string, operation int, physical int, pub
 	saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	unsafe {
-		args := [&char(c'vinix-volume'), if operation == 0 { &char(c'hash-bundle-auto') } else if operation == 1 { &char(c'verify-data-auto') } else { &char(c'scrub-data-auto') }, input.str, output.str, &char(nil)]!
+		args := [&char(c'tulpar-volume'), if operation == 0 { &char(c'hash-bundle-auto') } else if operation == 1 { &char(c'verify-data-auto') } else { &char(c'scrub-data-auto') }, input.str, output.str, &char(nil)]!
 		assert run(if operation == 1 { 3 } else { 4 }, &args[0]) == expected
 	}
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0 && data_io.opened == data_io.closed
@@ -46,7 +46,7 @@ fn data_auto_check(input string, output string, operation int, physical int, pub
 }
 
 fn test_automatic_data_pin_transfer_mode_identity_order_complete_scrubs_and_publication_faults() {
-	work := os.join_path(os.temp_dir(), 'vinix-data-auto-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-data-auto-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	bundle := work + '/source'; reference := work + '/reference'; report := work + '/report'
 	mut manifest := DataManifest{}; mut devices := DataDevices{}; data_io_fixture(mut manifest, mut devices)
 	data_io = DataIO{}; assert publish_bundle(bundle.str, unsafe { &manifest.set })

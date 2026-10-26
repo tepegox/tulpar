@@ -16,15 +16,15 @@ fn C.mkfifo(&char, u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn launch_service_architecture() string { return $if arm64 { 'aarch64' } $else { 'x86_64' } }
 fn launch_service_cycles() int { return $if track_heap ? { 1000 } $else { 16 } }
 
 fn launch_service_fixture(root string, architecture string, count int) !Service {
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	key := 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a'
 	mut repositories := []Repository{cap: count}
 	mut packages := []Installed{cap: count}
@@ -44,7 +44,7 @@ fn launch_service_fixture(root string, architecture string, count int) !Service 
 	config := Config{ architecture: architecture, repositories: repositories, policy: Policy{ allowed: allowed, pins: pins, permissions: ['files'],
 		licenses: ['Vendor é🚀'], allow_firmware: true, reserve_bytes: 17 } }
 	text := json2.encode(config); defer { unsafe { text.free() } }
-	os.write_file(root + '/etc/vinix-packages/config.json', text)!
+	os.write_file(root + '/etc/tulpar-packages/config.json', text)!
 	service := Service{ root: root, offline: true }
 	directory := state_directory(root); defer { unsafe { directory.free() } }
 	guard := acquire(directory)!; guard.release()
@@ -58,16 +58,16 @@ fn launch_service_fixture(root string, architecture string, count int) !Service 
 }
 
 fn launch_service_root(label string) string {
-	return os.temp_dir() + '/vinix-launch-service-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	return os.temp_dir() + '/tulpar-launch-service-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 }
 
 fn launch_service_failure(service Service, id string, expected string, cycles int) {
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. cycles {
 		if mut prepared := service.prepare_launch(id) { prepared.close(); assert false }
 		else { message := err.msg(); assert message.contains(expected), message; unsafe { message.free(); err.free() } }
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, expected + ' retained ' + kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, expected + ' retained ' + kept.str() }
 }
 
 fn launch_service_ordinary_failure(service Service, id string, expected string) {
@@ -89,7 +89,7 @@ fn launch_service_owned_snapshots() ! {
 			service := launch_service_fixture(root, architecture, count)!
 			directory := state_directory(root); defer { unsafe { directory.free() } }
 			cycles := if count == 1 { launch_service_cycles() } else { 16 }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. cycles {
 				mut prepared := service.prepare_launch('app')!
 				assert prepared.directory == directory && prepared.config.architecture == architecture && prepared.config.policy.offline
@@ -99,7 +99,7 @@ fn launch_service_owned_snapshots() ! {
 				assert prepared.lease == -1 && prepared.directory == '' && prepared.state.generation == 0
 				assert prepared.config.architecture == '' && prepared.config.policy.permissions.len == 0
 			}
-			$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'prepare retained ' + kept.str() }
+			$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'prepare retained ' + kept.str() }
 			mut first := service.prepare_launch('app')!; mut second := service.prepare_launch('app')!
 			assert first.config.architecture.str != second.config.architecture.str
 			if first.lease >= 0 {
@@ -118,7 +118,7 @@ fn launch_service_owned_snapshots() ! {
 			} else { first.close() }
 			// Preparation no longer holds the reader while a runner owns the snapshot.
 			guard := acquire(directory)!; guard.release()
-			os.write_file(root + '/etc/vinix-packages/config.json', '{retired configuration')!
+			os.write_file(root + '/etc/tulpar-packages/config.json', '{retired configuration')!
 			if second.lease >= 0 { assert second.state.packages.len == count }
 			assert second.config.repositories[0].url == 'file:///offline/é🚀' && second.config.policy.licenses[0] == 'Vendor é🚀'
 			second.close(); second.close()
@@ -143,7 +143,7 @@ fn test_prepared_launch_owns_snapshots_and_releases_only_its_lease() {
 
 fn test_session_executable_lookup_owns_and_retires_its_path() {
 	expected := os.executable(); defer { unsafe { expected.free() } }
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. launch_service_cycles() {
 		first := session_executable()!
 		second := session_executable()!
@@ -152,14 +152,14 @@ fn test_session_executable_lookup_owns_and_retires_its_path() {
 		assert second == expected
 		unsafe { second.free() }
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	println('LAUNCH SERVICE executable identity owns independent paths and retires lookup scratch PASS')
 }
 
 fn test_prepare_launch_refusals_retire_partial_configuration_and_descriptors() {
 	root := launch_service_root('refusal'); defer { os.rmdir_all(root) or {} }
 	service := launch_service_fixture(root, 'aarch64', 1)!
-	directory := state_directory(root); configuration := root + '/etc/vinix-packages/config.json'
+	directory := state_directory(root); configuration := root + '/etc/tulpar-packages/config.json'
 	metadata := directory + '/generations/7/state.json'; lease := directory + '/generations/7/lease'
 	original_config := os.read_file(configuration)!; original_state := os.read_file(metadata)!
 	launch_service_failure(Service{ root: 'relative' }, 'app', 'absolute directory', launch_service_cycles())
@@ -195,7 +195,7 @@ fn test_prepare_launch_refusals_retire_partial_configuration_and_descriptors() {
 
 fn launch_service_run_failure(service Service, root bool, cycles int) {
 	for mode in 0 .. 5 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles {
 			mut refused := false
 			input := LaunchInput{ window: mode == 1, command: mode >= 2, terminal: mode == 3, data_cwd: mode == 4 }
@@ -208,7 +208,7 @@ fn launch_service_run_failure(service Service, root bool, cycles int) {
 			}
 			assert refused
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'run retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'run retained ' + kept.str() }
 	}
 	$if track_heap ? { println('LAUNCH SERVICE tracked ' + if root { 'root' } else { 'UID 1000' } + ': five modes, 1000 refusals each retained 0 bytes') }
 }
@@ -216,12 +216,12 @@ fn launch_service_run_failure(service Service, root bool, cycles int) {
 fn test_real_root_service_retires_root_and_ordinary_launch_refusals() {
 	// The disposable qualification guest explicitly opts in. Never configure
 	// the host's real installation from a normal test invocation.
-	if os.getenv('VINIX_LAUNCH_SERVICE_GUEST') != '1' || os.geteuid() != 0 { return }
-	assert !os.exists('/etc/vinix-packages') && !os.exists('/var/lib/vinix-packages')
+	if os.getenv('TULPAR_LAUNCH_SERVICE_GUEST') != '1' || os.geteuid() != 0 { return }
+	assert !os.exists('/etc/tulpar-packages') && !os.exists('/var/lib/tulpar-packages')
 	launch_service_fixture('', launch_service_architecture(), 1)!
 	service := Service{}
 	launch_service_run_failure(service, true, launch_service_cycles())
-	path := '/etc/vinix-packages/config.json'
+	path := '/etc/tulpar-packages/config.json'
 	original := os.read_file(path)!
 	blocked := original.replace('"permissions":["files"]', '"permissions":[]')
 	assert blocked != original; os.write_file(path, blocked)!
@@ -235,6 +235,6 @@ fn test_real_root_service_retires_root_and_ordinary_launch_refusals() {
 	}
 	mut status := 0; assert C.waitpid(child, unsafe { &status }, 0) == child && status == 0
 	assert !os.exists('/home/launch-service-fixture')
-	writer := acquire('/var/lib/vinix-packages')!; writer.release()
+	writer := acquire('/var/lib/tulpar-packages')!; writer.release()
 	println('LAUNCH SERVICE real-root root and UID 1000 runners retire all five launch modes before session/data creation or execution PASS')
 }

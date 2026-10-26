@@ -72,13 +72,13 @@ fn scrub_ref_manifest() []u8 {
 }
 fn scrub_ref_input(state int) string {
 	zero := '0'.repeat(64)
-	return 'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + '\n' +
+	return 'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + '\n' +
 		'disk=0 slot=63 offset=0 bytes=512 readonly=1 result=match expected_sha256=${zero} actual_sha256=${zero}\n' +
 		'disk=1 slot=0 offset=512 bytes=4096 readonly=0 result=${if state == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} actual_sha256=${if state == 0 { zero } else if state == 1 { 'f'.repeat(64) } else { 'a'.repeat(64) }}\n'
 }
 fn scrub_ref_expected(state int) string {
 	zero := '0'.repeat(64)
-	return 'format=VINIXSR1 operation=verified-data-scrub-reference disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(scrub_ref_input(state)) + '\n' +
+	return 'format=TULPARSR1 operation=verified-data-scrub-reference disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(scrub_ref_input(state)) + '\n' +
 		'disk=0 disk_bytes=1048576 sector=512 identity=mbr:00000001\n' +
 		'disk=0 slot=63 offset=0 bytes=512 readonly=1 result=match expected_sha256=${zero} actual_sha256=${zero}\n' +
 		'disk=1 disk_bytes=1048576 sector=512 identity=mbr:00000002\n' +
@@ -89,11 +89,11 @@ fn scrub_ref_check(first string, second string, mode int, expected i32) string {
 	capture := os.dir(first) + '/history-capture'; assert C.fflush(C.stdout) == 0
 	saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	scrub_ref_io = ScrubRefIO{active: true, mode: mode}
-	unsafe { args := [&char(c'vinix-volume'), &char(c'verify-data-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'verify-data-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert scrub_ref_io.opened == scrub_ref_io.closed; scrub_ref_io.active = false
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }
-	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=VINIXSR1') && !text.contains('disk=') }; return text
+	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=TULPARSR1') && !text.contains('disk=') }; return text
 }
 
 __global monitor_verify_fd i32 = -1
@@ -116,24 +116,24 @@ fn monitor_verify_encode(manifest &DataManifest, history &DataMonitorHistory, di
 	assert scrub_ref_io.active && scrub_ref_io.opened == 4 && scrub_ref_io.closed == 0; if scrub_ref_io.mode == 7 { return 0 }; return encode_data_monitor_history(manifest, history, digest, output)
 }
 fn monitor_verify_input(states []int) string {
-	mut text := ''; mut changed := 0; for sample, state in states { if state != 0 { changed++ }; text += 'format=VINIXDM1 operation=monitored-data sample=${sample + 1} changed_samples=${changed} session_changed=${int(changed != 0)}\n' + scrub_ref_input(state) }; return text
+	mut text := ''; mut changed := 0; for sample, state in states { if state != 0 { changed++ }; text += 'format=TULPARDM1 operation=monitored-data sample=${sample + 1} changed_samples=${changed} session_changed=${int(changed != 0)}\n' + scrub_ref_input(state) }; return text
 }
 fn monitor_verify_wanted(states []int) string {
 	zero := '0'.repeat(64); mut changed := 0; mut classes := [4]int{}; table := [[0, 1, 1]!, [2, 0, 3]!, [2, 3, 0]!]!
 	for sample, state in states { if state != 0 { changed++ }; if sample != 0 { classes[table[states[sample - 1]][state]]++ } }; final := states.last(); digest := if final == 0 { zero } else if final == 1 { 'f'.repeat(64) } else { 'a'.repeat(64) }
-	return 'format=VINIXDM1 operation=verified-data-monitor disks=2 mappings=2 samples=${states.len} changed_samples=${changed} session_changed=${int(changed != 0)} final_changed=${int(final != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + ' transcript_sha256=' + sha256.hexhash(monitor_verify_input(states)) + '\n' +
+	return 'format=TULPARDM1 operation=verified-data-monitor disks=2 mappings=2 samples=${states.len} changed_samples=${changed} session_changed=${int(changed != 0)} final_changed=${int(final != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + ' transcript_sha256=' + sha256.hexhash(monitor_verify_input(states)) + '\n' +
 		'disk=0 disk_bytes=1048576 sector=512 identity=mbr:00000001\ndisk=0 slot=63 offset=0 bytes=512 readonly=1 changed_samples=0 stable=${states.len - 1} new_changes=0 restored=0 changed_again=0 final=match expected_sha256=${zero} final_sha256=${zero}\n' +
 		'disk=1 disk_bytes=1048576 sector=512 identity=mbr:00000002\ndisk=1 slot=0 offset=512 bytes=4096 readonly=0 changed_samples=${changed} stable=${classes[0]} new_changes=${classes[1]} restored=${classes[2]} changed_again=${classes[3]} final=${if final == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} final_sha256=${digest}\n'
 }
 fn monitor_verify_check(first string, second string, mode int, expected i32) string {
 	capture := os.dir(first) + '/verify-capture'; assert C.fflush(C.stdout) == 0; saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	scrub_ref_io = ScrubRefIO{active: true, mode: mode}; monitor_verify_fd = -1; monitor_verify_reads = 0; monitor_verify_eof_interrupted = false
-	unsafe { args := [&char(c'vinix-volume'), &char(c'verify-data-monitor'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'verify-data-monitor'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert scrub_ref_io.opened == scrub_ref_io.closed; scrub_ref_io.active = false; assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }; if expected == 1 && mode !in [8, 9] { assert !text.contains('operation=verified-data-monitor') && !text.contains('disk=') }; return text
 }
 fn test_monitor_verify_real_cli_complete_validation_buffering_owners_errors_and_no_partial_findings() {
-	work := os.join_path(os.temp_dir(), 'vinix-monitor-verify-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/reference'; second := work + '/transcript'; manifest := scrub_ref_manifest(); os.write_file_array(first, manifest)!; os.chmod(first, 0o644)!
+	work := os.join_path(os.temp_dir(), 'tulpar-monitor-verify-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/reference'; second := work + '/transcript'; manifest := scrub_ref_manifest(); os.write_file_array(first, manifest)!; os.chmod(first, 0o644)!
 	for sequence in 0 .. 27 { states := [sequence % 3, (sequence / 3) % 3, sequence / 9]; transcript := monitor_verify_input(states); os.write_file(second, transcript)!; os.chmod(second, 0o644)!
 		for mode in 0 .. 18 { result := if mode in [0, 1, 11] { if states.all(it == 0) { 0 } else { 2 } } else { 1 }; actual := monitor_verify_check(first, second, mode, result); if result != 1 { assert actual == monitor_verify_wanted(states) }; assert os.read_bytes(first)! == manifest && os.read_file(second)! == transcript }
 		assert monitor_verify_check(first, second, 19, if states.all(it == 0) { 0 } else { 2 }) == monitor_verify_wanted(states) && monitor_verify_eof_interrupted
@@ -144,7 +144,7 @@ fn test_monitor_verify_real_cli_complete_validation_buffering_owners_errors_and_
 	mut boundaries := map[int]int{}; for i in 1 .. states.len + 1 { boundaries[monitor_verify_input(states[..i]).len] = i }
 	for size in 0 .. transcript.len { os.write_file(second, transcript[..size])!; count := boundaries[size]; actual := monitor_verify_check(first, second, 0, if count > 0 { 2 } else { 1 }); if count > 0 { assert actual == monitor_verify_wanted(states[..count]) } }; os.write_file(second, transcript)!
 	for pair in [['sample=2', 'sample=3'], ['sample=2', 'sample=02'], ['changed_samples=2', 'changed_samples=1'], ['session_changed=1', 'session_changed=0'], ['slot=0', 'slot=1'], ['readonly=0', 'readonly=1'], ['offset=512', 'offset=1024'], ['bytes=4096', 'bytes=8192'], ['reference_sha256=' + sha256.hexhash(manifest.bytestr()), 'reference_sha256=' + '1'.repeat(64)]] { os.write_file(second, transcript.replace(pair[0], pair[1]))!; monitor_verify_check(first, second, 0, 1) }
-	for suffix in ['\x00', 'vinix-volume: checksum disk identity or geometry changed\n', '\n', 'format=VINIXDM1 operation=monitored-data sample=4'] { os.write_file(second, transcript + suffix)!; monitor_verify_check(first, second, 0, 1) }
+	for suffix in ['\x00', 'tulpar-volume: checksum disk identity or geometry changed\n', '\n', 'format=TULPARDM1 operation=monitored-data sample=4'] { os.write_file(second, transcript + suffix)!; monitor_verify_check(first, second, 0, 1) }
 	for at in 0 .. manifest.len { mut bad := manifest.clone(); bad[at] ^= 1; os.write_file_array(first, bad)!; os.write_file(second, transcript)!; monitor_verify_check(first, second, 0, 1) }; os.write_file_array(first, manifest)!
 	for path in [first, second] { bytes := os.read_bytes(path)!; os.mv(path, path + '.saved')!; os.symlink(path + '.saved', path)!; monitor_verify_check(first, second, 0, 1); os.rm(path)!; os.mkdir(path)!; monitor_verify_check(first, second, 0, 1); os.rmdir(path)!; assert C.mkfifo(path.str, 0o600) == 0; monitor_verify_check(first, second, 0, 1); os.rm(path)!; monitor_verify_check(first, second, 0, 1); os.mv(path + '.saved', path)!; assert os.read_bytes(path)! == bytes }
 	long_states := []int{len: 512, init: index % 3}; os.write_file(second, monitor_verify_input(long_states))!; assert monitor_verify_check(first, second, 0, 2) == monitor_verify_wanted(long_states) && monitor_verify_reads < 16; monitor_verify_check(first, second, 18, 1)

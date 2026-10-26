@@ -33,7 +33,7 @@ exercised safety, rather than general decoder leak freedom.
 The guest creates 128 obsolete generations in the offline deployment client,
 holds generation 64's shared lease in the parent and starts a test helper child.
 That child sets and rereads its 32-descriptor soft limit, then directly execs the
-production `vinix-package --root ROOT gc` command. The root generation, live
+production `tulpar-package --root ROOT gc` command. The root generation, live
 payload and activation pointer survive while the unused cache sentinel disappears.
 After releasing the lease, normal CLI collection retires it and payload
 verification still succeeds. The required marker is
@@ -46,12 +46,12 @@ Reproduce with the pinned compiler and staged headless UI module:
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
 V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 \
-  VINIX_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
   /tmp/distribution-check --direct-tests --cross
 ```
 
 Run [the Linux guest controller](linux-runtime-check.v) on matching AArch64 and
-x86_64 kernel/sandbox inputs with `VINIX_HWTEST_TCG=1` and a fresh directory.
+x86_64 kernel/sandbox inputs with `TULPAR_HWTEST_TCG=1` and a fresh directory.
 The test helper and limit override are part of the guest fixture only; production
 CLI options remain unchanged. Kernel/native sandbox inputs are retained; service,
 init, account and session programs are freshly built.

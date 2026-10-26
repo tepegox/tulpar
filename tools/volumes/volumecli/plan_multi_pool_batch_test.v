@@ -111,7 +111,7 @@ fn test_multi_pool_later_failures_retain_results_and_every_source_field() {
 }
 
 fn test_maximum_multi_pool_batch_259_argument_cli_64_pools_full_v2_and_durable_retry() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-pool-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-pool-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut baseline := PlanSet{}; mut expected := PlanSet{}
 	for disk in 0 .. 64 {
 		sector := if disk & 1 == 0 { u64(512) } else { u64(4096) }; end := u64(-1) & ~(sector - 1)
@@ -123,7 +123,7 @@ fn test_maximum_multi_pool_batch_259_argument_cli_64_pools_full_v2_and_durable_r
 	assert publish_bundle(path.str, &baseline); original := os.read_bytes(path)!; unsafe { expected = *(&baseline) }
 	unsafe {
 		mut args := [260]&char{}; mut pools := [64][4]char{}; mut slots := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'pool-preview-set-batch'); args[2] = path.str
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'pool-preview-set-batch'); args[2] = path.str
 		for i in 0 .. 64 {
 			disk := 63 - i; C.snprintf(&pools[i][0], 4, c'%u', u32(disk)); C.snprintf(&slots[i][0], 4, c'%u', u32(i))
 			args[3 + i * 4] = &pools[i][0]; args[4 + i * 4] = &slots[i][0]; args[5 + i * 4] = &char(c'4096'); args[6 + i * 4] = if i & 1 == 0 { &char(c'ro') } else { &char(c'rw') }
@@ -138,7 +138,7 @@ fn test_maximum_multi_pool_batch_259_argument_cli_64_pools_full_v2_and_durable_r
 }
 
 fn test_multi_pool_sources_and_complete_cli_tokens_fail_without_publication() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-pool-input-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-pool-input-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}; multi_fixture(mut set, 0, 0, 1); assert publish_bundle(path.str, &set)
 	original := os.read_bytes(path)!; mut batch := MultiPoolBatch{count: 1}; batch.pools[0] = 7; batch.rows[0] = Request{slot: 20, length: 4096}
 	os.symlink(path, work + '/link')!
@@ -146,7 +146,7 @@ fn test_multi_pool_sources_and_complete_cli_tokens_fail_without_publication() {
 	mut damaged := original.clone(); damaged[24] ^= 1; os.write_file_array(path, damaged)!
 	for preview in [false, true] { assert multi_pool_batch_plan(path.str, &batch, preview) == 1 && os.read_bytes(path)! == damaged }
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-preview-set-batch'), &char(c'/unused'), &char(c'7'), &char(c'20'), &char(c'4096'), &char(c'ro'), &char(c'8'), &char(c'21'), &char(c'4096'), &char(c'rw'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-preview-set-batch'), &char(c'/unused'), &char(c'7'), &char(c'20'), &char(c'4096'), &char(c'ro'), &char(c'8'), &char(c'21'), &char(c'4096'), &char(c'rw'), &char(nil)]!
 		for command in [c'pool-preview-set-batch', c'pool-allocate-set-batch'] {
 			args[1] = &char(command); for count in [2, 3, 4, 5, 6, 8, 9, 10, 260, 263] { assert run(count, &args[0]) == 2 }
 			for at in [3, 4, 5, 7, 8, 9] { old := args[at]; for bad in [c'', c'-1', c'1x', c'18446744073709551616'] { args[at] = &char(bad); assert run(11, &args[0]) == 2 }; args[at] = old }

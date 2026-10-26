@@ -11,10 +11,10 @@ Build the x86_64 kernel, then run the fixture with a fresh build and guest
 directory for each CPU configuration:
 
 ```sh
-VINIX_V_COMPILER=/path/to/v CC_AMD64=x86_64-linux-musl-gcc \
+TULPAR_V_COMPILER=/path/to/v CC_AMD64=x86_64-linux-musl-gcc \
   tests/amd64-exceptions/run --state-dir /tmp/exceptions-build-1 \
   --kernel-dir kernel --guest-state-dir /tmp/exceptions-guest-1 --cpus 1
-VINIX_V_COMPILER=/path/to/v CC_AMD64=x86_64-linux-musl-gcc \
+TULPAR_V_COMPILER=/path/to/v CC_AMD64=x86_64-linux-musl-gcc \
   tests/amd64-exceptions/run --state-dir /tmp/exceptions-build-4 \
   --kernel-dir kernel --guest-state-dir /tmp/exceptions-guest-4 --cpus 4
 ```
@@ -22,7 +22,7 @@ VINIX_V_COMPILER=/path/to/v CC_AMD64=x86_64-linux-musl-gcc \
 The runner compiles a static musl executable with strict warnings and checks
 the fixture object for implicit allocator imports. It boots q35 with TCG,
 `max`, 1 GiB of memory, and the selected CPU count. The default outer budget is
-900 seconds; the workload has no internal deadline. `VINIX_OVMF_CODE` can
+900 seconds; the workload has no internal deadline. `TULPAR_OVMF_CODE` can
 select the UEFI firmware. `--original-reference` builds an immutable C control
 from a supplied file, and `--prebuilt-init` runs an already built executable.
 

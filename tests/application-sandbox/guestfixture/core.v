@@ -22,7 +22,7 @@ fn C.vksb_groups(i32) i32
 fn C.vksb_capget(voidptr) i32
 fn C.vksb_unveil(&char, &char) i32
 fn C.vksb_pledge(&char, &char) i32
-fn C.vinix_sandbox_main(i32, &&char) i32
+fn C.tulpar_sandbox_main(i32, &&char) i32
 fn C.__builtin_alloca(usize) voidptr
 fn C.fcntl(i32, i32, ...voidptr) i32
 fn C.open(&char, i32, ...voidptr) i32
@@ -111,13 +111,13 @@ fn run_case(promises &char, mode &char, extra_path &char, program &char, exit_co
 		pid := C.fork()
 		if !require(pid >= 0, 86, c'pid >= 0') { return 1 }
 		if pid == 0 {
-			mut args := [&char(c'vinix-sandbox'), &char(c'--promises'), promises,
+			mut args := [&char(c'tulpar-sandbox'), &char(c'--promises'), promises,
 				&char(c'--uid'), &char(c'1000'), &char(c'--gid'), &char(c'1000'),
 				&char(c'--unveil'), &char(c'/tmp/sandbox-readable'), &char(c'r'),
 				&char(c'--env'), &char(c'EXPLICIT=literal;$(id)'), &char(c'--'),
 				program, &char(c'--sandbox-target'), mode, &char(nil)]!
 			if extra_path != nil { args[8] = extra_path }
-			C._exit(C.vinix_sandbox_main(16, &args[0]))
+			C._exit(C.tulpar_sandbox_main(16, &args[0]))
 		}
 		mut status := i32(0)
 		if !require(C.waitpid(pid, &status, 0) == pid, 96, c'waitpid(pid, &status, 0) == pid') { return 1 }

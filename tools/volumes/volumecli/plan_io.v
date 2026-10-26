@@ -35,10 +35,10 @@ fn C.snprintf(&char, uint, &char, ...voidptr) i32
 fn C.getpid() i32
 fn C.alloca(uint) voidptr
 
-fn plan_error(message &char) i32 { C.printf(c'vinix-volume: %s\n', message); return 1 }
+fn plan_error(message &char) i32 { C.printf(c'tulpar-volume: %s\n', message); return 1 }
 
 fn query_status(fd i32, mut status Status) bool {
-	if C.ioctl(fd, u64(0x56560004), &status) != 0 { C.perror(c'vinix-volume: status'); return false }
+	if C.ioctl(fd, u64(0x56560004), &status) != 0 { C.perror(c'tulpar-volume: status'); return false }
 	if status.version != 1 || status.reserved != 0 || status.flags & 2 != 0 {
 		plan_error(c'unsupported or offline block device'); return false
 	}
@@ -58,7 +58,7 @@ fn probe_disk(fd i32, mut key DiskKey, mut status Status) bool {
 		read = C.pread(fd, &sectors[0], uint(size), 0)
 		if read >= 0 || unsafe { C.errno != C.EINTR } { break }
 	}
-	if read != i64(size) { C.perror(c'vinix-volume: disk identity read'); return false }
+	if read != i64(size) { C.perror(c'tulpar-volume: disk identity read'); return false }
 	if !identify_disk(&sectors[0], int(size), status.bytes, status.sector, mut key) {
 		plan_error(c'disk needs a valid GPT GUID or a nonzero MBR disk signature'); return false
 	}
@@ -68,7 +68,7 @@ fn probe_disk(fd i32, mut key DiskKey, mut status Status) bool {
 @[direct_array_access]
 fn load_plan(path &char, mut plan Plan) bool {
 	fd := C.open(path, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open plan'); return false }
+	if fd < 0 { C.perror(c'tulpar-volume: open plan'); return false }
 	defer { C.close(fd) }
 	return read_plan(fd, mut plan, false)
 }
@@ -76,7 +76,7 @@ fn load_plan(path &char, mut plan Plan) bool {
 @[direct_array_access]
 fn read_plan(fd i32, mut plan Plan, trusted bool) bool {
 	mut info := C.stat{}
-	if C.fstat(fd, &info) != 0 { C.perror(c'vinix-volume: stat plan'); return false }
+	if C.fstat(fd, &info) != 0 { C.perror(c'tulpar-volume: stat plan'); return false }
 	if C.S_ISREG(info.st_mode) == 0 || info.st_size < plan_header_bytes || info.st_size > plan_max_bytes {
 		plan_error(c'plan must be a bounded regular file'); return false
 	}
@@ -133,12 +133,12 @@ fn publish_bytes_at(directory i32, name &char, bytes &u8, size int) bool {
 	mut temporary := [64]char{}
 	mut fd := i32(-1)
 	for attempt := 0; attempt < 64; attempt++ {
-		C.snprintf(&temporary[0], 64, c'.vinix-volume-%ld-%u', i64(C.getpid()), u32(attempt))
+		C.snprintf(&temporary[0], 64, c'.tulpar-volume-%ld-%u', i64(C.getpid()), u32(attempt))
 		if C.strcmp(&temporary[0], name) == 0 { continue }
 		fd = C.openat(directory, &temporary[0], C.O_WRONLY | C.O_CREAT | C.O_EXCL | C.O_NOFOLLOW | C.O_CLOEXEC, u32(0o600))
 		if fd >= 0 || unsafe { C.errno != C.EEXIST } { break }
 	}
-	if fd < 0 { C.perror(c'vinix-volume: create temporary plan'); return false }
+	if fd < 0 { C.perror(c'tulpar-volume: create temporary plan'); return false }
 	mut published := false
 	defer {
 		if fd >= 0 { C.close(fd) }
@@ -148,22 +148,22 @@ fn publish_bytes_at(directory i32, name &char, bytes &u8, size int) bool {
 	for done < size {
 		written := C.write(fd, unsafe { bytes + done }, uint(size - done))
 		if written < 0 && unsafe { C.errno == C.EINTR } { continue }
-		if written <= 0 { C.perror(c'vinix-volume: write plan'); return false }
+		if written <= 0 { C.perror(c'tulpar-volume: write plan'); return false }
 		done += int(written)
 	}
-	if C.fsync(fd) != 0 { C.perror(c'vinix-volume: flush plan'); return false }
+	if C.fsync(fd) != 0 { C.perror(c'tulpar-volume: flush plan'); return false }
 	closed := C.close(fd)
 	fd = -1
-	if closed != 0 { C.perror(c'vinix-volume: close plan'); return false }
+	if closed != 0 { C.perror(c'tulpar-volume: close plan'); return false }
 	if C.renameat(directory, &temporary[0], directory, name) != 0 {
-		C.perror(c'vinix-volume: publish plan'); return false
+		C.perror(c'tulpar-volume: publish plan'); return false
 	}
 	published = true
-	if C.fsync(directory) != 0 { C.perror(c'vinix-volume: plan published but directory flush failed'); return false }
+	if C.fsync(directory) != 0 { C.perror(c'tulpar-volume: plan published but directory flush failed'); return false }
 	return true
 }
 
-fn volume_path(slot u32, buffer &char) { C.snprintf(buffer, 64, c'/dev/mapper/vinix%u', slot) }
+fn volume_path(slot u32, buffer &char) { C.snprintf(buffer, 64, c'/dev/mapper/tulpar%u', slot) }
 
 @[direct_array_access]
 fn save_plan(device &char, path &char) i32 {
@@ -172,7 +172,7 @@ fn save_plan(device &char, path &char) i32 {
 	defer { close_plan_edit(mut edit) }
 	if !open_plan_destination(path, mut edit, true) { return 1 }
 	fd := C.open(device, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW)
-	if fd < 0 { C.perror(c'vinix-volume: open disk'); return 1 }
+	if fd < 0 { C.perror(c'tulpar-volume: open disk'); return 1 }
 	defer { C.close(fd) }
 	mut plan := unsafe { &Plan(C.alloca(sizeof(Plan))) }
 	unsafe { *plan = Plan{} }
@@ -192,7 +192,7 @@ fn snapshot_plan(fd i32, mut plan Plan, mut parent Status) bool {
 		view := C.open(&name[0], C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW)
 		if view < 0 {
 			if unsafe { C.errno == C.ENOENT } { continue }
-			C.perror(c'vinix-volume: open mapping'); return false
+			C.perror(c'tulpar-volume: open mapping'); return false
 		}
 		mut status := Status{}
 		valid := query_status(view, mut status)
@@ -233,7 +233,7 @@ fn restore_plan(device &char, path &char) i32 {
 	if !load_plan(path, mut plan) { return 1 }
 	flags := i32(if plan_writable(plan) { C.O_RDWR } else { C.O_RDONLY }) | i32(C.O_CLOEXEC | C.O_NOFOLLOW)
 	fd := C.open(device, flags)
-	if fd < 0 { C.perror(c'vinix-volume: open disk'); return 1 }
+	if fd < 0 { C.perror(c'tulpar-volume: open disk'); return 1 }
 	defer { C.close(fd) }
 	return restore_loaded(fd, plan)
 }
@@ -295,7 +295,7 @@ fn prepare_restore_mode(fd i32, plan &Plan, mut state RestoreState, grow bool) b
 		view := C.open(&name[0], C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW)
 		if view < 0 {
 			if unsafe { C.errno == C.ENOENT } { continue }
-			C.perror(c'vinix-volume: open mapping'); return false
+			C.perror(c'tulpar-volume: open mapping'); return false
 		}
 		mut status := Status{}
 		valid := query_status(view, mut status)
@@ -335,7 +335,7 @@ fn apply_restore(fd i32, plan &Plan, state &RestoreState) i32 {
 		}
 		if state.present[i] { continue }
 		if C.ioctl(fd, u64(0x56560001), &plan.rows[i]) != 0 {
-			C.perror(c'vinix-volume: restore stopped; previously created mappings remain'); return 1
+			C.perror(c'tulpar-volume: restore stopped; previously created mappings remain'); return 1
 		}
 	}
 	C.printf(c'restored %u volume mappings\n', plan.count)
@@ -348,7 +348,7 @@ fn apply_mapping_growth(row &Request, parent &Status, generation u64, previous_b
 	mut name := [64]char{}
 	volume_path(row.slot, &name[0])
 	fd := C.open(&name[0], C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW)
-	if fd < 0 { C.perror(c'vinix-volume: open mapping for growth'); return false }
+	if fd < 0 { C.perror(c'tulpar-volume: open mapping for growth'); return false }
 	defer { C.close(fd) }
 	mut status := Status{}
 	if !query_status(fd, mut status) || status.generation != generation || status.bytes != previous_bytes
@@ -357,7 +357,7 @@ fn apply_mapping_growth(row &Request, parent &Status, generation u64, previous_b
 	}
 	mut request := Request{length: row.length}
 	if C.ioctl(fd, u64(0x56560002), &request) != 0 {
-		C.perror(c'vinix-volume: growth stopped; earlier changes remain'); return false
+		C.perror(c'tulpar-volume: growth stopped; earlier changes remain'); return false
 	}
 	if !query_status(fd, mut status) || status.generation != generation || !mapping_matches(unsafe { &status }, parent, row) {
 		plan_error(c'mapping changed after growth; earlier changes remain'); return false

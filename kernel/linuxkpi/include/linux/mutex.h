@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUX_MUTEX_H
-#define VINIX_LINUX_MUTEX_H
+#ifndef TULPAR_LINUX_MUTEX_H
+#define TULPAR_LINUX_MUTEX_H
 #include <linux/atomic.h>
 #include <linux/list.h>
 #include <linux/spinlock_types.h>

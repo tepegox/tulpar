@@ -531,11 +531,11 @@ fn cmdline_has(option string) bool {
 }
 
 fn persistent_requested() bool {
-	return cmdline_has('vinix.qemu_persist=1')
+	return cmdline_has('tulpar.qemu_persist=1')
 }
 
 fn root_requested() bool {
-	return cmdline_has('vinix.qemu_root=1')
+	return cmdline_has('tulpar.qemu_root=1')
 }
 
 // Mount the QEMU data disk as the root filesystem, so every write survives a

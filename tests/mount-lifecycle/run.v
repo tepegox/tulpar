@@ -10,7 +10,7 @@ import os
 struct Receipt {
 	architecture string
 	case_name string
-	context string = 'native Vinix QEMU guest; private tmpfs mounts; root and UID/GID 1000 checks; networking disabled'
+	context string = 'native Tulpar QEMU guest; private tmpfs mounts; root and UID/GID 1000 checks; networking disabled'
 	inputs map[string]string
 	exit_code int
 }
@@ -35,14 +35,14 @@ fn main() {
 	state := os.abs_path(options.value('--state-dir', ''))
 	timeout := options.integer('--timeout', 180)!
 	if os.exists(state) || timeout <= 0 { eprintln('state must be fresh and timeout positive'); exit(2) }
-	kernel := os.read_bytes(options.value('--kernel-dir', '') + '/bin/vinix')!
+	kernel := os.read_bytes(options.value('--kernel-dir', '') + '/bin/tulpar')!
 	machine := if arch == 'aarch64' { 183 } else { 62 }
 	if kernel.len < 20 || kernel[..6] != [u8(127), `E`, `L`, `F`, 2, 1]
 		|| int(kernel[18]) + (int(kernel[19]) << 8) != machine {
 		eprintln('kernel must be matching little-endian ELF64'); exit(2)
 	}
 	os.mkdir_all(state + '/kernel/bin')!
-	os.write_file_array(state + '/kernel/bin/vinix', kernel)!
+	os.write_file_array(state + '/kernel/bin/tulpar', kernel)!
 	os.mkdir_all(state + '/sources')!
 	hosttest.module_copy_tree(@DIR + '/mountfixture', state + '/sources/mountfixture')!
 	mut inputs := {

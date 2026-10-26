@@ -17,14 +17,14 @@ fn xinput_test(args []string) !int {
 	], 0,
 		'Usage: run [--baseline ORIGINAL-C] [--state-dir FRESH-DIR] [--host-arch arm64|amd64]',
 		'Compare production XTEST events to six frozen original C traces under ASan/UBSan.') or { return error_with_code(err.msg(), 2) }
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-xinput-test-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-xinput-test-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	arch := if '--host-arch' in parsed.options {
 		parsed.options['--host-arch']
 	} else {
 		policyhost.caller_arch()
 	}
-	mut include := os.getenv_opt('VINIX_X11_INCLUDE') or { root() + '/build-aarch64-x11/sysroot/usr/include' }
+	mut include := os.getenv_opt('TULPAR_X11_INCLUDE') or { root() + '/build-aarch64-x11/sysroot/usr/include' }
 	if !os.is_file(include + '/X11/Xlib.h') {
 		include = root() + '/build-aarch64-x11/staging/usr/include'
 	}
@@ -104,7 +104,7 @@ fn xinput_test(args []string) !int {
 
 fn target_compiler(arch string) !([]string, []string) {
 	if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		return [...compiler_prefix('CC', 'clang')!, '--target=aarch64-linux-musl', '--sysroot=' + sdk], [
 			'-L' + sdk + '/lib',
 			'-fuse-ld=lld',
@@ -135,7 +135,7 @@ fn x11_guest(args []string, wine bool) !int {
 	needed(parsed, ['--arch', '--kernel-dir', '--state-dir'])!
 	timeout := timeout_option(parsed, 3600)!
 	arch := parsed.options['--arch']
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-x11-guest-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-x11-guest-')!
 	x11_core(if wine { 'winehost' } else { 'xinputcore' }, work + '/core.c', if arch == 'aarch64' {
 		'arm64'
 	} else {
@@ -154,7 +154,7 @@ fn x11_guest(args []string, wine bool) !int {
 	if wine {
 		core_flags := [...cc, '-std=gnu11', '-O2', '-ffunction-sections', '-fdata-sections',
 			'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-unused-label', '-I' + work,
-			'-I' + root() + '/build-support/xorg-server', '-DVINIX_WINE_HOST_NO_MAIN']
+			'-I' + root() + '/build-support/xorg-server', '-DTULPAR_WINE_HOST_NO_MAIN']
 		run([...core_flags, '-c', work + '/core.c', '-o', work + '/core.o'])!
 		run([...flags, '-Dmain=wine_fixture_main', '-c', root() + '/tests/wine-host/test.c', '-o',
 			work + '/fixture.o'])!
@@ -188,12 +188,12 @@ pub fn run() i32 {
 		'-o', init])!
 	elf_arch(init, arch)!
 	os.mkdir_all(work + '/kernel/bin')!
-	hosttest.module_copy_file_preserving_stat(resolve(parsed.options['--kernel-dir'])! + '/bin/vinix', work + '/kernel/bin/vinix')!
-	elf_arch(work + '/kernel/bin/vinix', arch)!
+	hosttest.module_copy_file_preserving_stat(resolve(parsed.options['--kernel-dir'])! + '/bin/tulpar', work + '/kernel/bin/tulpar')!
+	elf_arch(work + '/kernel/bin/tulpar', arch)!
 	hosttest.write_json(work + '/inputs.json', {
 		'arch':           json2.Any(arch)
 		'wine':           json2.Any(wine)
-		'kernel_sha256':  json2.Any(hosttest.sha(work + '/kernel/bin/vinix')!)
+		'kernel_sha256':  json2.Any(hosttest.sha(work + '/kernel/bin/tulpar')!)
 		'fixture_sha256': json2.Any(hosttest.sha(root() + if wine {
 			'/tests/wine-host/test.c'
 		} else {
@@ -204,7 +204,7 @@ pub fn run() i32 {
 		'compiler_flags': json2.Any(hosttest.strings(flags))
 	})!
 	if '--build-only' in parsed.options { return 0 }
-	state := hosttest.work_dir(work + '/guest', 'vinix-x11-runtime-')!
+	state := hosttest.work_dir(work + '/guest', 'tulpar-x11-runtime-')!
 	return guesthost.guest('', init, state, work + '/kernel', arch,
 		[if wine { 'WINE HOST GUEST PASS' } else { 'X11 INPUT GUEST PASS' }], []string{}, false, false, timeout)!
 }

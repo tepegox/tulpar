@@ -244,7 +244,7 @@ pub fn start_program(execve bool, dir &fs.VFSNode, _path string, argv []string, 
 	// resolves that to this process's program, but the new process must record
 	// where the program really is: keeping the literal path would make the
 	// child's own /proc/self/exe point back at itself forever.
-	prog_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	prog_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := if execve {
 		fs.parent_and_mount_for(fs.at_fdcwd, _path, prog_mount) or { free_exec_arguments(_path, argv, envp); return none }
 	} else { unsafe { dir } }
@@ -270,7 +270,7 @@ pub fn start_program_node(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, p
 	mac_previous := mac_thread.mac_loading
 	if execve { mac_thread.mac_loading = true }
 	defer { mac_thread.mac_loading = mac_previous }
-	handed_on := unsafe { &bool(C.vinix_stack_alloc(sizeof(bool))) }
+	handed_on := unsafe { &bool(C.tulpar_stack_alloc(sizeof(bool))) }
 	unsafe { *handed_on = false }
 	process := load_program_image(execve, dir, prog_node, prog_mount, path, argv, envp, stdin_path,
 		stdout_path, stderr_path, handed_on, description) or {
@@ -306,7 +306,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 	}
 	fs.check_access(prog_node, fs.access_exec, true)?
 	mut prog := prog_node.resource
-	allow_wx := envp.contains('VINIX_ALLOW_WX=1')
+	allow_wx := envp.contains('TULPAR_ALLOW_WX=1')
 	if allow_wx && !fs.wx_exec_allowed(prog_mount, description_mount) {
 		errno.set(errno.eperm)
 		return none
@@ -405,7 +405,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 	} else {
 		// Found from the root of the process that runs it -- a container's,
 		// after pivot_root -- as on arm64.
-		ld_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+		ld_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 		ld_node := fs.get_node_and_mount(fs.process_root(proc.current_thread().process), ld_path, true, ld_mount) or {
 			failure := errno.get()
 
@@ -595,7 +595,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 		process.sigcookie = proc.new_sigcookie()
 
 		kernel_pagemap.switch_to()
-		// Exec retains the calling task's accounting even though Vinix builds
+		// Exec retains the calling task's accounting even though Tulpar builds
 		// a replacement Thread. Finish its old-process CPU turn before detach.
 		proc.charge_cpu_time(mut t, proc.cpu_time_now_ns())
 		inherited_usage := t.usage
@@ -695,7 +695,7 @@ pub fn syscall_execveat(_ voidptr, dirfd int, _path charptr, _argv &charptr, _en
 	mut target := path
 
 	mut direct_node := &fs.VFSNode(unsafe { nil })
-	direct_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	direct_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	lib.copy_mount_context(direct_mount, unsafe { nil })
 	if path.len == 0 {
 		// The descriptor's name below takes the empty path's place.
@@ -716,7 +716,7 @@ pub fn syscall_execveat(_ voidptr, dirfd int, _path charptr, _argv &charptr, _en
 		} else {
 			unsafe { &fs.VFSNode(proc.current_directory_of(process)) }
 		}
-		mut name := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+		mut name := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
   unsafe { *name = lib.new_text(32) }
 		name.add('/proc/self/fd/')
 		name.add_decimal(i64(call_dirfd))

@@ -5,7 +5,7 @@ module hostfixture
 
 #include <host-native-abi.h>
 
-@[typedef] struct C.vinix_init_escape {}
+@[typedef] struct C.tulpar_init_escape {}
 struct C.delay { mut: seconds i64 nanoseconds i64 }
 struct C.action {
  handler fn (i32)
@@ -22,14 +22,14 @@ fn C.strcpy(&char, &char) &char
 fn C.strstr(&char, &char) &char
 fn C.strcmp(&char, &char) i32
 fn C.memcpy(voidptr, voidptr, usize) voidptr
-fn C.setjmp(C.vinix_init_escape) i32
-fn C.longjmp(C.vinix_init_escape, i32)
+fn C.setjmp(C.tulpar_init_escape) i32
+fn C.longjmp(C.tulpar_init_escape, i32)
 fn C.puts(&char) i32
-fn C.vinix_init_shell()
-fn C.vinix_init_full()
-fn C.vinix_init_desktop()
-fn C.vinix_init_power_signal(i32)
-fn C.vinix_init_child_signal(i32)
+fn C.tulpar_init_shell()
+fn C.tulpar_init_full()
+fn C.tulpar_init_desktop()
+fn C.tulpar_init_power_signal(i32)
+fn C.tulpar_init_child_signal(i32)
 fn C.initcore__prepare_desktop_boot()
 fn C.initcore__prepare_hosted_x11_storage()
 fn C.initcore__prepare_environment()
@@ -51,7 +51,7 @@ __global sleeps usize
 __global probes usize
 __global output [32768]char
 __global lines &&char
-__global finished C.vinix_init_escape
+__global finished C.tulpar_init_escape
 __global mode i32
 __global exit_status i32
 __global symlink_failure i32
@@ -112,11 +112,11 @@ pub fn syscall(nr u64, a0 u64, a1 u64, a2 u64, a3 u64, a4 u64) i64 {
   if nr == 93 { exit_status = i32(a0); C.longjmp(finished, 1) }
   if nr == 56 {
    C.assert(a0 == u64(i64(-100))); text_copy(&r.path[0], a1)
-   if mode == volumes { C.assert(C.strcmp(&r.path[0], c'/usr/sbin/vinix-volume') == 0 && a2 == 0); return if volume_missing { i64(-2) } else { i64(8) } }
+   if mode == volumes { C.assert(C.strcmp(&r.path[0], c'/usr/sbin/tulpar-volume') == 0 && a2 == 0); return if volume_missing { i64(-2) } else { i64(8) } }
    if a2 == 0x41 { C.assert(a3 == 0o600); return 9 }
    if mode == graphical {
     if C.strcmp(&r.path[0], c'/dev/dri/renderD128') == 0 { return if graphical_gpu { i64(8) } else { i64(-2) } }
-    if C.strcmp(&r.path[0], c'/usr/bin/vinix-desktop-gpu') == 0 { return if graphical_gpu_binary { i64(8) } else { i64(-2) } }
+    if C.strcmp(&r.path[0], c'/usr/bin/tulpar-desktop-gpu') == 0 { return if graphical_gpu_binary { i64(8) } else { i64(-2) } }
     return -2
    }
    return 8
@@ -143,7 +143,7 @@ pub fn syscall(nr u64, a0 u64, a1 u64, a2 u64, a3 u64, a4 u64) i64 {
   if nr == 134 {
    C.assert(a2 == 0 && a3 == 8); action := &C.action(usize(a1))
    C.assert(action.flags == 0 && action.mask == 0 && voidptr(action.restorer) != nil)
-   expected := if a0 == 17 { voidptr(C.vinix_init_child_signal) } else { voidptr(C.vinix_init_power_signal) }
+   expected := if a0 == 17 { voidptr(C.tulpar_init_child_signal) } else { voidptr(C.tulpar_init_power_signal) }
    C.assert(usize(voidptr(action.handler)) == usize(expected)); return 0
   }
   if nr == 81 { C.assert(a0 == 0); return 0 }
@@ -164,21 +164,21 @@ pub fn syscall(nr u64, a0 u64, a1 u64, a2 u64, a3 u64, a4 u64) i64 {
    if mode == full {
     C.assert(C.strcmp(&r.path[0], c'/bin/busybox') == 0)
     C.assert(C.strcmp(arguments[1], if full_echo { c'echo' } else { c'sh' }) == 0)
-    C.assert(C.strcmp(arguments[2], if full_echo { c'VINIX BUSYBOX EXEC TEST: PASS' } else { c'/etc/vinix-boot-test.sh' }) == 0 && arguments[3] == nil)
-    C.assert(C.strcmp(environment[1], c'HOME=/root') == 0 && C.strcmp(environment[2], c'TERM=linux') == 0 && C.strcmp(environment[3], c'PS1=vinix# ') == 0)
+    C.assert(C.strcmp(arguments[2], if full_echo { c'TULPAR BUSYBOX EXEC TEST: PASS' } else { c'/etc/tulpar-boot-test.sh' }) == 0 && arguments[3] == nil)
+    C.assert(C.strcmp(environment[1], c'HOME=/root') == 0 && C.strcmp(environment[2], c'TERM=linux') == 0 && C.strcmp(environment[3], c'PS1=tulpar# ') == 0)
     C.assert(C.strcmp(environment[4], c'LD_LIBRARY_PATH=/usr/lib:/usr/lib/xorg/modules') == 0)
     C.assert(C.strcmp(environment[5], c'LIBGL_DRIVERS_PATH=/usr/lib/xorg/modules/dri:/usr/lib/dri') == 0 && environment[6] == nil)
    } else if mode == graphical {
-    C.assert(C.strcmp(&r.path[0], c'/usr/sbin/vinix-session') == 0)
+    C.assert(C.strcmp(&r.path[0], c'/usr/sbin/tulpar-session') == 0)
     C.assert(C.strcmp(arguments[1], c'graphical') == 0 && C.strcmp(arguments[2], c'--desktop') == 0)
     if graphical_gpu && graphical_gpu_binary {
-     C.assert(C.strcmp(arguments[3], c'/usr/bin/vinix-desktop-gpu') == 0 && C.strcmp(arguments[4], c'--fallback-desktop') == 0)
-     C.assert(C.strcmp(arguments[5], c'/usr/bin/vinix-desktop') == 0 && arguments[6] == nil)
-    } else { C.assert(C.strcmp(arguments[3], c'/usr/bin/vinix-desktop') == 0 && arguments[4] == nil) }
-    C.assert(C.strcmp(environment[1], c'HOME=/root') == 0 && C.strcmp(environment[13], c'VINIX_SYSTEM_SESSION=1') == 0 && environment[14] == nil)
+     C.assert(C.strcmp(arguments[3], c'/usr/bin/tulpar-desktop-gpu') == 0 && C.strcmp(arguments[4], c'--fallback-desktop') == 0)
+     C.assert(C.strcmp(arguments[5], c'/usr/bin/tulpar-desktop') == 0 && arguments[6] == nil)
+    } else { C.assert(C.strcmp(arguments[3], c'/usr/bin/tulpar-desktop') == 0 && arguments[4] == nil) }
+    C.assert(C.strcmp(environment[1], c'HOME=/root') == 0 && C.strcmp(environment[13], c'TULPAR_SYSTEM_SESSION=1') == 0 && environment[14] == nil)
     C.longjmp(finished, 1)
    } else if mode == volumes {
-    C.assert(C.strcmp(&r.path[0], c'/usr/sbin/vinix-volume') == 0)
+    C.assert(C.strcmp(&r.path[0], c'/usr/sbin/tulpar-volume') == 0)
     C.assert(C.strcmp(arguments[1], c'boot-restore') == 0 && arguments[2] == nil)
     C.assert(C.strcmp(environment[1], c'HOME=/root') == 0)
    } else { C.assert(mode == spawn_mode && arguments[1] == nil && environment[1] == nil) }; return -2
@@ -214,29 +214,29 @@ fn number(nr u64, at usize) &Record {
 }
 fn shell_test() {
  unsafe {
-  reset(shell); lines = &&char(&shell_input[0]); if C.setjmp(finished) == 0 { C.vinix_init_shell() }
+  reset(shell); lines = &&char(&shell_input[0]); if C.setjmp(finished) == 0 { C.tulpar_init_shell() }
   C.assert(exit_status == 0 && read_at == 9)
   C.assert(C.strstr(&output[0], c' | | | | | \'_ \\| \\ \\/ /\n') != nil)
-  C.assert(C.strstr(&output[0], c'Type \'help\' for available commands.\n\nvinix# vinix# Available commands:\n') != nil)
-  C.assert(C.strstr(&output[0], c'  exit   - exit shell\nvinix# Hello from userland!\nvinix# Vinix 0.1.0 aarch64\nvinix# hello world\nvinix# \nvinix# unknown command: echoes\nvinix# unknown command: missing\nvinix# Goodbye!\n') != nil)
-  reset(shell); lines = &&char(&shell_eof[0]); if C.setjmp(finished) == 0 { C.vinix_init_shell() }
+  C.assert(C.strstr(&output[0], c'Type \'help\' for available commands.\n\ntulpar# tulpar# Available commands:\n') != nil)
+  C.assert(C.strstr(&output[0], c'  exit   - exit shell\ntulpar# Hello from userland!\ntulpar# Tulpar 0.1.0 aarch64\ntulpar# hello world\ntulpar# \ntulpar# unknown command: echoes\ntulpar# unknown command: missing\ntulpar# Goodbye!\n') != nil)
+  reset(shell); lines = &&char(&shell_eof[0]); if C.setjmp(finished) == 0 { C.tulpar_init_shell() }
   C.assert(exit_status == 1 && C.strstr(&output[0], c'read error or EOF, exiting\n') != nil)
  }
 }
 fn full_test() {
  unsafe {
-  reset(full); if C.setjmp(finished) == 0 { C.vinix_init_full() }
+  reset(full); if C.setjmp(finished) == 0 { C.tulpar_init_full() }
   C.assert(exit_status == 1 && count(221) == 1)
-  C.assert(C.strcmp(&output[0], c'\nVinix ARM64 test userland: starting boot tests\ninit: execve /bin/sh failed\n') == 0)
+  C.assert(C.strcmp(&output[0], c'\nTulpar ARM64 test userland: starting boot tests\ninit: execve /bin/sh failed\n') == 0)
  }
 }
 fn boot_test() {
  unsafe {
   reset(basic); C.initcore__prepare_desktop_boot()
   C.assert(used == 20 && count(35) == 10 && count(36) == 3 && count(38) == 4 && count(37) == 1)
-  C.assert(C.strcmp(&calls[0].path[0], c'/run/vinix-desktop-development') == 0 && C.strcmp(&calls[2].path[0], c'/run/vinix-latest-release') == 0)
-  C.assert(C.strcmp(&number(36, 0).path[0], c'vinix-desktop') == 0 && C.strcmp(&number(36, 2).other[0], c'/usr/bin/.vinix-settings.system') == 0)
-  C.assert(C.strcmp(&number(38, 3).other[0], c'/usr/bin/vinix-desktop') == 0)
+  C.assert(C.strcmp(&calls[0].path[0], c'/run/tulpar-desktop-development') == 0 && C.strcmp(&calls[2].path[0], c'/run/tulpar-latest-release') == 0)
+  C.assert(C.strcmp(&number(36, 0).path[0], c'tulpar-desktop') == 0 && C.strcmp(&number(36, 2).other[0], c'/usr/bin/.tulpar-settings.system') == 0)
+  C.assert(C.strcmp(&number(38, 3).other[0], c'/usr/bin/tulpar-desktop') == 0)
   reset(basic); symlink_failure = 1; link_failure = 1; C.initcore__prepare_desktop_boot()
   C.assert(count(38) == 2 && count(37) == 1 && count(35) == 11 && C.strstr(&output[0], c'could not restore the packaged desktop') != nil)
   reset(basic); C.initcore__prepare_hosted_x11_storage()
@@ -249,11 +249,11 @@ fn signal_test() {
  unsafe {
   reset(basic); C.initcore__install_power_signals(); C.assert(used == 5)
   for i := usize(0); i < 5; i++ { C.assert(calls[i].nr == 134 && calls[i].a[0] == signals[i]) }
-  C.vinix_init_power_signal(1); C.assert(C.vinit_reload == 1 && C.vinit_power == 0)
-  C.vinix_init_power_signal(15); C.assert(C.vinit_reload == 1 && C.vinit_power == 15)
-  C.vinix_init_child_signal(17); C.assert(C.vinit_reload == 1 && C.vinit_power == 15)
+  C.tulpar_init_power_signal(1); C.assert(C.vinit_reload == 1 && C.vinit_power == 0)
+  C.tulpar_init_power_signal(15); C.assert(C.vinit_reload == 1 && C.vinit_power == 15)
+  C.tulpar_init_child_signal(17); C.assert(C.vinit_reload == 1 && C.vinit_power == 15)
   for i := usize(0); i < 3; i++ {
-   reset(basic); C.vinix_init_power_signal(i32(power[i])); C.initcore__apply_power_request()
+   reset(basic); C.tulpar_init_power_signal(i32(power[i])); C.initcore__apply_power_request()
    C.assert(calls[0].nr == 81 && calls[1].nr == 142 && calls[1].a[2] == commands[i] && C.vinit_power == 0)
   }
   reset(wait); C.vinit_power = 15; mut status := i32(-1); C.initcore__wait_for_child(77, &status)
@@ -266,8 +266,8 @@ fn signal_test() {
 }
 fn process_test() {
  unsafe {
-  mut arguments := [&char(c'/usr/bin/vinix-desktop-gpu'), &char(nil)]!
-  mut fallback := [&char(c'/usr/bin/vinix-desktop'), &char(nil)]!
+  mut arguments := [&char(c'/usr/bin/tulpar-desktop-gpu'), &char(nil)]!
+  mut fallback := [&char(c'/usr/bin/tulpar-desktop'), &char(nil)]!
   mut environment := [&char(c'PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin'), &char(nil)]!
   mut status := i32(0)
   reset(spawn_mode); C.assert(C.initcore__spawn_program(&arguments[0], &fallback[0], true, &status, &environment[0], true) == 77)
@@ -306,7 +306,7 @@ fn graphical_boot_test() {
   for variant := 0; variant < 3; variant++ {
    reset(graphical); cloned = 0
    graphical_gpu = variant != 0; graphical_gpu_binary = variant == 1
-   if C.setjmp(finished) == 0 { C.vinix_init_desktop() }
+   if C.setjmp(finished) == 0 { C.tulpar_init_desktop() }
    C.assert(count(221) == 1 && count(220) == 1 && count(154) == 1)
   }
  }

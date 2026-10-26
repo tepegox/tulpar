@@ -112,7 +112,7 @@ fn test_activity_inspector_exports_raw_io_totals() {
 		io_raw: 'rchar: 1234\nwchar: 5678\nread_bytes: 0\nwrite_bytes: 1024\nnet_recv_bytes: 12\nnet_send_bytes: 34\n'.clone()
 	}
 	defer { inspector.close() }
-	home := os.join_path(os.temp_dir(), 'vinix-activity-inspector-io-test')
+	home := os.join_path(os.temp_dir(), 'tulpar-activity-inspector-io-test')
 	path := os.join_path(home, 'Activity-Monitor-42.txt')
 	os.mkdir_all(home)!
 	defer {

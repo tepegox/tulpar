@@ -73,12 +73,12 @@ pub fn verify_marker(path &char, payload &char, length usize) i32 {
 @[export: 'verify_persistence_boot']
 pub fn verify_persistence_boot() i32 {
 	unsafe {
-		fd := C.open(c'/root/vinix-qemu-core/persist', C.O_RDONLY)
+		fd := C.open(c'/root/tulpar-qemu-core/persist', C.O_RDONLY)
 		if fd < 0 { return if C.errno == C.ENOENT { 0 } else { -1 } }
 		C.close(fd)
-		if verify_marker(c'/root/vinix-qemu-core/persist', c'vinix-ext2-cache-writeback-v1', 29) != 0 { return -1 }
-		if verify_marker(c'/root/vinix-qemu-core/synced', c'vinix-ext2-sync-writeback-v1', 28) != 0 { return -1 }
-		C.puts(c'VINIX QEMU CORE PERSIST: PASS')
+		if verify_marker(c'/root/tulpar-qemu-core/persist', c'tulpar-ext2-cache-writeback-v1', 29) != 0 { return -1 }
+		if verify_marker(c'/root/tulpar-qemu-core/synced', c'tulpar-ext2-sync-writeback-v1', 28) != 0 { return -1 }
+		C.puts(c'TULPAR QEMU CORE PERSIST: PASS')
 		return 1
 	}
 }

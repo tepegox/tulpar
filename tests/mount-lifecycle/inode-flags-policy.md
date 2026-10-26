@@ -15,7 +15,7 @@ backend support, securelevel and overlay checks remain in their previous order.
 
 The mount-write requirement also appears in
 [Linux v6.12's inode-flag ioctl](https://github.com/torvalds/linux/blob/v6.12/fs/ioctl.c).
-This change preserves Vinix's existing capability check before mount policy.
+This change preserves Tulpar's existing capability check before mount policy.
 It does not qualify Linux-compatible error precedence for unprivileged setters.
 
 Use `--case inode-flags` or `ip-0` through `ip-7`. The native `all` suite includes

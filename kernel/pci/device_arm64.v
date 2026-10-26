@@ -16,7 +16,7 @@ __global (
 // records only I and toggles all DAIF masks; using it here would change a
 // caller's independently masked FIQ/debug/SError state. NMI/FIQ recursion into
 // PCI configuration remains outside this ordinary IRQ-safe lock contract.
-@[export: 'vinix_pci_config_lock']
+@[export: 'tulpar_pci_config_lock']
 fn config_lock() {
 	mut flags := u64(0)
 	asm volatile aarch64 {
@@ -34,7 +34,7 @@ fn config_lock() {
 	config_transport_daif = flags
 }
 
-@[export: 'vinix_pci_config_unlock']
+@[export: 'tulpar_pci_config_unlock']
 fn config_unlock() {
 	// Snapshot before publishing unlock, so a new owner cannot overwrite the
 	// state this CPU must restore. Release ordering precedes its wake event.
@@ -73,7 +73,7 @@ pub fn set_ecam(virt u64, buses u32) bool {
 	return true
 }
 
-@[export: 'vinix_pci_config_limit']
+@[export: 'tulpar_pci_config_limit']
 fn config_limit(bus u32) u32 {
 	return if ecam_base != 0 && bus < ecam_buses { u32(4096) } else { u32(0) }
 }
@@ -84,7 +84,7 @@ fn ecam_address(bus u32, slot u32, function u32, offset u32) u64 {
 	return ecam_base + (u64(bus) << 20) + (u64(slot) << 15) + (u64(function) << 12) + offset
 }
 
-@[export: 'vinix_pci_config_read_raw']
+@[export: 'tulpar_pci_config_read_raw']
 fn config_read_raw(bus u32, slot u32, function u32, offset u32, width u32) u32 {
 	addr := ecam_address(bus, slot, function, offset)
 	return match width {
@@ -94,7 +94,7 @@ fn config_read_raw(bus u32, slot u32, function u32, offset u32, width u32) u32 {
 	}
 }
 
-@[export: 'vinix_pci_config_write_raw']
+@[export: 'tulpar_pci_config_write_raw']
 fn config_write_raw(bus u32, slot u32, function u32, offset u32, width u32, value u32) {
 	addr := ecam_address(bus, slot, function, offset)
 	match width {

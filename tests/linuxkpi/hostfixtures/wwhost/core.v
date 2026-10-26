@@ -33,8 +33,8 @@ fn C.ww_mutex_lock_slow_interruptible(&C.ww_mutex, &C.ww_acquire_ctx) i32
 fn C.ww_mutex_unlock(&C.ww_mutex)
 fn C.ww_mutex_trylock(&C.ww_mutex, &C.ww_acquire_ctx) i32
 fn C.vmh_mutex_waiters(&C.mutex) u32
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
 fn C.vmh_ww_actor_thread(voidptr) voidptr
 @[c_extern] __global (
  C.vmh_wd_class C.ww_class
@@ -185,9 +185,9 @@ fn basic(klass &C.ww_class) {
   C.assert(C.ww_mutex_lock(&a, &ctx) == -C.EALREADY)
   C.assert(C.ww_mutex_lock_interruptible(&a, &ctx) == -C.EALREADY)
   C.assert(C.ww_mutex_trylock(&a, &ctx) == 0 && ctx.acquired == 1)
-  flags := C.vinix_linuxkpi_irq_save()
+  flags := C.tulpar_linuxkpi_irq_save()
   C.assert(C.ww_mutex_trylock(&b, &ctx) != 0)
-  C.vinix_linuxkpi_irq_restore(flags)
+  C.tulpar_linuxkpi_irq_restore(flags)
   C.assert(ctx.acquired == 2 && usize(b.ctx) == usize(&ctx))
   C.ww_acquire_done(&ctx)
   C.ww_mutex_unlock(&a); C.assert(ctx.acquired == 1 && a.ctx == nil)
@@ -326,12 +326,12 @@ fn first_lock(klass &C.ww_class) {
   actor_go(&first); wait_value(&first.model.parked, 1)
   C.assert(C.__atomic_load_n(&first.returned, 2) == 0 && first.ctx.acquired == 0)
   C.__atomic_store_n(&C.vmh_u64(&first.model.pending), u64(1) << 14, 3)
-  C.assert(C.vinix_linuxkpi_task_enqueue(&first.model))
+  C.assert(C.tulpar_linuxkpi_task_enqueue(&first.model))
   for spin := u32(0); spin < 1000000; spin++ {
-   if !C.vinix_linuxkpi_task_queued(&first.model) { break }
+   if !C.tulpar_linuxkpi_task_queued(&first.model) { break }
    C.sched_yield()
   }
-  C.assert(!C.vinix_linuxkpi_task_queued(&first.model))
+  C.assert(!C.tulpar_linuxkpi_task_queued(&first.model))
   C.assert(C.__atomic_load_n(&first.returned, 2) == 0)
   C.ww_mutex_unlock(&mutexp)
   wait_value(&first.locked, 1)
@@ -434,7 +434,7 @@ fn interrupt_and_handoff(klass &C.ww_class) {
    C.__atomic_store_n(&C.vmh_u64(&actor.model.pending), u64(1) << 14, 3)
    if klass.is_wait_die == 0 { C.__atomic_store_n(&actor.ctx.wounded, u16(1), 3) }
    if round & 1 == 0 {
-    C.assert(C.vinix_linuxkpi_task_enqueue(&actor.model))
+    C.assert(C.tulpar_linuxkpi_task_enqueue(&actor.model))
     wait_value(&actor.dropped, 1)
     C.assert(actor.result == -C.EINTR && actor.ctx.acquired == 0)
     actor_join(&actor)
@@ -453,7 +453,7 @@ fn interrupt_and_handoff(klass &C.ww_class) {
   actor.slow = true
   actor_go(&actor); wait_value(&actor.model.parked, 1)
   C.__atomic_store_n(&C.vmh_u64(&actor.model.pending), u64(1) << 14, 3)
-  C.assert(C.vinix_linuxkpi_task_enqueue(&actor.model))
+  C.assert(C.tulpar_linuxkpi_task_enqueue(&actor.model))
   actor_join(&actor)
   C.assert(actor.result == -C.EINTR && C.vmh_mutex_waiters(&mutexp.base) == 0)
   C.ww_mutex_unlock(&mutexp)

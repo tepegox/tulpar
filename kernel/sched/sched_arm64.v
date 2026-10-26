@@ -22,7 +22,7 @@ import krandom
 
 fn C.sched_switch_context(gpr_state voidptr, kernel_stack u64)
 
-fn C.vinix_enter_idle(stack_top u64, entry voidptr, thread voidptr)
+fn C.tulpar_enter_idle(stack_top u64, entry voidptr, thread voidptr)
 
 // The outgoing thread's lock protects its kernel stack. Release it only after
 // the CPU has switched to its private idle stack; another CPU may otherwise
@@ -52,11 +52,11 @@ fn evict_to_idle(cpu_number u64, thr &proc.Thread) {
 		panic('Missing private CPU idle stack')
 	}
 	top := idle_stack_tops[cpu_number]
-	C.vinix_enter_idle(top, voidptr(finish_eviction), voidptr(thr))
+	C.tulpar_enter_idle(top, voidptr(finish_eviction), voidptr(thr))
 	for {}
 }
 
-fn C.vinix_call_void_fn(f voidptr)
+fn C.tulpar_call_void_fn(f voidptr)
 
 fn C.yield_dispatch(handler voidptr)
 
@@ -81,7 +81,7 @@ __global (
 	// loop, a blocking yield and a timeslice can be on three different CPUs.
 	input_poll_lock            klock.Lock
 	last_syscall_input_poll_ns u64
-	// The first context switch into vinix-desktop-gpu is the boundary which
+	// The first context switch into tulpar-desktop-gpu is the boundary which
 	// differs between QEMU and the M1. Point at that thread's saved register
 	// state so the assembly restore can emit checkpoints without flooding every
 	// ordinary context switch on the machine.
@@ -123,7 +123,7 @@ pub fn prepare_cpu_stacks(cpu_number u64) {
 pub fn enter_idle() {
 	cpu.interrupt_toggle(false)
 	cpu_number := cpu.read_tpidr_el1()
-	C.vinix_enter_idle(idle_stack_tops[cpu_number], voidptr(await), unsafe { nil })
+	C.tulpar_enter_idle(idle_stack_tops[cpu_number], voidptr(await), unsafe { nil })
 	for {}
 }
 
@@ -345,7 +345,7 @@ fn poll_platform_input() {
 	defer {
 		input_poll_lock.release()
 	}
-	C.vinix_call_void_fn(uart_poll_callback)
+	C.tulpar_call_void_fn(uart_poll_callback)
 }
 
 // Keep the syscall fallback narrower than the scheduler's normal platform
@@ -1187,7 +1187,7 @@ pub fn new_user_thread(_process &proc.Process, want_elf bool, pc voidptr, arg vo
 		kernel_stack_size + u64(sizeof(proc.Thread)) * 2 + 16384) or { errno.set(errno.eagain); return none }
 	mut charge_transferred := false
 	defer { if !charge_transferred { kbudget.release(charge) } }
-	trace_gpu_exec := process.executable_path == '/usr/bin/vinix-desktop-gpu'
+	trace_gpu_exec := process.executable_path == '/usr/bin/tulpar-desktop-gpu'
 	if trace_gpu_exec {
 		println('exec[gpu]/thread: entered new_user_thread')
 	}

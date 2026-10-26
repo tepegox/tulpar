@@ -12,8 +12,8 @@ fn C.reboot(int) int
 fn C.usleep(u32) int
 
 fn check() ! {
-	os.setenv('VINIX_PACKAGE_COMPOSITION_CLI', '/usr/bin/vinix-package', true)
-	os.unsetenv('VINIX_IMPORT_LIMITS_BEFORE')
+	os.setenv('TULPAR_PACKAGE_COMPOSITION_CLI', '/usr/bin/tulpar-package', true)
+	os.unsetenv('TULPAR_IMPORT_LIMITS_BEFORE')
 	for name in ['catalog-normalize', 'composition-ownership', 'catalog-plan', 'import-limits', 'import', 'catalog', 'composition', 'release']! {
 		mut child := os.new_process('/usr/share/package-fixtures/' + name)
 		child.set_redirect_stdio_merged(); child.run()

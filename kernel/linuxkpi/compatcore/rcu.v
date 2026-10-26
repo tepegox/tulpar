@@ -35,11 +35,11 @@ fn C.vkm_cpu_masks_ready() bool
 fn C.vkm_cpu_ids() u32
 fn C.vkm_online_count() u32
 fn C.vks_smp_ready() bool
-fn C.vinix_linuxkpi_smp_boot_context() bool
-fn C.vinix_linuxkpi_smp_task_present() bool
-fn C.vinix_linuxkpi_rcu_force_quiescence()
-fn C.vinix_linuxkpi_maskable_irq_depth() u32
-fn C.vinix_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_smp_boot_context() bool
+fn C.tulpar_linuxkpi_smp_task_present() bool
+fn C.tulpar_linuxkpi_rcu_force_quiescence()
+fn C.tulpar_linuxkpi_maskable_irq_depth() u32
+fn C.tulpar_linuxkpi_preempt_count() u32
 fn C.vkr_page_allocation_size(voidptr) uint
 fn C.vkr_kvfree(voidptr)
 
@@ -74,9 +74,9 @@ fn rcu_request_locked(target u64) {
 	unsafe { if !rcu_sequence_done(vkr_rcu_needed, target) { vkr_rcu_needed = target } }
 }
 fn rcu_sleepable_context() bool {
-	return C.vinix_linuxkpi_may_sleep() && C.vinix_linuxkpi_smp_task_present()
-		&& C.vinix_linuxkpi_maskable_irq_depth() == 0 && C.vinix_linuxkpi_preempt_count() == 0
-		&& (C.vinix_linuxkpi_irq_flags() & 512) != 0
+	return C.tulpar_linuxkpi_may_sleep() && C.tulpar_linuxkpi_smp_task_present()
+		&& C.tulpar_linuxkpi_maskable_irq_depth() == 0 && C.tulpar_linuxkpi_preempt_count() == 0
+		&& (C.tulpar_linuxkpi_irq_flags() & 512) != 0
 }
 @[export: 'vkr_rcu_ready']
 pub fn rcu_domain_ready() bool { return unsafe { C.vkr_rcu_load32(&vkr_rcu_published, 2) != 0 } }
@@ -105,7 +105,7 @@ fn rcu_enter_worker(worker &RcuWorker) {
 fn rcu_join_worker(worker &RcuWorker) {
 	unsafe {
 		require(C.vkr_rcu_pthread_join(worker.thread) == 0)
-		for !C.vkr_rcu_task_retired(worker.task) { C.vinix_linuxkpi_cond_resched() }
+		for !C.vkr_rcu_task_retired(worker.task) { C.tulpar_linuxkpi_cond_resched() }
 		C.vkr_rcu_put_task(worker.task)
 		C.kfree(worker)
 	}
@@ -132,7 +132,7 @@ pub fn rcu_bootstrap(count u32) i32 {
 	if count == 0 || count > 256 || !C.vkm_cpu_masks_ready() || !C.vks_smp_ready()
 		|| count != C.vkm_cpu_ids() || count != C.vkm_online_count() { return -22 }
 	if rcu_domain_ready() { return -114 }
-	if !C.vinix_linuxkpi_smp_boot_context() { return -1 }
+	if !C.tulpar_linuxkpi_smp_boot_context() { return -1 }
 	gp := rcu_start_worker(false)
 	if is_null(gp) { return -12 }
 	callback := rcu_start_worker(true)
@@ -229,7 +229,7 @@ pub fn rcu_get_state() u64 {
 @[export: 'vkr_rcu_start_poll']
 pub fn rcu_start_poll() u64 {
 	unsafe {
-		require(rcu_domain_ready() && (C.vinix_linuxkpi_irq_flags() & 512) != 0)
+		require(rcu_domain_ready() && (C.tulpar_linuxkpi_irq_flags() & 512) != 0)
 		C.vkr_rcu_fence(5)
 		flags := C.vkp_spin_lock_irqsave(&vkr_rcu_guard)
 		cookie := rcu_sequence_snapshot(vkr_rcu_sequence)
@@ -327,7 +327,7 @@ pub fn rcu_gp_worker(argument voidptr) voidptr {
 			C.vkp_spin_unlock_irqrestore(&vkr_rcu_guard, flags)
 			// Requests may have interrupted an old pinned/IRQ scope. Keep asking
 			// for a real return; neither IPI arrival nor a fixed delay is a QS.
-			if active { C.vinix_linuxkpi_rcu_force_quiescence() }
+			if active { C.tulpar_linuxkpi_rcu_force_quiescence() }
 			C.msleep(1)
 		}
 		require(!active && is_null(batch))
@@ -356,7 +356,7 @@ pub fn rcu_callback_worker(argument voidptr) voidptr {
 				C.memcpy(&bits, &head.func, sizeof(uint))
 				head.next = nil
 				require(rcu_sleepable_context())
-				C.vinix_linuxkpi_preempt_disable()
+				C.tulpar_linuxkpi_preempt_disable()
 				C.vkr_rcu_fence(5)
 				if bits < 4096 {
 					C.memset(&head.func, 0, sizeof(voidptr))
@@ -369,10 +369,10 @@ pub fn rcu_callback_worker(argument voidptr) voidptr {
 				}
 				// Callback may requeue or free its object. Only pointer values and
 				// separate ordinal accounting remain live after invocation.
-				require(C.vinix_linuxkpi_maskable_irq_depth() == 0
-					&& C.vinix_linuxkpi_preempt_count() == 1
-					&& (C.vinix_linuxkpi_irq_flags() & 512) != 0)
-				C.vinix_linuxkpi_preempt_enable()
+				require(C.tulpar_linuxkpi_maskable_irq_depth() == 0
+					&& C.tulpar_linuxkpi_preempt_count() == 1
+					&& (C.tulpar_linuxkpi_irq_flags() & 512) != 0)
+				C.tulpar_linuxkpi_preempt_enable()
 				retired_flags := C.vkp_spin_lock_irqsave(&vkr_rcu_guard)
 				C.vkr_rcu_store64(&vkr_rcu_completed, vkr_rcu_completed + 1, 3)
 				C.vkp_spin_unlock_irqrestore(&vkr_rcu_guard, retired_flags)

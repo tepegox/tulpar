@@ -45,7 +45,7 @@ fn (mut c Controls) check(name string, kind string, text string, repetitions int
 fn native() string {
 	mut text := strings.new_builder(8192)
 	text.writeln('HWTEST START packages-https-runtime')
-	text.writeln('curl 8.14.1 (aarch64-unknown-vinix) libcurl/8.14.1 OpenSSL/3.5.0 zlib/1.3.1')
+	text.writeln('curl 8.14.1 (aarch64-unknown-tulpar) libcurl/8.14.1 OpenSSL/3.5.0 zlib/1.3.1')
 	text.writeln('GUEST TLS file baseline=1000000 ceiling=1131072')
 	for mode in tlsruntime.modes() {
 		text.writeln('GUEST TLS ' + mode + ' retained 0 tracked bytes')
@@ -111,7 +111,7 @@ fn run() ! {
 		return error('usage: https-runtime-evidence-check RETAINER_BINARY [REPORT_PATH]')
 	}
 	program := os.abs_path(os.args[1])
-	work := os.join_path(os.temp_dir(), 'vinix-tls-evidence-' + os.getpid().str() + '-' + time.now().unix_milli().str())
+	work := os.join_path(os.temp_dir(), 'tulpar-tls-evidence-' + os.getpid().str() + '-' + time.now().unix_milli().str())
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or {} }
 	mut c := Controls{ program: program, work: work, report: strings.new_builder(4096) }

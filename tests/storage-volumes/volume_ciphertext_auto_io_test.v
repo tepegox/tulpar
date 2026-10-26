@@ -13,7 +13,7 @@ fn ciphertext_auto_check(input string, credential string, reference string, reco
 	unsafe {
 		verb := if verify { if recovery { &char(c'verify-recovery-volume-auto') } else { &char(c'verify-volume-auto') } }
 			else { if recovery { &char(c'hash-recovery-volume-auto') } else { &char(c'hash-volume-auto') } }
-		args := [&char(c'vinix-volume'), verb, input.str, credential.str, reference.str, &char(nil)]!
+		args := [&char(c'tulpar-volume'), verb, input.str, credential.str, reference.str, &char(nil)]!
 		assert run(5, &args[0]) == expected
 	}
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
@@ -26,7 +26,7 @@ fn ciphertext_auto_check(input string, credential string, reference string, reco
 fn test_automatic_ciphertext_creation_verification_erasure_pin_continuity_and_faults() {
 	ciphertext_model = true; recovery_growth_model = true
 	defer { ciphertext_model = false; recovery_growth_model = false; auto_scrub_refused = false; auto_scrub_pin_fault = 0 }
-	work := os.join_path(os.temp_dir(), 'vinix-ciphertext-auto-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-ciphertext-auto-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	input := work + '/input'; credential := work + '/credential'; reference := work + '/reference'
 	wrapping := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}
 	data := []u8{len: 73728, init: ciphertext_pattern(u64(index) + 8192)}; digest := sha256.sum(data)

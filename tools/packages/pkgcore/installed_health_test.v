@@ -8,13 +8,13 @@ import time
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 fn C.mkfifo(&char, u32) int
 
 fn health_fixture() !(string, State, Plan) {
-	directory := os.temp_dir() + '/vinix-installed-health-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-installed-health-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	generation := directory + '/generations/7'
 	os.mkdir_all(generation + '/share/applications')!
 	mut packages := []Installed{}
@@ -25,7 +25,7 @@ fn health_fixture() !(string, State, Plan) {
 			architecture: if id == 'data' { 'all' } else { 'aarch64' }, version: '1.0.0', license: 'MIT', entrypoint: 'bin/app',
 			associations: ['text/plain', 'text/markdown'], files: [Payload{ path: 'bin/app', bytes: 7, sha256: sha256.hexhash('payload'), executable: id != 'data' }] }
 		packages << Installed{ package: p, repository: 'trusted', public_key: 'a'.repeat(64), sequence: 1 }
-		if id == 'app' { os.write_file(generation + '/share/applications/vinix-app.desktop', desktop_entry(p))!; os.chmod(generation + '/share/applications/vinix-app.desktop', 0o644)! }
+		if id == 'app' { os.write_file(generation + '/share/applications/tulpar-app.desktop', desktop_entry(p))!; os.chmod(generation + '/share/applications/tulpar-app.desktop', 0o644)! }
 	}
 	return directory, State{ generation: 7, architecture: 'aarch64', requested: ['app'], packages: packages }, Plan{ packages: packages }
 }
@@ -64,8 +64,8 @@ fn test_installed_modes_require_canonical_permissions_without_changing_cache_adm
 fn test_registration_matches_canonical_signed_metadata_and_refuses_special_files() {
 	directory, current, plan := health_fixture()!; defer { os.rmdir_all(directory) or {} }
 	generation := directory + '/generations/7'; p := plan.packages[0].package
-	entry := generation + '/share/applications/vinix-app.desktop'
-	expected := '[Desktop Entry]\nType=Application\nName=Editor é\nComment=Write text\nExec=/usr/bin/vinix-package run app %F\nTerminal=false\nMimeType=text/plain;text/markdown;\nX-Vinix-Package=app\nX-Vinix-Runtime=\n'
+	entry := generation + '/share/applications/tulpar-app.desktop'
+	expected := '[Desktop Entry]\nType=Application\nName=Editor é\nComment=Write text\nExec=/usr/bin/tulpar-package run app %F\nTerminal=false\nMimeType=text/plain;text/markdown;\nX-Tulpar-Package=app\nX-Tulpar-Runtime=\n'
 	assert desktop_entry(p) == expected && verified_registration(generation, p)
 	assert desktop_entry(Package{ ...p, associations: [] }).contains('MimeType=;\n')
 	assert verified_registration(generation, plan.packages[1].package) && verified_registration(generation, plan.packages[2].package)
@@ -91,15 +91,15 @@ fn test_registration_matches_canonical_signed_metadata_and_refuses_special_files
 fn test_installed_health_discovery_retires_all_owned_scratch() {
 	$if track_heap ? {
 		directory, current, plan := health_fixture()!; defer { os.rmdir_all(directory) or {} }
-		entry := directory + '/generations/7/share/applications/vinix-app.desktop'
+		entry := directory + '/generations/7/share/applications/tulpar-app.desktop'
 		for damaged in [false, true] {
 			if damaged { os.rm(entry)! }
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 64 {
 				repairs := transaction_repairs(directory, current, plan, 'install')
 				assert repairs.len == if damaged { 1 } else { 0 }; close_transaction_repairs(repairs)
 			}
-			kept := C.vinix_heap_end(); assert kept == 0 && C.vinix_heap_count() == 0, 'installed health retained ${kept} bytes'
+			kept := C.tulpar_heap_end(); assert kept == 0 && C.tulpar_heap_count() == 0, 'installed health retained ${kept} bytes'
 		}
 		println('INSTALLATION HEALTH 128 healthy/registration-damaged discovery cycles retain zero tracked bytes PASS')
 	}

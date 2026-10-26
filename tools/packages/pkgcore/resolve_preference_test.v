@@ -3,8 +3,8 @@ module pkgcore
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn preference_package(id string, version string, architecture string, dependencies []Dependency) Installed {
@@ -144,7 +144,7 @@ fn test_public_install_preference_retires_scratch_and_preserves_borrowed_catalog
 		current := State{packages: installed}
 		missing := [...roots, 'zz-missing']
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				plan := resolve(catalog, config, current, roots, false)!
 				assert plan.packages.len == 64 && plan.packages.all(it.package.version == '1.0.0')
@@ -158,7 +158,7 @@ fn test_public_install_preference_retires_scratch_and_preserves_borrowed_catalog
 				}
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'public install preference retained ${kept} bytes'
 		assert catalog.packages.len == 192 && catalog.packages[0] == installed[0] && current.packages == installed
 		println('Resolver preference: 1000 public successful multi-version installs and missing-requirement refusals retain zero tracked bytes PASS')

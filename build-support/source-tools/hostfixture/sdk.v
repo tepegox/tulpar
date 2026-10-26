@@ -47,7 +47,7 @@ pub fn cpython_headers(executable string, explicit string) !string {
 		if resolved == '/usr/bin/python3' {
 			developer := os.getenv_opt('DEVELOPER_DIR') or {
 				selected_sdk := sourcecommand.capture_full(['/usr/bin/xcode-select', '-p'], os.environ(), 5, 65536, unsafe { nil })!
-				if selected_sdk.status != 0 { return error('cannot find active developer SDK; set VINIX_CPYTHON_INCLUDE') }
+				if selected_sdk.status != 0 { return error('cannot find active developer SDK; set TULPAR_CPYTHON_INCLUDE') }
 				selected_sdk.stdout.trim_space()
 			}
 			for base in [developer + '/Library/Frameworks/Python3.framework/Versions',
@@ -73,8 +73,8 @@ pub fn cpython_headers(executable string, explicit string) !string {
 		}
 		if matches.len != 0 { break }
 	}
-	if matches.len == 0 { return error('CPython development headers were not found; set VINIX_CPYTHON_INCLUDE') }
-	if matches.len != 1 { return error('ambiguous CPython SDK; set VINIX_CPYTHON_INCLUDE') }
+	if matches.len == 0 { return error('CPython development headers were not found; set TULPAR_CPYTHON_INCLUDE') }
+	if matches.len != 1 { return error('ambiguous CPython SDK; set TULPAR_CPYTHON_INCLUDE') }
 	return matches[0]
 }
 

@@ -3,7 +3,7 @@
 @[translated]
 module netcore
 
-#include "vinix_net.h"
+#include "tulpar_net.h"
 #include "net_random.h"
 #include <lwip/dhcp.h>
 #include <lwip/dns.h>
@@ -33,9 +33,9 @@ module netcore
 #include "net_driver_abi.h"
 #include "stack_slots.h"
 
-fn C.vinix_stack_alloc(size u64) voidptr
-fn C.vinix_lwip_set_output4(&C.netif, Netif_output_fn)
-fn C.vinix_lwip_set_output6(&C.netif, Netif_output_ip6_fn)
+fn C.tulpar_stack_alloc(size u64) voidptr
+fn C.tulpar_lwip_set_output4(&C.netif, Netif_output_fn)
+fn C.tulpar_lwip_set_output6(&C.netif, Netif_output_ip6_fn)
 
 // Native lwIP callback typedefs carry pointee const qualifiers that V's
 // function types omit. The borrowed callback address is unchanged by the cast.
@@ -47,22 +47,22 @@ fn C.udp_recv(&C.udp_pcb, C.udp_recv_fn, voidptr)
 @[c_extern]
 __global C.tcp_pcb_lists [4]&&C.tcp_pcb
 
-@[export: 'vinix_lwip_tcp_lists']
+@[export: 'tulpar_lwip_tcp_lists']
 pub fn tcp_lists() voidptr {
 	return unsafe { voidptr(&C.tcp_pcb_lists[0]) }
 }
 
-@[export: 'vinix_lwip_set_output4']
+@[export: 'tulpar_lwip_set_output4']
 pub fn set_output4(n &C.netif, callback Netif_output_fn) {
 	unsafe { C.memcpy(&n.output, &callback, sizeof(Netif_output_fn)) }
 }
 
-@[export: 'vinix_lwip_set_output6']
+@[export: 'tulpar_lwip_set_output6']
 pub fn set_output6(n &C.netif, callback Netif_output_ip6_fn) {
 	unsafe { C.memcpy(&n.output_ip6, &callback, sizeof(Netif_output_ip6_fn)) }
 }
 
-@[export: 'vinix_lwip_udp_recv']
+@[export: 'tulpar_lwip_udp_recv']
 pub fn udp_recv(p &C.udp_pcb, callback Udp_recv_fn, argument voidptr) {
 	unsafe {
 		mut native := C.udp_recv_fn{}
@@ -323,9 +323,9 @@ pub enum Netif_mac_filter_action {
 
 pub type Netif_mld_mac_filter_fn = fn (&C.netif, &C.ip6_addr, Netif_mac_filter_action) Err_t
 
-pub type Netif_output_fn = fn (&C.netif, &C.pbuf, C.vinix_output4_address) Err_t
+pub type Netif_output_fn = fn (&C.netif, &C.pbuf, C.tulpar_output4_address) Err_t
 
-pub type Netif_output_ip6_fn = fn (&C.netif, &C.pbuf, C.vinix_output6_address) Err_t
+pub type Netif_output_ip6_fn = fn (&C.netif, &C.pbuf, C.tulpar_output6_address) Err_t
 
 pub struct C.pbuf {
 pub mut:
@@ -539,9 +539,9 @@ pub mut:
 	recv_arg voidptr
 }
 
-pub type Udp_recv_fn = fn (voidptr, &C.udp_pcb, &C.pbuf, C.vinix_receive_address, U16_t)
+pub type Udp_recv_fn = fn (voidptr, &C.udp_pcb, &C.pbuf, C.tulpar_receive_address, U16_t)
 
-pub struct C.vinix_net_endpoint {
+pub struct C.tulpar_net_endpoint {
 pub mut:
 	words  [4]u32
 	scope  u32
@@ -549,14 +549,14 @@ pub mut:
 	port   u16
 }
 
-pub type Vinix_port_taken_fn = fn (u16, voidptr) i32
+pub type Tulpar_port_taken_fn = fn (u16, voidptr) i32
 
 fn C.dhcp_release_and_stop(netif &C.netif)
 fn C.dhcp_start(netif &C.netif) Err_t
 fn C.dhcp_supplied_address(netif &C.netif) U8_t
 fn C.dns_getserver(numdns U8_t) &C.ip_addr
 fn C.etharp_output(netif &C.netif, q &C.pbuf, ipaddr &C.ip4_addr) Err_t
-fn C.ethip6_output(netif &C.netif, q &C.pbuf, ip6addr C.vinix_output6_address) Err_t
+fn C.ethip6_output(netif &C.netif, q &C.pbuf, ip6addr C.tulpar_output6_address) Err_t
 fn C.igmp_init()
 fn C.igmp_joingroup_netif(netif &C.netif, groupaddr &C.ip4_addr) Err_t
 fn C.igmp_leavegroup_netif(netif &C.netif, groupaddr &C.ip4_addr) Err_t
@@ -617,16 +617,16 @@ fn C.udp_bind(pcb &C.udp_pcb, ipaddr &C.ip_addr, port U16_t) Err_t
 fn C.udp_connect(pcb &C.udp_pcb, ipaddr &C.ip_addr, port U16_t) Err_t
 fn C.udp_disconnect(pcb &C.udp_pcb)
 fn C.udp_new_ip_type(@type U8_t) &C.udp_pcb
-fn C.vinix_lwip_udp_recv(pcb &C.udp_pcb, recv Udp_recv_fn, recv_arg voidptr)
+fn C.tulpar_lwip_udp_recv(pcb &C.udp_pcb, recv Udp_recv_fn, recv_arg voidptr)
 fn C.udp_remove(pcb &C.udp_pcb)
 fn C.udp_send(pcb &C.udp_pcb, p &C.pbuf) Err_t
 fn C.udp_sendto(pcb &C.udp_pcb, p &C.pbuf, dst_ip &C.ip_addr, dst_port U16_t) Err_t
-fn C.vinix_e1000_send(arg voidptr, arg_2 u64) i32
-fn C.vinix_rtl8169_send(arg voidptr, arg_2 u64) i32
-fn C.vinix_ath10k_send(arg voidptr, arg_2 u64) i32
-fn C.vinix_ip_randomid() u16
-fn C.vinix_pick_port(first u16, last u16, taken Vinix_port_taken_fn, context voidptr) u16
-fn C.vinix_virtio_net_send(arg voidptr, arg_2 u64) i32
+fn C.tulpar_e1000_send(arg voidptr, arg_2 u64) i32
+fn C.tulpar_rtl8169_send(arg voidptr, arg_2 u64) i32
+fn C.tulpar_ath10k_send(arg voidptr, arg_2 u64) i32
+fn C.tulpar_ip_randomid() u16
+fn C.tulpar_pick_port(first u16, last u16, taken Tulpar_port_taken_fn, context voidptr) u16
+fn C.tulpar_virtio_net_send(arg voidptr, arg_2 u64) i32
 
 @[c_extern]
 __global C.netif_list &C.netif
@@ -640,22 +640,22 @@ __global C.ip_data C.ip_globals
 @[c_extern]
 __global C.udp_pcbs &C.udp_pcb
 
-fn C.vinix_lwip_tcp_lists() voidptr
+fn C.tulpar_lwip_tcp_lists() voidptr
 
-pub const vinix_net_stream = 1
-pub const vinix_net_dgram = 2
-pub const vinix_net_readable = 1
-pub const vinix_net_writable = 2
-pub const vinix_net_error = 4
-pub const vinix_net_hangup = 8
+pub const tulpar_net_stream = 1
+pub const tulpar_net_dgram = 2
+pub const tulpar_net_readable = 1
+pub const tulpar_net_writable = 2
+pub const tulpar_net_error = 4
+pub const tulpar_net_hangup = 8
 pub const driver_none = 0
 pub const driver_virtio = 1
 pub const driver_e1000 = 3
 pub const driver_rtl8169 = 4
 pub const driver_ath10k = 5
 
-@[export: 'vinix_net_owner']
-pub fn vinix_net_owner() i32 { return if net_link_attached != 0 { net_active_driver } else { driver_none } }
+@[export: 'tulpar_net_owner']
+pub fn tulpar_net_owner() i32 { return if net_link_attached != 0 { net_active_driver } else { driver_none } }
 
 pub type Driver_send_fn = fn (voidptr, u64) i32
 
@@ -665,15 +665,15 @@ pub fn driver_send(driver i32) Driver_send_fn {
 	unsafe {
 		match driver {
 			driver_virtio {
-				return C.vinix_virtio_net_send
+				return C.tulpar_virtio_net_send
 			}
 			driver_e1000 {
-				return C.vinix_e1000_send
+				return C.tulpar_e1000_send
 			}
 			driver_rtl8169 {
-				return C.vinix_rtl8169_send
+				return C.tulpar_rtl8169_send
 			}
-			driver_ath10k { return C.vinix_ath10k_send }
+			driver_ath10k { return C.tulpar_ath10k_send }
 			else {
 				return Driver_send_fn(nil)
 			}
@@ -700,7 +700,7 @@ pub mut:
 	used    u8
 }
 
-pub struct Vinix_socket {
+pub struct Tulpar_socket {
 pub mut:
 	family          i32
 	v6only          i32
@@ -746,9 +746,9 @@ pub mut:
 	last_remote_port    u16
 	rx_head             &Packet
 	rx_tail             &Packet
-	accept_head         &Vinix_socket
-	accept_tail         &Vinix_socket
-	accept_next         &Vinix_socket
+	accept_head         &Tulpar_socket
+	accept_tail         &Tulpar_socket
+	accept_next         &Tulpar_socket
 	// Appended so historical fixtures can still borrow the original prefix.
 	raw                 &C.raw_pcb
 	icmp_filter         u32
@@ -810,8 +810,8 @@ pub fn linux_error(error_ Err_t) i32 {
 // A failed assertion stops this CPU for good, so say which one it was where it
 // can be read: ordinary printf is compiled out of PROD kernels, and the stack
 // was all that was left to find it by.
-@[export: 'vinix_lwip_assert']
-pub fn vinix_lwip_assert(message &char, file &char, line i32) {
+@[export: 'tulpar_lwip_assert']
+pub fn tulpar_lwip_assert(message &char, file &char, line i32) {
 	unsafe {
 		C.printf_panic(c"lwip: assertion '%s' at %s:%d\n", message, file, line)
 		assert_uart(message, file, line)
@@ -826,15 +826,15 @@ pub fn sys_now() u32 {
 	}
 }
 
-@[export: 'vinix_htonl']
-pub fn vinix_htonl(value u32) u32 {
+@[export: 'tulpar_htonl']
+pub fn tulpar_htonl(value u32) u32 {
 	unsafe {
 		return C.lwip_htonl(value)
 	}
 }
 
-@[export: 'vinix_htons']
-pub fn vinix_htons(value u16) u16 {
+@[export: 'tulpar_htons']
+pub fn tulpar_htons(value u16) u16 {
 	unsafe {
 		return C.lwip_htons(value)
 	}
@@ -849,7 +849,7 @@ pub fn free_packet(packet &Packet) {
 	}
 }
 
-pub fn free_packets(socket &Vinix_socket) {
+pub fn free_packets(socket &Tulpar_socket) {
 	unsafe {
 		for socket.rx_head {
 			packet := socket.rx_head
@@ -861,11 +861,11 @@ pub fn free_packets(socket &Vinix_socket) {
 	}
 }
 
-pub fn queue_packet(socket &Vinix_socket, p &C.pbuf, address &C.ip_addr, port u16, terminal i32) i32 {
+pub fn queue_packet(socket &Tulpar_socket, p &C.pbuf, address &C.ip_addr, port u16, terminal i32) i32 {
 	unsafe {
 		packet := &Packet(0)
 		charge := u32(u64(p.tot_len) + sizeof(Packet) + u64(64))
-		if (charge > socket.receive_limit || socket.receive_queued > socket.receive_limit - charge) && !(socket.@type == vinix_net_stream && (socket.receive_queued == u32(0) || terminal)) {
+		if (charge > socket.receive_limit || socket.receive_queued > socket.receive_limit - charge) && !(socket.@type == tulpar_net_stream && (socket.receive_queued == u32(0) || terminal)) {
 			return 0
 		}
 		// TCP may coalesce an entire advertised window into one pbuf chain.
@@ -932,7 +932,7 @@ pub fn queue_packet(socket &Vinix_socket, p &C.pbuf, address &C.ip_addr, port u1
 // *without an error callback. The caller holds the kernel's network lock.
 //
 
-pub fn detach_tcp(socket &Vinix_socket, pcb &C.tcp_pcb) {
+pub fn detach_tcp(socket &Tulpar_socket, pcb &C.tcp_pcb) {
 	unsafe {
 		for {
 			for {
@@ -1005,10 +1005,10 @@ pub fn detach_tcp(socket &Vinix_socket, pcb &C.tcp_pcb) {
 	}
 }
 
-@[export: 'vinix_net_core_tcp_received']
+@[export: 'tulpar_net_core_tcp_received']
 pub fn tcp_received(argument voidptr, pcb &C.tcp_pcb, p &C.pbuf, error_ Err_t) Err_t {
 	unsafe {
-		socket := &Vinix_socket(argument)
+		socket := &Tulpar_socket(argument)
 
 		if uint(socket) == 0 {
 			if p {
@@ -1059,10 +1059,10 @@ pub fn tcp_received(argument voidptr, pcb &C.tcp_pcb, p &C.pbuf, error_ Err_t) E
 	}
 }
 
-@[export: 'vinix_net_core_tcp_sent_data']
+@[export: 'tulpar_net_core_tcp_sent_data']
 pub fn tcp_sent_data(argument voidptr, pcb &C.tcp_pcb, length u16) Err_t {
 	unsafe {
-		socket := &Vinix_socket(argument)
+		socket := &Tulpar_socket(argument)
 
 		if socket {
 			socket.send_queued = if u32(length) >= socket.send_queued {
@@ -1077,7 +1077,7 @@ pub fn tcp_sent_data(argument voidptr, pcb &C.tcp_pcb, length u16) Err_t {
 
 pub fn tcp_connected(argument voidptr, pcb &C.tcp_pcb, error_ Err_t) Err_t {
 	unsafe {
-		socket := &Vinix_socket(argument)
+		socket := &Tulpar_socket(argument)
 
 		if uint(socket) == 0 {
 			return Err_t(Err_enum_t.err_ok)
@@ -1094,7 +1094,7 @@ pub fn tcp_connected(argument voidptr, pcb &C.tcp_pcb, error_ Err_t) Err_t {
 
 pub fn tcp_failed(argument voidptr, error_ Err_t) {
 	unsafe {
-		socket := &Vinix_socket(argument)
+		socket := &Tulpar_socket(argument)
 		if uint(socket) == 0 {
 			return
 		}
@@ -1106,7 +1106,7 @@ pub fn tcp_failed(argument voidptr, error_ Err_t) {
 	}
 }
 
-pub fn install_tcp_callbacks(socket &Vinix_socket) {
+pub fn install_tcp_callbacks(socket &Tulpar_socket) {
 	unsafe {
 		C.tcp_arg(socket.tcp, voidptr(socket))
 		C.tcp_recv(socket.tcp, tcp_received)
@@ -1117,18 +1117,18 @@ pub fn install_tcp_callbacks(socket &Vinix_socket) {
 	}
 }
 
-@[export: 'vinix_net_core_accept_callback']
+@[export: 'tulpar_net_core_accept_callback']
 pub fn accept_callback(argument voidptr, pcb &C.tcp_pcb, error_ Err_t) Err_t {
 	unsafe {
-		listener := &Vinix_socket(argument)
-		child := &Vinix_socket(0)
+		listener := &Tulpar_socket(argument)
+		child := &Tulpar_socket(0)
 		if (uint(listener) == 0) || i32(error_) != Err_enum_t.err_ok {
 			if pcb {
 				C.tcp_abort(pcb)
 			}
 			return Err_t(Err_enum_t.err_abrt)
 		}
-		child = &Vinix_socket(C.mem_calloc(Mem_size_t(1), Mem_size_t(sizeof(Vinix_socket))))
+		child = &Tulpar_socket(C.mem_calloc(Mem_size_t(1), Mem_size_t(sizeof(Tulpar_socket))))
 		if uint(child) == 0 {
 			C.tcp_abort(pcb)
 			return Err_t(Err_enum_t.err_abrt)
@@ -1143,7 +1143,7 @@ pub fn accept_callback(argument voidptr, pcb &C.tcp_pcb, error_ Err_t) Err_t {
 		} else {
 			child.hops4
 		}))
-		child.@type = vinix_net_stream
+		child.@type = tulpar_net_stream
 		child.protocol = 6
 		child.connected = 1
 		child.tcp = pcb
@@ -1183,10 +1183,10 @@ pub fn accept_callback(argument voidptr, pcb &C.tcp_pcb, error_ Err_t) Err_t {
 	}
 }
 
-@[export: 'vinix_net_core_udp_received']
+@[export: 'tulpar_net_core_udp_received']
 pub fn udp_received(argument voidptr, pcb &C.udp_pcb, p &C.pbuf, address &C.ip_addr, port u16) {
 	unsafe {
-		socket := &Vinix_socket(argument)
+		socket := &Tulpar_socket(argument)
 
 		mut __c2v_condition_0 := false
 		mut __c2v_condition_1 := false
@@ -1220,7 +1220,7 @@ pub fn udp_received(argument voidptr, pcb &C.udp_pcb, p &C.pbuf, address &C.ip_a
 // IP output already enqueues the optional multicast loop copy. The native
 // *loopif output enqueues again, which delivers duplicates and ignores LOOP=0.
 
-pub fn loop_output4(interface_ &C.netif, p &C.pbuf, target C.vinix_output4_address) Err_t {
+pub fn loop_output4(interface_ &C.netif, p &C.pbuf, target C.tulpar_output4_address) Err_t {
 	unsafe {
 		destination := &C.ip4_addr(target)
 		return Err_t(if (u64(destination.addr) & (((u64(4026531840) & u64(U32_t(255))) << 24) | ((u64(4026531840) & u64(U32_t(65280))) << 8) | ((u64(4026531840) & u64(U32_t(16711680))) >> 8) | ((u64(4026531840) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(3758096384) & u64(U32_t(255))) << 24) | ((u64(3758096384) & u64(U32_t(65280))) << 8) | ((u64(3758096384) & u64(U32_t(16711680))) >> 8) | ((u64(3758096384) & u64(U32_t(u64(4278190080)))) >> 24)) {
@@ -1231,7 +1231,7 @@ pub fn loop_output4(interface_ &C.netif, p &C.pbuf, target C.vinix_output4_addre
 	}
 }
 
-pub fn loop_output6(interface_ &C.netif, p &C.pbuf, target C.vinix_output6_address) Err_t {
+pub fn loop_output6(interface_ &C.netif, p &C.pbuf, target C.tulpar_output6_address) Err_t {
 	unsafe {
 		destination := &C.ip6_addr(target)
 		return Err_t(if (u64(destination.addr[0]) & (((u64(4278190080) & u64(U32_t(255))) << 24) | ((u64(4278190080) & u64(U32_t(65280))) << 8) | ((u64(4278190080) & u64(U32_t(16711680))) >> 8) | ((u64(4278190080) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(4278190080) & u64(U32_t(255))) << 24) | ((u64(4278190080) & u64(U32_t(65280))) << 8) | ((u64(4278190080) & u64(U32_t(16711680))) >> 8) | ((u64(4278190080) & u64(U32_t(u64(4278190080)))) >> 24)) {
@@ -1242,8 +1242,8 @@ pub fn loop_output6(interface_ &C.netif, p &C.pbuf, target C.vinix_output6_addre
 	}
 }
 
-@[export: 'vinix_net_init']
-pub fn vinix_net_init() {
+@[export: 'tulpar_net_init']
+pub fn tulpar_net_init() {
 	unsafe {
 		if net_stack_initialised {
 			return
@@ -1261,11 +1261,11 @@ pub fn vinix_net_init() {
 
 				C.igmp_stop(interface_)
 				if i32(C.igmp_start(interface_)) != Err_enum_t.err_ok {
-					vinix_lwip_assert(c'loop IGMP initialization', c'kernel/netcore/core.v', 1213)
+					tulpar_lwip_assert(c'loop IGMP initialization', c'kernel/netcore/core.v', 1213)
 				}
 				interface_.flags |= 64
-				C.vinix_lwip_set_output4(interface_, loop_output4)
-				C.vinix_lwip_set_output6(interface_, loop_output6)
+				C.tulpar_lwip_set_output4(interface_, loop_output4)
+				C.tulpar_lwip_set_output6(interface_, loop_output6)
 			}
 		}
 		net_stack_initialised = 1
@@ -1288,8 +1288,8 @@ pub fn driver_output(frame voidptr, length uint) i32 {
 	}
 }
 
-@[export: 'vinix_net_counters']
-pub fn vinix_net_counters(index i32, fields &u64) i32 {
+@[export: 'tulpar_net_counters']
+pub fn tulpar_net_counters(index i32, fields &u64) i32 {
 	if index != 1 && (index != 2 || net_link_attached == 0) { return 0 }
 	for i in 0 .. 16 {
 		unsafe { fields[i] = if index == 2 { net_physical_counters[i] } else { u64(0) } }
@@ -1318,7 +1318,7 @@ pub fn link_output(netif &C.netif, p &C.pbuf) Err_t {
 // *machine had sent in between. The fragments of a datagram share its ID, and
 // *ip4_frag() sends them in order, one after another, the first at offset 0.
 
-pub fn output_ipv4(netif &C.netif, p &C.pbuf, target C.vinix_output4_address) Err_t {
+pub fn output_ipv4(netif &C.netif, p &C.pbuf, target C.tulpar_output4_address) Err_t {
 	unsafe {
 		destination := &C.ip4_addr(target)
 		header := &C.ip_hdr(p.payload)
@@ -1327,7 +1327,7 @@ pub fn output_ipv4(netif &C.netif, p &C.pbuf, target C.vinix_output4_address) Er
 			header_length = u16((U8_t(((i32(header._v_hl) & 15) * 4))))
 			if i32(header_length) >= 20 && i32(p.len) >= i32(header_length) {
 				if (u32(C.lwip_htons(header._offset)) & 8191) == u32(0) {
-					net_fragment_id = C.vinix_ip_randomid()
+					net_fragment_id = C.tulpar_ip_randomid()
 				}
 				header._id = net_fragment_id
 				header._chksum = U16_t(0)
@@ -1346,7 +1346,7 @@ pub fn physical_init(netif &C.netif) Err_t {
 		C.memcpy(netif.hwaddr, voidptr(&net_active_mac[0]), uint(6))
 		netif.mtu = U16_t(1500)
 		netif.flags = U8_t(2 | 8 | 16 | 32 | 64)
-		C.vinix_lwip_set_output4(netif, output_ipv4)
+		C.tulpar_lwip_set_output4(netif, output_ipv4)
 		netif.output_ip6 = C.ethip6_output
 		netif.flags |= 64
 		netif.linkoutput = link_output
@@ -1354,18 +1354,18 @@ pub fn physical_init(netif &C.netif) Err_t {
 	}
 }
 
-@[export: 'vinix_net_attach']
-pub fn vinix_net_attach(mac &u8, driver i32) i32 {
+@[export: 'tulpar_net_attach']
+pub fn tulpar_net_attach(mac &u8, driver i32) i32 {
 	unsafe {
 		zero := C.ip4_addr{}
 		if !net_stack_initialised {
-			vinix_net_init()
+			tulpar_net_init()
 		}
 		if is_null(driver_send(driver)) {
 			return -22
 		}
 		if net_link_attached {
-			vinix_net_detach()
+			tulpar_net_detach()
 		}
 		net_active_driver = driver
 		net_physical_counters = [16]u64{}
@@ -1395,7 +1395,7 @@ pub fn vinix_net_attach(mac &u8, driver i32) i32 {
 		C.netif_set_up(&net_physical_netif)
 		net_link_attached = 1
 		if i32(C.dhcp_start(&net_physical_netif)) != Err_enum_t.err_ok {
-			vinix_net_detach()
+			tulpar_net_detach()
 			return -12
 		}
 		C.printf(c'net: attached %c%c%u, %s\n', i32(net_physical_netif.name[0]), i32(net_physical_netif.name[1]), i32(net_physical_netif.num),
@@ -1406,8 +1406,8 @@ pub fn vinix_net_attach(mac &u8, driver i32) i32 {
 
 // Link events belong to the active driver. A delayed event from a removed
 // card must not change an interface subsequently attached by another driver.
-@[export: 'vinix_net_set_link']
-pub fn vinix_net_set_link(driver i32, up i32) {
+@[export: 'tulpar_net_set_link']
+pub fn tulpar_net_set_link(driver i32, up i32) {
 	unsafe {
 		if !net_link_attached || driver != net_active_driver { return }
 		if up != 0 {
@@ -1420,13 +1420,13 @@ pub fn vinix_net_set_link(driver i32, up i32) {
 	}
 }
 
-@[export: 'vinix_net_carrier']
-pub fn vinix_net_carrier() i32 {
+@[export: 'tulpar_net_carrier']
+pub fn tulpar_net_carrier() i32 {
 	return if net_link_attached != 0 && net_physical_netif.flags & 4 != 0 { i32(1) } else { i32(0) }
 }
 
-@[export: 'vinix_net_detach']
-pub fn vinix_net_detach() {
+@[export: 'tulpar_net_detach']
+pub fn tulpar_net_detach() {
 	unsafe {
 		if !net_link_attached {
 			return
@@ -1440,8 +1440,8 @@ pub fn vinix_net_detach() {
 	}
 }
 
-@[export: 'vinix_net_input']
-pub fn vinix_net_input(frame voidptr, length uint) i32 {
+@[export: 'tulpar_net_input']
+pub fn tulpar_net_input(frame voidptr, length uint) i32 {
 	unsafe {
 		p := &C.pbuf(0)
 		error_ := Err_t(0)
@@ -1473,13 +1473,13 @@ pub fn vinix_net_input(frame voidptr, length uint) i32 {
 	}
 }
 
-@[export: 'vinix_net_poll']
-pub fn vinix_net_poll(now_ms u32) {
+@[export: 'tulpar_net_poll']
+pub fn tulpar_net_poll(now_ms u32) {
 	unsafe {
 		if !net_stack_initialised {
 			return
 		}
-		// lwIP wants milliseconds that start near zero and only go up. Vinix's
+		// lwIP wants milliseconds that start near zero and only go up. Tulpar's
 		//     *monotonic clock is seeded from the platform's idea of elapsed time and is
 		//     *already a few weeks along at boot, so feeding it in raw put every timer
 		//     *C.lwip_init() had scheduled -- at a sys_now() of 0 -- more than 2^31 ms in
@@ -1499,8 +1499,8 @@ pub fn vinix_net_poll(now_ms u32) {
 	}
 }
 
-@[export: 'vinix_net_config']
-pub fn vinix_net_config(address &u32, netmask &u32, gateway &u32, dns &u32) i32 {
+@[export: 'tulpar_net_config']
+pub fn tulpar_net_config(address &u32, netmask &u32, gateway &u32, dns &u32) i32 {
 	unsafe {
 		index := u32(0)
 		if !net_link_attached || !C.dhcp_supplied_address(&net_physical_netif) {
@@ -1529,8 +1529,8 @@ pub fn vinix_net_config(address &u32, netmask &u32, gateway &u32, dns &u32) i32 
 	}
 }
 
-@[export: 'vinix_net_link']
-pub fn vinix_net_link(mac &u8, mtu &u32) i32 {
+@[export: 'tulpar_net_link']
+pub fn tulpar_net_link(mac &u8, mtu &u32) i32 {
 	unsafe {
 		if !net_link_attached {
 			return 0
@@ -1541,19 +1541,19 @@ pub fn vinix_net_link(mac &u8, mtu &u32) i32 {
 	}
 }
 
-@[export: 'vinix_socket_new']
-pub fn vinix_socket_new(@type i32, protocol i32) &Vinix_socket {
+@[export: 'tulpar_socket_new']
+pub fn tulpar_socket_new(@type i32, protocol i32) &Tulpar_socket {
 	unsafe {
-		socket := &Vinix_socket(0)
+		socket := &Tulpar_socket(0)
 		if !net_stack_initialised {
-			vinix_net_init()
+			tulpar_net_init()
 		}
-		if @type != vinix_net_stream && @type != vinix_net_dgram && @type != vinix_net_raw { return nil }
-		if @type == vinix_net_raw && protocol != 1 { return nil }
-		if (@type == vinix_net_stream && protocol != 0 && protocol != 6) || (@type == vinix_net_dgram && protocol != 0 && protocol != 17) {
+		if @type != tulpar_net_stream && @type != tulpar_net_dgram && @type != tulpar_net_raw { return nil }
+		if @type == tulpar_net_raw && protocol != 1 { return nil }
+		if (@type == tulpar_net_stream && protocol != 0 && protocol != 6) || (@type == tulpar_net_dgram && protocol != 0 && protocol != 17) {
 			return nil
 		}
-		socket = &Vinix_socket(C.mem_calloc(Mem_size_t(1), Mem_size_t(sizeof(Vinix_socket))))
+		socket = &Tulpar_socket(C.mem_calloc(Mem_size_t(1), Mem_size_t(sizeof(Tulpar_socket))))
 		if uint(socket) == 0 {
 			return nil
 		}
@@ -1568,10 +1568,10 @@ pub fn vinix_socket_new(@type i32, protocol i32) &Vinix_socket {
 		socket.protocol = if protocol {
 			protocol
 		} else {
-			(if @type == vinix_net_stream { 6 } else { 17 })
+			(if @type == tulpar_net_stream { 6 } else { 17 })
 		}
-		socket.send_limit = u32(if @type == vinix_net_stream { (16 * 1460) } else { 212992 })
-		socket.receive_limit = u32(if @type == vinix_net_stream {
+		socket.send_limit = u32(if @type == tulpar_net_stream { (16 * 1460) } else { 212992 })
+		socket.receive_limit = u32(if @type == tulpar_net_stream {
 			(16 * 1460) + 4096
 		} else {
 			212992
@@ -1579,26 +1579,26 @@ pub fn vinix_socket_new(@type i32, protocol i32) &Vinix_socket {
 		socket.keep_idle = u32(7200000)
 		socket.keep_interval = u32(75000)
 		socket.keep_count = 9
-		if @type == vinix_net_raw {
+		if @type == tulpar_net_raw {
 			socket.raw = C.raw_new_ip_type(U8_t(Lwip_ip_addr_type.ipaddr_type_v4), 1) @[freed]
 			if socket.raw == nil { C.mem_free(voidptr(socket)); return nil }
 			socket_ip_pcb(socket).ttl = 64
 			install_raw_callback(socket)
-		} else if @type == vinix_net_stream {
+		} else if @type == tulpar_net_stream {
 			socket.tcp = C.tcp_new_ip_type(U8_t(Lwip_ip_addr_type.ipaddr_type_v4))
 			if uint(socket.tcp) == 0 {
 				C.mem_free(voidptr(socket))
 				return nil
 			}
 			install_tcp_callbacks(socket)
-		} else if @type == vinix_net_dgram {
+		} else if @type == tulpar_net_dgram {
 			socket.udp = C.udp_new_ip_type(U8_t(Lwip_ip_addr_type.ipaddr_type_v4))
 			if uint(socket.udp) == 0 {
 				C.mem_free(voidptr(socket))
 				return nil
 			}
 			socket.udp.flags |= 8
-			C.vinix_lwip_udp_recv(socket.udp, udp_received_native, voidptr(socket))
+			C.tulpar_lwip_udp_recv(socket.udp, udp_received_native, voidptr(socket))
 		} else {
 			C.mem_free(voidptr(socket))
 			return nil
@@ -1607,8 +1607,8 @@ pub fn vinix_socket_new(@type i32, protocol i32) &Vinix_socket {
 	}
 }
 
-@[export: 'vinix_socket_free']
-pub fn vinix_socket_free(socket &Vinix_socket) {
+@[export: 'tulpar_socket_free']
+pub fn tulpar_socket_free(socket &Tulpar_socket) {
 	unsafe {
 		if uint(socket) == 0 {
 			return
@@ -1622,7 +1622,7 @@ pub fn vinix_socket_free(socket &Vinix_socket) {
 			child := socket.accept_head
 			socket.accept_head = child.accept_next
 			child.accept_next = nil
-			vinix_socket_free(child)
+			tulpar_socket_free(child)
 		}
 		if !(uint(socket.tcp) == 0) && u32(socket.tcp.state) == u32(Tcp_state.listen) {
 			// A listening pcb is lwIP's smaller tcp_pcb_listen. It has no data
@@ -1643,7 +1643,7 @@ pub fn vinix_socket_free(socket &Vinix_socket) {
 			socket.tcp = nil
 		}
 		if socket.udp {
-			C.vinix_lwip_udp_recv(socket.udp, (voidptr(0)), voidptr((voidptr(0))))
+			C.tulpar_lwip_udp_recv(socket.udp, (voidptr(0)), voidptr((voidptr(0))))
 			C.udp_remove(socket.udp)
 			socket.udp = nil
 		}
@@ -1672,7 +1672,7 @@ pub fn tcp_port_taken(port u16, context voidptr) i32 {
 		pcb := &C.tcp_pcb(0)
 
 		for i = 0; i < 4; i++ {
-			for pcb = *(&&&C.tcp_pcb(C.vinix_lwip_tcp_lists()))[i]; uint(pcb) != uint((voidptr(0))); pcb = pcb.next {
+			for pcb = *(&&&C.tcp_pcb(C.tulpar_lwip_tcp_lists()))[i]; uint(pcb) != uint((voidptr(0))); pcb = pcb.next {
 				if i32(pcb.local_port) == i32(port) {
 					return 1
 				}
@@ -1701,10 +1701,10 @@ pub fn udp_port_taken(port u16, context voidptr) i32 {
 // *and connect(), listen() and sendto() on a socket not yet bound. 99 is
 // *EADDRNOTAVAIL, Linux's answer when the range is used up.
 
-pub fn bind_ephemeral(socket &Vinix_socket, address &C.ip_addr) i32 {
+pub fn bind_ephemeral(socket &Tulpar_socket, address &C.ip_addr) i32 {
 	unsafe {
-		stream := i32(socket.@type == vinix_net_stream)
-		port := C.vinix_pick_port(u16(49152), u16(65535), if stream {
+		stream := i32(socket.@type == tulpar_net_stream)
+		port := C.tulpar_pick_port(u16(49152), u16(65535), if stream {
 			tcp_port_taken
 		} else {
 			udp_port_taken
@@ -1720,9 +1720,9 @@ pub fn bind_ephemeral(socket &Vinix_socket, address &C.ip_addr) i32 {
 	}
 }
 
-pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
+pub fn bind_ip(socket &Tulpar_socket, address &C.ip_addr, port u16) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		error_ := Err_t(0)
 		if uint(socket) == 0 {
@@ -1766,7 +1766,7 @@ pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 			// while()
 			break
 		}
-		ip_pcb := if socket.@type == vinix_net_stream {
+		ip_pcb := if socket.@type == tulpar_net_stream {
 			&C.ip_pcb(voidptr(socket.tcp))
 		} else {
 			&C.ip_pcb(voidptr(socket.udp))
@@ -1778,7 +1778,7 @@ pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 				socket.hops4
 			}))
 		}
-		if socket.@type == vinix_net_stream && (uint(socket.tcp) == 0) {
+		if socket.@type == tulpar_net_stream && (uint(socket.tcp) == 0) {
 			return if socket.error { socket.error } else { 107 }
 		}
 		if i32(port) == 0 {
@@ -1788,7 +1788,7 @@ pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 			}
 			return result
 		}
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			error_ = C.tcp_bind(socket.tcp, ip, C.lwip_htons(port))
 		} else {
 			error_ = C.udp_bind(socket.udp, ip, C.lwip_htons(port))
@@ -1804,7 +1804,7 @@ pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 // address: libc uses connect + getsockname to rank resolved destinations.
 // Keep that selection separately so wildcard UDP PCBs retain their receive
 // semantics and an explicit sendto can still select another outgoing route.
-fn udp_connect_source(socket &Vinix_socket, destination &C.ip_addr, source &C.ip_addr) i32 {
+fn udp_connect_source(socket &Tulpar_socket, destination &C.ip_addr, source &C.ip_addr) i32 {
 	unsafe {
 		local := &socket_ip_pcb(socket).local_ip
 		if destination.@type == u8(Lwip_ip_addr_type.ipaddr_type_v6) {
@@ -1825,9 +1825,9 @@ fn udp_connect_source(socket &Vinix_socket, destination &C.ip_addr, source &C.ip
 	}
 }
 
-pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
+pub fn connect_ip(socket &Tulpar_socket, address &C.ip_addr, port u16) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		error_ := Err_t(0)
 		if uint(socket) == 0 {
@@ -1871,7 +1871,7 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 				socket.hops4
 			}))
 		}
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			if uint(socket.tcp) == 0 {
 				return if socket.error { socket.error } else { 107 }
 			}
@@ -1938,7 +1938,7 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 			return 115
 		}
 		if socket.raw != nil {
-			source := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+			source := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 			C.memset(source, 0, sizeof(C.ip_addr))
 			route_error := udp_connect_source(socket, ip, source)
 			if route_error != 0 { return route_error }
@@ -1949,7 +1949,7 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 			}
 			return linux_error(error_)
 		}
-		source := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		source := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		route_error := udp_connect_source(socket, ip, source)
 		if route_error != 0 { return route_error }
 		if i32(socket.udp.local_port) == 0 {
@@ -1967,11 +1967,11 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 	}
 }
 
-@[export: 'vinix_socket_listen']
-pub fn vinix_socket_listen(socket &Vinix_socket, backlog i32) i32 {
+@[export: 'tulpar_socket_listen']
+pub fn tulpar_socket_listen(socket &Tulpar_socket, backlog i32) i32 {
 	unsafe {
 		listener := &C.tcp_pcb(0)
-		listen_error := &i8(C.vinix_stack_alloc(sizeof(i8)))
+		listen_error := &i8(C.tulpar_stack_alloc(sizeof(i8)))
 		*listen_error = i8(0)
 		if (uint(socket) == 0) || (uint(socket.tcp) == 0) || socket.connected || socket.connecting {
 			return 95
@@ -2000,10 +2000,10 @@ pub fn vinix_socket_listen(socket &Vinix_socket, backlog i32) i32 {
 	}
 }
 
-@[export: 'vinix_socket_accept']
-pub fn vinix_socket_accept(socket &Vinix_socket) &Vinix_socket {
+@[export: 'tulpar_socket_accept']
+pub fn tulpar_socket_accept(socket &Tulpar_socket) &Tulpar_socket {
 	unsafe {
-		child := &Vinix_socket(0)
+		child := &Tulpar_socket(0)
 		if (uint(socket) == 0) || !socket.listening || (uint(socket.accept_head) == 0) {
 			return nil
 		}
@@ -2020,7 +2020,7 @@ pub fn vinix_socket_accept(socket &Vinix_socket) &Vinix_socket {
 	}
 }
 
-pub fn send_ip(socket &Vinix_socket, data voidptr, length uint, address &C.ip_addr, port u16, has_address i32) i32 {
+pub fn send_ip(socket &Tulpar_socket, data voidptr, length uint, address &C.ip_addr, port u16, has_address i32) i32 {
 	unsafe {
 		error_ := Err_t(0)
 		if (uint(socket) == 0) || ((uint(data) == 0) && length) {
@@ -2030,7 +2030,7 @@ pub fn send_ip(socket &Vinix_socket, data voidptr, length uint, address &C.ip_ad
 			return -32
 		}
 		if socket.raw != nil { return send_icmp(socket, data, length, address, has_address) }
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			amount := u16(0)
 			if uint(socket.tcp) == 0 {
 				return -(if socket.error { socket.error } else { 107 })
@@ -2137,13 +2137,13 @@ pub fn send_ip(socket &Vinix_socket, data voidptr, length uint, address &C.ip_ad
 	}
 }
 
-pub fn recv_ip(socket &Vinix_socket, data voidptr, length uint, address &C.ip_addr, port &u16) i32 {
+pub fn recv_ip(socket &Tulpar_socket, data voidptr, length uint, address &C.ip_addr, port &u16) i32 {
 	return recv_ip_flags(socket, data, length, address, port, 0)
 }
 
 // Queue ownership and TCP receive-window credit change only on consumption.
 // Peek copies caller-owned bytes while the enclosing network lock pins packets.
-pub fn recv_ip_flags(socket &Vinix_socket, data voidptr, length uint, address &C.ip_addr, port &u16, flags i32) i32 {
+pub fn recv_ip_flags(socket &Tulpar_socket, data voidptr, length uint, address &C.ip_addr, port &u16, flags i32) i32 {
 	unsafe {
 		packet := &Packet(0)
 		available := u16(0)
@@ -2151,15 +2151,15 @@ pub fn recv_ip_flags(socket &Vinix_socket, data voidptr, length uint, address &C
 		if (uint(socket) == 0) || ((uint(data) == 0) && length) {
 			return -22
 		}
-		if socket.read_shutdown || (socket.@type == vinix_net_stream && socket.connected && length == 0) {
+		if socket.read_shutdown || (socket.@type == tulpar_net_stream && socket.connected && length == 0) {
 			return 0
 		}
 		packet = socket.rx_head
 		if uint(packet) == 0 {
-			if socket.@type == vinix_net_stream && socket.peer_closed && !socket.error {
+			if socket.@type == tulpar_net_stream && socket.peer_closed && !socket.error {
 				return 0
 			}
-			if socket.@type == vinix_net_stream && !socket.connected {
+			if socket.@type == tulpar_net_stream && !socket.connected {
 				return -(if socket.error { socket.error } else { 107 })
 			}
 			return -11
@@ -2205,7 +2205,7 @@ pub fn recv_ip_flags(socket &Vinix_socket, data voidptr, length uint, address &C
 			*port = C.lwip_htons(packet.port)
 		}
 		if flags & 2 != 0 {
-			if socket.@type != vinix_net_stream { return i32(if flags & 0x20 != 0 { available } else { amount }) }
+			if socket.@type != tulpar_net_stream { return i32(if flags & 0x20 != 0 { available } else { amount }) }
 			// TCP may queue separate packets for a single requested prefix.
 			mut copied := uint(amount)
 			packet = packet.next
@@ -2218,7 +2218,7 @@ pub fn recv_ip_flags(socket &Vinix_socket, data voidptr, length uint, address &C
 			}
 			return i32(copied)
 		}
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			packet.offset = u16((i32(packet.offset) + i32(amount)))
 			if socket.tcp {
 				C.tcp_recved(socket.tcp, amount)
@@ -2241,12 +2241,12 @@ pub fn recv_ip_flags(socket &Vinix_socket, data voidptr, length uint, address &C
 			}
 			free_packet(packet)
 		}
-		return i32(if socket.@type != vinix_net_stream && flags & 0x20 != 0 { available } else { amount })
+		return i32(if socket.@type != tulpar_net_stream && flags & 0x20 != 0 { available } else { amount })
 	}
 }
 
-@[export: 'vinix_socket_shutdown']
-pub fn vinix_socket_shutdown(socket &Vinix_socket, how i32) i32 {
+@[export: 'tulpar_socket_shutdown']
+pub fn tulpar_socket_shutdown(socket &Tulpar_socket, how i32) i32 {
 	unsafe {
 		error_ := Err_t(0)
 		if (uint(socket) == 0) || how < 0 || how > 2 {
@@ -2259,7 +2259,7 @@ pub fn vinix_socket_shutdown(socket &Vinix_socket, how i32) i32 {
 		if how == 1 || how == 2 {
 			socket.write_shutdown = 1
 		}
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			if uint(socket.tcp) == 0 {
 				return if socket.connected { 0 } else { 107 }
 			}
@@ -2297,8 +2297,8 @@ pub fn vinix_socket_shutdown(socket &Vinix_socket, how i32) i32 {
 	}
 }
 
-@[export: 'vinix_socket_local']
-pub fn vinix_socket_local(socket &Vinix_socket, address &u32, port &u16) i32 {
+@[export: 'tulpar_socket_local']
+pub fn tulpar_socket_local(socket &Tulpar_socket, address &u32, port &u16) i32 {
 	unsafe {
 		if uint(socket) == 0 {
 			return 88
@@ -2308,7 +2308,7 @@ pub fn vinix_socket_local(socket &Vinix_socket, address &u32, port &u16) i32 {
 			if port { *port = 0 }
 			return 0
 		}
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			if address {
 				*address = if socket.tcp {
 					socket.tcp.local_ip.u_addr.ip4.addr
@@ -2335,8 +2335,8 @@ pub fn vinix_socket_local(socket &Vinix_socket, address &u32, port &u16) i32 {
 	}
 }
 
-@[export: 'vinix_socket_peer']
-pub fn vinix_socket_peer(socket &Vinix_socket, address &u32, port &u16) i32 {
+@[export: 'tulpar_socket_peer']
+pub fn tulpar_socket_peer(socket &Tulpar_socket, address &u32, port &u16) i32 {
 	unsafe {
 		if (uint(socket) == 0) || !socket.connected {
 			return 107
@@ -2346,7 +2346,7 @@ pub fn vinix_socket_peer(socket &Vinix_socket, address &u32, port &u16) i32 {
 			if port { *port = 0 }
 			return 0
 		}
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			if address {
 				*address = if socket.tcp {
 					socket.tcp.remote_ip.u_addr.ip4.addr
@@ -2373,35 +2373,35 @@ pub fn vinix_socket_peer(socket &Vinix_socket, address &u32, port &u16) i32 {
 	}
 }
 
-@[export: 'vinix_socket_ready']
-pub fn vinix_socket_ready(socket &Vinix_socket) i32 {
+@[export: 'tulpar_socket_ready']
+pub fn tulpar_socket_ready(socket &Tulpar_socket) i32 {
 	unsafe {
 		ready := i32(0)
 		if uint(socket) == 0 {
-			return vinix_net_error
+			return tulpar_net_error
 		}
 		if if socket.listening {
 			uint(socket.accept_head) != uint((voidptr(0)))
 		} else {
 			(uint(socket.rx_head) != uint((voidptr(0))) || socket.peer_closed || socket.read_shutdown)
 		} {
-			ready |= vinix_net_readable
+			ready |= tulpar_net_readable
 		}
 		if !socket.write_shutdown && ((!(uint(socket.tcp) == 0) && socket.connected && i32(socket.tcp.snd_buf) > 0 && socket.send_queued < socket.send_limit) || !(uint(socket.udp) == 0) || socket.raw != nil) {
-			ready |= vinix_net_writable
+			ready |= tulpar_net_writable
 		}
 		if socket.error {
-			ready |= vinix_net_error
+			ready |= tulpar_net_error
 		}
 		if socket.peer_closed {
-			ready |= vinix_net_hangup
+			ready |= tulpar_net_hangup
 		}
 		return ready
 	}
 }
 
-@[export: 'vinix_socket_error']
-pub fn vinix_socket_error(socket &Vinix_socket, clear i32) i32 {
+@[export: 'tulpar_socket_error']
+pub fn tulpar_socket_error(socket &Tulpar_socket, clear i32) i32 {
 	unsafe {
 		error_ := i32(0)
 		if uint(socket) == 0 {
@@ -2415,8 +2415,8 @@ pub fn vinix_socket_error(socket &Vinix_socket, clear i32) i32 {
 	}
 }
 
-@[export: 'vinix_socket_available']
-pub fn vinix_socket_available(socket &Vinix_socket) i32 {
+@[export: 'tulpar_socket_available']
+pub fn tulpar_socket_available(socket &Tulpar_socket) i32 {
 	unsafe {
 		packet := &Packet(0)
 		total := u32(0)
@@ -2425,7 +2425,7 @@ pub fn vinix_socket_available(socket &Vinix_socket) i32 {
 		}
 		for packet = socket.rx_head; packet; packet = packet.next {
 			total += u32(i32(packet.p.tot_len) - i32(packet.offset))
-			if socket.@type != vinix_net_stream {
+			if socket.@type != tulpar_net_stream {
 				break
 			}
 		}
@@ -2433,7 +2433,7 @@ pub fn vinix_socket_available(socket &Vinix_socket) i32 {
 	}
 }
 
-pub fn socket_ip_pcb(socket &Vinix_socket) &C.ip_pcb {
+pub fn socket_ip_pcb(socket &Tulpar_socket) &C.ip_pcb {
 	unsafe {
 		if socket.raw != nil { return &C.ip_pcb(voidptr(socket.raw)) }
 		if socket.tcp {
@@ -2443,8 +2443,8 @@ pub fn socket_ip_pcb(socket &Vinix_socket) &C.ip_pcb {
 	}
 }
 
-@[export: 'vinix_socket_set_option']
-pub fn vinix_socket_set_option(socket &Vinix_socket, level i32, option i32, value i32) i32 {
+@[export: 'tulpar_socket_set_option']
+pub fn tulpar_socket_set_option(socket &Tulpar_socket, level i32, option i32, value i32) i32 {
 	unsafe {
 		pcb := &C.ip_pcb(0)
 		if uint(socket) == 0 {
@@ -2640,7 +2640,7 @@ pub fn vinix_socket_set_option(socket &Vinix_socket, level i32, option i32, valu
 		if level == 6 {
 			// IPPROTO_TCP
 
-			if socket.@type != vinix_net_stream {
+			if socket.@type != tulpar_net_stream {
 				return 92
 			}
 			match option {
@@ -2705,8 +2705,8 @@ pub fn vinix_socket_set_option(socket &Vinix_socket, level i32, option i32, valu
 	}
 }
 
-@[export: 'vinix_socket_get_option']
-pub fn vinix_socket_get_option(socket &Vinix_socket, level i32, option i32, value &i32) i32 {
+@[export: 'tulpar_socket_get_option']
+pub fn tulpar_socket_get_option(socket &Tulpar_socket, level i32, option i32, value &i32) i32 {
 	unsafe {
 		pcb := &C.ip_pcb(0)
 		if (uint(socket) == 0) || (uint(value) == 0) {
@@ -2780,7 +2780,7 @@ pub fn vinix_socket_get_option(socket &Vinix_socket, level i32, option i32, valu
 		if level == 6 {
 			// IPPROTO_TCP
 
-			if socket.@type != vinix_net_stream {
+			if socket.@type != tulpar_net_stream {
 				return 92
 			}
 			match option {
@@ -2819,8 +2819,8 @@ pub fn vinix_socket_get_option(socket &Vinix_socket, level i32, option i32, valu
 // The V descriptor remains registered while close waits for acknowledgments.
 // *Abort is also used after a linger timeout, before freeing callbacks.
 
-@[export: 'vinix_socket_pending']
-pub fn vinix_socket_pending(socket &Vinix_socket) i32 {
+@[export: 'tulpar_socket_pending']
+pub fn tulpar_socket_pending(socket &Tulpar_socket) i32 {
 	unsafe {
 		return if !(uint(socket) == 0) && !(uint(socket.tcp) == 0) && !socket.listening {
 			i32(socket.send_queued)
@@ -2830,8 +2830,8 @@ pub fn vinix_socket_pending(socket &Vinix_socket) i32 {
 	}
 }
 
-@[export: 'vinix_socket_abort_close']
-pub fn vinix_socket_abort_close(socket &Vinix_socket) {
+@[export: 'tulpar_socket_abort_close']
+pub fn tulpar_socket_abort_close(socket &Tulpar_socket) {
 	unsafe {
 		if socket {
 			socket.abort_on_close = 1
@@ -2860,7 +2860,7 @@ pub fn linux_interface_index(interface_ &C.netif) u32 {
 	}
 }
 
-@[export: 'vinix_net_core_interface_index']
+@[export: 'tulpar_net_core_interface_index']
 pub fn interface_index(index u32) &C.netif {
 	unsafe {
 		if index == u32(2) {
@@ -2903,8 +2903,8 @@ pub fn multicast_interface(index u32, address u32) &C.netif {
 	}
 }
 
-@[export: 'vinix_net_core_endpoint_ip']
-pub fn endpoint_ip(socket &Vinix_socket, endpoint &C.vinix_net_endpoint, ip &C.ip_addr) i32 {
+@[export: 'tulpar_net_core_endpoint_ip']
+pub fn endpoint_ip(socket &Tulpar_socket, endpoint &C.tulpar_net_endpoint, ip &C.ip_addr) i32 {
 	unsafe {
 		if (uint(socket) == 0) || (uint(endpoint) == 0) {
 			return 22
@@ -2973,9 +2973,9 @@ pub fn endpoint_ip(socket &Vinix_socket, endpoint &C.vinix_net_endpoint, ip &C.i
 	}
 }
 
-pub fn endpoint_from_ip(family i32, ip &C.ip_addr, port u16, endpoint &C.vinix_net_endpoint) {
+pub fn endpoint_from_ip(family i32, ip &C.ip_addr, port u16, endpoint &C.tulpar_net_endpoint) {
 	unsafe {
-		C.memset(voidptr(endpoint), 0, sizeof(C.vinix_net_endpoint))
+		C.memset(voidptr(endpoint), 0, sizeof(C.tulpar_net_endpoint))
 		endpoint.family = u16(family)
 		endpoint.port = port
 		if (uint(ip) != uint((voidptr(0)))) && (i32(ip.@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
@@ -2992,14 +2992,14 @@ pub fn endpoint_from_ip(family i32, ip &C.ip_addr, port u16, endpoint &C.vinix_n
 	}
 }
 
-@[export: 'vinix_socket_new_family']
-pub fn vinix_socket_new_family(@type i32, protocol i32, family i32) &Vinix_socket {
+@[export: 'tulpar_socket_new_family']
+pub fn tulpar_socket_new_family(@type i32, protocol i32, family i32) &Tulpar_socket {
 	unsafe {
 		if family != 2 && family != 10 {
 			return nil
 		}
-		if @type == vinix_net_raw && family != 2 { return nil }
-		socket := vinix_socket_new(@type, protocol)
+		if @type == tulpar_net_raw && family != 2 { return nil }
+		socket := tulpar_socket_new(@type, protocol)
 		if uint(socket) == 0 {
 			return nil
 		}
@@ -3021,10 +3021,10 @@ pub fn vinix_socket_new_family(@type i32, protocol i32, family i32) &Vinix_socke
 	}
 }
 
-@[export: 'vinix_socket_bind_endpoint']
-pub fn vinix_socket_bind_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_endpoint) i32 {
+@[export: 'tulpar_socket_bind_endpoint']
+pub fn tulpar_socket_bind_endpoint(socket &Tulpar_socket, endpoint &C.tulpar_net_endpoint) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		error_ := endpoint_ip(socket, endpoint, ip)
 		if error_ {
@@ -3088,10 +3088,10 @@ pub fn vinix_socket_bind_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_en
 	}
 }
 
-@[export: 'vinix_socket_connect_endpoint']
-pub fn vinix_socket_connect_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_endpoint) i32 {
+@[export: 'tulpar_socket_connect_endpoint']
+pub fn tulpar_socket_connect_endpoint(socket &Tulpar_socket, endpoint &C.tulpar_net_endpoint) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		error_ := endpoint_ip(socket, endpoint, ip)
 		if error_ {
@@ -3101,10 +3101,10 @@ pub fn vinix_socket_connect_endpoint(socket &Vinix_socket, endpoint &C.vinix_net
 	}
 }
 
-@[export: 'vinix_socket_send_endpoint']
-pub fn vinix_socket_send_endpoint(socket &Vinix_socket, data voidptr, length uint, endpoint &C.vinix_net_endpoint, has_address i32) i32 {
+@[export: 'tulpar_socket_send_endpoint']
+pub fn tulpar_socket_send_endpoint(socket &Tulpar_socket, data voidptr, length uint, endpoint &C.tulpar_net_endpoint, has_address i32) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		if has_address {
 			error_ := endpoint_ip(socket, endpoint, ip)
@@ -3120,15 +3120,15 @@ pub fn vinix_socket_send_endpoint(socket &Vinix_socket, data voidptr, length uin
 	}
 }
 
-@[export: 'vinix_socket_recv_endpoint']
-pub fn vinix_socket_recv_endpoint(socket &Vinix_socket, data voidptr, length uint, endpoint &C.vinix_net_endpoint) i32 {
-	return vinix_socket_recv_endpoint_flags(socket, data, length, endpoint, 0)
+@[export: 'tulpar_socket_recv_endpoint']
+pub fn tulpar_socket_recv_endpoint(socket &Tulpar_socket, data voidptr, length uint, endpoint &C.tulpar_net_endpoint) i32 {
+	return tulpar_socket_recv_endpoint_flags(socket, data, length, endpoint, 0)
 }
 
-@[export: 'vinix_socket_recv_endpoint_flags']
-pub fn vinix_socket_recv_endpoint_flags(socket &Vinix_socket, data voidptr, length uint, endpoint &C.vinix_net_endpoint, flags i32) i32 {
+@[export: 'tulpar_socket_recv_endpoint_flags']
+pub fn tulpar_socket_recv_endpoint_flags(socket &Tulpar_socket, data voidptr, length uint, endpoint &C.tulpar_net_endpoint, flags i32) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		port := u16(0)
 		C.memset(voidptr(ip), 0, sizeof(C.ip_addr))
@@ -3140,8 +3140,8 @@ pub fn vinix_socket_recv_endpoint_flags(socket &Vinix_socket, data voidptr, leng
 	}
 }
 
-@[export: 'vinix_socket_name_endpoint']
-pub fn vinix_socket_name_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_endpoint, peer i32) i32 {
+@[export: 'tulpar_socket_name_endpoint']
+pub fn tulpar_socket_name_endpoint(socket &Tulpar_socket, endpoint &C.tulpar_net_endpoint, peer i32) i32 {
 	unsafe {
 		if (uint(socket) == 0) || (uint(endpoint) == 0) {
 			return 22
@@ -3157,7 +3157,7 @@ pub fn vinix_socket_name_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_en
 			endpoint_from_ip(socket.family, ip, 0, endpoint)
 			return 0
 		}
-		if socket.@type == vinix_net_stream {
+		if socket.@type == tulpar_net_stream {
 			ip = if socket.tcp {
 				(if peer { &socket.tcp.remote_ip } else { &socket.tcp.local_ip })
 			} else {
@@ -3189,10 +3189,10 @@ pub fn vinix_socket_name_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_en
 
 // Preserve the original IPv4 bridge ABI used by existing production/tests.
 
-@[export: 'vinix_socket_bind']
-pub fn vinix_socket_bind(socket &Vinix_socket, address u32, port u16) i32 {
+@[export: 'tulpar_socket_bind']
+pub fn tulpar_socket_bind(socket &Tulpar_socket, address u32, port u16) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v4)
 		ip.u_addr.ip4.addr = address
@@ -3200,10 +3200,10 @@ pub fn vinix_socket_bind(socket &Vinix_socket, address u32, port u16) i32 {
 	}
 }
 
-@[export: 'vinix_socket_connect']
-pub fn vinix_socket_connect(socket &Vinix_socket, address u32, port u16) i32 {
+@[export: 'tulpar_socket_connect']
+pub fn tulpar_socket_connect(socket &Tulpar_socket, address u32, port u16) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v4)
 		ip.u_addr.ip4.addr = address
@@ -3211,10 +3211,10 @@ pub fn vinix_socket_connect(socket &Vinix_socket, address u32, port u16) i32 {
 	}
 }
 
-@[export: 'vinix_socket_send']
-pub fn vinix_socket_send(socket &Vinix_socket, data voidptr, length uint, address u32, port u16, has_address i32) i32 {
+@[export: 'tulpar_socket_send']
+pub fn tulpar_socket_send(socket &Tulpar_socket, data voidptr, length uint, address u32, port u16, has_address i32) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v4)
 		ip.u_addr.ip4.addr = address
@@ -3222,10 +3222,10 @@ pub fn vinix_socket_send(socket &Vinix_socket, data voidptr, length uint, addres
 	}
 }
 
-@[export: 'vinix_socket_recv']
-pub fn vinix_socket_recv(socket &Vinix_socket, data voidptr, length uint, address &u32, port &u16) i32 {
+@[export: 'tulpar_socket_recv']
+pub fn tulpar_socket_recv(socket &Tulpar_socket, data voidptr, length uint, address &u32, port &u16) i32 {
 	unsafe {
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		result := recv_ip(socket, voidptr(data), length, if address {
 			ip
@@ -3245,7 +3245,7 @@ pub fn live_membership(member &Membership, interface_ &C.netif) i32 {
 	}
 }
 
-pub fn has_membership(socket &Vinix_socket, group &C.ip_addr, interface_ &C.netif) i32 {
+pub fn has_membership(socket &Tulpar_socket, group &C.ip_addr, interface_ &C.netif) i32 {
 	unsafe {
 		for i := i32(0); i < 16; i++ {
 			member := &socket.memberships[0] + i
@@ -3294,7 +3294,7 @@ pub fn leave_membership(member &Membership, interface_ &C.netif) Err_t {
 	}
 }
 
-pub fn release_memberships(socket &Vinix_socket) {
+pub fn release_memberships(socket &Tulpar_socket) {
 	unsafe {
 		for i := i32(0); i < 16; i++ {
 			member := &socket.memberships[0] + i
@@ -3307,8 +3307,8 @@ pub fn release_memberships(socket &Vinix_socket) {
 	}
 }
 
-@[export: 'vinix_socket_membership']
-pub fn vinix_socket_membership(socket &Vinix_socket, endpoint &C.vinix_net_endpoint, interface_address u32, join i32) i32 {
+@[export: 'tulpar_socket_membership']
+pub fn tulpar_socket_membership(socket &Tulpar_socket, endpoint &C.tulpar_net_endpoint, interface_address u32, join i32) i32 {
 	unsafe {
 		if (uint(socket) == 0) || (uint(endpoint) == 0) || (i32(endpoint.family) != 2 && i32(endpoint.family) != 10) {
 			return 22
@@ -3316,7 +3316,7 @@ pub fn vinix_socket_membership(socket &Vinix_socket, endpoint &C.vinix_net_endpo
 		if i32(endpoint.family) == 10 && socket.family != 10 {
 			return 92
 		}
-		group := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		group := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(group, 0, sizeof(C.ip_addr))
 		C.memset(voidptr(group), 0, sizeof(C.ip_addr))
 		for {
@@ -3515,8 +3515,8 @@ pub fn vinix_socket_membership(socket &Vinix_socket, endpoint &C.vinix_net_endpo
 	}
 }
 
-@[export: 'vinix_socket_multicast_interface']
-pub fn vinix_socket_multicast_interface(socket &Vinix_socket, family i32, index u32, interface_address u32) i32 {
+@[export: 'tulpar_socket_multicast_interface']
+pub fn tulpar_socket_multicast_interface(socket &Tulpar_socket, family i32, index u32, interface_address u32) i32 {
 	unsafe {
 		if (uint(socket) == 0) || (uint(socket.udp) == 0) {
 			return 92
@@ -3550,14 +3550,14 @@ pub fn vinix_socket_multicast_interface(socket &Vinix_socket, family i32, index 
 	}
 }
 
-@[export: 'vinix_net_ipv6_address']
-pub fn vinix_net_ipv6_address(index u32, slot u32, endpoint &C.vinix_net_endpoint, state &u32, valid_life &u32, preferred_life &u32) i32 {
+@[export: 'tulpar_net_ipv6_address']
+pub fn tulpar_net_ipv6_address(index u32, slot u32, endpoint &C.tulpar_net_endpoint, state &u32, valid_life &u32, preferred_life &u32) i32 {
 	unsafe {
 		interface_ := interface_index(index)
 		if (uint(interface_) == 0) || slot >= u32(6) {
 			return 0
 		}
-		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		ip := &C.ip_addr(C.tulpar_stack_alloc(sizeof(C.ip_addr)))
 		C.memset(ip, 0, sizeof(C.ip_addr))
 		for {
 			ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v6)
@@ -3595,7 +3595,7 @@ pub fn vinix_net_ipv6_address(index u32, slot u32, endpoint &C.vinix_net_endpoin
 	}
 }
 
-pub fn family_set_option(socket &Vinix_socket, level i32, option i32, value i32) i32 {
+pub fn family_set_option(socket &Tulpar_socket, level i32, option i32, value i32) i32 {
 	unsafe {
 		pcb := socket_ip_pcb(socket)
 		if level == 0 {
@@ -3685,7 +3685,7 @@ pub fn family_set_option(socket &Vinix_socket, level i32, option i32, value i32)
 			if value < 0 {
 				return 19
 			}
-			return vinix_socket_multicast_interface(socket, 10, u32(value), u32(0))
+			return tulpar_socket_multicast_interface(socket, 10, u32(value), u32(0))
 		}
 		if option == 18 {
 			// IPV6_MULTICAST_HOPS
@@ -3709,7 +3709,7 @@ pub fn family_set_option(socket &Vinix_socket, level i32, option i32, value i32)
 	}
 }
 
-pub fn family_get_option(socket &Vinix_socket, level i32, option i32, value &i32) i32 {
+pub fn family_get_option(socket &Tulpar_socket, level i32, option i32, value &i32) i32 {
 	unsafe {
 		if level == 0 {
 			if option == 2 {
@@ -3773,19 +3773,19 @@ pub fn family_get_option(socket &Vinix_socket, level i32, option i32, value &i32
 
 // Family/managed multicast policy stays beside the raw lwIP bridge.
 
-@[export: 'vinix_net_core_physical']
+@[export: 'tulpar_net_core_physical']
 pub fn physical() voidptr {
 	unsafe { return &net_physical_netif
 	 }
 }
 
-@[export: 'vinix_net_core_epoch']
+@[export: 'tulpar_net_core_epoch']
 pub fn epoch() u64 { return net_link_epoch }
 
 fn is_null(p voidptr) bool { return uint(p) == 0 }
 
-@[export: 'vinix_net_core_mac']
+@[export: 'tulpar_net_core_mac']
 pub fn fixture_mac() voidptr { unsafe { return &net_active_mac[0] } }
 
-@[export: 'vinix_net_core_accept_fn']
+@[export: 'tulpar_net_core_accept_fn']
 pub fn fixture_accept_fn() Tcp_accept_fn { return accept_callback }

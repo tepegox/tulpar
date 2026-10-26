@@ -28,7 +28,7 @@ fn assert_fixture_imports(text string) ! {
 fn build_fixture(work string, arch string, family string, original string) !string {
 	mut flags := []string{}
 	if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		flags = [os.getenv_opt('CC_AARCH64') or { 'clang' }, '--target=aarch64-linux-musl',
 			'--sysroot=' + sdk, '-fuse-ld=lld', '-L' + sdk + '/lib']
 	} else {
@@ -55,15 +55,15 @@ fn build_fixture(work string, arch string, family string, original string) !stri
 	if family == 'pagetable' {
 		entry := work + '/entry'
 		os.mkdir(entry)!
-		os.write_file(entry + '/entry-native-abi.h', '#include <stdio.h>\n#include <unistd.h>\nint vinix_pagetable_boundaries(void);\n')!
+		os.write_file(entry + '/entry-native-abi.h', '#include <stdio.h>\n#include <unistd.h>\nint tulpar_pagetable_boundaries(void);\n')!
 		os.write_file(entry + '/core.v', "module entry
 #include <entry-native-abi.h>
-fn C.vinix_pagetable_boundaries() i32
+fn C.tulpar_pagetable_boundaries() i32
 fn C.fflush(voidptr) i32
 fn C.pause() i32
 @[export: 'main']
 pub fn run() i32 {
-    result := C.vinix_pagetable_boundaries()
+    result := C.tulpar_pagetable_boundaries()
     unsafe { C.fflush(nil) }
     if result == 0 { for { C.pause() } }
     return result
@@ -131,7 +131,7 @@ fn built_command(arguments []string, family string) !int {
 	program := if prebuilt {
 		path_option(options, '--prebuilt-init', '')!
 	} else {
-		work := hosttest.work_dir(options.value('--state-dir', ''), 'vinix-native-fixture-')!
+		work := hosttest.work_dir(options.value('--state-dir', ''), 'tulpar-native-fixture-')!
 		original := if options.has('--original-reference') {
 			path_option(options, '--original-reference', '')!
 		} else {
@@ -156,7 +156,7 @@ fn built_command(arguments []string, family string) !int {
 		if !options.has('--kernel-dir') || !options.has('--guest-state-dir') || timeout <= 0 {
 			return error_with_code('native run needs kernel directory, fresh guest directory and positive timeout', 2)
 		}
-		state := hosttest.work_dir(options.value('--guest-state-dir', ''), 'vinix-native-exception-')!
+		state := hosttest.work_dir(options.value('--guest-state-dir', ''), 'tulpar-native-exception-')!
 		os.mkdir_all(state + '/rootfs/mnt')!
 		archive := image(program, state)!
 		configured := launch(program, archive, state, path_option(options, '--kernel-dir', '')!, arch, true)!
@@ -165,7 +165,7 @@ fn built_command(arguments []string, family string) !int {
 		qemu_index := command.index('-drive') + 1
 		firmware := command[qemu_index].all_after('file=')
 		receipt := {
-			'kernel_sha256':   json2.Any(digest(path_option(options, '--kernel-dir', '')! + '/bin/vinix')!)
+			'kernel_sha256':   json2.Any(digest(path_option(options, '--kernel-dir', '')! + '/bin/tulpar')!)
 			'init_sha256':     json2.Any(digest(program)!)
 			'iso_sha256':      json2.Any(digest(state + '/test.iso')!)
 			'firmware_sha256': json2.Any(digest(firmware)!)

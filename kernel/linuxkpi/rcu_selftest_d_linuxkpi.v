@@ -14,27 +14,27 @@ import x86.hpet as rcu_test_clock
 #include "linuxkpi_rcu_fixture_v_primitives.h"
 #include "linuxkpi_smp_fixture_v_primitives.h"
 
-struct C.vinix_rcu_fixture_head {}
+struct C.tulpar_rcu_fixture_head {}
 struct C.callback_head {}
-fn C.vinix_linuxkpi_rcu_fixture_head_bytes() u32
-fn C.vinix_linuxkpi_rcu_fixture_read_lock()
-fn C.vinix_linuxkpi_rcu_fixture_read_unlock()
-fn C.vinix_linuxkpi_rcu_fixture_get_state() u64
-fn C.vinix_linuxkpi_rcu_fixture_start_poll() u64
-fn C.vinix_linuxkpi_rcu_fixture_poll(u64) bool
-fn C.vinix_linuxkpi_rcu_fixture_synchronize(bool)
-fn C.vinix_linuxkpi_rcu_fixture_barrier()
-fn C.vinix_linuxkpi_rcu_fixture_call(voidptr, fn (&C.callback_head))
-fn C.vinix_linuxkpi_rcu_test_force_count() u64
-fn C.vinix_linuxkpi_rcu_test_irq_off_probe() i32
-fn C.vinix_linuxkpi_rcu_fixture_task_sleeping(voidptr) bool
+fn C.tulpar_linuxkpi_rcu_fixture_head_bytes() u32
+fn C.tulpar_linuxkpi_rcu_fixture_read_lock()
+fn C.tulpar_linuxkpi_rcu_fixture_read_unlock()
+fn C.tulpar_linuxkpi_rcu_fixture_get_state() u64
+fn C.tulpar_linuxkpi_rcu_fixture_start_poll() u64
+fn C.tulpar_linuxkpi_rcu_fixture_poll(u64) bool
+fn C.tulpar_linuxkpi_rcu_fixture_synchronize(bool)
+fn C.tulpar_linuxkpi_rcu_fixture_barrier()
+fn C.tulpar_linuxkpi_rcu_fixture_call(voidptr, fn (&C.callback_head))
+fn C.tulpar_linuxkpi_rcu_test_force_count() u64
+fn C.tulpar_linuxkpi_rcu_test_irq_off_probe() i32
+fn C.tulpar_linuxkpi_rcu_fixture_task_sleeping(voidptr) bool
 
 const rcu_test_timeout_ns = u64(10000000000)
 const rcu_test_dynamic_count = 25
 
 struct RcuNativeNode {
 mut:
-	head C.vinix_rcu_fixture_head
+	head C.tulpar_rcu_fixture_head
 	remaining u32
 	dynamic bool
 	held bool
@@ -135,15 +135,15 @@ fn rcu_test_reader(_argument voidptr) {
 		if mode == 0 { sched.reschedule(); continue }
 		if mode == 1 || mode == 5 {
 			if mode == 1 {
-				C.vinix_linuxkpi_rcu_fixture_read_lock()
-				C.vinix_linuxkpi_rcu_fixture_read_lock()
+				C.tulpar_linuxkpi_rcu_fixture_read_lock()
+				C.tulpar_linuxkpi_rcu_fixture_read_lock()
 			} else { preempt_disable(); preempt_disable() }
 			katomic.store(mut &rcu_native_ledger.phase, u32(1))
 			rcu_test_spin_release(true)
-			if mode == 1 { C.vinix_linuxkpi_rcu_fixture_read_unlock() } else { preempt_enable() }
+			if mode == 1 { C.tulpar_linuxkpi_rcu_fixture_read_unlock() } else { preempt_enable() }
 			katomic.store(mut &rcu_native_ledger.phase, u32(2))
 			rcu_test_spin_release(false)
-			if mode == 1 { C.vinix_linuxkpi_rcu_fixture_read_unlock() } else { preempt_enable() }
+			if mode == 1 { C.tulpar_linuxkpi_rcu_fixture_read_unlock() } else { preempt_enable() }
 		} else {
 			if mode == 2 { preempt_disable(); preempt_disable() }
 			ints := cpu.interrupt_toggle(false)
@@ -166,7 +166,7 @@ fn rcu_test_reader(_argument voidptr) {
 				// A real software INT entered while raw CLI is active must not
 				// report quiescence on its return to the original saved IF0.
 				rcu_test_spin_release(true)
-				if C.vinix_linuxkpi_rcu_test_irq_off_probe() != 0 || cpu.interrupt_state()
+				if C.tulpar_linuxkpi_rcu_test_irq_off_probe() != 0 || cpu.interrupt_state()
 					|| local.maskable_irq_depth != 0 || preempt_depth[1] != 0 { rcu_test_fail(32) }
 				katomic.store(mut &rcu_native_ledger.phase, u32(2))
 			}
@@ -205,8 +205,8 @@ fn rcu_test_aux(_argument voidptr) {
 		command := katomic.load(&rcu_native_ledger.aux_command)
 		if command == 0 { sched.reschedule(); continue }
 		katomic.store(mut &rcu_native_ledger.aux_started, true)
-		if command == 2 { C.vinix_linuxkpi_rcu_fixture_barrier() }
-		else { C.vinix_linuxkpi_rcu_fixture_synchronize(command == 3) }
+		if command == 2 { C.tulpar_linuxkpi_rcu_fixture_barrier() }
+		else { C.tulpar_linuxkpi_rcu_fixture_synchronize(command == 3) }
 		if !rcu_test_task(2) { rcu_test_fail(256) }
 		katomic.store(mut &rcu_native_ledger.aux_command, u32(0))
 		katomic.store(mut &rcu_native_ledger.aux_done, true)
@@ -241,7 +241,7 @@ fn rcu_test_wait_aux_parked() bool {
 	owner := unsafe { &proc.Thread(rcu_native_ledger.aux_owner) }
 	started := rcu_test_clock.nanoseconds()
 	for !(katomic.load(&rcu_native_ledger.aux_started)
-		&& C.vinix_linuxkpi_rcu_fixture_task_sleeping(unsafe { &owner.linuxkpi_task[0] })
+		&& C.tulpar_linuxkpi_rcu_fixture_task_sleeping(unsafe { &owner.linuxkpi_task[0] })
 		&& !katomic.load(&owner.is_in_queue) && katomic.load(&owner.running_on) == u64(-1)
 		&& !katomic.load(&owner.is_in_queue)) {
 		if katomic.load(&rcu_native_ledger.failures) != 0
@@ -253,7 +253,7 @@ fn rcu_test_wait_aux_parked() bool {
 
 fn rcu_test_wait_force(previous u64) bool {
 	started := rcu_test_clock.nanoseconds()
-	for C.vinix_linuxkpi_rcu_test_force_count() == previous {
+	for C.tulpar_linuxkpi_rcu_test_force_count() == previous {
 		if katomic.load(&rcu_native_ledger.failures) != 0
 			|| rcu_test_clock.nanoseconds() - started >= rcu_test_timeout_ns { return false }
 		sched.reschedule()
@@ -263,7 +263,7 @@ fn rcu_test_wait_force(previous u64) bool {
 
 fn rcu_test_wait_cookie(cookie u64) bool {
 	started := rcu_test_clock.nanoseconds()
-	for !C.vinix_linuxkpi_rcu_fixture_poll(cookie) {
+	for !C.tulpar_linuxkpi_rcu_fixture_poll(cookie) {
 		if katomic.load(&rcu_native_ledger.failures) != 0
 			|| rcu_test_clock.nanoseconds() - started >= rcu_test_timeout_ns { return false }
 		sched.reschedule()
@@ -282,7 +282,7 @@ fn rcu_test_start_scope(mode u32) bool {
 		katomic.store(mut &rcu_native_ledger.command, mode)
 		if !rcu_test_wait_phase(1) { return false }
 		if mode != 4 { return true }
-		if C.vinix_linuxkpi_smp_fixture_single(1, rcu_test_irq_hold, unsafe { nil }, 0) != 0 { return false }
+		if C.tulpar_linuxkpi_smp_fixture_single(1, rcu_test_irq_hold, unsafe { nil }, 0) != 0 { return false }
 		katomic.store(mut &rcu_native_ledger.allow_irqs, true)
 		if !rcu_test_wait_phase(2) { return false }
 		if katomic.load(&rcu_native_ledger.irq_eligible) { return true }
@@ -310,10 +310,10 @@ fn rcu_test_callback(argument &C.callback_head) {
 	cpu.interrupt_toggle(ints)
 	if !valid || may_sleep() { rcu_test_fail(512) }
 	if held {
-		force := C.vinix_linuxkpi_rcu_test_force_count()
-		cookie := C.vinix_linuxkpi_rcu_fixture_start_poll()
+		force := C.tulpar_linuxkpi_rcu_test_force_count()
+		cookie := C.tulpar_linuxkpi_rcu_fixture_start_poll()
 		started := rcu_test_clock.nanoseconds()
-		for C.vinix_linuxkpi_rcu_test_force_count() == force {
+		for C.tulpar_linuxkpi_rcu_test_force_count() == force {
 			spin_wait()
 			if rcu_test_clock.nanoseconds() - started >= rcu_test_timeout_ns {
 				lib.kpanic(unsafe { nil }, c'linuxkpi: held ordinary RCU callback force deadline')
@@ -321,7 +321,7 @@ fn rcu_test_callback(argument &C.callback_head) {
 		}
 		observe := rcu_test_clock.nanoseconds()
 		for rcu_test_clock.nanoseconds() - observe < 2000000 {
-			if C.vinix_linuxkpi_rcu_fixture_poll(cookie) || katomic.load(&rcu_native_ledger.aux_done) {
+			if C.tulpar_linuxkpi_rcu_fixture_poll(cookie) || katomic.load(&rcu_native_ledger.aux_done) {
 				rcu_test_fail(1024)
 			}
 			spin_wait()
@@ -331,7 +331,7 @@ fn rcu_test_callback(argument &C.callback_head) {
 	katomic.store(mut &rcu_native_ledger.callbacks, katomic.load(&rcu_native_ledger.callbacks) + 1)
 	if remaining > 1 {
 		node.remaining = remaining - 1
-		C.vinix_linuxkpi_rcu_fixture_call(node, rcu_test_callback)
+		C.tulpar_linuxkpi_rcu_fixture_call(node, rcu_test_callback)
 		// Self requeue may already have published this detached head. No object
 		// read follows the original call_rcu invocation.
 	} else if dynamic {
@@ -347,37 +347,37 @@ fn rcu_test_scope(mode u32) bool {
 		katomic.store(mut &rcu_native_ledger.release_inner, true)
 		katomic.store(mut &rcu_native_ledger.release_scope, true)
 		katomic.store(mut &rcu_native_ledger.allow_irqs, true)
-		if submitted { C.vinix_linuxkpi_rcu_fixture_barrier() }
+		if submitted { C.tulpar_linuxkpi_rcu_fixture_barrier() }
 	}
 	if !rcu_test_start_scope(mode) { return false }
 	before := katomic.load(&rcu_native_ledger.callbacks)
-	force := C.vinix_linuxkpi_rcu_test_force_count()
-	old_cookie := C.vinix_linuxkpi_rcu_fixture_get_state()
-	cookie := C.vinix_linuxkpi_rcu_fixture_start_poll()
-	C.vinix_linuxkpi_rcu_fixture_call(unsafe { &node }, rcu_test_callback)
+	force := C.tulpar_linuxkpi_rcu_test_force_count()
+	old_cookie := C.tulpar_linuxkpi_rcu_fixture_get_state()
+	cookie := C.tulpar_linuxkpi_rcu_fixture_start_poll()
+	C.tulpar_linuxkpi_rcu_fixture_call(unsafe { &node }, rcu_test_callback)
 	submitted = true
 	rcu_test_begin_aux(if mode == 3 { u32(3) } else { u32(1) })
 	if !rcu_test_wait_aux_parked() || !rcu_test_wait_force(force) { return false }
 	if mode == 4 {
-		if C.vinix_linuxkpi_smp_fixture_single(1, rcu_test_nested_irq, unsafe { nil }, 1) != 0
+		if C.tulpar_linuxkpi_smp_fixture_single(1, rcu_test_nested_irq, unsafe { nil }, 1) != 0
 			|| katomic.load(&rcu_native_ledger.nested_entries) == 0 { return false }
 	}
-	if C.vinix_linuxkpi_rcu_fixture_poll(cookie) || C.vinix_linuxkpi_rcu_fixture_poll(old_cookie)
+	if C.tulpar_linuxkpi_rcu_fixture_poll(cookie) || C.tulpar_linuxkpi_rcu_fixture_poll(old_cookie)
 		|| katomic.load(&rcu_native_ledger.callbacks) != before || katomic.load(&rcu_native_ledger.aux_done) {
 		return false
 	}
 	if mode == 1 || mode == 2 || mode == 3 || mode == 5 {
 		katomic.store(mut &rcu_native_ledger.release_inner, true)
 		if !rcu_test_wait_phase(2) { return false }
-		inner_force := C.vinix_linuxkpi_rcu_test_force_count()
-		if !rcu_test_wait_force(inner_force) || C.vinix_linuxkpi_rcu_fixture_poll(cookie)
+		inner_force := C.tulpar_linuxkpi_rcu_test_force_count()
+		if !rcu_test_wait_force(inner_force) || C.tulpar_linuxkpi_rcu_fixture_poll(cookie)
 			|| katomic.load(&rcu_native_ledger.callbacks) != before
 			|| katomic.load(&rcu_native_ledger.aux_done) { return false }
 	}
 	katomic.store(mut &rcu_native_ledger.release_scope, true)
 	if !rcu_test_wait_phase(3) || !rcu_test_wait_cookie(cookie) || !rcu_test_wait_cookie(old_cookie)
 		|| !rcu_test_wait(&rcu_native_ledger.aux_done) { return false }
-	C.vinix_linuxkpi_rcu_fixture_barrier()
+	C.tulpar_linuxkpi_rcu_fixture_barrier()
 	return katomic.load(&rcu_native_ledger.callbacks) == before + 1
 		&& katomic.load(&rcu_native_ledger.failures) == 0
 }
@@ -399,7 +399,7 @@ fn rcu_test_dynamic(controller &proc.Thread) bool {
 				}
 				sched.reschedule()
 			}
-			C.vinix_linuxkpi_rcu_fixture_barrier()
+			C.tulpar_linuxkpi_rcu_fixture_barrier()
 		}
 	}
 	for index in 0 .. rcu_test_dynamic_count {
@@ -415,7 +415,7 @@ fn rcu_test_dynamic(controller &proc.Thread) bool {
 	test_alloc_oom(0)
 	ints := cpu.interrupt_toggle(false)
 	for index in 0 .. allocated {
-		C.vinix_linuxkpi_rcu_fixture_call(nodes[index], rcu_test_callback)
+		C.tulpar_linuxkpi_rcu_fixture_call(nodes[index], rcu_test_callback)
 		submitted++
 	}
 	allocation_free := controller.linuxkpi_alloc_fail_after == 0 && !cpu.interrupt_state()
@@ -433,7 +433,7 @@ fn rcu_test_dynamic(controller &proc.Thread) bool {
 			|| rcu_test_clock.nanoseconds() - started >= rcu_test_timeout_ns { return false }
 		sched.reschedule()
 	}
-	C.vinix_linuxkpi_rcu_fixture_barrier()
+	C.tulpar_linuxkpi_rcu_fixture_barrier()
 	return rcu_test_wait_cookie(katomic.load(&rcu_native_ledger.callback_cookie))
 		&& katomic.load(&rcu_native_ledger.callbacks) == u32(5 + rcu_test_dynamic_count + 5)
 		&& katomic.load(&rcu_native_ledger.failures) == 0
@@ -488,7 +488,7 @@ fn rcu_test_lifecycle() bool {
 }
 
 fn rcu_native_selftest() bool {
-	if cpu_locals.len < 4 || cpu_locals.len > 64 || C.vinix_linuxkpi_rcu_fixture_head_bytes() != 16 { return false }
+	if cpu_locals.len < 4 || cpu_locals.len > 64 || C.tulpar_linuxkpi_rcu_fixture_head_bytes() != 16 { return false }
 	for round in 0 .. 3 {
 		before := selftest_free_baseline()
 		if !rcu_test_lifecycle() { return false }

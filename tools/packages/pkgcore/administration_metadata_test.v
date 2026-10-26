@@ -9,9 +9,9 @@ import time
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn administration_encoding_fixture() (Config, TrustHistory) {
 	repository := Repository{ id: 'trusted', url: 'file:///srv/é/文件/"quoted"/back\\slash', public_key: 'a'.repeat(64) }
@@ -108,22 +108,22 @@ fn test_repeated_administration_encoding_and_fingerprinting_retire_all_scratch()
 		repository := config.repositories[0]
 		digest := 'c'.repeat(64)
 		for _ in 0 .. 64 {
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			configuration := encode_administration_document(config, 'too large')!
 			consumer := encode_administration_document(history, 'too large')!
 			publisher := encode_administration_document(ReleaseHistory{ indexes: history.repositories }, 'too large')!
 			fingerprint := repository_fingerprint(config, history, 'enroll', repository, digest)
 			unsafe { configuration.free(); consumer.free(); publisher.free(); fingerprint.free() }
-			kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+			kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained'
 		}
 		boundary := administration_boundary_config()
 		rejected := Config{ ...boundary, launch_user: boundary.launch_user + 'x' }
 		for _ in 0 .. 8 {
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			if text := encode_administration_document(rejected, 'too large') { unsafe { text.free() }; assert false }
 			else { message := err.msg(); unsafe { message.free(); err.free() } }
-			kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+			kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained'
 		}
 		assert config.repositories[0] == repository && history.repositories.len == 128
@@ -132,7 +132,7 @@ fn test_repeated_administration_encoding_and_fingerprinting_retire_all_scratch()
 }
 
 fn test_administration_writes_preserve_inputs_and_refuse_before_replacing_oversized_documents() {
-	directory := os.temp_dir() + '/vinix-administration-encoding-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-administration-encoding-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory)!
 	defer { os.rmdir_all(directory) or {} }
 	config, history := administration_encoding_fixture()

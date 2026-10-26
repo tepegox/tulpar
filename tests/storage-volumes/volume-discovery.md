@@ -1,6 +1,6 @@
 # Automatic encrypted-volume discovery
 
-`open-volume-auto` authenticates a `VINIXVC1` configuration before scanning
+`open-volume-auto` authenticates a `TULPARVC1` configuration before scanning
 `/dev`, then imports through the retained descriptor for its unique matching
 physical disk. See [commands and limits](../../docs/storage-volumes.md#automatic-encrypted-volume-discovery).
 

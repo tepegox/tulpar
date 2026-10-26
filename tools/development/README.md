@@ -1,7 +1,7 @@
 # Native development tools
 
-The commands are `vinix-build`, [vinix-qualify](qualification.md),
-[vinix-vm](virtual-machines.md) and [vinix-jobs](scheduled-jobs.md).
+The commands are `tulpar-build`, [tulpar-qualify](qualification.md),
+[tulpar-vm](virtual-machines.md) and [tulpar-jobs](scheduled-jobs.md).
 All implementations, staging and tests are V.
 See the [workstream status](../../docs/development-containers-virtualization.md)
 for the remaining section 17 implementation and guest acceptance work.
@@ -53,7 +53,7 @@ numbers, expressions, assertions, explicit `#line` filenames and paths outside
 that directory retain their meaning. This adaptation is recorded with the
 other source hashes. Build each project from its source root.
 
-`VINIX_V_ROOT` can select an absolute, complete V library installation separately
+`TULPAR_V_ROOT` can select an absolute, complete V library installation separately
 from the executable's location. Invalid roots are refused. Pin that installation
 as an SDK input in a build plan. This keeps `@VROOT`/`@VEXEROOT` library paths
 stable when a newly rebuilt compiler runs from different private workspaces;
@@ -67,7 +67,7 @@ compiler reports the source commit. `native-v.json` records the source-tree,
 generated-C, helper-object, executable and complete-installation hashes, host
 compiler pins and every translation/compile/link argv. The fourth argument can
 override the C compiler with a JSON argv, using the same default as `stage.v`.
-`VINIX_V_COPT` selects `-O0`, `-O1` (default) or `-O2` for the compiler object;
+`TULPAR_V_COPT` selects `-O0`, `-O1` (default) or `-O2` for the compiler object;
 the chosen option is retained in its compile argv. Automatic V compiler bug
 uploads are disabled in the staging command environment.
 Only `complete: true` represents a completed installation. After source export,
@@ -79,7 +79,7 @@ executable pin alone does not identify a complete bootstrap SDK.
 Supply the resulting `vlang` root to the
 [native guest checks](../../tests/development/README.md). Pin the entire root
 when using it in an installed-system build plan. This prepares a host bootstrap
-compiler; rebuilding that compiler inside Vinix and qualifying every V external
+compiler; rebuilding that compiler inside Tulpar and qualifying every V external
 tool, default garbage collector and package-manager workflow remain separate
 acceptance work.
 
@@ -92,7 +92,7 @@ Historical stage receipts and logs are retained in
 `build/development17-20261013/native-v-x86-final`. Native execution/compilation
 acceptance is recorded separately by the guest controller.
 
-The portable stages with all three source-file adaptations and `VINIX_V_COPT=-O0`
+The portable stages with all three source-file adaptations and `TULPAR_V_COPT=-O0`
 completed in `build/development17-20261013/native-v-arm-qualified` and
 `build/development17-20261013/native-v-x86-qualified`. Their patched-source pin is
 `918bec26b18f9205f63b3498d90c2df3d57fdd02e17b87caf92e3d63b62233f1`.
@@ -231,7 +231,7 @@ x86_64 TCG and AArch64 HVF, with 19 independently validated records each in
 The earlier x86 connection-aborted receipt remains evidence for further
 network reliability work; adding request context does not close that issue.
 
-`vinix-build` is a V build runner for installed Vinix systems and build hosts.
+`tulpar-build` is a V build runner for installed Tulpar systems and build hosts.
 It runs a pinned build plan in a new private workspace, preserves source links
 and permissions, sets `SOURCE_DATE_EPOCH`, and records command results and output
 SHA-256s. It stops on the first failure and retains logs and a failed receipt.
@@ -251,10 +251,10 @@ deadline; the command owner retires its process group before reaping it.
 Build the runner with the installed V compiler:
 
 ```
-v -gc none -cc gcc -o vinix-build tools/development/build.v
-./vinix-build hash /path/to/prepared-source
-./vinix-build hash /usr/lib/vlang/v
-./vinix-build build plan.json /path/to/new-result
+v -gc none -cc gcc -o tulpar-build tools/development/build.v
+./tulpar-build hash /path/to/prepared-source
+./tulpar-build hash /usr/lib/vlang/v
+./tulpar-build build plan.json /path/to/new-result
 ```
 
 The source must be a prepared closure, including dependencies. Export a committed
@@ -263,7 +263,7 @@ revision with Git's archive command and materialize the pinned dependencies from
 the desktop. Internal relative symlinks are preserved; links escaping the closure
 and special files are rejected. Directory and regular-file permissions are part
 of each tree pin; symlink modes use canonical 0777 because Darwin's
-umask-dependent modes differ from Vinix's
+umask-dependent modes differ from Tulpar's
 reported modes. Link targets remain pinned and escaping links remain errors.
 Recompute tree pins made by older tools on Darwin if they include symlinks.
 The build runs on a copy and rechecks the source, tools and additional SDK inputs
@@ -294,23 +294,23 @@ A plan has this shape (replace paths and hashes with actual values):
       "name": "kernel",
       "directory": "kernel",
       "argv": ["{make}", "ARCH=x86_64", "V={v}", "CC={cc}", "AR={ar}", "KERNEL_LINK_RANDOMIZE=0"],
-      "artifacts": ["kernel/bin/vinix"]
+      "artifacts": ["kernel/bin/tulpar"]
     },
     {
       "name": "userland",
-      "directory": "util-vinix",
+      "directory": "util-tulpar",
       "argv": ["{make}", "V={v}", "CC={cc}", "VFLAGS=-gc none -os vinix"],
-      "artifacts": ["util-vinix/chsh/chsh", "util-vinix/fetch/fetch", "util-vinix/mount/mount", "util-vinix/lscpu/lscpu"]
+      "artifacts": ["util-tulpar/chsh/chsh", "util-tulpar/fetch/fetch", "util-tulpar/mount/mount", "util-tulpar/lscpu/lscpu"]
     },
     {
       "name": "init",
-      "argv": ["{v}", "-os", "vinix", "-gc", "none", "-cc", "{cc}", "-o", "{work}/vinix-init", "{work}/init"],
-      "artifacts": ["vinix-init"]
+      "argv": ["{v}", "-os", "vinix", "-gc", "none", "-cc", "{cc}", "-o", "{work}/tulpar-init", "{work}/init"],
+      "artifacts": ["tulpar-init"]
     },
     {
       "name": "package-cli",
-      "argv": ["{v}", "-new-compiler", "-nocache", "-no-retry-compilation", "-no-parallel", "-no-memory-limit", "-os", "linux", "-musl", "-gc", "none", "-cc", "{cc}", "-path", "@vlib|{work}", "-o", "{work}/vinix-package", "{work}/tools/packages/main.v"],
-      "artifacts": ["vinix-package"]
+      "argv": ["{v}", "-new-compiler", "-nocache", "-no-retry-compilation", "-no-parallel", "-no-memory-limit", "-os", "linux", "-musl", "-gc", "none", "-cc", "{cc}", "-path", "@vlib|{work}", "-o", "{work}/tulpar-package", "{work}/tools/packages/main.v"],
+      "artifacts": ["tulpar-package"]
     }
   ]
 }
@@ -347,7 +347,7 @@ preserve modes, retain failure receipts and enforce command deadlines. These
 checks also compile a `-gc none` hash probe and bound peak-memory growth across
 1,000 full-buffer hashes. The stream-buffer regression measured approximately
 79 MiB of growth before the fix and 1 MiB after it on the Darwin ARM host.
-These host checks do not establish Vinix guest qualification.
+These host checks do not establish Tulpar guest qualification.
 
 On 15 October 2026 the tool-pin regressions reproduced execution of a workspace
 shadow through a relative pin and execution of a tool replaced by an earlier
@@ -358,5 +358,5 @@ failed step in the receipt and prevent later steps. All seven build,
 qualification and scheduler test files passed on the Darwin ARM host with V
 `be2eb40`. Both static Linux ELF64 CLI builds also passed, with checked ARM64
 and x86-64 machine IDs. Source/compiler/binary pins and logs are retained in
-`/tmp/vinix-build-tools-63837`. These results cover host build-runner behavior;
+`/tmp/tulpar-build-tools-63837`. These results cover host build-runner behavior;
 complete installed kernel/desktop self-hosting remains open.

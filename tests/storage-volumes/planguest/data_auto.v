@@ -4,7 +4,7 @@ module planguest
 @[direct_array_access]
 fn data_auto_tool(verb &char, input &char, destination &char, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), verb, input, destination, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), verb, input, destination, &char(nil)]!
 		fd := C.open(c'/root/auto-data-output', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(fd >= 0, c'open automatic data capture')
 		child := C.fork(); check(child >= 0, c'fork automatic data utility')
 		if child == 0 { if C.dup2(fd, 1) != 1 || C.close(fd) != 0 { C._exit(126) }; C.execv(args[0], &args[0]); C._exit(127) }
@@ -27,10 +27,10 @@ fn data_auto_equal(first &char, second &char) {
 fn data_auto_setup(parent &char, other &char) {
 	unsafe {
 		tool(c'create', parent, c'2', c'1048576', c'8192', 0); tool(c'create', other, c'9', c'1048576', c'8192', 0)
-		readonly := [&char(c'/usr/sbin/vinix-volume'), &char(c'create'), parent, &char(c'5'), &char(c'2097152'), &char(c'12288'), &char(c'ro'), &char(nil)]!
+		readonly := [&char(c'/usr/sbin/tulpar-volume'), &char(c'create'), parent, &char(c'5'), &char(c'2097152'), &char(c'12288'), &char(c'ro'), &char(nil)]!
 		run_utility(&readonly[0], 0)
 		for disk in 0 .. 2 {
-			fd := C.open(if disk == 0 { &char(c'/dev/mapper/vinix2') } else { &char(c'/dev/mapper/vinix9') }, C.O_RDWR); mut bytes := [4096]u8{}
+			fd := C.open(if disk == 0 { &char(c'/dev/mapper/tulpar2') } else { &char(c'/dev/mapper/tulpar9') }, C.O_RDWR); mut bytes := [4096]u8{}
 			for i in 0 .. 4096 { bytes[i] = if disk == 0 { u8(0x6d) } else { u8(0x9c) } }
 			check(fd >= 0 && C.pwrite(fd, &bytes[0], 4096, 0) == 4096 && C.pwrite(fd, &bytes[0], 4096, 4096) == 4096 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist two-disk automatic data fixture')
 		}
@@ -83,9 +83,9 @@ fn data_auto_entry() i32 {
 	parent := $if amd64 { &char(c'/dev/sd0') } $else { &char(c'/dev/vda') }; other := $if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') }
 	if phase < 0 {
 		data_auto_setup(parent, other); data_auto_matrix(parent, other, false)
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9'); held := C.open(c'/dev/mapper/vinix9', C.O_RDONLY); check(held >= 0, c'hold automatic data view')
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9'); held := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY); check(held >= 0, c'hold automatic data view')
 		mut output := [4096]char{}; data_auto_tool(c'verify-data-auto', c'/root/auto-data.vhash', unsafe { nil }, 0, &output[0])
-		check(first == status(c'/dev/mapper/vinix2') && second == status(c'/dev/mapper/vinix9'), c'automatic verification preserves complete live status')
+		check(first == status(c'/dev/mapper/tulpar2') && second == status(c'/dev/mapper/tulpar9'), c'automatic verification preserves complete live status')
 		left := C.open(parent, C.O_RDWR); right := C.open(other, C.O_RDWR); mut a := [4096]u8{}; mut b := [4096]u8{}
 		check(left >= 0 && right >= 0 && C.pread(left, &a[0], 4096, 1048576) == 4096 && C.pread(right, &b[0], 4096, 1048576) == 4096, c'pin two-disk automatic corruption')
 		mut change := a; change[17] ^= 1; check(C.pwrite(left, &change[0], 4096, 1048576) == 4096 && C.fsync(left) == 0, c'persist first automatic corruption')
@@ -97,16 +97,16 @@ fn data_auto_entry() i32 {
 		data_auto_equal(c'/root/auto-data.txt', c'/root/auto-data-changed.txt'); signature(other, 0x12345679)
 		data_auto_matrix(parent, other, false)
 		check(C.pread(held, &change[0], 4096, 0) == 4096 && C.close(held) == 0, c'read held automatic data view'); for value in change { check(value == 0x9c, c'preserved held automatic data') }
-		check(status(c'/dev/mapper/vinix2').generation == first.generation && status(c'/dev/mapper/vinix9').generation == second.generation, c'automatic data preserves mapping generations')
+		check(status(c'/dev/mapper/tulpar2').generation == first.generation && status(c'/dev/mapper/tulpar9').generation == second.generation, c'automatic data preserves mapping generations')
 		root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold automatic data writer lock')
 		data_auto_tool(c'hash-bundle-auto', c'/root/auto-data.vset', c'/root/auto-data.vhash', 1, &output[0]); data_auto_tool(c'scrub-data-auto', c'/root/auto-data.vhash', c'/root/auto-data.txt', 1, &output[0])
 		data_auto_tool(c'verify-data-auto', c'/root/auto-data.vhash', unsafe { nil }, 0, &output[0]); check(C.close(root) == 0, c'release automatic data writer lock')
 		data_auto_retention()
-		copy_plan(c'/root/auto-data.vset', c'/etc/vinix/volumes.vset')
-		check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'remove invalid automatic data boot plan')
+		copy_plan(c'/root/auto-data.vset', c'/etc/tulpar/volumes.vset')
+		check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'remove invalid automatic data boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist automatic data phase')
-		for path in [&char(c'/'), &char(c'/etc/vinix')]! {
+		for path in [&char(c'/'), &char(c'/etc/tulpar')]! {
 			fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist automatic data boot state')
 		}
 		C.printf(c'PLAN DATA AUTO PASSED: all-disk discovery, complete manual/automatic artifacts, corruption/failure precedence and bounded lifetimes\n')

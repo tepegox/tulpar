@@ -35,7 +35,7 @@ fn create_import_workspace() !ImportWorkspace {
 
 fn create_import_workspace_at(parent string) !ImportWorkspace {
 	process := os.getpid().str()
-	prefix := 'vinix-pack-root-' + process
+	prefix := 'tulpar-pack-root-' + process
 	defer { unsafe { process.free(); prefix.free() } }
 	mut stage := create_export_stage(parent, prefix, 'prepared import')!
 	mut accepted := false

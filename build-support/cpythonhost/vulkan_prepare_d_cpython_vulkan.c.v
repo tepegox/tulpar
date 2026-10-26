@@ -3,7 +3,7 @@ module cpythonhost
 
 fn C.PyCapsule_New(voidptr, &char, voidptr) voidptr
 fn C.PyCapsule_GetPointer(voidptr, &char) voidptr
-fn C.vinix_vulkan_prepare_dispose(voidptr)
+fn C.tulpar_vulkan_prepare_dispose(voidptr)
 
 struct VulkanPrepareExpression {
 mut:
@@ -11,7 +11,7 @@ mut:
 }
 
 pub fn vulkan_prepare_take(capsule voidptr, index i32) voidptr {
-	mut state := unsafe { &VulkanPrepareExpression(C.PyCapsule_GetPointer(capsule, c'vinix.dota.prepare.expression')) }
+	mut state := unsafe { &VulkanPrepareExpression(C.PyCapsule_GetPointer(capsule, c'tulpar.dota.prepare.expression')) }
 	if state == unsafe { nil } { return unsafe { nil } }
 	if index < 0 || index > 1 || state.values[index] == unsafe { nil } {
 		message := py_string('invalid Dota preparation operand')
@@ -28,7 +28,7 @@ pub fn vulkan_prepare_take(capsule voidptr, index i32) voidptr {
 // The capsule owns its two references until the Python expression transfers
 // them onto its operand stack. Its traceback retains no consumed references.
 pub fn vulkan_prepare_dispose(capsule voidptr) {
-	state := unsafe { &VulkanPrepareExpression(C.PyCapsule_GetPointer(capsule, c'vinix.dota.prepare.expression')) }
+	state := unsafe { &VulkanPrepareExpression(C.PyCapsule_GetPointer(capsule, c'tulpar.dota.prepare.expression')) }
 	if state == unsafe { nil } { return }
 	drop(state.values[1])
 	drop(state.values[0])
@@ -45,7 +45,7 @@ fn vulkan_prepare_expression(target voidptr, value voidptr) voidptr {
 		return unsafe { nil }
 	}
 	unsafe { *state = VulkanPrepareExpression{ values: [target, value]! } }
-	capsule := C.PyCapsule_New(state, c'vinix.dota.prepare.expression', voidptr(C.vinix_vulkan_prepare_dispose))
+	capsule := C.PyCapsule_New(state, c'tulpar.dota.prepare.expression', voidptr(C.tulpar_vulkan_prepare_dispose))
 	if capsule == unsafe { nil } {
 		drop(value)
 		drop(target)

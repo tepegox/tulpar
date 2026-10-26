@@ -4,14 +4,14 @@
 set -eu
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
-hosted_command=${VINIX_STEAM_HOSTED_COMMAND:-"$repo/tests/steam/hosted-command/run"}
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-steam-hosted.XXXXXX")
+hosted_command=${TULPAR_STEAM_HOSTED_COMMAND:-"$repo/tests/steam/hosted-command/run"}
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-steam-hosted.XXXXXX")
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 export HOME="$work/home"
 mkdir -p "$HOME/.steam"
-export VINIX_STEAM_LAUNCHER="$work/fake-steam"
+export TULPAR_STEAM_LAUNCHER="$work/fake-steam"
 
-cat > "$VINIX_STEAM_LAUNCHER" <<'FAKE'
+cat > "$TULPAR_STEAM_LAUNCHER" <<'FAKE'
 #!/bin/sh
 count=$(cat "$HOME/count" 2>/dev/null || echo 0)
 count=$((count + 1))
@@ -30,7 +30,7 @@ fi
 sleep 1 </dev/null >/dev/null 2>&1 &
 echo "$!" > "$HOME/.steam/steam.pid"
 FAKE
-chmod 0755 "$VINIX_STEAM_LAUNCHER"
+chmod 0755 "$TULPAR_STEAM_LAUNCHER"
 
 INSTALL_ON_FIRST=1 "$hosted_command" "$repo/build-support/steam/steam-hosted"
 [ "$(cat "$HOME/count")" = 2 ] || {

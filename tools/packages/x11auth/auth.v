@@ -72,9 +72,9 @@ pub fn open_surface(root &char, path &char, uid u32, system_owner u32, create bo
 	unsafe {
 		mut prefix := [4096]char{}
 		length := if uid == 0 {
-			C.snprintf(&prefix[0], sizeof(prefix), c'%srun/vinix-hosted-x11/', root)
+			C.snprintf(&prefix[0], sizeof(prefix), c'%srun/tulpar-hosted-x11/', root)
 		} else {
-			C.snprintf(&prefix[0], sizeof(prefix), c'%srun/user/%u/vinix-hosted-x11/', root, uid)
+			C.snprintf(&prefix[0], sizeof(prefix), c'%srun/user/%u/tulpar-hosted-x11/', root, uid)
 		}
 		if length < 1 || length >= int(sizeof(prefix)) || C.strncmp(path, &prefix[0], uint(length)) != 0 { return -1 }
 		leaf := path + length
@@ -116,7 +116,7 @@ pub fn host_root(root &char, uid u32, system_owner u32, create bool) int {
 		}
 		// The legacy root directory may be a root-owned tmpfs mount (0755).
 		// Every surface remains exclusive 0700; ordinary account roots are 0700.
-		next_host := directory(fd, c'vinix-hosted-x11', uid, uid != 0, create)
+		next_host := directory(fd, c'tulpar-hosted-x11', uid, uid != 0, create)
 		C.close(fd); fd = next_host
 		return fd
 	}

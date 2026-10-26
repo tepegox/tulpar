@@ -37,9 +37,9 @@ fn appended_options(args []string, names []string) map[string][]string {
 }
 
 fn snapshot_kernel(work string, source string, arch string) !string {
-	target := work + '/kernel/bin/vinix'
+	target := work + '/kernel/bin/tulpar'
 	os.mkdir_all(os.dir(target))!
-	hosttest.module_copy_file_preserving_stat(resolve(source)! + '/bin/vinix', target)!
+	hosttest.module_copy_file_preserving_stat(resolve(source)! + '/bin/tulpar', target)!
 	elf_arch(target, arch)!
 	return work + '/kernel'
 }
@@ -92,10 +92,10 @@ fn process_command(args []string, family string) !int {
 	expected := parsed.options['--expect'] or { 'PROCESS-SMP PASS' }
 	if expected == '' { return error_with_code('Expected marker must be nonempty', 2) }
 	kernel := resolve(parsed.options['--kernel-dir'] or { root() + '/kernel' })!
-	if !os.is_file(kernel + '/bin/vinix') { return error_with_code('build the requested kernel first', 2) }
+	if !os.is_file(kernel + '/bin/tulpar') { return error_with_code('build the requested kernel first', 2) }
 	work := if '--state-dir' in parsed.options {
 		resolve(parsed.options['--state-dir'])!
-	} else { hosttest.work_dir('', 'vinix-process-smp-')! }
+	} else { hosttest.work_dir('', 'tulpar-process-smp-')! }
 	os.mkdir_all(work)!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	cc, link := target_compiler(arch)!
@@ -117,7 +117,7 @@ fn process_command(args []string, family string) !int {
 		'compile_command': json2.Any(hosttest.strings(compile_command))
 		'source_sha256': json2.Any(hosttest.sha(source)!)
 		'init_sha256': json2.Any(hosttest.sha(init)!)
-		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!)
+		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!)
 		'archive_sha256': json2.Any(hosttest.sha(archive)!)
 	}
 	hosttest.write_json(work + '/inputs.json', receipt)!
@@ -143,7 +143,7 @@ fn backlog_command(args []string) !int {
 		'Build and run the seven independent Linux listen-backlog cases.') or { return error_with_code(err.msg(), 2) }
 	needed(parsed, ['--arch', '--state-dir'])!
 	if '--build-only' !in parsed.options { needed(parsed, ['--kernel-dir', '--guest-state-dir'])! }
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-listen-backlog-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-listen-backlog-')!
 	arch := parsed.options['--arch']
 	cc, link := target_compiler(arch)!
 	flags := [...cc, '-std=gnu11', '-O2', '-g', '-Wall', '-Wextra', '-Werror', '-D_GNU_SOURCE=',
@@ -152,7 +152,7 @@ fn backlog_command(args []string) !int {
 	fixture := work + '/fixture.o'
 	if control != '' {
 		os.cp(resolve(control)!, work + '/fixture.c')!
-		run([...flags, '-Dmain=vinix_independent_fixture', '-c', work + '/fixture.c', '-o', fixture])!
+		run([...flags, '-Dmain=tulpar_independent_fixture', '-c', work + '/fixture.c', '-o', fixture])!
 	} else { guesthost.compile_module(root() + '/tests/listen-backlog/backlogfixture', fixture, arch, flags)! }
 	imports := output([os.getenv_opt('NM') or { 'nm' }, '-u', fixture])!
 	if allocator_imports(imports) { return error('Unexpected fixture allocation import:\n' + imports) }
@@ -174,7 +174,7 @@ fn backlog_command(args []string) !int {
 		'init_sha256': json2.Any(hosttest.sha(init)!)
 	})!
 	if '--build-only' in parsed.options { println(init); return 0 }
-	state := hosttest.work_dir(parsed.options['--guest-state-dir'], 'vinix-backlog-guest-')!
+	state := hosttest.work_dir(parsed.options['--guest-state-dir'], 'tulpar-backlog-guest-')!
 	return guesthost.guest('', init, state, snapshot_kernel(work, parsed.options['--kernel-dir'], arch)!, arch,
 		['LISTEN-BACKLOG-PASS cases=7', 'INDEPENDENT FIXTURE PASS'],
 		['LISTEN-BACKLOG-FAIL', 'INDEPENDENT FIXTURE FAIL'], false, true, 60)!
@@ -207,8 +207,8 @@ struct InspectionSpec {
 fn inspection_spec(family string) !InspectionSpec {
 	return match family {
 		'resource-open' { InspectionSpec{ revision: '22c5d6ee193d107102888f359bfade8e34b592d2', module_name: 'resourcefixture', expected: ['RESOURCE OPEN semantics PASS', 'RESOURCE OPEN: PASS'], failure: 'FAIL: resource open', timeout: 180 } }
-		'proc-thread-lock' { InspectionSpec{ revision: '8ca75d10e8b804cf26705ba9c04614965da81690', module_name: 'lockfixture', expected: ['VINIX PROC THREAD LOCK: PASS'], failure: 'FAIL: proc thread lock:', timeout: 180 } }
-		'proc-map-lookup' { InspectionSpec{ revision: '47db8e1ce160c2829ad9df9fde6e1f1345d1f80c', module_name: 'mapfixture', expected: ['VINIX PROC MAP LOOKUP: PASS'], failure: 'FAIL: proc map lookup:', timeout: 1800 } }
+		'proc-thread-lock' { InspectionSpec{ revision: '8ca75d10e8b804cf26705ba9c04614965da81690', module_name: 'lockfixture', expected: ['TULPAR PROC THREAD LOCK: PASS'], failure: 'FAIL: proc thread lock:', timeout: 180 } }
+		'proc-map-lookup' { InspectionSpec{ revision: '47db8e1ce160c2829ad9df9fde6e1f1345d1f80c', module_name: 'mapfixture', expected: ['TULPAR PROC MAP LOOKUP: PASS'], failure: 'FAIL: proc map lookup:', timeout: 1800 } }
 		'kernel-retention' { InspectionSpec{ revision: '94143cac914e30d8dc14871eb3163a9e2e31cded', module_name: 'retentionfixture', expected: ['KERNEL RETENTION: PASS'], failure: 'FAIL: retention', timeout: 180 } }
 		else { return error('Unknown inspection fixture') }
 	}
@@ -287,7 +287,7 @@ fn inspection_report(text string, family string, arch string) !map[string]json2.
 		progress := matched_rows(text, r'proc thread lock: (\d+) snapshots, (\d+) process CPU clocks', 2)!
 		if progress.len != 1 || !decimal_at_least(progress[0][0], '100') || !decimal_at_least(progress[0][1], '10')
 			|| text.count('PASS: process inspection completes during sibling thread churn') != 1
-			|| text.count('VINIX PROC THREAD LOCK: PASS') != 1 {
+			|| text.count('TULPAR PROC THREAD LOCK: PASS') != 1 {
 			return error('PROC THREAD LOCK inspection/clock progress or marker count differs')
 		}
 		report['progress'] = string_rows(progress)
@@ -307,7 +307,7 @@ fn inspection_command(args []string, family string) !int {
 		'Compare the immutable original C and maintained V process inspection fixtures.') or { return error_with_code(err.msg(), 2) }
 	needed(parsed, ['--arch', '--kernel-dir', '--state-dir', '--guest-state-dir'])!
 	arch := parsed.options['--arch']
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-inspection-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-inspection-')!
 	raw := output(['git', '-C', root(), 'show', spec.revision + ':tests/' + family + '/test.c'])!
 	write(work + '/original.c', raw)!
 	compiler := inspection_compiler(arch)!
@@ -331,12 +331,12 @@ fn inspection_command(args []string, family string) !int {
 		'compiler_flags': json2.Any(hosttest.strings(flags))
 		'fixture_imports': json2.Any(hosttest.strings(imports.split_into_lines()))
 		'source_hashes': json2.Any(hosttest.string_map(directory_hashes(module_path, '')!))
-		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!)
+		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!)
 		'harness_timeout_seconds': json2.Any(spec.timeout)
 	}
 	if threads {
 		receipt['qemu_cpus'] = if arch == 'aarch64' {
-			json2.Any(strconv.atoi(os.getenv_opt('VINIX_QEMU_SMP') or { '4' })!)
+			json2.Any(strconv.atoi(os.getenv_opt('TULPAR_QEMU_SMP') or { '4' })!)
 		} else { json2.Any(2) }
 		receipt['fixture_alarm_seconds'] = if family == 'proc-map-lookup' { 600 } else { 120 }
 	}
@@ -354,7 +354,7 @@ fn inspection_command(args []string, family string) !int {
 		receipt['variants'] = variants
 		hosttest.write_json(work + '/validation.json', receipt)!
 		if '--build-only' in parsed.options { continue }
-		hosttest.work_dir(state, 'vinix-inspection-guest-')!
+		hosttest.work_dir(state, 'tulpar-inspection-guest-')!
 		archive := guesthost.image(program, state)!
 		configured := guesthost.launch(program, archive, state, private_kernel, arch, true)!
 		item['command'] = hosttest.strings(configured.command)

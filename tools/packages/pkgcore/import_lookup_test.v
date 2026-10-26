@@ -6,9 +6,9 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn C.mkfifo(&char, u32) int
@@ -21,7 +21,7 @@ struct ImportLookupCase {
 }
 
 fn import_lookup_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-import-lookup-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-import-lookup-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/root/usr/lib/deep')!
 	os.mkdir(work + '/root/opt')!
 	os.write_file(work + '/root/usr/lib/data', 'guest bytes')!
@@ -102,10 +102,10 @@ fn test_prepared_lookup_retires_owned_paths_and_borrowed_prefixes_on_success_and
 		mut maximum := u64(0); mut allocations := u32(0)
 		cycles := if '--import-lookup-baseline' in os.args { 4 } else { $if track_heap ? { 128 } $else { 8 } }
 		for _ in 0 .. cycles {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			import_lookup_attempt(root, item)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); records := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); records := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if records > allocations { allocations = records }
 			}
 		}
@@ -176,10 +176,10 @@ fn test_prepared_lookup_rechecks_retire_complete_and_refused_resolution_scratch(
 		mut maximum := u64(0); mut allocations := u32(0)
 		cycles := $if track_heap ? { 128 } $else { 8 }
 		for _ in 0 .. cycles {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			import_lookup_recheck(lookup_root, source, node, refused)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); records := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); records := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if records > allocations { allocations = records }
 			}
 		}

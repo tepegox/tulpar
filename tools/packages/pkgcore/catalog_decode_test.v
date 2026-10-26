@@ -8,8 +8,8 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn catalog_decode_selected(selection string) bool {
@@ -73,7 +73,7 @@ fn test_catalog_decode_owns_complete_and_growing_imports() {
 			text := catalog_decode_document(count, 1, 1, architecture); defer { unsafe { text.free() } }
 			tracked := count != 4096
 			cycles := if tracked { $if track_heap ? { 1000 } $else { 64 } } else { 1 }
-			$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+			$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 			for _ in 0 .. cycles {
 				value := decode_catalog_recipe(text)!
 				assert value.format == 1 && value.architectures.len == 1 && value.architectures[0] == architecture && value.packages.len == count
@@ -84,7 +84,7 @@ fn test_catalog_decode_owns_complete_and_growing_imports() {
 				close_decoded_catalog(value)
 			}
 			$if track_heap ? { if tracked {
-				kept := C.vinix_heap_end(); assert kept == 0
+				kept := C.tulpar_heap_end(); assert kept == 0
 				println('CATALOG DECODE ' + architecture + ' ' + count.str() + ' imports: 1000 cycles retained ' + kept.str() + ' bytes')
 			} }
 			if !tracked { continue }
@@ -105,24 +105,24 @@ fn test_catalog_decode_preserves_legacy_protocol_and_template_separation() {
 	inputs := [text, ' \n' + text + '\t', text.replace('"recipe":', '"rec\\u0069pe":'), text.replace('"sdk":1', '"sdk":1,"window_protocol":0')]
 	cycles := $if track_heap ? { 1000 } $else { 64 }
 	for input in inputs {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles {
 			value := decode_catalog_recipe(input)!
 			assert value.packages[0].recipe.manifest.sdk == 1 && value.packages[0].recipe.manifest.window_protocol == 0
 			close_decoded_catalog(value)
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		value := decode_catalog_recipe(input)!; assert json2.encode(value) == text; close_decoded_catalog(value)
 	}
 	template := '{"manifest":{"dependencies":[{}],"files":[{}]},"entries":[{"source":"COPYING","path":"COPYING"}]}'
 	locked_template := '{"format":1,"architectures":["aarch64"],"packages":[{"source":"shared","recipe":' + template + '}]}'
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. cycles {
 		root := decode_root_recipe(template)!; assert root.format == 1 && root.manifest.sdk == 1
 		close_decoded_root_recipe(root)
 		catalog_decode_refusal(locked_template)
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	println('CATALOG DECODE whitespace, escaped keys and legacy window protocol preserve writer bytes; source defaults cannot enter complete catalog locks PASS')
 }
 
@@ -144,16 +144,16 @@ fn test_catalog_decode_partial_schema_and_typed_refusals_retire_storage() {
 		text.replace('"source":"aarch64","recipe":', '"source":"aarch64","recipe":null,"ignored":'),
 		text.replace_once('},{"source":"aarch64"', '},{"source":"' + invalid_utf8 + '"'),
 		text.replace('"path":"share/0"}', '"path":"\\uD800"}'), '{}']
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for end in 0 .. text.len { catalog_decode_refusal(unsafe { tos(text.str, end) }) }
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	cycles := $if track_heap ? { 1000 } $else { 64 }
 	for number, input in inputs {
 		assert input != text
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { catalog_decode_refusal(input) }
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0
+			kept := C.tulpar_heap_end(); assert kept == 0
 			println('CATALOG DECODE refusal ' + number.str() + ': 1000 cycles retained ' + kept.str() + ' bytes')
 		}
 	}
@@ -184,11 +184,11 @@ fn test_catalog_decode_full_selector_and_payload_bounds() {
 	if !catalog_decode_selected('nested') { return }
 	for architecture in ['aarch64', 'x86_64']! {
 		text := catalog_decode_document(1, 1024, 1, architecture)
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		value := decode_catalog_recipe(text)!
 		assert value.packages[0].recipe.entries.len == 1024 && value.packages[0].recipe.entries.last().path == 'share/1023'
 		close_decoded_catalog(value)
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		unsafe { text.free() }
 		payload_text := catalog_decode_document(1, 1, max_files, architecture)
 		full := decode_catalog_recipe(payload_text)!
@@ -200,7 +200,7 @@ fn test_catalog_decode_full_selector_and_payload_bounds() {
 
 fn test_catalog_decode_refusal_preserves_publisher_workspaces_and_restored_retry_publishes() {
 	if !catalog_decode_selected('pack') { return }
-	work := os.temp_dir() + '/vinix-catalog-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-catalog-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/roots/shared')!; defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/roots/shared/COPYING', 'redistribution terms')!
 	p := Package{ id: 'notice', version: '1.0.0', architecture: 'all', name: 'Notice', kind: 'data', license: 'MIT',

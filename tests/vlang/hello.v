@@ -4,7 +4,7 @@
 
 fn main() {
 	$if tinyc {
-		println('V runs natively on Vinix')
+		println('V runs natively on Tulpar')
 	} $else {
 		eprintln('V did not use Alpine TCC')
 		exit(1)

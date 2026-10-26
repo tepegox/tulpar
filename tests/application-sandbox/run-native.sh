@@ -21,10 +21,10 @@ cp "$root/tests/application-sandbox/native_guest.v" "$work/src/main.v"
 # the harness's -Wall -Wextra -Werror checks.
 cat > "$work/cc" <<'EOF'
 #!/bin/sh
-exec "$VINIX_NATIVE_TEST_CC" "$@" -w
+exec "$TULPAR_NATIVE_TEST_CC" "$@" -w
 EOF
 chmod +x "$work/cc"
-VINIX_NATIVE_TEST_CC="$native_cc" CC="$work/cc" CC_AMD64="$work/cc" \
+TULPAR_NATIVE_TEST_CC="$native_cc" CC="$work/cc" CC_AMD64="$work/cc" \
 "$root/tests/kernel-gaps/run-native" --source "$work/native.c" \
     --arch "$arch" --kernel-dir "$kernel" \
     --expect 'APPLICATION NATIVE SANDBOX GUEST PASS' \

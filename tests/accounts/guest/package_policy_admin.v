@@ -19,12 +19,12 @@ fn qualify_package_policy_admin(mut t Test, db accountcore.Database, alex accoun
 	os.write_file(path, json2.encode(proposed))!
 	os.chmod(path, 0o644)!
 	for user in [alex, sam] {
-		current := run(['/usr/bin/vinix-package', 'policy'], '', db, user)
+		current := run(['/usr/bin/tulpar-package', 'policy'], '', db, user)
 		assert current.status == 0, current.output
 		mut displayed := pkgprotocol.decode_policy_document(current.output)!
 		assert displayed.architecture == initial.architecture && displayed.policy.offline
 		displayed.close()
-		response := run(['/usr/bin/vinix-package', 'policy-review', path], '', db, user)
+		response := run(['/usr/bin/tulpar-package', 'policy-review', path], '', db, user)
 		assert response.status == 0, response.output
 		mut review := pkgprotocol.decode_policy_review(response.output)!
 		assert review.generation == before.generation && review.rows.len == 1
@@ -36,7 +36,7 @@ fn qualify_package_policy_admin(mut t Test, db accountcore.Database, alex accoun
 	}
 	mut review := service.review_policy(path)!
 	defer { review.close() }
-	command := ['/usr/bin/vinix-package', 'admin', 'policy-apply', review.fingerprint, path]
+	command := ['/usr/bin/tulpar-package', 'admin', 'policy-apply', review.fingerprint, path]
 	standard := run(command, sam_password + '\n', db, sam)
 	assert standard.status != 0 && standard.output.contains('cannot approve'), standard.output
 	wrong := run(command, 'wrong password\n', db, alex)
@@ -54,13 +54,13 @@ fn qualify_package_policy_admin(mut t Test, db accountcore.Database, alex accoun
 	assert displayed.policy.allowed == ['another-app'] && displayed.policy.reserve_bytes == 65536
 	displayed.close()
 	assert service.state()! == before && pkgcore.load_config('')!.repositories == initial.repositories
-	assert owner_of('/etc/vinix-packages/config.json') == 0
+	assert owner_of('/etc/tulpar-packages/config.json') == 0
 	assert !applied.output.contains(alex_password) && os.ls('/run/user/1000')!.all(!it.starts_with('pkg-'))
 	// Restore policy before the existing remove/rollback/trust lifecycle checks.
 	os.write_file(path, json2.encode(original))!
 	mut restoration := service.review_policy(path)!
 	defer { restoration.close() }
-	restored := run(['/usr/bin/vinix-package', 'admin', 'policy-apply', restoration.fingerprint, path], alex_password + '\n', db, alex)
+	restored := run(['/usr/bin/tulpar-package', 'admin', 'policy-apply', restoration.fingerprint, path], alex_password + '\n', db, alex)
 	assert restored.status == 0 && pkgcore.load_config('')!.policy == original.policy && service.state()! == before, restored.output
 	t.say('PACKAGE POLICY ordinary-admin-standard public-read complete-impact literal-path password-role stale-file-refusal atomic-policy-only reload clean-runtime PASS')
 }

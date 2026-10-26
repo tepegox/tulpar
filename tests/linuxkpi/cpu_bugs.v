@@ -209,7 +209,7 @@ fn selected_source(raw string) !string {
 		}
 		if hosttest.named_body(body, 'main') && !body.contains('cpubugfixture__run') { continue }
 		if ['linuxkpi__', 'cpubugfixture__', 'cpu__', 'msr__', 'katomic__', 'lib__'].any(line.contains(it))
-			|| ['vinix_linuxkpi_boot_cpu_has_bug', 'cpubug_configure', 'cpubug_initialize',
+			|| ['tulpar_linuxkpi_boot_cpu_has_bug', 'cpubug_configure', 'cpubug_initialize',
 				'cpubug_state', 'cpubug_seed_ready', 'array_get', 'v_panic', 'x86_rdmsr_safe',
 				'main', '_vno_main_init_caller'].any(hosttest.named_body(body, it)) {
 			bodies << body
@@ -356,7 +356,7 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	hosttest.verify_upstream(linux, hosttest.upstream_pin()!)!
-	work := hosttest.work_dir(keep, 'vinix-cpu-bug-v-')!
+	work := hosttest.work_dir(keep, 'tulpar-cpu-bug-v-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	stage := work + '/stage'
 	for module_name in ['linuxkpi', 'katomic', 'lib', 'x86/cpu', 'x86/msr', 'cpubugfixture'] {
@@ -365,7 +365,7 @@ fn run_profile(keep string) ! {
 	mut inputs := [@FILE, root + '/kernel/x86/cpu/linuxkpi_l1tf_amd64.v',
 		root + '/kernel/linuxkpi/cpu_bugs_amd64.v', root + '/kernel/x86/msr/safe.v',
 		root + '/kernel/linuxkpi/include/asm/cpufeature.h',
-		root + '/kernel/linuxkpi/include/vinix/runtime.h', root + '/kernel/linuxkpi/upstream.json']
+		root + '/kernel/linuxkpi/include/tulpar/runtime.h', root + '/kernel/linuxkpi/upstream.json']
 	for directory in ['tests/linuxkpi/cpubugfixture', 'tests/linuxkpi/hosttest'] {
 		for extension in ['.v', '.h'] { inputs << os.walk_ext(root + '/' + directory, extension) }
 	}
@@ -408,7 +408,7 @@ fn run_profile(keep string) ! {
 	selected := work + '/selected.c'
 	os.write_file(selected, selected_source(raw)!)!
 	production_names := ['cpu__linuxkpi_classify_l1tf', 'cpu__linuxkpi_sample_l1tf', 'msr__read_safe',
-		'linuxkpi__initialise_cpu_bugs', 'linuxkpi__boot_cpu_has_bug', 'vinix_linuxkpi_boot_cpu_has_bug']
+		'linuxkpi__initialise_cpu_bugs', 'linuxkpi__boot_cpu_has_bug', 'tulpar_linuxkpi_boot_cpu_has_bug']
 	mut production_hashes := map[string]string{}
 	for name in production_names {
 		body := hosttest.extract_body(raw, name)!
@@ -423,7 +423,7 @@ fn run_profile(keep string) ! {
 		}
 		production_hashes[name] = hosttest.text_sha(body)
 	}
-	mut includes := ['-D__KERNEL__', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-include',
+	mut includes := ['-D__KERNEL__', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-include',
 		root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h', '-include',
 		linux + '/include/linux/compiler_types.h']
 	for directory in [stage, root + '/kernel/linuxkpi/include', linux + '/include',

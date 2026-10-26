@@ -4,8 +4,8 @@ See [commands and behavior](../../docs/storage-volumes.md#recovery-volume-growth
 
 ```sh
 sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --host-recovery-growth --work /tmp/recovery-growth-host
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/vinix --recovery-growth --work /tmp/recovery-growth-arm
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/vinix --recovery-growth --work /tmp/recovery-growth-x86
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/tulpar --recovery-growth --work /tmp/recovery-growth-arm
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/tulpar --recovery-growth --work /tmp/recovery-growth-x86
 ```
 
 The scoped host run includes independent recovery codec checks, the extended

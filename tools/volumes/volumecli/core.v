@@ -56,65 +56,65 @@ fn decimal(text &char) ?u64 {
 }
 
 fn usage() i32 {
-	C.printf(c'       vinix-volume backup-file SOURCE ARCHIVE\n       vinix-volume backup-file-delta BASE_ARCHIVE SOURCE ARCHIVE\n       vinix-volume restore-file ARCHIVE DESTINATION\n       vinix-volume restore-file-delta BASE_ARCHIVE DELTA_ARCHIVE DESTINATION\n')
-	C.printf(c'       vinix-volume verify-volume-monitor REFERENCE TRANSCRIPT\n')
-	C.printf(c'       vinix-volume verify-data-monitor MANIFEST TRANSCRIPT\n')
-	C.printf(c'       vinix-volume monitor-volume-auto CONFIG PASSPHRASE_FILE REFERENCE INTERVAL_SECONDS COUNT\n       vinix-volume monitor-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE INTERVAL_SECONDS COUNT\n')
-	C.printf(c'       vinix-volume monitor-data-auto MANIFEST INTERVAL_SECONDS COUNT\n')
-	C.printf(c'       vinix-volume verify-volume-scrub-reference REFERENCE REPORT\n')
-	C.printf(c'       vinix-volume verify-data-scrub-reference MANIFEST REPORT\n')
-	C.printf(c'       vinix-volume compare-data-scrubs BEFORE_REPORT AFTER_REPORT\n')
-	C.printf(c'       vinix-volume show-data-scrub REPORT\n')
-	C.printf(c'       vinix-volume compare-data-references BEFORE_MANIFEST AFTER_MANIFEST\n')
-	C.printf(c'       vinix-volume hash-bundle-auto BUNDLE MANIFEST\n       vinix-volume verify-data-auto MANIFEST\n       vinix-volume scrub-data-auto MANIFEST REPORT\n')
-	C.printf(c'       vinix-volume show-volume-reference REFERENCE\n       vinix-volume compare-volume-references BEFORE_REFERENCE AFTER_REFERENCE\n')
-	C.printf(c'       vinix-volume hash-volume-auto CONFIG PASSPHRASE_FILE REFERENCE\n       vinix-volume verify-volume-auto CONFIG PASSPHRASE_FILE REFERENCE\n       vinix-volume hash-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE\n       vinix-volume verify-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE\n')
-	C.printf(c'       vinix-volume scrub-volume-auto CONFIG PASSPHRASE_FILE REFERENCE REPORT\n       vinix-volume scrub-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE REPORT\n')
-	C.printf(c'       vinix-volume compare-volume-scrubs BEFORE_REPORT AFTER_REPORT\n')
-	C.printf(c'       vinix-volume scrub-volume DEVICE CONFIG PASSPHRASE_FILE REFERENCE REPORT\n       vinix-volume scrub-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE REFERENCE REPORT\n       vinix-volume show-volume-scrub REPORT\n')
-	C.printf(c'       vinix-volume hash-volume DEVICE CONFIG PASSPHRASE_FILE REFERENCE\n       vinix-volume verify-volume DEVICE CONFIG PASSPHRASE_FILE REFERENCE\n       vinix-volume hash-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE REFERENCE\n       vinix-volume verify-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE REFERENCE\n')
-	C.printf(c'       vinix-volume plan-preview-grow-volume DEVICE CONFIG PASSPHRASE_FILE EXPECTED_BYTES LENGTH_BYTES\n       vinix-volume plan-preview-grow-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE EXPECTED_BYTES LENGTH_BYTES\n')
-	C.printf(c'       vinix-volume show-volume CONFIG PASSPHRASE_FILE\n       vinix-volume discover-volume CONFIG PASSPHRASE_FILE\n')
-	C.printf(c'       vinix-volume plan-grow-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE EXPECTED_BYTES LENGTH_BYTES NEW_BACKUP\n')
-	C.printf(c'       vinix-volume rewrap-recovery-volume BACKUP OLD_RECOVERY_KEYFILE NEW_RECOVERY_KEYFILE NEW_BACKUP\n')
-	C.printf(c'       vinix-volume show-recovery-volume BACKUP RECOVERY_KEYFILE\n       vinix-volume discover-recovery-volume BACKUP RECOVERY_KEYFILE\n       vinix-volume open-recovery-volume-auto BACKUP RECOVERY_KEYFILE [ro]\n')
-	C.printf(c'       vinix-volume backup-volume CONFIG PASSPHRASE_FILE RECOVERY_KEYFILE BACKUP\n       vinix-volume recover-volume BACKUP RECOVERY_KEYFILE NEW_PASSPHRASE_FILE CONFIG\n')
-	C.printf(c'       vinix-volume boot-unlock\n')
-	C.printf(c'       vinix-volume plan-grow-volume DEVICE CONFIG PASSPHRASE_FILE LENGTH_BYTES NEW_CONFIG\n')
-	C.printf(c'       vinix-volume open-volume-auto CONFIG PASSPHRASE_FILE [ro]\n')
-	C.printf(c'       vinix-volume rewrap-volume CONFIG OLD_PASSPHRASE_FILE NEW_PASSPHRASE_FILE NEW_CONFIG\n')
-	C.printf(c'       vinix-volume seal-volume DEVICE SLOT OFFSET_BYTES LENGTH_BYTES KEYFILE PASSPHRASE_FILE CONFIG [ro]\n       vinix-volume open-volume DEVICE CONFIG PASSPHRASE_FILE [ro]\n       vinix-volume unseal-volume-key CONFIG PASSPHRASE_FILE KEYFILE\n')
-	C.printf(c'       vinix-volume rewrap-key ENVELOPE OLD_PASSPHRASE_FILE NEW_PASSPHRASE_FILE NEW_ENVELOPE\n')
-	C.printf(c'       vinix-volume seal-key KEYFILE PASSPHRASE_FILE ENVELOPE\n       vinix-volume unseal-key ENVELOPE PASSPHRASE_FILE KEYFILE\n       vinix-volume open-sealed DEVICE SLOT OFFSET_BYTES LENGTH_BYTES ENVELOPE PASSPHRASE_FILE [ro]\n')
-	C.printf(c'       vinix-volume backup-key KEYFILE RECOVERY_KEYFILE ENVELOPE\n       vinix-volume recover-key ENVELOPE RECOVERY_KEYFILE KEYFILE\n')
-	C.printf(c'       vinix-volume open-crypt DEVICE SLOT OFFSET_BYTES LENGTH_BYTES KEYFILE [ro]\n')
-	C.printf(c'usage: vinix-volume status DEVICE\n       vinix-volume health DEVICE\n       vinix-volume monitor DEVICE INTERVAL_SECONDS [SAMPLES]\n       vinix-volume create DEVICE SLOT OFFSET_BYTES LENGTH_BYTES [ro]\n       vinix-volume grow DEVICE LENGTH_BYTES\n       vinix-volume remove DEVICE\n       vinix-volume discard DEVICE OFFSET_BYTES LENGTH_BYTES\n       vinix-volume save DEVICE PLAN\n       vinix-volume restore DEVICE PLAN\n       vinix-volume discover PLAN\n       vinix-volume restore-auto PLAN\n       vinix-volume restore-set DIRECTORY\n       vinix-volume boot-restore\n')
-	C.printf(c'       vinix-volume save-set BUNDLE DEVICE [DEVICE ...]\n       vinix-volume plan-grow BUNDLE SLOT LENGTH_BYTES\n       vinix-volume restore-bundle BUNDLE [grow]\n')
-	C.printf(c'       vinix-volume show-bundle BUNDLE\n       vinix-volume check-bundle BUNDLE [grow]\n')
-	C.printf(c'       vinix-volume hash-bundle BUNDLE MANIFEST DISK_INDEX DEVICE [...]\n       vinix-volume verify-data MANIFEST DISK_INDEX DEVICE [...]\n       vinix-volume show-data MANIFEST\n')
-	C.printf(c'       vinix-volume scrub-data MANIFEST REPORT DISK_INDEX DEVICE [...]\n')
-	C.printf(c'       vinix-volume plan-add BUNDLE DISK_INDEX SLOT OFFSET_BYTES LENGTH_BYTES [ro]\n       vinix-volume plan-remove BUNDLE SLOT\n')
-	C.printf(c'       vinix-volume plan-add-batch BUNDLE IDENTITY SLOT OFFSET_BYTES LENGTH_BYTES MODE [...]\n       vinix-volume plan-preview-add-batch BUNDLE IDENTITY SLOT OFFSET_BYTES LENGTH_BYTES MODE [...]\n       MODE is rw or ro; batches contain 1..64 requests\n')
-	C.printf(c'       vinix-volume plan-grow-batch BUNDLE IDENTITY SLOT LENGTH_BYTES [...]\n       vinix-volume plan-preview-grow-batch BUNDLE IDENTITY SLOT LENGTH_BYTES [...]\n')
-	C.printf(c'       vinix-volume pool-contract-batch BUNDLE POOL IDENTITY END_BYTES [...]\n       vinix-volume pool-preview-contract-batch BUNDLE POOL IDENTITY END_BYTES [...]\n')
-	C.printf(c'       vinix-volume pool-resize-batch BUNDLE IDENTITY POOL START_BYTES END_BYTES [...]\n       vinix-volume pool-preview-resize-batch BUNDLE IDENTITY POOL START_BYTES END_BYTES [...]\n')
-	C.printf(c'       vinix-volume plan-contract-capacity-batch BUNDLE IDENTITY DEVICE EXPECTED_BYTES [...]\n       vinix-volume plan-preview-contract-capacity-batch BUNDLE IDENTITY DEVICE EXPECTED_BYTES [...]\n')
-	C.printf(c'       vinix-volume pool-allocate-set-batch BUNDLE POOL SLOT LENGTH_BYTES MODE [...]\n       vinix-volume pool-preview-set-batch BUNDLE POOL SLOT LENGTH_BYTES MODE [...]\n')
-	C.printf(c'       vinix-volume pool-grow-set-batch BUNDLE POOL SLOT LENGTH_BYTES [...]\n       vinix-volume pool-preview-grow-set-batch BUNDLE POOL SLOT LENGTH_BYTES [...]\n')
-	C.printf(c'       vinix-volume plan-remove-batch BUNDLE SLOT [...]\n       vinix-volume plan-preview-remove-batch BUNDLE SLOT [...]\n')
-	C.printf(c'       vinix-volume plan-enroll BUNDLE PLAN\n       vinix-volume plan-forget BUNDLE DISK_INDEX\n')
-	C.printf(c'       vinix-volume plan-enroll-batch BUNDLE PLAN [...]\n       vinix-volume plan-preview-enroll-batch BUNDLE PLAN [...]\n')
-	C.printf(c'       vinix-volume plan-forget-batch BUNDLE IDENTITY [...]\n       vinix-volume plan-preview-forget-batch BUNDLE IDENTITY [...]\n')
-	C.printf(c'       vinix-volume plan-space BUNDLE DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES\n       vinix-volume plan-allocate BUNDLE DISK_INDEX SLOT LENGTH_BYTES START_BYTES END_BYTES ALIGNMENT_BYTES [ro]\n')
-	C.printf(c'       vinix-volume plan-capacity BUNDLE DISK_INDEX DEVICE EXPECTED_BYTES\n')
-	C.printf(c'       vinix-volume plan-capacity-batch BUNDLE DISK_INDEX DEVICE EXPECTED_BYTES [DISK_INDEX DEVICE EXPECTED_BYTES ...]\n       vinix-volume plan-preview-capacity-batch BUNDLE DISK_INDEX DEVICE EXPECTED_BYTES [DISK_INDEX DEVICE EXPECTED_BYTES ...]\n')
-	C.printf(c'       vinix-volume pool-add BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES\n       vinix-volume pool-remove BUNDLE POOL_ID DISK_INDEX\n       vinix-volume pool-space BUNDLE POOL_ID\n       vinix-volume pool-allocate BUNDLE POOL_ID SLOT LENGTH_BYTES [ro]\n')
-	C.printf(c'       vinix-volume pool-add-batch BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES [...]\n       vinix-volume pool-preview-add-batch BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES [...]\n       vinix-volume pool-remove-batch BUNDLE POOL_ID DISK_INDEX [...]\n       vinix-volume pool-preview-remove-batch BUNDLE POOL_ID DISK_INDEX [...]\n')
-	C.printf(c'       vinix-volume pool-order BUNDLE POOL_ID DISK_INDEX [...]\n       vinix-volume pool-preview-order BUNDLE POOL_ID DISK_INDEX [...]\n')
-	C.printf(c'       vinix-volume pool-expand BUNDLE POOL_ID DISK_INDEX END_BYTES\n       vinix-volume pool-grow BUNDLE POOL_ID SLOT LENGTH_BYTES\n')
-	C.printf(c'       vinix-volume pool-allocate-batch BUNDLE POOL_ID SLOT LENGTH_BYTES MODE [SLOT LENGTH_BYTES MODE ...]\n       vinix-volume pool-preview-batch BUNDLE POOL_ID SLOT LENGTH_BYTES MODE [SLOT LENGTH_BYTES MODE ...]\n       MODE is rw or ro; batches contain 1..64 requests\n')
-	C.printf(c'       vinix-volume pool-grow-batch BUNDLE POOL_ID SLOT LENGTH_BYTES [SLOT LENGTH_BYTES ...]\n       vinix-volume pool-preview-grow-batch BUNDLE POOL_ID SLOT LENGTH_BYTES [SLOT LENGTH_BYTES ...]\n')
-	C.printf(c'       vinix-volume pool-expand-batch BUNDLE POOL_ID DISK_INDEX END_BYTES [DISK_INDEX END_BYTES ...]\n       vinix-volume pool-preview-expand-batch BUNDLE POOL_ID DISK_INDEX END_BYTES [DISK_INDEX END_BYTES ...]\n')
+	C.printf(c'       tulpar-volume backup-file SOURCE ARCHIVE\n       tulpar-volume backup-file-delta BASE_ARCHIVE SOURCE ARCHIVE\n       tulpar-volume restore-file ARCHIVE DESTINATION\n       tulpar-volume restore-file-delta BASE_ARCHIVE DELTA_ARCHIVE DESTINATION\n')
+	C.printf(c'       tulpar-volume verify-volume-monitor REFERENCE TRANSCRIPT\n')
+	C.printf(c'       tulpar-volume verify-data-monitor MANIFEST TRANSCRIPT\n')
+	C.printf(c'       tulpar-volume monitor-volume-auto CONFIG PASSPHRASE_FILE REFERENCE INTERVAL_SECONDS COUNT\n       tulpar-volume monitor-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE INTERVAL_SECONDS COUNT\n')
+	C.printf(c'       tulpar-volume monitor-data-auto MANIFEST INTERVAL_SECONDS COUNT\n')
+	C.printf(c'       tulpar-volume verify-volume-scrub-reference REFERENCE REPORT\n')
+	C.printf(c'       tulpar-volume verify-data-scrub-reference MANIFEST REPORT\n')
+	C.printf(c'       tulpar-volume compare-data-scrubs BEFORE_REPORT AFTER_REPORT\n')
+	C.printf(c'       tulpar-volume show-data-scrub REPORT\n')
+	C.printf(c'       tulpar-volume compare-data-references BEFORE_MANIFEST AFTER_MANIFEST\n')
+	C.printf(c'       tulpar-volume hash-bundle-auto BUNDLE MANIFEST\n       tulpar-volume verify-data-auto MANIFEST\n       tulpar-volume scrub-data-auto MANIFEST REPORT\n')
+	C.printf(c'       tulpar-volume show-volume-reference REFERENCE\n       tulpar-volume compare-volume-references BEFORE_REFERENCE AFTER_REFERENCE\n')
+	C.printf(c'       tulpar-volume hash-volume-auto CONFIG PASSPHRASE_FILE REFERENCE\n       tulpar-volume verify-volume-auto CONFIG PASSPHRASE_FILE REFERENCE\n       tulpar-volume hash-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE\n       tulpar-volume verify-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE\n')
+	C.printf(c'       tulpar-volume scrub-volume-auto CONFIG PASSPHRASE_FILE REFERENCE REPORT\n       tulpar-volume scrub-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE REPORT\n')
+	C.printf(c'       tulpar-volume compare-volume-scrubs BEFORE_REPORT AFTER_REPORT\n')
+	C.printf(c'       tulpar-volume scrub-volume DEVICE CONFIG PASSPHRASE_FILE REFERENCE REPORT\n       tulpar-volume scrub-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE REFERENCE REPORT\n       tulpar-volume show-volume-scrub REPORT\n')
+	C.printf(c'       tulpar-volume hash-volume DEVICE CONFIG PASSPHRASE_FILE REFERENCE\n       tulpar-volume verify-volume DEVICE CONFIG PASSPHRASE_FILE REFERENCE\n       tulpar-volume hash-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE REFERENCE\n       tulpar-volume verify-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE REFERENCE\n')
+	C.printf(c'       tulpar-volume plan-preview-grow-volume DEVICE CONFIG PASSPHRASE_FILE EXPECTED_BYTES LENGTH_BYTES\n       tulpar-volume plan-preview-grow-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE EXPECTED_BYTES LENGTH_BYTES\n')
+	C.printf(c'       tulpar-volume show-volume CONFIG PASSPHRASE_FILE\n       tulpar-volume discover-volume CONFIG PASSPHRASE_FILE\n')
+	C.printf(c'       tulpar-volume plan-grow-recovery-volume DEVICE BACKUP RECOVERY_KEYFILE EXPECTED_BYTES LENGTH_BYTES NEW_BACKUP\n')
+	C.printf(c'       tulpar-volume rewrap-recovery-volume BACKUP OLD_RECOVERY_KEYFILE NEW_RECOVERY_KEYFILE NEW_BACKUP\n')
+	C.printf(c'       tulpar-volume show-recovery-volume BACKUP RECOVERY_KEYFILE\n       tulpar-volume discover-recovery-volume BACKUP RECOVERY_KEYFILE\n       tulpar-volume open-recovery-volume-auto BACKUP RECOVERY_KEYFILE [ro]\n')
+	C.printf(c'       tulpar-volume backup-volume CONFIG PASSPHRASE_FILE RECOVERY_KEYFILE BACKUP\n       tulpar-volume recover-volume BACKUP RECOVERY_KEYFILE NEW_PASSPHRASE_FILE CONFIG\n')
+	C.printf(c'       tulpar-volume boot-unlock\n')
+	C.printf(c'       tulpar-volume plan-grow-volume DEVICE CONFIG PASSPHRASE_FILE LENGTH_BYTES NEW_CONFIG\n')
+	C.printf(c'       tulpar-volume open-volume-auto CONFIG PASSPHRASE_FILE [ro]\n')
+	C.printf(c'       tulpar-volume rewrap-volume CONFIG OLD_PASSPHRASE_FILE NEW_PASSPHRASE_FILE NEW_CONFIG\n')
+	C.printf(c'       tulpar-volume seal-volume DEVICE SLOT OFFSET_BYTES LENGTH_BYTES KEYFILE PASSPHRASE_FILE CONFIG [ro]\n       tulpar-volume open-volume DEVICE CONFIG PASSPHRASE_FILE [ro]\n       tulpar-volume unseal-volume-key CONFIG PASSPHRASE_FILE KEYFILE\n')
+	C.printf(c'       tulpar-volume rewrap-key ENVELOPE OLD_PASSPHRASE_FILE NEW_PASSPHRASE_FILE NEW_ENVELOPE\n')
+	C.printf(c'       tulpar-volume seal-key KEYFILE PASSPHRASE_FILE ENVELOPE\n       tulpar-volume unseal-key ENVELOPE PASSPHRASE_FILE KEYFILE\n       tulpar-volume open-sealed DEVICE SLOT OFFSET_BYTES LENGTH_BYTES ENVELOPE PASSPHRASE_FILE [ro]\n')
+	C.printf(c'       tulpar-volume backup-key KEYFILE RECOVERY_KEYFILE ENVELOPE\n       tulpar-volume recover-key ENVELOPE RECOVERY_KEYFILE KEYFILE\n')
+	C.printf(c'       tulpar-volume open-crypt DEVICE SLOT OFFSET_BYTES LENGTH_BYTES KEYFILE [ro]\n')
+	C.printf(c'usage: tulpar-volume status DEVICE\n       tulpar-volume health DEVICE\n       tulpar-volume monitor DEVICE INTERVAL_SECONDS [SAMPLES]\n       tulpar-volume create DEVICE SLOT OFFSET_BYTES LENGTH_BYTES [ro]\n       tulpar-volume grow DEVICE LENGTH_BYTES\n       tulpar-volume remove DEVICE\n       tulpar-volume discard DEVICE OFFSET_BYTES LENGTH_BYTES\n       tulpar-volume save DEVICE PLAN\n       tulpar-volume restore DEVICE PLAN\n       tulpar-volume discover PLAN\n       tulpar-volume restore-auto PLAN\n       tulpar-volume restore-set DIRECTORY\n       tulpar-volume boot-restore\n')
+	C.printf(c'       tulpar-volume save-set BUNDLE DEVICE [DEVICE ...]\n       tulpar-volume plan-grow BUNDLE SLOT LENGTH_BYTES\n       tulpar-volume restore-bundle BUNDLE [grow]\n')
+	C.printf(c'       tulpar-volume show-bundle BUNDLE\n       tulpar-volume check-bundle BUNDLE [grow]\n')
+	C.printf(c'       tulpar-volume hash-bundle BUNDLE MANIFEST DISK_INDEX DEVICE [...]\n       tulpar-volume verify-data MANIFEST DISK_INDEX DEVICE [...]\n       tulpar-volume show-data MANIFEST\n')
+	C.printf(c'       tulpar-volume scrub-data MANIFEST REPORT DISK_INDEX DEVICE [...]\n')
+	C.printf(c'       tulpar-volume plan-add BUNDLE DISK_INDEX SLOT OFFSET_BYTES LENGTH_BYTES [ro]\n       tulpar-volume plan-remove BUNDLE SLOT\n')
+	C.printf(c'       tulpar-volume plan-add-batch BUNDLE IDENTITY SLOT OFFSET_BYTES LENGTH_BYTES MODE [...]\n       tulpar-volume plan-preview-add-batch BUNDLE IDENTITY SLOT OFFSET_BYTES LENGTH_BYTES MODE [...]\n       MODE is rw or ro; batches contain 1..64 requests\n')
+	C.printf(c'       tulpar-volume plan-grow-batch BUNDLE IDENTITY SLOT LENGTH_BYTES [...]\n       tulpar-volume plan-preview-grow-batch BUNDLE IDENTITY SLOT LENGTH_BYTES [...]\n')
+	C.printf(c'       tulpar-volume pool-contract-batch BUNDLE POOL IDENTITY END_BYTES [...]\n       tulpar-volume pool-preview-contract-batch BUNDLE POOL IDENTITY END_BYTES [...]\n')
+	C.printf(c'       tulpar-volume pool-resize-batch BUNDLE IDENTITY POOL START_BYTES END_BYTES [...]\n       tulpar-volume pool-preview-resize-batch BUNDLE IDENTITY POOL START_BYTES END_BYTES [...]\n')
+	C.printf(c'       tulpar-volume plan-contract-capacity-batch BUNDLE IDENTITY DEVICE EXPECTED_BYTES [...]\n       tulpar-volume plan-preview-contract-capacity-batch BUNDLE IDENTITY DEVICE EXPECTED_BYTES [...]\n')
+	C.printf(c'       tulpar-volume pool-allocate-set-batch BUNDLE POOL SLOT LENGTH_BYTES MODE [...]\n       tulpar-volume pool-preview-set-batch BUNDLE POOL SLOT LENGTH_BYTES MODE [...]\n')
+	C.printf(c'       tulpar-volume pool-grow-set-batch BUNDLE POOL SLOT LENGTH_BYTES [...]\n       tulpar-volume pool-preview-grow-set-batch BUNDLE POOL SLOT LENGTH_BYTES [...]\n')
+	C.printf(c'       tulpar-volume plan-remove-batch BUNDLE SLOT [...]\n       tulpar-volume plan-preview-remove-batch BUNDLE SLOT [...]\n')
+	C.printf(c'       tulpar-volume plan-enroll BUNDLE PLAN\n       tulpar-volume plan-forget BUNDLE DISK_INDEX\n')
+	C.printf(c'       tulpar-volume plan-enroll-batch BUNDLE PLAN [...]\n       tulpar-volume plan-preview-enroll-batch BUNDLE PLAN [...]\n')
+	C.printf(c'       tulpar-volume plan-forget-batch BUNDLE IDENTITY [...]\n       tulpar-volume plan-preview-forget-batch BUNDLE IDENTITY [...]\n')
+	C.printf(c'       tulpar-volume plan-space BUNDLE DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES\n       tulpar-volume plan-allocate BUNDLE DISK_INDEX SLOT LENGTH_BYTES START_BYTES END_BYTES ALIGNMENT_BYTES [ro]\n')
+	C.printf(c'       tulpar-volume plan-capacity BUNDLE DISK_INDEX DEVICE EXPECTED_BYTES\n')
+	C.printf(c'       tulpar-volume plan-capacity-batch BUNDLE DISK_INDEX DEVICE EXPECTED_BYTES [DISK_INDEX DEVICE EXPECTED_BYTES ...]\n       tulpar-volume plan-preview-capacity-batch BUNDLE DISK_INDEX DEVICE EXPECTED_BYTES [DISK_INDEX DEVICE EXPECTED_BYTES ...]\n')
+	C.printf(c'       tulpar-volume pool-add BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES\n       tulpar-volume pool-remove BUNDLE POOL_ID DISK_INDEX\n       tulpar-volume pool-space BUNDLE POOL_ID\n       tulpar-volume pool-allocate BUNDLE POOL_ID SLOT LENGTH_BYTES [ro]\n')
+	C.printf(c'       tulpar-volume pool-add-batch BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES [...]\n       tulpar-volume pool-preview-add-batch BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES [...]\n       tulpar-volume pool-remove-batch BUNDLE POOL_ID DISK_INDEX [...]\n       tulpar-volume pool-preview-remove-batch BUNDLE POOL_ID DISK_INDEX [...]\n')
+	C.printf(c'       tulpar-volume pool-order BUNDLE POOL_ID DISK_INDEX [...]\n       tulpar-volume pool-preview-order BUNDLE POOL_ID DISK_INDEX [...]\n')
+	C.printf(c'       tulpar-volume pool-expand BUNDLE POOL_ID DISK_INDEX END_BYTES\n       tulpar-volume pool-grow BUNDLE POOL_ID SLOT LENGTH_BYTES\n')
+	C.printf(c'       tulpar-volume pool-allocate-batch BUNDLE POOL_ID SLOT LENGTH_BYTES MODE [SLOT LENGTH_BYTES MODE ...]\n       tulpar-volume pool-preview-batch BUNDLE POOL_ID SLOT LENGTH_BYTES MODE [SLOT LENGTH_BYTES MODE ...]\n       MODE is rw or ro; batches contain 1..64 requests\n')
+	C.printf(c'       tulpar-volume pool-grow-batch BUNDLE POOL_ID SLOT LENGTH_BYTES [SLOT LENGTH_BYTES ...]\n       tulpar-volume pool-preview-grow-batch BUNDLE POOL_ID SLOT LENGTH_BYTES [SLOT LENGTH_BYTES ...]\n')
+	C.printf(c'       tulpar-volume pool-expand-batch BUNDLE POOL_ID DISK_INDEX END_BYTES [DISK_INDEX END_BYTES ...]\n       tulpar-volume pool-preview-expand-batch BUNDLE POOL_ID DISK_INDEX END_BYTES [DISK_INDEX END_BYTES ...]\n')
 	return 2
 }
 
@@ -723,18 +723,18 @@ pub fn run(argc i32, argv &&char) i32 {
 	flags := i32(if request == 0x1277 || (request == 0x56560001 && data.flags == 0) { C.O_RDWR } else { C.O_RDONLY }) | i32(C.O_CLOEXEC)
 	fd := unsafe { C.open(argv[2], flags) }
 	if fd < 0 {
-		C.perror(c'vinix-volume: open')
+		C.perror(c'tulpar-volume: open')
 		return 1
 	}
 	defer { C.close(fd) }
 	if request == 0x56560004 {
 		mut result := Status{}
 		if C.ioctl(fd, request, &result) != 0 {
-			C.perror(c'vinix-volume: status')
+			C.perror(c'tulpar-volume: status')
 			return 1
 		}
 		if result.version != 1 || result.reserved != 0 {
-			C.printf(c'vinix-volume: unsupported status version\n')
+			C.printf(c'tulpar-volume: unsupported status version\n')
 			return 1
 		}
 		C.printf(c'bytes=%lu sector=%lu readonly=%lu offline=%lu flush=%lu discard=%lu encrypted=%lu\nreads=%lu writes=%lu read_bytes=%lu write_bytes=%lu flushes=%lu\nerrors=%lu last_error=%lu disk=%lu offset=%lu slot=%lu generation=%lu\n',
@@ -744,15 +744,15 @@ pub fn run(argc i32, argv &&char) i32 {
 			result.errors, result.last_error, result.disk_id, result.start, result.slot, result.generation)
 	} else if request == 0x1277 {
 		if C.ioctl(fd, request, &range[0]) != 0 {
-			C.perror(c'vinix-volume: discard')
+			C.perror(c'tulpar-volume: discard')
 			return 1
 		}
 	} else {
 		if C.ioctl(fd, request, &data) != 0 {
-			C.perror(c'vinix-volume: change')
+			C.perror(c'tulpar-volume: change')
 			return 1
 		}
-		if request == 0x56560001 { C.printf(c'/dev/mapper/vinix%u\n', data.slot) }
+		if request == 0x56560001 { C.printf(c'/dev/mapper/tulpar%u\n', data.slot) }
 	}
 	return 0
 }

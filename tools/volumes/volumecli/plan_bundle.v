@@ -131,7 +131,7 @@ fn decode_bundle(data &u8, size int, mut set PlanSet) bool {
 fn read_bundle(fd i32, mut set PlanSet, trusted bool) bool {
 	mut info := C.stat{}
 	if C.fstat(fd, &info) != 0 {
-		C.perror(c'vinix-volume: stat bundle')
+		C.perror(c'tulpar-volume: stat bundle')
 		return false
 	}
 	if C.S_ISREG(info.st_mode) == 0 || info.st_size < bundle_header_bytes
@@ -177,7 +177,7 @@ fn load_relative_bundle(directory i32, name &char, mut set PlanSet, trusted bool
 	fd := C.openat(directory, name, C.O_RDONLY | C.O_NOFOLLOW | C.O_NONBLOCK | C.O_CLOEXEC)
 	if fd < 0 {
 		if optional && unsafe { C.errno == C.ENOENT } { return true }
-		C.perror(c'vinix-volume: open bundle')
+		C.perror(c'tulpar-volume: open bundle')
 		return false
 	}
 	defer { C.close(fd) }
@@ -220,7 +220,7 @@ fn save_bundle(path &char, count int, devices &&char) i32 {
 	for i in 0 .. count {
 		fd := C.open(unsafe { devices[i] }, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW)
 		if fd < 0 {
-			C.perror(c'vinix-volume: open bundle disk')
+			C.perror(c'tulpar-volume: open bundle disk')
 			return 1
 		}
 		fds[i] = fd
@@ -245,7 +245,7 @@ fn save_bundle(path &char, count int, devices &&char) i32 {
 fn restore_bundle(path &char, grow bool) i32 {
 	fd := C.open(path, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
 	if fd < 0 {
-		C.perror(c'vinix-volume: open bundle')
+		C.perror(c'tulpar-volume: open bundle')
 		return 1
 	}
 	defer { C.close(fd) }

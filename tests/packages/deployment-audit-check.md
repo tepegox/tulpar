@@ -1,6 +1,6 @@
 # Installed deployment drift audit
 
-`vinix-package [--offline] [--json] deployment-audit LOCK.json` compares a supplied
+`tulpar-package [--offline] [--json] deployment-audit LOCK.json` compares a supplied
 exact format-2 deployment with one reader-locked installed generation. Exit 0 means
 metadata matches, 3 means a complete drift report, and 1 means an error. The report
 identifies the generation, architecture and SHA-256 of the exact captured input.

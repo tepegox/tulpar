@@ -3,7 +3,7 @@ module planguest
 
 fn recovery_growth_tool(parent &char, input &char, capacity &char, length &char, output &char, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'plan-grow-recovery-volume'), parent, input, &char(c'/root/recovery.key'), capacity, length, output, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'plan-grow-recovery-volume'), parent, input, &char(c'/root/recovery.key'), capacity, length, output, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
@@ -21,10 +21,10 @@ fn recovery_growth_metadata(input &char, output &char, capacity u64, length u64)
 fn recovery_growth_view(parent &char, backup &char, force bool, saved_readonly bool, length u64, initialize bool) {
 	unsafe {
 		recovery_unlock_tool(backup, c'/root/recovery.key', force, 0)
-		readonly := force || saved_readonly; info := status(c'/dev/mapper/vinix60')
+		readonly := force || saved_readonly; info := status(c'/dev/mapper/tulpar60')
 		check(info.flags & 64 != 0 && (info.flags & 1 != 0) == readonly && info.bytes == length
 			&& info.start == 15728640 && info.disk_id == status(parent).disk_id, c'grown recovery identity, length and mode')
-		fd := C.open(c'/dev/mapper/vinix60', if readonly { C.O_RDONLY } else { C.O_RDWR }); check(fd >= 0, c'open grown recovery view')
+		fd := C.open(c'/dev/mapper/tulpar60', if readonly { C.O_RDONLY } else { C.O_RDWR }); check(fd >= 0, c'open grown recovery view')
 		crypt_data(fd, 0, 0x73)
 		if initialize {
 			check(!readonly, c'initialize only writable recovery view')
@@ -33,8 +33,8 @@ fn recovery_growth_view(parent &char, backup &char, force bool, saved_readonly b
 			check(C.pwrite(fd, &data[0], 512, position) == 512 && C.fsync(fd) == 0, c'persist newly exposed encrypted recovery data')
 		}
 		crypt_data(fd, 4096, 0xa6); if length == 12288 { crypt_data(fd, 8192, 0xc2) }
-		if readonly { check(C.open(c'/dev/mapper/vinix60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'grown recovery readonly cannot escalate') }
-		check(C.close(fd) == 0, c'close grown recovery view'); simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		if readonly { check(C.open(c'/dev/mapper/tulpar60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'grown recovery readonly cannot escalate') }
+		check(C.close(fd) == 0, c'close grown recovery view'); simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 	}
 }
 
@@ -76,7 +76,7 @@ fn recovery_growth_first(parent &char, wrong &char) {
 		recovery_growth_tool(parent, c'/root/volume.vrecover', c'16777216', c'8193', c'/root/no-output', 1)
 		check(C.open(c'/root/no-output', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'wrong identity/capacity and invalid growth never publish')
 		recovery_unlock_tool(c'/root/volume.vrecover', c'/root/recovery.key', false, 0)
-		before := status(c'/dev/mapper/vinix60'); held := C.open(c'/dev/mapper/vinix60', C.O_RDWR)
+		before := status(c'/dev/mapper/tulpar60'); held := C.open(c'/dev/mapper/tulpar60', C.O_RDWR)
 		check(held >= 0, c'hold original encrypted descriptor')
 		mut ciphertext := [512]u8{}; mut again := [512]u8{}
 		raw := C.open(parent, C.O_RDONLY); check(raw >= 0 && C.pread(raw, &ciphertext[0], 512, 15728640) == 512, c'capture ciphertext before planning')
@@ -88,18 +88,18 @@ fn recovery_growth_first(parent &char, wrong &char) {
 			recovery_growth_tool(parent, input, c'16777216', c'8192', output, 1)
 			recovery_growth_tool(parent, input, c'16777216', c'8192', input, 1)
 		}
-		after := status(c'/dev/mapper/vinix60'); check(after.bytes == 4096 && after.generation == before.generation, c'planning preserves live mapping and held descriptor')
+		after := status(c'/dev/mapper/tulpar60'); check(after.bytes == 4096 && after.generation == before.generation, c'planning preserves live mapping and held descriptor')
 		crypt_data(held, 0, 0x73)
 		check(C.pread(raw, &again[0], 512, 15728640) == 512 && C.memcmp(&ciphertext[0], &again[0], 512) == 0, c'planning never writes physical ciphertext')
-		check(C.close(raw) == 0 && C.close(held) == 0, c'close original retained descriptors'); simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		check(C.close(raw) == 0 && C.close(held) == 0, c'close original retained descriptors'); simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		recovery_growth_view(parent, c'/root/grown.vrecover', false, false, 8192, true)
 		recovery_growth_view(parent, c'/root/grown.vrecover', true, false, 8192, false)
 		recovery_growth_view(parent, c'/root/grown-ro.vrecover', false, true, 8192, false)
 		recovery_growth_retention(parent); recovery_unlock_missing_credentials()
-		check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'disable invalid plain boot plan')
+		check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'disable invalid plain boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist recovery growth phase')
-		for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! {
+		for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! {
 			fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist recovery growth backups')
 		}
 		C.printf(c'PLAN RECOVERY GROWTH PASSED: authenticated extent growth, unchanged live descriptors/data, RW/RO ciphertext and measured lifetimes\n')
@@ -118,7 +118,7 @@ fn recovery_growth_entry() i32 {
 		parent := $if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') }
 		wrong := $if amd64 { &char(c'/dev/sd0') } $else { &char(c'/dev/vda') }
 		check(status(parent).bytes == 33554432, c'physical capacity grew across reordered boot')
-		recovery_unlock_tool(c'/root/grown.vrecover', c'/root/recovery.key', false, 1); missing(c'/dev/mapper/vinix60')
+		recovery_unlock_tool(c'/root/grown.vrecover', c'/root/recovery.key', false, 1); missing(c'/dev/mapper/tulpar60')
 		recovery_growth_tool(wrong, c'/root/grown.vrecover', c'33554432', c'12288', c'/root/no-output', 1)
 		recovery_growth_tool(parent, c'/root/grown.vrecover', c'16777216', c'12288', c'/root/no-output', 1)
 		recovery_growth_tool(parent, c'/root/grown.vrecover', c'33554432', c'12288', c'/root/capacity.vrecover', 0)

@@ -4,7 +4,7 @@ Run from the repository root with a fresh output directory:
 
 ```sh
 build-support/run-v-tool.sh tests/linuxkpi/i915_sw_fence.v \
-  --keep-directory /tmp/vinix-sw-fence-host
+  --keep-directory /tmp/tulpar-sw-fence-host
 ```
 
 The V controller verifies the pinned Linux 6.6.157 import and compiles the

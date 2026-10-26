@@ -15,7 +15,7 @@
 
 extern int malloc_trim(size_t);
 
-/* Compile against the staged Vinix libc. Nothing interposes malloc here. */
+/* Compile against the staged Tulpar libc. Nothing interposes malloc here. */
 static const size_t sizes[] = {0, 1, 15, 16, 17, 31, 32, 48, 64, 96, 128,
     256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536, 131051, 131052,
     131053, 200000, 262144, 400000, 800000, 1600000, 2097152, 2200000};
@@ -245,7 +245,7 @@ static int rejects_corruption(void)
         printf("UALLOC-CORRUPTION test=%u status=%d signal=%d exit=%d\n", test, status,
             WIFSIGNALED(status) ? WTERMSIG(status) : 0,
             WIFEXITED(status) ? WEXITSTATUS(status) : -1);
-        /* Vinix reports AArch64 BRK as SIGTRAP; x86 UD2 reports SIGILL. */
+        /* Tulpar reports AArch64 BRK as SIGTRAP; x86 UD2 reports SIGILL. */
         REQUIRE(WIFSIGNALED(status) && (WTERMSIG(status) == SIGSEGV ||
             WTERMSIG(status) == SIGILL || WTERMSIG(status) == SIGABRT
 #if defined(__aarch64__)

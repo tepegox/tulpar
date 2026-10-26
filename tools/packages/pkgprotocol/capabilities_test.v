@@ -4,9 +4,9 @@ module pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 const capabilities_fixture = '{"format":1,"package_formats":[1],"application_sdks":[1],"native_window_protocols":[1,2],"deployment_formats":[1,2]}'
 
@@ -60,14 +60,14 @@ fn test_capabilities_retires_owned_arrays_and_every_partial_decode() {
 		invalid << capabilities_fixture + ' false'
 		invalid << capabilities_fixture.replace('"format":1', '"format":0')
 		reordered := '{"deployment_formats":[1,2],"native_window_protocols":[1,2],"application_sdks":[1],"package_formats":[1],"format":1}'
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			capabilities_consume(capabilities_fixture, true)
 			capabilities_consume(reordered, true)
 			for text in invalid { capabilities_consume(text, false) }
 		}
-		kept := C.vinix_heap_end()
-		assert kept == 0 && C.vinix_heap_count() == 0, 'capabilities reader retained ${kept} bytes'
+		kept := C.tulpar_heap_end()
+		assert kept == 0 && C.tulpar_heap_count() == 0, 'capabilities reader retained ${kept} bytes'
 		println('PACKAGE CAPABILITIES 1000 decode/refusal/double-close cycles with every truncated prefix retain zero tracked bytes PASS')
 	}
 }

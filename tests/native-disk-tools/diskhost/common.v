@@ -53,11 +53,11 @@ fn integer(options guesthost.Options, name string, fallback int) !int {
 
 fn caller_timeout(options guesthost.Options, fallback int) !int {
 	if options.has('--timeout') { return integer(options, '--timeout', fallback)! }
-	return strconv.atoi(os.getenv_opt('VINIX_QEMU_TIMEOUT') or { fallback.str() }) or { return argument('invalid integer for --timeout') }
+	return strconv.atoi(os.getenv_opt('TULPAR_QEMU_TIMEOUT') or { fallback.str() }) or { return argument('invalid integer for --timeout') }
 }
 
 fn timeout() !int {
-	value := strconv.atoi(os.getenv_opt('VINIX_QEMU_TIMEOUT') or { '300' })!
+	value := strconv.atoi(os.getenv_opt('TULPAR_QEMU_TIMEOUT') or { '300' })!
 	if value <= 0 { return argument('timeout must be positive') }
 	return value
 }
@@ -106,7 +106,7 @@ pub fn format_ext2(executable string, disk string, seed string, bytes i64) ! {
 
 fn compiler(arch string) []string {
 	if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		return [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk,
 			'-L' + sdk + '/lib', '-fuse-ld=lld']
 	}
@@ -121,22 +121,22 @@ fn kernel(work string, supplied string, arch string) !string {
 	source := resolve(if supplied != '' {
 		supplied
 	} else if arch == 'aarch64' {
-		os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' }
+		os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' }
 	} else {
-		os.getenv_opt('VINIX_AMD64_KERNEL') or { root() + '/kernel/bin/vinix' }
+		os.getenv_opt('TULPAR_AMD64_KERNEL') or { root() + '/kernel/bin/tulpar' }
 	})!
-	path := if os.is_dir(source) { source + '/bin/vinix' } else { source }
+	path := if os.is_dir(source) { source + '/bin/tulpar' } else { source }
 	data := os.read_bytes(path)!
 	if data.len < 20 || data[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1]
 		|| int(data[18]) + (int(data[19]) << 8) != if arch == 'aarch64' { 183 } else { 62 } {
 		return argument('Kernel ELF architecture does not match --arch')
 	}
 	mkdir(work + '/kernel/bin')!
-	if path == work + '/kernel/bin/vinix' {
+	if path == work + '/kernel/bin/tulpar' {
 		return argument('Kernel source must be outside the private snapshot')
 	}
-	hosttest.module_copy_file_preserving_stat(path, work + '/kernel/bin/vinix')!
-	if os.read_bytes(work + '/kernel/bin/vinix')! != data {
+	hosttest.module_copy_file_preserving_stat(path, work + '/kernel/bin/tulpar')!
+	if os.read_bytes(work + '/kernel/bin/tulpar')! != data {
 		return error('Kernel changed while copying its snapshot')
 	}
 	return work + '/kernel'
@@ -163,21 +163,21 @@ fn extract(archive string, directory string) ! {
 
 fn seed_identity(seed string, archive string) ! {
 	for name in ['dev', 'proc', 'tmp', 'run', 'root'] { mkdir(seed + '/' + name)! }
-	os.write_file(seed + '/.vinix-image-id', hosttest.sha(archive)![..16] + '\n')!
+	os.write_file(seed + '/.tulpar-image-id', hosttest.sha(archive)![..16] + '\n')!
 }
 
 fn x86_command(configured guesthost.Launch, disk string, memory int, reboot bool, network bool) []string {
 	mut argv := configured.command.clone()
 	argv[argv.index('-m') + 1] = memory.str()
 	argv[argv.index('-serial') + 1] = 'stdio'
-	argv[argv.index('-accel') + 1] = os.getenv_opt('VINIX_QEMU_ACCEL') or { 'tcg' }
-	firmware := os.getenv_opt('VINIX_OVMF_CODE_AMD64') or { os.dir(os.dir(argv[0])) + '/share/qemu/edk2-x86_64-code.fd' }
+	argv[argv.index('-accel') + 1] = os.getenv_opt('TULPAR_QEMU_ACCEL') or { 'tcg' }
+	firmware := os.getenv_opt('TULPAR_OVMF_CODE_AMD64') or { os.dir(os.dir(argv[0])) + '/share/qemu/edk2-x86_64-code.fd' }
 	argv[argv.index('-drive') + 1] = 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware
 	argv << ['-drive', 'if=ide,format=raw,file=' + disk + ',cache=writeback']
 	if reboot { argv.delete(argv.index('-no-reboot')) }
 	if !network && '-nic' !in argv { argv << ['-nic', 'none'] }
-	if os.getenv('VINIX_TEST_QMP') != '' {
-		argv[argv.index('-qmp') + 1] = 'unix:' + os.getenv('VINIX_TEST_QMP') + ',server=on,wait=off'
+	if os.getenv('TULPAR_TEST_QMP') != '' {
+		argv[argv.index('-qmp') + 1] = 'unix:' + os.getenv('TULPAR_TEST_QMP') + ',server=on,wait=off'
 	}
 	return argv
 }
@@ -189,15 +189,15 @@ fn launch(init string, archive string, work string, kernel_dir string, arch stri
 
 fn launch_mode(init string, archive string, work string, kernel_dir string, arch string, memory int, disk string,
 	reboot bool, no_network bool, overlay bool) !guesthost.Launch {
-	runner := resolve(os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() })!
-	prior_network := os.getenv_opt('VINIX_QEMU_NETWORK')
-	if no_network { os.setenv('VINIX_QEMU_NETWORK', '0', true) }
+	runner := resolve(os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() })!
+	prior_network := os.getenv_opt('TULPAR_QEMU_NETWORK')
+	if no_network { os.setenv('TULPAR_QEMU_NETWORK', '0', true) }
 	defer {
 		if no_network {
 			if value := prior_network {
-				os.setenv('VINIX_QEMU_NETWORK', value, true)
+				os.setenv('TULPAR_QEMU_NETWORK', value, true)
 			} else {
-				os.unsetenv('VINIX_QEMU_NETWORK')
+				os.unsetenv('TULPAR_QEMU_NETWORK')
 			}
 		}
 	}
@@ -226,7 +226,7 @@ fn launch_mode(init string, archive string, work string, kernel_dir string, arch
 		'disk':                     json2.Any(disk)
 		'init_sha256':              json2.Any(hosttest.sha(init)!)
 		'archive_sha256':           json2.Any(hosttest.sha(archive)!)
-		'immutable_kernel_sha256':  json2.Any(hosttest.sha(kernel_dir + '/bin/vinix')!)
+		'immutable_kernel_sha256':  json2.Any(hosttest.sha(kernel_dir + '/bin/tulpar')!)
 		'kernel_rebuilt_by_runner': json2.Any(false)
 	})) + '\n')!
 	return guesthost.Launch{argv, configured.env}

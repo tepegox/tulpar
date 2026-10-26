@@ -43,12 +43,12 @@ pub:
 
 // A fixed lwIP address slot avoids allocating a second interface registry.
 pub fn ipv6_address(index u32, slot u32) ?IPv6InterfaceAddress {
-	mut address := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
-	state := unsafe { &u32(C.vinix_stack_alloc(sizeof(u32))) }
-	valid := unsafe { &u32(C.vinix_stack_alloc(sizeof(u32))) }
-	preferred := unsafe { &u32(C.vinix_stack_alloc(sizeof(u32))) }
+	mut address := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
+	state := unsafe { &u32(C.tulpar_stack_alloc(sizeof(u32))) }
+	valid := unsafe { &u32(C.tulpar_stack_alloc(sizeof(u32))) }
+	preferred := unsafe { &u32(C.tulpar_stack_alloc(sizeof(u32))) }
 	net_lock.acquire()
-	ret := C.vinix_net_ipv6_address(index, slot, address, state, valid, preferred)
+	ret := C.tulpar_net_ipv6_address(index, slot, address, state, valid, preferred)
 	net_lock.release()
 	address_state := unsafe { *state }
 	if ret == 0 || address_state == 0 { return none }

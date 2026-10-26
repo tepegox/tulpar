@@ -62,9 +62,9 @@ fn driver_start() {
 	}
 	cpuidle_started = true
 	cpuidle_driver_name = 'none'
-	if choice := devcore.boot_option('vinix.cpuidle=') {
+	if choice := devcore.boot_option('tulpar.cpuidle=') {
 		if choice == 'off' {
-			print('cpuidle: switched off by vinix.cpuidle=off\n')
+			print('cpuidle: switched off by tulpar.cpuidle=off\n')
 			return
 		}
 	}

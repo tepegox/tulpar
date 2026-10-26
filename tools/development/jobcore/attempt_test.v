@@ -8,7 +8,7 @@ import sourcecommand
 import time
 
 fn test_attempt_arguments_reserve_fresh_outputs_and_survive_acknowledgement() {
-	root := sourcecommand.temporary('vinix-jobs-attempts')!
+	root := sourcecommand.temporary('tulpar-jobs-attempts')!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/main.v', 'module main\nimport os\nfn main() { if os.getenv("TOKEN") != "private-token" || os.args[2] != "literal-" + os.base(os.args[1]).all_after("output-") { exit(1) }; if os.exists(os.args[1]) { exit(2) }; os.mkdir(os.args[1], mode: 0o700)!; os.write_file(os.args[1] + "/result", "42")! }\n')!
 	compiled := sourcecommand.capture([@VEXE, '-gc', 'none', '-cc', 'cc', '-o', root + '/job', root + '/main.v'],
@@ -53,7 +53,7 @@ fn test_attempt_arguments_reserve_fresh_outputs_and_survive_acknowledgement() {
 }
 
 fn test_legacy_attempt_migration_and_counter_exhaustion_preserve_state() {
-	root := sourcecommand.temporary('vinix-jobs-attempt-migration')!
+	root := sourcecommand.temporary('tulpar-jobs-attempt-migration')!
 	defer { os.rmdir_all(root) or {} }
 	program := os.real_path(os.find_abs_path_of_executable('true')!)
 	plan := Plan{uid: os.getuid(), jobs: [Job{id: 'ci', executable: devcore.Pin{program, devcore.file_hash(program)!},

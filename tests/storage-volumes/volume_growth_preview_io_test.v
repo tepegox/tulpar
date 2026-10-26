@@ -30,7 +30,7 @@ fn growth_preview_check(input string, credential string, capacity u64, length u6
 	else {
 		capacity_text := capacity.str(); length_text := length.str()
 		unsafe {
-			args := [&char(c'vinix-volume'), if recovery { &char(c'plan-preview-grow-recovery-volume') } else { &char(c'plan-preview-grow-volume') }, &char(c'/recovery-growth-parent'), input.str, credential.str, capacity_text.str, length_text.str, &char(nil)]!
+			args := [&char(c'tulpar-volume'), if recovery { &char(c'plan-preview-grow-recovery-volume') } else { &char(c'plan-preview-grow-volume') }, &char(c'/recovery-growth-parent'), input.str, credential.str, capacity_text.str, length_text.str, &char(nil)]!
 			assert run(7, &args[0]) == expected
 		}
 	}
@@ -46,7 +46,7 @@ fn growth_preview_check(input string, credential string, capacity u64, length u6
 fn test_growth_previews_authenticate_before_pinned_readonly_probes_report_exact_geometry_and_never_publish() {
 	growth_preview_model = true; recovery_growth_model = true
 	defer { growth_preview_model = false; recovery_growth_model = false }
-	work := os.join_path(os.temp_dir(), 'vinix-growth-preview-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-growth-preview-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	input := work + '/input'; credential := work + '/credential'
 	wrapping := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}

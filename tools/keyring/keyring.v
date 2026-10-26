@@ -1,25 +1,25 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2026 Alexander Medvednikov
 //
-// vinix-keyring: an account's credential store (keyringcore/core.v), as a
+// tulpar-keyring: an account's credential store (keyringcore/core.v), as a
 // service that holds the store open for a session and the commands that
 // ask it.
 //
-//	vinix-keyring daemon [--unlock-stdin]
+//	tulpar-keyring daemon [--unlock-stdin]
 //	    serve this account's store on a socket only this account can
 //	    reach, until the session ends. With --unlock-stdin a password is
 //	    read from standard input first and the store opened with it: how a
 //	    login opens the store with what was typed at the login screen.
 //
-//	vinix-keyring status            absent, locked or unlocked, and how many
-//	vinix-keyring init              make the store; prints the recovery key
-//	vinix-keyring unlock | lock
-//	vinix-keyring set SERVICE ACCOUNT        the secret on standard input
-//	vinix-keyring get SERVICE ACCOUNT
-//	vinix-keyring delete SERVICE ACCOUNT
-//	vinix-keyring list
-//	vinix-keyring change-password   the old password, then the new
-//	vinix-keyring recover           the recovery key, then a new password;
+//	tulpar-keyring status            absent, locked or unlocked, and how many
+//	tulpar-keyring init              make the store; prints the recovery key
+//	tulpar-keyring unlock | lock
+//	tulpar-keyring set SERVICE ACCOUNT        the secret on standard input
+//	tulpar-keyring get SERVICE ACCOUNT
+//	tulpar-keyring delete SERVICE ACCOUNT
+//	tulpar-keyring list
+//	tulpar-keyring change-password   the old password, then the new
+//	tulpar-keyring recover           the recovery key, then a new password;
 //	                                prints a new recovery key
 //
 // Passwords and secrets are read from the terminal without echo, or one per
@@ -114,7 +114,7 @@ mut:
 }
 
 fn fail(message string) {
-	eprintln('vinix-keyring: ${message}')
+	eprintln('tulpar-keyring: ${message}')
 	exit(1)
 }
 
@@ -127,7 +127,7 @@ fn home() string {
 }
 
 fn default_store() string {
-	return os.join_path(home(), '.local', 'share', 'vinix', 'keyring')
+	return os.join_path(home(), '.local', 'share', 'tulpar', 'keyring')
 }
 
 fn default_socket() string {
@@ -135,7 +135,7 @@ fn default_socket() string {
 	if runtime == '' || runtime[0] != `/` {
 		fail('XDG_RUNTIME_DIR is not set: there is no session to keep a store open for')
 	}
-	return os.join_path(runtime, 'vinix-keyring.sock')
+	return os.join_path(runtime, 'tulpar-keyring.sock')
 }
 
 fn reply(status u16, fields ...string) authproto.Frame {
@@ -417,7 +417,7 @@ fn serve(store_path string, socket_path string, unlock bool, cost keyringcore.Co
 				if key := store.unlock(password) {
 					service.key = key
 				} else {
-					eprintln('vinix-keyring: the login password does not open the store; it stays locked')
+					eprintln('tulpar-keyring: the login password does not open the store; it stays locked')
 				}
 			}
 		}
@@ -485,12 +485,12 @@ fn finish(answer authproto.Frame) {
 	if answer.code == ok {
 		exit(0)
 	}
-	eprintln('vinix-keyring: ${if answer.text(0) == '' { 'refused' } else { answer.text(0) }}')
+	eprintln('tulpar-keyring: ${if answer.text(0) == '' { 'refused' } else { answer.text(0) }}')
 	exit(if answer.code == invalid { 2 } else { 1 })
 }
 
 fn usage() {
-	eprintln('usage: vinix-keyring daemon [--unlock-stdin] | status | init | unlock | lock | set SERVICE ACCOUNT | get SERVICE ACCOUNT | delete SERVICE ACCOUNT | list | change-password | recover')
+	eprintln('usage: tulpar-keyring daemon [--unlock-stdin] | status | init | unlock | lock | set SERVICE ACCOUNT | get SERVICE ACCOUNT | delete SERVICE ACCOUNT | list | change-password | recover')
 	exit(2)
 }
 
@@ -523,7 +523,7 @@ fn main() {
 		'daemon' {
 			// A cheaper cost only where a test asks for it by naming its
 			// own store.
-			cost := if os.getenv('VINIX_KEYRING_TEST_COST') == '1' {
+			cost := if os.getenv('TULPAR_KEYRING_TEST_COST') == '1' {
 				keyringcore.Cost{
 					ln: 10
 				}

@@ -3,7 +3,7 @@ module planguest
 
 fn volume_seal_tool(parent &char, config &char, readonly bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'seal-volume'), parent, &char(c'60'), &char(c'15728640'), &char(c'4096'),
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'seal-volume'), parent, &char(c'60'), &char(c'15728640'), &char(c'4096'),
 			&char(c'/root/crypt.key'), &char(c'/root/crypt.pass'), config, if readonly { &char(c'ro') } else { &char(nil) }, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
@@ -11,14 +11,14 @@ fn volume_seal_tool(parent &char, config &char, readonly bool, expected i32) {
 
 fn volume_seal_open_tool(parent &char, config &char, password &char, readonly bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'open-volume'), parent, config, password, if readonly { &char(c'ro') } else { &char(nil) }, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'open-volume'), parent, config, password, if readonly { &char(c'ro') } else { &char(nil) }, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
 
 fn volume_seal_key_tool(config &char, password &char, output &char, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'unseal-volume-key'), config, password, output, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'unseal-volume-key'), config, password, output, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
@@ -26,14 +26,14 @@ fn volume_seal_key_tool(config &char, password &char, output &char, expected i32
 fn volume_seal_view(parent &char, config &char, force_readonly bool, expected_readonly bool) {
 	unsafe {
 		volume_seal_open_tool(parent, config, c'/root/crypt.pass', force_readonly, 0)
-		info := status(c'/dev/mapper/vinix60')
+		info := status(c'/dev/mapper/tulpar60')
 		check(info.flags & 64 != 0 && (info.flags & 1 != 0) == expected_readonly && info.start == 15728640 && info.bytes == 4096 && info.sector == 512, c'authenticated mapping geometry and mode')
-		fd := C.open(c'/dev/mapper/vinix60', if expected_readonly { C.O_RDONLY } else { C.O_RDWR })
+		fd := C.open(c'/dev/mapper/tulpar60', if expected_readonly { C.O_RDONLY } else { C.O_RDWR })
 		check(fd >= 0, c'open configured volume')
-		if expected_readonly { check(C.open(c'/dev/mapper/vinix60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'saved readonly cannot escalate') }
+		if expected_readonly { check(C.open(c'/dev/mapper/tulpar60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'saved readonly cannot escalate') }
 		else { mut data := [512]u8{init: 0x73}; check(C.pwrite(fd, &data[0], 512, 0) == 512, c'configured writable data') }
 		crypt_data(fd, 0, 0x73); check(C.close(fd) == 0, c'close configured volume')
-		simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 	}
 }
 
@@ -53,13 +53,13 @@ fn planned_volume_seal(parent &char, wrong &char) {
 		again = original; again[144] ^= 1
 		bad := C.open(c'/root/volume-bad.sealed', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(bad >= 0 && C.write(bad, &again[0], 320) == 320 && C.close(bad) == 0, c'configuration tamper fixture')
-		volume_seal_open_tool(parent, c'/root/volume-bad.sealed', c'/root/crypt.pass', false, 1); missing(c'/dev/mapper/vinix60')
-		volume_seal_open_tool(parent, c'/root/volume.sealed', c'/root/wrong.pass', false, 1); missing(c'/dev/mapper/vinix60')
+		volume_seal_open_tool(parent, c'/root/volume-bad.sealed', c'/root/crypt.pass', false, 1); missing(c'/dev/mapper/tulpar60')
+		volume_seal_open_tool(parent, c'/root/volume.sealed', c'/root/wrong.pass', false, 1); missing(c'/dev/mapper/tulpar60')
 		volume_seal_key_tool(c'/root/volume.sealed', c'/root/wrong.pass', c'/root/no-volume-key', 1)
 		check(C.open(c'/root/no-volume-key', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'bad credentials never recover a key')
 		check(C.unlink(c'/root/crypt.key') == 0, c'delete raw key before configured unlock')
-		volume_seal_open_tool(wrong, c'/root/volume.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/vinix60')
-		volume_seal_open_tool(c'/root/volume.sealed', c'/root/volume.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/vinix60')
+		volume_seal_open_tool(wrong, c'/root/volume.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/tulpar60')
+		volume_seal_open_tool(c'/root/volume.sealed', c'/root/volume.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/tulpar60')
 		volume_seal_view(parent, c'/root/volume.sealed', false, false)
 		volume_seal_view(parent, c'/root/volume.sealed', true, true)
 		volume_seal_view(parent, c'/root/volume-ro.sealed', false, true)
@@ -99,7 +99,7 @@ fn volume_seal_retention(parent &char) {
 fn volume_seal_reordered_boot(parent &char, wrong &char) {
 	unsafe {
 		check(C.unlink(c'/root/crypt.key') == 0, c'delete raw key before configuration boot unlock')
-		volume_seal_open_tool(wrong, c'/root/volume.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/vinix60')
+		volume_seal_open_tool(wrong, c'/root/volume.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/tulpar60')
 		volume_seal_view(parent, c'/root/volume.sealed', true, true)
 		volume_seal_view(parent, c'/root/volume-ro.sealed', false, true)
 		check(C.open(c'/root/crypt.key', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'configuration boot unlock creates no raw key')

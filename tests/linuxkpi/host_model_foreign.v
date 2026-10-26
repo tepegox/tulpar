@@ -42,13 +42,13 @@ mut:
 }
 struct C.task_struct {
 mut:
-    vinix_thread voidptr
+    tulpar_thread voidptr
     pid i32
     tgid i32
     flags u32
     __state u32
     comm [16]char
-    vinix_initial_comm [16]char
+    tulpar_initial_comm [16]char
     in_iowait u32
 }
 @[c_extern] __global C.vmh_mutex_initializer C.pthread_mutex_t
@@ -105,15 +105,15 @@ fn C.memcmp(voidptr, voidptr, usize) i32
 fn C.strcmp(&char, &char) i32
 fn C.strlen(&char) usize
 fn C.sched_yield() i32
-fn C.vinix_linuxkpi_task_init(voidptr, voidptr, i32, i32, &char, usize)
-fn C.vinix_linuxkpi_task_view(voidptr, voidptr, i32, i32, &char, usize, bool) voidptr
-fn C.vinix_linuxkpi_task_inherit(voidptr, voidptr, i32, i32, voidptr)
-fn C.vinix_linuxkpi_task_dead(voidptr)
-fn C.vinix_linuxkpi_task_selftest() i32
-fn C.vinix_linuxkpi_task_queued(voidptr) bool
-fn C.vinix_linuxkpi_task_enqueue(voidptr) bool
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_spin_wait()
+fn C.tulpar_linuxkpi_task_init(voidptr, voidptr, i32, i32, &char, usize)
+fn C.tulpar_linuxkpi_task_view(voidptr, voidptr, i32, i32, &char, usize, bool) voidptr
+fn C.tulpar_linuxkpi_task_inherit(voidptr, voidptr, i32, i32, voidptr)
+fn C.tulpar_linuxkpi_task_dead(voidptr)
+fn C.tulpar_linuxkpi_task_selftest() i32
+fn C.tulpar_linuxkpi_task_queued(voidptr) bool
+fn C.tulpar_linuxkpi_task_enqueue(voidptr) bool
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_spin_wait()
 fn C.get_task_struct(&C.task_struct) &C.task_struct
 fn C.put_task_struct(&C.task_struct)
 fn C.task_is_running(&C.task_struct) bool

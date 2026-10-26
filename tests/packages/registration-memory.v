@@ -7,8 +7,8 @@ import userland.packagecore
 import tools.packages.pkgprotocol
 
 #include "@VMODROOT/../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 struct Installation { package pkgprotocol.RegisteredPackage }
 struct Snapshot {
@@ -42,16 +42,16 @@ fn main() {
 		text[..text.len - 2], additive.replace('"array":', '"bad":"\\ud800","array":'),
 		text + ' false', '{"format":1,"generation":1,"architecture":"aarch64","packages":null}']
 	for warmup in 0 .. 2 {
-		if warmup == 1 { C.vinix_heap_begin() }
+		if warmup == 1 { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			consume(text, true); consume(additive, true)
 			for bad in invalid { consume(bad, false) }
 		}
 	}
-	kept := C.vinix_heap_end()
+	kept := C.tulpar_heap_end()
 	assert kept == 0, 'registration reader retained ${kept} bytes'
 	println('Package registration reader: 1000 wide/additive/partial-invalid decode/close cycles retain zero tracked bytes')
-	root := os.real_path(os.temp_dir()) + '/vinix-registration-memory-' + os.getpid().str()
+	root := os.real_path(os.temp_dir()) + '/tulpar-registration-memory-' + os.getpid().str()
 	os.mkdir_all(root + '/generations/1')!
 	defer { os.rmdir_all(root) or {} }
 	path := root + '/generations/1/state.json'
@@ -68,7 +68,7 @@ fn main() {
 	mut registry := packagecore.Registry{}
 	owner := u32(os.geteuid())
 	for warmup in 0 .. 2 {
-		if warmup == 1 { C.vinix_heap_begin() }
+		if warmup == 1 { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			assert registry.refresh(root, owner, 'aarch64')!
 			assert !registry.refresh(root, owner, 'aarch64')!
@@ -83,7 +83,7 @@ fn main() {
 			registry.close()
 		}
 	}
-	retained := C.vinix_heap_end()
+	retained := C.tulpar_heap_end()
 	assert retained == 0, 'registration reload retained ${retained} bytes'
 	println('Package registry: 1000 reload/cache/partial-refusal/architecture-refusal/generation-refusal/retirement cycles retain zero tracked bytes')
 }

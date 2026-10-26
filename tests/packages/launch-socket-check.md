@@ -24,7 +24,7 @@ opposite shutdowns, and empty/partial-header/partial-body launch requests that
 must report interruption within one second. Existing separate-stream,
 close-on-exec, missing-rights and surplus-rights checks still run. Darwin can
 return `ENOTCONN` on the second opposite `SHUT_RDWR`; the host concurrency test
-accepts that specific result. Linux/Vinix must complete both shutdowns normally.
+accepts that specific result. Linux/Tulpar must complete both shutdowns normally.
 
 ## Socket budget diagnosis
 
@@ -84,7 +84,7 @@ Run the dedicated guest controller with a short new state directory:
 ```sh
 v -path '@vlib|@vmodules|.|tests/hardware-platform' \
   -o /tmp/launch-socket tests/packages/launch-socket-runtime-check.v
-/tmp/launch-socket --arch aarch64 --kernel /path/to/kernel/bin/vinix \
+/tmp/launch-socket --arch aarch64 --kernel /path/to/kernel/bin/tulpar \
   --state-dir /tmp/launch-socket-arm
 ```
 

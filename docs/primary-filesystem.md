@@ -1,6 +1,6 @@
 # Journaled primary filesystem
 
-Blank disks installed by Vinix now use VJFS, a private journaled format built
+Blank disks installed by Tulpar now use VJFS, a private journaled format built
 on the EXT2 block, inode and directory layouts. Its superblock signature is
 `0x4a56`, distinct from EXT2's `0xef53`. Foreign EXT2/EXT3 drivers must not
 mount it and bypass recovery. Existing EXT2 volumes keep their existing format

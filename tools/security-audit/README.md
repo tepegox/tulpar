@@ -1,7 +1,7 @@
 # Persistent seccomp audit collection
 
-`vinix-security-audit` polls `/proc/security_audit` every 250 ms and appends
-selected seccomp decisions to `/var/log/vinix-audit/seccomp.log`. The desktop
+`tulpar-security-audit` polls `/proc/security_audit` every 250 ms and appends
+selected seccomp decisions to `/var/log/tulpar-audit/seccomp.log`. The desktop
 image starts its supervisor before applications. It requires root and the
 kernel's initial-user-namespace CAP_AUDIT_READ authorization. Logs survive a
 reboot when `/var/log` is on the persistent root filesystem; a tmpfs root cannot
@@ -47,7 +47,7 @@ tests/kernel-gaps/run-native --source tests/security-audit/collectorguestfixture
   --arch aarch64 --kernel-dir /path/to/isolated/kernel \
   --expect 'SECURITY AUDIT COLLECTOR VM PASS' --fail 'SECURITY AUDIT COLLECTOR VM FAIL'
 # One authorized snapshot, including a session end:
-/usr/sbin/vinix-security-audit --once
+/usr/sbin/tulpar-security-audit --once
 ```
 
 `--interval-ms` accepts 10 through 60000. `--log` must be an absolute secure path;

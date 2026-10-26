@@ -235,7 +235,7 @@ fn check_software_snapshot_memory() ! {
 		defer { app.close_app() }
 		app.initialize_deployment_field()
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.begin_deployment_snapshot()
 				app.paste_input(software_snapshot_fixture_path); app.key_input('\x01')
@@ -266,7 +266,7 @@ fn check_software_snapshot_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'deployment save UI retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'deployment save UI retained ${kept} bytes'
 		println('Software deployment saving: 1000 literal paste/control refusal/blur/full/compact/receipt/paging/mismatch/retirement cycles retain zero tracked bytes')
 	}
 }

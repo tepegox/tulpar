@@ -25,8 +25,8 @@ mut:
 fn C.va_start(C.vkf_native_va, &C.vks_const_char)
 fn C.va_end(C.vkf_native_va)
 fn C.vkf_va_parameter(C.vkf_native_va) voidptr
-fn C.vinix_kasprintf_va_storage(C.vkf_native_va) voidptr
-fn C.vinix_kasprintf_descriptor_storage(C.va_format) voidptr
+fn C.tulpar_kasprintf_va_storage(C.vkf_native_va) voidptr
+fn C.tulpar_kasprintf_descriptor_storage(C.va_format) voidptr
 fn C.memcpy(voidptr, voidptr, uint) voidptr
 fn C.kvasprintf(u32, &C.vks_const_char, C.vkf_native_va) &char
 fn C.kvasprintf_const(u32, &C.vks_const_char, C.vkf_native_va) &C.vks_const_char
@@ -35,8 +35,8 @@ fn C.vkf_kvasprintf(u32, voidptr, voidptr) voidptr
 fn C.vkf_kvasprintf_const(u32, voidptr, voidptr) voidptr
 fn C.kfree_const(&C.vks_const_void)
 fn C.kmalloc(uint, u32) voidptr
-fn C.vinix_kasprintf_gfp_kernel() u32
-fn C.vinix_linuxkpi_is_kernel_rodata(&C.vks_const_void) bool
+fn C.tulpar_kasprintf_gfp_kernel() u32
+fn C.tulpar_linuxkpi_is_kernel_rodata(&C.vks_const_void) bool
 
 // copied is a snapshot of this genuine compiler cursor, never a constructed
 // va_list. Its pointers borrow this live variadic frame until va_end below.
@@ -51,7 +51,7 @@ fn genuine(mode u32, flags u32, slots u32, state &u32, fmt &C.vks_const_char, ..
 		C.memcpy(&expected[0], cursor, abiargs.native_size())
 		// Typed aggregate va_list is by value outside SysV64; canonical calls always
 		// mutate the actual origin. Advancing copied slots cannot alter the origin.
-		if mode >= 2 || C.VINIX_VA_ABI == 3 {
+		if mode >= 2 || C.TULPAR_VA_ABI == 3 {
 			for _ in u32(0) .. slots { abiargs.word(&expected[0]) }
 		}
 		result := if mode == 0 {
@@ -88,8 +88,8 @@ fn genuine_nested(flags u32, state &u32, fmt &C.vks_const_char, ...) voidptr {
 		C.memcpy(&before[0], cursor, abiargs.native_size())
 		mut descriptor := C.va_format{}
 		descriptor.fmt = fmt
-		descriptor.va = C.vinix_kasprintf_va_storage(ap)
-		result := C.kasprintf(flags, &C.vks_const_char(c'outer<%pV>tail'), C.vinix_kasprintf_descriptor_storage(descriptor))
+		descriptor.va = C.tulpar_kasprintf_va_storage(ap)
+		result := C.kasprintf(flags, &C.vks_const_char(c'outer<%pV>tail'), C.tulpar_kasprintf_descriptor_storage(descriptor))
 		mut after := [4]u64{}
 		C.memcpy(&after[0], cursor, abiargs.native_size())
 		mut same := true
@@ -102,7 +102,7 @@ fn genuine_nested(flags u32, state &u32, fmt &C.vks_const_char, ...) voidptr {
 	}
 }
 
-@[export:'vinix_linuxkpi_kasprintf_fixture_run']
+@[export:'tulpar_linuxkpi_kasprintf_fixture_run']
 pub fn run(which u32, flags u32, source voidptr, state &u32) voidptr {
 	unsafe {
 		*state = 0
@@ -139,7 +139,7 @@ pub fn run(which u32, flags u32, source voidptr, state &u32) voidptr {
 	}
 }
 
-@[export:'vinix_linuxkpi_kasprintf_fixture_overflow']
+@[export:'tulpar_linuxkpi_kasprintf_fixture_overflow']
 pub fn overflow(flags u32, state &u32) bool {
 	unsafe {
 		mut format := [2314]u8{}
@@ -163,21 +163,21 @@ pub fn overflow(flags u32, state &u32) bool {
 	}
 }
 
-@[export:'vinix_linuxkpi_kasprintf_fixture_free']
+@[export:'tulpar_linuxkpi_kasprintf_fixture_free']
 pub fn free(ptr voidptr) {
 	unsafe { C.kfree_const(&C.vks_const_void(ptr)) }
 }
 
-@[export:'vinix_linuxkpi_kasprintf_fixture_alloc']
-pub fn alloc(size uint) voidptr { return C.kmalloc(size, C.vinix_kasprintf_gfp_kernel()) }
+@[export:'tulpar_linuxkpi_kasprintf_fixture_alloc']
+pub fn alloc(size uint) voidptr { return C.kmalloc(size, C.tulpar_kasprintf_gfp_kernel()) }
 
-@[export:'vinix_linuxkpi_kasprintf_fixture_gfp']
-pub fn gfp() u32 { return C.vinix_kasprintf_gfp_kernel() }
+@[export:'tulpar_linuxkpi_kasprintf_fixture_gfp']
+pub fn gfp() u32 { return C.tulpar_kasprintf_gfp_kernel() }
 
-@[export:'vinix_linuxkpi_kasprintf_fixture_literal']
-pub fn literal() voidptr { return unsafe { voidptr(c'vinix-format-constant') } }
+@[export:'tulpar_linuxkpi_kasprintf_fixture_literal']
+pub fn literal() voidptr { return unsafe { voidptr(c'tulpar-format-constant') } }
 
-@[export:'vinix_linuxkpi_kasprintf_fixture_rodata']
+@[export:'tulpar_linuxkpi_kasprintf_fixture_rodata']
 pub fn rodata(ptr voidptr) bool {
-	return unsafe { C.vinix_linuxkpi_is_kernel_rodata(&C.vks_const_void(ptr)) }
+	return unsafe { C.tulpar_linuxkpi_is_kernel_rodata(&C.vks_const_void(ptr)) }
 }

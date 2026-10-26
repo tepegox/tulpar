@@ -132,19 +132,19 @@ fn await_word(word &u32, value u32) {
 	check(false, @LINE)
 }
 
-@[export:'vinix_linuxkpi_cpu_id']
+@[export:'tulpar_linuxkpi_cpu_id']
 pub fn cpu_id() u32 { return ctx().cpu }
 
-@[export:'vinix_linuxkpi_preempt_count']
+@[export:'tulpar_linuxkpi_preempt_count']
 pub fn pins() u32 { return ctx().pins }
 
-@[export:'vinix_linuxkpi_maskable_irq_depth']
+@[export:'tulpar_linuxkpi_maskable_irq_depth']
 pub fn depth() u32 { return ctx().depth }
 
-@[export:'vinix_linuxkpi_irq_flags']
+@[export:'tulpar_linuxkpi_irq_flags']
 pub fn flags() usize { return usize(ctx().flags) }
 
-@[export:'vinix_linuxkpi_irq_save']
+@[export:'tulpar_linuxkpi_irq_save']
 pub fn irq_save() usize {
 	unsafe {
 		saved := ctx().flags
@@ -153,17 +153,17 @@ pub fn irq_save() usize {
 	}
 }
 
-@[export:'vinix_linuxkpi_irq_restore']
+@[export:'tulpar_linuxkpi_irq_restore']
 pub fn irq_restore(v usize) {
 	unsafe { ctx().flags = u64(v) }
 }
 
-@[export:'vinix_linuxkpi_preempt_disable']
+@[export:'tulpar_linuxkpi_preempt_disable']
 pub fn preempt_disable() {
 	unsafe { ctx().pins++ }
 }
 
-@[export:'vinix_linuxkpi_preempt_enable']
+@[export:'tulpar_linuxkpi_preempt_enable']
 pub fn preempt_enable() {
 	unsafe {
 		check(ctx().pins > 0, @LINE)
@@ -171,15 +171,15 @@ pub fn preempt_enable() {
 	}
 }
 
-@[export:'vinix_linuxkpi_may_sleep']
+@[export:'tulpar_linuxkpi_may_sleep']
 pub fn may_sleep() bool {
 	return ctx().task && ctx().pins == 0 && ctx().depth == 0 && (ctx().flags & 512) != 0
 }
 
-@[export:'vinix_linuxkpi_smp_task_present']
+@[export:'tulpar_linuxkpi_smp_task_present']
 pub fn task_present() bool { return ctx().task }
 
-@[export:'vinix_linuxkpi_smp_boot_context']
+@[export:'tulpar_linuxkpi_smp_boot_context']
 pub fn boot_context() bool { return may_sleep() }
 
 @[export:'vks_smp_ready']
@@ -190,13 +190,13 @@ pub fn smp_ready() bool { return unsafe { C.iwh_load(&transport_ready) != 0 } }
 @[export:'vkr_rcu_ready']
 pub fn rcu_ready_observation() bool { return unsafe { C.iwh_load(&rcu_domain_published) != 0 } }
 
-@[export:'vinix_linuxkpi_spin_wait']
+@[export:'tulpar_linuxkpi_spin_wait']
 pub fn spin_wait() {
 	unsafe { if ctx().sync_waiter { C.iwh_add(&waiter_spins, 1) } }
 	C.sched_yield()
 }
 
-@[export:'vinix_linuxkpi_cond_resched']
+@[export:'tulpar_linuxkpi_cond_resched']
 pub fn resched() i32 {
 	if may_sleep() {
 		unsafe { if ctx().sync_waiter { C.iwh_add(&waiter_spins, 1) } }
@@ -206,7 +206,7 @@ pub fn resched() i32 {
 	return 0
 }
 
-@[export:'vinix_linuxkpi_irqwork_send_ipi']
+@[export:'tulpar_linuxkpi_irqwork_send_ipi']
 pub fn send_ipi(cpu u32) {
 	unsafe {
 		check(cpu < count, @LINE)
@@ -245,7 +245,7 @@ pub fn unexpected_allocate(_bytes usize, _flags u32) voidptr {
 	return unsafe { nil }
 }
 
-@[export:'vinix_linuxkpi_bug'; noreturn]
+@[export:'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(reason C.iwh_const_charp, line i32) {
 	unsafe {
 		if fatal_watch {

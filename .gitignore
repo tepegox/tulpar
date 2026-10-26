@@ -1,4 +1,4 @@
-/vinix.iso
+/tulpar.iso
 /initramfs.tar
 /.vscode
 /ovmf
@@ -7,7 +7,7 @@
 *.bin
 *.a
 *.o
-vinix-aarch64.iso
+tulpar-aarch64.iso
 *.xml
 .DS_Store
 boot-image/
@@ -41,7 +41,7 @@ build-support/init-aarch64/initramfs-desktop.tar
 build-support/init-aarch64/initramfs-desktop.tar.gz
 build-support/init-aarch64/initramfs-sound.tar
 build-support/init-aarch64/.initramfs-desktop.tar.*
-/vinix-desktop-amd64.iso
+/tulpar-desktop-amd64.iso
 kernel/tmp.c
 kernel/tmp.v
 /build-aarch64-python/
@@ -76,7 +76,7 @@ kernel/tmp.v
 
 # Screenshots stay out of git.
 /tulpar-*.iso
-/docker-vinix-terminal.png
+/docker-tulpar-terminal.png
 /build-release/
 
 /build-aarch64-android/
@@ -89,3 +89,9 @@ kernel/tmp.v
 
 # Generated host executable; keep its V sources tracked.
 /tools/terminal
+
+# Legacy generated artifacts.
+/vinix.iso
+vinix-aarch64.iso
+/vinix-desktop-amd64.iso
+/docker-vinix-terminal.png

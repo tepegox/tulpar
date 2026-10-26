@@ -3,7 +3,7 @@
 set -eu
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-staging-cache-test.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-staging-cache-test.XXXXXX")
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 
 mkdir -p "$work/source" "$work/downloads" "$work/staging/usr/bin"

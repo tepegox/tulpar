@@ -15,7 +15,7 @@ import x86.cpu.local as cpulocal
 // override before it publishes readiness; the ordinary scheduler uses that
 // value for the same timeslice weighting as process nice. This does not change
 // scheduling policy or allocate memory.
-@[export: 'vinix_linuxkpi_worker_set_nice']
+@[export: 'tulpar_linuxkpi_worker_set_nice']
 fn worker_set_nice(nice i32) int {
 	if nice < -20 || nice > 19 {
 		return -errno.einval
@@ -50,7 +50,7 @@ fn worker_set_nice(nice i32) int {
 // Read-only probes expose the actual scheduler inputs/results to the native
 // regression tests. IRQ protection keeps current stable throughout each read.
 // Nice 20 and timeslice 0 are outside their valid ranges and indicate no task.
-@[export: 'vinix_linuxkpi_worker_nice']
+@[export: 'tulpar_linuxkpi_worker_nice']
 fn worker_nice() int {
 	ints := cpu.interrupt_toggle(false)
 	t := proc.current_thread()
@@ -67,7 +67,7 @@ fn worker_nice() int {
 	return nice
 }
 
-@[export: 'vinix_linuxkpi_worker_timeslice']
+@[export: 'tulpar_linuxkpi_worker_timeslice']
 fn worker_timeslice() u64 {
 	ints := cpu.interrupt_toggle(false)
 	t := proc.current_thread()

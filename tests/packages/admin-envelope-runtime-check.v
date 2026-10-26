@@ -22,9 +22,9 @@ fn suite() hwhost.Suite {
 			hwhost.Program{ source: 'tools/packages/pkgadmin/protocol_test.v', path: 'usr/share/package-fixtures/protocol' },
 			hwhost.Program{ source: 'tools/accounts/authcore/authcore_test.v', path: 'usr/share/package-fixtures/authcore' },
 			hwhost.Program{ source: 'tools/packages/pkgadmin/socket_test.v', path: 'usr/share/package-fixtures/socket' },
-			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/vinix-authd' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
+			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/tulpar-authd' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
 		]
 		scenarios: [hwhost.Scenario{ name: 'packages-admin-envelope', arches: ['aarch64', 'x86_64'],
 			about: 'owned canonical administrator requests, partial refusals and completion hash state as root and UID 1000',
@@ -43,7 +43,7 @@ fn check() !int {
 	args := os.args[1..]; options := hwhost.parse_options(args)!
 	if options.help || options.list { return hwhost.run_suite(suite(), args, @FILE) }
 	if !os.is_file(options.kernel) { return error('--kernel is not a file') }
-	work := os.temp_dir() + '/vinix-admin-envelope-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-admin-envelope-' + os.getpid().str()
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	os.cp(options.kernel, work + '/kernel')!
 	kernel := artifact('kernel', work + '/kernel')!
@@ -54,7 +54,7 @@ fn check() !int {
 		for name in ['admin-envelope', 'protocol', 'authcore', 'socket']! {
 			artifacts << artifact(name, base + '/guest/root/usr/share/package-fixtures/' + name)!
 		}
-		for path in ['usr/sbin/vinix-authd', 'usr/sbin/vinix-session', 'usr/bin/vinix-package']! {
+		for path in ['usr/sbin/tulpar-authd', 'usr/sbin/tulpar-session', 'usr/bin/tulpar-package']! {
 			artifacts << artifact(os.file_name(path), base + '/guest/root/' + path)!
 		}
 		artifacts << artifact('serial-log', base + '/packages-admin-envelope/serial.log')!

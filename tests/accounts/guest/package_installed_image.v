@@ -10,10 +10,10 @@ struct PackageInstalledFile { role string bytes u64 sha256 string }
 struct PackageInstalledImage { format int image string files []PackageInstalledFile }
 
 const package_installed_observation = '/root/package-installed-observation.json'
-const package_installed_files = ['/sbin/init', '/usr/bin/vinix-package', '/usr/bin/vinix-sandbox',
-	'/usr/sbin/vinix-account', '/usr/sbin/vinix-authd', '/usr/sbin/vinix-session',
-	'/usr/share/package-fixtures/software-image', '/usr/share/vinix/actions/packages-change',
-	'/usr/share/vinix/actions/packages-launch', pkgprotocol.image_applications_path]
+const package_installed_files = ['/sbin/init', '/usr/bin/tulpar-package', '/usr/bin/tulpar-sandbox',
+	'/usr/sbin/tulpar-account', '/usr/sbin/tulpar-authd', '/usr/sbin/tulpar-session',
+	'/usr/share/package-fixtures/software-image', '/usr/share/tulpar/actions/packages-change',
+	'/usr/share/tulpar/actions/packages-launch', pkgprotocol.image_applications_path]
 
 fn package_installed_root() !bool {
 	mut root := C.stat{}
@@ -27,8 +27,8 @@ fn package_installed_root() !bool {
 	}
 	if !disk_root { return error('Software installed-system check requires the installer-selected disk root') }
 	proof := json2.decode[PackageInstalledImage](os.read_file('/usr/share/package-fixtures/installed-image.json')!)!
-	assert proof.format == 1 && proof.image == 'vinix-packages-installed-sdk-1'
-	assert os.read_file('/.vinix-image-id')!.trim_space() == proof.image
+	assert proof.format == 1 && proof.image == 'tulpar-packages-installed-sdk-1'
+	assert os.read_file('/.tulpar-image-id')!.trim_space() == proof.image
 	assert proof.files.len == package_installed_files.len
 	mut seen := []string{}
 	for file in proof.files {

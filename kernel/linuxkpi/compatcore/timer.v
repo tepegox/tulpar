@@ -19,7 +19,7 @@ fn C.vkt_pthread_detach(voidptr) i32
 fn C.vkt_timer_worker_ready() voidptr
 fn C.vkt_completion_complete(voidptr)
 fn C.vkt_completion_wait(voidptr)
-fn C.vinix_linuxkpi_task_get(voidptr)
+fn C.tulpar_linuxkpi_task_get(voidptr)
 
 __global (
 	vkt_timer_lock u32
@@ -96,7 +96,7 @@ fn vkt_modify_timer(timer &C.vkt_timer_view, expires u64, pending_only bool, red
 		require((timer.flags & ~u32(0x200000)) == 0)
 		pending := if is_null(timer.pprev) { i32(0) } else { i32(1) }
 		if add && pending != 0 {
-			if C.vkp_exchange32(&vkt_timer_add_warned, 1, 0) == 0 { vinix_linuxkpi_warn(c'linuxkpi_timer.v', 0) }
+			if C.vkp_exchange32(&vkt_timer_add_warned, 1, 0) == 0 { tulpar_linuxkpi_warn(c'linuxkpi_timer.v', 0) }
 			C.vkp_spin_unlock_irqrestore(&vkt_timer_lock, flags)
 			return 0
 		}
@@ -149,12 +149,12 @@ pub fn timer_shutdown(storage voidptr) i32 { return vkt_delete_timer(unsafe { &C
 pub fn timer_try_delete_sync(storage voidptr) i32 { return vkt_delete_timer(unsafe { &C.vkt_timer_view(storage) }, true, false, false) }
 
 fn vkt_delete_sync(timer &C.vkt_timer_view, shutdown bool) i32 {
-	require((timer.flags & 0x200000) != 0 || (C.vinix_linuxkpi_irq_flags() & 512) != 0)
+	require((timer.flags & 0x200000) != 0 || (C.tulpar_linuxkpi_irq_flags() & 512) != 0)
 	for {
 		result := vkt_delete_timer(timer, true, shutdown, true)
 		if result >= 0 { return result }
-		C.vinix_linuxkpi_spin_wait()
-		C.vinix_linuxkpi_cond_resched()
+		C.tulpar_linuxkpi_spin_wait()
+		C.tulpar_linuxkpi_cond_resched()
 	}
 	return 0
 }
@@ -163,7 +163,7 @@ pub fn timer_delete_sync(storage voidptr) i32 { return vkt_delete_sync(unsafe { 
 @[export: 'timer_shutdown_sync']
 pub fn timer_shutdown_sync(storage voidptr) i32 { return vkt_delete_sync(unsafe { &C.vkt_timer_view(storage) }, true) }
 
-@[export: 'vinix_linuxkpi_timer_tick']
+@[export: 'tulpar_linuxkpi_timer_tick']
 pub fn timer_tick() {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkt_timer_lock)
@@ -190,10 +190,10 @@ fn vkt_run_add(run &VktTimerRun) {
  }
 }
 
-@[export: 'vinix_linuxkpi_timer_dispatch']
+@[export: 'tulpar_linuxkpi_timer_dispatch']
 pub fn timer_dispatch() u32 {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		mut count := u32(0)
 		for {
 			mut run := VktTimerRun{task: C.vkp_current()}
@@ -206,11 +206,11 @@ pub fn timer_dispatch() u32 {
 			require(uint(function) != 0)
 			vkt_detach_locked(timer)
 			vkt_run_add(&run)
-			C.vinix_linuxkpi_preempt_disable()
+			C.tulpar_linuxkpi_preempt_disable()
 			C.vkp_spin_unlock_irqrestore(&vkt_timer_lock, if irq_safe { u64(0) } else { flags })
-			depth := C.vinix_linuxkpi_preempt_count()
+			depth := C.tulpar_linuxkpi_preempt_count()
 			function(&C.timer_list(timer))
-			require(C.vinix_linuxkpi_preempt_count() == depth && ((C.vinix_linuxkpi_irq_flags() & 512) != 0) != irq_safe)
+			require(C.tulpar_linuxkpi_preempt_count() == depth && ((C.tulpar_linuxkpi_irq_flags() & 512) != 0) != irq_safe)
 			flags = C.vkp_spin_lock_irqsave(&vkt_timer_lock)
 			// Callback may already have freed timer: only touch our stack record.
 			if is_null(run.prev) { vkt_running_head = run.next }
@@ -218,15 +218,15 @@ pub fn timer_dispatch() u32 {
 			if is_null(run.next) { vkt_running_tail = run.prev }
 			else { run.next.prev = run.prev }
 			C.vkp_spin_unlock_irqrestore(&vkt_timer_lock, flags)
-			if irq_safe { C.vinix_linuxkpi_irq_restore(512) }
-			C.vinix_linuxkpi_preempt_enable()
+			if irq_safe { C.tulpar_linuxkpi_irq_restore(512) }
+			C.tulpar_linuxkpi_preempt_enable()
 			count++
 		}
 		return count
 	}
 }
 
-@[export: 'vinix_linuxkpi_timer_active']
+@[export: 'tulpar_linuxkpi_timer_active']
 pub fn timer_active() uint {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkt_timer_lock)
@@ -257,18 +257,18 @@ pub fn timer_round_relative(tick u64, cpu i32) u64 { now := C.vkp_jiffies(); ret
 @[export: '__round_jiffies_up_relative']
 pub fn timer_round_up_relative(tick u64, cpu i32) u64 { now := C.vkp_jiffies(); return vkt_round_jiffy(tick + now, cpu, true) - now }
 @[export: 'round_jiffies']
-pub fn timer_round_current(tick u64) u64 { return timer_round(tick, i32(C.vinix_linuxkpi_cpu_id())) }
+pub fn timer_round_current(tick u64) u64 { return timer_round(tick, i32(C.tulpar_linuxkpi_cpu_id())) }
 @[export: 'round_jiffies_up']
-pub fn timer_round_up_current(tick u64) u64 { return timer_round_up(tick, i32(C.vinix_linuxkpi_cpu_id())) }
+pub fn timer_round_up_current(tick u64) u64 { return timer_round_up(tick, i32(C.tulpar_linuxkpi_cpu_id())) }
 @[export: 'round_jiffies_relative']
-pub fn timer_round_relative_current(tick u64) u64 { return timer_round_relative(tick, i32(C.vinix_linuxkpi_cpu_id())) }
+pub fn timer_round_relative_current(tick u64) u64 { return timer_round_relative(tick, i32(C.tulpar_linuxkpi_cpu_id())) }
 @[export: 'round_jiffies_up_relative']
-pub fn timer_round_up_relative_current(tick u64) u64 { return timer_round_up_relative(tick, i32(C.vinix_linuxkpi_cpu_id())) }
+pub fn timer_round_up_relative_current(tick u64) u64 { return timer_round_up_relative(tick, i32(C.tulpar_linuxkpi_cpu_id())) }
 
 @[export: 'vkt_unexpected_callback']
 pub fn timer_unexpected_callback(timer &C.timer_list) { require(false) }
 
-@[export: 'vinix_linuxkpi_timer_selftest']
+@[export: 'tulpar_linuxkpi_timer_selftest']
 pub fn timer_selftest() i32 {
 	unsafe {
 		mut timer := C.vkt_timer_view{}
@@ -291,7 +291,7 @@ pub fn timer_selftest() i32 {
 pub fn timer_thread(argument voidptr) voidptr {
 	unsafe {
 		task := &C.vkt_task_view(C.vkp_current())
-		C.vinix_linuxkpi_task_get(task.vinix_thread)
+		C.tulpar_linuxkpi_task_get(task.tulpar_thread)
 		mut flags := C.vkp_spin_lock_irqsave(&vkt_timer_lock)
 		vkt_timer_worker = task
 		C.vkp_spin_unlock_irqrestore(&vkt_timer_lock, flags)
@@ -308,7 +308,7 @@ pub fn timer_thread(argument voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_timer_bootstrap']
+@[export: 'tulpar_linuxkpi_timer_bootstrap']
 pub fn timer_bootstrap() i32 {
 	unsafe {
 		mut native_thread := u64(0)

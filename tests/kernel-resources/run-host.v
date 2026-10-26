@@ -6,7 +6,7 @@ import os
 fn main() {
 	root := os.real_path(os.dir(@FILE) + '/../..')
 	scratch := os.getenv_opt('TMPDIR') or { os.temp_dir() }
-	work := os.real_path(scratch) + '/vinix-resource-host-' + os.getpid().str()
+	work := os.real_path(scratch) + '/tulpar-resource-host-' + os.getpid().str()
 	if os.exists(work) { panic('host state must be fresh') }
 	os.mkdir_all(work + '/modules')!
 	defer { os.rmdir_all(work) or {} }

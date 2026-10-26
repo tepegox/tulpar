@@ -12,7 +12,7 @@ fn C.reboot(int) int
 fn C.usleep(u32) int
 
 fn check() ! {
-	os.unsetenv('VINIX_IMPORT_LIMITS_BEFORE')
+	os.unsetenv('TULPAR_IMPORT_LIMITS_BEFORE')
 	for name in ['import-lookup', 'import-capture', 'import-limits', 'import', 'pack-source', 'catalog', 'release']! {
 		mut child := os.new_process('/usr/share/package-fixtures/' + name)
 		child.set_redirect_stdio_merged(); child.run()

@@ -22,7 +22,7 @@ fn test_personal_purge_removes_data_without_following_nested_links_or_opening_sp
 	work := purge_work()!
 	defer { os.rmdir_all(work) or { panic(err) } }
 	home := work + '/home'
-	data := home + '/.local/share/vinix-apps/app'
+	data := home + '/.local/share/tulpar-apps/app'
 	os.mkdir_all(data + '/nested')!
 	os.mkdir_all(work + '/outside')!
 	os.write_file(work + '/outside/kept', 'outside')!
@@ -46,7 +46,7 @@ fn test_personal_purge_removes_data_without_following_nested_links_or_opening_sp
 }
 
 fn test_purge_refuses_parent_and_top_level_aliases_wrong_owner_and_shared_parents() {
-	for part in ['.local', '.local/share', '.local/share/vinix-apps', '.local/share/vinix-apps/app'] {
+	for part in ['.local', '.local/share', '.local/share/tulpar-apps', '.local/share/tulpar-apps/app'] {
 		work := purge_work()!
 		defer { os.rmdir_all(work) or { panic(err) } }
 		home := work + '/home'
@@ -62,7 +62,7 @@ fn test_purge_refuses_parent_and_top_level_aliases_wrong_owner_and_shared_parent
 	work := purge_work()!
 	defer { os.rmdir_all(work) or { panic(err) } }
 	home := work + '/home'
-	data := home + '/.local/share/vinix-apps/app'
+	data := home + '/.local/share/tulpar-apps/app'
 	os.mkdir_all(data)!
 	os.write_file(data + '/kept', 'data')!
 	for wrong_uid in [u32(os.geteuid()) + 1] {
@@ -145,7 +145,7 @@ fn test_purge_refuses_top_level_special_files_and_excessive_depth() {
 		work := purge_work()!
 		defer { os.rmdir_all(work) or { panic(err) } }
 		home := work + '/home'
-		data := home + '/.local/share/vinix-apps/app'
+		data := home + '/.local/share/tulpar-apps/app'
 		os.mkdir_all(os.dir(data))!
 		match kind {
 			'fifo' { assert C.mkfifo(data.str, 0o600) == 0; assert_purge_special_refusal(home, data, kind)! }
@@ -160,7 +160,7 @@ fn test_purge_refuses_top_level_special_files_and_excessive_depth() {
 	work := purge_work()!
 	defer { os.rmdir_all(work) or { panic(err) } }
 	home := work + '/home'
-	data := home + '/.local/share/vinix-apps/app'
+	data := home + '/.local/share/tulpar-apps/app'
 	deep := data + '/d'.repeat(65)
 	os.mkdir_all(deep)!
 	mut refused := false

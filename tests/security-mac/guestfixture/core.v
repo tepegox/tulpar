@@ -206,8 +206,8 @@ fn C.strtoull(&char, &&char, i32) u64
 fn C.usleep(u32) i32
 fn C.pthread_create(&C.pthread_t, voidptr, fn (voidptr) voidptr, voidptr) i32
 fn C.pthread_join(C.pthread_t, &voidptr) i32
-fn C.vinix_mac_policy_blocked_thread(voidptr) voidptr
-fn C.vinix_mac_policy_close_exec_descriptor(voidptr) voidptr
+fn C.tulpar_mac_policy_blocked_thread(voidptr) voidptr
+fn C.tulpar_mac_policy_close_exec_descriptor(voidptr) voidptr
 
 const mac_prctl = i32(0x56584d41)
 const inspect = u32(1)
@@ -233,7 +233,7 @@ fn control(command u32, domain u32, kind u32, mask u32) i64 {
 }
 
 fn label(path &char, value &char) i32 {
-	return C.setxattr(path, c'security.vinix', value, C.strlen(value), 0)
+	return C.setxattr(path, c'security.tulpar', value, C.strlen(value), 0)
 }
 
 fn contents(path &char, value &char) i32 {
@@ -274,7 +274,7 @@ fn slab_class_bytes(wanted_size u32) u64 {
 
 fn slab_bytes() u64 { return slab_class_bytes(0) }
 
-@[export: 'vinix_mac_policy_blocked_thread']
+@[export: 'tulpar_mac_policy_blocked_thread']
 pub fn blocked_thread(argument voidptr) voidptr {
 	unsafe {
 		fd := *(&i32(argument))
@@ -357,7 +357,7 @@ fn copy_program_to_memfd() i32 {
 	}
 }
 
-@[export: 'vinix_mac_policy_close_exec_descriptor']
+@[export: 'tulpar_mac_policy_close_exec_descriptor']
 pub fn close_exec_descriptor(argument voidptr) voidptr {
 	unsafe {
 		descriptor := *(&i32(argument))
@@ -396,7 +396,7 @@ fn test_exec_descriptor_close() i32 {
 				mut descriptor := copy_program_to_memfd()
 				if descriptor < 0 || control(3, 1, 0, 0) != 0 { C._exit(3) }
 				closer := &C.pthread_t(C.__builtin_alloca(sizeof(C.pthread_t)))
-				if C.pthread_create(closer, nil, C.vinix_mac_policy_close_exec_descriptor, &descriptor) != 0 {
+				if C.pthread_create(closer, nil, C.tulpar_mac_policy_close_exec_descriptor, &descriptor) != 0 {
 					C._exit(4)
 				}
 				mut arguments := [&char(c'/sbin/init'), &char(c'exec-race'), &char(nil)]!
@@ -569,7 +569,7 @@ fn worker(secret_fd i32, readonly_fd i32, channel i32, parent i32, address usize
 			return 1
 		}
 		C.errno = 0
-		if !require((C.removexattr(c'/mac-private', c'security.vinix')) == -1 && (C.errno == C.EACCES || C.errno == C.EPERM), 297, c'(removexattr("/mac-private", "security.vinix")) == -1 && (errno == EACCES || errno == EPERM)') {
+		if !require((C.removexattr(c'/mac-private', c'security.tulpar')) == -1 && (C.errno == C.EACCES || C.errno == C.EPERM), 297, c'(removexattr("/mac-private", "security.tulpar")) == -1 && (errno == EACCES || errno == EPERM)') {
 			return 1
 		}
 		buffer := &char(C.__builtin_alloca(16))
@@ -619,7 +619,7 @@ fn worker(secret_fd i32, readonly_fd i32, channel i32, parent i32, address usize
 			return 1
 		}
 		C.errno = 0
-		if !require((C.fgetxattr(secret_fd, c'security.vinix', buffer, 16)) == -1 && (C.errno == C.EACCES || C.errno == C.EPERM), 312, c'(fgetxattr(secret_fd, "security.vinix", buffer, sizeof(buffer))) == -1 && (errno == EACCES || errno == EPERM)') {
+		if !require((C.fgetxattr(secret_fd, c'security.tulpar', buffer, 16)) == -1 && (C.errno == C.EACCES || C.errno == C.EPERM), 312, c'(fgetxattr(secret_fd, "security.tulpar", buffer, sizeof(buffer))) == -1 && (errno == EACCES || errno == EPERM)') {
 			return 1
 		}
 		C.errno = 0
@@ -752,13 +752,13 @@ fn worker(secret_fd i32, readonly_fd i32, channel i32, parent i32, address usize
 		if !require(C.write(output, c'owned', 5) == 5, 357, c'write(output, "owned", 5) == 5') {
 			return 1
 		}
-		if !require(C.getxattr(c'/mac-private/output', c'security.vinix', buffer, 16) == 1 && buffer[0] == char(`1`), 358, c'getxattr("/mac-private/output", "security.vinix", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
+		if !require(C.getxattr(c'/mac-private/output', c'security.tulpar', buffer, 16) == 1 && buffer[0] == char(`1`), 358, c'getxattr("/mac-private/output", "security.tulpar", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
 			return 1
 		}
 		if !require(C.mkdir(c'/mac-private/created', 0o700) == 0 || C.errno == C.EEXIST, 359, c'mkdir("/mac-private/created", 0700) == 0 || errno == EEXIST') {
 			return 1
 		}
-		if !require(C.getxattr(c'/mac-private/created', c'security.vinix', buffer, 16) == 1 && buffer[0] == char(`1`), 360, c'getxattr("/mac-private/created", "security.vinix", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
+		if !require(C.getxattr(c'/mac-private/created', c'security.tulpar', buffer, 16) == 1 && buffer[0] == char(`1`), 360, c'getxattr("/mac-private/created", "security.tulpar", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
 			return 1
 		}
 		if !require(C.link(c'/mac-private/output', c'/mac-private/outlink') == 0 || C.errno == C.EEXIST, 361, c'link("/mac-private/output", "/mac-private/outlink") == 0 || errno == EEXIST') {
@@ -773,7 +773,7 @@ fn worker(secret_fd i32, readonly_fd i32, channel i32, parent i32, address usize
 		if !require(C.symlink(c'output', c'/mac-private/symlink') == 0 || C.errno == C.EEXIST, 364, c'symlink("output", "/mac-private/symlink") == 0 || errno == EEXIST') {
 			return 1
 		}
-		if !require(C.lgetxattr(c'/mac-private/symlink', c'security.vinix', buffer, 16) == 1 && buffer[0] == char(`1`), 365, c'lgetxattr("/mac-private/symlink", "security.vinix", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
+		if !require(C.lgetxattr(c'/mac-private/symlink', c'security.tulpar', buffer, 16) == 1 && buffer[0] == char(`1`), 365, c'lgetxattr("/mac-private/symlink", "security.tulpar", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
 			return 1
 		}
 
@@ -781,7 +781,7 @@ fn worker(secret_fd i32, readonly_fd i32, channel i32, parent i32, address usize
 		if !require(overlay >= 0 && C.write(overlay, c'up', 2) == 2, 368, c'overlay >= 0 && write(overlay, "up", 2) == 2') {
 			return 1
 		}
-		if !require(C.fgetxattr(overlay, c'security.vinix', buffer, 16) == 1 && buffer[0] == char(`1`), 369, c'fgetxattr(overlay, "security.vinix", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
+		if !require(C.fgetxattr(overlay, c'security.tulpar', buffer, 16) == 1 && buffer[0] == char(`1`), 369, c'fgetxattr(overlay, "security.tulpar", buffer, sizeof(buffer)) == 1 && buffer[0] == \'1\'') {
 			return 1
 		}
 		C.close(overlay)
@@ -1219,13 +1219,13 @@ pub fn entry(argc i32, argv &&char) i32 {
 		if !require(C.symlink(c'/sbin/init', c'/mac-private/denied-executable') == 0, 553, c'symlink("/sbin/init", "/mac-private/denied-executable") == 0') {
 			return 1
 		}
-		if !require(C.lsetxattr(c'/mac-private/denied-link', c'security.vinix', c'2', 1, 0) == 0, 554, c'lsetxattr("/mac-private/denied-link", "security.vinix", "2", 1, 0) == 0') {
+		if !require(C.lsetxattr(c'/mac-private/denied-link', c'security.tulpar', c'2', 1, 0) == 0, 554, c'lsetxattr("/mac-private/denied-link", "security.tulpar", "2", 1, 0) == 0') {
 			return 1
 		}
-		if !require(C.lsetxattr(c'/mac-private/denied-directory', c'security.vinix', c'2', 1, 0) == 0, 555, c'lsetxattr("/mac-private/denied-directory", "security.vinix", "2", 1, 0) == 0') {
+		if !require(C.lsetxattr(c'/mac-private/denied-directory', c'security.tulpar', c'2', 1, 0) == 0, 555, c'lsetxattr("/mac-private/denied-directory", "security.tulpar", "2", 1, 0) == 0') {
 			return 1
 		}
-		if !require(C.lsetxattr(c'/mac-private/denied-executable', c'security.vinix', c'2', 1, 0) == 0, 556, c'lsetxattr("/mac-private/denied-executable", "security.vinix", "2", 1, 0) == 0') {
+		if !require(C.lsetxattr(c'/mac-private/denied-executable', c'security.tulpar', c'2', 1, 0) == 0, 556, c'lsetxattr("/mac-private/denied-executable", "security.tulpar", "2", 1, 0) == 0') {
 			return 1
 		}
 		if !require(C.mount(c'/mac-secret', c'/mac-bind', nil, C.MS_BIND, nil) == 0, 557, c'mount("/mac-secret", "/mac-bind", NULL, MS_BIND, NULL) == 0') {
@@ -1310,7 +1310,7 @@ pub fn entry(argc i32, argv &&char) i32 {
 		if !require(denied_memfd >= 0 && C.write(denied_memfd, c'not ELF', 7) == 7 && C.fchmod(denied_memfd, 0o755) == 0, 593, c'denied_memfd >= 0 && write(denied_memfd, "not ELF", 7) == 7 && fchmod(denied_memfd, 0755) == 0') {
 			return 1
 		}
-		if !require(C.fsetxattr(denied_memfd, c'security.vinix', c'4', 1, 0) == 0, 594, c'fsetxattr(denied_memfd, "security.vinix", "4", 1, 0) == 0') {
+		if !require(C.fsetxattr(denied_memfd, c'security.tulpar', c'4', 1, 0) == 0, 594, c'fsetxattr(denied_memfd, "security.tulpar", "4", 1, 0) == 0') {
 			return 1
 		}
 		executable_memfd := copy_program_to_memfd()
@@ -1330,7 +1330,7 @@ pub fn entry(argc i32, argv &&char) i32 {
 			return 1
 		}
 		C.errno = 0
-		if !require((C.removexattr(c'/mac-secret', c'security.vinix')) == -1 && (C.errno == C.EACCES || C.errno == C.EPERM), 603, c'(removexattr("/mac-secret", "security.vinix")) == -1 && (errno == EACCES || errno == EPERM)') {
+		if !require((C.removexattr(c'/mac-secret', c'security.tulpar')) == -1 && (C.errno == C.EACCES || C.errno == C.EPERM), 603, c'(removexattr("/mac-secret", "security.tulpar")) == -1 && (errno == EACCES || errno == EPERM)') {
 			return 1
 		}
 		if !require(test_exec_descriptor_close() == 0, 604, c'test_exec_descriptor_close() == 0') {
@@ -1355,7 +1355,7 @@ pub fn entry(argc i32, argv &&char) i32 {
 		pipes_for_thread := &i32(C.__builtin_alloca(2 * sizeof(i32)))
 		if !require(C.pipe(pipes_for_thread) == 0, 614, c'pipe(pipes_for_thread) == 0') { return 1 }
 		extra := &C.pthread_t(C.__builtin_alloca(sizeof(C.pthread_t)))
-		if !require(C.pthread_create(extra, nil, C.vinix_mac_policy_blocked_thread, &pipes_for_thread[0]) == 0, 616, c'pthread_create(&extra, NULL, blocked_thread, &pipes_for_thread[0]) == 0') {
+		if !require(C.pthread_create(extra, nil, C.tulpar_mac_policy_blocked_thread, &pipes_for_thread[0]) == 0, 616, c'pthread_create(&extra, NULL, blocked_thread, &pipes_for_thread[0]) == 0') {
 			return 1
 		}
 		C.errno = 0

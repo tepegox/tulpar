@@ -45,7 +45,7 @@ fn check() ! {
 	if !source.contains(ready) || !source.contains(close) || !source.contains(root_line) {
 		return error('controller lifecycle changed; review cleanup instrumentation')
 	}
-	work := os.join_path(os.temp_dir(), 'vinix-tls-cleanup-' + os.getpid().str() + '-' + time.now().unix_milli().str())
+	work := os.join_path(os.temp_dir(), 'tulpar-tls-cleanup-' + os.getpid().str() + '-' + time.now().unix_milli().str())
 	os.mkdir_all(work)!
 	state := work + '/state'
 	mut server_pid := 0

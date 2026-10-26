@@ -60,7 +60,7 @@ oracle option, allocator-import guard, 180-second host deadline and
 3,600-second guest budget. Its original sanitizer setting requested
 LeakSanitizer on macOS, where Apple's runtime rejects that option. The native
 runner enables ASan/UBSan there with `detect_leaks=0`, while supported hosts
-retain `detect_leaks=1`. `VINIX_NET_RANDOM_ASAN_OPTIONS` overrides this setting.
+retain `detect_leaks=1`. `TULPAR_NET_RANDOM_ASAN_OPTIONS` overrides this setting.
 This qualification makes no LeakSanitizer claim on macOS.
 
 Explicit test workspaces must be fresh and remain available after a failure.
@@ -98,7 +98,7 @@ stat copying, public CLI failures, preservation of existing workspaces and
 for each controller because they inspect shared `/tmp` prefixes. Cold fronts
 are checked outside the checkout; the corresponding-source N64 front is also
 qualified from a copied source tree. Local evidence is under
-`/tmp/vinix-compat-*`. No Python was executed, fixture predicate weakened or
+`/tmp/tulpar-compat-*`. No Python was executed, fixture predicate weakened or
 language classification override added.
 
 Security and volume staging retain compiler precedence, target checks, strict
@@ -142,5 +142,5 @@ volume staging build both musl targets from committed production sources at
 `5e431bdcdfbfd46564a90841fcd401b473a87cad`. Concurrent volume CLI edits caused
 strict compiler errors during qualification; those edits were left untouched,
 and the successful builds use a copied source tree with a source-hash receipt.
-Evidence is under `/tmp/vinix-stage-clean-*`, `/tmp/vinix-security-*`,
-`/tmp/vinix-volume-*`, `/tmp/vinix-xinput-*` and `/tmp/vinix-wine-*`.
+Evidence is under `/tmp/tulpar-stage-clean-*`, `/tmp/tulpar-security-*`,
+`/tmp/tulpar-volume-*`, `/tmp/tulpar-xinput-*` and `/tmp/tulpar-wine-*`.

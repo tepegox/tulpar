@@ -8,10 +8,10 @@ row binding before displaying historical findings. See
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-scrub-reference --work /tmp/scrub-reference-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --scrub-reference --work /tmp/scrub-reference-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --scrub-reference --work /tmp/scrub-reference-x86
 ```
 

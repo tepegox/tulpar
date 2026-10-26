@@ -7,7 +7,7 @@ import hosttest
 
 const scope = 'Execute unchanged const-string ownership, typed Linux facades, native range classifier and page/string allocation chain through independent endpoint/page transports. Native linker placement and retained kernel allocations require separate guest evidence.'
 const functions = ['const_string_kfree','const_string_kstrdup','kstrdup','kstrndup','strnlen','kmemdup_nul','is_null','require','runtime_gfp_supported','runtime_alloc_gfp_pages','runtime_kmalloc','runtime_kfree','runtime_ksize','page_allocation_size','native_kmalloc','native_kfree']
-const exports = ['vkc_kfree_const','vkc_kstrdup_const','kstrdup','kstrndup','kmemdup_nul','vinix_linuxkpi_gfp_supported','vinix_linuxkpi_alloc_gfp_pages','vkr_kmalloc','vkr_kfree','vkr_ksize','vkr_page_allocation_size','kmalloc','kfree']
+const exports = ['vkc_kfree_const','vkc_kstrdup_const','kstrdup','kstrndup','kmemdup_nul','tulpar_linuxkpi_gfp_supported','tulpar_linuxkpi_alloc_gfp_pages','vkr_kmalloc','vkr_kfree','vkr_ksize','vkr_page_allocation_size','kmalloc','kfree']
 
 fn generation_capture(argv []string,_log string,_timeout int,env map[string]string) !hosttest.Result {
 	output := argv[argv.index('-o')+1]
@@ -34,8 +34,8 @@ fn select_source(raw string,group string) !string {
 		if symbol in [group+'__vinit',group+'__vinit_caller',group+'__vno_main_init_caller'] ||
 			(group == 'compatcore' && (functions.map('compatcore__'+it).contains(symbol) || symbol in exports)) ||
 			(group == 'headercore' && symbol in ['headercore__const_string_free','headercore__const_string_dup','kfree_const','kstrdup_const']) ||
-			(group == 'linuxkpi' && symbol in ['linuxkpi__const_string_is_rodata','vinix_linuxkpi_is_kernel_rodata']) ||
-			(group == 'conststringfixture' && (symbol.starts_with(group+'__') || symbol in ['main','csh_rodata_start','csh_rodata_end','vinix_linuxkpi_page_size','vinix_linuxkpi_may_sleep','vinix_linuxkpi_alloc_pages','vinix_linuxkpi_free_pages','vinix_linuxkpi_bug'])) {
+			(group == 'linuxkpi' && symbol in ['linuxkpi__const_string_is_rodata','tulpar_linuxkpi_is_kernel_rodata']) ||
+			(group == 'conststringfixture' && (symbol.starts_with(group+'__') || symbol in ['main','csh_rodata_start','csh_rodata_end','tulpar_linuxkpi_page_size','tulpar_linuxkpi_may_sleep','tulpar_linuxkpi_alloc_pages','tulpar_linuxkpi_free_pages','tulpar_linuxkpi_bug'])) {
 			selected << body
 		}
 	}
@@ -53,7 +53,7 @@ fn select_source(raw string,group string) !string {
 		metadata << hosttest.record(raw,'compatcore__RuntimeAllocation')!
 	}
 	header := match group {
-		'compatcore' { '#include "linuxkpi_v_primitives.h"\n#include "linuxkpi_const_string_v_primitives.h"\n#include <string.h>\nvoid *vinix_linuxkpi_alloc_pages(size_t,bool);\n' }
+		'compatcore' { '#include "linuxkpi_v_primitives.h"\n#include "linuxkpi_const_string_v_primitives.h"\n#include <string.h>\nvoid *tulpar_linuxkpi_alloc_pages(size_t,bool);\n' }
 		'headercore' { '#include "linuxkpi_const_string_v_contract.h"\n' }
 		'linuxkpi' { '#include "linuxkpi_v_primitives.h"\n#include "linuxkpi_const_string_v_primitives.h"\n#include "symbols.h"\n' }
 		else { '#include "contract.h"\n' }
@@ -79,11 +79,11 @@ fn flags(work string,linux string,standard string,optimization string,host bool)
 	if host {
 		$if macos { argv << ['-arch','x86_64'] }
 		argv << ['-iquote',work+'/include']
-		argv << ['-g','-fsanitize=address,undefined','-fno-omit-frame-pointer','-D_FORTIFY_SOURCE=0','-DVINIX_LINUXKPI_HOST_TEST','-include',root+'/tests/linuxkpi/host_types.h']
+		argv << ['-g','-fsanitize=address,undefined','-fno-omit-frame-pointer','-D_FORTIFY_SOURCE=0','-DTULPAR_LINUXKPI_HOST_TEST','-include',root+'/tests/linuxkpi/host_types.h']
 	} else {
 		argv << ['--target=x86_64-unknown-none','-nostdinc','-fno-stack-protector','-fstack-usage','-isystem',root+'/kernel/freestnd-c-hdrs','-I',root+'/kernel/c']
 	}
-	argv << ['-std='+standard,'-'+optimization,'-ffreestanding','-fno-builtin','-fwrapv','-fno-strict-aliasing','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-sign-compare','-DVINIX_LINUXKPI','-D__KERNEL__','-include','linux/kconfig.h','-include',linux+'/include/linux/compiler_types.h']
+	argv << ['-std='+standard,'-'+optimization,'-ffreestanding','-fno-builtin','-fwrapv','-fno-strict-aliasing','-ffunction-sections','-fdata-sections','-Wall','-Wextra','-Werror','-Wno-unused-function','-Wno-unused-parameter','-Wno-sign-compare','-DTULPAR_LINUXKPI','-D__KERNEL__','-include','linux/kconfig.h','-include',linux+'/include/linux/compiler_types.h']
 	for path in [work+'/include',root+'/tests/linuxkpi/conststringfixture',root+'/kernel/linuxkpi/include',linux+'/include',linux+'/include/uapi',linux+'/arch/x86/include',linux+'/arch/x86/include/uapi'] { argv << ['-I',path] }
 	argv << ['-iquote',root+'/kernel/c']
 	return argv
@@ -93,7 +93,7 @@ fn run(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR',root+'/third_party/linux-i915/linux-6.6.157')
 	hosttest.verify_upstream(linux,hosttest.upstream_pin()!)!
-	work := hosttest.work_dir(keep,'vinix-const-string-')!
+	work := hosttest.work_dir(keep,'tulpar-const-string-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut inputs := [@FILE,os.executable(),root+'/kernel/linuxkpi/const_string_d_linuxkpi.v',root+'/tests/linuxkpi/conststringfixture/README.md',root+'/build-support/find-v.sh']
 	for schema in ['atomic-exchange','overflow','spinlock'] { inputs << root+'/kernel/linuxkpi/abi/'+schema+'.json' }
@@ -120,7 +120,7 @@ fn run(keep string) ! {
 	os.cp(root+'/kernel/linuxkpi/headercore/const_string.v',work+'/stage/headercore/const_string.v')!
 	os.cp(root+'/kernel/linuxkpi/const_string_d_linuxkpi.v',work+'/stage/linuxkpi/core.v')!
 	os.cp(root+'/tests/linuxkpi/conststringfixture/core.v',work+'/stage/conststringfixture/core.v')!
-	for schema, file in {'atomic-exchange':'atomic_exchange','overflow':'integer_policy','spinlock':'spinlock_adapters'} { hosttest.generate_abi(root+'/kernel/linuxkpi/abi/'+schema+'.json',root+'/kernel/linuxkpi',work+'/include/vinix/'+file+'.h')! }
+	for schema, file in {'atomic-exchange':'atomic_exchange','overflow':'integer_policy','spinlock':'spinlock_adapters'} { hosttest.generate_abi(root+'/kernel/linuxkpi/abi/'+schema+'.json',root+'/kernel/linuxkpi',work+'/include/tulpar/'+file+'.h')! }
 	os.write_file(work+'/include/symbols.h','void *csh_rodata_start(void);\nvoid *csh_rodata_end(void);\n#define rodata_start (csh_rodata_start())\n#define rodata_end (csh_rodata_end())\n')!
 	mut proofs := []json2.Any{}
 	for group in ['compatcore','headercore','linuxkpi','conststringfixture'] {
@@ -157,13 +157,13 @@ fn run(keep string) ! {
 				for group in ['compatcore','headercore','linuxkpi','conststringfixture'] {
 					if !host && group == 'conststringfixture' { continue }
 					mut argv := flags(work,linux,standard,optimization,host)!
-					if group == 'compatcore' { argv << '-DVINIX_V_RUNTIME' }
+					if group == 'compatcore' { argv << '-DTULPAR_V_RUNTIME' }
 					object := work+'/'+tag+'-'+group+if host { '-host.o' } else { '-native.o' }
 					objects << compile_input(argv,work+'/'+group+'-selected.c',object,env)!
 					if host { linked << object; continue }
 					imports := hosttest.command([hosttest.tool('llvm-nm'),'--undefined-only',object],object+'.imports.log',30,env)!.stdout
 					mut allowed := match group {
-						'compatcore' { ['vinix_linuxkpi_is_kernel_rodata','vinix_linuxkpi_page_size','vinix_linuxkpi_may_sleep','vinix_linuxkpi_alloc_pages','vinix_linuxkpi_free_pages','vinix_linuxkpi_bug','memcpy','memset'] }
+						'compatcore' { ['tulpar_linuxkpi_is_kernel_rodata','tulpar_linuxkpi_page_size','tulpar_linuxkpi_may_sleep','tulpar_linuxkpi_alloc_pages','tulpar_linuxkpi_free_pages','tulpar_linuxkpi_bug','memcpy','memset'] }
 						'headercore' { ['vkc_kfree_const','vkc_kstrdup_const'] }
 						else { ['rodata_start','rodata_end'] }
 					}

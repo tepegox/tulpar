@@ -39,17 +39,17 @@ fn desktop_fixture(root string) !(string, map[string]string) {
 		fixture_write(root + '/' + item[0], item[1])!
 	}
 	mut env := os.environ()
-	env.delete('VINIX_PACKAGE_IMAGE_CONFIG')
-	env.delete('VINIX_PACKAGE_IMAGE_REPOSITORIES')
-	env.delete('VINIX_PACKAGE_IMAGE_APPLICATIONS')
+	env.delete('TULPAR_PACKAGE_IMAGE_CONFIG')
+	env.delete('TULPAR_PACKAGE_IMAGE_REPOSITORIES')
+	env.delete('TULPAR_PACKAGE_IMAGE_APPLICATIONS')
 	for name, value in {
 		'LLVM_BIN':                         llvm
 		'LD_LLD':                           root + '/tools/ld.lld'
 		'CLANG':                            root + '/tools/host-clang'
 		'LD64_LLD':                         root + '/tools/ld64.lld'
-		'VINIX_AARCH64_USERLAND_BUILD_DIR': root + '/build-aarch64-userland'
-		'VINIX_X11_STAGING':                root + '/build-aarch64-x11/staging'
-		'VINIX_GPU_SYSROOT':                root + '/build-aarch64-x11/sysroot'
+		'TULPAR_AARCH64_USERLAND_BUILD_DIR': root + '/build-aarch64-userland'
+		'TULPAR_X11_STAGING':                root + '/build-aarch64-x11/staging'
+		'TULPAR_GPU_SYSROOT':                root + '/build-aarch64-x11/sysroot'
 	} {
 		env[name] = value
 	}
@@ -57,7 +57,7 @@ fn desktop_fixture(root string) !(string, map[string]string) {
 }
 
 fn desktop_temporary() !string {
-	mut pattern := (os.temp_dir().trim_right('/') + '/vinix-desktop-key-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir().trim_right('/') + '/tulpar-desktop-key-XXXXXX\x00').bytes()
 	if isnil(C.mkdtemp(pattern.data)) { return file_error(pattern.bytestr()) }
 	return pattern[..pattern.len - 1].bytestr()
 }
@@ -100,16 +100,16 @@ fn test_release_package_configuration_content_and_selection_invalidate() {
 	unenrolled := fixture_key(root, v, env)!
 	configuration := root + '/release/config.json'
 	fixture_write(configuration, 'first reviewed release configuration\n')!
-	env['VINIX_PACKAGE_IMAGE_CONFIG'] = configuration
+	env['TULPAR_PACKAGE_IMAGE_CONFIG'] = configuration
 	first := fixture_key(root, v, env)!
 	assert first != unenrolled
-	mut state := C.vinix_cache_stat{}
-	assert C.vinix_cache_lstat(&char(configuration.str), &state) == 0
+	mut state := C.tulpar_cache_stat{}
+	assert C.tulpar_cache_lstat(&char(configuration.str), &state) == 0
 	fixture_write(configuration, 'other reviewed release configuration\n')!
-	stamps := [C.timespec{state.st_atime, state.vinix_cache_atime_nsec}, C.timespec{state.st_mtime, state.vinix_cache_mtime_nsec}]!
+	stamps := [C.timespec{state.st_atime, state.tulpar_cache_atime_nsec}, C.timespec{state.st_mtime, state.tulpar_cache_mtime_nsec}]!
 	assert C.utimensat(C.AT_FDCWD, &char(configuration.str), &stamps[0], 0) == 0
 	assert first != fixture_key(root, v, env)!
-	env.delete('VINIX_PACKAGE_IMAGE_CONFIG')
+	env.delete('TULPAR_PACKAGE_IMAGE_CONFIG')
 	assert fixture_key(root, v, env)! == unenrolled
 }
 
@@ -121,16 +121,16 @@ fn test_image_repository_content_and_selection_invalidate() {
 	bundle := root + '/release/repositories'
 	object := bundle + '/native/objects/payload'
 	fixture_write(object, 'first offline application payload\n')!
-	env['VINIX_PACKAGE_IMAGE_REPOSITORIES'] = bundle
+	env['TULPAR_PACKAGE_IMAGE_REPOSITORIES'] = bundle
 	first := fixture_key(root, v, env)!
 	assert first != unenrolled
-	mut state := C.vinix_cache_stat{}
-	assert C.vinix_cache_lstat(&char(object.str), &state) == 0
+	mut state := C.tulpar_cache_stat{}
+	assert C.tulpar_cache_lstat(&char(object.str), &state) == 0
 	fixture_write(object, 'other offline application payload\n')!
-	stamps := [C.timespec{state.st_atime, state.vinix_cache_atime_nsec}, C.timespec{state.st_mtime, state.vinix_cache_mtime_nsec}]!
+	stamps := [C.timespec{state.st_atime, state.tulpar_cache_atime_nsec}, C.timespec{state.st_mtime, state.tulpar_cache_mtime_nsec}]!
 	assert C.utimensat(C.AT_FDCWD, &char(object.str), &stamps[0], 0) == 0
 	assert first != fixture_key(root, v, env)!
-	env.delete('VINIX_PACKAGE_IMAGE_REPOSITORIES')
+	env.delete('TULPAR_PACKAGE_IMAGE_REPOSITORIES')
 	assert fixture_key(root, v, env)! == unenrolled
 }
 
@@ -140,26 +140,26 @@ fn test_image_application_requirements_selection_content_and_missing_input_inval
 	v, mut env := desktop_fixture(root)!
 	baseline := fixture_key(root, v, env)!
 	path := root + '/release/applications.json'
-	env['VINIX_PACKAGE_IMAGE_APPLICATIONS'] = path
+	env['TULPAR_PACKAGE_IMAGE_APPLICATIONS'] = path
 	missing := fixture_key(root, v, env)!
 	assert missing != baseline
 	fixture_write(path, '{"format":1,"architecture":"aarch64","packages":["first"]}\n')!
 	first := fixture_key(root, v, env)!
 	assert first != missing
-	mut state := C.vinix_cache_stat{}
-	assert C.vinix_cache_lstat(&char(path.str), &state) == 0
+	mut state := C.tulpar_cache_stat{}
+	assert C.tulpar_cache_lstat(&char(path.str), &state) == 0
 	fixture_write(path, '{"format":1,"architecture":"aarch64","packages":["other"]}\n')!
-	stamps := [C.timespec{state.st_atime, state.vinix_cache_atime_nsec}, C.timespec{state.st_mtime, state.vinix_cache_mtime_nsec}]!
+	stamps := [C.timespec{state.st_atime, state.tulpar_cache_atime_nsec}, C.timespec{state.st_mtime, state.tulpar_cache_mtime_nsec}]!
 	assert C.utimensat(C.AT_FDCWD, &char(path.str), &stamps[0], 0) == 0
 	changed := fixture_key(root, v, env)!
 	assert changed != first
 	other := root + '/release/same-contents.json'
 	fixture_write(other, os.read_file(path)!)!
-	env['VINIX_PACKAGE_IMAGE_APPLICATIONS'] = other
+	env['TULPAR_PACKAGE_IMAGE_APPLICATIONS'] = other
 	assert fixture_key(root, v, env)! != changed
-	env.delete('VINIX_PACKAGE_IMAGE_APPLICATIONS')
+	env.delete('TULPAR_PACKAGE_IMAGE_APPLICATIONS')
 	assert fixture_key(root, v, env)! == baseline
-	env['VINIX_PACKAGE_IMAGE_APPLICATIONS'] = 'invalid\x00path'
+	env['TULPAR_PACKAGE_IMAGE_APPLICATIONS'] = 'invalid\x00path'
 	if _ := fixture_key(root, v, env) { assert false } else { assert err.msg().contains('image application requirements path') }
 	println('IMAGE REQUIREMENTS CACHE selected/missing/removed paths, same-size restored-time content changes and alternate identical-content inputs invalidate; invalid paths refuse PASS')
 }
@@ -234,15 +234,15 @@ fn test_nested_x11_rewrite_invalidates_in_place() {
 	v, env := desktop_fixture(root)!
 	library := root + '/build-aarch64-x11/staging/usr/lib/libx.so'
 	first := fixture_key(root, v, env)!
-	mut state := C.vinix_cache_stat{}
-	assert C.vinix_cache_lstat(&char(library.str), &state) == 0
+	mut state := C.tulpar_cache_stat{}
+	assert C.tulpar_cache_lstat(&char(library.str), &state) == 0
 	fixture_write(library, 'two\n')!
-	stamps := [C.timespec{state.st_atime, state.vinix_cache_atime_nsec},
-		C.timespec{state.st_mtime, state.vinix_cache_mtime_nsec}]!
+	stamps := [C.timespec{state.st_atime, state.tulpar_cache_atime_nsec},
+		C.timespec{state.st_mtime, state.tulpar_cache_mtime_nsec}]!
 	assert C.utimensat(C.AT_FDCWD, &char(library.str), &stamps[0], 0) == 0
-	mut restored := C.vinix_cache_stat{}
-	assert C.vinix_cache_lstat(&char(library.str), &restored) == 0
-	assert restored.st_mtime == state.st_mtime && restored.vinix_cache_mtime_nsec == state.vinix_cache_mtime_nsec
+	mut restored := C.tulpar_cache_stat{}
+	assert C.tulpar_cache_lstat(&char(library.str), &restored) == 0
+	assert restored.st_mtime == state.st_mtime && restored.tulpar_cache_mtime_nsec == state.tulpar_cache_mtime_nsec
 	assert first != fixture_key(root, v, env)!
 }
 

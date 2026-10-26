@@ -19,9 +19,9 @@ fn materialization_descriptors() int {
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn materialization_selected(name string) bool {
@@ -31,7 +31,7 @@ fn materialization_selected(name string) bool {
 }
 
 fn materialization_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-materialize-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-materialize-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/root/tree/a/b/empty')!
 	os.mkdir(work + '/root/other')!
 	for index in 0 .. 16 { os.write_file(work + '/root/tree/a/b/data-' + index.str(), 'payload-' + index.str())! }
@@ -111,10 +111,10 @@ fn test_prepared_materialization_retires_scratch_on_complete_recursive_and_late_
 			if os.exists(output) { os.rmdir_all(output)! }; os.mkdir(output)!
 			if mode == 'create-failure' { os.mkdir(output + '/payload')! }
 			if mode == 'parent-file' { os.write_file(output + '/one', 'preserved')! }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			materialization_attempt(root, output, mode, pins)!
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 			}
 		}

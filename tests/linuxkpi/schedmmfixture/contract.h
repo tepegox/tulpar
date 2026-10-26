@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_SCHED_MM_FIXTURE_CONTRACT_H
-#define VINIX_SCHED_MM_FIXTURE_CONTRACT_H
+#ifndef TULPAR_SCHED_MM_FIXTURE_CONTRACT_H
+#define TULPAR_SCHED_MM_FIXTURE_CONTRACT_H
 #include <stdint.h>
 typedef uint64_t u64;
 #include "linuxkpi_common_v_contract.h"
@@ -47,7 +47,7 @@ SMM_TYPE(&fs_reclaim_acquire, void (*)(gfp_t));
 #undef SMM_TYPE
 
 /* Original records/offsets only; no duplicated layout or executable algorithm. */
-static const unsigned long vinix_sched_mm_original_layout[] __attribute__((used)) = {
+static const unsigned long tulpar_sched_mm_original_layout[] __attribute__((used)) = {
     sizeof(struct kobject), _Alignof(struct kobject), sizeof(struct kobj_type),
     _Alignof(struct kobj_type), sizeof(struct kset), _Alignof(struct kset),
     offsetof(struct kobject, name), offsetof(struct kobject, entry),

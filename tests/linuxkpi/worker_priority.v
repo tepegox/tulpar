@@ -22,8 +22,8 @@ fn stage(work string) !([]string, json2.Any) {
 	if actual.count(identity) != 1 || actual.count(irq) != 1 {
 		return error('Missing unique native identity/IRQ guards')
 	}
-	old_identity := actual.replace('fn worker_set_nice(', 'fn historical_identity(').replace("'vinix_linuxkpi_worker_set_nice'", "'wph_historical_identity'").replace(identity, 't.process != kernel_process')
-	old_irq := actual.replace('fn worker_set_nice(', 'fn historical_irq(').replace("'vinix_linuxkpi_worker_set_nice'", "'wph_historical_irq'").replace(irq, '')
+	old_identity := actual.replace('fn worker_set_nice(', 'fn historical_identity(').replace("'tulpar_linuxkpi_worker_set_nice'", "'wph_historical_identity'").replace(identity, 't.process != kernel_process')
+	old_irq := actual.replace('fn worker_set_nice(', 'fn historical_irq(').replace("'tulpar_linuxkpi_worker_set_nice'", "'wph_historical_irq'").replace(irq, '')
 	os.write_file(where + '/linuxkpi/priority_selected.v', '@[has_globals]\nmodule linuxkpi\nimport errno\nimport katomic\nimport proc\nimport sched\nimport x86.cpu\nimport x86.cpu.local as cpulocal\n__global preempt_depth [256]u32\n' + actual + '\n// Labeled historical controls; actual production body above is unchanged.\n' + old_identity + '\n' + old_irq +
 		"\n@[export:'wph_set_preempt']pub fn fixture_set(index u32,value u32){preempt_depth[index]=value;sched.fixture_owner()}\n@[export:'wph_get_preempt']pub fn fixture_get(index u32)u32{return preempt_depth[index]}\n")!
 	for name in ['core.v', 'contract.h'] {
@@ -37,7 +37,7 @@ fn stage(work string) !([]string, json2.Any) {
 	os.write_file(where + '/errno/transport.v', 'module errno\npub const einval=22\npub const ewouldblock=11\npub const eperm=1\n')!
 	os.write_file(where + '/v.mod', "Module{name:'worker_priority_fixture'}\n")!
 	os.write_file(where + '/entry.v', 'module main\nimport workerpriorityfixture as _\nimport linuxkpi as _\nfn main(){}\n')!
-	return [path, @FILE, root + '/kernel/linuxkpi/include/vinix/runtime.h'], {
+	return [path, @FILE, root + '/kernel/linuxkpi/include/tulpar/runtime.h'], {
 		'actual_v_body_sha256':              json2.Any(hosttest.text_sha(actual))
 		'historical_identity_v_body_sha256': hosttest.text_sha(old_identity)
 		'historical_irq_v_body_sha256':      hosttest.text_sha(old_irq)
@@ -54,7 +54,7 @@ fn select_source(raw string) !string {
 		}
 		if ['workerpriorityfixture__', 'linuxkpi__', 'sched__', 'proc__', 'cpu__', 'local__',
 			'katomic__'].any(line.contains(it))
-			|| line.contains(' wph_') || hosttest.named_body(body, 'main') || hosttest.named_body(body, 'vinix_linuxkpi_worker_set_nice') {
+			|| line.contains(' wph_') || hosttest.named_body(body, 'main') || hosttest.named_body(body, 'tulpar_linuxkpi_worker_set_nice') {
 			bodies << body
 		}
 	}
@@ -115,7 +115,7 @@ fn run(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	hosttest.verify_upstream(linux, hosttest.upstream_pin()!)!
-	work := hosttest.work_dir(keep, 'vinix-worker-priority-')!
+	work := hosttest.work_dir(keep, 'tulpar-worker-priority-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut inputs, history := stage(work)!
 	inputs << os.walk_ext(os.dir(@FILE) + '/workerpriorityfixture', '.v')
@@ -141,7 +141,7 @@ fn run(keep string) ! {
 	selected_text := select_source(raw)!
 	selected := work + '/selected.c'
 	os.write_file(selected, selected_text)!
-	names := ['linuxkpi__worker_set_nice', 'vinix_linuxkpi_worker_set_nice']
+	names := ['linuxkpi__worker_set_nice', 'tulpar_linuxkpi_worker_set_nice']
 	mut production_bodies := []string{}
 	mut production_hashes := map[string]string{}
 	for name in names {
@@ -166,7 +166,7 @@ fn run(keep string) ! {
 	if hosttest.c_bodies(os.read_file(production)!) != production_bodies {
 		return error('Production-only body changed')
 	}
-	mut include_args := ['-D__KERNEL__', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-include',
+	mut include_args := ['-D__KERNEL__', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-include',
 		root + '/tests/linuxkpi/host_types.h']
 	for path in [work + '/stage', root + '/kernel/linuxkpi/include', linux + '/include',
 		linux + '/include/uapi', linux + '/arch/x86/include', linux + '/arch/x86/include/uapi'] {

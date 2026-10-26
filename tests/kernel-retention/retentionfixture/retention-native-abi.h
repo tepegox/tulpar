@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_RETENTION_FIXTURE_NATIVE_ABI_H
-#define VINIX_RETENTION_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_RETENTION_FIXTURE_NATIVE_ABI_H
+#define TULPAR_RETENTION_FIXTURE_NATIVE_ABI_H
 #define _GNU_SOURCE
 #include <errno.h>
 #include <fcntl.h>

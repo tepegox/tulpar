@@ -6,8 +6,8 @@ import os
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn launch_owned_fixture(architecture string, kind string, width int) (Config, State) {
@@ -44,7 +44,7 @@ fn launch_owned_fixture(architecture string, kind string, width int) (Config, St
 fn launch_owned_cycles() int { return $if track_heap ? { 1000 } $else { 32 } }
 
 fn launch_owned_refusal(config Config, state State, data string, input LaunchInput, expected string) {
-	if mut value := application_launch_plan(config, '/var/lib/vinix-packages', state, 'app', data, 1000, 1000, input) {
+	if mut value := application_launch_plan(config, '/var/lib/tulpar-packages', state, 'app', data, 1000, 1000, input) {
 		value.close(); assert false
 	} else { message := err.msg(); assert message == expected, message; unsafe { message.free(); err.free() } }
 }
@@ -54,10 +54,10 @@ fn test_launch_plans_survive_source_state_and_sibling_retirement() {
 	text := json2.encode(fixture)
 	mut state := decode_persistent_state(text, 'aarch64')!
 	unsafe { text.free() }
-	root := '/var/lib/vinix-packages'.clone()
+	root := '/var/lib/tulpar-packages'.clone()
 	data := '/home/user/é🚀 data'.clone()
 	id := 'app'.clone()
-	executable := '/usr/bin/vinix-package'.clone()
+	executable := '/usr/bin/tulpar-package'.clone()
 	account := 'alex'.clone()
 	mut input := command_launch(['--data-cwd', '--file', '/tmp/launch-owned', '--', '', '--uid', '$(literal)', '@APP@/literal'])!
 	os.write_file('/tmp/launch-owned', 'document')!
@@ -73,7 +73,7 @@ fn test_launch_plans_survive_source_state_and_sibling_retirement() {
 	first.close(); first.close()
 	assert first.program == '' && first.directory == '' && first.arguments.len == 0
 	assert second.arguments.last() == '@APP@/literal' && 'TERM=linux' in second.arguments
-	assert session.arguments == ['run', '--isolated', 'alex', '/usr/bin/vinix-package', 'run-args', 'app',
+	assert session.arguments == ['run', '--isolated', 'alex', '/usr/bin/tulpar-package', 'run-args', 'app',
 		'--data-cwd', '--file', '/tmp/launch-owned', '--', '', '--uid', '$(literal)', '@APP@/literal']
 	second.close(); second.close(); session.close(); session.close()
 	assert session.program == '' && session.directory == '' && session.arguments.len == 0
@@ -97,12 +97,12 @@ fn test_launch_plan_matrix_retires_success_storage_and_keeps_inputs_literal() {
 					packages[last] = Installed{ ...packages[last], package: Package{ ...packages[last].package, window_protocol: if mode == 5 { 2 } else { 1 }, permissions: [...packages[last].package.permissions, 'display'] } }
 					selected = State{ ...state, packages: packages }
 				}
-				for _ in 0 .. 1 { mut warm := application_launch_plan(config, '/var/lib/vinix-packages', selected, 'app', '/home/user/data', 1000, 1000, input)!; warm.close() }
-				$if track_heap ? { C.vinix_heap_begin() }
+				for _ in 0 .. 1 { mut warm := application_launch_plan(config, '/var/lib/tulpar-packages', selected, 'app', '/home/user/data', 1000, 1000, input)!; warm.close() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				for _ in 0 .. launch_owned_cycles() {
-					mut plan := application_launch_plan(config, '/var/lib/vinix-packages', selected, 'app', '/home/user/data', 1000, 1000, input)!
-					assert plan.program == '/usr/bin/vinix-sandbox'
-					assert plan.directory == if input.data_cwd { '/home/user/data' } else { '/var/lib/vinix-packages/generations/42/apps/app' }
+					mut plan := application_launch_plan(config, '/var/lib/tulpar-packages', selected, 'app', '/home/user/data', 1000, 1000, input)!
+					assert plan.program == '/usr/bin/tulpar-sandbox'
+					assert plan.directory == if input.data_cwd { '/home/user/data' } else { '/var/lib/tulpar-packages/generations/42/apps/app' }
 					assert plan.arguments[5] == if input.window { 'stdio rpath wpath cpath flock exec prot_exec inet dns proc unix' }
 						else if input.terminal { 'stdio rpath wpath cpath flock exec prot_exec tty inet dns proc unix' }
 						else { 'stdio rpath wpath cpath flock exec prot_exec inet dns proc unix' }
@@ -111,7 +111,7 @@ fn test_launch_plan_matrix_retires_success_storage_and_keeps_inputs_literal() {
 					assert plan.arguments.last() == if input.command { '@DATA@/literal' } else { '/tmp/launch-owned-matrix' }
 					plan.close(); plan.close()
 				}
-				$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, architecture + ' ' + kind + ' mode ' + mode.str() + ' retained ' + kept.str() }
+				$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, architecture + ' ' + kind + ' mode ' + mode.str() + ' retained ' + kept.str() }
 			}
 		}
 	}
@@ -165,15 +165,15 @@ fn test_launch_plan_dependency_and_document_growth_retires_storage() {
 		config, state := launch_owned_fixture('x86_64', 'native', width)
 		documents := []string{len: if width == 64 { 256 } else { width }, init: '/tmp/launch-owned-growth'}
 		input := LaunchInput{ documents: documents, command: true, arguments: []string{len: 256, init: 'literal'}, data_cwd: true }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. launch_owned_cycles() {
-			mut plan := application_launch_plan(config, '/var/lib/vinix-packages', state, 'app', '/home/user/data', 1000, 1000, input)!
+			mut plan := application_launch_plan(config, '/var/lib/tulpar-packages', state, 'app', '/home/user/data', 1000, 1000, input)!
 			assert plan.arguments.last() == 'literal'; plan.close()
 			closure := application_closure(state, 'app')
 			assert closure.len == width + 1
 			unsafe { (&array(&closure)).free() }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'growth retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'growth retained ' + kept.str() }
 	}
 	println('LAUNCH OWNERSHIP 0/1/64 dependencies, shared edges/cycles, 256 documents and 256 literal arguments retire vector growth PASS')
 }
@@ -208,9 +208,9 @@ fn test_launch_plan_refusals_retire_partial_plans() {
 			else { 'document must be an existing absolute regular file: /missing-launch-owned-file' }
 		}
 		launch_owned_refusal(policy, selected, data, actual, expected)
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. launch_owned_cycles() { launch_owned_refusal(policy, selected, data, actual, expected) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'refusal ' + case_index.str() + ' retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'refusal ' + case_index.str() + ' retained ' + kept.str() }
 		os.rm('/tmp/launch-owned-denied')!
 	}
 	println('LAUNCH OWNERSHIP policy, revoked/weak publishers, SDK directories and regular-file/permission refusals retire partial plans PASS')
@@ -223,14 +223,14 @@ fn test_isolated_session_plans_own_and_retire_every_mode() {
 			config := Config{ architecture: 'aarch64', launch_user: 'alex' }
 			input := LaunchInput{ documents: documents, arguments: if mode in [2, 3]! { ['', '--file', '$(literal)', '@APP@/literal'] } else { []string{} },
 				terminal: mode == 1 || mode == 3, command: mode == 2 || mode == 3, data_cwd: mode == 3, window: mode == 4 }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. launch_owned_cycles() {
-				mut plan := launch_session_request(config, '/usr/bin/vinix-package', 'app', input)!
-				assert plan.program == '/usr/sbin/vinix-session' && plan.directory == '/'
+				mut plan := launch_session_request(config, '/usr/bin/tulpar-package', 'app', input)!
+				assert plan.program == '/usr/sbin/tulpar-session' && plan.directory == '/'
 				assert plan.arguments[4] == ['run', 'run-terminal', 'run-args', 'run-terminal-args', 'run-window']![mode]
 				plan.close(); plan.close()
 			}
-			$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'session retained ' + kept.str() }
+			$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'session retained ' + kept.str() }
 		}
 	}
 	println('LAUNCH OWNERSHIP five isolated session modes and 0/1/64/256 documents release independent vectors PASS')

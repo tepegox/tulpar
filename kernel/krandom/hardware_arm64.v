@@ -2,7 +2,7 @@
 module krandom
 
 // RNDR is optional (QEMU's max CPU has it; the M1 does not).
-@[export: 'vinix_hw_random64']
+@[export: 'tulpar_hw_random64']
 fn hardware_random64(out &u64) i32 {
 	mut isar0 := u64(0)
 	asm volatile aarch64 {

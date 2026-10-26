@@ -54,7 +54,7 @@ fn wine_fixture_recipe(architecture string, application bool) RootRecipe {
 }
 
 fn wine_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-wine-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-wine-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		for directory in ['app', 'runtime', 'licenses'] { os.mkdir_all(root + '/' + directory)! }
@@ -110,7 +110,7 @@ fn test_wine_profile_reproducible_pins_signed_offline_install_license_policy_and
 		installed := transact(accepted, store, 'install', [one.application], TransactionOptions{})!
 		assert installed.packages.len == 2 && installed.requested == [one.application]
 		assert installed.packages.all(it.package.architecture == architecture)
-		launcher := store + '/current/share/applications/vinix-org.example.win64.desktop'
+		launcher := store + '/current/share/applications/tulpar-org.example.win64.desktop'
 		assert os.read_file(launcher)!.contains('MimeType=text/plain;')
 		assert transact(accepted, store, 'remove', [one.application], TransactionOptions{})!.packages.len == 0
 		assert !os.exists(launcher)
@@ -183,7 +183,7 @@ fn test_wine_profile_preflight_races_space_cleanup_and_retry() {
 		baseline := wine_catalog(work + '/recipes', work + '/roots', work + '/baseline')!
 		mut denied := false
 		wine_catalog_with(work + '/recipes', work + '/roots', work + '/refused', options) or { denied = true }
-		assert denied && os.ls(work)!.all(!it.starts_with('.vinix-wine-profile-'))
+		assert denied && os.ls(work)!.all(!it.starts_with('.tulpar-wine-profile-'))
 		if os.exists(work + '/refused') {
 			assert os.ls(work + '/refused')! == ['keep']
 			assert os.read_file(work + '/refused/keep')! == 'concurrent owner'
@@ -228,7 +228,7 @@ fn wine_test_command(arguments []string) os.Result {
 }
 
 fn test_wine_profile_cli_matches_public_api_and_refuses_bad_arity_and_reused_output() {
-	cli := os.getenv('VINIX_PACKAGE_WINE_CLI')
+	cli := os.getenv('TULPAR_PACKAGE_WINE_CLI')
 	if cli == '' { return } // The maintained qualification driver supplies it.
 	work := wine_fixture()!
 	defer { os.rmdir_all(work) or {} }

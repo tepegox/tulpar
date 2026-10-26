@@ -87,7 +87,7 @@ fn check_software_review_actions_memory() ! {
 		}
 		mut app := SoftwareApp{administration_required: true, output: []u8{cap: 8192}}
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for index, text in texts {
 					if index % 4 == 3 {
@@ -100,7 +100,7 @@ fn check_software_review_actions_memory() ! {
 			}
 		}
 		app.close_app()
-		kept := C.vinix_heap_end(); assert kept == 0, 'review actions retained ' + kept.str()
+		kept := C.tulpar_heap_end(); assert kept == 0, 'review actions retained ' + kept.str()
 		unsafe { for text in texts { text.free() }; (&array(&texts)).free() }
 		println('REVIEW ACTIONS 1000 current/legacy refusal/render/blocked-confirm and new-install/permission/retirement cycles retain zero tracked bytes PASS')
 	}

@@ -38,7 +38,7 @@ v -nocache -no-skip-unused -gc none -manualfree \
   -path '@vlib|@vmodules|.|tools/accounts' \
   -o /tmp/package-repair tests/packages/repair-check.v
 /tmp/package-repair /tmp/new-repair-work
-/tmp/package-repair /tmp/new-repair-cli-work /path/to/vinix-package
+/tmp/package-repair /tmp/new-repair-cli-work /path/to/tulpar-package
 ```
 
 `--before` exercises the retained previous implementation's false success. The

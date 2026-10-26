@@ -42,7 +42,7 @@
 // a second later, and the cooler of the two is the one acted on -- what
 // follows a critical reading is the machine switching itself off, and one
 // wild figure from a controller that was busy must not be enough for that.
-// `vinix.acpi_thermal=nocrt` on the command line takes the zones without
+// `tulpar.acpi_thermal=nocrt` on the command line takes the zones without
 // their critical trips, and `=off` leaves zones and fans alone.
 //
 // The method names, units and package layouts are the specification's (ACPI
@@ -151,7 +151,7 @@ __global (
 	// One thread at a time decides about the fans; a second one that comes
 	// by meanwhile leaves it to the first.
 	acpipm_cooling_busy u32
-	// `vinix.acpi_thermal=nocrt`: firmware's critical trips are not acted on.
+	// `tulpar.acpi_thermal=nocrt`: firmware's critical trips are not acted on.
 	acpipm_thermal_no_critical bool
 )
 
@@ -569,13 +569,13 @@ pub fn initialise_thermal() {
 	// For the machine whose firmware reports temperatures that are not: `off`
 	// leaves its zones and fans alone, `nocrt` takes the zones without the
 	// trip that switches the machine off.
-	if choice := devcore.boot_option('vinix.acpi_thermal=') {
+	if choice := devcore.boot_option('tulpar.acpi_thermal=') {
 		if choice == 'off' {
-			print('acpipm: thermal zones and fans left alone by vinix.acpi_thermal=off\n')
+			print('acpipm: thermal zones and fans left alone by tulpar.acpi_thermal=off\n')
 			return
 		}
 		if choice == 'nocrt' {
-			print('acpipm: critical trips ignored by vinix.acpi_thermal=nocrt\n')
+			print('acpipm: critical trips ignored by tulpar.acpi_thermal=nocrt\n')
 			acpipm_thermal_no_critical = true
 		}
 	}

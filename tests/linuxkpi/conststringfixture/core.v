@@ -8,7 +8,7 @@ module conststringfixture
 @[typedef] struct C.vks_const_void {}
 fn C.kstrdup_const(&C.vks_const_char,u32) &C.vks_const_char
 fn C.kfree_const(&C.vks_const_void)
-fn C.vinix_linuxkpi_is_kernel_rodata(&C.vks_const_void) bool
+fn C.tulpar_linuxkpi_is_kernel_rodata(&C.vks_const_void) bool
 fn C.vkr_kmalloc(usize,u32) voidptr
 fn C.vkr_ksize(voidptr) usize
 fn C.vkr_page_allocation_size(voidptr) usize
@@ -50,9 +50,9 @@ fn check(ok bool) {
 }
 @[export:'csh_rodata_start'] pub fn rodata_start() voidptr { return unsafe { voidptr(image_first) } }
 @[export:'csh_rodata_end'] pub fn rodata_end() voidptr { return unsafe { voidptr(image_last) } }
-@[export:'vinix_linuxkpi_page_size'] pub fn page_size() usize { return 4096 }
-@[export:'vinix_linuxkpi_may_sleep'] pub fn may_sleep() bool { return unsafe { sleepable } }
-@[export:'vinix_linuxkpi_alloc_pages'] pub fn allocate(pages usize,reclaim bool) voidptr {
+@[export:'tulpar_linuxkpi_page_size'] pub fn page_size() usize { return 4096 }
+@[export:'tulpar_linuxkpi_may_sleep'] pub fn may_sleep() bool { return unsafe { sleepable } }
+@[export:'tulpar_linuxkpi_alloc_pages'] pub fn allocate(pages usize,reclaim bool) voidptr {
 	unsafe {
 		check(pages != 0 && (!reclaim || sleepable))
 		page_calls++; last_reclaim = reclaim
@@ -67,7 +67,7 @@ fn check(ok bool) {
 		return base
 	}
 }
-@[export:'vinix_linuxkpi_free_pages'] pub fn release(base voidptr,pages usize) {
+@[export:'tulpar_linuxkpi_free_pages'] pub fn release(base voidptr,pages usize) {
 	unsafe {
 		mut slot := 0
 		for slot < 32 && page_bases[slot] != base { slot++ }
@@ -76,10 +76,10 @@ fn check(ok bool) {
 		C.free(base)
 	}
 }
-@[export:'vinix_linuxkpi_bug'; noreturn] pub fn bug(reason &C.vks_const_char,line i32) {
+@[export:'tulpar_linuxkpi_bug'; noreturn] pub fn bug(reason &C.vks_const_char,line i32) {
 	C.printf(c'CONST STRING unexpected invariant %s:%d\n',reason,line); C.fflush(unsafe { nil }); C.exit(87)
 }
-fn classify(p voidptr) bool { return unsafe { C.vinix_linuxkpi_is_kernel_rodata(&C.vks_const_void(p)) } }
+fn classify(p voidptr) bool { return unsafe { C.tulpar_linuxkpi_is_kernel_rodata(&C.vks_const_void(p)) } }
 fn duplicate(p voidptr,flags u32) voidptr { return unsafe { voidptr(C.kstrdup_const(&C.vks_const_char(p),flags)) } }
 fn free_copy(p voidptr) { unsafe { C.kfree_const(&C.vks_const_void(p)) } }
 fn owned_copy(source voidptr,size usize,flags u32) voidptr {

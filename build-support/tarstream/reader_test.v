@@ -10,7 +10,7 @@ import tarcore
 fn C.mkdtemp(&char) &char
 
 fn temporary_directory() !string {
-	mut pattern := (os.temp_dir() + '/vinix-tarstream-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir() + '/tulpar-tarstream-XXXXXX\x00').bytes()
 	unsafe {
 		path := C.mkdtemp(&char(pattern.data))
 		if path == nil { return error('cannot create test directory') }

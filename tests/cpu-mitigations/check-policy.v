@@ -26,12 +26,12 @@ static unsigned arch_reads, ctrl_reads, ctrl_writes;
 static bool ignored_write;
 static unsigned allocations;
 static bool fail_allocation;
-void *vinix_mitigation_test_calloc(size_t count, size_t size) {
+void *tulpar_mitigation_test_calloc(size_t count, size_t size) {
     allocations++;
     assert(count == 2 && size == 32);
     return fail_allocation ? NULL : calloc(count, size);
 }
-void vinix_mitigation_test_cpuid(uint32_t leaf, uint32_t subleaf,
+void tulpar_mitigation_test_cpuid(uint32_t leaf, uint32_t subleaf,
                              uint32_t *a, uint32_t *b, uint32_t *c, uint32_t *d) {
     *a = *b = *c = *d = 0;
     if (!leaf) {
@@ -44,11 +44,11 @@ void vinix_mitigation_test_cpuid(uint32_t leaf, uint32_t subleaf,
     else if (leaf == 0x80000008) { assert(vendor == 2 && ext_max >= leaf); *b = amd_bits; }
     else assert(!"unexpected CPUID port");
 }
-uint64_t vinix_mitigation_test_rdmsr(uint32_t msr) {
+uint64_t tulpar_mitigation_test_rdmsr(uint32_t msr) {
     if (msr == 0x10a) { assert(vendor == 1 && (leaf7 & (1u << 29))); arch_reads++; return arch_bits; }
     assert(msr == 0x48 && expected_control); ctrl_reads++; return control;
 }
-void vinix_mitigation_test_wrmsr(uint32_t msr, uint64_t value) {
+void tulpar_mitigation_test_wrmsr(uint32_t msr, uint64_t value) {
     assert(msr == 0x48 && expected_control);
     assert(value == (UINT64_C(0x8000000000000000) | expected_control));
     ctrl_writes++; if (!ignored_write) control = value;
@@ -57,17 +57,17 @@ int kprintf(const char *fmt, ...) { (void)fmt; return 0; }
 '
 const tests = r'
 int main(void) {
-    assert(!vinix_x86_mitigations_setup(0));
-    assert(!vinix_x86_mitigations_setup(UINT64_MAX));
+    assert(!tulpar_x86_mitigations_setup(0));
+    assert(!tulpar_x86_mitigations_setup(UINT64_MAX));
     assert(!allocations);
     fail_allocation = true;
-    assert(!vinix_x86_mitigations_setup(2));
-    assert(!vinix_x86_mitigation_policies);
-    assert(!vinix_x86_mitigations_initialise(0));
+    assert(!tulpar_x86_mitigations_setup(2));
+    assert(!tulpar_x86_mitigation_policies);
+    assert(!tulpar_x86_mitigations_initialise(0));
     fail_allocation = false;
-    assert(vinix_x86_mitigations_setup(2));
-    assert(!vinix_x86_mitigations_setup(2));
-    assert(!vinix_x86_mitigations_initialise(2));
+    assert(tulpar_x86_mitigations_setup(2));
+    assert(!tulpar_x86_mitigations_setup(2));
+    assert(!tulpar_x86_mitigations_initialise(2));
     unsigned cases = 0;
     for (vendor = 0; vendor < 3; vendor++) {
       for (unsigned mask = 0; mask < 1024; mask++) {
@@ -103,8 +103,8 @@ int main(void) {
         expected_control = user | (ibrs ? 1 : 0);
         arch_reads = ctrl_reads = ctrl_writes = 0;
         control = UINT64_C(0x8000000000000000); ignored_write = false;
-        assert(vinix_x86_mitigations_initialise(cases & 1));
-        struct vinix_x86_mitigation_policy p = vinix_x86_mitigation_policies[cases & 1];
+        assert(tulpar_x86_mitigations_initialise(cases & 1));
+        struct tulpar_x86_mitigation_policy p = tulpar_x86_mitigation_policies[cases & 1];
         assert(p.flags == flags);
         assert(p.kernel_control == (expected_control ? control : 0));
         assert(p.user_control == (user | (expected_control ? UINT64_C(0x8000000000000000) : 0)));
@@ -118,9 +118,9 @@ int main(void) {
     vendor = 1; max_leaf = 7; max_subleaf = 0; leaf7 = 1u << 26;
     expected_control = 1; control = UINT64_C(0x8000000000000000); ignored_write = true;
     /* A virtual CPU that enumerates a control but ignores it cannot report success. */
-    assert(!vinix_x86_mitigations_initialise(0));
+    assert(!tulpar_x86_mitigations_initialise(0));
     assert(allocations == 2); /* One failed attempt and one boot allocation. */
-    free(vinix_x86_mitigation_policies);
+    free(tulpar_x86_mitigation_policies);
     puts("CPU MITIGATION POLICY PASS: 12288 vendor/leaf/control cases, MSR gates and readback failure");
 }
 '
@@ -182,7 +182,7 @@ fn imports_forbidden(text string) bool {
 }
 
 fn (c Config) execute() ! {
-	fixturehost.write(c.output('v.mod'), "Module { name: 'vinix_cpu_policy_tests' }\n")!
+	fixturehost.write(c.output('v.mod'), "Module { name: 'tulpar_cpu_policy_tests' }\n")!
 	source := c.path('kernel/x86/cpu/initialisation')
 	hosttest.module_copy_tree(append_path(source, 'mitigations_amd64.v'), c.output('policy.v'))!
 	hosttest.module_copy_tree(append_path(source, 'mitigation_ports_amd64.v'), c.output('ports.v'))!
@@ -193,11 +193,11 @@ fn (c Config) execute() ! {
 	c.inherited([compiler, '-shared', '-no-builtin', '-os', 'vinix', '-target-libc-headers', '-nofloat',
 		'-gc', 'none', '-manualfree', '-d', 'mitigation_test', '-o', c.output('policy.c'), c.work], environment)!
 	cc := hosttest.env_default('CC', 'clang')
-	fixturehost.write(c.output('host_ports.h'), '#include <stddef.h>\nint kprintf(const char *, ...);\nvoid *vinix_mitigation_test_calloc(size_t, size_t);\n')!
+	fixturehost.write(c.output('host_ports.h'), '#include <stddef.h>\nint kprintf(const char *, ...);\nvoid *tulpar_mitigation_test_calloc(size_t, size_t);\n')!
 	common := [cc, '-std=gnu11', '-O1', '-g', '-Wall', '-Wextra', '-Werror',
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-iquote', c.path('kernel/c')]
 	c.inherited([...common, '-I', c.path('kernel/c'), '-Wno-unused-function', '-ffreestanding',
-		'-fno-builtin', '-Dcalloc=vinix_mitigation_test_calloc', '-fno-strict-aliasing', '-include',
+		'-fno-builtin', '-Dcalloc=tulpar_mitigation_test_calloc', '-fno-strict-aliasing', '-include',
 		c.output('host_ports.h'), '-c', c.output('policy.c'), '-o', c.output('policy.o')], c.environment)!
 	imports := c.capture(['nm', '-u', c.output('policy.o')])!
 	if imports_forbidden(imports) {
@@ -220,7 +220,7 @@ fn main() {
 }
 
 fn run_native() ! {
-	work := hosttest.work_dir('', 'vinix-cpu-policy-')!
+	work := hosttest.work_dir('', 'tulpar-cpu-policy-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	c := Config{ root: hosttest.root(), work: work, caller: policyhost.caller_arch(), environment: policyhost.environment() }
 	c.execute()!

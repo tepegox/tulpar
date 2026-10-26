@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /* Declaration-only boundary for libarchive's decompressed byte stream. */
-#ifndef VINIX_TARSTREAM_FILTER_ABI_H
-#define VINIX_TARSTREAM_FILTER_ABI_H
+#ifndef TULPAR_TARSTREAM_FILTER_ABI_H
+#define TULPAR_TARSTREAM_FILTER_ABI_H
 #include <stddef.h>
 #include <sys/types.h>
 #if __has_include(<archive.h>)

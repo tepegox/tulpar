@@ -9,7 +9,7 @@ import userland.ptycore
 import tools.packages.pkgprotocol
 
 fn media_command(id string, argv []string, documents []string) Ran {
-	mut arguments := ['/usr/bin/vinix-package', 'run-args', id]
+	mut arguments := ['/usr/bin/tulpar-package', 'run-args', id]
 	for document in documents { arguments << ['--file', document] }
 	arguments << '--'
 	arguments << argv
@@ -40,15 +40,15 @@ fn qualify_package_ffmpeg(mut t Test) ! {
 		'/tmp/package-publisher/ffmpeg-seed', '1', (time.now().unix() + 3600).str(), '/tmp/ffmpeg-release'])!)!
 	assert release.public_key == key && release.package_count == 6
 	t.say('PACKAGE FFMPEG signed release PASS')
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{
 		architecture: architecture, launch_user: 'alex', policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 }
 	}))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['--offline', 'repo-enroll', 'ffmpeg-fixture', 'file:///tmp/ffmpeg-release', key])!
 	package_success(['--offline', 'update'])!
 	package_success(['--offline', 'install', pkgcore.ffmpeg_application_id, pkgcore.ffprobe_application_id])!
-	installed := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
+	installed := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
 	assert installed.packages.len == 3 && installed.requested.len == 2
 	t.say('PACKAGE FFMPEG offline install PASS')
 	for id in [pkgcore.ffmpeg_application_id, pkgcore.ffprobe_application_id] {
@@ -56,7 +56,7 @@ fn qualify_package_ffmpeg(mut t Test) ! {
 		assert banner.status == 0 && banner.output.contains('version 8.0.1'), banner.output
 	}
 	t.say('PACKAGE FFMPEG ordinary argument banners PASS')
-	terminal := ptycore.spawn(['/usr/bin/vinix-package', 'run-terminal-args', pkgcore.ffmpeg_application_id, '--', '-version'],
+	terminal := ptycore.spawn(['/usr/bin/tulpar-package', 'run-terminal-args', pkgcore.ffmpeg_application_id, '--', '-version'],
 		['PATH=/usr/bin:/usr/sbin', 'HOME=/root', 'TERM=linux'], '/', 24, 80, 640, 384)!
 	defer { C.close(terminal.terminal) }
 	assert sqlite_terminal_read(terminal.terminal, 'ffmpeg version 8.0.1')!.contains('ffmpeg version 8.0.1')
@@ -72,18 +72,18 @@ fn qualify_package_ffmpeg(mut t Test) ! {
 	}
 	assert terminal_finished && terminal_status == 0
 	t.say('PACKAGE FFMPEG terminal argument banner PASS')
-	data := '/home/alex/.local/share/vinix-apps/' + pkgcore.ffmpeg_application_id
+	data := '/home/alex/.local/share/tulpar-apps/' + pkgcore.ffmpeg_application_id
 	mut relative_words := pkgprotocol.command_words('-v error -f lavfi -i testsrc2=size=64x48:duration=0.1 -c:v mpeg4 -threads 2 -y "relative output; $literal.avi"')!
 	defer { pkgprotocol.free_command_values(mut relative_words) }
 	mut relative_vector := pkgprotocol.command_vector(pkgcore.ffmpeg_application_id, relative_words, [], true, false)!
 	defer { pkgprotocol.free_command_values(mut relative_vector) }
-	relative_reply := run(['/usr/bin/vinix-package', ...relative_vector], '', none, none)
+	relative_reply := run(['/usr/bin/tulpar-package', ...relative_vector], '', none, none)
 	assert relative_reply.status == 0, relative_reply.output
 	relative_path := data + '/relative output; $literal.avi'
 	assert os.file_size(relative_path) > 0 && os.stat(relative_path)!.uid == 1000
 	assert media_probe(relative_path, true).status == 0
 	assert media_probe(relative_path, false).status != 0
-	installed_folder := '/var/lib/vinix-packages/generations/' + installed.generation.str() + '/apps/' + pkgcore.ffmpeg_application_id
+	installed_folder := '/var/lib/tulpar-packages/generations/' + installed.generation.str() + '/apps/' + pkgcore.ffmpeg_application_id
 	assert !os.exists(installed_folder + '/relative output; $literal.avi')
 	t.say('PACKAGE COMMAND private-working-folder quoted-arguments relative-output ordinary-owner explicit-grants PASS')
 	video := data + '/a space; $literal.avi'
@@ -108,16 +108,16 @@ fn qualify_package_ffmpeg(mut t Test) ! {
 	refused := media_command(pkgcore.ffmpeg_application_id, ['-v', 'error', '-f', 'lavfi', '-i',
 		'testsrc2=size=64x48:duration=0.1', '-c:v', 'mpeg4', '-threads', '2', '-y', outside], [])
 	assert refused.status != 0 && !os.exists(outside), refused.output
-	assert run(['/usr/bin/vinix-package', 'run-terminal-args', pkgcore.ffmpeg_application_id, '--', '-version'], '', none, none).status != 0
+	assert run(['/usr/bin/tulpar-package', 'run-terminal-args', pkgcore.ffmpeg_application_id, '--', '-version'], '', none, none).status != 0
 	t.say('PACKAGE FFMPEG real-video-encode decode probe audio-pcm literal-arguments terminal-arguments ordinary-owner explicit-file-grant outside-path-refusal PASS')
 	package_success(['verify'])!
 	package_success(['--offline', 'remove', pkgcore.ffmpeg_application_id])!
-	partial := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
+	partial := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
 	assert partial.packages.len == 2 && partial.packages.any(it.package.id == pkgcore.ffmpeg_runtime_id)
 	assert media_probe(video, true).status == 0
-	assert !os.exists('/var/lib/vinix-packages/current/share/applications/' + pkgcore.ffmpeg_application_id + '.desktop')
+	assert !os.exists('/var/lib/tulpar-packages/current/share/applications/' + pkgcore.ffmpeg_application_id + '.desktop')
 	package_success(['--offline', 'remove', pkgcore.ffprobe_application_id])!
-	assert pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 0 && os.is_file(video) && os.is_file(audio)
+	assert pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 0 && os.is_file(video) && os.is_file(audio)
 	package_success(['rollback'])!
 	assert media_probe(video, true).status == 0
 	package_success(['--offline', 'remove', pkgcore.ffprobe_application_id])!
@@ -125,7 +125,7 @@ fn qualify_package_ffmpeg(mut t Test) ! {
 	package_success(['--offline', 'install', pkgcore.ffmpeg_application_id, pkgcore.ffprobe_application_id])!
 	assert media_probe(video, true).status == 0 && os.stat(video)!.uid == 1000
 	package_success(['--offline', 'remove', pkgcore.ffmpeg_application_id, pkgcore.ffprobe_application_id])!
-	assert pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 0 && os.is_file(video)
+	assert pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 0 && os.is_file(video)
 	assert os.is_file(relative_path) && os.stat(relative_path)!.uid == 1000
 	t.say('PACKAGE FFMPEG signed-canonical-catalog shared-runtime removal rollback offline-cache-reinstall retained-media PASS')
 }

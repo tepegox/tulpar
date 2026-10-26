@@ -98,7 +98,7 @@ fn (mut pair NVMEQueuePair) rewind() {
 // initialise() did. With the controller's lock.
 fn (mut pair NVMEQueuePair) create_again() bool {
 	mut controller := pair.parent_controller
-	mut create_cq := unsafe { &NVMECommand(C.vinix_stack_alloc(sizeof(NVMECommand))) }
+	mut create_cq := unsafe { &NVMECommand(C.tulpar_stack_alloc(sizeof(NVMECommand))) }
 	unsafe {
 		*create_cq = NVMECommand{}
 		create_cq.opcode = opcode_create_cq
@@ -111,7 +111,7 @@ fn (mut pair NVMEQueuePair) create_again() bool {
 	if controller.admin_queue.exchange(mut create_cq, -1) != 0 {
 		return false
 	}
-	mut create_sq := unsafe { &NVMECommand(C.vinix_stack_alloc(sizeof(NVMECommand))) }
+	mut create_sq := unsafe { &NVMECommand(C.tulpar_stack_alloc(sizeof(NVMECommand))) }
 	unsafe {
 		*create_sq = NVMECommand{}
 		create_sq.opcode = opcode_create_sq

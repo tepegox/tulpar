@@ -251,7 +251,7 @@ pub fn sc_dump_ring() {
 // ── Wrapper / stub syscalls for Linux compatibility ──
 
 // Linux mmap passes prot and flags as separate args (x2, x3).
-// Vinix's syscall_mmap expects them packed: prot in upper 32 bits, flags in lower 32.
+// Tulpar's syscall_mmap expects them packed: prot in upper 32 bits, flags in lower 32.
 fn syscall_linux_mmap(gpr_state voidptr, addr voidptr, length u64, prot u64, flags u64, fdnum int, offset i64) (u64, u64) {
 	prot_and_flags := (prot << 32) | flags
 	return file.syscall_mmap(gpr_state, addr, length, prot_and_flags, fdnum, offset)
@@ -264,7 +264,7 @@ fn syscall_linux_getdents64(gpr_state voidptr, fdnum int, dirp u64, count u64) (
 
 // Linux uname(buf); see linux_uname().
 fn syscall_linux_uname(_ voidptr, buf u64) (u64, u64) {
-	return linux_uname(buf, c'Vinix 0.1.0 aarch64', c'aarch64')
+	return linux_uname(buf, c'Tulpar 0.1.0 aarch64', c'aarch64')
 }
 
 // sendmsg is implemented by the socket layer so AF_INET datagrams retain their
@@ -281,7 +281,7 @@ fn syscall_linux_recvfrom(gpr_state voidptr, fdnum int, buf voidptr, len u64, fl
 	return socket.syscall_recvfrom(gpr_state, fdnum, buf, len, flags, src_addr, unsafe { &u32(addrlen) })
 }
 
-// Convert Vinix stat.Stat (144 bytes, x86_64 layout) to Linux aarch64 struct stat (128 bytes).
+// Convert Tulpar stat.Stat (144 bytes, x86_64 layout) to Linux aarch64 struct stat (128 bytes).
 // Field order and sizes differ: mode/nlink are swapped and narrower on aarch64, blksize is i32.
 fn convert_stat_to_linux(src &stat.Stat, user_dst u64) bool {
 	mut buf := [128]u8{}
@@ -311,10 +311,10 @@ fn convert_stat_to_linux(src &stat.Stat, user_dst u64) bool {
 	return usercopy.copy_to_user(user_dst, unsafe { voidptr(&buf[0]) }, u64(sizeof(buf)))
 }
 
-// fstatat wrapper: call Vinix fstatat with a local buffer, then convert to Linux layout.
+// fstatat wrapper: call Tulpar fstatat with a local buffer, then convert to Linux layout.
 fn syscall_linux_fstatat(gpr_state voidptr, dirfd int, path charptr, linux_buf u64, flags int) (u64, u64) {
 	// Neither the filesystem fill nor the checked conversion retains this scratch.
-	stat_storage := unsafe { &stat.Stat(C.vinix_stack_alloc(sizeof(stat.Stat))) }
+	stat_storage := unsafe { &stat.Stat(C.tulpar_stack_alloc(sizeof(stat.Stat))) }
 	unsafe { *stat_storage = stat.Stat{} }
 	ret, err := linux_fstatat_lookup(gpr_state, dirfd, path, stat_storage, flags)
 	if err != 0 {
@@ -326,10 +326,10 @@ fn syscall_linux_fstatat(gpr_state voidptr, dirfd int, path charptr, linux_buf u
 	return 0, 0
 }
 
-// fstat wrapper: call Vinix fstat with a local buffer, then convert to Linux layout.
+// fstat wrapper: call Tulpar fstat with a local buffer, then convert to Linux layout.
 fn syscall_linux_fstat(gpr_state voidptr, fdnum int, linux_buf u64) (u64, u64) {
 	// Neither the filesystem fill nor the checked conversion retains this scratch.
-	stat_storage := unsafe { &stat.Stat(C.vinix_stack_alloc(sizeof(stat.Stat))) }
+	stat_storage := unsafe { &stat.Stat(C.tulpar_stack_alloc(sizeof(stat.Stat))) }
 	unsafe { *stat_storage = stat.Stat{} }
 	ret, err := fs.syscall_fstat(gpr_state, int(u32(fdnum)), stat_storage)
 	if err != 0 {
@@ -349,7 +349,7 @@ pub fn init_syscall_table() {
 		syscall_table[i] = voidptr(syscall_vacant)
 	}
 
-	// Linux aarch64 syscall numbers → Vinix handlers
+	// Linux aarch64 syscall numbers → Tulpar handlers
 	// Reference: include/uapi/asm-generic/unistd.h
 
 	// File I/O
@@ -594,9 +594,9 @@ pub fn init_syscall_table() {
 	syscall_table[161] = voidptr(net.syscall_sethostname) // __NR_sethostname
 	syscall_table[162] = voidptr(net.syscall_setdomainname) // __NR_setdomainname
 
-	// TLS — on aarch64 musl sets TPIDR_EL0 directly, but keep Vinix's
+	// TLS — on aarch64 musl sets TPIDR_EL0 directly, but keep Tulpar's
 	// set_tls available at a high slot for mlibc compat
-	// Vinix extensions. 245-259 is the block asm-generic sets aside for
+	// Tulpar extensions. 245-259 is the block asm-generic sets aside for
 	// arch-specific syscalls and that arm64 never uses, so nothing upstream can
 	// grow into it. They used to sit on 291 and 292, which are statx and
 	// io_pgetevents: a program calling statx got set_tls with statx's arguments.

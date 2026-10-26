@@ -43,7 +43,7 @@ fn initialise_cpu_bugs() {
 	katomic.store(mut &boot_bug_ready, u32(1))
 }
 
-@[export: 'vinix_linuxkpi_boot_cpu_has_bug']
+@[export: 'tulpar_linuxkpi_boot_cpu_has_bug']
 fn boot_cpu_has_bug(bug u32) bool {
 	if bug != bug_l1tf {
 		lib.kpanic(unsafe { nil }, c'linuxkpi: unsupported CPU bug query')

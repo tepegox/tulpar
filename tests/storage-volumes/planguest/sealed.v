@@ -3,7 +3,7 @@ module planguest
 
 fn sealed_file_tool(input &char, password &char, output &char, seal bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), if seal { &char(c'seal-key') } else { &char(c'unseal-key') }, input, password, output, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), if seal { &char(c'seal-key') } else { &char(c'unseal-key') }, input, password, output, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
@@ -14,7 +14,7 @@ fn sealed_open_tool(parent &char, password &char, readonly bool, expected i32) {
 
 fn sealed_open_path_tool(parent &char, envelope &char, password &char, readonly bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'open-sealed'), parent,
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'open-sealed'), parent,
 			&char(c'60'), &char(c'15728640'), &char(c'4096'), envelope, password,
 			if readonly { &char(c'ro') } else { &char(nil) }, &char(nil)]!
 		run_utility(&args[0], expected)
@@ -24,24 +24,24 @@ fn sealed_open_path_tool(parent &char, envelope &char, password &char, readonly 
 fn sealed_view(parent &char, readonly bool) {
 	unsafe {
 		sealed_open_tool(parent, c'/root/crypt.pass', readonly, 0)
-		info := status(c'/dev/mapper/vinix60')
+		info := status(c'/dev/mapper/tulpar60')
 		check(info.flags & 64 != 0 && (info.flags & 1 != 0) == readonly, c'sealed encrypted mapping mode')
-		fd := C.open(c'/dev/mapper/vinix60', if readonly { C.O_RDONLY } else { C.O_RDWR })
-		if readonly { check(C.open(c'/dev/mapper/vinix60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'sealed readonly access') }
+		fd := C.open(c'/dev/mapper/tulpar60', if readonly { C.O_RDONLY } else { C.O_RDWR })
+		if readonly { check(C.open(c'/dev/mapper/tulpar60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'sealed readonly access') }
 		else { mut data := [512]u8{init: 0x73}; check(C.pwrite(fd, &data[0], 512, 0) == 512, c'sealed writable data') }
 		crypt_data(fd, 0, 0x73)
-		check(fd >= 0 && C.close(fd) == 0, c'close sealed volume'); simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		check(fd >= 0 && C.close(fd) == 0, c'close sealed volume'); simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 	}
 }
 
 fn planned_sealed(parent &char) {
 	unsafe {
 		pass := C.open(c'/root/crypt.pass', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
-		check(pass >= 0 && C.write(pass, c'Vinix protected-volume fixture passphrase', 41) == 41 && C.fsync(pass) == 0 && C.close(pass) == 0, c'private passphrase fixture')
+		check(pass >= 0 && C.write(pass, c'Tulpar protected-volume fixture passphrase', 41) == 41 && C.fsync(pass) == 0 && C.close(pass) == 0, c'private passphrase fixture')
 		wrong := C.open(c'/root/wrong.pass', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(wrong >= 0 && C.write(wrong, c'wrong fixture passphrase', 24) == 24 && C.close(wrong) == 0, c'wrong passphrase fixture')
 		sealed_file_tool(c'/root/crypt.key', c'/root/crypt.pass', c'/root/crypt.sealed', true, 0)
-		sealed_open_tool(parent, c'/root/wrong.pass', true, 1); missing(c'/dev/mapper/vinix60')
+		sealed_open_tool(parent, c'/root/wrong.pass', true, 1); missing(c'/dev/mapper/tulpar60')
 		sealed_file_tool(c'/root/crypt.sealed', c'/root/wrong.pass', c'/root/no-key', false, 1)
 		check(C.open(c'/root/no-key', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'wrong passphrase never publishes')
 		sealed_file_tool(c'/root/crypt.sealed', c'/root/crypt.pass', c'/root/unsealed.key', false, 0)

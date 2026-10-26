@@ -9,9 +9,9 @@ V_C_ERROR_BUG_REPORT_DISABLED=1 v -cc cc run tools/development/stage-java.v \
   aarch64 /path/to/prepared-java-overlay java-25-openjdk /path/to/new-java-stage
 
 V_C_ERROR_BUG_REPORT_DISABLED=1 \
-VINIX_DEVELOPMENT_REFERENCE_SDK=/path/to/new-java-stage/sdk \
-VINIX_DEVELOPMENT_REFERENCE_PROFILES=java \
-VINIX_DEVELOPMENT_REFERENCE_JIT=1 \
+TULPAR_DEVELOPMENT_REFERENCE_SDK=/path/to/new-java-stage/sdk \
+TULPAR_DEVELOPMENT_REFERENCE_PROFILES=java \
+TULPAR_DEVELOPMENT_REFERENCE_JIT=1 \
 tests/development/run-guest aarch64 /path/to/kernel /path/to/staged-tools /path/to/new-state
 ```
 
@@ -25,8 +25,8 @@ workspaces. Class, JAR and readback artifacts must match. The qualifier does
 not grant production mount approval; the standalone CLI requires the system
 administrator to prepare that policy separately.
 
-`smoke.sh` runs inside the aarch64 Vinix userland. It verifies the Alpine
-OpenJDK JRE and JDK, compiles `VinixJavaSmoke.java` with `javac`, packages the
+`smoke.sh` runs inside the aarch64 Tulpar userland. It verifies the Alpine
+OpenJDK JRE and JDK, compiles `TulparJavaSmoke.java` with `javac`, packages the
 class with `jar`, and runs it from both a class directory and the resulting
 archive. The Java program exercises files, cryptography, threads and TCP
 loopback networking.

@@ -72,10 +72,10 @@ struct Schedule {
 }
 
 pub fn enabled_record() !string {
-	unit := '[Service]\nType=simple\nExecStart="/usr/bin/vinix-jobs" watch "/home/developer/service-state"\n'
+	unit := '[Service]\nType=simple\nExecStart="/usr/bin/tulpar-jobs" watch "/home/developer/service-state"\n'
 		+ 'Restart=on-failure\nRestartSec=1s\nTimeoutStopSec=10s\n'
 	mut supervisor := sessioncore.Supervisor{count: 1}
-	supervisor.services[0] = sessioncore.import_linux_service('vinix-jobs.service', unit, true)!
+	supervisor.services[0] = sessioncore.import_linux_service('tulpar-jobs.service', unit, true)!
 	supervisor.validate()!
 	return supervisor.encode()
 }
@@ -114,7 +114,7 @@ pub fn verify(receipts map[string]string, phase int, pin string) !Proof {
 	enabled := enabled_record()!
 	if hex.decode(proof.running)!.bytestr() != enabled
 		|| hex.decode(proof.before)!.bytestr() != if phase == 1 { '' } else { enabled }
-		|| hex.decode(proof.after)!.bytestr() != if phase == 3 { 'vinix-services\t1\n' } else { enabled } {
+		|| hex.decode(proof.after)!.bytestr() != if phase == 3 { 'tulpar-services\t1\n' } else { enabled } {
 		return error('cold boot changed the persisted service definition')
 	}
 	verify_state(receipts[prefix + 'service-after.json'], phase, pin)!

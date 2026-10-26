@@ -4,11 +4,11 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-BUILD_DIR="${VINIX_AMD64_DISK_BUILD_DIR:-$SCRIPT_DIR/build-amd64-disk}"
-KERNEL="${VINIX_AMD64_KERNEL:-$SCRIPT_DIR/build-amd64-kernel/bin/vinix}"
-INITRAMFS="${VINIX_AMD64_INITRAMFS:-$SCRIPT_DIR/build-amd64-userland/initramfs.tar}"
-OUTPUT_DISK="${VINIX_AMD64_DISK:-$SCRIPT_DIR/vinix-amd64.img}"
-DISK_SIZE_MB="${VINIX_AMD64_DISK_SIZE_MB:-64}"
+BUILD_DIR="${TULPAR_AMD64_DISK_BUILD_DIR:-$SCRIPT_DIR/build-amd64-disk}"
+KERNEL="${TULPAR_AMD64_KERNEL:-$SCRIPT_DIR/build-amd64-kernel/bin/tulpar}"
+INITRAMFS="${TULPAR_AMD64_INITRAMFS:-$SCRIPT_DIR/build-amd64-userland/initramfs.tar}"
+OUTPUT_DISK="${TULPAR_AMD64_DISK:-$SCRIPT_DIR/tulpar-amd64.img}"
+DISK_SIZE_MB="${TULPAR_AMD64_DISK_SIZE_MB:-64}"
 . "$SCRIPT_DIR/build-support/limine-binary.sh"
 
 case "$BUILD_DIR" in
@@ -19,7 +19,7 @@ case "$BUILD_DIR" in
 esac
 case "$DISK_SIZE_MB" in
     ''|*[!0-9]*|0)
-        echo "ERROR: VINIX_AMD64_DISK_SIZE_MB must be a positive integer" >&2
+        echo "ERROR: TULPAR_AMD64_DISK_SIZE_MB must be a positive integer" >&2
         exit 1
         ;;
 esac
@@ -46,13 +46,13 @@ if [ "$disk_bytes" -lt $((payload_bytes + 8 * 1024 * 1024)) ]; then
 fi
 
 mkdir -p "$(dirname "$OUTPUT_DISK")"
-OUTPUT_TMP="$(mktemp "$(dirname "$OUTPUT_DISK")/.vinix-amd64.img.XXXXXX")"
+OUTPUT_TMP="$(mktemp "$(dirname "$OUTPUT_DISK")/.tulpar-amd64.img.XXXXXX")"
 trap 'rm -f "$OUTPUT_TMP"' EXIT
 truncate -s "${DISK_SIZE_MB}M" "$OUTPUT_TMP"
 mformat -i "$OUTPUT_TMP" -F ::
 mmd -i "$OUTPUT_TMP" ::/EFI ::/EFI/BOOT ::/boot
 mcopy -o -i "$OUTPUT_TMP" "$BOOTX64" ::/EFI/BOOT/BOOTX64.EFI
-mcopy -o -i "$OUTPUT_TMP" "$KERNEL" ::/boot/vinix
+mcopy -o -i "$OUTPUT_TMP" "$KERNEL" ::/boot/tulpar
 mcopy -o -i "$OUTPUT_TMP" "$INITRAMFS" ::/boot/initramfs.tar
 mcopy -o -i "$OUTPUT_TMP" "$SCRIPT_DIR/build-support/limine.conf" ::/boot/limine.conf
 mv -f "$OUTPUT_TMP" "$OUTPUT_DISK"

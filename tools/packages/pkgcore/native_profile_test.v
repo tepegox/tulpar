@@ -13,7 +13,7 @@ fn native_fixture_elf(architecture string, interpreter bool) []u8 {
 }
 
 fn native_profile_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-native-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-native-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		os.mkdir_all(root + '/bin')!
@@ -41,7 +41,7 @@ fn test_native_profile_pins_both_targets_matches_examples_and_installs_a_signed_
 		p := item.recipe.manifest
 		assert p.kind == 'native' && p.runtime == '' && p.dependencies.len == 0 && p.files.len == 4
 		assert !p.proprietary && !p.firmware && p.license == 'MIT'
-		name := if p.id == 'org.vinix.package-hello' { 'hello' } else { p.id.all_after_last('.') }
+		name := if p.id == 'org.tulpar.package-hello' { 'hello' } else { p.id.all_after_last('.') }
 		manifest := json2.decode[Package](read_metadata(repository + '/examples/package-' + name + '/manifest-' + p.architecture + '.json')!)!
 		assert Package{ ...p, files: [] } == manifest
 	}
@@ -53,12 +53,12 @@ fn test_native_profile_pins_both_targets_matches_examples_and_installs_a_signed_
 			policy: Policy{ offline: true, reserve_bytes: 0 } }
 		store := work + '/store-' + architecture
 		refresh(config, store)!
-		ids := ['org.vinix.counter', 'org.vinix.memo', 'org.vinix.package-hello']
+		ids := ['org.tulpar.counter', 'org.tulpar.memo', 'org.tulpar.package-hello']
 		installed := transact(config, store, 'install', ids, TransactionOptions{})!
 		assert installed.packages.len == 3 && installed.packages.all(it.package.architecture == architecture)
-		assert os.is_file(store + '/current/share/applications/vinix-org.vinix.memo.desktop')
+		assert os.is_file(store + '/current/share/applications/tulpar-org.tulpar.memo.desktop')
 		assert transact(config, store, 'remove', ids, TransactionOptions{})!.packages.len == 0
-		assert !os.exists(store + '/current/share/applications/vinix-org.vinix.memo.desktop')
+		assert !os.exists(store + '/current/share/applications/tulpar-org.tulpar.memo.desktop')
 		assert rollback(config, store)!.packages.len == 3
 	}
 }
@@ -101,10 +101,10 @@ fn test_native_profile_rechecks_imported_segment_ranges_and_allows_exact_retry()
 	baseline := native_catalog('1.0.0', work + '/roots', work + '/baseline')!
 	mut refused := false
 	native_catalog_with('1.0.0', work + '/roots', work + '/refused', CatalogOptions{ checkpoint: native_profile_imported_invalid_elf }) or {
-		refused = err.msg().contains('imported org.vinix.memo') && err.msg().contains('segment outside the file')
+		refused = err.msg().contains('imported org.tulpar.memo') && err.msg().contains('segment outside the file')
 	}
 	assert refused && !os.exists(work + '/refused')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-native-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-native-profile-'))
 	os.write_file_array(work + '/roots/aarch64/bin/memo', elffixture.image('aarch64', 'static'))!
 	assert native_catalog('1.0.0', work + '/roots', work + '/refused')!.catalog_sha256 == baseline.catalog_sha256
 }
@@ -143,7 +143,7 @@ fn test_native_profile_refuses_bad_inputs_changed_imports_and_insufficient_space
 	mut notice := false
 	native_catalog('1.0.0', work + '/roots', work + '/refused') or { notice = err.msg().contains('redistribution notice') }
 	assert notice && !os.exists(work + '/refused')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-native-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-native-profile-'))
 }
 
 fn test_native_profile_preserves_a_concurrent_destination() {
@@ -152,7 +152,7 @@ fn test_native_profile_preserves_a_concurrent_destination() {
 	mut raced := false
 	native_catalog_with('1.0.0', work + '/roots', work + '/refused', CatalogOptions{ checkpoint: native_profile_raced_target }) or { raced = true }
 	assert raced && os.is_dir(work + '/refused') && os.ls(work + '/refused')!.len == 0
-	assert os.ls(work)!.all(!it.starts_with('.vinix-native-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-native-profile-'))
 }
 
 fn test_native_profile_refuses_a_notice_changed_to_a_directory_after_preflight() {
@@ -163,7 +163,7 @@ fn test_native_profile_refuses_a_notice_changed_to_a_directory_after_preflight()
 		denied = err.msg().contains('unexpected payload')
 	}
 	assert denied && !os.exists(work + '/refused')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-native-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-native-profile-'))
 }
 
 fn test_native_profile_requires_complete_ordinary_roots_new_output_and_canonical_version() {

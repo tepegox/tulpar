@@ -12,7 +12,7 @@ fn C.truncate(&char, i64) int
 
 struct MountReceipt {
  architecture string
- context string = 'native Vinix QEMU guest; private ext2 volume'
+ context string = 'native Tulpar QEMU guest; private ext2 volume'
  inputs map[string]string
  exit_code int
 }
@@ -36,20 +36,20 @@ fn main() {
  state := os.abs_path(options.value('--state-dir', ''))
  timeout := options.integer('--timeout', 180)!
  if os.exists(state) || timeout <= 0 { eprintln('state must be fresh and timeout positive'); exit(2) }
- kernel := os.read_bytes(options.value('--kernel-dir', '') + '/bin/vinix')!
+ kernel := os.read_bytes(options.value('--kernel-dir', '') + '/bin/tulpar')!
  expected := if arch == 'aarch64' { 183 } else { 62 }
  if kernel.len < 20 || kernel[..6] != [u8(127), `E`, `L`, `F`, 2, 1] || int(kernel[18]) + (int(kernel[19]) << 8) != expected {
   eprintln('kernel must be matching little-endian ELF64'); exit(2)
  }
  os.mkdir_all(state + '/kernel/bin')!
  os.mkdir_all(state + '/sources/mountfixture')!
- os.write_file_array(state + '/kernel/bin/vinix', kernel)!
+ os.write_file_array(state + '/kernel/bin/tulpar', kernel)!
  source := os.read_file(os.real_path(os.dir(@FILE) + '/mountfixture/core.v'))!
  os.write_file(state + '/sources/mountfixture/core.v', source)!
  disk := state + '/store.ext2'
  os.write_file(disk, '')!
  if unsafe { C.truncate(disk.str, 128 * 1024 * 1024) } != 0 { eprintln('cannot size private volume'); exit(1) }
- mut formatter := os.getenv('VINIX_MKE2FS')
+ mut formatter := os.getenv('TULPAR_MKE2FS')
  if formatter == '' {
   for candidate in ['mke2fs', 'mkfs.ext2', '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs'] {
    formatter = os.find_abs_path_of_executable(candidate) or { continue }
@@ -69,14 +69,14 @@ fn main() {
  for name, path in {'init': state + '/init', 'iso': state + '/test.iso', 'disk_after': disk} {
   inputs[name] = digest(path) or { '' }
  }
- os.write_file(state + '/receipt.json', json2.encode(MountReceipt{arch, 'native Vinix QEMU guest; private ext2 volume', inputs, code}, prettify: true) + '\n')!
+ os.write_file(state + '/receipt.json', json2.encode(MountReceipt{arch, 'native Tulpar QEMU guest; private ext2 volume', inputs, code}, prettify: true) + '\n')!
  exit(code)
 }
 
 fn run_guest(state string, arch string, disk string, timeout int) !int {
  init := guesthost.compile_init(state + '/sources/mountfixture/core.v', state, arch, false)!
  archive := guesthost.image(init, state)!
- if arch == 'x86_64' { os.setenv('VINIX_CMDLINE', os.getenv('VINIX_CMDLINE') + ' vinix.disk=auto', true) }
+ if arch == 'x86_64' { os.setenv('TULPAR_CMDLINE', os.getenv('TULPAR_CMDLINE') + ' tulpar.disk=auto', true) }
  configured := guesthost.launch(init, archive, state, state + '/kernel', arch, true)!
  mut command := configured.command.clone()
  if arch == 'aarch64' {

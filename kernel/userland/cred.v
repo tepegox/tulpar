@@ -13,7 +13,7 @@ import usercopy
 
 // The most supplementary groups a process may hold. Linux's default is 65536;
 // this is a bound the kernel can carry without an allocation growing without
-// limit, and far past anything a Vinix userland asks for.
+// limit, and far past anything a Tulpar userland asks for.
 const max_groups = 32
 
 fn current_process() &proc.Process {

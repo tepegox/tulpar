@@ -36,7 +36,7 @@ pub fn diagnostic_declarations() !string {
 }
 
 pub fn robust_generate(destination string, i386 bool, host bool) ! {
-	work := hosttest.work_dir('', 'vinix-steam-robust-')!
+	work := hosttest.work_dir('', 'tulpar-steam-robust-')!
 	defer { retire(work) }
 	source := work + '/robustcore'
 	hosttest.module_copy_tree(root() + '/build-support/steam/robustcore', source)!
@@ -116,7 +116,7 @@ pub fn robust_native(work string) ! {
 				run([...flags, '-c', root() + '/build-support/steam/robust-syscall.S', '-o', forward])!
 				extra << forward
 			}
-			run([os.getenv_opt('VINIX_LD_LLD') or { '/opt/homebrew/bin/ld.lld' }, '-m', if i386 { 'elf_i386' } else { 'elf_x86_64' },
+			run([os.getenv_opt('TULPAR_LD_LLD') or { '/opt/homebrew/bin/ld.lld' }, '-m', if i386 { 'elf_i386' } else { 'elf_x86_64' },
 				'-static', '--gc-sections', '-e', '_start', '-o', directory + '/' + label, ...common, object, abi, ...extra])!
 		}
 		println(name + ' actual native ABI fixtures linked')
@@ -126,7 +126,7 @@ pub fn robust_native(work string) ! {
 fn robust_test(args []string) !int {
 	parsed := hosttest.parse_arguments(args, [hosttest.Option{name: '--output-dir', value: true}, hosttest.Option{name: '--native'}], 0,
 		'Usage: test-robust-list [--output-dir DIR] [--native]', 'Compare both V preload policies with immutable original C.') or { return error_with_code(err.msg(), 2) }
-	work := hosttest.work_dir(parsed.options['--output-dir'], 'vinix-steam-robust-proof-')!
+	work := hosttest.work_dir(parsed.options['--output-dir'], 'tulpar-steam-robust-proof-')!
 	defer { if '--output-dir' !in parsed.options { retire(work) } }
 	flags := ['clang', '-O1', '-g', '-fno-builtin', '-fsanitize=address,undefined', '-fno-omit-frame-pointer',
 		'-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-label', '-Wno-unused-parameter']

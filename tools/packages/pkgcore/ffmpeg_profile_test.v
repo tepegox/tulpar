@@ -10,11 +10,11 @@ fn ffmpeg_test_elf(architecture string, kind string) []u8 {
 }
 
 fn ffmpeg_test_roots() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-ffmpeg-profile-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-ffmpeg-profile-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		for directory in ['bin', 'lib', 'licenses', 'sources'] { os.mkdir_all(root + '/' + directory)! }
-		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/vinix-linux-runner', 'lib/libc.so', ...ffmpeg_libraries] {
+		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/tulpar-linux-runner', 'lib/libc.so', ...ffmpeg_libraries] {
 			os.write_file_array(root + '/' + path, ffmpeg_test_elf(architecture, ffmpeg_elf_kind(path)))!
 			os.chmod(root + '/' + path, 0o755)!
 		}
@@ -39,7 +39,7 @@ fn test_ffmpeg_templates_disclose_permissions_source_and_complete_runtime_closur
 				assert recipe.entries.len == 20 && recipe.entries.any(it.path == 'sources/ffmpeg.tar.xz')
 			} else {
 				assert p.kind == 'linux' && p.version == '8.0.1' && p.permissions == ['files']
-				assert p.runtime == ffmpeg_runtime_id && p.entrypoint == 'bin/vinix-linux-runner'
+				assert p.runtime == ffmpeg_runtime_id && p.entrypoint == 'bin/tulpar-linux-runner'
 				assert p.dependencies == [Dependency{ id: ffmpeg_runtime_id, minimum: '1.0.0', before: '2.0.0' }]
 			}
 			files := recipe.entries.map(Payload{ path: it.path, bytes: 1, sha256: '01'.repeat(32), executable: ffmpeg_elf_kind(it.path) != '' })
@@ -77,7 +77,7 @@ fn test_ffmpeg_profile_refuses_wrong_targets_links_notices_versions_and_unpinned
 	mut pin_denied := false
 	ffmpeg_catalog('1.0.0', work + '/roots', work + '/pin') or { pin_denied = err.msg().contains('source archive differs') }
 	assert pin_denied && !os.exists(work + '/pin')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-ffmpeg-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-ffmpeg-profile-'))
 	os.rename(work + '/roots/x86_64', work + '/saved')!
 	os.symlink(work + '/saved', work + '/roots/x86_64')!
 	mut link_denied := false
@@ -127,7 +127,7 @@ fn test_ffmpeg_profile_rechecks_imported_entry_before_source_pin_admission() {
 		refused = err.msg().contains('imported') && err.msg().contains('executable entry')
 	}
 	assert refused && !os.exists(work + '/refused')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-ffmpeg-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-ffmpeg-profile-'))
 }
 
 fn test_ffmpeg_profile_requires_the_imported_source_filename_and_complete_bounded_notices() {
@@ -142,7 +142,7 @@ fn test_ffmpeg_profile_requires_the_imported_source_filename_and_complete_bounde
 			denied = err.msg().contains('unexpected payload path') || err.msg().contains('invalid redistribution/build notice')
 		}
 		assert denied && !os.exists(work + '/refused')
-		assert os.ls(work)!.all(!it.starts_with('.vinix-ffmpeg-profile-'))
+		assert os.ls(work)!.all(!it.starts_with('.tulpar-ffmpeg-profile-'))
 	}
 	work := ffmpeg_test_roots()!
 	defer { os.rmdir_all(work) or {} }
@@ -150,5 +150,5 @@ fn test_ffmpeg_profile_requires_the_imported_source_filename_and_complete_bounde
 	ffmpeg_catalog_with('1.0.0', work + '/roots', work + '/refused', CatalogOptions{ available_space: ffmpeg_profile_zero_space }) or {
 		full = err.msg().contains('insufficient disk space')
 	}
-	assert full && !os.exists(work + '/refused') && os.ls(work)!.all(!it.starts_with('.vinix-ffmpeg-profile-'))
+	assert full && !os.exists(work + '/refused') && os.ls(work)!.all(!it.starts_with('.tulpar-ffmpeg-profile-'))
 }

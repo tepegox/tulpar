@@ -168,12 +168,12 @@ fn check(frontend string, trimmer string, directory string) ! {
 		assert os.ls('/dev/fd')!.len==baseline
 	}
 	os.mkdir_all(directory)!
-	for index,text in ['start\n# Vinix execinfo compatibility\ntail','no marker\n','one\r\ntwo\r# Vinix execinfo compatibilitytail','\xef\xbb\xbfstart\n# Vinix execinfo compatibility'] {
+	for index,text in ['start\n# Tulpar execinfo compatibility\ntail','no marker\n','one\r\ntwo\r# Tulpar execinfo compatibilitytail','\xef\xbb\xbfstart\n# Tulpar execinfo compatibility'] {
 		input:=directory+'/cmake-'+index.str()
 		os.write_file(input,text)!
 		output:=sourcecommand.capture_full([trimmer,input],os.environ(),10,65536,cachecli.cancelled)!
 		assert output.status==0 && output.stdout=='' && output.stderr==''
-		assert os.read_file(input)! == text.replace('\r\n','\n').replace('\r','\n').all_before('# Vinix execinfo compatibility')
+		assert os.read_file(input)! == text.replace('\r\n','\n').replace('\r','\n').all_before('# Tulpar execinfo compatibility')
 	}
 	bad:=directory+'/invalid'
 	os.write_file_array(bad,[u8(255)])!

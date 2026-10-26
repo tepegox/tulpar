@@ -280,7 +280,7 @@ pub fn entry() i32 {
 	}
 	unsafe {
 		C.printf(c'proc map lookup: %lu lookups, %lu directory snapshots\n', native_ulong(pm_lookups), native_ulong(pm_listings))
-		if !failed() { C.puts(c'VINIX PROC MAP LOOKUP: PASS') }
+		if !failed() { C.puts(c'TULPAR PROC MAP LOOKUP: PASS') }
 		if pm_owner != 1 { return if failed() { 1 } else { 0 } }
 		C.sync(); C.reboot(C.RB_POWER_OFF); for { C.pause() }
 		return 0

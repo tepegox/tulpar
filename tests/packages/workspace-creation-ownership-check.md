@@ -41,7 +41,7 @@ Functional checks also exercise relative `alias/..`, trailing separators,
 restrictive umask, unchanged ancestor modes, symlink-leaf refusal, empty/NUL
 paths, a non-directory prefix and retained partial parents after exceeding a
 native path limit, followed by corrected retry. macOS uses a 300-byte component;
-the guests exceed Vinix's 4,096-byte copied-path bound with 8,192 bytes, since
+the guests exceed Tulpar's 4,096-byte copied-path bound with 8,192 bytes, since
 its tmpfs accepts the host's overlong component. Existing workspace containment and
 publisher exclusion tests remain mandatory.
 
@@ -94,7 +94,7 @@ V=/path/to/reviewed/v /tmp/workspace-creation-check /build/new-creation-host
 
 v -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/workspace-creation-runtime tests/packages/workspace-creation-ownership-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/workspace-creation-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-creation-arm
 ```

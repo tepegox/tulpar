@@ -34,7 +34,7 @@ fn stage() ! {
 	}
 	if cc.len == 0 { return error('compiler argv must not be empty') }
 	cc[0] = os.find_abs_path_of_executable(cc[0])!
-	v := os.find_abs_path_of_executable(os.getenv_opt('VINIX_V_COMPILER') or { @VEXE })!
+	v := os.find_abs_path_of_executable(os.getenv_opt('TULPAR_V_COMPILER') or { @VEXE })!
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	devcore.fresh_directory(args[1])!
 	output := os.real_path(args[1])
@@ -51,10 +51,10 @@ fn stage() ! {
 	manifest := output + '/development-tools.json'
 	os.write_file(manifest, json2.encode(receipt, prettify: true) + '\n')!
 	for tool, source in {
-		'vinix-build':   'build.v'
-		'vinix-vm':      'vm.v'
-		'vinix-qualify': 'qualify.v'
-		'vinix-jobs':    'jobs.v'
+		'tulpar-build':   'build.v'
+		'tulpar-vm':      'vm.v'
+		'tulpar-qualify': 'qualify.v'
+		'tulpar-jobs':    'jobs.v'
 	} {
 		println('Staging ${tool} for ${architecture}')
 		c := work + '/' + tool + '.c'

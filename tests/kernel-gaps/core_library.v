@@ -9,7 +9,7 @@ fn C.GC_register_my_thread(voidptr) i32
 fn C.GC_unregister_my_thread() i32
 fn C.PyErr_NoMemory() voidptr
 
-@[export: 'vinix_kernel_gap_core']
+@[export: 'tulpar_kernel_gap_core']
 fn entry(operation &char, namespace voidptr, arguments voidptr, syntax voidptr) voidptr {
 	C.GC_allow_register_threads()
 	mut registered := false

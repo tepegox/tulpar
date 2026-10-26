@@ -13,7 +13,7 @@ fn exec_fd_entry(argc i32, argv &&char) {
 			mut dev_name := [128]char{}
 			check(argc == 5 && C.snprintf(&proc_name[0], 128, c'/proc/self/fd/%s', argv[argc - 1]) > 0
 				&& C.snprintf(&dev_name[0], 128, c'/dev/fd/%s', argv[argc - 1]) > 0, 650)
-			// Linux and Vinix spell the synthesized script name differently.
+			// Linux and Tulpar spell the synthesized script name differently.
 			check(C.strcmp(argv[1], &proc_name[0]) == 0 || C.strcmp(argv[1], &dev_name[0]) == 0, 650)
 			opened := C.open(&proc_name[0], C.O_RDONLY)
 			mut bytes := [2]u8{}

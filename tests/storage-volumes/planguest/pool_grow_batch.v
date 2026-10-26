@@ -4,7 +4,7 @@ module planguest
 fn pool_grow_batch(path &char, pool &char, first &char, first_length &char,
 	second &char, second_length &char, preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'pool-preview-grow-batch') } else { &char(c'pool-grow-batch') },
 			path, pool, first, first_length, second, second_length, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
@@ -35,9 +35,9 @@ fn planned_pool_grow_batch(parent &char, other &char) {
 		pool_growth(c'/root/saved.vset', c'pool-expand', c'3', c'0', c'6299648', 0)
 		pool_batch(c'/root/saved.vset', c'3', c'14', c'4096', c'ro', c'15', c'8192', c'rw', false, 0, nil)
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
-		first := status(c'/dev/mapper/vinix14'); second := status(c'/dev/mapper/vinix15')
-		held_first := C.open(c'/dev/mapper/vinix14', C.O_RDONLY)
-		held_second := C.open(c'/dev/mapper/vinix15', C.O_RDWR)
+		first := status(c'/dev/mapper/tulpar14'); second := status(c'/dev/mapper/tulpar15')
+		held_first := C.open(c'/dev/mapper/tulpar14', C.O_RDONLY)
+		held_second := C.open(c'/dev/mapper/tulpar15', C.O_RDWR)
 		check(held_first >= 0 && held_second >= 0, c'hold cross-disk growth views')
 		raw := C.open(other, C.O_RDWR)
 		mut data := [4096]u8{init: 0xb9}
@@ -60,7 +60,7 @@ fn planned_pool_grow_batch(parent &char, other &char) {
 			&& contains(&output[0], c'disk=1 slot=15 action=grow offset=6291456 previous_bytes=8192 bytes=12288 readonly=0'), c'complete cross-disk growth preview')
 		bundle_unchanged(c'/root/saved.vset', &original[0], original_size)
 		pool_grow_batch(c'/root/saved.vset', c'3', c'14', c'8192', c'15', c'12288', false, 0, nil)
-		check(status(c'/dev/mapper/vinix14').bytes == first.bytes && status(c'/dev/mapper/vinix15').bytes == second.bytes, c'growth batch remains offline')
+		check(status(c'/dev/mapper/tulpar14').bytes == first.bytes && status(c'/dev/mapper/tulpar15').bytes == second.bytes, c'growth batch remains offline')
 		planned := C.open(c'/root/saved.vset', C.O_RDONLY)
 		mut complete := [8768]u8{}
 		complete_size := C.read(planned, &complete[0], 8768)
@@ -70,11 +70,11 @@ fn planned_pool_grow_batch(parent &char, other &char) {
 		preview(c'check-bundle', true, 1, &output[0])
 		check(!contains(&output[0], c'action='), c'later-disk extension conflict rejects complete growth preview')
 		tool(c'restore-bundle', c'/root/saved.vset', c'grow', nil, nil, 1)
-		check(status(c'/dev/mapper/vinix14').bytes == first.bytes && status(c'/dev/mapper/vinix15').bytes == second.bytes, c'preflight rejection prevents first growth')
-		simple(c'remove', c'/dev/mapper/vinix16', nil, 0)
+		check(status(c'/dev/mapper/tulpar14').bytes == first.bytes && status(c'/dev/mapper/tulpar15').bytes == second.bytes, c'preflight rejection prevents first growth')
+		simple(c'remove', c'/dev/mapper/tulpar16', nil, 0)
 		tool(c'restore-bundle', c'/root/saved.vset', c'grow', nil, nil, 0)
-		check(status(c'/dev/mapper/vinix14').generation == first.generation && status(c'/dev/mapper/vinix14').bytes == 8192
-			&& status(c'/dev/mapper/vinix15').generation == second.generation && status(c'/dev/mapper/vinix15').bytes == 12288, c'growth batch replay retains both generations')
+		check(status(c'/dev/mapper/tulpar14').generation == first.generation && status(c'/dev/mapper/tulpar14').bytes == 8192
+			&& status(c'/dev/mapper/tulpar15').generation == second.generation && status(c'/dev/mapper/tulpar15').bytes == 12288, c'growth batch replay retains both generations')
 		check(C.pread(held_first, &data[0], 4096, 4096) == 4096 && C.close(held_first) == 0, c'held readonly descriptor reads first extension')
 		for byte in data { check(byte == 0xba, c'first extension data preserved') }
 		check(C.pread(held_second, &data[0], 4096, 8192) == 4096 && C.close(held_second) == 0, c'held writable descriptor reads second extension')
@@ -83,21 +83,21 @@ fn planned_pool_grow_batch(parent &char, other &char) {
 		check(contains(&output[0], c'slot=14 action=keep') && contains(&output[0], c'slot=15 action=keep'), c'growth batch retries report both kept rows')
 		bundle_unchanged(c'/root/saved.vset', &complete[0], complete_size)
 		for slot in [&char(c'14'), &char(c'15')]! { simple(c'plan-remove', c'/root/saved.vset', slot, 0) }
-		simple(c'remove', c'/dev/mapper/vinix14', nil, 0); simple(c'remove', c'/dev/mapper/vinix15', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar14', nil, 0); simple(c'remove', c'/dev/mapper/tulpar15', nil, 0)
 		tool(c'pool-remove', c'/root/saved.vset', c'3', c'0', nil, 0)
 		tool(c'pool-remove', c'/root/saved.vset', c'3', c'1', nil, 0)
 		pool_members(c'/root/saved.vset')
 		bundle_unchanged(c'/root/saved.vset', &baseline[0], size)
 		check(first.disk_id == status(parent).disk_id && second.disk_id == status(other).disk_id, c'growth retained physical disk identities')
-		copy_plan(c'/root/saved.vset', c'/etc/vinix/volumes.vset')
+		copy_plan(c'/root/saved.vset', c'/etc/tulpar/volumes.vset')
 		C.printf(c'PLAN POOL GROWTH BATCH PASSED: atomic cross-disk growth, complete previews, rollback, live preflight and held descriptors\n')
 	}
 }
 
 fn capacity_growth_batch(parent &char) {
 	unsafe {
-		before := status(c'/dev/mapper/vinix18')
-		held := C.open(c'/dev/mapper/vinix18', C.O_RDONLY)
+		before := status(c'/dev/mapper/tulpar18')
+		held := C.open(c'/dev/mapper/tulpar18', C.O_RDONLY)
 		raw := C.open(parent, C.O_RDWR)
 		mut data := [4096]u8{init: 0xcd}
 		check(held >= 0 && raw >= 0 && C.pwrite(raw, &data[0], 4096, 16789504) == 4096
@@ -106,9 +106,9 @@ fn capacity_growth_batch(parent &char) {
 		pool_grow_batch(c'/root/saved.vset', c'4', c'14', c'8192', c'18', c'8192', true, 0, &output[0])
 		check(contains(&output[0], c'slot=14 action=keep') && contains(&output[0], c'slot=18 action=grow'), c'mixed keep/grow preview')
 		pool_grow_batch(c'/root/saved.vset', c'4', c'14', c'8192', c'18', c'8192', false, 0, nil)
-		check(status(c'/dev/mapper/vinix18').bytes == 4096, c'tail growth planning is offline')
+		check(status(c'/dev/mapper/tulpar18').bytes == 4096, c'tail growth planning is offline')
 		tool(c'restore-bundle', c'/root/saved.vset', c'grow', nil, nil, 0)
-		check(status(c'/dev/mapper/vinix18').bytes == 8192 && status(c'/dev/mapper/vinix18').generation == before.generation
+		check(status(c'/dev/mapper/tulpar18').bytes == 8192 && status(c'/dev/mapper/tulpar18').generation == before.generation
 			&& C.pread(held, &data[0], 4096, 4096) == 4096 && C.close(held) == 0, c'held tail descriptor reads grown readonly extent')
 		for byte in data { check(byte == 0xcd, c'grown readonly tail bytes preserved') }
 		pool_grow_batch(c'/root/saved.vset', c'4', c'14', c'8192', c'18', c'8192', false, 0, &output[0])

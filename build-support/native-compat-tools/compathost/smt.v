@@ -13,10 +13,10 @@ fn smt_guest_command(args []string) !int {
 		hosttest.Option{ name: '--build-only' }], 0, 'Usage: run [--state-dir FRESH-DIR] [--build-only]',
 		'Boot the unchanged SMT affinity probe with both policies and the original topology.') or { return error_with_code(err.msg(), 2) }
 	timeout := environment_timeout(180)!
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-smt-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-smt-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
-	repo := resolve(os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() })!
-	private_kernel := snapshot_kernel_input(work, os.getenv_opt('VINIX_AMD64_KERNEL') or { root() + '/build-amd64-kernel/bin/vinix' }, 'x86_64')!
+	repo := resolve(os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() })!
+	private_kernel := snapshot_kernel_input(work, os.getenv_opt('TULPAR_AMD64_KERNEL') or { root() + '/build-amd64-kernel/bin/tulpar' }, 'x86_64')!
 	compiler := os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }
 	flags := [compiler, '-O2', '-Wall', '-Wextra', '-Werror', '-D_GNU_SOURCE', '-fno-strict-aliasing']
 	fixture := work + '/fixture.o'
@@ -27,7 +27,7 @@ fn smt_guest_command(args []string) !int {
 	run(compile)!
 	elf_arch(init, 'x86_64')!
 	mut receipt := { 'compile_command': json2.Any(hosttest.strings(compile)), 'fixture_flags': json2.Any(hosttest.strings(flags)),
-		'init_sha256': json2.Any(hosttest.sha(init)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!),
+		'init_sha256': json2.Any(hosttest.sha(init)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!),
 		'sources': json2.Any(hosttest.string_map(directory_hashes(root() + '/tests/smt-policy/guestfixture', '')!)),
 		'topology': json2.Any('4,sockets=1,cores=2,threads=2'), 'timeout': json2.Any(timeout) }
 	mut variants := map[string]json2.Any{}
@@ -37,7 +37,7 @@ fn smt_guest_command(args []string) !int {
 		state := work + '/policy-' + enabled
 		os.mkdir(state)!
 		os.cp(archive, state + '/initramfs.tar')!
-		mut item := { 'request': json2.Any(enabled), 'cmdline': json2.Any('vinix.smt=' + enabled),
+		mut item := { 'request': json2.Any(enabled), 'cmdline': json2.Any('tulpar.smt=' + enabled),
 			'archive_sha256': json2.Any(hosttest.sha(state + '/initramfs.tar')!) }
 		variants[enabled] = item
 		receipt['variants'] = variants
@@ -62,12 +62,12 @@ fn smt_guest_command(args []string) !int {
 }
 
 fn smt_launch(init string, state string, kernel string, repo string, enabled string) !guesthost.Launch {
-	previous := os.getenv_opt('VINIX_CMDLINE')
-	os.setenv('VINIX_CMDLINE', 'vinix.smt=' + enabled, true)
-	defer { if text := previous { os.setenv('VINIX_CMDLINE', text, true) } else { os.unsetenv('VINIX_CMDLINE') } }
+	previous := os.getenv_opt('TULPAR_CMDLINE')
+	os.setenv('TULPAR_CMDLINE', 'tulpar.smt=' + enabled, true)
+	defer { if text := previous { os.setenv('TULPAR_CMDLINE', text, true) } else { os.unsetenv('TULPAR_CMDLINE') } }
 	configured := guesthost.launch_from(init, state + '/initramfs.tar', state, kernel, 'x86_64', false, repo)!
 	return guesthost.Launch{
-		command: optin_launch(configured.command, 'x86_64', state, 'max', '4,sockets=1,cores=2,threads=2', 'VINIX_OVMF_CODE')
+		command: optin_launch(configured.command, 'x86_64', state, 'max', '4,sockets=1,cores=2,threads=2', 'TULPAR_OVMF_CODE')
 		env: configured.env
 	}
 }

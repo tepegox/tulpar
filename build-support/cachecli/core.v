@@ -91,7 +91,7 @@ fn desktop(argv []string) !int {
 	v := args.required('--v') or { return error_with_code(err.msg(), 2) }
 	env := os.environ()
 	input := cachekey.desktop_prepare(root, v, env, root + '/build-support/desktop-build-key')!
-	command := cachekey.shell_words(env['VINIX_MUSL_CC_AARCH64'] or { 'aarch64-linux-musl-gcc' })!
+	command := cachekey.shell_words(env['TULPAR_MUSL_CC_AARCH64'] or { 'aarch64-linux-musl-gcc' })!
 	mut path := ''
 	mut version := 'missing'
 	if command.len > 0 {

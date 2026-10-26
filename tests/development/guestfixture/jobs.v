@@ -31,16 +31,16 @@ fn job_identity() {
 			&& C.getgid() == 1000 && C.getegid() == 1000, 321)
 		check(C.getenv(c'UNSELECTED_PARENT_SECRET') == nil, 322)
 		token := C.getenv(c'TEST_TOKEN')
-		check(token != nil && C.strcmp(token, c'vinix-native-fixture-secret') == 0, 323)
-		C.puts(c'vinix-native-fixture-secret')
-		C.write(2, c'vinix-native-fixture-secret\n', 28)
+		check(token != nil && C.strcmp(token, c'tulpar-native-fixture-secret') == 0, 323)
+		C.puts(c'tulpar-native-fixture-secret')
+		C.write(2, c'tulpar-native-fixture-secret\n', 28)
 	}
 }
 
 fn lifecycle_payload(mode &char) i32 {
 	unsafe {
 		job_identity()
-		prefix := C.getenv(c'VINIX_JOB_PROOF_PREFIX')
+		prefix := C.getenv(c'TULPAR_JOB_PROOF_PREFIX')
 		check(prefix != nil && C.getpgid(0) == C.getpid(), 324)
 		mut path := [256]char{}
 		mut text := [32]char{}
@@ -90,7 +90,7 @@ fn start_jobs(action &char, state &char) i32 {
 		pid := C.fork()
 		check(pid > -1, 331)
 		if pid == 0 {
-			argv := [&char(c'/usr/bin/vinix-jobs'), action, state, &char(nil)]!
+			argv := [&char(c'/usr/bin/tulpar-jobs'), action, state, &char(nil)]!
 			C.execv(argv[0], &argv[0])
 			C._exit(127)
 		}
@@ -179,9 +179,9 @@ fn job_lifecycle_checks() {
 			mut state := [256]char{}
 			C.snprintf(&plan[0], plan.len, c'/home/developer/%s-jobs.json', name)
 			C.snprintf(&state[0], state.len, c'/home/developer/%s-state', name)
-			check(command(c'/usr/bin/vinix-jobs', c'init', &plan[0], &state[0]) == 0, 343)
+			check(command(c'/usr/bin/tulpar-jobs', c'init', &plan[0], &state[0]) == 0, 343)
 		}
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/deadline-state', nil) == 1, 344)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/deadline-state', nil) == 1, 344)
 		retired_job(job_pid(c'/home/developer/deadline', c'parent'))
 		retired_job(job_pid(c'/home/developer/deadline', c'child'))
 		job_state(c'/home/developer/deadline-state/state.json', false, c'job deadline expired', c'"runs":1')
@@ -195,8 +195,8 @@ fn job_lifecycle_checks() {
 			parent := job_pid(&prefix[0], c'parent')
 			child := job_pid(&prefix[0], c'child')
 			check(C.getpgid(parent) == parent && C.getpgid(child) == parent, 345)
-			check(command(c'/usr/bin/vinix-jobs', c'run-due', &state[0], nil) == 1, 346)
-			check(command(c'/usr/bin/vinix-jobs', c'acknowledge-interrupted', &state[0], c'fixture') == 1, 347)
+			check(command(c'/usr/bin/tulpar-jobs', c'run-due', &state[0], nil) == 1, 346)
+			check(command(c'/usr/bin/tulpar-jobs', c'acknowledge-interrupted', &state[0], c'fixture') == 1, 347)
 			check(C.kill(owner, if C.strcmp(name, c'term') == 0 { C.SIGTERM } else { C.SIGINT }) == 0, 348)
 			wait_jobs(owner, 0)
 			retired_job(parent)
@@ -237,7 +237,7 @@ fn job_lifecycle_checks() {
 		check(C.kill(owner, C.SIGKILL) == 0, 354)
 		wait_jobs(owner, C.SIGKILL)
 		check(C.kill(parent, 0) == 0 && C.kill(child, 0) == 0, 355)
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/interrupted-state', nil) == 1, 356)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/interrupted-state', nil) == 1, 356)
 		snapshot_job(c'/home/developer/interrupted-state/state.json', c'/home/developer/interrupted-before.json')
 		job_state(c'/home/developer/interrupted-before.json', true, c'running', c'"runs":0')
 		// Only the fixture's freshly observed, still-live group is signalled.
@@ -245,8 +245,8 @@ fn job_lifecycle_checks() {
 		check(C.kill(-parent, C.SIGKILL) == 0, 357)
 		retired_job(parent)
 		retired_job(child)
-		check(command(c'/usr/bin/vinix-jobs', c'acknowledge-interrupted', c'/home/developer/interrupted-state', c'fixture') == 0, 358)
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/interrupted-state', nil) == 0, 359)
+		check(command(c'/usr/bin/tulpar-jobs', c'acknowledge-interrupted', c'/home/developer/interrupted-state', c'fixture') == 0, 358)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/interrupted-state', nil) == 0, 359)
 		job_state(c'/home/developer/interrupted-state/state.json', false, c'finished', c'"runs":1')
 		mut proof := [10]char{}
 		fd := C.open(c'/home/developer/interrupted.recovered', C.O_RDONLY)

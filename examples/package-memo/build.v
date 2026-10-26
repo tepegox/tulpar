@@ -18,7 +18,7 @@ fn build(destination string) ! {
 	v := os.find_abs_path_of_executable(if os.getenv('V') == '' { 'v' } else { os.getenv('V') })!
 	output := os.abs_path(destination)
 	if os.exists(output) { return error('example repository output must be new') }
-	work := os.temp_dir() + '/vinix-sdk-memo-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-sdk-memo-' + os.getpid().str()
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or {} }
 	for architecture in ['aarch64', 'x86_64'] {
@@ -28,7 +28,7 @@ fn build(destination string) ! {
 		os.mkdir_all(payload + '/licenses')!
 		os.cp(repository + '/tools/packages/appsdk/LICENSE', payload + '/licenses/application-sdk-MIT.txt')!
 		os.cp(os.dir(v) + '/LICENSE', payload + '/licenses/v-MIT.txt')!
-		os.cp(os.getenv_opt('VINIX_MUSL_COPYRIGHT') or { repository + '/build-support/musl/COPYRIGHT' }, payload + '/licenses/musl-MIT.txt')!
+		os.cp(os.getenv_opt('TULPAR_MUSL_COPYRIGHT') or { repository + '/build-support/musl/COPYRIGHT' }, payload + '/licenses/musl-MIT.txt')!
 		command(v, ['-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository,
 			'-d', 'no_backtrace', '-d', 'no_segfault_handler', '-os', 'linux', '-arch',
 			if architecture == 'aarch64' { 'arm64' } else { 'amd64' }, '-o', work + '/memo.c',

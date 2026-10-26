@@ -58,7 +58,7 @@ fn add_io_limit(mut text lib.Text, label string, value u64) {
 }
 
 fn cgroup_io_text(account &proc.CGroupAccount, limits bool) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(256) }
 	sample := cgcontrol.snapshot(proc.cgroup_control(account))
 	for device in sample.io {

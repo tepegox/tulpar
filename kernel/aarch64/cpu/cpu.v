@@ -419,7 +419,7 @@ pub fn write_cntp_tval_el0(value u64) {
 
 // Virtual timer (CNTV) registers -- used under HVF where physical timer is trapped.
 //
-// Vinix polls ISTATUS instead of relying on virtual-timer IRQ delivery under
+// Tulpar polls ISTATUS instead of relying on virtual-timer IRQ delivery under
 // HVF. After the host leaves QEMU in the background for long enough, HVF can
 // stop reporting ISTATUS for an already-overdue 32-bit TVAL deadline. With all
 // guest threads asleep, that leaves every CPU spinning in the scheduler's
@@ -472,7 +472,7 @@ pub fn write_cntv_ctl_el0(value u64) {
 }
 
 pub fn write_cntv_tval_el0(value u64) {
-	// TVAL is architecturally a signed 32-bit countdown. Every Vinix use is a
+	// TVAL is architecturally a signed 32-bit countdown. Every Tulpar use is a
 	// small positive interval, but preserve the immediate-expiry meaning of a
 	// value whose sign bit is set rather than turning it into a far-future u64.
 	raw := u32(value)
@@ -736,24 +736,24 @@ pub fn syscall_set_tls(_ voidptr, addr u64) (u64, u64) {
 }
 
 pub fn init_fpu_globals() {
-	C.vinix_aarch64_fpu_enable()
+	C.tulpar_aarch64_fpu_enable()
 	fpu_storage_size = 520
 	fpu_save = save_fpu_state
 	fpu_restore = restore_fpu_state
 }
 
-fn C.vinix_aarch64_fpu_enable()
+fn C.tulpar_aarch64_fpu_enable()
 
-fn C.vinix_aarch64_fpu_save(state voidptr)
+fn C.tulpar_aarch64_fpu_save(state voidptr)
 
-fn C.vinix_aarch64_fpu_restore(state voidptr)
+fn C.tulpar_aarch64_fpu_restore(state voidptr)
 
 fn save_fpu_state(state voidptr) {
-	C.vinix_aarch64_fpu_save(state)
+	C.tulpar_aarch64_fpu_save(state)
 }
 
 fn restore_fpu_state(state voidptr) {
-	C.vinix_aarch64_fpu_restore(state)
+	C.tulpar_aarch64_fpu_restore(state)
 }
 
 // PSCI calls, used as a boot signal on machines with no usable console.
@@ -768,21 +768,21 @@ fn restore_fpu_state(state voidptr) {
 pub const psci_system_off = u64(0x84000008)
 pub const psci_system_reset = u64(0x84000009)
 
-fn C.vinix_psci_hvc(function_id u64) u64
+fn C.tulpar_psci_hvc(function_id u64) u64
 
-fn C.vinix_psci_smc(function_id u64) u64
+fn C.tulpar_psci_smc(function_id u64) u64
 
-fn C.vinix_current_el() u64
+fn C.tulpar_current_el() u64
 
-fn C.vinix_set_sp_el1(value u64)
+fn C.tulpar_set_sp_el1(value u64)
 
 pub fn current_el() u64 {
-	return C.vinix_current_el()
+	return C.tulpar_current_el()
 }
 
-// Give EL1 a valid SP_EL1 (exception stack). See vinix_set_sp_el1 in psci.S.
+// Give EL1 a valid SP_EL1 (exception stack). See tulpar_set_sp_el1 in psci.S.
 pub fn set_sp_el1(value u64) {
-	C.vinix_set_sp_el1(value)
+	C.tulpar_set_sp_el1(value)
 }
 
 pub fn psci_call(function_id u64) {
@@ -790,20 +790,20 @@ pub fn psci_call(function_id u64) {
 	// would land in the early fault vectors and look like a crash rather than
 	// a PSCI call. Only a kernel at EL1 has a hypervisor below to answer it.
 	if current_el() >= 2 {
-		C.vinix_psci_smc(function_id)
+		C.tulpar_psci_smc(function_id)
 		return
 	}
-	C.vinix_psci_hvc(function_id)
-	C.vinix_psci_smc(function_id)
+	C.tulpar_psci_hvc(function_id)
+	C.tulpar_psci_smc(function_id)
 }
 
-fn C.vinix_install_early_fault_vectors()
+fn C.tulpar_install_early_fault_vectors()
 
 // Route every early exception to a machine reset. Only meaningful while
 // diagnosing a boot that produces no output at all; the real vectors replace
 // these as soon as exception handling is initialised.
 pub fn install_early_fault_reset() {
-	C.vinix_install_early_fault_vectors()
+	C.tulpar_install_early_fault_vectors()
 }
 fn read_id_aa64isar0_el1() u64 {
 	mut ret := u64(0)
@@ -855,7 +855,7 @@ fn id_field(register u64, shift u64) u64 {
 // MongoDB to know it is on ARMv8.2. Only what EL0 can use with nothing set up
 // by the kernel is offered: no SVE or SME, which are not enabled here, no
 // pointer authentication or BTI, which need keys and page attributes, and no
-// event stream, which Vinix does not run. HWCAP_CPUID is not set either: an
+// event stream, which Tulpar does not run. HWCAP_CPUID is not set either: an
 // EL0 read of an ID register is answered (see emulated_id_register()), but
 // all it shows is what these bits already say.
 pub fn user_hwcaps() (u64, u64) {

@@ -65,7 +65,7 @@ fn run() ! {
 	checked([work + '/ownership'], os.environ(), work + '/ownership.log')!
 	checked([work + '/main', '--help'], os.environ(), work + '/help.log')!
 	mut environment := os.environ()
-	environment['VINIX_CPYTHON_LIBRARY'] = '/nonexistent/vinix-cpython-sdk'
+	environment['TULPAR_CPYTHON_LIBRARY'] = '/nonexistent/tulpar-cpython-sdk'
 	for argv in [['--abi-only'], ['--fcntl-only'], ['--unknown']] {
 		result := sourcecommand.capture_full([work + '/main', ...argv], environment, -1, 1024 * 1024, cachecli.cancelled)!
 		assert result.status == if argv[0] == '--unknown' { 2 } else { 1 }, result.str()
@@ -124,7 +124,7 @@ fn run() ! {
 		'status':   json2.Any('PASS')
 		'profile':  json2.Any(profile)
 		'receipts': json2.Any(receipts)
-		'limits':   json2.Any('No interpreter, SDK Python modules or Vinix guest executed. Ownership/callback tests use a native V model, and actual staged CPython ELF exports are checked as data. Both guest executables are generated and linked against real existing musl SDKs; this establishes builds/ABI availability and preserves source checks without asserting a new guest runtime result.')
+		'limits':   json2.Any('No interpreter, SDK Python modules or Tulpar guest executed. Ownership/callback tests use a native V model, and actual staged CPython ELF exports are checked as data. Both guest executables are generated and linked against real existing musl SDKs; this establishes builds/ABI availability and preserves source checks without asserting a new guest runtime result.')
 	}),
 		prettify: true
 	) + '\n')!

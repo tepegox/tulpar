@@ -16,7 +16,7 @@ and ELF architecture, copies the input kernel, compiles the V fixture and owns
 QEMU without networking. AArch64 selects HVF on macOS by default; set `USE_TCG=1`
 to use TCG. Each state directory must be new. No Python executes.
 
-The fixture requires the Vinix kernel identity and runs the public CLIs as
+The fixture requires the Tulpar kernel identity and runs the public CLIs as
 UID/GID 1000. It checks all four help entry points, schedule/account binding,
 a real scheduled job, selected credentials and environment, private plan/state
 ownership and modes, interval coalescing, and refusal of public or symlinked
@@ -33,11 +33,11 @@ This base gate checks native export and parser compatibility. Select the real
 Services broker explicitly to add import/start/stop and broker-restart checks:
 
 ```
-VINIX_DEVELOPMENT_SERVICE_BROKER=/path/to/native/vinix-session \
+TULPAR_DEVELOPMENT_SERVICE_BROKER=/path/to/native/tulpar-session \
 tests/development/run-guest aarch64 /path/to/kernel /path/to/staged-tools /path/to/new-state
 ```
 
-Supply the static broker alongside `vinix-timesync` and `vinix-service-runner`
+Supply the static broker alongside `tulpar-timesync` and `tulpar-service-runner`
 for the selected architecture. The controller copies all three executables into
 the guest and records their SHA-256 values beside the four development commands.
 An unsuitable or missing helper cannot satisfy
@@ -65,13 +65,13 @@ To exercise the scheduler across three fresh QEMU processes with one private
 
 ```
 v -enable-globals -gc none -cc cc run tests/native-guest-tools/service-cold-boot-main.v \
-  aarch64 /path/to/kernel /path/to/staged-tools /path/to/native/vinix-desktop /path/to/new-state
+  aarch64 /path/to/kernel /path/to/staged-tools /path/to/native/tulpar-desktop /path/to/new-state
 ```
 
 Use `x86_64` for the other architecture. This gate needs `mke2fs` and `e2fsck`;
-`VINIX_MKE2FS` and `VINIX_E2FSCK` may select their executable paths. It uses the
+`TULPAR_MKE2FS` and `TULPAR_E2FSCK` may select their executable paths. It uses the
 same native fixture/compiler settings as `run-guest`, including
-`VINIX_AARCH64_SYSROOT` when needed. Each boot receives a new initramfs and QEMU
+`TULPAR_AARCH64_SYSROOT` when needed. Each boot receives a new initramfs and QEMU
 process; only `home.ext2` is reused. Runtime IPC defaults to volatile `/run`, as
 in an installed session. Append `persistent` to put the broker socket under
 `/home/developer/service-runtime` on ext2 instead. Either mode defaults to a
@@ -265,7 +265,7 @@ compatibility patch, SHA-256
 `c8b114d931b2d6fba0d899c6e0e2340c181128d130ecdee042d7eac417c9f395`.
 The baseline diagnostic, exact patch and build logs remain beside the receipts.
 Native ARM fixture compilation selected the installed musl sysroot through
-`VINIX_AARCH64_SYSROOT`; its retained V `clang-native` wrapper selects the
+`TULPAR_AARCH64_SYSROOT`; its retained V `clang-native` wrapper selects the
 matching GCC runtime with Clang's `--gcc-toolchain` option. These checks qualify
 private-file handling and the base runner workflow; compiler-project, complete
 installed self-hosting and broader server/CI acceptance retain their own gates.
@@ -319,14 +319,14 @@ checks source/link preservation, account-owned private output/HOME/temporary dir
 contents. The controller independently checks both native receipt hashes against
 the expected bytes. Altering the pinned source must stop the next build before
 execution. This tests runner behavior with a prebuilt payload; compiling all
-Vinix layers inside an installed system remains open.
+Tulpar layers inside an installed system remains open.
 
 For additional reference workflows, prepare one native SDK prefix and select
 its profiles explicitly:
 
 ```
-VINIX_DEVELOPMENT_REFERENCE_SDK=/path/to/reference-prefix \
-VINIX_DEVELOPMENT_REFERENCE_PROFILES=make,ninja,sqlite \
+TULPAR_DEVELOPMENT_REFERENCE_SDK=/path/to/reference-prefix \
+TULPAR_DEVELOPMENT_REFERENCE_PROFILES=make,ninja,sqlite \
 tests/development/run-guest aarch64 /path/to/kernel /path/to/staged-tools /path/to/new-state
 ```
 
@@ -356,7 +356,7 @@ pinned shell. Prepare one coherent prefix; this mode cannot be mixed with the
 positional GCC/V SDK arguments. No host tool is silently substituted.
 
 UID/GID 1000 runs a generated build plan twice in fresh private workspaces.
-Pinned version commands precede `vinix-qualify --require-vinix`; Java records
+Pinned version commands precede `tulpar-qualify --require-tulpar`; Java records
 its versions as the first three qualifier commands. The project
 commands retain the 600-second budget. The plan uses 1800-second step deadlines
 and the guest receives 2 GiB of RAM. Both input trees are verified before and
@@ -385,8 +385,8 @@ V_C_ERROR_BUG_REPORT_DISABLED=1 v -cc cc run tools/development/stage-http.v \
   aarch64 /path/to/native-busybox /path/to/native-musl /path/to/new-http-stage
 
 V_C_ERROR_BUG_REPORT_DISABLED=1 \
-VINIX_DEVELOPMENT_REFERENCE_SDK=/path/to/new-http-stage/sdk \
-VINIX_DEVELOPMENT_REFERENCE_PROFILES=http \
+TULPAR_DEVELOPMENT_REFERENCE_SDK=/path/to/new-http-stage/sdk \
+TULPAR_DEVELOPMENT_REFERENCE_PROFILES=http \
 tests/development/run-guest aarch64 /path/to/kernel /path/to/staged-tools /path/to/new-state
 ```
 
@@ -442,20 +442,20 @@ remain failed receipts; qualification applies to the exact tuples above.
 Server diagnostics remain in private logs, including on failure; the guest
 emits bounded qualifier diagnostics and public case receipts.
 
-For the scheduled native Go CI gate, set `VINIX_DEVELOPMENT_REFERENCE_CI=1`
+For the scheduled native Go CI gate, set `TULPAR_DEVELOPMENT_REFERENCE_CI=1`
 with the prepared Go prefix and development tools that support reserved
 attempts and nested command interruption:
 
 ```
 V_C_ERROR_BUG_REPORT_DISABLED=1 USE_TCG=0 \
-VINIX_DEVELOPMENT_REFERENCE_SDK=/path/to/native-go-stage/sdk \
-VINIX_DEVELOPMENT_REFERENCE_PROFILES=go \
-VINIX_DEVELOPMENT_REFERENCE_CI=1 \
+TULPAR_DEVELOPMENT_REFERENCE_SDK=/path/to/native-go-stage/sdk \
+TULPAR_DEVELOPMENT_REFERENCE_PROFILES=go \
+TULPAR_DEVELOPMENT_REFERENCE_CI=1 \
 tests/development/run-guest aarch64 /path/to/kernel /path/to/staged-tools /path/to/new-ci-state
 ```
 
-CI mode replaces the two manual reference builds with a pinned `vinix-jobs`
-schedule executing `vinix-build`. Its opt-in `{attempt}` argument produces
+CI mode replaces the two manual reference builds with a pinned `tulpar-jobs`
+schedule executing `tulpar-build`. Its opt-in `{attempt}` argument produces
 `/home/developer/ci-1` and `ci-2`. Both runs compile and execute the ordinary
 Go goroutine/channel/file project. A pinned child verifies UID/GID 1000 and
 that the schedule's private credential and unselected parent credentials
@@ -588,7 +588,7 @@ both readback files contain `42` and hash to
 `73475cb40a568e8da8a045ced110137e159f890ac4da883b6b17dc651b3a8049`.
 The completed stage is retained in
 `build/development17-20261013/reference-arm-go-b`. This qualifies the tested
-pure-Go project through Vinix's Linux ABI; native x86 Go, cgo, wider module,
+pure-Go project through Tulpar's Linux ABI; native x86 Go, cgo, wider module,
 network, debugger and production-server workflows remain separate gates.
 
 Java uses the [native SDK stager](../../tools/development/stage-java.v) and
@@ -653,9 +653,9 @@ only accepted absolute link target. Unused `.py`, `.pyc` and `.pyo` helpers are
 excluded before copying. The SDK is prepared input, not downloaded or built by
 this controller. Compiler workloads receive 2 GiB of guest RAM.
 The musl loader link is normalized to its adjacent `libc.so`, so the copied
-SDK and runtime are portable closures that `vinix-build` can pin.
+SDK and runtime are portable closures that `tulpar-build` can pin.
 
-As UID/GID 1000, the fixture invokes `vinix-qualify --require-vinix` for `c,cpp`.
+As UID/GID 1000, the fixture invokes `tulpar-qualify --require-tulpar` for `c,cpp`.
 Both projects must compile with symbols, create/join a thread, write/read a
 file and execute their exact resulting binary. The controller independently
 checks the native report's kernel, architecture, account, runner and compiler
@@ -682,7 +682,7 @@ v -cc cc run tools/development/stage-v.v aarch64 /path/to/v-checkout /path/to/ne
 This copies and hashes the V root with Python helpers excluded, installs the
 compiler beside its matching library at `/usr/lib/vlang`, checks V/BusyBox ELF
 architectures and records both executable hashes. The V project uses the
-explicit Vinix/musl target, serial V3 workers and the native C compiler. It
+explicit Tulpar/musl target, serial V3 workers and the native C compiler. It
 must compile, write/read a file and execute its resulting binary. These runs
 receive 3 GiB of RAM. Failed qualification retains bounded command-log excerpts
 in the serial transcript as well as the native report.
@@ -738,10 +738,10 @@ The full compiler/package gate uses 600-second command deadlines and a
 and independently checked in its report; other guest runs retain 900 seconds.
 
 To rebuild V inside the guest before the project builds, set
-`VINIX_DEVELOPMENT_SELFHOST_V=1` on the complete SDK/V/BusyBox invocation:
+`TULPAR_DEVELOPMENT_SELFHOST_V=1` on the complete SDK/V/BusyBox invocation:
 
 ```
-VINIX_DEVELOPMENT_SELFHOST_V=1 tests/development/run-guest aarch64 /path/to/kernel /path/to/staged-tools /path/to/new-state /path/to/aarch64-linux-musl-native /path/to/vlang /path/to/native-static-busybox
+TULPAR_DEVELOPMENT_SELFHOST_V=1 tests/development/run-guest aarch64 /path/to/kernel /path/to/staged-tools /path/to/new-state /path/to/aarch64-linux-musl-native /path/to/vlang /path/to/native-static-busybox
 ```
 
 The prepared native V bootstrap translates its pinned `/usr/lib/vlang/cmd/v`
@@ -755,7 +755,7 @@ replaces its compiler with the rebuilt executable beside its matching libraries
 and help files. Each workspace gets its own rebuilt compiler;
 the remaining V help, package, assertion and utility builds use that compiler.
 Project builds select the pinned `/usr/lib/vlang` library root through
-`VINIX_V_ROOT` and disable caches, so library-path constants and cached-object
+`TULPAR_V_ROOT` and disable caches, so library-path constants and cached-object
 filenames cannot introduce the workspace prefix into the resulting artifacts.
 The runner checks its generated artifact pin before each execution. All 23
 steps must pass, compiler versions must match the pinned `VERSION`, and the
@@ -767,7 +767,7 @@ The outer receipt records `selfhost_v`; invalid option values or a missing
 complete SDK are refused before creating a state directory. Compiler sources,
 runtime objects and libraries come from the pinned installation input, and
 retain its recorded source adaptations. This checks a compiler rebuild and its
-use to build projects; rebuilding every Vinix layer remains a separate gate.
+use to build projects; rebuilding every Tulpar layer remains a separate gate.
 
 On 13 October 2026 the self-host compiler gate passed as UID/GID 1000 on
 AArch64 HVF. The 14-record receipt and transcript are retained in
@@ -790,7 +790,7 @@ matching SHA-256s are:
 The run used V sources `f6358ecff9cffbf2d8b03e6a09269aac7707e26c`,
 GCC/G++ 11.2.1 (20211120), BusyBox 1.36.1 and the prepared installation from
 `build/development17-20261013/native-v-arm-pinned`. The receipt records all
-source, SDK, compiler and runtime pins; its committed Vinix source revision is
+source, SDK, compiler and runtime pins; its committed Tulpar source revision is
 `116ba2c7850ca331a5bf9851470f1bae4a9136d3`. The isolated production kernel was
 built from `776b9f0d3` plus the bounded metadata-budget policy in `116ba2c78`.
 That policy preserves the previous limits through 4 GiB and allows the native
@@ -800,10 +800,10 @@ existing C resource fixture still reaches its fixed mapping bound on both the
 unchanged and updated kernels; see [the separate failing gate](../../docs/kernel-resources.md).
 
 For prepared compiler startup/help coverage without a GCC SDK, set
-`VINIX_DEVELOPMENT_V_SMOKE_ROOT` to the complete matching installation root:
+`TULPAR_DEVELOPMENT_V_SMOKE_ROOT` to the complete matching installation root:
 
 ```
-VINIX_DEVELOPMENT_V_SMOKE_ROOT=/path/to/x86-vlang tests/development/run-guest x86_64 /path/to/kernel /tmp/development-x86 /tmp/new-v-smoke
+TULPAR_DEVELOPMENT_V_SMOKE_ROOT=/path/to/x86-vlang tests/development/run-guest x86_64 /path/to/kernel /tmp/development-x86 /tmp/new-v-smoke
 ```
 
 The controller copies and pins the root and executable; UID 1000 executes help
@@ -819,15 +819,15 @@ in `build/development17-20261013/native-v-x86-pinned`. No native x86 GCC SDK was
 supplied, so compiler rebuilding and project compilation on x86 remain open.
 
 To run the CPU inspection check with a separately prepared `lscpu` ELF, set
-`VINIX_DEVELOPMENT_CPU_BINARY` to its host path. The controller checks the
+`TULPAR_DEVELOPMENT_CPU_BINARY` to its host path. The controller checks the
 architecture, pins and copies the binary and records its hash as `lscpu-smoke`.
 The same UID/GID 1000 procfs check runs without requiring a native compiler SDK:
 
 ```
-VINIX_DEVELOPMENT_CPU_BINARY=/path/to/x86_64-lscpu VINIX_QEMU_CPU=Nehalem tests/development/run-guest x86_64 /path/to/kernel /tmp/development-x86 /tmp/new-cpu-state
+TULPAR_DEVELOPMENT_CPU_BINARY=/path/to/x86_64-lscpu TULPAR_QEMU_CPU=Nehalem tests/development/run-guest x86_64 /path/to/kernel /tmp/development-x86 /tmp/new-cpu-state
 ```
 
-`VINIX_QEMU_CPU` also selects the x86 QEMU model; the default remains `max`.
+`TULPAR_QEMU_CPU` also selects the x86 QEMU model; the default remains `max`.
 A prepared ELF check is execution coverage, separate from the native rebuild
 gate above. The receipt records the actual QEMU argv and prepared binary hash.
 
@@ -855,50 +855,50 @@ before failing, preserving the executed command and artifact pins for diagnosis.
 
 On 13 October 2026 these workflows passed on x86_64 and AArch64 using the
 previously staged commands and isolated production kernels. Receipts are in
-`/tmp/vinix-development-guest-x86-20261013-e` and
-`/tmp/vinix-development-guest-arm-20261013-e`.
+`/tmp/tulpar-development-guest-x86-20261013-e` and
+`/tmp/tulpar-development-guest-arm-20261013-e`.
 The extended build-plan runs passed in
-`/tmp/vinix-development-build-x86-20261013-b` and
-`/tmp/vinix-development-build-arm-20261013-b`; both architectures produced
+`/tmp/tulpar-development-build-x86-20261013-b` and
+`/tmp/tulpar-development-build-arm-20261013-b`; both architectures produced
 artifact hash `8f62334d280332417efb4876a0690270b65488e01a24a4752f6e512653bb4cc9`.
 The optional SDK run passed on AArch64 with GCC/G++ 11.2.1 (20211120) as
 UID/GID 1000, including both reference project compile/run workflows. Its
 receipt and compiler-version transcript are retained in
-`/tmp/vinix-development-compilers-arm-20261013-c`.
+`/tmp/tulpar-development-compilers-arm-20261013-c`.
 Comparison with the fresh guest in `...-20261013-b` found matching SDK,
 compiler and compiled-project hashes for the same project paths and build
 epoch. The copied SDK hash is
 `5286f56cfe9f709635fa20f38325376e541cc4283376887ed6abc67d3d3eb279`.
 The extended controller's x86 job/build regression passed in
-`/tmp/vinix-development-compilers-x86-base-20261013-a`.
+`/tmp/tulpar-development-compilers-x86-base-20261013-a`.
 No native x86 GCC SDK was supplied for a compiler-project run.
 
 The C/C++/V run passed on AArch64 as UID/GID 1000 in
-`/tmp/vinix-development-v-arm-20261013-a`, using the updated staged commands in
-`/tmp/vinix-dev-aarch64-20261013-v-a`, GCC/G++ 11.2.1 and V 0.5.2. The prepared V
+`/tmp/tulpar-development-v-arm-20261013-a`, using the updated staged commands in
+`/tmp/tulpar-dev-aarch64-20261013-v-a`, GCC/G++ 11.2.1 and V 0.5.2. The prepared V
 tree's `VERSION` identifies revision `9bfa1dc3f3455d5733d5c226662b6aaba8544f2c`;
 its copied closure hash is
 `f2a67e54f237e64cefba4f1935ca301f305a4186488677e68b926bf5ff1dc2ea`.
 The receipt records the actual V executable and BusyBox hashes separately.
 The x86 controller/fixture regression passed in
-`/tmp/vinix-development-v-x86-base-20261013-a` without a compiler SDK.
+`/tmp/tulpar-development-v-x86-base-20261013-a` without a compiler SDK.
 This compiles a reference V project; rebuilding the V compiler itself and all
-Vinix layers remains open.
+Tulpar layers remains open.
 
 The private build HOME/temporary-directory checks passed as UID/GID 1000 on
-both architectures in `/tmp/vinix-development-home-arm-20261013-a` and
-`/tmp/vinix-development-home-x86-20261013-a`, with the updated commands staged
-in `/tmp/vinix-dev-aarch64-20261013-home-a` and
-`/tmp/vinix-dev-x86_64-20261013-home-a`.
+both architectures in `/tmp/tulpar-development-home-arm-20261013-a` and
+`/tmp/tulpar-development-home-x86-20261013-a`, with the updated commands staged
+in `/tmp/tulpar-dev-aarch64-20261013-home-a` and
+`/tmp/tulpar-dev-x86_64-20261013-home-a`.
 
 The utility rebuild run passed on AArch64 in
-`/tmp/vinix-development-userland-arm-20261013-g`, with commands staged in
-`/tmp/vinix-dev-aarch64-20261013-buffer-a`. Both fresh workspaces compiled and
+`/tmp/tulpar-development-userland-arm-20261013-g`, with commands staged in
+`/tmp/tulpar-dev-aarch64-20261013-buffer-a`. Both fresh workspaces compiled and
 executed `fetch`, `mount` and `chsh` as UID/GID 1000, retained complete receipts
 and produced matching artifact hashes. This includes successful SDK/V/runtime
 pin verification before and after each build. The extended x86 controller and
 fixture regression passed without a compiler SDK in
-`/tmp/vinix-development-userland-x86-base-20261013-a`.
+`/tmp/tulpar-development-userland-x86-base-20261013-a`.
 The copied utility source hash is
 `7640e3bca2b9b35861843fb5ee7ad453ac7d39ff1568379f3901e5060cc34b52`.
 Both workspaces produced these artifact SHA-256s:
@@ -909,12 +909,12 @@ Both workspaces produced these artifact SHA-256s:
 | `mount-bin` | `0808686c516603edbe08c1863727387b8e326c9d55d7ebb3a5298416093a2c2d` |
 | `chsh-bin` | `45ca2c0c495d8d972ea094fceb9dfeb86197c7a00515bf7a449ccd447f63ff5d` |
 
-Earlier diagnostics exposed Darwin/Vinix symlink-mode differences and retained
+Earlier diagnostics exposed Darwin/Tulpar symlink-mode differences and retained
 64 KiB stream buffers under `-gc none`. Canonical link modes and explicit
 buffer release fix those runner failures; input pins are still verified.
 
 The extended four-utility native rebuild passed on AArch64 in
-`/tmp/vinix-development-lscpu-arm-20261013-a`, with the same staged commands
+`/tmp/tulpar-development-lscpu-arm-20261013-a`, with the same staged commands
 and SDK/V/runtime pins. Its source pin is
 `1c2fead1fefb5b59f86f743202c719b4969865297feeb3ce400ef9a1e9e2c1c3`.
 Both workspaces produced `lscpu-bin` hash
@@ -925,19 +925,19 @@ has no usable device tree and therefore does not enable ARM SMP. This source
 snapshot precedes the separate `fetch` color and x86 CPU-count fixes.
 
 Prepared ELF CPU checks passed as UID/GID 1000 on AArch64 in
-`/tmp/vinix-development-lscpu-arm-smoke-20261013-a`, and on x86 with the AMD
+`/tmp/tulpar-development-lscpu-arm-smoke-20261013-a`, and on x86 with the AMD
 `max` and Intel `Nehalem` QEMU models in
-`/tmp/vinix-development-lscpu-x86-amd-20261013-a` and
-`/tmp/vinix-development-lscpu-x86-intel-20261013-a`. The x86 checks each match
+`/tmp/tulpar-development-lscpu-x86-amd-20261013-a` and
+`/tmp/tulpar-development-lscpu-x86-intel-20261013-a`. The x86 checks each match
 two online processor records and pin binary hash
 `44d43664cdc98a20d7c57141e59ed00534e422d72eed2eab2d85042bb5b137a9`.
 The old CPUID package-count implementation failed the same Intel CPU-count
-gate in `/tmp/vinix-development-lscpu-intel-before-20261013-a`; using the OS
+gate in `/tmp/tulpar-development-lscpu-intel-before-20261013-a`; using the OS
 online CPU count fixes it. These x86 checks execute a cross-built ELF;
 native x86 compiler qualification still needs a prepared native SDK.
 
 The init-extended native rebuild passed in
-`/tmp/vinix-development-init-arm-20261013-a`, using the same staged commands
+`/tmp/tulpar-development-init-arm-20261013-a`, using the same staged commands
 and SDK/V/runtime pins. Both workspaces compiled and executed all four
 utilities and `init`, completed all 11 steps and reverified every input pin.
 The source pin is
@@ -949,14 +949,14 @@ and updated `fetch-bin` hash
 `c4995938f7b4c73c9eb78540b760c944709fc1ad3e2cf84b509a7a5b51e87b46`;
 the `mount`, `chsh` and ARM `lscpu` artifact hashes remained unchanged.
 The x86 controller/fixture regression passed without a native compiler SDK in
-`/tmp/vinix-development-init-x86-base-20261013-a`.
+`/tmp/tulpar-development-init-x86-base-20261013-a`.
 Both architectures also passed after moving duplicate staging-tree retirement
-before ISO assembly, in `/tmp/vinix-development-prune-arm-20261013-a` and
-`/tmp/vinix-development-prune-x86-20261013-a`.
+before ISO assembly, in `/tmp/tulpar-development-prune-arm-20261013-a` and
+`/tmp/tulpar-development-prune-x86-20261013-a`.
 
 The committed-source, native package and assertion-failure gates passed on
 13 October 2026 with V source revision
-`f6358ecff9cffbf2d8b03e6a09269aac7707e26c`, staged with `VINIX_V_COPT=-O0`, and
+`f6358ecff9cffbf2d8b03e6a09269aac7707e26c`, staged with `TULPAR_V_COPT=-O0`, and
 the GCC/G++ 11.2.1 SDK. The AArch64 HVF run retained a passing 14-record receipt
 and all 19 successful build steps per workspace in
 `build/development17-20261013/guest-arm-package-assertions`. Its source revision
@@ -978,7 +978,7 @@ prepared-compiler help/version and account/job/build regression passed in
 installation `4d83946b8ab4d99ac938c96da5d72668835abbaca7d18d8dc63f1b689e7d1853`;
 it does not run native compiler projects without an x86 SDK.
 
-This qualifies the tested per-account job workflows in Vinix guests, including
+This qualifies the tested per-account job workflows in Tulpar guests, including
 the native watcher, signal, deadline and interruption checks recorded above.
 The optional native Services broker lifecycle and quiescent persistent-home
 cold boots are covered above. Graphical service control, complete installed

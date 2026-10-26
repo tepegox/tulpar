@@ -24,7 +24,7 @@ fn test_raw_environment_records_are_owned_after_input_changes() {
 }
 
 fn test_existing_fallback_keeps_literal_path_bytes() {
-	work := hosttest.work_dir('', 'vinix-host-fixture-test-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-host-fixture-test-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	path := work + '/literal\\file.v'
 	assert existing(path) == path + '.pending'

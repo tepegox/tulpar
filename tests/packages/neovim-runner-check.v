@@ -42,7 +42,7 @@ fn check() ! {
 	invalid := work + '/invalid-executable'
 	os.write_file(invalid, 'ordinary test executable\n')!; os.chmod(invalid, 0o755)!
 	result := work + '/observed.json'
-	os.setenv('VINIX_NEOVIM_OBSERVATION', result, true)
+	os.setenv('TULPAR_NEOVIM_OBSERVATION', result, true)
 	os.setenv('VIMRUNTIME', '/ambient/untrusted/runtime', true)
 	os.setenv('VIM', '/ambient/untrusted/vim', true)
 	os.setenv('LD_LIBRARY_PATH', '/signed/generation/lib:/signed/runtime/lib', true)
@@ -78,7 +78,7 @@ fn check() ! {
 
 fn main() {
 	if os.base(os.executable()) == 'observer' {
-		os.write_file(os.getenv('VINIX_NEOVIM_OBSERVATION'), json2.encode(Observation{
+		os.write_file(os.getenv('TULPAR_NEOVIM_OBSERVATION'), json2.encode(Observation{
 			arguments: os.args, runtime: os.getenv('VIMRUNTIME'), vim: os.getenv('VIM'), libraries: os.getenv('LD_LIBRARY_PATH')
 		}) + '\n') or { eprintln(err); exit(1) }
 		return

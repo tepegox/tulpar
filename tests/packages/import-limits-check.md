@@ -58,7 +58,7 @@ V=/path/to/reviewed/v /tmp/import-limits-check /build/new-import-limits-check
 
 v -no-skip-unused -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/import-limits-runtime-check tests/packages/catalog-normalize-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/import-limits-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-import-limits-arm
 ```

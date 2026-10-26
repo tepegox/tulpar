@@ -12,7 +12,7 @@ fn test_ci_options_require_an_explicit_native_compiler_project() {
 
 fn test_ci_receipts_require_reserved_attempts_pins_credential_scope_and_failure() {
 	builder := 'a'.repeat(64)
-	plan := Plan{schema: 1, uid: 1000, jobs: [Job{id: 'ci', executable: Pin{'/usr/bin/vinix-build', builder},
+	plan := Plan{schema: 1, uid: 1000, jobs: [Job{id: 'ci', executable: Pin{'/usr/bin/tulpar-build', builder},
 		arguments: ['build', '/home/developer/reference-build.json', '/home/developer/ci-{attempt}'], expand_attempt: true,
 		directory: '/home/developer', interval_seconds: 1, timeout_seconds: 1800, credential_files: {'CI_TOKEN': '/home/developer/token'}}]}
 	text := json2.encode(plan)

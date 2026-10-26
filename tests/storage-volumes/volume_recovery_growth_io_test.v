@@ -94,7 +94,7 @@ fn recovery_growth_check(input string, key string, output string, capacity u64, 
 	} else {
 		capacity_text := capacity.str(); length_text := length.str()
 		unsafe {
-			args := [&char(c'vinix-volume'), &char(c'plan-grow-recovery-volume'), &char(c'/recovery-growth-parent'), input.str, key.str, capacity_text.str, length_text.str, output.str, &char(nil)]!
+			args := [&char(c'tulpar-volume'), &char(c'plan-grow-recovery-volume'), &char(c'/recovery-growth-parent'), input.str, key.str, capacity_text.str, length_text.str, output.str, &char(nil)]!
 			assert run(8, &args[0]) == expected
 		}
 	}
@@ -104,7 +104,7 @@ fn recovery_growth_check(input string, key string, output string, capacity u64, 
 
 fn test_recovery_growth_authentication_geometry_erasure_pinned_rechecks_and_publication() {
 	recovery_growth_model = true; defer { recovery_growth_model = false }; volume_recovery_io = VolumeRecoveryIO{}
-	work := os.join_path(os.temp_dir(), 'vinix-recovery-growth-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-recovery-growth-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	input := work + '/backup'; key := work + '/key'; output := work + '/output'
 	credential := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}
@@ -136,7 +136,7 @@ fn test_recovery_growth_authentication_geometry_erasure_pinned_rechecks_and_publ
 					recovery_growth_check(input, key, output, 16777216, 8192, 0, mode, sector, kind, flags == 1, if mode <= 1 { 0 } else { 1 })
 					assert os.exists(output) == (mode <= 1 || mode in [19, 20, 21])
 					if os.exists(output) { mut next := request; next.data.length = 8192; volume_recovery_check_output(output, &disk, &next, true, &credential[0])!; os.rm(output)! }
-					assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+					assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 				}
 				for length in [u64(0), u64(512), u64(4095), u64(8193), u64(16777216), u64(-1)] {
 					recovery_growth_check(input, key, output, 16777216, length, 0, 0, sector, kind, false, 1); assert recovery_growth_io.parent_opens == 0 && !os.exists(output)

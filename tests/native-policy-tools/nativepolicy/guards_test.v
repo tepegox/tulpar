@@ -25,12 +25,12 @@ fn test_fixture_timeout_kills_and_reaps_the_child() {
 }
 
 fn test_darwin_assembly_adapter_changes_only_native_symbol_and_section_directives() {
-	before := '#include "varargs.inc"\n.text\nVINIX_VARIADIC printf, vinix_printf_entry, 1\n' +
+	before := '#include "varargs.inc"\n.text\nTULPAR_VARIADIC printf, tulpar_printf_entry, 1\n' +
 		'.global vp_format\n.type vp_format, @function\nvp_format:\n    jmp npf_vpprintf\n' +
 		'.size vp_format, .-vp_format\n.data\n.global stderr\nstderr:\n    .quad .Lstderr_file\n' +
 		'.section .note.GNU-stack,"",@progbits\n'
 	assert console_darwin_abi(before) == '#include "varargs.inc"\n.text\n' +
-		'VINIX_VARIADIC ABI_SYMBOL(printf), ABI_SYMBOL(vinix_printf_entry), 1\n' +
+		'TULPAR_VARIADIC ABI_SYMBOL(printf), ABI_SYMBOL(tulpar_printf_entry), 1\n' +
 		'.global ABI_SYMBOL(vp_format)\nABI_SYMBOL(vp_format):\n    jmp ABI_SYMBOL(npf_vpprintf)\n' +
 		'.section __DATA,__data\n.global ABI_SYMBOL(stderr)\nABI_SYMBOL(stderr):\n    .quad .Lstderr_file\n'
 }
@@ -64,7 +64,7 @@ fn test_reference_adapter_keeps_control_bodies_and_first_closing_line() {
 		'extern i64 vinit_syscall(u64,u64,u64,u64,u64,u64);\n' +
 		'static inline i64 syscall1(u64 nr,u64 a0) { return vinit_syscall(nr,a0,0,0,0,0); }\n' +
 		'static inline i64 syscall5(u64 nr,u64 a0,u64 a1,u64 a2,u64 a3,u64 a4) { return vinit_syscall(nr,a0,a1,a2,a3,a4); }\n' +
-		'\n\n\nstatic void signal_restorer(void) {}\nvoid vinix_init_shell(void) { original_algorithm(); }\n'
+		'\n\n\nstatic void signal_restorer(void) {}\nvoid tulpar_init_shell(void) { original_algorithm(); }\n'
 	assert (reference_init('typedef long i64;\nstatic inline i64 syscall1() {\n x();\n}\n', 'shell') or { panic(err) }).contains('syscall1()')
 	assert (reference_init('typedef long i64;\nstatic inline i64 syscall6(u64 nr) {\n x();\n}\n', 'shell') or { panic(err) }).contains('syscall6')
 	assert replace_word('requested_power_signal érequested_power_signal requested_power_signalé',

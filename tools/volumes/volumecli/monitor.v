@@ -62,7 +62,7 @@ fn monitor_exit(current i32, observation i32) i32 {
 
 fn monitor_status(fd i32, mut status Status) bool {
 	if C.ioctl(fd, u64(0x56560004), unsafe { &status }) != 0 {
-		C.perror(c'vinix-volume: monitor status')
+		C.perror(c'tulpar-volume: monitor status')
 		return false
 	}
 	if !monitor_status_valid(unsafe { &status }) {
@@ -150,7 +150,7 @@ fn monitor_show(sample u64, status &Status, health &Health, query_error i32,
 fn monitor_device(path &char, interval u32, samples u64) i32 {
 	fd := C.open(path, C.O_RDONLY | C.O_CLOEXEC)
 	if fd < 0 {
-		C.perror(c'vinix-volume: open monitor device')
+		C.perror(c'tulpar-volume: open monitor device')
 		return 1
 	}
 	defer { C.close(fd) }
@@ -176,7 +176,7 @@ fn monitor_device(path &char, interval u32, samples u64) i32 {
 		health_delta := monitor_health_delta(mut health_counters, health, observation.health_valid)
 		if !monitor_show(sample, unsafe { &status }, health, observation.query_error, observation.code, delta, baseline, health_delta.media_errors)
 			|| !monitor_health_show(health, unsafe { &health_delta }) || C.fflush(C.stdout) != 0 {
-			C.perror(c'vinix-volume: monitor output')
+			C.perror(c'tulpar-volume: monitor output')
 			return 1
 		}
 		result = monitor_exit(result, observation.code)

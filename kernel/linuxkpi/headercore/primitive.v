@@ -106,18 +106,18 @@ fn C.vhp_store_unsigned(&u32, u32, i32)
 @[c: '__atomic_compare_exchange_n']
 fn C.vhp_compare_unsigned(&u32, &u32, u32, bool, i32, i32) bool
 
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
-fn C.vinix_linuxkpi_spin_wait()
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_need_resched() bool
-fn C.vinix_linuxkpi_cond_resched() i32
-fn C.vinix_linuxkpi_task_get(voidptr)
-fn C.vinix_linuxkpi_task_put(voidptr)
-fn C.vinix_linuxkpi_task_signal_pending(voidptr, bool) bool
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_spin_wait()
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_need_resched() bool
+fn C.tulpar_linuxkpi_cond_resched() i32
+fn C.tulpar_linuxkpi_task_get(voidptr)
+fn C.tulpar_linuxkpi_task_put(voidptr)
+fn C.tulpar_linuxkpi_task_signal_pending(voidptr, bool) bool
 fn C.kmem_cache_alloc(&C.kmem_cache, u32) voidptr
 
 @[c_extern]
@@ -176,7 +176,7 @@ pub fn spin_init(guard &C.spinlock_t) {
 	unsafe { C.vhp_store_unsigned(&guard.locked, 0, 0) }
 }
 
-@[export: 'vinix_raw_spin_trylock']
+@[export: 'tulpar_raw_spin_trylock']
 pub fn spin_raw_try(guard &C.spinlock_t) bool {
 	mut expected := u32(0)
 	unsafe { return C.vhp_compare_unsigned(&guard.locked, &expected, 1, false, 2, 0)
@@ -185,31 +185,31 @@ pub fn spin_raw_try(guard &C.spinlock_t) bool {
 
 @[export: 'spin_lock']
 pub fn spin_lock(guard &C.spinlock_t) {
-	C.vinix_linuxkpi_preempt_disable()
-	for !spin_raw_try(guard) { C.vinix_linuxkpi_spin_wait() }
+	C.tulpar_linuxkpi_preempt_disable()
+	for !spin_raw_try(guard) { C.tulpar_linuxkpi_spin_wait() }
 }
 
 // The caller evaluates its lock operand before entering this leaf and stores
 // returned IRQ flags only after acquisition, matching the original wrapper.
-@[export: 'vinix_spin_lock_irqsave_nested_native']
+@[export: 'tulpar_spin_lock_irqsave_nested_native']
 pub fn spin_lock_irqsave_nested(guard &C.spinlock_t) uint {
-	flags := C.vinix_linuxkpi_irq_save()
+	flags := C.tulpar_linuxkpi_irq_save()
 	spin_lock(guard)
 	return flags
 }
 
 @[export: 'spin_trylock']
 pub fn spin_trylock(guard &C.spinlock_t) bool {
-	C.vinix_linuxkpi_preempt_disable()
+	C.tulpar_linuxkpi_preempt_disable()
 	if spin_raw_try(guard) { return true }
-	C.vinix_linuxkpi_preempt_enable()
+	C.tulpar_linuxkpi_preempt_enable()
 	return false
 }
 
 @[export: 'spin_unlock']
 pub fn spin_unlock(guard &C.spinlock_t) {
 	unsafe { C.vhp_store_unsigned(&guard.locked, 0, 3) }
-	C.vinix_linuxkpi_preempt_enable()
+	C.tulpar_linuxkpi_preempt_enable()
 }
 
 @[export: 'spin_is_locked']
@@ -220,19 +220,19 @@ pub fn spin_is_locked(guard C.vhp_const_spinp) bool {
 
 @[export: 'spin_lock_irq']
 pub fn spin_lock_irq(guard &C.spinlock_t) {
-	C.vinix_linuxkpi_irq_save()
+	C.tulpar_linuxkpi_irq_save()
 	spin_lock(guard)
 }
 
 @[export: 'spin_unlock_irq']
 pub fn spin_unlock_irq(guard &C.spinlock_t) {
 	spin_unlock(guard)
-	C.vinix_linuxkpi_irq_restore(uint(1) << 9)
+	C.tulpar_linuxkpi_irq_restore(uint(1) << 9)
 }
 
 @[export: 'irqs_disabled']
 pub fn irqs_disabled() bool {
-	return irqs_disabled_flags(C.vinix_linuxkpi_irq_flags())
+	return irqs_disabled_flags(C.tulpar_linuxkpi_irq_flags())
 }
 
 @[export: 'irqs_disabled_flags']
@@ -240,23 +240,23 @@ pub fn irqs_disabled_flags(flags uint) bool {
 	return (flags & (uint(1) << 9)) == 0
 }
 
-@[export: 'vinix_local_irq_disable']
-pub fn irq_disable() { C.vinix_linuxkpi_irq_save() }
+@[export: 'tulpar_local_irq_disable']
+pub fn irq_disable() { C.tulpar_linuxkpi_irq_save() }
 
-@[export: 'vinix_local_irq_enable']
+@[export: 'tulpar_local_irq_enable']
 pub fn irq_enable() {
-	C.vinix_linuxkpi_irq_restore(uint(1) << 9)
+	C.tulpar_linuxkpi_irq_restore(uint(1) << 9)
 }
 
 @[export: 'cpu_relax']
-pub fn cpu_relax() { C.vinix_linuxkpi_spin_wait() }
+pub fn cpu_relax() { C.tulpar_linuxkpi_spin_wait() }
 
 @[export: 'raw_smp_processor_id']
-pub fn cpu_id() u32 { return C.vinix_linuxkpi_cpu_id() }
+pub fn cpu_id() u32 { return C.tulpar_linuxkpi_cpu_id() }
 
-@[export: 'vinix_get_cpu']
+@[export: 'tulpar_get_cpu']
 pub fn get_cpu() u32 {
-	C.vinix_linuxkpi_preempt_disable()
+	C.tulpar_linuxkpi_preempt_disable()
 	return cpu_id()
 }
 
@@ -273,12 +273,12 @@ pub fn task_tgid(task C.vhp_const_taskp) i32 {
 }
 
 @[export: 'need_resched']
-pub fn need_resched() bool { return C.vinix_linuxkpi_need_resched() }
+pub fn need_resched() bool { return C.tulpar_linuxkpi_need_resched() }
 
 @[export: 'cond_resched']
-pub fn cond_resched() i32 { return C.vinix_linuxkpi_cond_resched() }
+pub fn cond_resched() i32 { return C.tulpar_linuxkpi_cond_resched() }
 
-@[export: 'vinix_task_is_running']
+@[export: 'tulpar_task_is_running']
 pub fn task_running(task C.vhp_const_taskp) bool {
 	unsafe { return C.vhp_load_unsigned(&(&C.task_struct(voidptr(task))).__state, 0) == 0
 	 }
@@ -286,23 +286,23 @@ pub fn task_running(task C.vhp_const_taskp) bool {
 
 @[export: 'get_task_struct']
 pub fn get_task(task &C.task_struct) &C.task_struct {
-	C.vinix_linuxkpi_task_get(task.vinix_thread)
+	C.tulpar_linuxkpi_task_get(task.tulpar_thread)
 	return task
 }
 
 @[export: 'put_task_struct']
 pub fn put_task(task &C.task_struct) {
-	C.vinix_linuxkpi_task_put(task.vinix_thread)
+	C.tulpar_linuxkpi_task_put(task.tulpar_thread)
 }
 
 @[export: 'signal_pending']
 pub fn signal_pending(task &C.task_struct) i32 {
-	return i32(C.vinix_linuxkpi_task_signal_pending(task.vinix_thread, false))
+	return i32(C.tulpar_linuxkpi_task_signal_pending(task.tulpar_thread, false))
 }
 
 @[export: 'fatal_signal_pending']
 pub fn fatal_signal_pending(task &C.task_struct) i32 {
-	return i32(C.vinix_linuxkpi_task_signal_pending(task.vinix_thread, true))
+	return i32(C.tulpar_linuxkpi_task_signal_pending(task.tulpar_thread, true))
 }
 
 @[export: 'signal_pending_state']
@@ -508,12 +508,12 @@ pub fn atomic64_xchg_relaxed(p &C.atomic64_t, value C.vhp_s64) C.vhp_s64 {
 }
 
 // ABI adapters invoke this before evaluating the caller's lock expression.
-@[export: 'vinix_local_irq_save']
+@[export: 'tulpar_local_irq_save']
 pub fn irq_save() uint {
-	return C.vinix_linuxkpi_irq_save()
+	return C.tulpar_linuxkpi_irq_save()
 }
 
-@[export: 'vinix_local_irq_restore']
+@[export: 'tulpar_local_irq_restore']
 pub fn irq_restore(flags uint) {
-	C.vinix_linuxkpi_irq_restore(flags)
+	C.tulpar_linuxkpi_irq_restore(flags)
 }

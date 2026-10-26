@@ -1,16 +1,16 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_IRQFLAGS_H
-#define VINIX_LINUX_IRQFLAGS_H
-#include <vinix/runtime.h>
-#define local_irq_save(flags) do { (flags) = vinix_linuxkpi_irq_save(); } while (0)
-#define local_irq_restore(flags) vinix_linuxkpi_irq_restore(flags)
-#define local_irq_disable vinix_local_irq_disable
-void vinix_local_irq_disable(void);
-#define local_irq_enable vinix_local_irq_enable
-void vinix_local_irq_enable(void);
+#ifndef TULPAR_LINUX_IRQFLAGS_H
+#define TULPAR_LINUX_IRQFLAGS_H
+#include <tulpar/runtime.h>
+#define local_irq_save(flags) do { (flags) = tulpar_linuxkpi_irq_save(); } while (0)
+#define local_irq_restore(flags) tulpar_linuxkpi_irq_restore(flags)
+#define local_irq_disable tulpar_local_irq_disable
+void tulpar_local_irq_disable(void);
+#define local_irq_enable tulpar_local_irq_enable
+void tulpar_local_irq_enable(void);
 bool irqs_disabled(void);
 bool irqs_disabled_flags(unsigned long);
-#define local_save_flags(flags) do { (flags) = vinix_linuxkpi_irq_flags(); } while (0)
+#define local_save_flags(flags) do { (flags) = tulpar_linuxkpi_irq_flags(); } while (0)
 #define raw_local_irq_save local_irq_save
 #define raw_local_irq_restore local_irq_restore
 #define raw_local_irq_disable local_irq_disable

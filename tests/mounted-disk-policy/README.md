@@ -36,14 +36,14 @@ Build tracked production kernels on both architectures, then run:
 V=/path/to/v tests/mounted-disk-policy/host
 tests/mounted-disk-policy/check-generated --arch=aarch64 kernel/obj/blob.c
 tests/mounted-disk-policy/check-generated --arch=amd64 build-amd64-kernel/obj/blob.c
-VINIX_VM_RUNNER_ROOT=/path/to/vinix \
-VINIX_KERNEL_DIR="$PWD/kernel" \
-VINIX_AARCH64_SYSROOT=/path/to/vinix/build-aarch64-userland/sysroot \
-VINIX_QEMU_RT_NO_BUILD=1 VINIX_QEMU_AUDIO=off \
+TULPAR_VM_RUNNER_ROOT=/path/to/tulpar \
+TULPAR_KERNEL_DIR="$PWD/kernel" \
+TULPAR_AARCH64_SYSROOT=/path/to/tulpar/build-aarch64-userland/sysroot \
+TULPAR_QEMU_RT_NO_BUILD=1 TULPAR_QEMU_AUDIO=off \
 tests/mounted-disk-policy/run
-VINIX_VM_RUNNER_ROOT=/path/to/vinix \
-VINIX_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/vinix" \
-VINIX_QEMU_RT_NO_BUILD=1 \
+TULPAR_VM_RUNNER_ROOT=/path/to/tulpar \
+TULPAR_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/tulpar" \
+TULPAR_QEMU_RT_NO_BUILD=1 \
 tests/mounted-disk-policy/run --arch=amd64
 ```
 

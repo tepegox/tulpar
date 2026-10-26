@@ -205,7 +205,7 @@ pub fn release_mapping(mut res Resource, _handle voidptr, _page u64, physical vo
     memory.pmm_free(physical, 1)
 }
 VEOF
-if [ "${VINIX_PAGING_HOST:-0}" = 1 ]; then
+if [ "${TULPAR_PAGING_HOST:-0}" = 1 ]; then
     rm "$work/modules/pager/pager.v"
     cp "$root/kernel/pager/"*.v "$root/tests/paging/store_test.v" "$root/tests/paging/codec_test.v" "$work/modules/pager/"
     cp "$root/tests/paging/mapping_test.v" "$work/modules/mmap/"
@@ -269,7 +269,7 @@ pub fn await_one_from_generation_masked(mut e eventstruct.Event, previous u64) ?
 }
 VEOF
 fi
-if [ "${VINIX_FILE_PAGES_HOST:-0}" = 1 ]; then
+if [ "${TULPAR_FILE_PAGES_HOST:-0}" = 1 ]; then
     cp "$root/kernel/memory/mmap/file_pages.v" "$root/tests/mapped-writeback/aliases_test.v" "$work/modules/mmap/"
     cat >> "$work/modules/memory/memory.v" <<'VEOF'
 pub const pte_file_dirty = u64(1) << 20
@@ -303,13 +303,13 @@ pub fn sync_mapping(mut _res Resource, _handle voidptr, _offset u64, _length u64
 pub fn pageout_mapping(mut _res Resource, _page u64) u64 { return 0 }
 VEOF
 fi
-if [ "${VINIX_HOST_SANITIZE:-0}" = 1 ]; then
+if [ "${TULPAR_HOST_SANITIZE:-0}" = 1 ]; then
     VMODULES="$work/modules" "$root/build-support/source-tools/run" test-directory "$v" "$work/modules/mmap" -cc clang -cflags '-fsanitize=address,undefined' -ldflags '-fsanitize=address,undefined' -enable-globals -gc none
 else
     VMODULES="$work/modules" "$root/build-support/source-tools/run" test-directory "$v" "$work/modules/mmap" -enable-globals -gc none
 fi
-if [ "${VINIX_PAGING_HOST:-0}" = 1 ]; then
-    if [ "${VINIX_HOST_SANITIZE:-0}" = 1 ]; then
+if [ "${TULPAR_PAGING_HOST:-0}" = 1 ]; then
+    if [ "${TULPAR_HOST_SANITIZE:-0}" = 1 ]; then
         VMODULES="$work/modules" "$root/build-support/source-tools/run" test-directory "$v" "$work/modules/pager" -cc clang -cflags '-fsanitize=address,undefined' -ldflags '-fsanitize=address,undefined' -enable-globals -gc none
     else
         VMODULES="$work/modules" "$root/build-support/source-tools/run" test-directory "$v" "$work/modules/pager" -enable-globals -gc none

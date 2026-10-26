@@ -557,7 +557,7 @@ fn (mut p Preparation) archive() ! {
 
 fn (mut p Preparation) boot_disk() ! {
 	p.save('conf', divide(p.state, 'limine.conf')!)!
-	ignore_method(p.get('conf'), 'write_text', [v(ah.Value('timeout: 0\nverbose: yes\n\n/Vinix PCI configuration\n    protocol: limine\n    kernel_path: boot():/boot/vinix\n    module_path: boot():/boot/initramfs.tar\n    resolution: 1024x768x32\n    kaslr: no\n    cmdline: vinix.qemu_platform=1\n'))], {})!
+	ignore_method(p.get('conf'), 'write_text', [v(ah.Value('timeout: 0\nverbose: yes\n\n/Tulpar PCI configuration\n    protocol: limine\n    kernel_path: boot():/boot/tulpar\n    module_path: boot():/boot/initramfs.tar\n    resolution: 1024x768x32\n    kaslr: no\n    cmdline: tulpar.qemu_platform=1\n'))], {})!
 	p.save('disk', divide(p.state, 'boot.img')!)!
 	manager := method(p.get('disk'), 'open', [v(ah.Value('wb'))], {})!
 	image := prep_enter(manager) or {
@@ -582,7 +582,7 @@ fn (mut p Preparation) populate(run string) ! {
 		run_values(run, [tool, lit('-i')!, stringify(p.get('disk'))!, p.get('directory')], [p.get('directory')])!
 	}
 	mut rows := []string{}
-	for entry in [['loader', '::/EFI/BOOT/BOOTAA64.EFI'], ['kernel', '::/boot/vinix'],
+	for entry in [['loader', '::/EFI/BOOT/BOOTAA64.EFI'], ['kernel', '::/boot/tulpar'],
 		['conf', '::/boot/limine.conf'], ['archive_path', '::/boot/initramfs.tar']] {
 		destination := lit(entry[1])!
 		rows << tuple([p.get(entry[0]), destination])!

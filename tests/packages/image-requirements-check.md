@@ -1,6 +1,6 @@
 # Reviewed application requirements in release builds
 
-`stage.v --applications FILE` and `VINIX_PACKAGE_IMAGE_APPLICATIONS` select a
+`stage.v --applications FILE` and `TULPAR_PACKAGE_IMAGE_APPLICATIONS` select a
 reviewed format-1 deployment root manifest for the release's advertised apps.
 Both normal staging and compiler-free preflight resolve that complete set from
 the selected signed bundle before compiler lookup or image publication. The
@@ -66,7 +66,7 @@ V=/path/to/reviewed/v /tmp/image-requirements-check /build/new-image-requirement
 
 v -path '@vlib|@vmodules|.|tests/hardware-platform' \
   -o /tmp/image-requirements-runtime-check tests/packages/image-requirements-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/image-requirements-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-image-requirements-arm
 ```

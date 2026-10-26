@@ -6,7 +6,7 @@ fn test_portable_bootstrap_requires_exact_source_and_stamps_revision() {
 	executable := patched.index('executable_root :=') or { panic('missing executable lookup') }
 	baked := patched.index('baked_root :=') or { panic('missing source fallback') }
 	assert executable < baked
-	selected := patched.index("os.getenv_opt('VINIX_V_ROOT')") or { panic('missing explicit root lookup') }
+	selected := patched.index("os.getenv_opt('TULPAR_V_ROOT')") or { panic('missing explicit root lookup') }
 	assert selected < executable
 	assert patched.contains('!os.is_abs_path(selected)')
 	assert patched.contains('return os.real_path(selected)')

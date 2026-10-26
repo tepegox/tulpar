@@ -12,15 +12,15 @@ struct C.raw_pcb {}
 struct C.raw_recv_fn {}
 
 @[typedef]
-struct C.vinix_receive_address {}
+struct C.tulpar_receive_address {}
 
 @[typedef]
-struct C.vinix_output4_address {}
+struct C.tulpar_output4_address {}
 
 @[typedef]
-struct C.vinix_output6_address {}
+struct C.tulpar_output6_address {}
 
-type RawReceive = fn (voidptr, &C.raw_pcb, &C.pbuf, C.vinix_receive_address) u8
+type RawReceive = fn (voidptr, &C.raw_pcb, &C.pbuf, C.tulpar_receive_address) u8
 
 fn C.raw_new_ip_type(u8, u8) &C.raw_pcb
 fn C.raw_remove(&C.raw_pcb)
@@ -32,14 +32,14 @@ fn C.raw_sendto(&C.raw_pcb, &C.pbuf, &C.ip_addr) Err_t
 fn C.pbuf_clone(int, int, &C.pbuf) &C.pbuf
 fn C.pbuf_get_at(&C.pbuf, u16) u8
 
-pub const vinix_net_raw = 3
+pub const tulpar_net_raw = 3
 
 // The shared UDP bridge needs the same exact const-qualified lwIP ABI.
-fn udp_received_native(argument voidptr, pcb &C.udp_pcb, p &C.pbuf, source C.vinix_receive_address, port U16_t) {
+fn udp_received_native(argument voidptr, pcb &C.udp_pcb, p &C.pbuf, source C.tulpar_receive_address, port U16_t) {
 	unsafe { udp_received(argument, pcb, p, &C.ip_addr(source), u16(port)) }
 }
 
-fn install_raw_callback(socket &Vinix_socket) {
+fn install_raw_callback(socket &Tulpar_socket) {
 	unsafe {
 		callback := RawReceive(icmp_received)
 		mut native := C.raw_recv_fn{}
@@ -48,10 +48,10 @@ fn install_raw_callback(socket &Vinix_socket) {
 	}
 }
 
-fn icmp_received(argument voidptr, _pcb &C.raw_pcb, p &C.pbuf, source C.vinix_receive_address) u8 {
+fn icmp_received(argument voidptr, _pcb &C.raw_pcb, p &C.pbuf, source C.tulpar_receive_address) u8 {
 	unsafe {
 		address := &C.ip_addr(source)
-		socket := &Vinix_socket(argument)
+		socket := &Tulpar_socket(argument)
 		if socket == nil || socket.read_shutdown || p == nil { return 0 }
 		header := C.ip_data.current_ip_header_tot_len
 		if header < 20 || u32(p.tot_len) < u32(header) + 4 { return 0 }
@@ -70,7 +70,7 @@ fn icmp_received(argument voidptr, _pcb &C.raw_pcb, p &C.pbuf, source C.vinix_re
 	}
 }
 
-fn send_icmp(socket &Vinix_socket, data voidptr, length uint, address &C.ip_addr, has_address i32) i32 {
+fn send_icmp(socket &Tulpar_socket, data voidptr, length uint, address &C.ip_addr, has_address i32) i32 {
 	unsafe {
 		if !has_address && !socket.connected { return -89 }
 		if length > 65515 || length > socket.send_limit { return -90 }

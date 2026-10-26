@@ -148,7 +148,7 @@ fn read_repository_review(root string, operation string, repository Repository, 
 	defer { close_decoded_snapshots(snapshots) }
 	history := history_with_snapshots(next, directory, snapshots)!
 	defer { close_decoded_history(history) }
-	mut template := (os.temp_dir().trim_right('/') + '/vinix-repository-review-XXXXXX').bytes()
+	mut template := (os.temp_dir().trim_right('/') + '/tulpar-repository-review-XXXXXX').bytes()
 	unsafe { template.flags |= .noslices }
 	template << u8(0)
 	defer { unsafe { template.free() } }

@@ -70,11 +70,11 @@ fn C.cas32(&u32, &u32, u32, bool, int, int) bool
 
 fn C.migrate_disable()
 fn C.migrate_enable()
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
-fn C.vinix_linuxkpi_preempt_check_resched()
-fn C.vinix_linuxkpi_worker_bind(u32) int
-fn C.vinix_linuxkpi_test_worker_route(voidptr, u32) int
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_preempt_check_resched()
+fn C.tulpar_linuxkpi_worker_bind(u32) int
+fn C.tulpar_linuxkpi_test_worker_route(voidptr, u32) int
 fn C.mh_configure_cpus(i64)
 fn C.mh_configure_policy()
 fn C.mh_configure_bridge()
@@ -215,7 +215,7 @@ pub fn (mut value Lock) test_and_acquire() bool {
 		match hook_kind {
 			1 { C.migrate_disable() }
 			2 { unsafe { C.store8(&u8(&tasks[0].is_dead), 1, 5) } }
-			3 { check(C.vinix_linuxkpi_test_worker_route(unsafe { &tasks[0] }, 0) == 0, 4) }
+			3 { check(C.tulpar_linuxkpi_test_worker_route(unsafe { &tasks[0] }, 0) == 0, 4) }
 			else { check(false, 5) }
 		}
 	}
@@ -231,7 +231,7 @@ pub fn load[T](value &T) T {
 			affinity_hook_armed = false
 			affinity_hook_hits++
 			check(!irq_enabled && tasks[0].linuxkpi_migration_pin == 0, 53)
-			check(C.vinix_linuxkpi_test_worker_route(unsafe { &tasks[0] }, affinity_hook_target) == 0, 54)
+			check(C.tulpar_linuxkpi_test_worker_route(unsafe { &tasks[0] }, affinity_hook_target) == 0, 54)
 			// The labeled historical helper fails after this independent valid
 			// producer mutation. Its own state must remain unchanged thereafter.
 			if affinity_hook_historical { capture() }
@@ -547,7 +547,7 @@ fn deferred_affinity() {
 				configure(4, source)
 				C.migrate_disable()
 				C.migrate_disable()
-				check(C.vinix_linuxkpi_test_worker_route(unsafe { &tasks[0] }, target) == 0, 25)
+				check(C.tulpar_linuxkpi_test_worker_route(unsafe { &tasks[0] }, target) == 0, 25)
 				check(tasks[0].affinity_mask == u64(1) << target && tasks[0].linuxkpi_migration_pin == (u64(2) << 32) | u64(source + 1), 26)
 				for _ in 0 .. 20 { check(C.mh_place(unsafe { &tasks[0] }) == u64(source), 27) }
 				C.migrate_enable()
@@ -556,27 +556,27 @@ fn deferred_affinity() {
 				match guard {
 					0 {}
 					1 { irq_enabled = false }
-					2 { C.vinix_linuxkpi_preempt_disable() }
+					2 { C.tulpar_linuxkpi_preempt_disable() }
 					else { records[source].maskable_irq_depth = 1 }
 				}
 				C.migrate_enable()
 				check(tasks[0].linuxkpi_migration_pin == 0 && C.mh_get_bridge(source, 1) == 1 && wake_count == 2 && wakes[0] == source && wakes[1] == target && reschedule_count == 0, 29)
 				if guard == 1 {
-					C.vinix_linuxkpi_preempt_check_resched()
+					C.tulpar_linuxkpi_preempt_check_resched()
 					check(reschedule_count == 0, 30)
 					irq_enabled = true
 				}
 				if guard == 3 {
-					C.vinix_linuxkpi_preempt_check_resched()
+					C.tulpar_linuxkpi_preempt_check_resched()
 					check(reschedule_count == 0, 31)
 					records[source].maskable_irq_depth = 0
 				}
 				if guard == 2 {
-					C.vinix_linuxkpi_preempt_check_resched()
+					C.tulpar_linuxkpi_preempt_check_resched()
 					check(reschedule_count == 0, 32)
-					C.vinix_linuxkpi_preempt_enable()
+					C.tulpar_linuxkpi_preempt_enable()
 				} else {
-					C.vinix_linuxkpi_preempt_check_resched()
+					C.tulpar_linuxkpi_preempt_check_resched()
 				}
 				check(current_local.cpu_number == u64(target) && reschedule_count == 1 && C.mh_get_bridge(source, 1) == 0, 33)
 			}
@@ -642,9 +642,9 @@ fn binding_guards() {
 		tasks[0].numa_node = 37
 		irq_enabled = ints
 		capture()
-		check(C.vinix_linuxkpi_test_worker_route(unsafe { &tasks[0] }, 1) == -1 && irq_enabled == ints && same_state(), 51)
+		check(C.tulpar_linuxkpi_test_worker_route(unsafe { &tasks[0] }, 1) == -1 && irq_enabled == ints && same_state(), 51)
 		if ints {
-			check(C.vinix_linuxkpi_worker_bind(1) == -1 && irq_enabled && same_state(), 52)
+			check(C.tulpar_linuxkpi_worker_bind(1) == -1 && irq_enabled && same_state(), 52)
 		}
 	}
 	for source in u32(0) .. u32(4) {
@@ -655,9 +655,9 @@ fn binding_guards() {
 			tasks[0].numa_node = 37
 			before_mask := tasks[0].affinity_mask
 			before_pin := tasks[0].linuxkpi_migration_pin
-			check(C.vinix_linuxkpi_worker_bind(target) == -16, 36)
+			check(C.tulpar_linuxkpi_worker_bind(target) == -16, 36)
 			check(irq_enabled && tasks[0].numa_node == 37 && tasks[0].affinity_mask == before_mask && tasks[0].linuxkpi_migration_pin == before_pin && wake_count == 0 && reschedule_count == 0, 37)
-			check(C.vinix_linuxkpi_worker_bind(source) == 0 && tasks[0].numa_node == -1 && tasks[0].affinity_mask == u64(1) << source && tasks[0].linuxkpi_migration_pin == before_pin, 38)
+			check(C.tulpar_linuxkpi_worker_bind(source) == 0 && tasks[0].numa_node == -1 && tasks[0].affinity_mask == u64(1) << source && tasks[0].linuxkpi_migration_pin == before_pin, 38)
 			C.migrate_enable()
 		}
 	}
@@ -671,7 +671,7 @@ fn binding_guards() {
 			else { records[0].maskable_irq_depth = 1 }
 		}
 		before_if := irq_enabled
-		check(C.vinix_linuxkpi_worker_bind(1) == -11 && irq_enabled == before_if && tasks[0].affinity_mask == mask, 39)
+		check(C.tulpar_linuxkpi_worker_bind(1) == -11 && irq_enabled == before_if && tasks[0].affinity_mask == mask, 39)
 	}
 }
 
@@ -726,7 +726,7 @@ fn affinity_publication_races() {
 						check(irq_enabled && C.mh_get_bridge(source, 1) == 1 && reschedule_count == 0, 56)
 						check(wake_count == 3 && wakes[0] == latest && wakes[1] == source && wakes[2] == first, 57)
 						check(!C.mh_may_run(unsafe { &tasks[0] }, u64(first)) && C.mh_may_run(unsafe { &tasks[0] }, u64(latest)), 58)
-						C.vinix_linuxkpi_preempt_check_resched()
+						C.tulpar_linuxkpi_preempt_check_resched()
 						check(reschedule_count == 1 && current_local.cpu_number == u64(latest), 59)
 					}
 					check(affinity_hook_hits == 1 && affinity_hook_reads == 2 && !affinity_hook_armed && tasks[0].affinity_mask == u64(1) << latest && tasks[0].linuxkpi_migration_pin == 0, 60)

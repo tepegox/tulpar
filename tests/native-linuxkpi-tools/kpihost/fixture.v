@@ -43,7 +43,7 @@ pub fn exercise_exchange(tools Tools, work string) ! {
 		gamehost.mkdir(work + '/' + name)!
 		gamehost.copy_file(source + '/core.v', work + '/' + name + '/core.v')!
 	}
-	hosttest.generate_abi(tools.root + '/kernel/linuxkpi/abi/atomic-exchange.json', work, work + '/include/vinix/atomic_exchange.h')!
+	hosttest.generate_abi(tools.root + '/kernel/linuxkpi/abi/atomic-exchange.json', work, work + '/include/tulpar/atomic_exchange.h')!
 	flags := [gamehost.env('CC', 'clang'), ...clang_host_flags(arch), '-std=gnu11', '-fgnu89-inline',
 		'-O1', '-g', '-ffreestanding', '-fno-builtin', '-fwrapv', '-fno-strict-aliasing', '-Wall',
 		'-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',

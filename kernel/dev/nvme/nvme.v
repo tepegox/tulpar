@@ -460,7 +460,7 @@ fn (mut dev NVMENamespace) sync(_handle voidptr) ? {
 	defer { if completed { dev.metrics.flushed() } else { dev.metrics.failed() } }
 	// Submission copies the command into the permanent queue. Keep the
 	// borrowed command on this stack even if disable cannot stop payload DMA.
-	mut command := unsafe { &NVMECommand(C.vinix_stack_alloc(sizeof(NVMECommand))) }
+	mut command := unsafe { &NVMECommand(C.tulpar_stack_alloc(sizeof(NVMECommand))) }
 	unsafe { *command = NVMECommand{} }
 	command.opcode = opcode_flush
 	unsafe { command.private.rw.nsid = u32(dev.nsid) }
@@ -489,7 +489,7 @@ fn (mut dev NVMENamespace) discard(offset u64, bytes u64) ? {
 	mut owned := false
 	defer { if !owned { memory.pmm_free(physical, 1) } }
 	mut range := unsafe { &NVMEDiscardRange(u64(physical) + higher_half) }
-	mut command := unsafe { &NVMECommand(C.vinix_stack_alloc(sizeof(NVMECommand))) }
+	mut command := unsafe { &NVMECommand(C.tulpar_stack_alloc(sizeof(NVMECommand))) }
 	mut start := offset / u64(dev.stat.blksize)
 	mut left := bytes / u64(dev.stat.blksize)
 	for left != 0 {
@@ -799,7 +799,7 @@ pub fn (mut ns NVMENamespace) rw_lba(buffer voidptr, start u64, cnt u64, rw bool
 		return -1
 	}
 	// Only PRPs reference DMA memory; the command itself is copied by send_cmd.
-	mut new_command := unsafe { &NVMECommand(C.vinix_stack_alloc(sizeof(NVMECommand))) }
+	mut new_command := unsafe { &NVMECommand(C.tulpar_stack_alloc(sizeof(NVMECommand))) }
 	unsafe { *new_command = NVMECommand{} }
 	mut prp_list := voidptr(unsafe { nil })
 	if bytes > page_size * 2 {

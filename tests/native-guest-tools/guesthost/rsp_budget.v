@@ -36,13 +36,13 @@ fn rsp_budget_checked(arguments []string) !int {
 	if compile_at < 0 || output_at < 0 || compile_at + 1 >= command.len || output_at + 1 >= command.len {
 		return error('RSP compile command must include -c SOURCE and -o OBJECT')
 	}
-	work := hosttest.work_dir('', 'vinix-n64-rsp-budget-')!
+	work := hosttest.work_dir('', 'tulpar-n64-rsp-budget-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	command[compile_at + 1] = source + '/mupen64plus-rsp-cxd4/rsp.c'
 	command[output_at + 1] = work + '/rsp.o'
-	command.insert(1, '-DDebugMessage=vinix_n64_rsp_fixture_message')
+	command.insert(1, '-DDebugMessage=tulpar_n64_rsp_fixture_message')
 	policyhost.owned_inherited_environment(command, policyhost.environment(), policyhost.caller_arch(), source)!
-	mut flags := command[..command.index('-c')].filter(it !in ['-DDebugMessage=vinix_n64_rsp_fixture_message', '-Wno-everything'])
+	mut flags := command[..command.index('-c')].filter(it !in ['-DDebugMessage=tulpar_n64_rsp_fixture_message', '-Wno-everything'])
 	flags << ['-Wall', '-Wextra', '-Werror', '-fno-strict-aliasing', '-I' + root() + '/build-support/n64']
 	flags = flags.map(if it.starts_with('-I./') { '-I' + source + '/' + it[2..] } else { it })
 	fixture := work + '/fixture.o'

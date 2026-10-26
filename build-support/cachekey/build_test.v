@@ -9,7 +9,7 @@ import os
 fn C.mkdtemp(&u8) &char
 
 fn build_temporary() !string {
-	mut pattern := (os.temp_dir().trim_right('/') + '/vinix-build-key-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir().trim_right('/') + '/tulpar-build-key-XXXXXX\x00').bytes()
 	if isnil(C.mkdtemp(pattern.data)) { return file_error(pattern.bytestr()) }
 	return pattern[..pattern.len - 1].bytestr()
 }

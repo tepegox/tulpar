@@ -40,7 +40,7 @@ fn run(args []string) ! {
 	if args.len == 3 && args[0] == 'game-bundle' { hostfixture.game_bundle(args[1], args[2])!; return }
 	if args.len == 3 && args[0] == 'ipa' { hostfixture.ipa(args[1], args[2])!; return }
 	if args.len in [2, 3] && args[0] in ['cpython-headers', 'cpython-version'] {
-		include_dir := if args.len == 3 { args[2] } else { os.getenv('VINIX_CPYTHON_INCLUDE') }
+		include_dir := if args.len == 3 { args[2] } else { os.getenv('TULPAR_CPYTHON_INCLUDE') }
 		println(if args[0] == 'cpython-headers' { hostfixture.cpython_headers(args[1], include_dir)! } else { hostfixture.cpython_version(args[1], include_dir)! })
 		return
 	}
@@ -65,7 +65,7 @@ fn run(args []string) ! {
 		'private-install' {
 			paging := sourcefixture.read(os.dir(args[1]) + '/paging.v')!
 			os.write_file(args[2], sourcefixture.private_install(text, paging,
-				os.getenv('VINIX_FILE_PAGES_HOST') == '1', os.getenv('VINIX_PAGING_HOST') == '1')!)!
+				os.getenv('TULPAR_FILE_PAGES_HOST') == '1', os.getenv('TULPAR_PAGING_HOST') == '1')!)!
 		}
 		else { return error('unknown source-tools operation: ' + args[0]) }
 	}

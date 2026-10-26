@@ -7,12 +7,12 @@ import imagehost
 import os
 
 fn run() ! {
-	args := cachecli.arguments(os.args[1..], [], [], [], 0, 2, 'Create a raw AArch64 UEFI guest image.\nUsage: build-vinix-guest-disk.sh [OUTPUT [INITRAMFS]]') or { return error_with_code(err.msg(), 2) }
+	args := cachecli.arguments(os.args[1..], [], [], [], 0, 2, 'Create a raw AArch64 UEFI guest image.\nUsage: build-tulpar-guest-disk.sh [OUTPUT [INITRAMFS]]') or { return error_with_code(err.msg(), 2) }
 	root := os.real_path(os.dir(@FILE) + '/..')
 	output := if args.positional.len > 0 {
 		args.positional[0]
 	} else {
-		root + '/build-aarch64-qemu-system/vinix-guest.img'
+		root + '/build-aarch64-qemu-system/tulpar-guest.img'
 	}
 	initramfs := if args.positional.len > 1 {
 		args.positional[1]

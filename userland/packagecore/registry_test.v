@@ -43,7 +43,7 @@ fn rejected_refresh(mut registry Registry, directory string, owner u32, architec
 }
 
 fn test_generation_registration_rejects_forgery_and_has_bounded_lifetimes() {
-	root := os.real_path(os.temp_dir()) + '/vinix-launcher-registry-' + os.getpid().str()
+	root := os.real_path(os.temp_dir()) + '/tulpar-launcher-registry-' + os.getpid().str()
 	os.mkdir_all(root + '/generations/1')!
 	defer { os.rmdir_all(root) or {} }
 	for path in [root, root + '/generations', root + '/generations/1'] { os.chmod(path, 0o755)! }
@@ -117,7 +117,7 @@ fn test_request_keeps_literal_documents_and_rejects_control_characters() {
 }
 
 fn test_registration_rejects_damaged_metadata_without_publishing_partial_menus_and_recovers() {
-	root := os.real_path(os.temp_dir()) + '/vinix-registration-admission-' + os.getpid().str()
+	root := os.real_path(os.temp_dir()) + '/tulpar-registration-admission-' + os.getpid().str()
 	os.mkdir_all(root + '/generations/1')!
 	defer { os.rmdir_all(root) or {} }
 	owner := u32(os.geteuid())

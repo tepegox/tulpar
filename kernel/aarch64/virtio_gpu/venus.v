@@ -91,7 +91,7 @@ fn release_host_span(offset u64, size u64) {
 
 // Map a mappable HOST3D blob into the aperture on its first DRM_IOCTL_VIRTGPU_MAP
 // or dma-buf export. QEMU on macOS backs every mapped blob with one of
-// Hypervisor.framework's few memory slots. Linux maps at creation; Vinix waits,
+// Hypervisor.framework's few memory slots. Linux maps at creation; Tulpar waits,
 // so blobs that are never mapped, such as most of a game's textures, do not
 // hold a slot. The caller holds a reference to the object.
 fn map_host_blob(_object &VirtioObject) int {

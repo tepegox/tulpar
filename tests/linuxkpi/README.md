@@ -8,7 +8,7 @@ native type namespace. Generated C is a temporary build artifact.
 
 `hostmodel/` preserves the original page ownership, task pins, queue locks and
 condition-variable lifecycle. `host_model_tls.S` supplies native per-thread
-storage because the frozen V compiler ignores `thread_local` for its Vinix
+storage because the frozen V compiler ignores `thread_local` for its Tulpar
 target. The formatting and logging assembly captures the native variadic
 arguments; their fixture bodies are V. `compile-native-host` builds the
 same assertions against the actual ARM or x86 musl SDK, with `hostguest/` as

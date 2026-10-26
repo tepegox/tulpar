@@ -4,7 +4,7 @@ MAKEFLAGS += -rR
 
 # This is the name that our final executable will have.
 # Change as needed.
-override OUTPUT := vinix
+override OUTPUT := tulpar
 
 # Install prefix; /usr/local is a good, standard default pick.
 PREFIX := /usr/local
@@ -26,7 +26,7 @@ endif
 ifneq ($(ARCH),x86_64)
     $(error LINUXKPI currently supports ARCH=x86_64 only)
 endif
-ifeq ($(wildcard $(LINUXKPI_SOURCE_DIR)/.vinix-upstream.json),)
+ifeq ($(wildcard $(LINUXKPI_SOURCE_DIR)/.tulpar-upstream.json),)
     $(error Run ../build-support/run-v-tool.sh ../tests/linuxkpi/upstream_source.v fetch before enabling LINUXKPI)
 endif
 endif
@@ -102,7 +102,7 @@ PROD :=
 # Ensure the dependencies have been obtained.
 ifneq ($(shell ( test '$(MAKECMDGOALS)' = clean || test '$(MAKECMDGOALS)' = distclean ); echo $$?),0)
     ifeq ($(strip $(AR)),)
-        $(error LLVM llvm-ar is required on macOS; install LLVM or set AR/VINIX_LLVM_AR)
+        $(error LLVM llvm-ar is required on macOS; install LLVM or set AR/TULPAR_LLVM_AR)
     endif
     ifeq ($(shell ( ! test -d freestnd-c-hdrs || ! test -d cc-runtime || ! test -d c/flanterm || ! test -f c/nanoprintf.h || ! test -f c/lwip/include/lwip/init.h ); echo $$?),0)
         $(error Please run the ./get-deps script first)
@@ -277,7 +277,7 @@ endif
 
 ifeq ($(PCI_CONFIG_TEST),1)
     override VFLAGS += -d pci_config_test
-    override CPPFLAGS += -DVINIX_PCI_CONFIG_TEST
+    override CPPFLAGS += -DTULPAR_PCI_CONFIG_TEST
 endif
 
 ifeq ($(PCI_TOPOLOGY_TEST),1)
@@ -293,13 +293,13 @@ endif
 
 ifeq ($(LINUXKPI),1)
     override VFLAGS += -d linuxkpi
-    override CPPFLAGS += -DVINIX_LINUXKPI
+    override CPPFLAGS += -DTULPAR_LINUXKPI
     LINUXKPI_CPPFLAGS := -I obj/linuxkpi/include -D__KERNEL__ -include linux/kconfig.h -include $(LINUXKPI_SOURCE_DIR)/include/linux/compiler_types.h -I linuxkpi/include -I $(LINUXKPI_SOURCE_DIR)/include -I $(LINUXKPI_SOURCE_DIR)/include/uapi -I $(LINUXKPI_SOURCE_DIR)/arch/x86/include -I $(LINUXKPI_SOURCE_DIR)/arch/x86/include/uapi -I $(LINUXKPI_SOURCE_DIR)/drivers/gpu/drm/i915 -Wno-unused-parameter -fwrapv
     LINUXKPI_OBJ := obj/linuxkpi/list_sort.o obj/linuxkpi/sort.o obj/linuxkpi/rbtree.o obj/linuxkpi/find_bit.o obj/linuxkpi/hweight.o obj/linuxkpi/ctype.o obj/linuxkpi/siphash.o obj/linuxkpi/i915_config.o obj/linuxkpi/intel_qp_tables.o obj/linuxkpi/i915_memcpy.o obj/linuxkpi/i915_sw_fence.o
     LINUXKPI_OBJ += obj/linuxkpi/headercore.o obj/linuxkpi/exchangecore.o
     # Keep the native 128-bit helper dormant until a caller selects that width.
     LINUXKPI_LIB := obj/linuxkpi/exchange128.a
-    LINUXKPI_ABI_HEADERS := obj/linuxkpi/include/vinix/spinlock_adapters.h obj/linuxkpi/include/vinix/atomic_exchange.h obj/linuxkpi/include/vinix/integer_policy.h
+    LINUXKPI_ABI_HEADERS := obj/linuxkpi/include/tulpar/spinlock_adapters.h obj/linuxkpi/include/tulpar/atomic_exchange.h obj/linuxkpi/include/tulpar/integer_policy.h
     # Match the generator's resolved -MQ target, including macOS /tmp aliases.
     LINUXKPI_BOUNDS_HEADER := $(realpath $(CURDIR))/obj/linuxkpi/include/generated/bounds.h
     LINUXKPI_SCHED_MM_HEADER := obj/linuxkpi/include/linux/sched/mm.h
@@ -316,7 +316,7 @@ endif
 # every allocation, so it is off unless asked for.
 ifeq ($(ALLOC_TRACK),1)
     override VFLAGS += -d alloc_track
-    override CPPFLAGS += -DVINIX_ALLOC_TRACK
+    override CPPFLAGS += -DTULPAR_ALLOC_TRACK
 endif
 
 ifeq ($(PROD),false)
@@ -418,13 +418,13 @@ LINUXKPI_V_TOOL_HELPERS := $(wildcard ../tests/linuxkpi/hosttest/*.v ../tests/li
 LINUXKPI_ABI_GENERATOR := ../tests/linuxkpi/generate_abi.v $(LINUXKPI_V_TOOL_HELPERS)
 LINUXKPI_BOUNDS_GENERATOR := ../tests/linuxkpi/generate_bounds.v $(LINUXKPI_V_TOOL_HELPERS)
 
-obj/linuxkpi/include/vinix/spinlock_adapters.h: linuxkpi/abi/spinlock.json $(LINUXKPI_ABI_GENERATOR) linuxkpi/headercore/primitive.v
+obj/linuxkpi/include/tulpar/spinlock_adapters.h: linuxkpi/abi/spinlock.json $(LINUXKPI_ABI_GENERATOR) linuxkpi/headercore/primitive.v
 	V="$(V)" sh ../build-support/run-v-tool.sh ../tests/linuxkpi/generate_abi.v $< $@
 
-obj/linuxkpi/include/vinix/atomic_exchange.h: linuxkpi/abi/atomic-exchange.json $(LINUXKPI_ABI_GENERATOR) linuxkpi/exchangecore/core.v linuxkpi/exchange128core/core.v
+obj/linuxkpi/include/tulpar/atomic_exchange.h: linuxkpi/abi/atomic-exchange.json $(LINUXKPI_ABI_GENERATOR) linuxkpi/exchangecore/core.v linuxkpi/exchange128core/core.v
 	V="$(V)" sh ../build-support/run-v-tool.sh ../tests/linuxkpi/generate_abi.v $< $@
 
-obj/linuxkpi/include/vinix/integer_policy.h: linuxkpi/abi/overflow.json $(LINUXKPI_ABI_GENERATOR) linuxkpi/headercore/policy.v
+obj/linuxkpi/include/tulpar/integer_policy.h: linuxkpi/abi/overflow.json $(LINUXKPI_ABI_GENERATOR) linuxkpi/headercore/policy.v
 	V="$(V)" sh ../build-support/run-v-tool.sh ../tests/linuxkpi/generate_abi.v $< $@
 
 # Keep unsupported task/MM operations as their exact original declarations.
@@ -508,7 +508,7 @@ obj/linuxkpi/i915_sw_fence.o: $(LINUXKPI_SOURCE_DIR)/drivers/gpu/drm/i915/i915_s
 endif
 
 # Compile the maintained V sampler separately so benchmark callers can use
-# identical GCC flags for this object on Vinix and XNU.
+# identical GCC flags for this object on Tulpar and XNU.
 ifeq ($(ARCH),x86_64)
 obj/heap_benchmark.c: $(wildcard heapbench/*.v) ../tests/native-generators/main.v $(wildcard ../tests/native-generators/generators/*.v) c/heap_benchmark_v.h
 	mkdir -p obj
@@ -588,7 +588,7 @@ obj/blob.c.o: GNUmakefile $(VFILES) $(V_CONFIG_STAMP)
 	$(V) $(VFLAGS) -o obj/blob.c obj/vsrc
 	sed 's/call 0(/call *(/g;/Wimplicit-function-declaration/d' < obj/blob.c > obj/blob.c.tmp
 	mv obj/blob.c.tmp obj/blob.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -DVINIX_V_RUNTIME -w -c obj/blob.c -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) -DTULPAR_V_RUNTIME -w -c obj/blob.c -o $@
 
 # Compilation rules for *.c files.
 obj/c/%.c.o: c/%.c GNUmakefile

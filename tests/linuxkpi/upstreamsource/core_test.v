@@ -68,7 +68,7 @@ fn fixture_pin(base string) !map[string]json2.Any {
 }
 
 fn test_modifications_and_added_files_are_rejected() {
-	base := hosttest.work_dir('', 'vinix-source-integrity-')!
+	base := hosttest.work_dir('', 'tulpar-source-integrity-')!
 	defer { hosttest.remove_work_dir(base) or {} }
 	fixture_archive(base, [Member{'driver/a.c', 'unmodified\n'}, Member{'unwanted.c', 'excluded\n'}])!
 	pin := fixture_pin(base)!
@@ -94,12 +94,12 @@ fn test_modifications_and_added_files_are_rejected() {
 }
 
 fn test_manifest_pin_rejects_rewritten_checksums() {
-	base := hosttest.work_dir('', 'vinix-source-manifest-')!
+	base := hosttest.work_dir('', 'tulpar-source-manifest-')!
 	defer { hosttest.remove_work_dir(base) or {} }
 	fixture_archive(base, [Member{'driver/a.c', 'unmodified\n'}, Member{'unwanted.c', 'excluded\n'}])!
 	mut pin := fixture_pin(base)!
 	root := fetch(base, pin)!
-	manifest := os.join_path(root, '.vinix-upstream.json')
+	manifest := os.join_path(root, '.tulpar-upstream.json')
 	pin['manifest_sha256'] = hosttest.file_digest(manifest)!
 	file := os.join_path(root, 'driver/a.c')
 	os.write_file(file, 'changed\n')!
@@ -117,7 +117,7 @@ fn test_manifest_pin_rejects_rewritten_checksums() {
 }
 
 fn test_path_escape_is_rejected() {
-	base := hosttest.work_dir('', 'vinix-source-traversal-')!
+	base := hosttest.work_dir('', 'tulpar-source-traversal-')!
 	defer { hosttest.remove_work_dir(base) or {} }
 	fixture_archive(base, [Member{'driver/../../outside.c', 'x'}])!
 	pin := fixture_pin(base)!

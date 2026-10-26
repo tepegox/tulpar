@@ -13,7 +13,7 @@ fn C.setrlimit(int, voidptr) int
 struct PackSourceLimit { current u64 maximum u64 }
 
 fn pack_source_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-pack-source-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-pack-source-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }
@@ -26,9 +26,9 @@ fn pack_source_manifest(work string) !string {
 }
 
 fn pack_source_change(phase string, relative string) ! {
-	if phase != os.getenv('VINIX_PACK_SOURCE_PHASE') || relative != os.getenv('VINIX_PACK_SOURCE_ENTRY') { return }
-	path := os.getenv('VINIX_PACK_SOURCE_PATH')
-	mode := os.getenv('VINIX_PACK_SOURCE_CHANGE')
+	if phase != os.getenv('TULPAR_PACK_SOURCE_PHASE') || relative != os.getenv('TULPAR_PACK_SOURCE_ENTRY') { return }
+	path := os.getenv('TULPAR_PACK_SOURCE_PATH')
+	mode := os.getenv('TULPAR_PACK_SOURCE_CHANGE')
 	match mode {
 		'grow' { mut file := os.open_append(path)!; file.write_string('extra')!; file.close() }
 		'shrink' { os.truncate(path, 0)! }
@@ -37,7 +37,7 @@ fn pack_source_change(phase string, relative string) ! {
 		else {
 			os.rename(path, path + '.saved')!
 			match mode {
-				'alias' { os.symlink(os.getenv('VINIX_PACK_SOURCE_OUTSIDE'), path)! }
+				'alias' { os.symlink(os.getenv('TULPAR_PACK_SOURCE_OUTSIDE'), path)! }
 				'fifo' { assert C.mkfifo(path.str, 0o600) == 0 }
 				'ordinary' { os.write_file(path, 'external')! }
 				'missing' {}
@@ -49,7 +49,7 @@ fn pack_source_change(phase string, relative string) ! {
 
 fn pack_source_hook(phase string, entry string, path string, outside string, mode string) PackSourceOptions {
 	for key, value in {'PHASE': phase, 'ENTRY': entry, 'PATH': path, 'OUTSIDE': outside, 'CHANGE': mode} {
-		os.setenv('VINIX_PACK_SOURCE_' + key, value, true)
+		os.setenv('TULPAR_PACK_SOURCE_' + key, value, true)
 	}
 	return PackSourceOptions{ checkpoint: pack_source_change }
 }

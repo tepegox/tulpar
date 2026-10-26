@@ -66,7 +66,7 @@ v -nocache -no-skip-unused -gc none -manualfree \
 v -nocache -no-skip-unused -gc none -manualfree \
   -path '@vlib|@vmodules|.|tools/accounts' \
   -o /tmp/publisher-workspace-check tests/packages/publisher-workspace-check.v
-/tmp/publisher-workspace-check /path/to/vinix-package /tmp/new-publisher-check
+/tmp/publisher-workspace-check /path/to/tulpar-package /tmp/new-publisher-check
 V=/path/to/v v -path '@vlib|@vmodules|.|tests/hardware-platform' \
   run tests/packages/publisher-workspace-runtime-check.v --arch aarch64 \
   --kernel /build/aarch64/kernel --state-dir /tmp/publisher-arm

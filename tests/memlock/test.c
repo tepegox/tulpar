@@ -17,14 +17,14 @@
 #include <unistd.h>
 
 #if defined(__aarch64__)
-#define SYS_vinix_mimmutable 247
+#define SYS_tulpar_mimmutable 247
 #else
-#define SYS_vinix_mimmutable 500
+#define SYS_tulpar_mimmutable 500
 #endif
 
 #define FORGED_BRK_RESERVATION 0x20000000
 
-#define CHECK(x) do { if (!(x)) { printf("VINIX MEMLOCK: FAIL line=%d errno=%d: %s\n", __LINE__, errno, #x); return 1; } } while (0)
+#define CHECK(x) do { if (!(x)) { printf("TULPAR MEMLOCK: FAIL line=%d errno=%d: %s\n", __LINE__, errno, #x); return 1; } } while (0)
 static size_t page;
 
 static unsigned long field(const char *path, const char *name)
@@ -244,7 +244,7 @@ static int current_and_future(void)
     CHECK(resident((void *)start) == 1); /* prior successful growth populated it */
     uintptr_t sealed = start + 2 * page;
     CHECK(resident((void *)sealed) == 0);
-    CHECK(syscall(SYS_vinix_mimmutable, (void *)sealed, page) == 0);
+    CHECK(syscall(SYS_tulpar_mimmutable, (void *)sealed, page) == 0);
     CHECK((uintptr_t)syscall(SYS_brk, sealed + page) == old_break);
     CHECK(locked() == 0 && resident((void *)sealed) == 0);
     void *forged = mmap(NULL, page, PROT_NONE,
@@ -441,13 +441,13 @@ int main(int argc, char **argv)
         if (!child) _exit(tests[i]());
         int result = child < 0 ? 255 : status(child);
         if (result != 0) {
-            printf("VINIX MEMLOCK: FAIL test=%u child_status=%d\n", i, result);
+            printf("TULPAR MEMLOCK: FAIL test=%u child_status=%d\n", i, result);
             failed = 1;
             continue;
         }
         printf("MEMLOCK PASS: %s\n", markers[i]);
     }
-    puts(failed ? "VINIX MEMLOCK: FAIL" : "VINIX MEMLOCK: PASS");
+    puts(failed ? "TULPAR MEMLOCK: FAIL" : "TULPAR MEMLOCK: PASS");
     sync();
     reboot(RB_POWER_OFF);
     for (;;) pause();

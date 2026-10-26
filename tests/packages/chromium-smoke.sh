@@ -6,15 +6,15 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export HOME=/root
 export SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-echo "VINIX CHROMIUM PACKAGE TEST"
+echo "TULPAR CHROMIUM PACKAGE TEST"
 
 if [ ! -x /usr/bin/Xorg ]; then
-	echo "Chromium test needs the Vinix Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
+	echo "Chromium test needs the Tulpar Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
 	exit 1
 fi
 test -x /usr/bin/run-chromium
-test -s /usr/share/vinix/chromium-smoke.html
-test -s /etc/chromium/policies/managed/vinix.json
+test -s /usr/share/tulpar/chromium-smoke.html
+test -s /etc/chromium/policies/managed/tulpar.json
 
 if [ ! -x /usr/lib/chromium/chrome ]; then
 	pkg install chromium
@@ -27,7 +27,7 @@ test -s /usr/share/mime/mime.cache
 echo "PASS pkg installed Chromium and its GTK runtime"
 
 # The version banner is the cheapest end-to-end check that the browser's own
-# executable loads, relocates and reaches main() under Vinix.
+# executable loads, relocates and reaches main() under Tulpar.
 /usr/lib/chromium/chrome --version >/tmp/chromium-version.txt 2>/tmp/chromium-version.log || {
 	cat /tmp/chromium-version.log >&2
 	echo "Chromium could not report its version" >&2
@@ -39,8 +39,8 @@ echo "PASS $(cat /tmp/chromium-version.txt)"
 mkdir -p /tmp/.X11-unix /var/lib/xkb
 display=:12
 # A persistent /root can shadow the copy the image ships there.
-if [ -x /usr/share/vinix/x-window-check ]; then
-	x_window_check=/usr/share/vinix/x-window-check
+if [ -x /usr/share/tulpar/x-window-check ]; then
+	x_window_check=/usr/share/tulpar/x-window-check
 else
 	x_window_check=/root/x-window-check
 fi
@@ -69,7 +69,7 @@ DISPLAY="$display" run-chromium >/tmp/chromium.log 2>&1 &
 chromium_pid=$!
 mapped=false
 i=0
-# A first launch builds the font cache and the browser's profile, and Vinix
+# A first launch builds the font cache and the browser's profile, and Tulpar
 # QEMU currently runs one guest CPU. Leave room for that one-time work.
 while [ "$i" -lt 300 ]; do
 	if ! kill -0 "$chromium_pid" 2>/dev/null; then
@@ -91,4 +91,4 @@ if [ "$mapped" != true ]; then
 fi
 
 echo "PASS Chromium opened a browser window"
-echo "VINIX CHROMIUM PACKAGE TEST: PASS"
+echo "TULPAR CHROMIUM PACKAGE TEST: PASS"

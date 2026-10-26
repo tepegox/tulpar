@@ -11,8 +11,8 @@ fn cipher_monitor_native_fixture(sector u64, kind u32, flags u64, mut disk DiskK
 fn cipher_monitor_native_expected(reference &u8, disk &DiskKey, row &Request, observed &u8, recovery bool, sample u64, changed_samples u64) string {
 	mut expected := [32]u8{}; mut actual := [32]u8{}; mut encoded := [128]u8{}; unsafe { for i in 0 .. 32 { expected[i] = reference[80 + i]; actual[i] = observed[i] }; for i in 0 .. 128 { encoded[i] = reference[i] } }
 	changed := expected != actual; identity := if disk.kind == 1 { 'mbr:83000001' } else { 'gpt:83000001-0000-0000-0000-00000000009b' }
-	return 'format=VINIXCM1 operation=monitored-ciphertext source=${if recovery { 'recovery' } else { 'volume' }} sample=${sample} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\n' +
-		'format=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(encoded[..])) + '\n' +
+	return 'format=TULPARCM1 operation=monitored-ciphertext source=${if recovery { 'recovery' } else { 'volume' }} sample=${sample} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\n' +
+		'format=TULPARCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(encoded[..])) + '\n' +
 		'disk_bytes=${disk.bytes} sector=${disk.sector} identity=${identity} slot=${row.slot} offset=${row.offset} bytes=${row.length} readonly=${row.flags} result=${if changed { 'changed' } else { 'match' }} expected_sha256=' + hex.encode(expected[..]) + ' actual_sha256=' + hex.encode(actual[..]) + '\n'
 }
 fn test_cipher_monitor_complete_eight_histories_eight_profiles_both_domains() {
@@ -32,7 +32,7 @@ fn test_cipher_monitor_invalid_reference_counters_and_full_width_geometry() {
 	row.offset = (u64(0x7fffffffffffffff) & ~u64(4095)) - 4096; row.length = 4096; assert encode_volume_ciphertext(&disk, &row, &expected[0], &reference[0]); mut output := [2048]char{}; size := encode_ciphertext_monitor(&reference[0], &observed[0], true, u64(-1), u64(-1), &output[0]); assert size > 0 && size < 2048 && unsafe { tos(&u8(&output[0]), size) } == cipher_monitor_native_expected(&reference[0], &disk, &row, &observed[0], true, u64(-1), u64(-1))
 }
 fn test_cipher_monitor_cli_both_domains_arity_and_unsigned_bounds() {
-	unsafe { mut args := [&char(c'vinix-volume'), &char(c'monitor-volume-auto'), &char(c'/missing-monitor-config'), &char(c'/missing-credential'), &char(c'/missing-reference'), &char(c'0'), &char(c'1'), &char(c'extra'), &char(nil)]!
+	unsafe { mut args := [&char(c'tulpar-volume'), &char(c'monitor-volume-auto'), &char(c'/missing-monitor-config'), &char(c'/missing-credential'), &char(c'/missing-reference'), &char(c'0'), &char(c'1'), &char(c'extra'), &char(nil)]!
 		for verb in [&char(c'monitor-volume-auto'), &char(c'monitor-recovery-volume-auto')]! { args[1] = verb
 			for argc in [2, 3, 4, 5, 6, 8, 9] { assert run(argc, &args[0]) == 2 }
 			for at in 2 .. 7 { saved := args[at]; args[at] = &char(c''); assert run(7, &args[0]) == 2; args[at] = saved }

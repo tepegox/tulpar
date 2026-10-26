@@ -14,7 +14,7 @@ reference transition, free or lifetime is added.
 
 [Linux v6.12 execveat](https://github.com/torvalds/linux/blob/v6.12/fs/exec.c)
 declares its descriptor argument as `int`. Its executable-name construction
-uses the resulting number in `/dev/fd/N`; Vinix uses `/proc/self/fd/N`.
+uses the resulting number in `/dev/fd/N`; Tulpar uses `/proc/self/fd/N`.
 The fixture accepts either spelling while requiring the normalized number.
 
 Use `--case execfd` or `ed-0` through `ed-7`. Native `all` and Linux
@@ -88,7 +88,7 @@ ARM probe compilation uses a private copy of the Homebrew musl-cross 0.9.11
 headers/libraries and GCC 14.2.0 `crtbeginT.o`, `crtend.o`, `libgcc.a` and
 `libgcc_eh.a`. `sdk-inputs.json` pins the copied bytes and symlink targets;
 the retained V `clang.v` wrapper selects these support files. Probe/controller
-tools use the host V compiler. These are host build inputs, not native Vinix
+tools use the host V compiler. These are host build inputs, not native Tulpar
 toolchain qualification.
 
 Native ARM uses HVF/four CPUs; x86 uses TCG/two, each with 1024 MiB. Linux

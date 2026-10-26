@@ -1,6 +1,6 @@
 #!/bin/sh
 # BusyBox's -o label is fixed at build time in Alpine's binary. Use the kernel
-# name for Vinix while keeping BusyBox's option parsing and field ordering.
+# name for Tulpar while keeping BusyBox's option parsing and field ordering.
 print_os=0
 for option do
     case "$option" in
@@ -22,7 +22,7 @@ output=$(/bin/busybox uname "$@") || exit "$?"
 # --help prints usage without a system-information line.
 [ -n "$output" ] || exit 0
 kernel=$(/bin/busybox uname -s) || exit "$?"
-if [ "$kernel" = Vinix ]; then
+if [ "$kernel" = Tulpar ]; then
     os=$(/bin/busybox uname -o) || exit "$?"
     case "$output" in
         "$os") output=$kernel ;;

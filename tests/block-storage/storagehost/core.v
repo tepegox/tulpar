@@ -56,9 +56,9 @@ pub fn run() ! {
 	guard := policyhost.own_commands()
 	defer { guard.close() }
 	root := hosttest.root()
-	work := hosttest.work_dir('', 'vinix-storage-host-')!
+	work := hosttest.work_dir('', 'tulpar-storage-host-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
-	write(work, 'v.mod', "Module { name: 'vinix_storage_host_tests' }\n")!
+	write(work, 'v.mod', "Module { name: 'tulpar_storage_host_tests' }\n")!
 	for path, contents in stubs() { write(work, path, contents)! }
 	write(work, 'block/fence/fence.v', os.read_file(root + '/kernel/block/fence/fence.v')!)!
 	write(work, 'resource/resource.v', 'module resource\npub struct BlockMetrics {}\npub fn (mut m BlockMetrics) failed() {}\npub fn (mut m BlockMetrics) flushed() {}\n' + function(os.read_file(root + '/kernel/resource/block_discard.v')!, 'discard_range_valid')!)!
@@ -68,7 +68,7 @@ pub fn run() ! {
 	driver(work, root + '/kernel/dev/nvme/nvme.v', 'nvme', ['memory', 'lib', 'pci', 'bitmap', 'stat',
 		'klock', 'event.eventstruct', 'errno', 'katomic', 'resource', 'proc', 'devcore', 'block.fence',
 		'x86.hpet as hpet_clock'], ['send_cmd', 'send_cmd_and_wait', 'exchange', 'fail_controller',
-		'ready_timeout_ns', 'rw_lba', 'transfer', 'sync', 'discard'], 'const page_size = u64(4096)\nconst higher_half = u64(0)\n#include <stdio.h>\n#define kprintf printf\n#define vinix_stack_alloc __builtin_alloca\nfn C.kprintf(&char, ...voidptr) int\nfn C.vinix_stack_alloc(usize) voidptr\n' + health_declarations + '\n' + function(os.read_file(root + '/kernel/dev/nvme/power.v')!, 'wait_awake')!)!
+		'ready_timeout_ns', 'rw_lba', 'transfer', 'sync', 'discard'], 'const page_size = u64(4096)\nconst higher_half = u64(0)\n#include <stdio.h>\n#define kprintf printf\n#define tulpar_stack_alloc __builtin_alloca\nfn C.kprintf(&char, ...voidptr) int\nfn C.tulpar_stack_alloc(usize) voidptr\n' + health_declarations + '\n' + function(os.read_file(root + '/kernel/dev/nvme/power.v')!, 'wait_awake')!)!
 	driver(work, root + '/kernel/aarch64/virtio_blk/virtio_blk.v', 'virtio_blk', [
 		'aarch64.cpu',
 		'aarch64.timer',

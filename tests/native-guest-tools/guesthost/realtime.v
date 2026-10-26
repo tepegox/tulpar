@@ -15,7 +15,7 @@ pub fn realtime_features() []string {
 		'QEMU RT PASS: SCHED_DEADLINE admits only what the machine can keep',
 		'QEMU RT PASS: SCHED_DEADLINE keeps a thread inside its budget',
 		'QEMU RT PASS: a runaway real-time thread is held to its bandwidth',
-		'QEMU RT PASS: a real-time thread wakes on time on a busy machine', 'VINIX QEMU RT: PASS']
+		'QEMU RT PASS: a real-time thread wakes on time on a busy machine', 'TULPAR QEMU RT: PASS']
 }
 
 pub fn realtime_command(arguments []string) int {
@@ -34,9 +34,9 @@ fn realtime_checked(arguments []string) !int {
 	timeout := serial_timeout(parsed, 300)!
 	state := resolve(parsed.value('--state-dir', ''))!
 	configured := serial_arm_launch(resolve(parsed.value('--init', ''))!, resolve(parsed.value('--initramfs', ''))!,
-		state, resolve(os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' })!, root(), 2048, '')!
+		state, resolve(os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' })!, root(), 2048, '')!
 	println('==> Starting AArch64 QEMU boot for the real-time regression')
 	policyhost.command_checkpoint()!
-	return boot_abi_from(configured.command, configured.env, state, 'aarch64', realtime_features(), 'VINIX QEMU RT: PASS',
-		['VINIX QEMU RT: FAIL', 'QEMU RT FAIL:', 'FATAL EXCEPTION', 'KERNEL PANIC'], timeout, true, root())!
+	return boot_abi_from(configured.command, configured.env, state, 'aarch64', realtime_features(), 'TULPAR QEMU RT: PASS',
+		['TULPAR QEMU RT: FAIL', 'QEMU RT FAIL:', 'FATAL EXCEPTION', 'KERNEL PANIC'], timeout, true, root())!
 }

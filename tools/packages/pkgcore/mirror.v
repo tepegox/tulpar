@@ -30,7 +30,7 @@ fn mirror_locked(config Config, directory string, destination string, names []st
 }
 
 struct MirrorIdentity {
-	domain string = 'vinix-mirror-review-1'
+	domain string = 'tulpar-mirror-review-1'
 	config Config
 	names []string
 	plan Plan
@@ -145,7 +145,7 @@ fn prepare_mirror_plan(config Config, directory string, destination string, name
 	unsafe { bytes.flags |= .noslices }
 	defer { unsafe { bytes.free() } }
 	json2.encode_append(MirrorIdentity{ config: config, names: names, plan: plan, snapshots: snapshots,
-		domain: if deployment == '' { 'vinix-mirror-review-1' } else { 'vinix-deployment-mirror-review-1' },
+		domain: if deployment == '' { 'tulpar-mirror-review-1' } else { 'tulpar-deployment-mirror-review-1' },
 		destination: destination, target: target, ancestor: ancestor, device: u64(info.st_dev), inode: u64(info.st_ino),
 		deployment: deployment, deployment_sha256: lock_sha256 }, mut bytes)
 	mut hash := sha256.new(); mut digest := []u8{len: sha256.size}
@@ -270,7 +270,7 @@ fn mirror_export(config Config, directory string, destination string, names []st
 	if target != prepared.target { return error('offline mirror destination changed; review the export again') }
 	parent := os.dir(target)
 	defer { unsafe { parent.free() } }
-	mut exporting := create_export_stage(parent, '.vinix-mirror', 'offline mirror')!
+	mut exporting := create_export_stage(parent, '.tulpar-mirror', 'offline mirror')!
 	defer { exporting.close() }
 	write_mirror_stage(config, directory, prepared, options, target, mut exporting) or {
 		return exporting.failure(err)

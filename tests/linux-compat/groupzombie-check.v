@@ -84,7 +84,7 @@ fn body(source string,name string) string {
 fn check_c(area string,suffix string) ! {
  mut before := os.read_file(area+'before-'+suffix+'.c')!; mut after := os.read_file(area+'after-'+suffix+'.c')!
  old := body(before,'proc__set_process_group'); new := body(after,'proc__set_process_group'); assert old != new
- for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','vinix_stack_alloc(','pin_thread(','unpin_thread('] {assert old.count(token) == new.count(token),token}
+ for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','tulpar_stack_alloc(','pin_thread(','unpin_thread('] {assert old.count(token) == new.count(token),token}
  before = before.replace(old,''); after = after.replace(new,'')
  unchanged := before == after; assert unchanged,'Whole production C differs outside set_process_group; no normalization'
 }
@@ -92,7 +92,7 @@ fn check_c(area string,suffix string) ! {
 
 fn sdk_and_primary(area string,out string) ! {
  sdk := object(area+'sdk-inputs.json')!; assert sdk.len == 2014
- prior := object('/Users/alex/.cache/vinix-linux-compat/grouporder-20261015/sdk-inputs.json')!; assert sdk.len == prior.len
+ prior := object('/Users/alex/.cache/tulpar-linux-compat/grouporder-20261015/sdk-inputs.json')!; assert sdk.len == prior.len
  for path,hash in sdk {assert hash.str() == prior[path]!.str() && digest(area+'sdk/'+path) == hash.str(),path}
  mut found := map[string]bool{}
  for path in os.walk_ext(area+'sdk','') {assert os.inode(path).typ == .regular; local := path.all_after(area+'sdk/'); assert local in sdk && local !in found; found[local] = true}
@@ -208,7 +208,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -239,7 +239,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -264,12 +264,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/groupzombie-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/groupzombie-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/groupzombiereferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/groupzombiereferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -302,7 +302,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: groupzombie-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	sdk_and_primary(area, out)!
@@ -314,7 +314,7 @@ fn main() {
 	os.write_file(area + 'scope-check.log', 'arm/x86: complete production C differs only in set_process_group; exit_published under the existing table lock admits completed zombie targets and group members, preserving incomplete-teardown exclusion and existing ownership/notifications; no added allocation/pin/free or compiler normalization; post-exit mutation lifetime independently reviewed\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == 'a6046ead7309dad8e166b94e819fd9726ac4eec7'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -404,7 +404,7 @@ fn main() {
 			'linux_primary_pin':        digest(area + 'linux-source.sha256')
 			'private_sdk': digest(area + 'sdk-inputs.json')
 			'lifetime_review': digest(area + 'lifetime-review.txt')
-			'sdk_prior_inputs': digest('/Users/alex/.cache/vinix-linux-compat/grouporder-20261015/sdk-inputs.json')
+			'sdk_prior_inputs': digest('/Users/alex/.cache/tulpar-linux-compat/grouporder-20261015/sdk-inputs.json')
 			'arm_compiler_adapter': digest(area + 'arm-cc.v')
 			'arm_compiler_adapter_binary': digest(area + 'arm-cc')
 			'primary_reuse': digest(area + 'primary-reuse.json')
@@ -421,7 +421,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + 'p1-' + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['groupzombie']
 			} else {
@@ -441,7 +441,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + if phase == 'before' { 'initial-build-' + suffix + '-before.log' } else { 'build-after-' + suffix + '-detached.log' }
 			assert os.read_file(producer)!.trim_space() == suffix + ' ' + phase + ' production build: PASS'
 			artifacts[phase + '_build_producer'] = digest(producer)

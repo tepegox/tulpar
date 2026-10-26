@@ -7,7 +7,7 @@
 //	    vendor device class revision config   what it is (PCI)
 //	    modalias uevent                       what would drive it
 //	    driver -> ../../../bus/pci/drivers/e1000
-//	    state health                          Vinix's: bound, failed; its history
+//	    state health                          Tulpar's: bound, failed; its history
 //	    reset remove                          write 1 to ask
 //	    power/wakeup power/wakeup_count       may it end a sleep; did it
 //	    power_state power/d3_count            D0 or D3hot (PCI); sleeps spent in D3hot
@@ -34,7 +34,7 @@ __global (
 // Paths are put together in a builder on the stack, as procfs does: one made
 // as a local value is moved to the heap by the compiler and left there.
 fn text2(a string, b string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(a.len + b.len) }
 	text.add(a)
 	text.add(b)
@@ -42,7 +42,7 @@ fn text2(a string, b string) string {
 }
 
 fn text3(a string, b string, c string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(a.len + b.len + c.len) }
 	text.add(a)
 	text.add(b)
@@ -52,7 +52,7 @@ fn text3(a string, b string, c string) string {
 
 // `depth` times "../", then `rest`: a link's way up to /sys and down again.
 fn up_and_over(depth int, rest string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(depth * 3 + rest.len) }
 	for _ in 0 .. depth {
 		text.add('../')
@@ -114,7 +114,7 @@ fn publish_driver(driver &Driver) {
 		return
 	}
 	bus := bus_name(driver.bus)
-	mut base := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut base := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *base = lib.new_text(64) }
 	base.add('bus/')
 	base.add(bus)
@@ -179,7 +179,7 @@ fn publish_device(mut dev Device) {
 
 	// /sys/bus/<bus>/devices/<name>
 	bus := bus_name(dev.bus)
-	mut link := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut link := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *link = lib.new_text(64) }
 	link.add('bus/')
 	link.add(bus)
@@ -200,7 +200,7 @@ fn unpublish_device(mut dev Device) {
 		return
 	}
 	bus := bus_name(dev.bus)
-	mut link := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut link := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *link = lib.new_text(64) }
 	link.add('bus/')
 	link.add(bus)
@@ -220,7 +220,7 @@ fn publish_binding(dev &Device) {
 		return
 	}
 	bus := bus_name(dev.bus)
-	mut driver := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut driver := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *driver = lib.new_text(64) }
 	driver.add('bus/')
 	driver.add(bus)
@@ -250,7 +250,7 @@ fn unpublish_binding(dev &Device) {
 	}
 	own := text2(dev.sysfs_path, '/driver')
 	fs.sysfs_remove(own)
-	mut listed := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut listed := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *listed = lib.new_text(64) }
 	listed.add('bus/')
 	listed.add(bus_name(dev.bus))

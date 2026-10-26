@@ -83,10 +83,10 @@ inputs and matching sandbox/kernel:
 ```sh
 v -path '@vlib|@vmodules|.|tests/hardware-platform|tools/accounts' \
   -o /tmp/native-catalog-check tests/packages/native-catalog-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
-  VINIX_PACKAGE_TEST_UI2=/path/to/headless/modules \
-  VINIX_NATIVE_CATALOG_INPUTS=/build/native-inputs \
-  VINIX_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/vinix-sandbox \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/headless/modules \
+  TULPAR_NATIVE_CATALOG_INPUTS=/build/native-inputs \
+  TULPAR_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/tulpar-sandbox \
   /tmp/native-catalog-check --software --arch aarch64 \
   --kernel /build/aarch64-kernel --state-dir /build/new-software-state
 ```

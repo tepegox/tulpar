@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Foreign type and compiler metadata only. All executable fixture code is V. */
-#ifndef VINIX_AGGREGATE_EXCHANGE_FIXTURE_H
-#define VINIX_AGGREGATE_EXCHANGE_FIXTURE_H
+#ifndef TULPAR_AGGREGATE_EXCHANGE_FIXTURE_H
+#define TULPAR_AGGREGATE_EXCHANGE_FIXTURE_H
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>

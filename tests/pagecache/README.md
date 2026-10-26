@@ -132,8 +132,8 @@ concurrent descriptor access and power-loss behavior still need integration test
 
 `tests/pagecache/run-guest --arch=aarch64` (or `amd64`) boots a disposable
 physical EXT2 root using native V power-cut supervision. Set
-`VINIX_VM_RUNNER_ROOT` to the checkout with the boot dependencies,
-`VINIX_KERNEL_DIR` to the ARM kernel directory, and `VINIX_AMD64_KERNEL` to
+`TULPAR_VM_RUNNER_ROOT` to the checkout with the boot dependencies,
+`TULPAR_KERNEL_DIR` to the ARM kernel directory, and `TULPAR_AMD64_KERNEL` to
 the x86 kernel binary. Both kernels must already be built; the runner snapshots
 them and never rebuilds the checkout. `--kernel DIR|ELF` overrides the input and
 `--build-only` retains native payloads and physically formatted disks without

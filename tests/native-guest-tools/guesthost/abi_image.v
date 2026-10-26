@@ -7,8 +7,8 @@ import hosttest
 // Other former realtime-driver callers need the same physical ext2 /root.
 pub fn arm_home_launch(command []string, state string, runner_root string) ![]string {
 	mut argv := command.clone()
-	if os.getenv('VINIX_QEMU_EXTRA') != '' {
-		argv.insert(1, hosttest.shell_split(os.getenv('VINIX_QEMU_EXTRA'))!)
+	if os.getenv('TULPAR_QEMU_EXTRA') != '' {
+		argv.insert(1, hosttest.shell_split(os.getenv('TULPAR_QEMU_EXTRA'))!)
 	}
 	abi_home_volume(state)!
 	abi_arm_config(state, runner_root)!
@@ -20,8 +20,8 @@ pub fn arm_home_launch(command []string, state string, runner_root string) ![]st
 // Reuse a caller-owned physical home across hard-stop/restart epochs.
 pub fn arm_persist_launch(command []string, disk string, state string, runner_root string) ![]string {
 	mut argv := command.clone()
-	if os.getenv('VINIX_QEMU_EXTRA') != '' {
-		argv.insert(1, hosttest.shell_split(os.getenv('VINIX_QEMU_EXTRA'))!)
+	if os.getenv('TULPAR_QEMU_EXTRA') != '' {
+		argv.insert(1, hosttest.shell_split(os.getenv('TULPAR_QEMU_EXTRA'))!)
 	}
 	abi_arm_config(state, runner_root)!
 	argv.insert(argv.index('-device'), ['-drive', 'if=none,format=raw,file=' + disk + ',id=powercut-home,cache=writeback',
@@ -33,7 +33,7 @@ fn abi_home_volume(state string) ! {
 	disk := state + '/root.ext2'
 	os.write_file(disk, '')!
 	if unsafe { C.truncate(disk.str, i64(64 * 1024 * 1024)) } < 0 { return posix_error() }
-	mut formatter := os.getenv('VINIX_MKE2FS')
+	mut formatter := os.getenv('TULPAR_MKE2FS')
 	if formatter == '' {
 		for candidate in ['mke2fs', 'mkfs.ext2', '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs',
 			'/usr/local/opt/e2fsprogs/sbin/mke2fs'] {
@@ -48,10 +48,10 @@ fn abi_home_volume(state string) ! {
 }
 
 fn abi_arm_config(state string, runner_root string) ! {
-	// The generic ISO builder does not forward VINIX_CMDLINE on ARM. Replace
+	// The generic ISO builder does not forward TULPAR_CMDLINE on ARM. Replace
 	// only the private ISO's config, retaining its UEFI El Torito/GPT metadata.
-	cmdline := 'vinix.qemu_persist=1' + if os.getenv('VINIX_CMDLINE') != '' {
-		' ' + os.getenv('VINIX_CMDLINE')
+	cmdline := 'tulpar.qemu_persist=1' + if os.getenv('TULPAR_CMDLINE') != '' {
+		' ' + os.getenv('TULPAR_CMDLINE')
 	} else {
 		''
 	}

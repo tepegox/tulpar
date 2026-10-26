@@ -22,10 +22,10 @@ struct C.atomic_t {}
 
 type WorkCallback = fn (&C.work_struct)
 
-fn C.vinix_linuxkpi_fixture_work_callback(&C.work_struct)
-fn C.vinix_linuxkpi_fixture_delayed_callback(&C.work_struct)
-fn C.vinix_linuxkpi_fixture_parallel_callback(&C.work_struct)
-fn C.vinix_linuxkpi_fixture_bound_callback(&C.work_struct)
+fn C.tulpar_linuxkpi_fixture_work_callback(&C.work_struct)
+fn C.tulpar_linuxkpi_fixture_delayed_callback(&C.work_struct)
+fn C.tulpar_linuxkpi_fixture_parallel_callback(&C.work_struct)
+fn C.tulpar_linuxkpi_fixture_bound_callback(&C.work_struct)
 fn C.INIT_WORK_ONSTACK(&C.work_struct, WorkCallback)
 fn C.INIT_DELAYED_WORK_ONSTACK(&C.delayed_work, WorkCallback)
 fn C.to_delayed_work(&C.work_struct) &C.delayed_work
@@ -34,15 +34,15 @@ fn C.complete(&C.completion)
 fn C.wait_for_completion(&C.completion)
 fn C.wait_for_completion_timeout(&C.completion, uint) uint
 fn C.current_work() &C.work_struct
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_worker_nice() i32
-fn C.vinix_linuxkpi_worker_timeslice() uint
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
-fn C.vinix_linuxkpi_test_park_preempt()
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_worker_nice() i32
+fn C.tulpar_linuxkpi_worker_timeslice() uint
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_test_park_preempt()
 fn C.get_cpu() u32
 fn C.put_cpu()
 fn C.cond_resched() i32
@@ -68,7 +68,7 @@ fn C.flush_workqueue(&C.workqueue_struct)
 fn C.drain_workqueue(&C.workqueue_struct)
 fn C.work_busy(&C.work_struct) u32
 fn C.timer_pending(&C.timer_list) bool
-fn C.vinix_linuxkpi_timer_active() uint
+fn C.tulpar_linuxkpi_timer_active() uint
 fn C.time_before(uint, uint) bool
 fn C.atomic_set(&C.atomic_t, i32)
 fn C.atomic_read(&C.atomic_t) i32
@@ -113,11 +113,11 @@ mut:
 	free_self bool
 }
 
-@[export: 'vinix_linuxkpi_fixture_work_callback']
+@[export: 'tulpar_linuxkpi_fixture_work_callback']
 pub fn work_callback(work &C.work_struct) {
 	unsafe {
 		mut test := &WorkTest(work)
-		if !C.vinix_linuxkpi_may_sleep() || uint(C.current_work()) != uint(work) {
+		if !C.tulpar_linuxkpi_may_sleep() || uint(C.current_work()) != uint(work) {
 			*test.result = -C.EIO
 		}
 		if test.count != nil {
@@ -139,7 +139,7 @@ pub fn work_callback(work &C.work_struct) {
 fn work_init(test &WorkTest, queue &C.workqueue_struct, result &i32) {
 	unsafe {
 		*test = WorkTest{ queue: queue, result: result }
-		C.INIT_WORK_ONSTACK(&test.work, C.vinix_linuxkpi_fixture_work_callback)
+		C.INIT_WORK_ONSTACK(&test.work, C.tulpar_linuxkpi_fixture_work_callback)
 		C.init_completion(&test.entered)
 		C.init_completion(&test.gate)
 	}
@@ -159,7 +159,7 @@ mut:
 fn ordered_body(batch &OrderedBatch) i32 {
 	unsafe {
 		for cpu in 0 .. 4 {
-			batch.queues[cpu] = C.alloc_ordered_workqueue(c'vinix-test-%u', 0, u32(cpu))
+			batch.queues[cpu] = C.alloc_ordered_workqueue(c'tulpar-test-%u', 0, u32(cpu))
 			if batch.queues[cpu] == nil { return -C.ENOMEM }
 		}
 		for cpu in 0 .. 4 {
@@ -222,7 +222,7 @@ fn ordered_body(batch &OrderedBatch) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_workqueue_native_selftest']
+@[export: 'tulpar_linuxkpi_workqueue_native_selftest']
 pub fn ordered_selftest() i32 {
 	unsafe {
 		mut batch := OrderedBatch{}
@@ -253,11 +253,11 @@ mut:
 	result   &i32 = unsafe { nil }
 }
 
-@[export: 'vinix_linuxkpi_fixture_delayed_callback']
+@[export: 'tulpar_linuxkpi_fixture_delayed_callback']
 pub fn delayed_callback(work &C.work_struct) {
 	unsafe {
 		mut test := &DelayedTest(C.to_delayed_work(work))
-		if !C.vinix_linuxkpi_may_sleep() || uint(C.current_work()) != uint(work) || C.time_before(C.jiffies, test.earliest) {
+		if !C.tulpar_linuxkpi_may_sleep() || uint(C.current_work()) != uint(work) || C.time_before(C.jiffies, test.earliest) {
 			*test.result = -C.EIO
 		}
 		test.calls++
@@ -280,7 +280,7 @@ pub fn delayed_callback(work &C.work_struct) {
 fn delayed_init(test &DelayedTest, queue &C.workqueue_struct, result &i32) {
 	unsafe {
 		*test = DelayedTest{ queue: queue, result: result, earliest: C.jiffies }
-		C.INIT_DELAYED_WORK_ONSTACK(&test.work, C.vinix_linuxkpi_fixture_delayed_callback)
+		C.INIT_DELAYED_WORK_ONSTACK(&test.work, C.tulpar_linuxkpi_fixture_delayed_callback)
 		C.init_completion(&test.done)
 	}
 }
@@ -298,7 +298,7 @@ mut:
 fn delayed_body(batch &DelayedBatch) i32 {
 	unsafe {
 		for i in 0 .. 4 {
-			batch.queues[i] = C.alloc_ordered_workqueue(c'vinix-delayed-%u', 0, u32(i))
+			batch.queues[i] = C.alloc_ordered_workqueue(c'tulpar-delayed-%u', 0, u32(i))
 			if batch.queues[i] == nil { return -C.ENOMEM }
 		}
 		for i in 0 .. 4 {
@@ -329,11 +329,11 @@ fn delayed_body(batch &DelayedBatch) i32 {
 			}
 			C.cancel_delayed_work_sync(&batch.tests[i].work)
 			delayed_init(&batch.tests[i], batch.queues[i], &batch.results[i])
-			flags := C.vinix_linuxkpi_irq_save()
-			if !C.queue_delayed_work(batch.queues[i], &batch.tests[i].work, 100000) || !C.mod_delayed_work(batch.queues[i], &batch.tests[i].work, 200000) || !C.cancel_delayed_work(&batch.tests[i].work) || C.vinix_linuxkpi_irq_flags() & (uint(1) << 9) != 0 {
+			flags := C.tulpar_linuxkpi_irq_save()
+			if !C.queue_delayed_work(batch.queues[i], &batch.tests[i].work, 100000) || !C.mod_delayed_work(batch.queues[i], &batch.tests[i].work, 200000) || !C.cancel_delayed_work(&batch.tests[i].work) || C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9) != 0 {
 				batch.results[i] = -C.EIO
 			}
-			C.vinix_linuxkpi_irq_restore(flags)
+			C.tulpar_linuxkpi_irq_restore(flags)
 			if batch.tests[i].calls != 0 || C.work_busy(&batch.tests[i].work.work) != 0 {
 				batch.results[i] = -C.EIO
 			}
@@ -370,7 +370,7 @@ fn delayed_body(batch &DelayedBatch) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_delayed_work_native_selftest']
+@[export: 'tulpar_linuxkpi_delayed_work_native_selftest']
 pub fn delayed_selftest() i32 {
 	unsafe {
 		mut batch := DelayedBatch{}
@@ -383,10 +383,10 @@ pub fn delayed_selftest() i32 {
 			if batch.results[i] != 0 { result = batch.results[i] }
 		}
 		retire_by := C.jiffies + 500
-		for C.vinix_linuxkpi_timer_active() != 0 && C.time_before(C.jiffies, retire_by) {
+		for C.tulpar_linuxkpi_timer_active() != 0 && C.time_before(C.jiffies, retire_by) {
 			C.msleep(1)
 		}
-		if C.vinix_linuxkpi_timer_active() != 0 { result = -C.EIO }
+		if C.tulpar_linuxkpi_timer_active() != 0 { result = -C.EIO }
 		return result
 	}
 }
@@ -428,12 +428,12 @@ fn parallel_report(stage &char, queue u32, item u32, ticks uint, test &ParallelT
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_parallel_callback']
+@[export: 'tulpar_linuxkpi_fixture_parallel_callback']
 pub fn parallel_callback(work &C.work_struct) {
 	unsafe {
 		mut test := &ParallelTest(work)
 		// Keep the original conditional active increment and failure order.
-		if !C.vinix_linuxkpi_may_sleep() {
+		if !C.tulpar_linuxkpi_may_sleep() {
 			parallel_failure(test, 1)
 		} else if uint(C.current_work()) != uint(work) {
 			parallel_failure(test, 2)
@@ -470,7 +470,7 @@ pub fn parallel_callback(work &C.work_struct) {
 fn parallel_init(test &ParallelTest, queue &C.workqueue_struct) {
 	unsafe {
 		*test = ParallelTest{ queue: queue, limit: 1 }
-		C.INIT_WORK_ONSTACK(&test.work, C.vinix_linuxkpi_fixture_parallel_callback)
+		C.INIT_WORK_ONSTACK(&test.work, C.tulpar_linuxkpi_fixture_parallel_callback)
 		C.atomic_set(&test.active, 0)
 		C.init_completion(&test.entered)
 		C.init_completion(&test.gate)
@@ -497,8 +497,8 @@ mut:
 fn parallel_body(batch &ParallelBatch) i32 {
 	unsafe {
 		mut result := i32(0)
-		batch.queues[0] = C.alloc_workqueue(c'vinix-parallel-2', C.WQ_UNBOUND, 2)
-		batch.queues[1] = C.alloc_workqueue(c'vinix-parallel-4', C.WQ_UNBOUND, 4)
+		batch.queues[0] = C.alloc_workqueue(c'tulpar-parallel-2', C.WQ_UNBOUND, 2)
+		batch.queues[1] = C.alloc_workqueue(c'tulpar-parallel-4', C.WQ_UNBOUND, 4)
 		batch.queues[2] = C.system_unbound_wq
 		if batch.queues[0] == nil || batch.queues[1] == nil || batch.queues[2] == nil {
 			parallel_report(c'queue allocation', 0, 0, 0, nil,
@@ -638,7 +638,7 @@ fn parallel_body(batch &ParallelBatch) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_unbound_work_native_selftest']
+@[export: 'tulpar_linuxkpi_unbound_work_native_selftest']
 pub fn parallel_selftest() i32 {
 	unsafe {
 		mut batch := ParallelBatch{}
@@ -692,7 +692,7 @@ fn bound_failure(test &BoundTest, reason u32) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_bound_callback']
+@[export: 'tulpar_linuxkpi_fixture_bound_callback']
 pub fn bound_callback(work &C.work_struct) {
 	unsafe {
 		mut test := &BoundTest(C.to_delayed_work(work))
@@ -700,13 +700,13 @@ pub fn bound_callback(work &C.work_struct) {
 		test.calls++
 		expected := test.expected_cpu[if call != 0 { 1 } else { 0 }]
 		if C.atomic_inc_return(&test.active) != 1 { bound_failure(test, 1) }
-		if !C.vinix_linuxkpi_may_sleep() { bound_failure(test, 2) }
+		if !C.tulpar_linuxkpi_may_sleep() { bound_failure(test, 2) }
 		if uint(C.current_work()) != uint(work) { bound_failure(test, 4) }
-		if expected != C.WORK_CPU_UNBOUND && C.vinix_linuxkpi_cpu_id() != expected {
+		if expected != C.WORK_CPU_UNBOUND && C.tulpar_linuxkpi_cpu_id() != expected {
 			bound_failure(test, 8)
 		}
-		if C.vinix_linuxkpi_worker_nice() != test.expected_nice { bound_failure(test, 16) }
-		if C.vinix_linuxkpi_worker_timeslice() != (if test.expected_nice == -20 {
+		if C.tulpar_linuxkpi_worker_nice() != test.expected_nice { bound_failure(test, 16) }
+		if C.tulpar_linuxkpi_worker_timeslice() != (if test.expected_nice == -20 {
 			uint(10000)
 		} else {
 			uint(5000)
@@ -720,14 +720,14 @@ pub fn bound_callback(work &C.work_struct) {
 			if !C.queue_work_on(i32(expected), test.queue, &test.dependency.delayed.work) {
 				bound_failure(test, 64)
 			}
-			C.vinix_linuxkpi_test_park_preempt()
+			C.tulpar_linuxkpi_test_park_preempt()
 			if C.wait_for_completion_timeout(&test.dependency.done, 500) == 0 {
 				bound_failure(test, 128)
 			}
 		}
 		C.cond_resched()
 		C.msleep(1)
-		if expected != C.WORK_CPU_UNBOUND && C.vinix_linuxkpi_cpu_id() != expected {
+		if expected != C.WORK_CPU_UNBOUND && C.tulpar_linuxkpi_cpu_id() != expected {
 			bound_failure(test, 256)
 		}
 		if call == 0 && test.requeue_queue != nil && !C.queue_work_on(i32(test.requeue_cpu), test.requeue_queue, work) {
@@ -752,7 +752,7 @@ fn bound_init(test &BoundTest, queue &C.workqueue_struct, cpu u32, highpri bool)
 		} else {
 			i32(0)
 		} }
-		C.INIT_DELAYED_WORK_ONSTACK(&test.delayed, C.vinix_linuxkpi_fixture_bound_callback)
+		C.INIT_DELAYED_WORK_ONSTACK(&test.delayed, C.tulpar_linuxkpi_fixture_bound_callback)
 		C.init_completion(&test.entered)
 		C.init_completion(&test.gate)
 		C.init_completion(&test.done)
@@ -811,10 +811,10 @@ fn bound_fail(batch &BoundBatch, stage u32) {
 fn bound_body(batch &BoundBatch) {
 	unsafe {
 		cpus := batch.cpus
-		batch.queues[0] = C.alloc_workqueue(c'vinix-bound', 0, 2)
-		batch.queues[1] = C.alloc_workqueue(c'vinix-bound-one', 0, 1)
-		batch.queues[2] = C.alloc_workqueue(c'vinix-unbound-high', C.WQ_UNBOUND | C.WQ_HIGHPRI, 2)
-		batch.queues[3] = C.alloc_workqueue(c'vinix-bound-high', C.WQ_HIGHPRI, 1)
+		batch.queues[0] = C.alloc_workqueue(c'tulpar-bound', 0, 2)
+		batch.queues[1] = C.alloc_workqueue(c'tulpar-bound-one', 0, 1)
+		batch.queues[2] = C.alloc_workqueue(c'tulpar-unbound-high', C.WQ_UNBOUND | C.WQ_HIGHPRI, 2)
+		batch.queues[3] = C.alloc_workqueue(c'tulpar-bound-high', C.WQ_HIGHPRI, 1)
 		for q in 0 .. 4 {
 			if batch.queues[q] == nil {
 				batch.result = -C.ENOMEM
@@ -840,11 +840,11 @@ fn bound_body(batch &BoundBatch) {
 		C.BUG_ON(!C.queue_work(batch.queues[2], &batch.tests[0].delayed.work))
 		if bound_finish(&batch.tests[0], c'unbound high priority') != 0 { bound_fail(batch, 3) }
 		bound_init(&batch.tests[0], batch.queues[0], cpus - 1, false)
-		flags := C.vinix_linuxkpi_irq_save()
+		flags := C.tulpar_linuxkpi_irq_save()
 		if !C.queue_delayed_work_on(0, batch.queues[0], &batch.tests[0].delayed, 100000) || !C.mod_delayed_work_on(i32(cpus - 1), batch.queues[0], &batch.tests[0].delayed, 2) {
 			bound_fail(batch, 4)
 		}
-		C.vinix_linuxkpi_irq_restore(flags)
+		C.tulpar_linuxkpi_irq_restore(flags)
 		if bound_finish(&batch.tests[0], c'delayed routing') != 0 { bound_fail(batch, 4) }
 		for migration in 0 .. 2 {
 			bound_init(&batch.tests[0], batch.queues[0], 0, false)
@@ -964,10 +964,10 @@ fn bound_body(batch &BoundBatch) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_bound_work_native_selftest']
+@[export: 'tulpar_linuxkpi_bound_work_native_selftest']
 pub fn bound_selftest() i32 {
 	unsafe {
-		count := C.vinix_linuxkpi_percpu_count()
+		count := C.tulpar_linuxkpi_percpu_count()
 		mut batch := BoundBatch{ cpus: if count < 4 { count } else { u32(4) }, heap_watchdog_count: -1, heap_final_count: -1 }
 		bound_body(&batch)
 		if batch.held_initialized {

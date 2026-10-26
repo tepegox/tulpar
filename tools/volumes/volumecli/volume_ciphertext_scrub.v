@@ -33,7 +33,7 @@ fn encode_volume_ciphertext_scrub(reference &u8, actual &u8, output &u8) bool {
 	if !volume_ciphertext_reference_geometry(reference, mut disk, mut row)
 		|| !volume_ciphertext_reference_fingerprint(reference, unsafe { &fingerprint }) { return false }
 	unsafe { for i in 0 .. volume_ciphertext_scrub_bytes { output[i] = 0 } }
-	put_le(output, 0, 8, 0x31534358494e4956) // VINIXCS1
+	put_le(output, 0, 8, 0x31534358494e4956) // TULPARCS1
 	put_le(output, 8, 4, 1); put_le(output, 12, 4, volume_ciphertext_scrub_bytes)
 	put_le(output, 16, 4, u64(volume_ciphertext_scrub_changed(reference, actual))); put_le(output, 20, 4, 1)
 	unsafe {
@@ -68,7 +68,7 @@ fn show_volume_ciphertext_scrub(data &u8, disk &DiskKey, row &Request) bool {
 			|| C.snprintf(&fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(data[192 + i])) != 2 { return false }
 	} }
 	changed := get_le(data, 16, 4)
-	return C.printf(c'format=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s\n', u64(1) - changed, changed, &fingerprint[0]) >= 0
+	return C.printf(c'format=TULPARCS1 operation=scrubbed-ciphertext mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s\n', u64(1) - changed, changed, &fingerprint[0]) >= 0
 		&& C.printf(c'disk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
 			disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags,
 			if changed == 0 { &char(c'match') } else { &char(c'changed') }, &expected[0], &actual[0]) >= 0
@@ -101,7 +101,7 @@ fn scrub_volume_ciphertext(device &char, input &char, credential &char, referenc
 	if !read_recovery_file(reference, &saved[0], volume_ciphertext_bytes)
 		|| !volume_ciphertext_matches(&saved[0], volume_ciphertext_bytes, &work.disk, &work.request.data) { return plan_error(c'ciphertext reference does not match authenticated geometry') }
 	fd := ciphertext_scrub_parent(device, &work.disk, mut work.status)
-	if fd < 0 { C.perror(c'vinix-volume: open ciphertext scrub parent'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open ciphertext scrub parent'); return 1 }; defer { C.close(fd) }
 	if !check_ciphertext_scrub_parent(fd, device, mut *work)
 		|| !volume_seal_recheck(fd, mut *work) || !volume_seal_recheck(fd, mut *work)
 		|| !read_volume_ciphertext(fd, &work.disk, &work.request.data, unsafe { &observed })

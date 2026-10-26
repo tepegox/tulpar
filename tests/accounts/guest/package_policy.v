@@ -37,14 +37,14 @@ fn package_policy_probe() int {
 	}
 	assert read_text(version) == '1.0.0\n'
 	data := os.getenv('HOME')
-	assert data.ends_with('/.local/share/vinix-apps/' + if mode == 'hold' {
+	assert data.ends_with('/.local/share/tulpar-apps/' + if mode == 'hold' {
 		'leased'
 	} else {
 		'restricted'
 	})
 	assert C.open(c'/home/alex/outside.txt', C.O_RDONLY) == -1
 	assert C.errno == C.ENOENT
-	assert C.open(c'/usr/bin/vinix-package', C.O_RDONLY) == -1
+	assert C.open(c'/usr/bin/tulpar-package', C.O_RDONLY) == -1
 	assert C.errno == C.ENOENT
 	assert C.open(&char(version.str), C.O_WRONLY) == -1
 	assert C.errno == C.EACCES
@@ -74,7 +74,7 @@ fn package_policy_probe() int {
 }
 
 fn package_success(arguments []string) !string {
-	result := run(['/usr/bin/vinix-package', ...arguments], '', none, none)
+	result := run(['/usr/bin/tulpar-package', ...arguments], '', none, none)
 	if result.status != 0 {
 		return error('${arguments.join(' ')}: ${result.status}: ${result.output}')
 	}
@@ -97,7 +97,7 @@ fn policy_package(id string, mode string, permissions []string, architecture str
 
 fn qualify_package_enforcement(mut t Test) ! {
 	config := json2.decode[pkgcore.Config](os.read_file('/tmp/package-enforcement-config.json')!)!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(config))!
 	os.write_file('/tmp/package-source/version.txt', '1.0.0\n')!
 	os.write_file('/home/alex/outside.txt', 'belongs to the user but is not granted\n')!
 	os.chown('/home/alex/outside.txt', 1000, 1000)!
@@ -141,14 +141,14 @@ fn qualify_package_enforcement(mut t Test) ! {
 	assert package_success(['run', 'network'])!.contains('PACKAGE NETWORK')
 	assert package_success(['run', 'process'])!.contains('PACKAGE PROCESS')
 	for id in ['no-network', 'no-fork'] {
-		denied := run(['/usr/bin/vinix-package', 'run', id], '', none, none)
+		denied := run(['/usr/bin/tulpar-package', 'run', id], '', none, none)
 		assert denied.status == 134, '${id}: ${denied.status} ${denied.output}'
 	}
 	// Explicit documents need the files permission even when the user owns them.
-	no_files := run(['/usr/bin/vinix-package', 'run', 'restricted', '/home/alex/outside.txt'], '', none, none)
+	no_files := run(['/usr/bin/tulpar-package', 'run', 'restricted', '/home/alex/outside.txt'], '', none, none)
 	assert no_files.status != 0 && no_files.output.contains('file permission is not declared'), no_files.output
-	before := pkgcore.read_state('/var/lib/vinix-packages', config.architecture)!
-	generation := '/var/lib/vinix-packages/generations/' + before.generation.str()
+	before := pkgcore.read_state('/var/lib/tulpar-packages', config.architecture)!
+	generation := '/var/lib/tulpar-packages/generations/' + before.generation.str()
 	assert before.packages.any(it.package.id == 'fixture-runtime')
 	assert 'fixture-runtime' !in before.requested
 	// Both the application and its runtime are verified before executing code.
@@ -156,12 +156,12 @@ fn qualify_package_enforcement(mut t Test) ! {
 		path := generation + '/apps/' + id + '/version.txt'
 		os.write_file(path, 'tampered\n')!
 		application := if id == 'restricted' { id } else { 'leased' }
-		changed := run(['/usr/bin/vinix-package', 'run', application], '', none, none)
+		changed := run(['/usr/bin/tulpar-package', 'run', application], '', none, none)
 		assert changed.status != 0 && changed.output.contains('installed application payload changed'), changed.output
 		os.write_file(path, '1.0.0\n')!
 	}
-	data := '/home/alex/.local/share/vinix-apps/leased'
-	mut holding := os.new_process('/usr/bin/vinix-package')
+	data := '/home/alex/.local/share/tulpar-apps/leased'
+	mut holding := os.new_process('/usr/bin/tulpar-package')
 	holding.set_args(['run', 'leased'])
 	holding.set_redirect_stdio_merged()
 	holding.run()
@@ -190,10 +190,10 @@ fn qualify_package_enforcement(mut t Test) ! {
 	pkgcore.publish('/tmp/package-repository', 'fixture', '/tmp/package-publisher/package-signing-seed', 3, time.now().unix() + 3600)!
 	package_success(['update'])!
 	package_success(['upgrade'])!
-	upgraded := pkgcore.read_state('/var/lib/vinix-packages', config.architecture)!
+	upgraded := pkgcore.read_state('/var/lib/tulpar-packages', config.architecture)!
 	assert upgraded.packages.any(it.package.id == 'fixture-runtime' && it.package.version == '2.0.0')
 	package_success(['remove', 'leased'])!
-	removed := pkgcore.read_state('/var/lib/vinix-packages', config.architecture)!
+	removed := pkgcore.read_state('/var/lib/tulpar-packages', config.architecture)!
 	assert !removed.packages.any(it.package.id in ['leased', 'fixture-runtime'])
 	package_success(['gc'])!
 	assert os.is_file(generation + '/apps/leased/version.txt')

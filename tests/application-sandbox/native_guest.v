@@ -28,7 +28,7 @@ fn profile_child(mode int) {
 		assert unsafe { C.syscall(unshare_nr, voidptr(0x04000000)) } == 0
 	}
 	options := AppProcessOptions{
-		name:        'vinix-calculator'
+		name:        'tulpar-calculator'
 		request_fd:  5
 		response_fd: 9
 	}
@@ -72,8 +72,8 @@ fn profile_child(mode int) {
 }
 
 fn main() {
-	assert native_app_has_sandbox('vinix-calculator')
-	assert !native_app_has_sandbox('vinix-terminal')
+	assert native_app_has_sandbox('tulpar-calculator')
+	assert !native_app_has_sandbox('tulpar-terminal')
 	// Read/write pipe endpoints are deliberately nonadjacent. The profile
 	// must preserve both while closing an extra inherited descriptor.
 	mut pipe := [2]i32{}

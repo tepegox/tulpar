@@ -64,14 +64,14 @@
 module xnualloc
 
 // Spell the sentinel as a positive literal so V emits a static C constant.
-// u64(-1) is initialized by _vinit, but Vinix brings its heap up before _vinit.
+// u64(-1) is initialized by _vinit, but Tulpar brings its heap up before _vinit.
 pub const no_element = u64(0xffffffffffffffff)
 pub const zba_ptr_mask = u32(0x0fffffff)
 pub const zba_order_shift = u32(29)
 pub const zba_has_extra_bit = u32(0x10000000)
 
 // C's packed bitfield/union representation, expressed explicitly in V.
-// Supported targets are the little-endian 64-bit architectures used by Vinix.
+// Supported targets are the little-endian 64-bit architectures used by Tulpar.
 // bits: zone index [0:9], guarded [10], inline [11], chunk length [12:15].
 // alloc_size doubles as secondary-page index/subchunk length.
 @[packed]
@@ -140,7 +140,7 @@ fn mask_lt64(index u64) u64 {
 // parameters instead of XNU's global zone_info lookup. 1 = free, 0 = occupied.
 // eidx may equal words * 64 (the wrap boundary), but may not exceed it.
 // Unlike upstream's accounting panic, exhaustion returns no_element; the
-// Vinix bridge turns this into a kernel panic when its page claims free slots.
+// Tulpar bridge turns this into a kernel panic when its page claims free slots.
 // The caller holds the owning zone lock. This routine is NOT atomic.
 pub fn zba_scan_bitmap_ref(bits &u64, words u32, eidx u64) u64 {
 	assert bits != unsafe { nil } && words > 0 && words <= 128
@@ -216,7 +216,7 @@ pub fn zone_meta_bits_init_inline(meta &PageMetadata, count u32, chunks u32) {
 }
 
 // The initialization loop in zone_meta_bits_alloc_init, also exposed for
-// caller-owned bitmaps such as Vinix's one-page slab geometry.
+// caller-owned bitmaps such as Tulpar's one-page slab geometry.
 pub fn zone_bits_init_ref(bits &u64, words u32, count u32) {
 	assert bits != unsafe { nil } && words > 0 && words <= 128
 	assert u64(count) <= u64(words) * 64
@@ -321,7 +321,7 @@ pub fn zone_meta_bits_merge(meta &PageMetadata, arena &Buddy, chunks u32, start 
 	}
 }
 
-// Caller supplies its per-CPU cursor. A Vinix shared-lock adapter may instead
+// Caller supplies its per-CPU cursor. A Tulpar shared-lock adapter may instead
 // keep one cursor per slab class, which is a documented behavioral difference.
 pub fn zone_meta_find_and_clear_bit(meta &PageMetadata, arena &Buddy, chunks u32,
 	last &u16) u64 {

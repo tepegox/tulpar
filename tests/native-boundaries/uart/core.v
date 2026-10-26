@@ -13,10 +13,10 @@ fn C.puts(&char) i32
 fn C.strcmp(&char, &char) i32
 fn C.memset(voidptr, i32, usize) voidptr
 fn C.trace_syscall_nr(usize)
-fn C.vinix_call_void_fn(voidptr)
+fn C.tulpar_call_void_fn(voidptr)
 fn C.native_boundary_callback()
 fn C.read_current_sp() usize
-fn C.vinix_smc_counter() u64
+fn C.tulpar_smc_counter() u64
 
 __global output [32]u8
 __global output_size usize
@@ -63,15 +63,15 @@ pub fn run() i32 {
 			C.assert(C.strcmp(&char(&output[0]), test.expected) == 0)
 		}
 		for index in 0 .. 256 {
-			C.vinix_call_void_fn(voidptr(C.native_boundary_callback))
+			C.tulpar_call_void_fn(voidptr(C.native_boundary_callback))
 			C.assert(callback_calls == u32(index + 1))
 		}
 		$if arm64 {
 			stack := C.read_current_sp()
 			C.assert(stack != 0 && stack % 16 == 0)
-			mut previous := C.vinix_smc_counter()
+			mut previous := C.tulpar_smc_counter()
 			for _ in 0 .. 128 {
-				next := C.vinix_smc_counter()
+				next := C.tulpar_smc_counter()
 				C.assert(next >= previous)
 				previous = next
 			}

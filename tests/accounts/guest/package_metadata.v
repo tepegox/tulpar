@@ -10,7 +10,7 @@ import tools.packages.pkgprotocol
 fn qualify_package_metadata(mut t Test, db accountcore.Database, alex accountcore.User, sam accountcore.User) ! {
 	service := pkgcore.Service{}
 	before := service.state()!
-	config := os.read_file('/etc/vinix-packages/config.json')!
+	config := os.read_file('/etc/tulpar-packages/config.json')!
 	lock_path := '/tmp/metadata lock é; $literal.json'
 	mut document := service.lock_deployment([])!
 	defer { document.close() }
@@ -22,7 +22,7 @@ fn qualify_package_metadata(mut t Test, db accountcore.Database, alex accountcor
 	os.write_file(lock_path, lock_text)!
 	os.chmod(lock_path, 0o644)!
 	for user in [alex, sam] {
-		view_response := run(['/usr/bin/vinix-package', 'view'], '', db, user)
+		view_response := run(['/usr/bin/tulpar-package', 'view'], '', db, user)
 		assert view_response.status == 0, view_response.output
 		mut view := pkgprotocol.decode_software_view(view_response.output)!
 		assert view.generation == before.generation && view.rows.len == 1 && view.launch_user == ''
@@ -38,12 +38,12 @@ fn qualify_package_metadata(mut t Test, db accountcore.Database, alex accountcor
 			pkgprotocol.decode_software_view(malformed) or { invalid = true }
 			assert invalid
 		}
-		status_response := run(['/usr/bin/vinix-package', '--json', 'repo-list'], '', db, user)
+		status_response := run(['/usr/bin/tulpar-package', '--json', 'repo-list'], '', db, user)
 		assert status_response.status == 0, status_response.output
 		mut status := pkgprotocol.decode_repositories(status_response.output)!
 		assert status.repositories.len == 1 && status.history.len == 1 && status.history[0].sequence == 1
 		status.close()
-		review_response := run(['/usr/bin/vinix-package', 'review', 'install', 'admin-fixture'], '', db, user)
+		review_response := run(['/usr/bin/tulpar-package', 'review', 'install', 'admin-fixture'], '', db, user)
 		assert review_response.status == 0, review_response.output
 		mut review := pkgprotocol.decode_review(review_response.output)!
 		assert review.rows.len == 1 && review.rows[0].action == 'keep' && review.rows[0].requested
@@ -52,17 +52,17 @@ fn qualify_package_metadata(mut t Test, db accountcore.Database, alex accountcor
 		mut refused := false
 		pkgprotocol.decode_review(review_response.output.replace('"firmware":false,', '')) or { refused = true }
 		assert refused
-		trust_response := run(['/usr/bin/vinix-package', 'repo-review', 'revoke', 'admin-publisher'], '', db, user)
+		trust_response := run(['/usr/bin/tulpar-package', 'repo-review', 'revoke', 'admin-publisher'], '', db, user)
 		assert trust_response.status == 0, trust_response.output
 		mut trust := pkgprotocol.decode_repository_review(trust_response.output)!
 		assert trust.operation == 'revoke' && trust.sequence == 0 && trust.index_sha256 == ''
 		trust.close()
-		mirror_response := run(['/usr/bin/vinix-package', 'mirror-review', '/tmp/metadata export é; $literal', 'admin-fixture'], '', db, user)
+		mirror_response := run(['/usr/bin/tulpar-package', 'mirror-review', '/tmp/metadata export é; $literal', 'admin-fixture'], '', db, user)
 		assert mirror_response.status == 0, mirror_response.output
 		mut mirror := pkgprotocol.decode_mirror_review(mirror_response.output)!
 		assert mirror.review.rows.len == 1 && mirror.review.rows[0].action == 'export'
 		mirror.close()
-		locked_response := run(['/usr/bin/vinix-package', 'mirror-deployment-review', '/tmp/metadata locked export', lock_path], '', db, user)
+		locked_response := run(['/usr/bin/tulpar-package', 'mirror-deployment-review', '/tmp/metadata locked export', lock_path], '', db, user)
 		assert locked_response.status == 0, locked_response.output
 		mut locked := pkgprotocol.decode_deployment_mirror_review(locked_response.output)!
 		assert locked.deployment == lock_path && locked.mirror.review.rows.len == 1
@@ -77,17 +77,17 @@ fn qualify_package_metadata(mut t Test, db accountcore.Database, alex accountcor
 			os.write_file(lock_path, malformed)!
 			for operation in [['deployment-review', lock_path],
 				['mirror-deployment-review', '/tmp/metadata locked export', lock_path]] {
-				response := run(['/usr/bin/vinix-package', ...operation], '', db, user)
+				response := run(['/usr/bin/tulpar-package', ...operation], '', db, user)
 				assert response.status != 0 && response.output.trim_space() != '' && !response.output.contains('V panic:'), response.output
 			}
 		}
 		os.write_file(lock_path, '{"packages":[],"architecture":"' + before.architecture + '","format":1}')!
-		roots_response := run(['/usr/bin/vinix-package', 'deployment-review', lock_path], '', db, user)
+		roots_response := run(['/usr/bin/tulpar-package', 'deployment-review', lock_path], '', db, user)
 		assert roots_response.status == 0, roots_response.output
 		mut roots_review := pkgprotocol.decode_review(roots_response.output)!
 		assert roots_review.rows.len == 1 && roots_review.rows[0].action == 'remove'; roots_review.close()
 		os.write_file(lock_path, lock_text)!
-		pinned_response := run(['/usr/bin/vinix-package', 'deployment-review', lock_path], '', db, user)
+		pinned_response := run(['/usr/bin/tulpar-package', 'deployment-review', lock_path], '', db, user)
 		assert pinned_response.status == 0, pinned_response.output
 		mut pinned := pkgprotocol.decode_review(pinned_response.output)!
 		assert pinned.rows.len == 1 && pinned.rows[0].action == 'keep'; pinned.close()
@@ -96,13 +96,13 @@ fn qualify_package_metadata(mut t Test, db accountcore.Database, alex accountcor
 			lock_text.replace('"version":"1.0.0"', '"version":"9.0.0"')] {
 			os.write_file(lock_path, invalid_pin)!
 			for operation in [['deployment-review', lock_path], ['mirror-deployment-review', '/tmp/metadata locked export', lock_path]] {
-				response := run(['/usr/bin/vinix-package', ...operation], '', db, user)
+				response := run(['/usr/bin/tulpar-package', ...operation], '', db, user)
 				assert response.status != 0 && response.output.contains('locked') && !response.output.contains('V panic:'), response.output
 			}
 		}
 		os.write_file(lock_path, lock_text)!
 	}
-	assert service.state()! == before && os.read_file('/etc/vinix-packages/config.json')! == config
+	assert service.state()! == before && os.read_file('/etc/tulpar-packages/config.json')! == config
 	assert !os.exists('/tmp/metadata export é; $literal') && !os.exists('/tmp/metadata locked export')
 	t.say('PACKAGE METADATA ordinary-admin-standard complete-package-trust-history-offline-lock typed-flags nested-refusal read-only PASS')
 	t.say('PACKAGE VIEW ordinary-admin-standard complete-catalog installed-launch-fields typed-flags nested-refusal read-only PASS')

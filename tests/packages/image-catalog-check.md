@@ -6,7 +6,7 @@ and adds an ordinary **Check release apps** action for baseline drift.
 
 Selecting advertised application requirements now makes normal package staging
 publish the exact resolved format-2 lock to
-`/usr/share/vinix-packages/applications.json`. Software's **Deployment → Review
+`/usr/share/tulpar-packages/applications.json`. Software's **Deployment → Review
 release apps** discovers this optional file and starts the ordinary read-only
 proposal. Full-set changes, including removals, still need confirmation and
 administrator approval. Publisher trust, permissions, licensing, architecture,
@@ -65,9 +65,9 @@ v -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' -o /tmp/catal
 /tmp/catalog-runtime --software --arch aarch64 --kernel KERNEL --state-dir NEW_SOFTWARE_WORK
 ```
 
-Repeat guest checks with `--arch x86_64`. They require `VINIX_HWTEST_TCG=1`;
-native checks also require verified `VINIX_NATIVE_CATALOG_INPUTS`, target
-`VINIX_NATIVE_CATALOG_SANDBOX` and `VINIX_PACKAGE_TEST_UI2`. The retained V guest
+Repeat guest checks with `--arch x86_64`. They require `TULPAR_HWTEST_TCG=1`;
+native checks also require verified `TULPAR_NATIVE_CATALOG_INPUTS`, target
+`TULPAR_NATIVE_CATALOG_SANDBOX` and `TULPAR_PACKAGE_TEST_UI2`. The retained V guest
 helper records the selected toolchain/kernel paths. Work directories must be new.
 
 This adds a declared release catalog workflow. Production publisher enrollment,

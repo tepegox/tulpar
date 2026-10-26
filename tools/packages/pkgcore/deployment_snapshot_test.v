@@ -7,9 +7,9 @@ import os
 import time
 
 fn snapshot_fixture(architecture string) !(string, State) {
-	work := os.temp_dir() + '/vinix-deployment-snapshot-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/etc/vinix-packages')!
-	os.write_file(work + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: architecture,
+	work := os.temp_dir() + '/tulpar-deployment-snapshot-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/etc/tulpar-packages')!
+	os.write_file(work + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: architecture,
 		policy: Policy{ offline: true, allowed: ['unrelated'], permissions: [], reserve_bytes: 0 } }))!
 	mut packages := []Installed{}
 	for id in ['editor', 'viewer', 'runtime', 'assets', 'extra'] {
@@ -87,14 +87,14 @@ fn test_snapshot_owns_returned_documents_and_refuses_invalid_or_uninstalled_root
 fn test_snapshot_is_read_only_on_fresh_state_and_excludes_writers_before_configuration_reads() {
 	work, _ := snapshot_fixture('aarch64')!; defer { os.rmdir_all(work) or {} }
 	service := Service{ root: work }; directory := state_directory(work)
-	configuration := os.read_file(work + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(work + '/etc/tulpar-packages/config.json')!
 	guard := acquire(directory)!
-	os.write_file(work + '/etc/vinix-packages/config.json', '{bad')!
+	os.write_file(work + '/etc/tulpar-packages/config.json', '{bad')!
 	mut message := ''
 	service.snapshot_deployment([]) or { message = err.msg() }
 	assert message.contains('another package transaction')
 	guard.release()
-	os.write_file(work + '/etc/vinix-packages/config.json', configuration)!
+	os.write_file(work + '/etc/tulpar-packages/config.json', configuration)!
 	os.write_file(directory + '/current/state.json', '{}')!
 	mut refused := false; service.snapshot_deployment([]) or { refused = true }; assert refused
 	os.rmdir_all(work + '/var')!

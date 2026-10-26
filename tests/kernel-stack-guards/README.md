@@ -8,7 +8,7 @@ teardown invalidates their translations before returning physical pages.
 The mappings cover user and kernel thread stacks, x86 page-fault, scheduler,
 idle, abort and double-fault stacks, and ARM exception, emergency and idle
 stacks. CPU stacks last for that CPU's lifetime. Bootloader stacks and ARM's
-early static exception fallback remain necessary until Vinix installs its
+early static exception fallback remain necessary until Tulpar installs its
 page tables; the boot CPU then abandons its bootstrap stack before idling.
 
 ARM current-level vector entry checks both endpoints of its save frame before
@@ -16,7 +16,7 @@ touching SP_EL1. An exhausted frame switches to a private emergency stack.
 TPIDR_EL1 points at permanent per-CPU scratch; its public accessors still
 return the CPU number. Full x15/x16/x17 values are restored and scratch is
 cleared before calling C. TPIDRRO_EL0 remains zero when user code runs.
-Exception entry masks DAIF, including SError, and Vinix does not enable NMI.
+Exception entry masks DAIF, including SError, and Tulpar does not enable NMI.
 Recursive exhaustion of the emergency stack or a broken permanent kernel
 mapping is outside this mechanism's recovery guarantee. Real exhaustion is
 fatal; general kernel fault recovery is not enabled.

@@ -1,6 +1,6 @@
 # Authenticated encrypted-volume growth
 
-`plan-grow-volume` authenticates a `VINIXVC1` configuration and publishes a
+`plan-grow-volume` authenticates a `TULPARVC1` configuration and publishes a
 separate configuration retaining its key, identity, native sectors, slot, start
 and readonly mode. Only nondecreasing physical capacity and extent length are
 allowed. See [commands and limits](../../docs/storage-volumes.md#authenticated-encrypted-volume-growth).

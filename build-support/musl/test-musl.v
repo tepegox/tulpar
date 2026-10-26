@@ -28,7 +28,7 @@ fn cached_fixture(work string) ! {
 	options := muslnative.Options{ root: work + '/repository', support: work + '/support', arch: 'x86_64', stage: work + '/stage', cache: work + '/cache', cc: work + '/cc', required_exports: ['malloc_trim'] }
 	plan := muslnative.plan(options, '1')!
 	assert plan.version == '1.2.5'
-	assert plan.cflags == '-fstack-protector-strong -DVINIX_MALLOC_RETAIN=1'
+	assert plan.cflags == '-fstack-protector-strong -DTULPAR_MALLOC_RETAIN=1'
 	assert plan.ldflags == '-Wl,-soname,libc.musl-x86_64.so.1'
 	build := options.cache + '/x86_64/' + plan.key
 	muslnative.parents(build + '/objects/lib')!
@@ -45,14 +45,14 @@ fn cached_fixture(work string) ! {
 	manifest['libc_so_sha256'] = muslnative.digest(build + '/objects/lib/libc.so')!
 	manifest['libc_a_sha256'] = muslnative.digest(build + '/objects/lib/libc.a')!
 	hosttest.write_json(build + '/build.json', manifest)!
-	os.setenv('VINIX_MUSL_TEST_READELF', os.executable(), true)
-	os.setenv('VINIX_MUSL_TEST_TARGET', work + '/stage', true)
+	os.setenv('TULPAR_MUSL_TEST_READELF', os.executable(), true)
+	os.setenv('TULPAR_MUSL_TEST_TARGET', work + '/stage', true)
 	muslnative.publish(plan)!
 	assert os.read_bytes(options.stage + '/lib/ld-musl-x86_64.so.1')! == rebuilt
 	assert os.stat(options.stage + '/lib/ld-musl-x86_64.so.1')!.mode & 0o777 == 0o755
 	assert os.readlink(options.stage + '/usr/lib/libc.so')! == '../../lib/ld-musl-x86_64.so.1'
 	assert os.readlink(options.stage + '/lib/libc.musl-x86_64.so.1')! == 'ld-musl-x86_64.so.1'
-	assert hosttest.decode_json(os.read_file(options.stage + '/usr/share/vinix/musl-build.json')!)!.as_map() == manifest
+	assert hosttest.decode_json(os.read_file(options.stage + '/usr/share/tulpar/musl-build.json')!)!.as_map() == manifest
 	muslnative.publish(plan)!
 	assert os.ls(options.cache)! == ['build.lock', 'x86_64'] || os.ls(options.cache)! == [
 		'x86_64',
@@ -137,7 +137,7 @@ fn main() {
 			'--version' { println('gcc (controlled) 14.2.0') }
 			'-print-prog-name=ar' { println('ar') }
 			'-print-prog-name=ranlib' { println('ranlib') }
-			'-print-prog-name=readelf' { println(os.getenv('VINIX_MUSL_TEST_READELF')) }
+			'-print-prog-name=readelf' { println(os.getenv('TULPAR_MUSL_TEST_READELF')) }
 			else {
 				eprintln('unexpected compiler probe')
 				exit(1)

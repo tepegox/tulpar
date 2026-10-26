@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /* Original declarations, host ABI and endpoint metadata; executable code is V. */
-#ifndef VINIX_CONST_STRING_HOST_CONTRACT_H
-#define VINIX_CONST_STRING_HOST_CONTRACT_H
+#ifndef TULPAR_CONST_STRING_HOST_CONTRACT_H
+#define TULPAR_CONST_STRING_HOST_CONTRACT_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

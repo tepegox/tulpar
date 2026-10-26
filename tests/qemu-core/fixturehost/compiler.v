@@ -88,7 +88,7 @@ pub fn host(kind string, output string, cc string, arch string) ! {
 	flags << ['-I', output + '/' + kind + 'fixture', '-I', output + '/' + provider]
 	if kind == 'epoll' {
 		flags << ['-idirafter',
-			hosttest.env_default('VINIX_AARCH64_SYSROOT', hosttest.root() + '/build-aarch64-userland/sysroot') + '/include']
+			hosttest.env_default('TULPAR_AARCH64_SYSROOT', hosttest.root() + '/build-aarch64-userland/sysroot') + '/include']
 	}
 	mut objects := []string{}
 	for name in [reference_name(kind), kind + 'fixture', provider] {
@@ -145,7 +145,7 @@ pub fn native_helper(kind string, output string, arch string, reference string) 
 
 fn native_build_core(kind string, output string, arch string, reference string, helper bool) ! {
 	outside_checkout(output, 'Compile recovered oracle C outside the maintained checkout')!
-	sysroot := hosttest.env_default('VINIX_AARCH64_SYSROOT', hosttest.root() + '/build-aarch64-userland/sysroot')
+	sysroot := hosttest.env_default('TULPAR_AARCH64_SYSROOT', hosttest.root() + '/build-aarch64-userland/sysroot')
 	cc := if arch == 'arm64' {
 		[hosttest.env_default('CC', 'clang'), '--target=aarch64-linux-musl', '--sysroot=' + sysroot]
 	} else {

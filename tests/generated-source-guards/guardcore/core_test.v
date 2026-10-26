@@ -11,7 +11,7 @@ fn definition(name string, body string) string {
 fn accounting_fixture() string {
 	return accounting_functions.map(definition(it, if it in ['sys__syscall_getrusage',
 		'userland__write_child_rusage'] {
-		'\tvinix_stack_alloc(sizeof(Record));\n\treturn 0;'
+		'\ttulpar_stack_alloc(sizeof(Record));\n\treturn 0;'
 	} else {
 		'\treturn 0;'
 	})).join('\n')
@@ -19,7 +19,7 @@ fn accounting_fixture() string {
 
 fn pagecache_fixture() string {
 	return pagecache_functions.map(definition(it, if it == 'pagecache__Cache__prefetch' {
-		'\tvinix_stack_alloc(sizeof(Slots));\n\twhile (ready) {}\n\treturn 0;'
+		'\ttulpar_stack_alloc(sizeof(Slots));\n\twhile (ready) {}\n\treturn 0;'
 	} else {
 		'\treturn 0;'
 	})).join('\n')
@@ -99,7 +99,7 @@ fn test_accounting_all_functions_and_stack_slot_counts() {
 	}
 	for name in accounting_functions[..2] {
 		for count in [0, 2] {
-			body := '\tvinix_stack_alloc(record);\n'.repeat(count) + '\treturn 0;'
+			body := '\ttulpar_stack_alloc(record);\n'.repeat(count) + '\treturn 0;'
 			allocation_check(parse(definition(name, body))!, name, 'accounting') or {
 				assert err.msg() == '${name}: expected one synchronous caller-stack record'
 				continue
@@ -112,15 +112,15 @@ fn test_accounting_all_functions_and_stack_slot_counts() {
 fn test_pagecache_all_functions_prefetch_loop_order_and_missing_loop() {
 	generated := parse(pagecache_fixture())!
 	for name in pagecache_functions { allocation_check(generated, name, 'pagecache')! }
-	for body in ['\twhile (ready) {}\n\tvinix_stack_alloc(slot);', '\twhile (ready) {}',
-		'\tvinix_stack_alloc(slot);\n\tvinix_stack_alloc(slot);\n\twhile (ready) {}'] {
+	for body in ['\twhile (ready) {}\n\ttulpar_stack_alloc(slot);', '\twhile (ready) {}',
+		'\ttulpar_stack_alloc(slot);\n\ttulpar_stack_alloc(slot);\n\twhile (ready) {}'] {
 		allocation_check(parse(definition('pagecache__Cache__prefetch', body))!, 'pagecache__Cache__prefetch', 'pagecache') or {
 			assert err.msg() == 'prefetch slots must be allocated once before its loop'
 			continue
 		}
 		assert false, 'accepted an unbounded prefetch scratch slot'
 	}
-	allocation_check(parse(definition('pagecache__Cache__prefetch', '\tvinix_stack_alloc(slot);'))!, 'pagecache__Cache__prefetch', 'pagecache') or {
+	allocation_check(parse(definition('pagecache__Cache__prefetch', '\ttulpar_stack_alloc(slot);'))!, 'pagecache__Cache__prefetch', 'pagecache') or {
 		assert err.msg() == 'substring not found'
 		return
 	}
@@ -173,9 +173,9 @@ fn test_procfs_creation_uses_the_first_unicode_line() {
 }
 
 fn test_cli_success_partial_stdout_errors_and_usage() {
-	tools := os.getenv('VINIX_GUARD_TOOLS')
+	tools := os.getenv('TULPAR_GUARD_TOOLS')
 	if tools == '' { return }
-	work := hosttest.work_dir('', 'vinix-source-guard-')!
+	work := hosttest.work_dir('', 'tulpar-source-guard-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for family, source in {
 		'accounting': accounting_fixture()

@@ -3,7 +3,7 @@
 //
 // A small procfs: enough of /proc for Linux userspace to find out about itself.
 //
-// Vinix answered the two entries that mattered most — /proc/self/exe and
+// Tulpar answered the two entries that mattered most — /proc/self/exe and
 // /proc/self/fd/N — by substituting a pathname during resolution, which is all
 // readlink(2) and exec(2) need. Directories cannot be answered that way, and
 // Chromium needs three of them: every child process checks that it is still
@@ -46,7 +46,7 @@ const uname_release = '0.1.0'
 
 const uname_release_line = uname_release + '\n'
 
-const linux_compat_release = '5.15.0-vinix'
+const linux_compat_release = '5.15.0-tulpar'
 
 const linux_compat_release_line = linux_compat_release + '\n'
 
@@ -372,7 +372,7 @@ fn (mut this ProcFS) build_root(parent &VFSNode, name string, view voidptr) &VFS
 	add_procfs_file(mut root, 'filesystems', .filesystems)
 	add_procfs_file(mut root, 'mounts', .self_mounts)
 	add_procfs_text(mut sys_kernel, 'cap_last_cap', decimal_line(proc.cap_last_cap))
-	add_procfs_text(mut sys_kernel, 'hostname', 'vinix\n')
+	add_procfs_text(mut sys_kernel, 'hostname', 'tulpar\n')
 	mut sys_vm := add_procfs_directory(mut sys, 'vm')
 	add_procfs_text(mut sys_vm, 'overcommit_memory', '0\n')
 	add_procfs_text(mut sys_vm, 'max_map_count', '1048576\n')
@@ -444,7 +444,7 @@ fn add_procfs_directory(mut parent VFSNode, name string) &VFSNode {
 	return node
 }
 
-// A writable /proc/sys knob. Vinix does not act on most of these, but a
+// A writable /proc/sys knob. Tulpar does not act on most of these, but a
 // container runtime reads and writes them at startup and refuses to run if one
 // it expects is missing, so each is present, readable and remembers what was
 // written.
@@ -582,7 +582,7 @@ fn (this &ProcFSResource) contents() string {
 		}
 		.kernel_resources {
 			usage := kbudget.snapshot()
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
    unsafe { *text = lib.new_text(1024) }
 			text.add('Limit: '); text.add_unsigned(usage.limit)
 			text.add('\nOwnerLimit: '); text.add_unsigned(usage.owner_limit)
@@ -619,7 +619,7 @@ fn (this &ProcFSResource) contents() string {
 			// the kernel heap has, the page caches' own storage included.
 			cached_kb := pagecache.resident_bytes() / 1024
 			slab_kb := heap_pages() * page_size / 1024
-			mut meminfo_builder := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut meminfo_builder := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *meminfo_builder = lib.new_text(256) }
 			meminfo_builder.add('MemTotal:       ')
 			meminfo_builder.add_unsigned(total_kb)
@@ -638,15 +638,15 @@ fn (this &ProcFSResource) contents() string {
 			meminfo_builder.add_unsigned(swap.compressed_bytes / 1024)
 			meminfo_builder.add(' kB\nZswapped:       ')
 			meminfo_builder.add_unsigned(swap.compressed_pages * memory.page_size / 1024)
-			meminfo_builder.add(' kB\nVinixPageouts:  ')
+			meminfo_builder.add(' kB\nTulparPageouts:  ')
 			meminfo_builder.add_unsigned(swap.pageouts)
-			meminfo_builder.add('\nVinixRefaults:  ')
+			meminfo_builder.add('\nTulparRefaults:  ')
 			meminfo_builder.add_unsigned(swap.refaults)
-			meminfo_builder.add('\nVinixSwapErrors: ')
+			meminfo_builder.add('\nTulparSwapErrors: ')
 			meminfo_builder.add_unsigned(swap.io_errors)
 			meminfo_builder.add('\nSlab:           ')
 			meminfo_builder.add_unsigned(slab_kb)
-			meminfo_builder.add(' kB\nVinixMemoryPressure: ')
+			meminfo_builder.add(' kB\nTulparMemoryPressure: ')
 			meminfo_builder.add_decimal(memory.pressure_snapshot().level)
 			meminfo_builder.add('\n')
 			return lib.finish_text(*meminfo_builder)
@@ -675,7 +675,7 @@ fn (this &ProcFSResource) contents() string {
 		.uptime {
 			seconds := time.monotonic_ns() / 1000000000
 			hundredths := (time.monotonic_ns() / 10000000) % 100
-			mut uptime_builder := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut uptime_builder := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *uptime_builder = lib.new_text(48) }
 			for i in 0 .. 2 {
 				if i > 0 {
@@ -694,14 +694,14 @@ fn (this &ProcFSResource) contents() string {
 		.version {
 			// Match uname's host identity and Linux-compatible UTS namespaces.
 			in_container := utsnet.in_own_uts_namespace()
-			sysname := if in_container { 'Linux' } else { 'Vinix' }
+			sysname := if in_container { 'Linux' } else { 'Tulpar' }
 			release := if in_container { linux_compat_release } else { uname_release }
 			// Freed by read(), as every generated text is.
-			text := '${sysname} version ${release} (vinix) #1 SMP\n' @[freed]
+			text := '${sysname} version ${release} (tulpar) #1 SMP\n' @[freed]
 			return text
 		}
 		.ostype {
-			return if utsnet.in_own_uts_namespace() { 'Linux\n' } else { 'Vinix\n' }
+			return if utsnet.in_own_uts_namespace() { 'Linux\n' } else { 'Tulpar\n' }
 		}
 		.osrelease {
 			return if utsnet.in_own_uts_namespace() { linux_compat_release_line } else { uname_release_line }
@@ -722,7 +722,7 @@ fn (this &ProcFSResource) contents() string {
 			// Linux's first two fields: the size of the address space and what
 			// of it is resident.
 			counted := process_memory(this.pid)
-			mut statm_builder := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut statm_builder := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *statm_builder = lib.new_text(64) }
 			statm_builder.add_unsigned(counted.mapped / page_size)
 			statm_builder.add_byte(` `)
@@ -797,7 +797,7 @@ fn (this &ProcFSResource) contents() string {
 			return maps_text(this.pid, true)
 		}
 		.oom_score_adj {
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(16) }
 			text.add_decimal(proc.process_oom_score_adj(this.pid))
 			text.add_byte(`\n`)
@@ -813,7 +813,7 @@ fn (this &ProcFSResource) contents() string {
 			return proc.id_map_text(this.pid, true)
 		}
 		.loginuid, .sessionid, .seat_session {
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(16) }
 			login_uid, login_session := proc.login_identity(this.pid)
 			text.add_decimal(i64(match this.kind {
@@ -831,7 +831,7 @@ fn (this &ProcFSResource) contents() string {
 			return ''
 		}
 		.securelevel {
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(8) }
 			text.add_decimal(i64(security.securelevel()))
 			text.add_byte(`\n`)
@@ -852,7 +852,7 @@ fn (this &ProcFSResource) contents() string {
 // `owned` with one byte after it, as a new string; `owned` is freed.
 fn text_with_ending(owned string, ending u8) string {
 	// Formatting helpers borrow this builder; str() returns independent owned bytes.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(owned.len + 1) }
 	text.add(owned)
 	text.add_byte(ending)
@@ -873,7 +873,7 @@ fn machine_stat_text() string {
 		idle += d
 	}
 	// Formatting helpers borrow the stack builder; finish_text returns owned bytes.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(count * 128 + 256) }
 	text.add('cpu ')
 	add_cpu_stat_fields(mut text, user, system, idle)
@@ -1237,7 +1237,7 @@ fn C.alloc_track_start()
 fn C.alloc_track_dump(buf &char, cap u64, min_count u64) u64
 
 fn slabinfo_text() string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(1024) }
 	text.add('# class      size    objects   pages\n')
 	classes := memory.heap_classes()
@@ -1321,7 +1321,7 @@ fn maps_text(pid int, detailed bool) string {
 		exe_ino = exe_node.resource.stat.ino
 	}
 	// Borrowed synchronously by formatting helpers; the owned bytes are consumed below.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(list.len * if detailed { 900 } else { 100 }) }
 	for info in list {
 		line_start := text.len()
@@ -1472,7 +1472,7 @@ pub fn procfs_dynamic_link_target(node &VFSNode) string {
 	// Made on every walk through the link, so without the string an
 	// interpolated number leaves behind; the caller frees it.
 	// Borrowed synchronously by formatting helpers; the owned bytes are consumed below.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(40) }
 	// Relative to this procfs root, including alternate mounts and chroots.
 	text.add_decimal(i64(pid))
@@ -1489,7 +1489,7 @@ pub fn procfs_self_target() string {
 	if current == unsafe { nil } || unsafe { current.process == nil } {
 		return ''
 	}
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(24) }
 	text.add_decimal(i64(proc.own_pid(current.process)))
 	return text.str()
@@ -1762,7 +1762,7 @@ fn populate_process_directory(mut node VFSNode, pid int) {
 }
 
 // What /proc/<pid> and /proc/<pid>/task/<tid> both hold. A thread's
-// descriptors, namespaces and mounts are its process', since Vinix threads
+// descriptors, namespaces and mounts are its process', since Tulpar threads
 // share all three.
 const process_entry_names = ['cmdline', 'comm', 'stat', 'statm', 'status', 'io', 'cgroup', 'environ',
 	'mountinfo', 'mounts', 'mountstats', 'maps', 'smaps', 'auxv', 'limits', 'loginuid', 'sessionid',

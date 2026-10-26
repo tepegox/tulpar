@@ -57,7 +57,7 @@ fn original_block(source string, prefix string) !string {
 fn elf_host_command(args []string) !int {
 	parsed := hosttest.parse_arguments(args, [hosttest.Option{ name: '--state-dir', value: true }], 0,
 		'Usage: run-host.sh [--state-dir FRESH-DIR]', 'Exercise genuine production ELF dynamic scanning and executable range freezing.') or { return error_with_code(err.msg(), 2) }
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-elf-text-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-elf-text-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	for name in ['elf', 'resource', 'mmap', 'memory'] { os.mkdir(work + '/' + name)! }
 	write(work + '/v.mod', 'Module { name: "elf_text_tests" }\n')!

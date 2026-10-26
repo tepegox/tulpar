@@ -29,8 +29,8 @@ continuation work; it does not declare the graphics implementation finished.
 
 ## What works and what does not
 
-Vinix's Linux userspace ABI does not supply Linux's internal kernel driver
-APIs. This project is building those APIs on Vinix, keeping the imported
+Tulpar's Linux userspace ABI does not supply Linux's internal kernel driver
+APIs. This project is building those APIs on Tulpar, keeping the imported
 driver intact. The compatibility runtime is opt-in with `LINUXKPI=1`, currently
 x86-64 only. Default x86-64 and arm64 kernels leave it disabled.
 
@@ -44,7 +44,7 @@ Initial target: Tiger Lake-LP GT2. The current read-only PCI identity filter
 is **`8086:9a49`**, still unconfirmed on the user's machine. The CPU model alone
 does not establish the GPU PCI ID. A previous optional question remains
 unanswered: obtain `lspci -nn -s 00:02.0` from that machine and identify a
-Vinix hardware test setup or isolated GPU passthrough setup. QEMU VGA cannot
+Tulpar hardware test setup or isolated GPU passthrough setup. QEMU VGA cannot
 validate i915. Keep coding and testing the compatibility runtime while that
 information is pending; final hardware completion depends on it.
 
@@ -205,7 +205,7 @@ tree; do not patch the driver or fill dependencies with fake-success stubs.
 Linked original files currently include `list_sort.c`, `sort.c`, `rbtree.c`,
 `find_bit.c`, `hweight.c`, `siphash.c` and `i915_memcpy.c`. Additional exact-version kernel
 reference sources were extracted outside the verified tree at
-`/tmp/vinix-linuxkpi-runtime-reference/`, including workqueue/timer/wait/time
+`/tmp/tulpar-linuxkpi-runtime-reference/`, including workqueue/timer/wait/time
 code. If that temporary directory disappears, read or extract the pinned
 archive into another separate reference directory, never into the import.
 
@@ -414,7 +414,7 @@ handling: an NMI can arrive during ring-0 windows with user GS or a released
 old Thread. A counter hook on the current ordinary thunk would be unsafe.
 Do not resolve in_nmi/local_bh with constant or explicit-reader-only
 stubs. Read-only next-step design is in
-`/tmp/vinix-linuxkpi-context-design.md`, with pinned entry reference paths.
+`/tmp/tulpar-linuxkpi-context-design.md`, with pinned entry reference paths.
 
 - Keep the IRQ hook behind the native active gate, which is published only
   after the boot owner warms generated module initialization and both worker
@@ -454,22 +454,22 @@ stubs. Read-only next-step design is in
 - COMMAND read/conditional-write uses 16 bits in one lock hold; adjacent STATUS
   RW1C is preserved. Existing BAR probes still require exclusive ownership and
   quiescence; transport serialization alone does not make them safe for i915.
-- Final 18-path kernel overlay is `/tmp/vinix-linuxkpi-pci-config-overlay.json`,
+- Final 18-path kernel overlay is `/tmp/tulpar-linuxkpi-pci-config-overlay.json`,
   private build baseline `71426a7e`. Full host strict GNU99/GNU11 ASan/UBSan,
   import and header suite passed. Normal x86 passed all 33 markers. Default x86,
   default ARM and opt-in ARM context guests reached actual Linux-ABI PID1.
   Enabled ELF SHA256 is
   `9f76e1954c9188dcffae9035ee1f097d0957ae0947febc49c8371ae05d7ad475`.
   Detailed immutable artifact/review/evidence manifest is
-  `/tmp/vinix-linuxkpi-pci-config-final-validation.json`.
+  `/tmp/tulpar-linuxkpi-pci-config-final-validation.json`.
 - Both feature SSE guests passed the new PCI exact-page checks, then failed
   the unchanged bound self-free 500-tick watchdog. Pre-PCI `71426a7e` ELF reproduced
   the same bound failure in identical guest settings. All 16 callbacks finish
   through safe cleanup, but delayed progress has no established cause. Do not
   claim these as full SSE passes or change the deadline to hide the failures.
-  Preserved logs: `/tmp/vinix-linuxkpi-pci-config-sse-vm/serial.log`,
-  `/tmp/vinix-linuxkpi-pci-config-sse-diagnostic-vm/serial.log` and
-  `/tmp/vinix-linuxkpi-pci-baseline-sse-vm/serial.log`.
+  Preserved logs: `/tmp/tulpar-linuxkpi-pci-config-sse-vm/serial.log`,
+  `/tmp/tulpar-linuxkpi-pci-config-sse-diagnostic-vm/serial.log` and
+  `/tmp/tulpar-linuxkpi-pci-baseline-sse-vm/serial.log`.
 - Native x86 actors read two real devices 896 times each across four bound CPUs,
   with IRQ-off/nested-pin/OOM calls and all 16 actual constructor rollback cases.
   Three warmups precede exact measured page recovery. ARM `PCI_CONFIG_TEST=1`
@@ -482,7 +482,7 @@ stubs. Read-only next-step design is in
   `62e783b877abd3688ddd54806d73e5fd9c51b2a5b4fe9b5780369ffbf7bfa77e`
   both retain 428 sites, 191 groups and 160 existing failure groups and exit 1. The initial
   411-site reports and pre-existing x86 V errors remain preserved. This is no
-  global allocation pass: `/tmp/vinix-linuxkpi-pci-allocation-comparison.json`.
+  global allocation pass: `/tmp/tulpar-linuxkpi-pci-allocation-comparison.json`.
 
 Ordinary Linux user copies now use the native exact-remaining-count walk.
 Existing Boolean/remote adapters preserve their policy. Raw and `__copy_*`
@@ -524,7 +524,7 @@ passes with a 600-second outer harness limit, with runtime deadlines unchanged.
 Paired default allocation reports contain 414 sites/192 groups and 158 existing
 failures with no added groups. That milestone passed 3/269 syntax units. Logs,
 source hashes and independent final generated-C reviews are under
-`/tmp/vinix-linuxkpi-uaccess-oct06-*`; they are scoped evidence, not GPU bringup.
+`/tmp/tulpar-linuxkpi-uaccess-oct06-*`; they are scoped evidence, not GPU bringup.
 
 ## Latest scalar and compiler-helper validation
 
@@ -555,8 +555,8 @@ Feature sources match the saved ELF's manifest. The private compiler binary
 and recovered private runtime library avoid ongoing changes in the shared V
 checkout; all 78 actual builtin inputs match previously captured hashes.
 Exact checks, hashes and scope are in
-`/tmp/vinix-linuxkpi-scalar-oct06-final-validation.json`, with library provenance
-in `/tmp/vinix-linuxkpi-scalar-oct06-frozen-library-provenance.json`.
+`/tmp/tulpar-linuxkpi-scalar-oct06-final-validation.json`, with library provenance
+in `/tmp/tulpar-linuxkpi-scalar-oct06-frozen-library-provenance.json`.
 This does not establish a global allocation pass or LinuxKPI support on ARM.
 
 Scalar stores are committed in `15c21a91`. Production-core/public-header checks
@@ -577,7 +577,7 @@ strict fourth-batch page/all-live-heap-class measurements; both guests recover
 exactly. The store fixture's first lifecycle is also flat after the preceding
 scalar-read fixture; this does not explain that earlier fixture's cold 8 KiB
 retention. Existing map/fork early-OOM rollback is outside this feature's scope.
-Evidence: `/tmp/vinix-linuxkpi-scalar-store-oct06-final-validation.json`.
+Evidence: `/tmp/tulpar-linuxkpi-scalar-store-oct06-final-validation.json`.
 These builds use the recorded isolated baseline plus owned feature overlays,
 not the concurrently changing shared HEAD; ARM remains LinuxKPI-disabled.
 
@@ -595,7 +595,7 @@ compiler jobs. Invalid metadata rejects before compilation. Verified upstream
 files remain 7,668 unchanged; the full result is **4/269**, expected exit 1:
 `i915_memcpy.c`, `i915_config.c`, `display/intel_qp_tables.c` and
 `i915_user_extensions.c`. The last unit is syntax-only and not linked. Exact
-report at that milestone: `/tmp/vinix-linuxkpi-audit-generated-oct06-native.json`.
+report at that milestone: `/tmp/tulpar-linuxkpi-audit-generated-oct06-native.json`.
 Bounds generation is now committed in `f1d5860b`: compile the exact pinned
 `kernel/bounds.c` outside the verified import using the actual target, config
 and generated adapters; record compiler/discovered-header hashes and command
@@ -603,7 +603,7 @@ stamps. `CONFIG_MMU=1` matches native paging. The five-level-capable type profil
 is committed in `a88dcea7`, with original UAPI aliases and annotations rather
 than duplicate typedefs. Linux page ownership, PFN/descriptor services and
 runtime geometry globals remain unresolved. Latest frozen syntax report:
-`/tmp/vinix-linuxkpi-smp-headers-oct06-enabled-proof/full-audit-report.json`, **4/269**,
+`/tmp/tulpar-linuxkpi-smp-headers-oct06-enabled-proof/full-audit-report.json`, **4/269**,
 expected exit 1. Original page-table types, static-key declarations and
 instruction-header and original CSD closure clear prior first errors; 213 units first fail on
 `rcu_read_lock`, followed by RCU pointer APIs and
@@ -632,7 +632,7 @@ recovery. Enabled/default x86 and disabled ARM builds and both default boots
 pass. Host tests pass 433,858 depth assertions plus eight fatal cases and
 9,200 copy assertions per GNU99/GNU11. Final actual generated C and optimized
 objects received independent lifetime reviews. Evidence:
-`/tmp/vinix-linuxkpi-pagefault-oct06-final-validation.json`.
+`/tmp/tulpar-linuxkpi-pagefault-oct06-final-validation.json`.
 
 Compiler milestones `a88dcea7`, `376b5d66` and `0e35bb9a` restore original
 complete page/folio/descriptor and entry types, genuine UAPI aliases, typed
@@ -647,7 +647,7 @@ unsafe reads and bulk-copy wrappers remain unresolved.
 Saved compiler-profile ELF `065b36cb1af47879fb76b22e0a5f6b62a4a4b3035ee78503afce853fd8610f7d`
 compiles/links. Its native V C and object match the passed fault-control kernel
 byte-for-byte; no full guest boot is claimed for this separately linked ELF.
-Aggregate evidence: `/tmp/vinix-linuxkpi-compiler-next-oct06-final-validation.json`.
+Aggregate evidence: `/tmp/tulpar-linuxkpi-compiler-next-oct06-final-validation.json`.
 These are scoped runtime/compiler results, not GPU bringup or a global allocation
 pass. Upstream remains unchanged.
 
@@ -661,7 +661,7 @@ exact physical bytes and all live heap classes after three warmups. Default x86
 and disabled ARM builds/startup pass. Host GNU99/GNU11 checks each pass
 25,299,139 sanitizer assertions; actual generated C, optimized object and linked
 ELF receive independent lifetime/ordering review. Tests use ordinary RAM, not a
-GPU aperture. Evidence: `/tmp/vinix-linuxkpi-nocache-oct06-final-validation.json`.
+GPU aperture. Evidence: `/tmp/tulpar-linuxkpi-nocache-oct06-final-validation.json`.
 
 Generated x86 early-ioremap/kmap wrappers now forward to genuine headers
 selected by the original Kbuild. Actual pinned wrapper generation, twelve
@@ -669,7 +669,7 @@ strict object probes and independent byte-identical replays pass. Real mapping
 symbols remain unresolved. Enabled compiler-only integration links and retains
 the passed nocache V C/object exactly; its separately linked ELF has no new
 guest-boot claim. Evidence:
-`/tmp/vinix-linuxkpi-asm-generated-headers-oct06-final-validation.json`.
+`/tmp/tulpar-linuxkpi-asm-generated-headers-oct06-final-validation.json`.
 
 ## Native maskable IRQ validation and next context work
 
@@ -710,7 +710,7 @@ both exit 1 with 354 ARM sites, 293 x86 sites and identical 158 failing groups.
 The initial allocation job never started because its worktree lacked the test
 harness; the corrected failure record is preserved. Frozen sources, artifacts,
 all result files and independent reviews are collected in
-`/tmp/vinix-linuxkpi-irq-context-oct06-final-validation.json`.
+`/tmp/tulpar-linuxkpi-irq-context-oct06-final-validation.json`.
 
 Next, fix workqueue callback identity under real IRQ interruption: the current
 task-only worker lookup must not grant an interrupt producer callback or drain
@@ -779,7 +779,7 @@ including retained churn allocations up to 48 KiB per 300-process batch and
 positive syscall allocations. This is scoped
 snapshot recovery evidence, not global leak freedom or GPU support. Sources,
 artifacts, results, failed attempts and independent review are collected in
-`/tmp/vinix-linuxkpi-pci-topology-oct06-final-validation.json`.
+`/tmp/tulpar-linuxkpi-pci-topology-oct06-final-validation.json`.
 
 ## Original instruction headers and CPU feature work
 
@@ -798,7 +798,7 @@ All fifteen prior MOVDIR declaration blockers advance to genuine RCU,
 diagnostics contain no remaining MOVDIR error. QEMU TCG does not expose either
 direct-store bit on this host and rejects forced positive exposure. Compiler
 closure is not positive instruction, device-portal or MMIO validation. Evidence:
-`/tmp/vinix-linuxkpi-movdir64b-oct06-final-validation.json`.
+`/tmp/tulpar-linuxkpi-movdir64b-oct06-final-validation.json`.
 
 Native runtime now samples only MOVDIRI/MOVDIR64B hardware bits on each actual
 CPU before its online acknowledgement, then publishes one immutable boot-CPU
@@ -830,7 +830,7 @@ All six broader desktop scenarios complete on disabled ARM. Churn retains
 16–48 KiB per 300-process batch and positive syscall allocations remain. The
 allocation gate still fails with exactly the same 158 groups as its PCI
 baseline. Do not claim global allocation success. Full evidence:
-`/tmp/vinix-linuxkpi-directstore-policy-oct06-final-validation.json`.
+`/tmp/tulpar-linuxkpi-directstore-policy-oct06-final-validation.json`.
 
 Original CSD tests now preserve records and genuine unresolved dispatcher/mask
 references. Production full-header integration now passes strict same-source
@@ -863,9 +863,9 @@ garbage-collected when unreferenced in this ELF. No new runtime algorithm or
 guest execution claim follows from this header feature. Full audit remains
 4/269; exactly seven CSD first errors advance to RCU (206 to 213). Masks,
 early maps, `smp_ops`, hotplug and remote callback services remain pending.
-Aggregate: `/tmp/vinix-linuxkpi-smp-headers-oct06-final-validation.json`.
+Aggregate: `/tmp/tulpar-linuxkpi-smp-headers-oct06-final-validation.json`.
 
-Original Linux boot CPU masks now publish Vinix's validated compact logical
+Original Linux boot CPU masks now publish Tulpar's validated compact logical
 CPU set: possible, present, online and active contain every installed CPU;
 dying is empty. The sole boot publisher clears/writes all four original words,
 sets the genuine `nr_cpu_ids` and atomic online count, then release-publishes
@@ -899,7 +899,7 @@ Its maintained wrapper file, declaration headers and authored embedded C test
 oracle/runner are first-party follow-up under the C-removal instruction, not
 vendored implementations or migration credit.
 
-The earlier `/tmp/vinix-linuxkpi-cpu-masks-oct06-final-validation.json` receipt
+The earlier `/tmp/tulpar-linuxkpi-cpu-masks-oct06-final-validation.json` receipt
 and its worktrees are absent. Its previous full native/host/desktop and baseline
 claims are archived as unverified draft text. Fresh evidence is kept in
 `/Users/alex/.cache/vinix-c-to-v/firstparty-only-20261006-011023/` as
@@ -924,7 +924,7 @@ host-suite baselines; fresh mask results do not establish their resolution.
   wake selection and explicit target wakes prevent sleeping target CPUs from
   stranding work. Native checks verify placement after sleep and yield.
 - `WQ_HIGHPRI` uses a per-thread nice override of -20 without changing the
-  shared kernel process. Vinix's native linear nice weights increase its
+  shared kernel process. Tulpar's native linear nice weights increase its
   ordinary scheduling quantum; this is not Linux's exact CFS weighting.
 - Checked constructors roll back stack, FPU and Thread allocations before
   publication. Partial manager/worker failure and destruction are tested.
@@ -969,7 +969,7 @@ driver goal rather than stopping after a plan or an improved audit count.
 | `kernel/linuxkpi/compatcore/workqueue.v`, `kernel/c/linuxkpi_workqueue_native_test.c` | Ordered, delayed, bound and unbound engine plus independent native tests |
 | `kernel/linuxkpi/compatcore/{srcu,timer,time,sync,task,percpu}.v`, `kernel/c/linuxkpi_*_v_primitives.{c,h}` | Native V backends and narrow Linux header/ABI bindings |
 | `kernel/linuxkpi/bridge_amd64.v` | Native V exports, initialization and measured guest tests |
-| `kernel/linuxkpi/include/vinix/runtime.h` | Internal bridge declarations |
+| `kernel/linuxkpi/include/tulpar/runtime.h` | Internal bridge declarations |
 | `kernel/linuxkpi/include/linux/`, `include/asm/` | Compatibility overlays; many remaining headers stay upstream |
 | `kernel/linuxkpi/upstream.py`, `upstream.json` | Import verification and exact pin |
 | `kernel/linuxkpi/audit.py` | Kbuild-derived complete i915 syntax audit |
@@ -996,7 +996,7 @@ generated-C hashes. Native checks run 200 times with exact page recovery;
 separate actual-backend tests passed 7,542,446 pinned-reference comparisons.
 The local `strim` traversal avoids forming `s - 1` and preserves every observable
 byte/pointer result. Source, host/native fixtures and generated C have independent
-approval. Evidence: `/tmp/vinix-linuxkpi-string-tokens-final-validation.json`.
+approval. Evidence: `/tmp/tulpar-linuxkpi-string-tokens-final-validation.json`.
 Fresh full syntax audit remains 3/269; imported files remain unchanged.
 
 Kernel-string parsers used five frozen kernel paths at `7735509f`, enabled ELF
@@ -1004,7 +1004,7 @@ Kernel-string parsers used five frozen kernel paths at `7735509f`, enabled ELF
 The same host/build/normal/SSE/default checks passed, including 56 native
 conversion checks per iteration inside the exact 200-iteration page measurement.
 Independent source/fixture/generated-C review and 16,653 private comparisons
-passed. Evidence: `/tmp/vinix-linuxkpi-kstrtox-final-validation.json`.
+passed. Evidence: `/tmp/tulpar-linuxkpi-kstrtox-final-validation.json`.
 `_from_user` and native remaining-byte/zero-tail user-copy integration are pending.
 
 The minimum-duration sleep feature used five frozen kernel paths at `53f41b30`,
@@ -1017,7 +1017,7 @@ recovery. The first normal guest later failed an unchanged unbound self-free
 timeout (3/8 at 502 ticks); the full normal rerun on the identical ELF and the
 full SSE run passed. Preserve that failure: it remains unexplained, and the
 rerun does not repair it. Evidence is
-`/tmp/vinix-linuxkpi-usleep-final-validation.json`. Equal-source allocation
+`/tmp/tulpar-linuxkpi-usleep-final-validation.json`. Equal-source allocation
 gates at this newer baseline have 429 sites, 192 groups and 161 existing
 failures on both sides, with no new counts/groups and no global pass.
 
@@ -1028,13 +1028,13 @@ Strict full ASan/UBSan host/import/header checks, enabled/default x86 and disabl
 ARM builds, full normal/SSE four-CPU guests and default Linux-ABI startup passed.
 The 200-iteration native test returned exactly to its physical-page baseline.
 Sources and generated C were independently reviewed; frozen evidence is
-`/tmp/vinix-linuxkpi-string-helpers-final-validation.json`. Latest full audit
-`/tmp/vinix-linuxkpi-string-helpers-i915-audit.json` remains expected exit 1,
+`/tmp/tulpar-linuxkpi-string-helpers-final-validation.json`. Latest full audit
+`/tmp/tulpar-linuxkpi-string-helpers-i915-audit.json` remains expected exit 1,
 **3/269**, with all 7,668 imported files unchanged.
 
 Policy/helper validation and the separate timed-worker retirement fix are
-recorded in `/tmp/vinix-linuxkpi-i915-policy-final-validation.json` and
-`/tmp/vinix-linuxkpi-mutex-io-retirement-final-validation.json`. The first policy
+recorded in `/tmp/tulpar-linuxkpi-i915-policy-final-validation.json` and
+`/tmp/tulpar-linuxkpi-mutex-io-retirement-final-validation.json`. The first policy
 guest passed the new helper page measurement but failed an older timed-wait
 baseline with 1,029 more free pages; a rerun was diagnostic, not a fix. The
 committed retirement fix now waits for all known joined workers' off-stack
@@ -1050,31 +1050,31 @@ Earlier bound/bitmap continuation checks cover these committed changes:
 
 | Check | Result and artifact |
 | --- | --- |
-| Strict host runtime/import tests | Clean ASan/UBSan; `/tmp/vinix-linuxkpi-bound-host-gatefixed.log`, `/tmp/vinix-linuxkpi-bitmap-integrated-host.log` |
-| Enabled x86 builds | Pass; `/tmp/vinix-linuxkpi-bound-x86-build-final.log`, `/tmp/vinix-linuxkpi-bitmap-x86-build.log` |
-| Disabled arm64 builds | Pass; `/tmp/vinix-linuxkpi-bound-arm-build-final.log`, `/tmp/vinix-linuxkpi-bitmap-arm-build.log` |
-| Default x86 build/guest | Pass; `/tmp/vinix-linuxkpi-bitmap-default-build.log`, `/tmp/vinix-linuxkpi-bitmap-default-vm/serial.log` |
-| Four-CPU enabled normal/SSE guests | Pass; `/tmp/vinix-linuxkpi-bitmap-vm/serial.log`, `/tmp/vinix-linuxkpi-bitmap-sse-vm/serial.log` |
-| Optional XNU allocator build/guest | Pass; `/tmp/vinix-linuxkpi-bound-xnu-build.log`, `/tmp/vinix-linuxkpi-bound-xnu-vm/serial.log` |
+| Strict host runtime/import tests | Clean ASan/UBSan; `/tmp/tulpar-linuxkpi-bound-host-gatefixed.log`, `/tmp/tulpar-linuxkpi-bitmap-integrated-host.log` |
+| Enabled x86 builds | Pass; `/tmp/tulpar-linuxkpi-bound-x86-build-final.log`, `/tmp/tulpar-linuxkpi-bitmap-x86-build.log` |
+| Disabled arm64 builds | Pass; `/tmp/tulpar-linuxkpi-bound-arm-build-final.log`, `/tmp/tulpar-linuxkpi-bitmap-arm-build.log` |
+| Default x86 build/guest | Pass; `/tmp/tulpar-linuxkpi-bitmap-default-build.log`, `/tmp/tulpar-linuxkpi-bitmap-default-vm/serial.log` |
+| Four-CPU enabled normal/SSE guests | Pass; `/tmp/tulpar-linuxkpi-bitmap-vm/serial.log`, `/tmp/tulpar-linuxkpi-bitmap-sse-vm/serial.log` |
+| Optional XNU allocator build/guest | Pass; `/tmp/tulpar-linuxkpi-bound-xnu-build.log`, `/tmp/tulpar-linuxkpi-bound-xnu-vm/serial.log` |
 | Full i915 syntax audit at the bound/bitmap milestone | Expected exit 1, **1/269** at that revision |
 | Import verification | **7,668** unchanged pinned files |
 
 The enabled bitmap ELF used by both normal/SSE guests is
-`/tmp/vinix-linuxkpi-bitmap-enabled.elf`, SHA256
+`/tmp/tulpar-linuxkpi-bitmap-enabled.elf`, SHA256
 `69abc50a0752aee53a3a0e9594f0baa3573d74c6caab7f0fd108f98926d364e4`.
 Both guest logs contain the bound/priority, worker-rollback and multiword
 bitmap markers and exact per-feature physical-page recovery. The earlier
 rebuilt unbound ELF also booted in fresh baseline normal/SSE guests at
-`/tmp/vinix-linuxkpi-next-baseline-{vm,sse-vm}/serial.log`.
+`/tmp/tulpar-linuxkpi-next-baseline-{vm,sse-vm}/serial.log`.
 
 Independent reviews approved committed worker, scheduler, constructor,
 bitmap, allocation-check and SRCU lifetimes. SRCU final strict host tests pass
-in `/tmp/vinix-linuxkpi-srcu-host-final.log`; fresh enabled x86 and disabled ARM
-builds pass in `/tmp/vinix-linuxkpi-srcu-{x86,arm}-build-tested.log`. Final normal
-and SSE guests pass in `/tmp/vinix-linuxkpi-srcu-final-{vm,sse-vm}/serial.log`,
+in `/tmp/tulpar-linuxkpi-srcu-host-final.log`; fresh enabled x86 and disabled ARM
+builds pass in `/tmp/tulpar-linuxkpi-srcu-{x86,arm}-build-tested.log`. Final normal
+and SSE guests pass in `/tmp/tulpar-linuxkpi-srcu-final-{vm,sse-vm}/serial.log`,
 including the new SRCU marker and exact page recovery. Default x86 startup
-passes in `/tmp/vinix-linuxkpi-srcu-default-vm/serial.log`. The final enabled ELF
-is `/tmp/vinix-linuxkpi-srcu-enabled-final.elf`, SHA256
+passes in `/tmp/tulpar-linuxkpi-srcu-default-vm/serial.log`. The final enabled ELF
+is `/tmp/tulpar-linuxkpi-srcu-enabled-final.elf`, SHA256
 `7942f62276e324036df6e4f6655cd063271ade00ecf52faa62f14bafae16f824`.
 
 Initial enabled SRCU guests intermittently failed the old timer self-test
@@ -1083,66 +1083,66 @@ call count with no callback context/ordering violation, at 100–140 elapsed
 ticks. The committed timer test now permits 500 ticks, retains every correctness
 check and prints fixed-stack failure records after shutdown/join. Final guests
 above use that exact source. Failed logs remain as evidence, including
-`/tmp/vinix-linuxkpi-srcu-timer-diagnostic-sse-vm/serial.log`; do not count them
+`/tmp/tulpar-linuxkpi-srcu-timer-diagnostic-sse-vm/serial.log`; do not count them
 as successful boots.
 
-Wound/wait strict host tests pass at `/tmp/vinix-linuxkpi-ww-host-final.log`.
+Wound/wait strict host tests pass at `/tmp/tulpar-linuxkpi-ww-host-final.log`.
 Fresh x86 enabled, ARM disabled and x86 default builds pass at
-`/tmp/vinix-linuxkpi-ww-{x86,arm,default}-build.log`. Four-CPU normal/SSE/default
-guests pass at `/tmp/vinix-linuxkpi-ww-{vm,sse-vm,default-vm}/serial.log`; both
+`/tmp/tulpar-linuxkpi-ww-{x86,arm,default}-build.log`. Four-CPU normal/SSE/default
+guests pass at `/tmp/tulpar-linuxkpi-ww-{vm,sse-vm,default-vm}/serial.log`; both
 enabled guests include the wound/wait marker and exact page recovery.
-The tested enabled ELF `/tmp/vinix-linuxkpi-ww-enabled.elf` has SHA256
+The tested enabled ELF `/tmp/tulpar-linuxkpi-ww-enabled.elf` has SHA256
 `159a6a7c8d25acfac902aa401a1e505ec1caf44f9ebe84a965a5a8baa1e4c5fb`.
 Independent backend/host/native lifetime reviews approved; generated measured
 V code uses scalar locals and adds no hidden allocation. Its fresh allocation
-gate `/tmp/vinix-linuxkpi-ww-alloc.log` matches every existing failure group;
-comparison is `/tmp/vinix-linuxkpi-ww-alloc-comparison.json`. The syntax audit
+gate `/tmp/tulpar-linuxkpi-ww-alloc.log` matches every existing failure group;
+comparison is `/tmp/tulpar-linuxkpi-ww-alloc-comparison.json`. The syntax audit
 still passes 1/269; complete driver linking and hardware remain pending.
 
 Bit/variable-wait strict host tests pass at
-`/tmp/vinix-linuxkpi-waitbit-host-review.log`. Fresh enabled x86, disabled ARM
-and default x86 builds pass at `/tmp/vinix-linuxkpi-waitbit-{x86,arm,default}-build.log`.
+`/tmp/tulpar-linuxkpi-waitbit-host-review.log`. Fresh enabled x86, disabled ARM
+and default x86 builds pass at `/tmp/tulpar-linuxkpi-waitbit-{x86,arm,default}-build.log`.
 Fresh normal/SSE/default guests pass at
-`/tmp/vinix-linuxkpi-waitbit-{vm,sse-vm,default-vm}/serial.log`; both enabled
+`/tmp/tulpar-linuxkpi-waitbit-{vm,sse-vm,default-vm}/serial.log`; both enabled
 runs contain the new keyed-wait marker and exact page recovery. Both use
-`/tmp/vinix-linuxkpi-waitbit-enabled.elf`, SHA256
+`/tmp/tulpar-linuxkpi-waitbit-enabled.elf`, SHA256
 `a7a244136d74992bcb6fbd69d68af085a93125e4ea3c9924dbbdfdeabebf6a19`.
 Independent backend/host/native reviews approved. Fresh allocation results
-match every baseline group at `/tmp/vinix-linuxkpi-waitbit-alloc-comparison.json`;
+match every baseline group at `/tmp/tulpar-linuxkpi-waitbit-alloc-comparison.json`;
 new generated V C contains only scalar measurement locals and direct calls
-(`/tmp/vinix-linuxkpi-waitbit-generatedc-snippet.c`). The audit remains 1/269,
+(`/tmp/tulpar-linuxkpi-waitbit-generatedc-snippet.c`). The audit remains 1/269,
 and import verification again checks all 7,668 unchanged files.
 
-I/O strict host tests pass at `/tmp/vinix-linuxkpi-iowait-host-final.log`.
+I/O strict host tests pass at `/tmp/tulpar-linuxkpi-iowait-host-final.log`.
 Fresh enabled x86, disabled ARM and default x86 builds pass at
-`/tmp/vinix-linuxkpi-iowait-x86-build-final-diagnostics.log`,
-`/tmp/vinix-linuxkpi-iowait-arm-build-final-diagnostics.log` and
-`/tmp/vinix-linuxkpi-iowait-default-build.log`. Fresh normal/SSE/default guests
-pass at `/tmp/vinix-linuxkpi-iowait-{reviewed-vm,reviewed-sse-vm,default-vm}/serial.log`.
+`/tmp/tulpar-linuxkpi-iowait-x86-build-final-diagnostics.log`,
+`/tmp/tulpar-linuxkpi-iowait-arm-build-final-diagnostics.log` and
+`/tmp/tulpar-linuxkpi-iowait-default-build.log`. Fresh normal/SSE/default guests
+pass at `/tmp/tulpar-linuxkpi-iowait-{reviewed-vm,reviewed-sse-vm,default-vm}/serial.log`.
 Both enabled guests include the I/O marker and exact page recovery, using
-`/tmp/vinix-linuxkpi-iowait-enabled-reviewed.elf`, SHA256
+`/tmp/tulpar-linuxkpi-iowait-enabled-reviewed.elf`, SHA256
 `7ce6e10a50ecec9e3fcef56ef2d0ab3b1a60a6429e6b2e65e9c4c2e8518c9af6`.
 These isolated builds start at `118047fd` plus the owned I/O/diagnostic overlay;
 later unrelated kernel commits are not silently included in this evidence.
 
 Initial I/O guest logs failed or timed out in earlier workqueue/worker tests
-before I/O ran. Preserve `/tmp/vinix-linuxkpi-iowait-{vm,sse-vm,trace-sse-vm,final-vm,worker-trace-vm}/serial.log`
+before I/O ran. Preserve `/tmp/tulpar-linuxkpi-iowait-{vm,sse-vm,trace-sse-vm,final-vm,worker-trace-vm}/serial.log`
 as failures. Diagnostics identified a bound self-free completion watchdog,
 whose later completion did not change its failed result. The reviewed normal
 run took about 120 seconds including ISO preparation. Final runs used the
 harness's explicit `--timeout 300`; every 500-tick callback check remains intact.
 An earlier identical-runtime ELF also passes both long-budget guests at
-`/tmp/vinix-linuxkpi-iowait-long-{normal,sse}-vm/serial.log`. These checks do not
+`/tmp/tulpar-linuxkpi-iowait-long-{normal,sse}-vm/serial.log`. These checks do not
 establish a cause for every preceding intermittent failure.
 
 Independent I/O backend/host/native and diagnostic lifetime reviews approved.
 Generated V code has no allocation/string-conversion markers in the nine new
 scheduler/bridge/route functions or measured locals:
-`/tmp/vinix-linuxkpi-iowait-generatedc-review.json`. Thread-layout comparison
+`/tmp/tulpar-linuxkpi-iowait-generatedc-review.json`. Thread-layout comparison
 keeps size 11,256, alignment 8 and every old offset unchanged; the new token is
 at offset 140. The fresh allocation baseline after unrelated kernel changes
 is **418 sites / 184 groups / 155 existing failures**, matched exactly by the
-I/O overlay (`/tmp/vinix-linuxkpi-iowait-alloc-comparison.json`). The older
+I/O overlay (`/tmp/tulpar-linuxkpi-iowait-alloc-comparison.json`). The older
 425-site result below describes earlier baselines. The I/O syntax audit still
 passes 1/269, and import verification still checks all 7,668 unchanged files.
 
@@ -1151,10 +1151,10 @@ ARM **293 source files / 361 sites**, x86 **224 files / 253 sites**, combined
 **425 unique sites / 182 file-kind groups / 155 pre-existing failures**.
 Fresh and populated architecture object directories give identical results.
 Missing make output and compiler reports now fail explicitly. Evidence:
-`/tmp/vinix-linuxkpi-bound-alloc-fixed-{fresh,populated-arm,populated-x86}.log`.
+`/tmp/tulpar-linuxkpi-bound-alloc-fixed-{fresh,populated-arm,populated-x86}.log`.
 The fresh SRCU overlay matches every count and failure group as well:
-`/tmp/vinix-linuxkpi-srcu-alloc.log` and
-`/tmp/vinix-linuxkpi-srcu-alloc-comparison.json`. Generated x86/ARM constructors
+`/tmp/tulpar-linuxkpi-srcu-alloc.log` and
+`/tmp/tulpar-linuxkpi-srcu-alloc-comparison.json`. Generated x86/ARM constructors
 initialize the caller-local allocation-failure field to -1, and its successful
 allocator bridge path adds no hidden V allocation. Do not change `allowed.txt`
 to hide these baseline failures.
@@ -1170,32 +1170,32 @@ wound/wait or bit-wait code. The repeat boot disks contain the measured ELF
 SHA256 `16343fd6ce1269aa2706fcda4e295cae0e51093d227df39ee4fbe5ec38af8d91`,
 and source, generated C and ELF remained unchanged through both runs.
 
-Repeat logs are `/tmp/vinix-linuxkpi-srcu-perf-ops-churn-cache.log` and
-`/tmp/vinix-linuxkpi-srcu-perf-idle-apps-drag.log`; metadata and parsed retained
-results are `/tmp/vinix-linuxkpi-srcu-perf-validation.json` and
-`/tmp/vinix-linuxkpi-srcu-perf-retained-summary.json`. Desktop idle/apps/drag
+Repeat logs are `/tmp/tulpar-linuxkpi-srcu-perf-ops-churn-cache.log` and
+`/tmp/tulpar-linuxkpi-srcu-perf-idle-apps-drag.log`; metadata and parsed retained
+results are `/tmp/tulpar-linuxkpi-srcu-perf-validation.json` and
+`/tmp/tulpar-linuxkpi-srcu-perf-retained-summary.json`. Desktop idle/apps/drag
 physical usage was 65.4/150.3/108.8 MiB. Single samples, concurrent host load
 and differing session binaries do not establish a causal performance change.
-Earlier logs remain `/tmp/vinix-linuxkpi-bound-perf-ops-churn-cache-rerun.log`,
-`/tmp/vinix-linuxkpi-bound-perf-idle-apps-drag.log` and
-`/tmp/vinix-linuxkpi-bound-perf-retained-summary.json`. Do not claim the whole
+Earlier logs remain `/tmp/tulpar-linuxkpi-bound-perf-ops-churn-cache-rerun.log`,
+`/tmp/tulpar-linuxkpi-bound-perf-idle-apps-drag.log` and
+`/tmp/tulpar-linuxkpi-bound-perf-retained-summary.json`. Do not claim the whole
 kernel is leak-free; per-feature page recovery is a separate measured result.
 
 The newer isolated ARM I/O-disabled build also completed desktop idle/apps/drag
-with DONE and no panic: `/tmp/vinix-linuxkpi-iowait-perf-idle-apps-drag.log`.
+with DONE and no panic: `/tmp/tulpar-linuxkpi-iowait-perf-idle-apps-drag.log`.
 Physical usage was 65.5/146.3/104.6 MiB. Its initial ops/churn/cache harness
 returned zero at its deadline with incomplete reports and no DONE; that is
 **incomplete validation**, not a pass. A fresh retry completed with DONE,
 exit zero and all 70 OPS, eight CHURN and two CACHE reports:
-`/tmp/vinix-linuxkpi-iowait-perf-retry-ops-churn-cache.log`. The corrected
+`/tmp/tulpar-linuxkpi-iowait-perf-retry-ops-churn-cache.log`. The corrected
 harness in `e4c5ffc4` independently replays the actual serial files and
 accepts exactly 80 allocation reports and three desktop scenarios, with no
-errors: `/tmp/vinix-linuxkpi-iowait-perf-retry-completed-verdict-replay.json`.
+errors: `/tmp/tulpar-linuxkpi-iowait-perf-retry-completed-verdict-replay.json`.
 Its 19 regression tests also reject missing completion, missing/duplicate
 reports, malformed measurements, fatal exits and incomplete console output.
 The measured ARM ELF is `f449c95e7ef242a2b794b6f883e262ed84da18bdc4f1e54cb8c6cfc8d848ebf4`;
 boot-disk identity and unchanged source/generated-C/ELF/desktop are recorded
-in `/tmp/vinix-linuxkpi-iowait-perf-retry-analysis.json`. These workloads use
+in `/tmp/tulpar-linuxkpi-iowait-perf-retry-analysis.json`. These workloads use
 AArch64 with `LINUXKPI=0`, `LIMINE_MP=0` and CPU0 only; they do not execute
 LinuxKPI I/O APIs. Existing proc/readdir and
 program-churn retention remains. Seventy changed and 26 added kernel paths
@@ -1208,10 +1208,10 @@ and ext2 commits. The enabled ELF SHA256 is
 `f5fefb21858cc7d80dd8aa3ef06c203da6c7d84cd4d46b20ea602ca69a8ed93e`.
 Fresh normal/SSE guests pass all markers, including exact page recovery after
 three cache warmups and a measured fourth batch:
-`/tmp/vinix-linuxkpi-cache-{vm,sse-vm}/serial.log`. Default x86 startup passes
-at `/tmp/vinix-linuxkpi-cache-default-vm/serial.log`; enabled/default x86 and
+`/tmp/tulpar-linuxkpi-cache-{vm,sse-vm}/serial.log`. Default x86 startup passes
+at `/tmp/tulpar-linuxkpi-cache-default-vm/serial.log`; enabled/default x86 and
 ARM-disabled builds pass. Full final host ASan/UBSan and strict helper probes
-pass at `/tmp/vinix-linuxkpi-cache-host-boundaries-final.log`.
+pass at `/tmp/tulpar-linuxkpi-cache-host-boundaries-final.log`.
 
 Native caches retain empty backing slabs for reuse until explicit shrink or
 quiescent destruction. Only flags zero and `SLAB_HWCACHE_ALIGN` are accepted;
@@ -1221,11 +1221,11 @@ Backend and fixtures have independent lifetime approval; private generated-C
 review finds no hidden allocation in the added measurement locals. The fresh
 equal-source allocation gate baseline/feature logs are byte-identical:
 416 sites / 184 groups / 155 existing failures, both gate exits 1, ARM V exit
-0 and x86 V exit 1. Evidence is `/tmp/vinix-linuxkpi-cache-{alloc-comparison,
+0 and x86 V exit 1. Evidence is `/tmp/tulpar-linuxkpi-cache-{alloc-comparison,
 generatedc-review,independent-lifetime-review}.json`. The full unchanged i915
 syntax audit still passes only 1/269; the include fixes expose later errors
-rather than a working driver. `/tmp/vinix-linuxkpi-cache-audit.log` and
-`/tmp/vinix-linuxkpi-cache-i915-audit.json` preserve the diagnostics.
+rather than a working driver. `/tmp/tulpar-linuxkpi-cache-audit.log` and
+`/tmp/tulpar-linuxkpi-cache-i915-audit.json` preserve the diagnostics.
 
 ## Latest task, sequence and logging validation
 
@@ -1234,9 +1234,9 @@ host sanitizer/import tests, independent lifetime review, isolated enabled
 x86/default x86/disabled ARM builds, normal and SSE4.1 native guests, and scoped
 page recovery. See the main status document for the earlier exact artifacts.
 
-The logging ELF is `/tmp/vinix-linuxkpi-printk-final-enabled-17path.elf`, SHA256
+The logging ELF is `/tmp/tulpar-linuxkpi-printk-final-enabled-17path.elf`, SHA256
 `318b1939b75b5d2111ea2a306d646c054775d788e086f49dd493615eacb8810b`.
-Normal/SSE logs are `/tmp/vinix-linuxkpi-printk-complete-{vm,sse-vm}/serial.log`;
+Normal/SSE logs are `/tmp/tulpar-linuxkpi-printk-complete-{vm,sse-vm}/serial.log`;
 both contain the required owned-printk marker and Linux-ABI startup success.
 The measured fourth logging batch returns exactly to baseline after three
 warmups. A permanent worker is initialized before measurement. Final disabled
@@ -1263,16 +1263,16 @@ records under the existing lock, before its last task release. A lingering
 reference is fatal before releasing its lifetime. All original API durations
 remain unchanged; final normal/SSE runs pass this check and every other marker.
 
-The final full host log is `/tmp/vinix-linuxkpi-printk-host-final.log`. Source
-freeze/build/guest evidence is `/tmp/vinix-linuxkpi-printk-final-validation.json`.
+The final full host log is `/tmp/tulpar-linuxkpi-printk-host-final.log`. Source
+freeze/build/guest evidence is `/tmp/tulpar-linuxkpi-printk-final-validation.json`.
 Independent formatter/ring/fixture, RNG and final time/taint reviews are saved
-in matching `/tmp/vinix-linuxkpi-*-review.json` files. The equal-baseline V gate
+in matching `/tmp/tulpar-linuxkpi-*-review.json` files. The equal-baseline V gate
 has 440 sites, 193 groups and 162 existing failures on both sides; no new counts
 or groups. Its original 16-path scope is immutable and the final two C-only
 changes preserve all checked V paths. This remains a scoped feature result,
 not a global allocation pass.
 
-The logging-milestone audit `/tmp/vinix-linuxkpi-printk-i915-audit.json` passed 2/269:
+The logging-milestone audit `/tmp/tulpar-linuxkpi-printk-i915-audit.json` passed 2/269:
 `i915_memcpy.c` and `display/intel_qp_tables.c`. The latter is not yet linked at
 that baseline; it is now linked and that subsequent result was 3/269. Remaining syntax paths include `generated/bounds.h`,
 `dev_t`, `asm/early_ioremap.h`, RCU pointer APIs and `call_single_data_t`.
@@ -1340,11 +1340,11 @@ worktree is supported, but save the enabled ELF first.
 
 ```sh
 python3 tests/linuxkpi/run_vm.py --kernel <enabled.elf> \
-  --state-dir /tmp/vinix-linuxkpi-next-vm
+  --state-dir /tmp/tulpar-linuxkpi-next-vm
 python3 tests/linuxkpi/run_vm.py --kernel <enabled.elf> \
-  --state-dir /tmp/vinix-linuxkpi-next-sse-vm --cpu max,hypervisor=off
+  --state-dir /tmp/tulpar-linuxkpi-next-sse-vm --cpu max,hypervisor=off
 python3 tests/linuxkpi/run_vm.py --kernel <default.elf> \
-  --state-dir /tmp/vinix-linuxkpi-next-default-vm --no-linuxkpi
+  --state-dir /tmp/tulpar-linuxkpi-next-default-vm --no-linuxkpi
 ```
 
 Each state directory must be new. The harness owns its guest/disk, uses TCG,
@@ -1355,13 +1355,13 @@ neither run tests actual GPU WC memory, rendering or display.
 
 Existing temporary artifacts are convenient references, not clean worktrees:
 
-- `/tmp/vinix-linuxkpi-unbound-worktree`: detached at `5ca6734d`, with final
+- `/tmp/tulpar-linuxkpi-unbound-worktree`: detached at `5ca6734d`, with final
   unbound sources copied/touched and currently enabled after the final rebuild.
-- `/tmp/vinix-linuxkpi-unbound-arm-worktree`: detached at `5ca6734d`, arm64
+- `/tmp/tulpar-linuxkpi-unbound-arm-worktree`: detached at `5ca6734d`, arm64
   disabled build with the corresponding copied source.
-- `/tmp/vinix-linuxkpi-unbound-enabled.elf`: kernel used by the recorded guest
+- `/tmp/tulpar-linuxkpi-unbound-enabled.elf`: kernel used by the recorded guest
   runs; the subsequent source change was host-test-only.
-- `/tmp/vinix-linuxkpi-unbound-enabled-final.elf`: saved final-source rebuild.
+- `/tmp/tulpar-linuxkpi-unbound-enabled-final.elf`: saved final-source rebuild.
 - Earlier `*-delayed-*`, `*-workqueue-*` and `*-timer-*` worktrees contain older
   milestones. Start fresh for new changes; never infer exact source from their
   detached HEAD alone.
@@ -1498,9 +1498,9 @@ All implementation and validation tooling must now be V. Current commands:
 
 ```sh
 build-support/run-v-tool.sh tests/linuxkpi/upstream_source.v verify
-build-support/run-v-tool.sh tests/linuxkpi/rcu_callbacks.v --keep-directory /tmp/vinix-rcu-host-fresh
-build-support/run-v-tool.sh tests/linuxkpi/run_vm.v --kernel /absolute/enabled.elf --state-dir /tmp/vinix-rcu-normal-fresh --timeout 3600
-build-support/run-v-tool.sh tests/linuxkpi/run_vm.v --kernel /absolute/enabled.elf --state-dir /tmp/vinix-rcu-sse-fresh --timeout 3600 --cpu max,hypervisor=off
+build-support/run-v-tool.sh tests/linuxkpi/rcu_callbacks.v --keep-directory /tmp/tulpar-rcu-host-fresh
+build-support/run-v-tool.sh tests/linuxkpi/run_vm.v --kernel /absolute/enabled.elf --state-dir /tmp/tulpar-rcu-normal-fresh --timeout 3600
+build-support/run-v-tool.sh tests/linuxkpi/run_vm.v --kernel /absolute/enabled.elf --state-dir /tmp/tulpar-rcu-sse-fresh --timeout 3600 --cpu max,hypervisor=off
 ```
 
 Replace the ELF path and use new state/proof directories. The new V fixture
@@ -1589,7 +1589,7 @@ enforcement and complete device/DMA/DRM services remain unresolved.
 Run helper tests through V, with a new proof directory when keeping outputs:
 
 ```sh
-build-support/run-v-tool.sh tests/linuxkpi/scalar_helpers.v --keep-dir /tmp/vinix-scalar-helpers-fresh
+build-support/run-v-tool.sh tests/linuxkpi/scalar_helpers.v --keep-dir /tmp/tulpar-scalar-helpers-fresh
 ```
 
 ## Latest configured CPU policy and V full audit
@@ -1637,7 +1637,7 @@ reports. Its correct final profile is **5/269**. First errors now include
 invocation defect is fixed. Use a fresh state directory:
 
 ```sh
-build-support/run-v-tool.sh tests/linuxkpi/audit_full.v --jobs 4 --keep-dir /tmp/vinix-i915-audit-fresh
+build-support/run-v-tool.sh tests/linuxkpi/audit_full.v --jobs 4 --keep-dir /tmp/tulpar-i915-audit-fresh
 ```
 
 Evidence is under `smp-oct10/cpu-policy-v2-*`,
@@ -2464,7 +2464,7 @@ prerequisite failures: add `tests/native-generators` and `tools/sourcecommand`
 alongside kernel, LinuxKPI tests, build support and docs. Preserve the failed
 `dma-resv-x86-build-oct15-v1.log`/`v1b.log`; completed native build is `v1c.log`.
 Fresh architecture worktrees are under the private
-`/Volumes/HommV66Scratch/vinix-linuxkpi-resv-oct15-321bb4c63` directory. All final
+`/Volumes/HommV66Scratch/tulpar-linuxkpi-resv-oct15-321bb4c63` directory. All final
 native proofs/ELFs, guest images/logs and host results are durable under
 `/Users/alex/.cache/vinix-linuxkpi/smp-oct10`. Completed container build worktrees
 were retired after exact source/commit/artifact verification; their saved
@@ -2593,7 +2593,7 @@ input/dependency/log review:
 `389b2e031184c95714fd9e2c08f76bb7b5321a435b739bd80b54c0fdd82d43fb`.
 
 New worktrees are private under
-`/Volumes/HommV66Scratch/vinix-linuxkpi-swfence-oct15-59b1e9ac5`; all final proofs,
+`/Volumes/HommV66Scratch/tulpar-linuxkpi-swfence-oct15-59b1e9ac5`; all final proofs,
 ELFs, guest images/logs and receipts remain durable under
 `/Users/alex/.cache/vinix-linuxkpi/smp-oct10/sw-fence-*`. Enabled artifacts now
 also save the actual storage assembly object before the default rebuild.
@@ -2659,7 +2659,7 @@ fixture and final public-query ELF export are absent. ARM excludes x86 code.
 
 All evidence is durable below
 `/Users/alex/.cache/vinix-linuxkpi/smp-oct10/cpu-bug-*`; private build worktrees
-are below `/Volumes/HommV66Scratch/vinix-linuxkpi-cpubug-oct15-156ef022a`.
+are below `/Volumes/HommV66Scratch/tulpar-linuxkpi-cpubug-oct15-156ef022a`.
 The last four RAM guest states also have verified durable copies, with source
 states retained. The final audit remains 6/269 and checks 8,042 input/generated/
 dependency paths, including 8,009 guarded inputs:

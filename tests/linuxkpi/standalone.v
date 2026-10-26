@@ -34,16 +34,16 @@ fn run_profile(options map[string]string) ! {
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-pthread']
 	$if macos { flags << ['-arch', if arch == 'arm64' { 'arm64' } else { 'x86_64' }] }
 	$else { if arch != native { return error('run target architecture fixtures on a native host') } }
-	work := hosttest.work_dir('', 'vinix-standalone-v-')!
+	work := hosttest.work_dir('', 'tulpar-standalone-v-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	include_dir := if '--include' in options { if options['--include'] == '' { '.' } else { options['--include'] } } else { os.join_path(work, 'include') }
 	if '--include' !in options {
 		for schema, header in {'spinlock': 'spinlock_adapters', 'atomic-exchange': 'atomic_exchange', 'overflow': 'integer_policy'} {
 			hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema + '.json'), os.join_path(root, 'kernel/linuxkpi'),
-				os.join_path(include_dir, 'vinix', header + '.h'))!
+				os.join_path(include_dir, 'tulpar', header + '.h'))!
 		}
 	}
-	mut includes := ['-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include', os.join_path(root, 'tests/linuxkpi/host_types.h'),
+	mut includes := ['-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include', os.join_path(root, 'tests/linuxkpi/host_types.h'),
 		'-include', 'linux/kconfig.h', '-include', os.join_path(source, 'include/linux/compiler_types.h'),
 		'-iquote', os.join_path(root, 'tests/linuxkpi/standalone'), '-iquote', os.join_path(root, 'kernel/c')]
 	for path in [include_dir, os.join_path(root, 'kernel/linuxkpi/include'), os.join_path(source, 'include'), os.join_path(source, 'include/uapi'),

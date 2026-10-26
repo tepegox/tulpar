@@ -66,7 +66,7 @@ same production package CLI for each architecture.
 Interrupted attempts are excluded. Private V resuming controllers reused completed
 C/binary artifacts; remaining components were built without restarting completed
 ones. Their sources, artifact records and final logs are pinned. After the shared
-AArch64 sysroot disappeared, a private copy from the retained vinix-old sysroot
+AArch64 sysroot disappeared, a private copy from the retained tulpar-old sysroot
 was admitted against 2180 original/copied file hashes; copied inputs are pinned.
 Five completed host checks lost their timings on interruption and record zero
 seconds. Host probe setup corrections (bounded reserve and observer isolation)

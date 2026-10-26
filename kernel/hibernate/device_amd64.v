@@ -3,7 +3,7 @@
 //
 // The device an image is kept on.
 //
-// It is named on the kernel command line -- vinix.hibernate=sd1, or with
+// It is named on the kernel command line -- tulpar.hibernate=sd1, or with
 // /dev/ in front -- by the name it has in /dev: a whole disk or a partition.
 // The kernel does not choose one. Whatever is named is found once, at boot,
 // after the disk drivers have brought their disks up and before anything on a
@@ -56,7 +56,7 @@ __global (
 // The name on the command line, or ''.
 pub fn device_name() string {
 	if !hib_option_read {
-		mut name := devcore.boot_option('vinix.hibernate=') or { '' }
+		mut name := devcore.boot_option('tulpar.hibernate=') or { '' }
 		if name.starts_with('/dev/') {
 			name = unsafe { tos(name.str + 5, name.len - 5) }
 		}
@@ -96,7 +96,7 @@ fn open_device() bool {
 	}
 	name := device_name()
 	if name.len == 0 {
-		hib_device_problem = 'no device was named for the image (vinix.hibernate=)'
+		hib_device_problem = 'no device was named for the image (tulpar.hibernate=)'
 		return false
 	}
 	path := '/dev/' + name @[freed]

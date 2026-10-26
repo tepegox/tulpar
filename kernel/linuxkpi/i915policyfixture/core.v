@@ -24,8 +24,8 @@ fn C.sysv_minor(u32) u32
 fn C.format_dev_t(&char, u32) &char
 fn C.print_dev_t(&char, u32) i32
 fn C.strcmp(&char, &char) i32
-fn C.vinix_linuxkpi_irq_flags() u64
-fn C.vinix_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_irq_flags() u64
+fn C.tulpar_linuxkpi_preempt_count() u32
 fn C.i915_fence_context_timeout(voidptr, u64) u64
 fn C.i915_fence_timeout(voidptr) u64
 
@@ -137,10 +137,10 @@ fn device_numbers() i32 {
     }
 }
 
-@[export: 'vinix_linuxkpi_i915_policy_native_selftest']
+@[export: 'tulpar_linuxkpi_i915_policy_native_selftest']
 pub fn run() i32 {
-    flags := C.vinix_linuxkpi_irq_flags()
-    depth := C.vinix_linuxkpi_preempt_count()
+    flags := C.tulpar_linuxkpi_irq_flags()
+    depth := C.tulpar_linuxkpi_preempt_count()
     unsafe {
         if C.i915_fence_context_timeout(nil, 0) != 0 { return -5 }
         if C.i915_fence_context_timeout(nil, 1) != 10001 { return -5 }
@@ -150,6 +150,6 @@ pub fn run() i32 {
     }
     if device_numbers() != 0 { return -5 }
     if qp_tables() != 0 { return -5 }
-    if C.vinix_linuxkpi_irq_flags() != flags || C.vinix_linuxkpi_preempt_count() != depth { return -5 }
+    if C.tulpar_linuxkpi_irq_flags() != flags || C.tulpar_linuxkpi_preempt_count() != depth { return -5 }
     return 0
 }

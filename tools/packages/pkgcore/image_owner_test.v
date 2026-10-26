@@ -13,13 +13,13 @@ struct ImageOwnerRequirements { format int = 1 architecture string packages []st
 
 $if track_heap ? {
 #include "@VMODROOT/../../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 }
 
 fn image_owner_fixture(architecture string) !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-image-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-image-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/source')!; os.mkdir(work + '/image')!; os.mkdir(work + '/scratch')!
 	os.write_file(work + '/seed', '00'.repeat(32) + '\n')!; os.chmod(work + '/seed', 0o600)!
 	key := key_public(work + '/seed')!
@@ -62,26 +62,26 @@ fn image_owner_write(path string, text string) ! {
 }
 
 fn image_owner_temporary() string {
-	work := os.getenv('VINIX_IMAGE_OWNER_WORK'); defer { unsafe { work.free() } }; return work + '/scratch'
+	work := os.getenv('TULPAR_IMAGE_OWNER_WORK'); defer { unsafe { work.free() } }; return work + '/scratch'
 }
 
 fn image_owner_space(path string) !u64 {
-	mode := os.getenv('VINIX_IMAGE_OWNER_MODE'); defer { unsafe { mode.free() } }
+	mode := os.getenv('TULPAR_IMAGE_OWNER_MODE'); defer { unsafe { mode.free() } }
 	if mode == 'space-error' { return error('injected image space refusal') }
 	if (mode == 'no-output-space' && !path.ends_with('/scratch')) || (mode == 'no-temp-space' && path.ends_with('/scratch')) { return 0 }
 	return ~u64(0)
 }
 
 fn image_owner_flush(fd int) int {
-	mode := os.getenv('VINIX_IMAGE_OWNER_MODE'); defer { unsafe { mode.free() } }
+	mode := os.getenv('TULPAR_IMAGE_OWNER_MODE'); defer { unsafe { mode.free() } }
 	if mode == 'flush' { return -1 }; return atomic_flush(fd)
 }
 
 fn image_owner_checkpoint(phase string, stage string) ! {
-	mode := os.getenv('VINIX_IMAGE_OWNER_MODE'); work := os.getenv('VINIX_IMAGE_OWNER_WORK')
+	mode := os.getenv('TULPAR_IMAGE_OWNER_MODE'); work := os.getenv('TULPAR_IMAGE_OWNER_WORK')
 	defer { unsafe { mode.free(); work.free() } }
 	if mode == phase { return error('injected image checkpoint refusal') }
-	if phase == 'captured' { assert C.setenv(c'VINIX_IMAGE_OWNER_CAPTURE', stage.str, 1) == 0 }
+	if phase == 'captured' { assert C.setenv(c'TULPAR_IMAGE_OWNER_CAPTURE', stage.str, 1) == 0 }
 	if phase == 'captured' && mode == 'changed-source' {
 		path := work + '/bundle/native/index.json'; defer { unsafe { path.free() } }; image_owner_write(path, '{}')!
 	}
@@ -102,7 +102,7 @@ fn image_owner_checkpoint(phase string, stage string) ! {
 		assert C.mkdir(path.str, 0o755) == 0; image_owner_write(keep, 'preserved replacement')!
 	}
 	if mode == 'changed-config' {
-		etc := work + '/image/etc'; directory := etc + '/vinix-packages'; path := directory + '/config.json'
+		etc := work + '/image/etc'; directory := etc + '/tulpar-packages'; path := directory + '/config.json'
 		defer { unsafe { etc.free(); directory.free(); path.free() } }
 		assert C.mkdir(etc.str, 0o755) == 0; assert C.mkdir(directory.str, 0o755) == 0; image_owner_write(path, '{}')!
 	}
@@ -185,7 +185,7 @@ fn image_owner_prepare(work string, architecture string, mode string) ! {
 		'deny-license' { os.write_file(path, text.replace('"licenses":["Vendor-EULA"]', '"licenses":[]'))! }
 		'deny-firmware' { os.write_file(path, text.replace('"allow_firmware":true', '"allow_firmware":false'))! }
 		'deny-permission' { os.write_file(path, text.replace('"permissions":["network","files"]', '"permissions":[]'))! }
-		'existing-config' { os.mkdir_all(work + '/image/etc/vinix-packages')!; os.cp(path, work + '/image/etc/vinix-packages/config.json')! }
+		'existing-config' { os.mkdir_all(work + '/image/etc/tulpar-packages')!; os.cp(path, work + '/image/etc/tulpar-packages/config.json')! }
 		'preserve' { image_owner_run(work, architecture, 'complete')! }
 		'existing-different' { os.mkdir_all(work + '/image' + image_repositories_path)!; os.write_file(work + '/image' + image_repositories_path + '/keep', 'preserved replacement')! }
 		else {}
@@ -193,27 +193,27 @@ fn image_owner_prepare(work string, architecture string, mode string) ! {
 }
 
 fn test_image_inputs_retain_no_call_storage_across_capture_report_publication_and_retirement() {
-	defer { for name in ['MODE', 'WORK', 'CAPTURE']! { os.unsetenv('VINIX_IMAGE_OWNER_' + name) } }
+	defer { for name in ['MODE', 'WORK', 'CAPTURE']! { os.unsetenv('TULPAR_IMAGE_OWNER_' + name) } }
 	for architecture in ['aarch64', 'x86_64']! {
 		for mode in ['complete', 'check-only', 'preserve', 'export', 'existing-config', 'empty-bundle', 'invalid-config', 'wrong-architecture', 'missing-source', 'alias-source',
 			'unsafe-source', 'wrong-key', 'second-index', 'missing-object', 'deny-license', 'deny-firmware', 'deny-permission', 'no-output-space', 'no-temp-space', 'space-error',
 			'captured', 'staged', 'changed-source', 'captured-index', 'staged-object', 'capture-replaced', 'stage-replaced', 'unsafe-retire', 'flush', 'raced-target', 'changed-config', 'changed-root', 'existing-different']! {
 			if !image_owner_selected(mode, architecture) { continue }
 			work := image_owner_fixture(architecture)!; defer { os.rmdir_all(work) or {} }
-			os.setenv('VINIX_IMAGE_OWNER_WORK', work, true); os.unsetenv('VINIX_IMAGE_OWNER_MODE')
+			os.setenv('TULPAR_IMAGE_OWNER_WORK', work, true); os.unsetenv('TULPAR_IMAGE_OWNER_MODE')
 			image_owner_run(work, architecture, 'complete')!
-			golden := os.read_file(work + '/image/usr/share/vinix-packages/applications.json')!
-			os.setenv('VINIX_IMAGE_OWNER_MODE', mode, true)
+			golden := os.read_file(work + '/image/usr/share/tulpar-packages/applications.json')!
+			os.setenv('TULPAR_IMAGE_OWNER_MODE', mode, true)
 			mut original := ImageOwnerLimit{}; assert C.getrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 			limited := ImageOwnerLimit{ current: 32, maximum: original.maximum }; assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limited }) == 0
 			before := image_owner_descriptors(); mut maximum := u64(0); mut records := u32(0)
 			for _ in 0 .. 4 {
 				image_owner_reset(work)!; image_owner_prepare(work, architecture, mode)!
-				$if track_heap ? { C.vinix_heap_begin() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				image_owner_attempt(work, architecture, mode)
-				$if track_heap ? { kept := C.vinix_heap_end(); count := C.vinix_heap_count(); if kept > maximum { maximum = kept }; if count > records { records = count } }
+				$if track_heap ? { kept := C.tulpar_heap_end(); count := C.tulpar_heap_count(); if kept > maximum { maximum = kept }; if count > records { records = count } }
 				assert image_owner_descriptors() == before && !os.exists(work + '/image/var')
-				if mode in ['complete', 'preserve', 'existing-config', 'changed-source']! { assert os.read_file(work + '/image/usr/share/vinix-packages/applications.json')! == golden }
+				if mode in ['complete', 'preserve', 'existing-config', 'changed-source']! { assert os.read_file(work + '/image/usr/share/tulpar-packages/applications.json')! == golden }
 				if mode == 'export' { assert os.read_file(work + '/deployment.json')! == golden && os.ls(work + '/image')!.len == 0 }
 				if mode == 'check-only' { assert os.ls(work + '/image')!.len == 0 }
 				if mode in ['raced-target', 'existing-different']! { assert os.read_file(work + '/image' + image_repositories_path + '/keep')! == 'preserved replacement' }
@@ -222,8 +222,8 @@ fn test_image_inputs_retain_no_call_storage_across_capture_report_publication_an
 			}
 			assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 			$if track_heap ? { println('IMAGE OWNER arch=' + architecture + ' case=' + mode + ' retained=' + maximum.str() + ' allocations=' + records.str()); $if !image_owner_baseline ? { assert maximum == 0 && records == 0 } }
-			image_owner_reset(work)!; os.unsetenv('VINIX_IMAGE_OWNER_MODE'); image_owner_run(work, architecture, 'complete')!
-			assert os.read_file(work + '/image/usr/share/vinix-packages/applications.json')! == golden
+			image_owner_reset(work)!; os.unsetenv('TULPAR_IMAGE_OWNER_MODE'); image_owner_run(work, architecture, 'complete')!
+			assert os.read_file(work + '/image/usr/share/tulpar-packages/applications.json')! == golden
 			assert os.read_file(work + '/bundle/native/index.json')! == os.read_file(work + '/native-index.json')!
 			println('IMAGE OWNER ' + architecture + ' ' + mode + ' exact declaration retry, trust, sources, recovery and descriptors PASS')
 		}

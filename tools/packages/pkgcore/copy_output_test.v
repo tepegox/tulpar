@@ -13,7 +13,7 @@ fn C.setrlimit(int, voidptr) int
 struct CopyOutputLimit { current u64 maximum u64 }
 
 fn copy_output_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-copy-output-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-copy-output-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }
@@ -27,7 +27,7 @@ fn copy_output_change(phase string, path string) ! {
 			os.rename(path, path + '.saved')!
 			match os.file_name(path) {
 				'fifo' { assert C.mkfifo(path.str, 0o600) == 0 }
-				'alias' { os.symlink(os.getenv('VINIX_COPY_OUTPUT_OUTSIDE'), path)! }
+				'alias' { os.symlink(os.getenv('TULPAR_COPY_OUTPUT_OUTSIDE'), path)! }
 				'ordinary' { os.write_file(path, 'replacement')! }
 				'missing' {}
 				else { panic('unknown copy output change') }
@@ -37,13 +37,13 @@ fn copy_output_change(phase string, path string) ! {
 }
 
 fn copy_output_flush(fd int) int {
-	os.write_file(os.getenv('VINIX_COPY_OUTPUT_FLUSHED'), 'once') or { panic(err) }
+	os.write_file(os.getenv('TULPAR_COPY_OUTPUT_FLUSHED'), 'once') or { panic(err) }
 	return C.fsync(fd)
 }
 
 fn copy_output_interrupted(fd int) int {
-	if os.getenv('VINIX_COPY_OUTPUT_INTERRUPTED') == '' {
-		os.setenv('VINIX_COPY_OUTPUT_INTERRUPTED', 'once', true)
+	if os.getenv('TULPAR_COPY_OUTPUT_INTERRUPTED') == '' {
+		os.setenv('TULPAR_COPY_OUTPUT_INTERRUPTED', 'once', true)
 		C.errno = C.EINTR
 		return -1
 	}
@@ -55,12 +55,12 @@ fn copy_output_failed(_ int) int { C.errno = C.EIO; return -1 }
 fn test_copy_output_captures_identity_and_rechecks_links_size_and_name_before_writing_and_after_flush() {
 	work := copy_output_work()!
 	defer { os.rmdir_all(work) or {} }
-	defer { os.unsetenv('VINIX_COPY_OUTPUT_OUTSIDE'); os.unsetenv('VINIX_COPY_OUTPUT_FLUSHED') }
+	defer { os.unsetenv('TULPAR_COPY_OUTPUT_OUTSIDE'); os.unsetenv('TULPAR_COPY_OUTPUT_FLUSHED') }
 	os.write_file(work + '/source', 'payload')!
 	os.write_file(work + '/outside', 'preserved')!
 	os.chmod(work + '/outside', 0o640)!
-	os.setenv('VINIX_COPY_OUTPUT_OUTSIDE', work + '/outside', true)
-	os.setenv('VINIX_COPY_OUTPUT_FLUSHED', work + '/marker', true)
+	os.setenv('TULPAR_COPY_OUTPUT_OUTSIDE', work + '/outside', true)
+	os.setenv('TULPAR_COPY_OUTPUT_FLUSHED', work + '/marker', true)
 	input := copy_source(work + '/source', 7)!
 	defer { C.close(input.fd) }
 	for phase in ['opened', 'flushed'] {
@@ -86,9 +86,9 @@ fn test_copy_output_captures_identity_and_rechecks_links_size_and_name_before_wr
 }
 
 fn copy_output_observer(event pkgprotocol.Progress) {
-	work := os.getenv('VINIX_COPY_OUTPUT_WORK')
+	work := os.getenv('TULPAR_COPY_OUTPUT_WORK')
 	defer { unsafe { work.free() } }
-	when := os.getenv('VINIX_COPY_OUTPUT_WHEN')
+	when := os.getenv('TULPAR_COPY_OUTPUT_WHEN')
 	defer { unsafe { when.free() } }
 	if (when == 'start' && event.current != 0) || (when == 'finish' && event.current != event.total) { return }
 	assert C.link((work + '/target').str, (work + '/linked').str) == 0
@@ -98,11 +98,11 @@ fn test_copy_output_observer_cannot_add_shared_output_before_writing_or_after_fl
 	for when in ['start', 'finish'] {
 		work := copy_output_work()!
 		defer { os.rmdir_all(work) or {} }
-		defer { os.unsetenv('VINIX_COPY_OUTPUT_WORK'); os.unsetenv('VINIX_COPY_OUTPUT_WHEN') }
+		defer { os.unsetenv('TULPAR_COPY_OUTPUT_WORK'); os.unsetenv('TULPAR_COPY_OUTPUT_WHEN') }
 		os.write_file(work + '/source', 'payload')!
 		os.write_file(work + '/target', 'retained')!
-		os.setenv('VINIX_COPY_OUTPUT_WORK', work, true)
-		os.setenv('VINIX_COPY_OUTPUT_WHEN', when, true)
+		os.setenv('TULPAR_COPY_OUTPUT_WORK', work, true)
+		os.setenv('TULPAR_COPY_OUTPUT_WHEN', when, true)
 		input := copy_source(work + '/source', 7)!
 		mut refused := false
 		copy_opened_with(input, work + '/source', work + '/target', 0,
@@ -121,7 +121,7 @@ fn test_copy_output_observer_cannot_add_shared_output_before_writing_or_after_fl
 fn test_copy_output_flush_retries_interruption_reports_storage_failure_and_retires_descriptors() {
 	work := copy_output_work()!
 	defer { os.rmdir_all(work) or {} }
-	defer { os.unsetenv('VINIX_COPY_OUTPUT_INTERRUPTED') }
+	defer { os.unsetenv('TULPAR_COPY_OUTPUT_INTERRUPTED') }
 	os.write_file(work + '/source', 'payload')!
 	os.write_file(work + '/outside', 'preserved')!
 	assert C.link((work + '/outside').str, (work + '/linked').str) == 0
@@ -129,7 +129,7 @@ fn test_copy_output_flush_retries_interruption_reports_storage_failure_and_retir
 	defer { C.close(input.fd) }
 	copy_opened_with(input, work + '/source', work + '/target', 0, pkgprotocol.Progress{}, no_progress,
 		CopyOptions{ flush: copy_output_interrupted })!
-	assert os.getenv('VINIX_COPY_OUTPUT_INTERRUPTED') == 'once' && os.read_file(work + '/target')! == 'payload'
+	assert os.getenv('TULPAR_COPY_OUTPUT_INTERRUPTED') == 'once' && os.read_file(work + '/target')! == 'payload'
 	mut original := CopyOutputLimit{}
 	assert C.getrlimit(C.RLIMIT_NOFILE, voidptr(&original)) == 0
 	limit := CopyOutputLimit{ current: 32, maximum: original.maximum }

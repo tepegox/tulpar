@@ -89,9 +89,9 @@ fn test_access_leaf_link_register_architecture_and_path_dedup() {
 }
 
 fn test_native_allocation_command_stdin_dedup_and_failed_symbolizer() {
-	tool := os.getenv('VINIX_ALLOC_SITES_TOOL')
+	tool := os.getenv('TULPAR_ALLOC_SITES_TOOL')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-alloc-sites-')!
+	work := hosttest.work_dir('', 'tulpar-alloc-sites-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	input := work + '/run.log'
 	stub := work + '/llvm-symbolizer'
@@ -107,9 +107,9 @@ fn test_native_allocation_command_stdin_dedup_and_failed_symbolizer() {
 }
 
 fn test_native_access_command_empty_input_architecture_and_symbolizer_failure() {
-	tool := os.getenv('VINIX_USER_SITES_TOOL')
+	tool := os.getenv('TULPAR_USER_SITES_TOOL')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-user-sites-')!
+	work := hosttest.work_dir('', 'tulpar-user-sites-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	input := work + '/run.log'
 	kernel := work + '/kernel'
@@ -142,8 +142,8 @@ fn test_native_access_command_empty_input_architecture_and_symbolizer_failure() 
 }
 
 fn test_real_llvm_symbolizer_on_arm_and_x86_elfs() {
-	if os.getenv('VINIX_SYMBOLIZER_REAL') != '1' { return }
-	work := hosttest.work_dir('', 'vinix-real-symbols-')!
+	if os.getenv('TULPAR_SYMBOLIZER_REAL') != '1' { return }
+	work := hosttest.work_dir('', 'tulpar-real-symbols-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	source := work + '/fixture.c'
 	os.write_file(source, '__attribute__((noinline)) void main__work(void) { __asm__ volatile(""); }\n__attribute__((noinline)) void main__caller(void) { main__work(); }\nvoid _start(void) { main__caller(); }\n')!

@@ -27,7 +27,7 @@ func check(ok bool, description string) {
 }
 
 func main() {
-	fmt.Println("VINIX ARM64 GO SMOKE")
+	fmt.Println("TULPAR ARM64 GO SMOKE")
 	check(runtime.GOOS == "linux", "Linux-compatible Go runtime")
 	check(runtime.GOARCH == "arm64", "AArch64 Go runtime")
 	fmt.Printf("  [info] %s %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)
@@ -95,7 +95,7 @@ func main() {
 	output, err := exec.Command("/bin/busybox", "echo", "Go subprocess").Output()
 	check(err == nil && string(output) == "Go subprocess\n", "fork/exec subprocess")
 
-	digest := sha256.Sum256([]byte("vinix"))
+	digest := sha256.Sum256([]byte("tulpar"))
 	check(fmt.Sprintf("%x", digest) == "c83faa56c46e4b8b18498b3de9adb42192e8c6fe6f246e6b36ea50bc6d02d76f", "SHA-256 standard library")
 	random := make([]byte, 32)
 	_, err = rand.Read(random)

@@ -6,7 +6,7 @@ import memory
 import usercopy
 import linuxkpi.compatcore
 
-@[export: 'vinix_linuxkpi_user_address_limit']
+@[export: 'tulpar_linuxkpi_user_address_limit']
 fn native_user_address_limit() uint {
 	return uint(memory.user_address_limit())
 }
@@ -22,26 +22,26 @@ fn require_usercopy_context() {
 
 // Kernel buffers are synchronous borrows. The current syscall owns its
 // process/pagemap; page acquisition independently retains its backing source.
-@[export: 'vinix_linuxkpi_raw_copy_from_user']
+@[export: 'tulpar_linuxkpi_raw_copy_from_user']
 fn native_raw_from_user(destination voidptr, source voidptr, length uint) uint {
 	if length == 0 { return 0 }
 	require_usercopy_context()
 	return uint(usercopy.raw_copy_from_user(destination, u64(source), u64(length)))
 }
 
-@[export: 'vinix_linuxkpi_raw_copy_to_user']
+@[export: 'tulpar_linuxkpi_raw_copy_to_user']
 fn native_raw_to_user(destination voidptr, source voidptr, length uint) uint {
 	if length == 0 { return 0 }
 	require_usercopy_context()
 	return uint(usercopy.raw_copy_to_user(u64(destination), source, u64(length)))
 }
 
-@[export: 'vinix_linuxkpi_raw_copy_from_user_inatomic']
+@[export: 'tulpar_linuxkpi_raw_copy_from_user_inatomic']
 fn native_raw_from_user_inatomic(destination voidptr, source voidptr, length uint) uint {
 	return uint(usercopy.raw_copy_from_user_inatomic(destination, u64(source), u64(length)))
 }
 
-@[export: 'vinix_linuxkpi_raw_copy_to_user_inatomic']
+@[export: 'tulpar_linuxkpi_raw_copy_to_user_inatomic']
 fn native_raw_to_user_inatomic(destination voidptr, source voidptr, length uint) uint {
 	return uint(usercopy.raw_copy_to_user_inatomic(u64(destination), source, u64(length)))
 }

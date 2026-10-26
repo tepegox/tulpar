@@ -6,10 +6,10 @@ import os
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
-	fn C.vinix_heap_size_at(u32) u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
+	fn C.tulpar_heap_size_at(u32) u64
 }
 
 // Synthetic receipts exercise admission only. Real PE generation and guest
@@ -98,7 +98,7 @@ fn pe_fd_control() {
 
 fn pe_zero() {
 	$if track_heap ? {
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		pe_require(kept == 0, 'PE admission retains V allocations')
 	}
 }
@@ -136,7 +136,7 @@ fn pe_denied(work string, reason string) {
 
 fn pe_deny_reason(work string, reason string) {
 	fd := pe_fd()
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 16 { pe_denied(work, reason) }
 	pe_zero()
 	pe_require(pe_fd() == fd, 'PE refusal leaks descriptors')
@@ -182,7 +182,7 @@ fn pe_decoder_failures(original string) {
 	// Every truncated prefix exercises ownership after any partially parsed
 	// nested map, input row, command array, string or escape. Exclude the final
 	// complete object without its newline, which is valid decoder input.
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for length in 0 .. original.len - 1 {
 		prefix := unsafe { tos(original.str, length) }
 		pe_bad_decode(prefix)
@@ -190,7 +190,7 @@ fn pe_decoder_failures(original string) {
 	pe_zero()
 	for bad in ['"\\uD800"', '"\\uDC00"', '"\\uD800\\u0041"', '"\\uZZZZ"', '"\\q"', '"\x01"', '"\xff"']! {
 		text := '{"format":1,"scope":' + bad + '}'
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 16 { pe_bad_decode(text) }
 		pe_zero()
 		unsafe { text.free() }
@@ -200,7 +200,7 @@ fn pe_decoder_failures(original string) {
 
 fn test_pe_proof_binds_outputs_inputs_commands_and_empty_logs() {
 	pe_fd_control()
-	work := os.real_path(os.temp_dir()) + '/vinix-pe-admission-' + os.getpid().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-pe-admission-' + os.getpid().str()
 	defer { os.rmdir_all(work) or {} }
 	pe_fixture(work)!
 	pe_accept(work)!
@@ -314,7 +314,7 @@ fn test_pe_proof_binds_outputs_inputs_commands_and_empty_logs() {
 	unsafe { pe_path.free(); pe_original.free() }
 	println('PE ADMISSION resealed schema/input/output/command/path/overlap/header refusals retain zero tracked V bytes and descriptors PASS')
 	fd := pe_fd()
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 { pe_accept(work)! }
 	pe_zero()
 	pe_require(pe_fd() == fd, 'PE success leaks descriptors')

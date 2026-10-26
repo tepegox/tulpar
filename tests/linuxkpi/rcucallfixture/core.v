@@ -9,7 +9,7 @@ module rcucallfixture
 @[typedef] struct C.pthread_t {}
 @[typedef] struct C.rcuh_const_charp {}
 @[typedef] struct C.rcuh_const_voidp {}
-struct C.task_struct { vinix_thread voidptr, __state u32 }
+struct C.task_struct { tulpar_thread voidptr, __state u32 }
 struct C.callback_head {}
 struct C.vkw_completion { mut: done u32 }
 struct C.vkw_swait_head { mut: lock u32, task_list C.vkw_list }
@@ -159,7 +159,7 @@ fn context() &Context {
 		check(ctx != nil, @LINE)
 		ctx.flags = 0x202
 		ctx.refs = 1
-		ctx.task.vinix_thread = ctx
+		ctx.task.tulpar_thread = ctx
 		check(C.pthread_setspecific(context_key, ctx) == 0, @LINE)
 		C.rcuh_add32(&context_live, 1)
 		return ctx
@@ -211,28 +211,28 @@ fn await_poll(cookie usize) {
 	check(false, @LINE)
 }
 
-@[export: 'vinix_linuxkpi_cpu_id'] pub fn cpu_id() u32 { return context().cpu }
-@[export: 'vinix_linuxkpi_preempt_count'] pub fn pins() u32 { return context().pins }
-@[export: 'vinix_linuxkpi_maskable_irq_depth'] pub fn depth() u32 { return context().depth }
-@[export: 'vinix_linuxkpi_irq_flags'] pub fn flags() usize { return context().flags }
+@[export: 'tulpar_linuxkpi_cpu_id'] pub fn cpu_id() u32 { return context().cpu }
+@[export: 'tulpar_linuxkpi_preempt_count'] pub fn pins() u32 { return context().pins }
+@[export: 'tulpar_linuxkpi_maskable_irq_depth'] pub fn depth() u32 { return context().depth }
+@[export: 'tulpar_linuxkpi_irq_flags'] pub fn flags() usize { return context().flags }
 @[export: 'vks_smp_ready'] pub fn smp_ready() bool { return unsafe { C.rcuh_load32(&smp_transport_ready) != 0 } }
-@[export: 'vinix_linuxkpi_smp_task_present'] pub fn task_present() bool { return true }
-@[export: 'vinix_linuxkpi_smp_boot_context'] pub fn boot_context() bool {
+@[export: 'tulpar_linuxkpi_smp_task_present'] pub fn task_present() bool { return true }
+@[export: 'tulpar_linuxkpi_smp_boot_context'] pub fn boot_context() bool {
 	ctx := context()
 	return ctx.constructor && ctx.pins == 0 && ctx.depth == 0 && (ctx.flags & 512) != 0
 }
-@[export: 'vinix_linuxkpi_may_sleep'] pub fn may_sleep() bool {
+@[export: 'tulpar_linuxkpi_may_sleep'] pub fn may_sleep() bool {
 	ctx := context()
 	return ctx.pins == 0 && ctx.depth == 0 && (ctx.flags & 512) != 0
 }
-@[export: 'vinix_linuxkpi_preempt_disable'] pub fn preempt_disable() {
+@[export: 'tulpar_linuxkpi_preempt_disable'] pub fn preempt_disable() {
 	unsafe {
 		ctx := context(); lock_context()
 		ctx.pins++; cpu_pins[ctx.cpu]++
 		unlock_context()
 	}
 }
-@[export: 'vinix_linuxkpi_preempt_enable'] pub fn preempt_enable() {
+@[export: 'tulpar_linuxkpi_preempt_enable'] pub fn preempt_enable() {
 	unsafe {
 		ctx := context(); lock_context()
 		check(ctx.pins != 0 && cpu_pins[ctx.cpu] != 0, @LINE)
@@ -240,7 +240,7 @@ fn await_poll(cookie usize) {
 		unlock_context()
 	}
 }
-@[export: 'vinix_linuxkpi_irq_save'] pub fn irq_save() usize {
+@[export: 'tulpar_linuxkpi_irq_save'] pub fn irq_save() usize {
 	unsafe {
 		ctx := context(); lock_context()
 		old := ctx.flags
@@ -249,7 +249,7 @@ fn await_poll(cookie usize) {
 		return old
 	}
 }
-@[export: 'vinix_linuxkpi_irq_restore'] pub fn irq_restore(value usize) {
+@[export: 'tulpar_linuxkpi_irq_restore'] pub fn irq_restore(value usize) {
 	unsafe {
 		ctx := context(); lock_context()
 		if (ctx.flags & 512) == 0 && (value & 512) != 0 { check(cpu_irq_off[ctx.cpu] != 0, @LINE); cpu_irq_off[ctx.cpu]-- }
@@ -258,21 +258,21 @@ fn await_poll(cookie usize) {
 		unlock_context()
 	}
 }
-@[export: 'vinix_linuxkpi_spin_wait'] pub fn spin_wait() { C.sched_yield() }
-@[export: 'vinix_linuxkpi_cond_resched'] pub fn reschedule() i32 { check(may_sleep(), @LINE); C.sched_yield(); return 1 }
+@[export: 'tulpar_linuxkpi_spin_wait'] pub fn spin_wait() { C.sched_yield() }
+@[export: 'tulpar_linuxkpi_cond_resched'] pub fn reschedule() i32 { check(may_sleep(), @LINE); C.sched_yield(); return 1 }
 @[export: 'msleep'] pub fn sleep(_milliseconds u32) {
 	check(may_sleep(), @LINE)
 	unsafe { ctx := context(); if ctx.waiter != nil { C.rcuh_add32(&ctx.waiter.parks, 1) } }
 	pause()
 }
-@[export: 'vinix_linuxkpi_bug'; noreturn] pub fn bug(reason C.rcuh_const_charp, line i32) {
+@[export: 'tulpar_linuxkpi_bug'; noreturn] pub fn bug(reason C.rcuh_const_charp, line i32) {
 	unsafe { C.fprintf(C.stderr, c'RCU invariant: %s:%d\n', reason, line) }; C.abort()
 }
 
 // Transport tests CPU scopes, not the production's epoch or callback state.
 // An eligible externally observed boundary runs only this trusted hook while
 // the CPU-context mutex excludes entry into another modeled atomic region.
-@[export: 'vinix_linuxkpi_rcu_force_quiescence'] pub fn force_quiescence() {
+@[export: 'tulpar_linuxkpi_rcu_force_quiescence'] pub fn force_quiescence() {
 	unsafe {
 		original := context()
 		for cpu := u32(0); cpu < configured_cpus; cpu++ {
@@ -348,12 +348,12 @@ fn await_poll(cookie usize) {
 @[export: 'vkr_rcu_host_worker_leave'] pub fn worker_leave() {
 	unsafe { ctx := context(); check(ctx.worker && may_sleep(), @LINE); C.rcuh_add32(&worker_live, u32(-1)); C.rcuh_add32(&worker_exits, 1) }
 }
-@[export: 'vinix_linuxkpi_current_task'] pub fn current_task() &C.task_struct { return unsafe { &context().task } }
+@[export: 'tulpar_linuxkpi_current_task'] pub fn current_task() &C.task_struct { return unsafe { &context().task } }
 @[export: 'get_task_struct'] pub fn get_task(task &C.task_struct) &C.task_struct {
-	unsafe { ctx := &Context(task.vinix_thread); check(C.rcuh_load32(&ctx.retired) == 0, @LINE); C.rcuh_add32(&ctx.refs, 1); return task }
+	unsafe { ctx := &Context(task.tulpar_thread); check(C.rcuh_load32(&ctx.retired) == 0, @LINE); C.rcuh_add32(&ctx.refs, 1); return task }
 }
-@[export: 'put_task_struct'] pub fn put_task(task &C.task_struct) { unsafe { release_context(&Context(task.vinix_thread)) } }
-@[export: 'vinix_linuxkpi_test_thread_reap_ready'] pub fn retired(owner voidptr) bool {
+@[export: 'put_task_struct'] pub fn put_task(task &C.task_struct) { unsafe { release_context(&Context(task.tulpar_thread)) } }
+@[export: 'tulpar_linuxkpi_test_thread_reap_ready'] pub fn retired(owner voidptr) bool {
 	unsafe { C.rcuh_add32(&retirement_queries, 1); return C.rcuh_load32(&(&Context(owner)).retired) != 0 }
 }
 

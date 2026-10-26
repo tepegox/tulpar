@@ -17,9 +17,9 @@ when warnings were printed, and `--update` cannot accept an incomplete report.
 Tests use shell compiler stubs and a separately compiled native source copier;
 they do not need Python.
 
-Set `VINIX_KERNEL_ALLOCS_COPY_TOOL` to an already compiled `copy_sources.v`
+Set `TULPAR_KERNEL_ALLOCS_COPY_TOOL` to an already compiled `copy_sources.v`
 executable when testing with a compiler stub or reusing a prepared host tool.
-The default `copy-sources` command follows ordinary `V`/`VINIX_V_COMPILER`
+The default `copy-sources` command follows ordinary `V`/`TULPAR_V_COMPILER`
 discovery and builds outside the checkout.
 
 The port was compared with the original Python copier on both real kernel

@@ -9,15 +9,15 @@ import tools.packages.pkgprotocol
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn status_fixture(populated bool) !(string, Service) {
-	root := os.temp_dir() + '/vinix-status-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.temp_dir() + '/tulpar-status-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	config := Config{ architecture: 'aarch64', policy: Policy{ offline: true, permissions: [], reserve_bytes: 0 } }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	if populated {
 		directory := state_directory(root)
 		guard := acquire(directory)!; guard.release()
@@ -33,7 +33,7 @@ fn status_fixture(populated bool) !(string, Service) {
 				dependencies: if id == 'app' { [Dependency{ id: 'runtime' }, Dependency{ id: 'assets' }] } else { []Dependency{} },
 				files: [Payload{ path: 'bin/app', sha256: sha256.hexhash('payload'), bytes: 7, executable: id != 'assets' }] }
 			packages << Installed{ package: p, repository: 'publisher', public_key: 'a'.repeat(64), sequence: 7 }
-			if id == 'app' { os.write_file(generation + '/share/applications/vinix-app.desktop', desktop_entry(p))! }
+			if id == 'app' { os.write_file(generation + '/share/applications/tulpar-app.desktop', desktop_entry(p))! }
 		}
 		os.write_file(generation + '/state.json', encode_generation_state(State{ architecture: 'aarch64', generation: 7, requested: ['app'], packages: packages })!)!
 		os.symlink('generations/7', directory + '/current')!
@@ -66,22 +66,22 @@ fn test_status_snapshots_retire_fresh_installed_and_failed_verification_storage(
 	$if track_heap ? {
 		fresh_root, fresh := status_fixture(false)!; defer { os.rmdir_all(fresh_root) or {} }
 		root, service := status_fixture(true)!; defer { os.rmdir_all(root) or {} }
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut status := fresh.state()!; assert status.generation == 0; retire_status(mut status)
 			mut checked := fresh.verify()!; assert checked.architecture == 'aarch64'; retire_status(mut checked)
 		}
-		fresh_bytes := C.vinix_heap_end()
-		C.vinix_heap_begin()
+		fresh_bytes := C.tulpar_heap_end()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut status := service.state()!; assert status.packages.len == 3; retire_status(mut status)
 			mut checked := service.verify()!; assert checked.generation == 7; retire_status(mut checked)
 		}
-		installed_bytes := C.vinix_heap_end()
+		installed_bytes := C.tulpar_heap_end()
 		os.write_file(state_directory(root) + '/current/apps/app/bin/app', 'damaged')!
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { status_refusal(service, true, 'installed payload verification failed') }
-		failed_bytes := C.vinix_heap_end()
+		failed_bytes := C.tulpar_heap_end()
 		println('STATUS SNAPSHOT 1000 fresh state/verify cycles retained ${fresh_bytes} bytes; 1000 installed cycles retained ${installed_bytes} bytes; 1000 failed verifies retained ${failed_bytes} bytes')
 		assert fresh_bytes == 0 && installed_bytes == 0 && failed_bytes == 0
 	}
@@ -91,7 +91,7 @@ fn test_status_snapshots_own_all_fields_preserve_bytes_and_keep_empty_reads_side
 	for architecture in ['aarch64', 'x86_64']! {
 		for populated in [false, true]! {
 			root, service := status_fixture(populated)!; defer { os.rmdir_all(root) or {} }
-			configuration := root + '/etc/vinix-packages/config.json'
+			configuration := root + '/etc/tulpar-packages/config.json'
 			os.write_file(configuration, os.read_file(configuration)!.replace('aarch64', architecture))!
 			store := state_directory(root)
 			metadata := store + '/current/state.json'
@@ -125,7 +125,7 @@ fn test_status_snapshots_own_all_fields_preserve_bytes_and_keep_empty_reads_side
 fn status_forbid_progress(_ pkgprotocol.Progress) { panic('status must not scan files or emit verification progress') }
 
 fn status_observe_progress(event pkgprotocol.Progress) {
-	root := os.getenv('VINIX_STATUS_TEST_ROOT'); defer { unsafe { root.free() } }
+	root := os.getenv('TULPAR_STATUS_TEST_ROOT'); defer { unsafe { root.free() } }
 	directory := state_directory(root); defer { unsafe { directory.free() } }
 	if guard := acquire(directory) { guard.release(); panic('verification released its reader lock') }
 	else { message := err.msg(); assert message.contains('another package transaction'); unsafe { message.free(); err.free() } }
@@ -138,9 +138,9 @@ fn test_status_does_not_verify_and_verification_keeps_its_lock_until_completion(
 	root, service := status_fixture(true)!; defer { os.rmdir_all(root) or {} }
 	mut state := (Service{ root: root, progress: status_forbid_progress }).state()!; retire_status(mut state)
 	os.write_file(root + '/progress.txt', '')!
-	os.setenv('VINIX_STATUS_TEST_ROOT', root, true); defer { os.unsetenv('VINIX_STATUS_TEST_ROOT') }
+	os.setenv('TULPAR_STATUS_TEST_ROOT', root, true); defer { os.unsetenv('TULPAR_STATUS_TEST_ROOT') }
 	mut verified := (Service{ root: root, progress: status_observe_progress }).verify()!; retire_status(mut verified)
-	assert os.read_file(root + '/progress.txt')! == 'verify::\nverify:app:bin/app\nverify:app:share/applications/vinix-app.desktop\nverify:runtime:bin/app\nverify:assets:bin/app\ncomplete::\n'
+	assert os.read_file(root + '/progress.txt')! == 'verify::\nverify:app:bin/app\nverify:app:share/applications/tulpar-app.desktop\nverify:runtime:bin/app\nverify:assets:bin/app\ncomplete::\n'
 	store := state_directory(root)
 	os.write_file(store + '/current/apps/app/bin/app', 'damaged')!
 	mut observed := service.state()!; assert observed.packages.len == 3; retire_status(mut observed)
@@ -153,9 +153,9 @@ fn test_status_does_not_verify_and_verification_keeps_its_lock_until_completion(
 fn test_status_refusals_retire_configuration_state_and_lock_scratch_before_retry() {
 	root, service := status_fixture(true)!; defer { os.rmdir_all(root) or {} }
 	store := state_directory(root)
-	configuration := root + '/etc/vinix-packages/config.json'; config_text := os.read_file(configuration)!
+	configuration := root + '/etc/tulpar-packages/config.json'; config_text := os.read_file(configuration)!
 	metadata := store + '/current/state.json'; state_text := os.read_file(metadata)!
-	registration := store + '/current/share/applications/vinix-app.desktop'; entry := os.read_file(registration)!
+	registration := store + '/current/share/applications/tulpar-app.desktop'; entry := os.read_file(registration)!
 	for failure in ['configuration', 'state', 'registration', 'namespace', 'activation', 'busy']! {
 		mut guard := Lock{ fd: -1 }
 		match failure {
@@ -167,12 +167,12 @@ fn test_status_refusals_retire_configuration_state_and_lock_scratch_before_retry
 			'busy' { guard = acquire(store)!; os.write_file(configuration, '{must not be read')! }
 			else {}
 		}
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			status_refusal(service, true, if failure == 'busy' { 'another package transaction' } else { '' })
 			if failure !in ['registration', 'namespace']! { status_refusal(service, false, '') }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, failure + ' retained bytes: ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, failure + ' retained bytes: ' + kept.str() }
 		match failure {
 			'configuration' { os.write_file(configuration, config_text)! }
 			'state' { os.write_file(metadata, state_text)! }

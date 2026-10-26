@@ -5,7 +5,7 @@
 module overflowfixture
 
 #include <linux/overflow.h>
-#include "vinix/integer_policy.h"
+#include "tulpar/integer_policy.h"
 @[typedef]
 struct C.vop_i128 {}
 fn C.memcpy(voidptr, voidptr, usize) voidptr
@@ -15,10 +15,10 @@ fn C.pause() i32
 fn C.open(&char, i32, ...) i32
 fn C.dup2(i32, i32) i32
 fn C.close(i32) i32
-fn C.vinix_overflow_fixture_left() i16
-fn C.vinix_overflow_fixture_right() u64
-fn C.vinix_overflow_fixture_result() &i8
-fn C.vinix_overflow_fixture_pointer() voidptr
+fn C.tulpar_overflow_fixture_left() i16
+fn C.tulpar_overflow_fixture_right() u64
+fn C.tulpar_overflow_fixture_result() &i8
+fn C.tulpar_overflow_fixture_pointer() voidptr
 fn C.preemptible() i32
 fn C.ZERO_OR_NULL_PTR(voidptr) i32
 @[c: 'check_add_overflow']
@@ -72,17 +72,17 @@ __global (
  vop_irq_calls u32
 )
 
-@[export: 'vinix_overflow_fixture_left']
+@[export: 'tulpar_overflow_fixture_left']
 pub fn left_argument() i16 { unsafe { vop_left_calls++; return -32768 } }
-@[export: 'vinix_overflow_fixture_right']
+@[export: 'tulpar_overflow_fixture_right']
 pub fn right_argument() u64 { unsafe { vop_right_calls++; return 0xffffffffffffffff } }
-@[export: 'vinix_overflow_fixture_result']
+@[export: 'tulpar_overflow_fixture_result']
 pub fn result_argument() &i8 { unsafe { vop_result_calls++; return &vop_result } }
-@[export: 'vinix_overflow_fixture_pointer']
+@[export: 'tulpar_overflow_fixture_pointer']
 pub fn pointer_argument() voidptr { unsafe { vop_pointer_calls++; return voidptr(16) } }
-@[export: 'vinix_linuxkpi_preempt_count']
+@[export: 'tulpar_linuxkpi_preempt_count']
 pub fn preempt_count() u32 { unsafe { vop_preempt_calls++; return vop_preempt } }
-@[export: 'vinix_linuxkpi_irq_flags']
+@[export: 'tulpar_linuxkpi_irq_flags']
 pub fn irq_flags() usize { unsafe { vop_irq_calls++; return vop_irq_flags } }
 
 fn native_signed(bits u128) C.vop_i128 {
@@ -339,7 +339,7 @@ fn policies() i32 {
    if (C.ZERO_OR_NULL_PTR(voidptr(address)) != 0) != (address <= 16) { errors++ }
   }
   vop_pointer_calls = 0
-  if C.ZERO_OR_NULL_PTR(C.vinix_overflow_fixture_pointer()) != 1 || vop_pointer_calls != 1 { errors++ }
+  if C.ZERO_OR_NULL_PTR(C.tulpar_overflow_fixture_pointer()) != 1 || vop_pointer_calls != 1 { errors++ }
   vop_preempt = 1; vop_preempt_calls = 0; vop_irq_calls = 0
   if C.preemptible() != 0 || vop_preempt_calls != 1 || vop_irq_calls != 0 { errors++ }
   vop_preempt = 0; vop_irq_flags = 0; vop_preempt_calls = 0; vop_irq_calls = 0
@@ -349,9 +349,9 @@ fn policies() i32 {
   for operation := u32(0); operation < 3; operation++ {
    vop_left_calls = 0; vop_right_calls = 0; vop_result_calls = 0; vop_result = 0
    overflow := match operation {
-    0 { C.vop_effect_add(C.vinix_overflow_fixture_left(), C.vinix_overflow_fixture_right(), C.vinix_overflow_fixture_result()) }
-    1 { C.vop_effect_sub(C.vinix_overflow_fixture_left(), C.vinix_overflow_fixture_right(), C.vinix_overflow_fixture_result()) }
-    else { C.vop_effect_mul(C.vinix_overflow_fixture_left(), C.vinix_overflow_fixture_right(), C.vinix_overflow_fixture_result()) }
+    0 { C.vop_effect_add(C.tulpar_overflow_fixture_left(), C.tulpar_overflow_fixture_right(), C.tulpar_overflow_fixture_result()) }
+    1 { C.vop_effect_sub(C.tulpar_overflow_fixture_left(), C.tulpar_overflow_fixture_right(), C.tulpar_overflow_fixture_result()) }
+    else { C.vop_effect_mul(C.tulpar_overflow_fixture_left(), C.tulpar_overflow_fixture_right(), C.tulpar_overflow_fixture_result()) }
    }
    expected := match operation { 0 { i8(-1) } 1 { i8(1) } else { i8(0) } }
    if !overflow || vop_result != expected || vop_left_calls != 1 || vop_right_calls != 1 || vop_result_calls != 1 { errors++ }

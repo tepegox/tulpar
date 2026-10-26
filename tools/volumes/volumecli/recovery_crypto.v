@@ -117,7 +117,7 @@ fn encode_recovery(key &u8, recovery &u8, nonce &u8, output &u8) bool {
 	mut work := unsafe { &RecoveryEnvelope(C.alloca(sizeof(RecoveryEnvelope))) }
 	unsafe { *work = RecoveryEnvelope{} }
 	defer { erase_key(work, sizeof(RecoveryEnvelope)) }
-	unsafe { C.memcpy(&work.bytes[0], c'VINIXKR1', 8) }
+	unsafe { C.memcpy(&work.bytes[0], c'TULPARKR1', 8) }
 	put_le(&work.bytes[0], 8, 4, 1); put_le(&work.bytes[0], 12, 4, 1)
 	put_le(&work.bytes[0], 16, 4, recovery_bytes); put_le(&work.bytes[0], 20, 4, 64)
 	unsafe { C.memcpy(&work.bytes[24], nonce, 12); C.memcpy(&work.bytes[64], key, 64) }
@@ -130,7 +130,7 @@ fn encode_recovery(key &u8, recovery &u8, nonce &u8, output &u8) bool {
 @[direct_array_access]
 fn decode_recovery(bytes &u8, size int, recovery &u8, output &u8) bool {
 	if size != recovery_bytes || recovery_equal(recovery, unsafe { recovery + 32 }, 32) { return false }
-	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'VINIXKR1'[i]) { return false } } }
+	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'TULPARKR1'[i]) { return false } } }
 	if get_le(bytes, 8, 4) != 1 || get_le(bytes, 12, 4) != 1
 		|| get_le(bytes, 16, 4) != recovery_bytes || get_le(bytes, 20, 4) != 64 { return false }
 	unsafe { for i in 36 .. 64 { if bytes[i] != 0 { return false } } }

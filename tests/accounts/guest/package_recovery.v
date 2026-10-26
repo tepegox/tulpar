@@ -8,7 +8,7 @@ import tools.packages.pkgcore
 
 const package_disk = $if arm64 { '/root' } $else { '/package-disk' }
 const package_test_root = package_disk + '/root'
-const package_state = package_test_root + '/var/lib/vinix-packages'
+const package_state = package_test_root + '/var/lib/tulpar-packages'
 
 fn package_crash_checkpoint(phase string) {
 	wanted := read_text('/etc/hwtest-scenario').trim_space().all_after_last('-')
@@ -61,14 +61,14 @@ fn package_disk_setup() !pkgcore.Config {
 	os.mkdir_all(package_disk + '/source/bin')!
 	os.cp('/sbin/init', package_disk + '/source/bin/app')!
 	os.chmod(package_disk + '/source/bin/app', 0o755)!
-	os.mkdir_all(package_test_root + '/etc/vinix-packages')!
+	os.mkdir_all(package_test_root + '/etc/tulpar-packages')!
 	key := pkgcore.keygen(package_disk + '/signing-seed')!
 	config := pkgcore.Config{
 		architecture: architecture
 		repositories: [pkgcore.Repository{ id: 'fixture', url: 'file://' + package_disk + '/repository', public_key: key }]
 		policy:       pkgcore.Policy{ reserve_bytes: 0 }
 	}
-	pkgcore.atomic_write(package_test_root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	pkgcore.atomic_write(package_test_root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	package_disk_version('1.0.0', architecture)!
 	pkgcore.publish(package_disk + '/repository', 'fixture', package_disk + '/signing-seed', 1, time.now().unix() + 3600)!
 	package_root_cli(['update'])!
@@ -82,7 +82,7 @@ fn package_disk_setup() !pkgcore.Config {
 	v2 := catalog.packages.filter(it.package.version == '2.0.0')[0].package
 	file := v2.files.filter(it.path == 'version.txt')[0]
 	pkgcore.atomic_write(package_state + '/objects/' + file.sha256 + '.part', '2.')!
-	data := package_test_root + '/home/alex/.local/share/vinix-apps/recovery-app'
+	data := package_test_root + '/home/alex/.local/share/tulpar-apps/recovery-app'
 	os.mkdir_all(data)!
 	os.write_file(data + '/personal.txt', 'personal data survives\n')!
 	os.chown(data + '/personal.txt', 1000, 1000)!
@@ -109,7 +109,7 @@ fn qualify_package_recovery(mut t Test) ! {
 	assert state.packages.len == 1 && state.packages[0].package.version == expected
 	assert state.generation == if phase == 'activated' { u64(2) } else { u64(1) }
 	package_root_cli(['verify'])!
-	assert os.is_file(package_state + '/current/share/applications/vinix-recovery-app.desktop')
+	assert os.is_file(package_state + '/current/share/applications/tulpar-recovery-app.desktop')
 	assert read_text(package_state + '/current/apps/recovery-app/version.txt') == expected + '\n'
 	assert os.is_dir(package_state + '/generations/.stage-2') == (phase == 'staged')
 	if phase == 'published' {
@@ -125,13 +125,13 @@ fn qualify_package_recovery(mut t Test) ! {
 	assert read_text(package_state + '/current/apps/recovery-app/version.txt') == '1.0.0\n'
 	package_root_cli(['remove', 'recovery-app'])!
 	assert pkgcore.read_state(package_state, config.architecture)!.packages.len == 0
-	assert !os.exists(package_state + '/current/share/applications/vinix-recovery-app.desktop')
+	assert !os.exists(package_state + '/current/share/applications/tulpar-recovery-app.desktop')
 	package_root_cli(['rollback'])!
 	package_root_cli(['verify'])!
 	package_root_cli(['gc'])!
 	assert os.ls(package_state + '/generations')!.sorted() == ['4', '5']
 	assert pkgcore.read_state(package_state, config.architecture)!.previous == 4
-	data := package_test_root + '/home/alex/.local/share/vinix-apps/recovery-app/personal.txt'
+	data := package_test_root + '/home/alex/.local/share/tulpar-apps/recovery-app/personal.txt'
 	assert read_text(data) == 'personal data survives\n' && owner_of(data) == 1000
 	assert mode_of(data) == 0o600
 	assert !os.ls(package_state + '/objects')!.any(it.ends_with('.part'))

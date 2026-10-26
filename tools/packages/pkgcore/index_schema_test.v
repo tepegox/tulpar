@@ -9,8 +9,8 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn schema_fixture() string {
@@ -176,7 +176,7 @@ fn test_signed_index_shape_checks_retire_owned_key_sets() {
 		inputs := [text, text.replace('"firmware":false', '"firmware":false,"firm\\u0077are":false'),
 			text.replace('"firmware":false,', ''), text.replace('"files":', '"unknown":{},"files":')]
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for i, input in inputs {
 					mut accepted := true
@@ -189,7 +189,7 @@ fn test_signed_index_shape_checks_retire_owned_key_sets() {
 				}
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'signed index key/required-field scanner retained ${kept} bytes'
 		println('Signed index shape scanner: 1000 valid/duplicate/missing/unknown cycles retain zero tracked bytes')
 	}
@@ -214,11 +214,11 @@ fn test_publisher_templates_preserve_defaults_but_refuse_ambiguous_declarations(
 }
 
 fn test_invalid_signed_refresh_and_enrollment_preserve_catalog_history_and_state() {
-	root := os.real_path(os.temp_dir()) + '/vinix-index-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.real_path(os.temp_dir()) + '/tulpar-index-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	defer { os.rmdir_all(root) or {} }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(Config{architecture: 'aarch64', policy: Policy{offline: true, reserve_bytes: 0}}))!
-	os.chmod(root + '/etc/vinix-packages/config.json', 0o644)!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(Config{architecture: 'aarch64', policy: Policy{offline: true, reserve_bytes: 0}}))!
+	os.chmod(root + '/etc/tulpar-packages/config.json', 0o644)!
 	os.mkdir_all(root + '/source/share')!
 	os.write_file(root + '/source/share/data', 'authenticated original payload')!
 	manifest := root + '/source.json'
@@ -234,7 +234,7 @@ fn test_invalid_signed_refresh_and_enrollment_preserve_catalog_history_and_state
 	service.refresh()!
 	service.transact('install', ['data'], TransactionOptions{})!
 	directory := state_directory(root)
-	configuration := os.read_file(root + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(root + '/etc/tulpar-packages/config.json')!
 	catalog := os.read_file(directory + '/catalog.json')!
 	history := os.read_file(directory + '/trust-history.json')!
 	state := service.state()!
@@ -255,7 +255,7 @@ fn test_invalid_signed_refresh_and_enrollment_preserve_catalog_history_and_state
 		enroll_repository(root, repository, false) or { enrollment_refused = true }
 		assert enrollment_refused
 		assert os.read_file(directory + '/catalog.json')! == catalog && os.read_file(directory + '/trust-history.json')! == history
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == configuration && service.state()! == state
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration && service.state()! == state
 		assert !os.exists(directory + '/refresh') && !os.exists(directory + '/enrollment')
 		mut review := service.review('upgrade', [])!
 		assert review.rows.len == 1 && review.rows[0].action == 'keep'

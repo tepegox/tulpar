@@ -53,7 +53,7 @@ fn syscall_linux_open(gpr_state voidptr, path charptr, flags int, mode u32) (u64
 
 // A bad user `stat` buffer must fail with EFAULT, not fault the kernel: the
 // result goes into a kernel struct that is then copied out through the
-// checked path. On amd64 the Vinix stat.Stat already has the Linux struct
+// checked path. On amd64 the Tulpar stat.Stat already has the Linux struct
 // stat layout, so the copy is verbatim.
 fn copy_stat_to_user(src &stat.Stat, buf u64) (u64, u64) {
 	if !usercopy.copy_to_user(buf, voidptr(src), u64(sizeof(stat.Stat))) {
@@ -64,24 +64,24 @@ fn copy_stat_to_user(src &stat.Stat, buf u64) (u64, u64) {
 
 fn syscall_linux_fstat(gpr_state voidptr, fdnum int, buf u64) (u64, u64) {
 	// Neither the filesystem fill nor the checked user copy retains this scratch.
-	vinix_stat := unsafe { &stat.Stat(C.vinix_stack_alloc(sizeof(stat.Stat))) }
-	unsafe { *vinix_stat = stat.Stat{} }
-	ret, err := fs.syscall_fstat(gpr_state, int(u32(fdnum)), vinix_stat)
+	tulpar_stat := unsafe { &stat.Stat(C.tulpar_stack_alloc(sizeof(stat.Stat))) }
+	unsafe { *tulpar_stat = stat.Stat{} }
+	ret, err := fs.syscall_fstat(gpr_state, int(u32(fdnum)), tulpar_stat)
 	if err != 0 {
 		return ret, err
 	}
-	return copy_stat_to_user(vinix_stat, buf)
+	return copy_stat_to_user(tulpar_stat, buf)
 }
 
 fn syscall_linux_fstatat(gpr_state voidptr, dirfd int, path charptr, buf u64, flags int) (u64, u64) {
 	// Neither the filesystem fill nor the checked user copy retains this scratch.
-	vinix_stat := unsafe { &stat.Stat(C.vinix_stack_alloc(sizeof(stat.Stat))) }
-	unsafe { *vinix_stat = stat.Stat{} }
-	ret, err := linux_fstatat_lookup(gpr_state, dirfd, path, vinix_stat, flags)
+	tulpar_stat := unsafe { &stat.Stat(C.tulpar_stack_alloc(sizeof(stat.Stat))) }
+	unsafe { *tulpar_stat = stat.Stat{} }
+	ret, err := linux_fstatat_lookup(gpr_state, dirfd, path, tulpar_stat, flags)
 	if err != 0 {
 		return ret, err
 	}
-	return copy_stat_to_user(vinix_stat, buf)
+	return copy_stat_to_user(tulpar_stat, buf)
 }
 
 fn syscall_linux_stat(gpr_state voidptr, path charptr, buf u64) (u64, u64) {
@@ -165,7 +165,7 @@ fn syscall_linux_rseq(_ voidptr) (u64, u64) {
 
 // Linux uname(buf); see linux_uname().
 fn syscall_linux_uname(_ voidptr, buf u64) (u64, u64) {
-	return linux_uname(buf, c'Vinix 0.1.0 amd64', c'x86_64')
+	return linux_uname(buf, c'Tulpar 0.1.0 amd64', c'x86_64')
 }
 
 fn syscall_linux_mkdir(gpr_state voidptr, path charptr, mode u32) (u64, u64) {
@@ -337,7 +337,7 @@ pub fn init_syscall_table() {
 		syscall_table[i] = voidptr(syscall_linux_vacant)
 	}
 
-	// Linux x86-64 syscall numbers → Vinix handlers.
+	// Linux x86-64 syscall numbers → Tulpar handlers.
 	// Reference: arch/x86/entry/syscalls/syscall_64.tbl
 
 	// File I/O

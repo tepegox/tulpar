@@ -594,7 +594,7 @@ pub fn run(argc i32, argv &&char) i32 {
 		if C.strcmp(selected, c'descexec') == 0 || C.strcmp(selected, c'all') == 0
 			|| C.strcmp(selected, c'move-reference') == 0 { descriptor_exec_cases(-1) }
 		if descriptor_exec >= 0 { descriptor_exec_cases(descriptor_exec) }
-		// wxallowed is a Vinix policy; the portable Linux group excludes it.
+		// wxallowed is a Tulpar policy; the portable Linux group excludes it.
 		if C.strcmp(selected, c'descwx') == 0 || C.strcmp(selected, c'all') == 0 { descriptor_wx_cases(-1) }
 		if descriptor_wx >= 0 { descriptor_wx_cases(descriptor_wx) }
 		if C.strcmp(selected, c'execflags') == 0 || C.strcmp(selected, c'all') == 0

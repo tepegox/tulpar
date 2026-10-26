@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_SPINLOCK_TYPES_RAW_H
-#define VINIX_LINUX_SPINLOCK_TYPES_RAW_H
+#ifndef TULPAR_LINUX_SPINLOCK_TYPES_RAW_H
+#define TULPAR_LINUX_SPINLOCK_TYPES_RAW_H
 #include <linux/types.h>
 #include <linux/lockdep_types.h>
 /* This build has no PREEMPT_RT substitution: both lock classes spin. */

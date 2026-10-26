@@ -34,49 +34,49 @@ fn vmx_read_status(field u64, value &u64) u8 {
 	return 1
 }
 
-@[export: 'vinix_vmx_enter']
-fn vmx_enter(registers &C.vinix_vmx_registers) i32 {
+@[export: 'tulpar_vmx_enter']
+fn vmx_enter(registers &C.tulpar_vmx_registers) i32 {
 	_ = registers
 	return -1
 }
 
-@[export: 'vinix_vmx_fxsave']
+@[export: 'tulpar_vmx_fxsave']
 fn vmx_fxsave(state voidptr) {
 	_ = state
 }
 
-@[export: 'vinix_vmx_fxrstor']
+@[export: 'tulpar_vmx_fxrstor']
 fn vmx_fxrstor(state voidptr) {
 	_ = state
 }
 
-@[export: 'vinix_vmx_sgdt']
-fn vmx_sgdt(descriptor &C.vinix_vmx_descriptor) {
+@[export: 'tulpar_vmx_sgdt']
+fn vmx_sgdt(descriptor &C.tulpar_vmx_descriptor) {
 	_ = descriptor
 }
 
-@[export: 'vinix_vmx_sidt']
-fn vmx_sidt(descriptor &C.vinix_vmx_descriptor) {
+@[export: 'tulpar_vmx_sidt']
+fn vmx_sidt(descriptor &C.tulpar_vmx_descriptor) {
 	_ = descriptor
 }
 
-@[export: 'vinix_vmx_read_cs']
+@[export: 'tulpar_vmx_read_cs']
 fn vmx_read_cs() u16 { return 0 }
 
-@[export: 'vinix_vmx_read_ss']
+@[export: 'tulpar_vmx_read_ss']
 fn vmx_read_ss() u16 { return 0 }
 
-@[export: 'vinix_vmx_read_ds']
+@[export: 'tulpar_vmx_read_ds']
 fn vmx_read_ds() u16 { return 0 }
 
-@[export: 'vinix_vmx_read_es']
+@[export: 'tulpar_vmx_read_es']
 fn vmx_read_es() u16 { return 0 }
 
-@[export: 'vinix_vmx_read_fs']
+@[export: 'tulpar_vmx_read_fs']
 fn vmx_read_fs() u16 { return 0 }
 
-@[export: 'vinix_vmx_read_gs']
+@[export: 'tulpar_vmx_read_gs']
 fn vmx_read_gs() u16 { return 0 }
 
-@[export: 'vinix_vmx_read_tr']
+@[export: 'tulpar_vmx_read_tr']
 fn vmx_read_tr() u16 { return 0 }

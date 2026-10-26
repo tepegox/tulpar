@@ -72,7 +72,7 @@ pub fn build_runtime(work string, arch string, flags []string, original string, 
 	production := root() + '/kernel/lib/stubs/memory.v'
 	mut text := hosttest.module_read_text(production)!.replace_once('module stubs', 'module memoryruntimecore')
 	for name in ['memcpy', 'memset', 'memmove', 'memcmp', 'atoi'] {
-		text = text.replace("export: '" + name + "'", "export: 'vinix_" + name + "'")
+		text = text.replace("export: '" + name + "'", "export: 'tulpar_" + name + "'")
 	}
 	os.write_file(primitive + '/core.v', text)!
 	registers := if arch == 'aarch64' { ['-mgeneral-regs-only'] } else { ['-mno-80387', '-mno-mmx', '-mno-sse', '-mno-sse2', '-mno-red-zone'] }
@@ -152,7 +152,7 @@ pub fn build_bigio(work string, arch string, flags []string, original string, mo
 pub fn flags(arch string, guest bool, runtime bool) []string {
 	mut compiler := []string{}
 	if guest && arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		compiler = [os.getenv_opt('CC_AARCH64') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk, '-fuse-ld=lld', '-L' + sdk + '/lib']
 	} else if guest { compiler = [os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }] }
 	else {
@@ -161,7 +161,7 @@ pub fn flags(arch string, guest bool, runtime bool) []string {
 	}
 	compiler << [if runtime { '-std=gnu99' } else { '-std=c11' }, '-O2', '-g', '-Wall', '-Wextra', '-Werror', '-fno-builtin']
 	if !guest {
-		sanitizer := if runtime { os.getenv_opt('VINIX_MEMORY_SANITIZERS') or { 'address,undefined' } } else { 'address,undefined' }
+		sanitizer := if runtime { os.getenv_opt('TULPAR_MEMORY_SANITIZERS') or { 'address,undefined' } } else { 'address,undefined' }
 		if sanitizer != 'none' { compiler << ['-fsanitize=' + sanitizer, '-fno-omit-frame-pointer'] }
 	}
 	return compiler
@@ -236,7 +236,7 @@ pub fn cli(argv []string, runtime bool) int {
 }
 
 fn options(args cachecli.Arguments, runtime bool, guest bool, build_only bool, arch string) !int {
-	work := if '--state-dir' in args.options { hosttest.work_dir(if args.value('--state-dir', '') == '' { '.' } else { args.value('--state-dir', '') }, 'vinix-memory-runtime-')! } else { sourcecommand.temporary('vinix-memory-runtime')! }
+	work := if '--state-dir' in args.options { hosttest.work_dir(if args.value('--state-dir', '') == '' { '.' } else { args.value('--state-dir', '') }, 'tulpar-memory-runtime-')! } else { sourcecommand.temporary('tulpar-memory-runtime')! }
 	defer { if '--state-dir' !in args.options { os.rmdir_all(work) or {} } }
 	original := optional_path(args, '--original-reference')!
 	compiler := flags(arch, guest, runtime)

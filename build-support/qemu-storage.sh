@@ -1,7 +1,7 @@
 #!/bin/bash
 # Shared host-side storage helpers for the AArch64 QEMU launchers.
 
-vinix_storage_file_size() {
+tulpar_storage_file_size() {
     if stat -f%z "$1" >/dev/null 2>&1; then
         stat -f%z "$1"
     else
@@ -9,7 +9,7 @@ vinix_storage_file_size() {
     fi
 }
 
-vinix_storage_is_temporary_path() {
+tulpar_storage_is_temporary_path() {
     local candidate="$1"
     local temp_root
 
@@ -26,12 +26,12 @@ vinix_storage_is_temporary_path() {
     return 1
 }
 
-vinix_storage_find_debugfs() {
+tulpar_storage_find_debugfs() {
     local candidate
 
-    if [ -n "${VINIX_DEBUGFS:-}" ]; then
-        [ -x "$VINIX_DEBUGFS" ] || return 1
-        printf '%s\n' "$VINIX_DEBUGFS"
+    if [ -n "${TULPAR_DEBUGFS:-}" ]; then
+        [ -x "$TULPAR_DEBUGFS" ] || return 1
+        printf '%s\n' "$TULPAR_DEBUGFS"
         return 0
     fi
     for candidate in \
@@ -46,12 +46,12 @@ vinix_storage_find_debugfs() {
     return 1
 }
 
-vinix_storage_find_mke2fs() {
+tulpar_storage_find_mke2fs() {
     local candidate
 
-    if [ -n "${VINIX_MKE2FS:-}" ]; then
-        [ -x "$VINIX_MKE2FS" ] || return 1
-        printf '%s\n' "$VINIX_MKE2FS"
+    if [ -n "${TULPAR_MKE2FS:-}" ]; then
+        [ -x "$TULPAR_MKE2FS" ] || return 1
+        printf '%s\n' "$TULPAR_MKE2FS"
         return 0
     fi
     for candidate in \
@@ -77,7 +77,7 @@ vinix_storage_find_mke2fs() {
 # $6 may name a package overlay to merge into a system image on the host. That
 # keeps the archive off the boot disk and out of guest RAM. Carried files win
 # conflicts while newly packaged home files are retained.
-vinix_storage_create_ext2() {
+tulpar_storage_create_ext2() {
     local target="$1"
     local size_mb="$2"
     local seed_archive="${3:-}"
@@ -98,7 +98,7 @@ vinix_storage_create_ext2() {
             rm -f "$temp_disk"
             return 1
         fi
-        seed_dir="$(mktemp -d "${TMPDIR:-/tmp}/vinix-root-seed.XXXXXX")" || {
+        seed_dir="$(mktemp -d "${TMPDIR:-/tmp}/tulpar-root-seed.XXXXXX")" || {
             rm -f "$temp_disk"
             return 1
         }
@@ -142,8 +142,8 @@ vinix_storage_create_ext2() {
             # a mixed, stale tree as current.
             if { [ -d "$carried_home/desktop" ] || \
                  [ -d "$carried_home/vmodules" ]; } && \
-               [ ! -f "$carried_home/.vinix-desktop-dev-version" ]; then
-                rm -f "$seed_dir/root/.vinix-desktop-dev-version"
+               [ ! -f "$carried_home/.tulpar-desktop-dev-version" ]; then
+                rm -f "$seed_dir/root/.tulpar-desktop-dev-version"
             fi
             # Replacing this directory wholesale drops files introduced by an
             # image update, such as /root/vmodules. Merge the old home over the
@@ -155,7 +155,7 @@ vinix_storage_create_ext2() {
                 return 1
             fi
         fi
-        printf '%s\n' "$image_id" > "$seed_dir/.vinix-image-id"
+        printf '%s\n' "$image_id" > "$seed_dir/.tulpar-image-id"
     fi
 
     persist_bytes=$((size_mb * 1024 * 1024))
@@ -179,7 +179,7 @@ vinix_storage_create_ext2() {
         fi
     fi
 
-    mke2fs="$(vinix_storage_find_mke2fs)" || {
+    mke2fs="$(tulpar_storage_find_mke2fs)" || {
         echo "ERROR: persistent storage needs mke2fs (install e2fsprogs)." >&2
         rm -rf "$seed_dir"
         rm -f "$temp_disk"
@@ -198,11 +198,11 @@ vinix_storage_create_ext2() {
     fi
 
     # mke2fs -d copies the ownership of the host files it read, so a volume
-    # built on a Mac arrives owned by whoever ran the build. Vinix runs as root
+    # built on a Mac arrives owned by whoever ran the build. Tulpar runs as root
     # and enforces Unix permissions; Firefox, for one, refuses to start when it
     # finds that $HOME belongs to somebody else.
     if [ -n "$seed_dir" ]; then
-        root_owner_tool="${VINIX_EXT2_ROOT_OWNER_TOOL:-$(dirname "${BASH_SOURCE[0]}")/ext2-set-root-owner}"
+        root_owner_tool="${TULPAR_EXT2_ROOT_OWNER_TOOL:-$(dirname "${BASH_SOURCE[0]}")/ext2-set-root-owner}"
         if ! "$root_owner_tool" "$temp_disk"; then
             echo "ERROR: could not give the new volume to root" >&2
             rm -rf "$seed_dir"
@@ -221,7 +221,7 @@ vinix_storage_create_ext2() {
 # The identity of the image a system volume was installed from. Size and mtime
 # are what a rebuild always changes, and reading them costs a stat rather than
 # a hash of a gigabyte.
-vinix_storage_image_id() {
+tulpar_storage_image_id() {
     local image="$1"
     local mtime
 
@@ -233,18 +233,18 @@ vinix_storage_image_id() {
     else
         return 1
     fi
-    printf '%s-%s\n' "$(vinix_storage_file_size "$image")" "$mtime"
+    printf '%s-%s\n' "$(tulpar_storage_file_size "$image")" "$mtime"
 }
 
 # The identity recorded inside an existing system volume, or nothing when it
 # has none -- which is also how a home volume and a corrupt one read.
-vinix_storage_installed_image_id() {
+tulpar_storage_installed_image_id() {
     local disk="$1"
     local debugfs
 
     [ -f "$disk" ] || return 1
-    debugfs="$(vinix_storage_find_debugfs)" || return 1
-    "$debugfs" -R 'cat /.vinix-image-id' "$disk" 2>/dev/null | tr -d '\r' | head -1
+    debugfs="$(tulpar_storage_find_debugfs)" || return 1
+    "$debugfs" -R 'cat /.tulpar-image-id' "$disk" 2>/dev/null | tr -d '\r' | head -1
 }
 
 # Copy a home out of an ext2 volume, so it can be carried into the volume that
@@ -252,13 +252,13 @@ vinix_storage_installed_image_id() {
 # volume, and / on the older home-only one, whose root directory is the home.
 # Failure here is never fatal on its own -- the caller decides whether to go on
 # without the old home or to keep the old volume.
-vinix_storage_extract_home() {
+tulpar_storage_extract_home() {
     local disk="$1"
     local destination="$2"
     local source="${3:-/root}"
     local debugfs
 
-    debugfs="$(vinix_storage_find_debugfs)" || return 1
+    debugfs="$(tulpar_storage_find_debugfs)" || return 1
     rm -rf "$destination"
     mkdir -p "$destination" || return 1
     "$debugfs" -R "rdump $source $destination" "$disk" >/dev/null 2>&1 || return 1

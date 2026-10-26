@@ -94,7 +94,7 @@ fn check_software_space_memory() ! {
 		text := json2.encode(space_fixture_review('upgrade', 5119, 4096, 1024))
 		mut app := SoftwareApp{output: []u8{cap: 8192}}
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.review = 'upgrade'.clone(); metadata_fixture_output(mut app, text); app.load_review()
 				assert !app.review_space_sufficient()
@@ -104,7 +104,7 @@ fn check_software_space_memory() ! {
 			}
 		}
 		app.close_app(); unsafe { text.free() }
-		kept := C.vinix_heap_end(); assert kept == 0, 'space review retained ' + kept.str()
+		kept := C.tulpar_heap_end(); assert kept == 0, 'space review retained ' + kept.str()
 		println('SOFTWARE SPACE 1000 review/load/render/blocked-confirm/cancel cycles retain zero tracked bytes PASS')
 	}
 }

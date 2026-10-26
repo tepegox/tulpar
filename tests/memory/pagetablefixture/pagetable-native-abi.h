@@ -1,6 +1,6 @@
 /* Native libc and volatile storage declarations; the regression is V. */
-#ifndef VINIX_PAGETABLE_NATIVE_ABI_H
-#define VINIX_PAGETABLE_NATIVE_ABI_H
+#ifndef TULPAR_PAGETABLE_NATIVE_ABI_H
+#define TULPAR_PAGETABLE_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

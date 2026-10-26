@@ -1,11 +1,11 @@
 # Native V application packages
 
-Build with `v -path '@vlib|@vmodules|.|tools/accounts' -o /tmp/vinix-package tools/packages/main.v`. Install/state commands
+Build with `v -path '@vlib|@vmodules|.|tools/accounts' -o /tmp/tulpar-package tools/packages/main.v`. Install/state commands
 support a disposable `--root /absolute/root`. Launch uses the real root and an
 ordinary identity. The root desktop can hand off to an administrator-configured
 `launch_user` through the isolated account session runner.
 
-`vinix-package capabilities` emits the package tool's accepted package, SDK,
+`tulpar-package capabilities` emits the package tool's accepted package, SDK,
 native window and deployment interface versions as JSON without loading
 configuration or package state. Select exact versions from the reported lists;
 the response does not advertise installed runtimes or publisher trust. See the
@@ -36,7 +36,7 @@ v run tests/packages/distribution-check.v --cross --desktop
 ```
 
 Release builders can supply a reviewed format-1 package configuration with
-`--config FILE` or `VINIX_PACKAGE_IMAGE_CONFIG=/absolute/FILE`. The option takes
+`--config FILE` or `TULPAR_PACKAGE_IMAGE_CONFIG=/absolute/FILE`. The option takes
 precedence over the environment. This seeds repository keys, organization policy
 and an optional launch account only on a fresh image; without it, new images
 remain unenrolled. Existing configuration is validated and preserved byte-for-byte,
@@ -52,9 +52,9 @@ failure/recovery checks and native execution on both architectures. The complete
 image build still requires successful completion before distribution.
 
 For an offline image, `--repositories DIRECTORY` or
-`VINIX_PACKAGE_IMAGE_REPOSITORIES=/absolute/DIRECTORY` captures complete signed
+`TULPAR_PACKAGE_IMAGE_REPOSITORIES=/absolute/DIRECTORY` captures complete signed
 release exports under their configured IDs. Their reviewed URLs must be
-`file:///usr/share/vinix-packages/repositories/ID`. The bundle is verified against
+`file:///usr/share/tulpar-packages/repositories/ID`. The bundle is verified against
 those keys and organization/license/firmware policy, then published atomically.
 Existing identical bundles are preserved; different or damaged destinations
 refuse. See [the bundle contract](SDK.md#offline-repository-bundles-in-release-images)
@@ -80,7 +80,7 @@ applications. See [the contract](SDK.md#require-an-advertised-application-catalo
 and [qualification](../../tests/packages/image-applications-check.md).
 
 Desktop/release builds can select the same gate declaratively with
-`VINIX_PACKAGE_IMAGE_APPLICATIONS=/absolute/requirements.json`, or use
+`TULPAR_PACKAGE_IMAGE_APPLICATIONS=/absolute/requirements.json`, or use
 `stage.v --applications FILE`. This is a nonempty format-1 deployment root
 manifest for the selected architecture. Explicit file or inline-ID options
 override the environment; the two explicit forms cannot be combined. Reports
@@ -110,7 +110,7 @@ the absolute-path field remains usable. See
 [chooser checks](../../tests/packages/software-deployment-chooser-check.md).
 
 Normal staging with selected application requirements also declares that exact
-set at `/usr/share/vinix-packages/applications.json`, after publishing its matching
+set at `/usr/share/tulpar-packages/applications.json`, after publishing its matching
 trust and signed bundle. Software's **Deployment → Review release apps** opens
 the complete proposal for separate confirmation. Existing identical declarations
 are preserved; different or unsafe files refuse. Check reports include the image
@@ -132,7 +132,7 @@ drift from that exact image lock without administrator approval or state changes
 See [installed-release checks](../../tests/packages/release-audit-check.md).
 
 Desktop checks need generated examples under `build/app-src` and a headless ui2
-overlay under `build/vmodules`; `VINIX_PACKAGE_TEST_UI2` selects another overlay
+overlay under `build/vmodules`; `TULPAR_PACKAGE_TEST_UI2` selects another overlay
 parent. Package implementation, publishing, staging and qualification use V.
 The driver also accepts `--direct-tests` to compile/run each existing assertion
 runner directly when the compiler's cached `vtest` tool cannot run. These runners
@@ -270,7 +270,7 @@ failures retain their diagnostics. Verification frames from transactions or
 running apps do not make those operations cancellable. See
 [navigation checks](../../tests/packages/software-verify-navigation-check.md).
 
-Software's **Health report**, also available as `vinix-package [--json] health`,
+Software's **Health report**, also available as `tulpar-package [--json] health`,
 inspects every installed app, runtime and data dependency. It lists all affected
 packages with installed provenance and paged diagnostics, even when catalogs are
 unavailable. Search matches installed metadata and diagnostics, and **Issues only**
@@ -903,7 +903,7 @@ Ordinary-user Software sessions authenticate reviewed administrative changes
 through the fixed `packages-change` action. A root worker returns progress over
 a private, kernel-peer-checked runtime socket; passwords stay off command lines
 and the desktop clears them after submission or cancellation. CLI clients use
-`vinix-package admin [--progress] [--offline] COMMAND ...` for the same bounded
+`tulpar-package admin [--progress] [--offline] COMMAND ...` for the same bounded
 reviewed-operation transport. See [administrator qualification](../../tests/packages/admin-check.md).
 
 The [ordinary-account compositor check](../../tests/packages/software-session-check.md)

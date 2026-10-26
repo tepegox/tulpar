@@ -13,8 +13,8 @@ struct C.pthread_t {}
 
 type WorkerFn = fn (voidptr) voidptr
 
-fn C.vinix_linuxkpi_fixture_worker_once(voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_worker_context(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_worker_once(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_worker_context(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, WorkerFn, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
@@ -24,22 +24,22 @@ fn C.init_completion(&C.completion)
 fn C.complete(&C.completion)
 fn C.wait_for_completion(&C.completion)
 fn C.wait_for_completion_timeout(&C.completion, uint) uint
-fn C.vinix_linuxkpi_test_worker_oom(i32)
+fn C.tulpar_linuxkpi_test_worker_oom(i32)
 fn C.alloc_workqueue(&char, u32, i32, ...) &C.workqueue_struct
 fn C.destroy_workqueue(&C.workqueue_struct)
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_worker_set_nice(i32) i32
-fn C.vinix_linuxkpi_worker_nice() i32
-fn C.vinix_linuxkpi_worker_timeslice() uint
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_worker_set_nice(i32) i32
+fn C.tulpar_linuxkpi_worker_nice() i32
+fn C.tulpar_linuxkpi_worker_timeslice() uint
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
 fn C.cond_resched() i32
 fn C.msleep(u32)
 fn C.memcpy(voidptr, voidptr, uint) voidptr
@@ -70,7 +70,7 @@ mut:
 	nice_release C.completion
 }
 
-@[export: 'vinix_linuxkpi_fixture_worker_once']
+@[export: 'tulpar_linuxkpi_fixture_worker_once']
 pub fn once(argument voidptr) voidptr {
 	unsafe {
 		mut test := &WorkerResult(argument)
@@ -114,9 +114,9 @@ fn failures() i32 {
 				if C.VKF_WORKER_TRACE {
 					C.kprintf(c'linuxkpi: worker trace constructor repeat=%u stage=%d pthread begin ticks=%lu\n', u32(repeat), i32(stage), C.jiffies)
 				}
-				C.vinix_linuxkpi_test_worker_oom(i32(stage))
-				error := C.pthread_create(&native_thread, nil, C.vinix_linuxkpi_fixture_worker_once, &test)
-				C.vinix_linuxkpi_test_worker_oom(0)
+				C.tulpar_linuxkpi_test_worker_oom(i32(stage))
+				error := C.pthread_create(&native_thread, nil, C.tulpar_linuxkpi_fixture_worker_once, &test)
+				C.tulpar_linuxkpi_test_worker_oom(0)
 				if C.VKF_WORKER_TRACE {
 					C.kprintf(c'linuxkpi: worker trace constructor repeat=%u stage=%d pthread returned error=%d ticks=%lu\n', u32(repeat), i32(stage), error, C.jiffies)
 				}
@@ -134,9 +134,9 @@ fn failures() i32 {
 					if C.VKF_WORKER_TRACE {
 						C.kprintf(c'linuxkpi: worker trace constructor repeat=%u stage=%d queue=%u flags=0x%x begin ticks=%lu\n', u32(repeat), i32(stage), u32(q), flags[q], C.jiffies)
 					}
-					C.vinix_linuxkpi_test_worker_oom(i32(stage))
-					queue := C.alloc_workqueue(c'vinix-worker-oom', flags[q], 2)
-					C.vinix_linuxkpi_test_worker_oom(0)
+					C.tulpar_linuxkpi_test_worker_oom(i32(stage))
+					queue := C.alloc_workqueue(c'tulpar-worker-oom', flags[q], 2)
+					C.tulpar_linuxkpi_test_worker_oom(0)
 					if queue != nil {
 						if C.VKF_WORKER_TRACE {
 							C.kprintf(c'linuxkpi: worker trace constructor unexpected queue success repeat=%u stage=%d queue=%u destroy begin ticks=%lu\n', u32(repeat), i32(stage), u32(q), C.jiffies)
@@ -158,7 +158,7 @@ fn failures() i32 {
 		if C.VKF_WORKER_TRACE {
 			C.kprintf(c'linuxkpi: worker trace recovery pthread create begin ticks=%lu\n', C.jiffies)
 		}
-		if C.pthread_create(&native_thread, nil, C.vinix_linuxkpi_fixture_worker_once, &recovery) != 0 {
+		if C.pthread_create(&native_thread, nil, C.tulpar_linuxkpi_fixture_worker_once, &recovery) != 0 {
 			return -C.ENOMEM
 		}
 		if C.VKF_WORKER_TRACE {
@@ -175,11 +175,11 @@ fn failures() i32 {
 fn placement(test &WorkerResult, cpu u32, nice i32) {
 	unsafe {
 		if C.VKF_WORKER_TRACE {
-			C.kprintf(c'linuxkpi: worker trace placement check begin expected_cpu=%u nice=%d actual_cpu=%u ticks=%lu\n', cpu, nice, C.vinix_linuxkpi_cpu_id(), C.jiffies)
+			C.kprintf(c'linuxkpi: worker trace placement check begin expected_cpu=%u nice=%d actual_cpu=%u ticks=%lu\n', cpu, nice, C.tulpar_linuxkpi_cpu_id(), C.jiffies)
 		}
 		C.cond_resched()
 		C.msleep(1)
-		if C.vinix_linuxkpi_cpu_id() != cpu || C.vinix_linuxkpi_worker_nice() != nice || C.vinix_linuxkpi_worker_timeslice() != (if nice == -20 {
+		if C.tulpar_linuxkpi_cpu_id() != cpu || C.tulpar_linuxkpi_worker_nice() != nice || C.tulpar_linuxkpi_worker_timeslice() != (if nice == -20 {
 			uint(10000)
 		} else {
 			uint(5000)
@@ -187,30 +187,30 @@ fn placement(test &WorkerResult, cpu u32, nice i32) {
 			test.result = -C.EIO
 		}
 		if C.VKF_WORKER_TRACE {
-			C.kprintf(c'linuxkpi: worker trace placement check complete expected_cpu=%u nice=%d actual_cpu=%u result=%d ticks=%lu\n', cpu, nice, C.vinix_linuxkpi_cpu_id(), test.result, C.jiffies)
+			C.kprintf(c'linuxkpi: worker trace placement check complete expected_cpu=%u nice=%d actual_cpu=%u result=%d ticks=%lu\n', cpu, nice, C.tulpar_linuxkpi_cpu_id(), test.result, C.jiffies)
 		}
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_worker_context']
+@[export: 'tulpar_linuxkpi_fixture_worker_context']
 pub fn context(argument voidptr) voidptr {
 	unsafe {
 		mut test := &WorkerResult(argument)
-		cpus := C.vinix_linuxkpi_percpu_count()
+		cpus := C.tulpar_linuxkpi_percpu_count()
 		C.__atomic_add_fetch(&test.calls, 1, 0)
 		if C.VKF_WORKER_TRACE {
-			C.kprintf(c'linuxkpi: worker trace context actor entered cpus=%u actual_cpu=%u ticks=%lu\n', cpus, C.vinix_linuxkpi_cpu_id(), C.jiffies)
+			C.kprintf(c'linuxkpi: worker trace context actor entered cpus=%u actual_cpu=%u ticks=%lu\n', cpus, C.tulpar_linuxkpi_cpu_id(), C.jiffies)
 		}
-		if cpus == 0 || cpus > 64 || !C.vinix_linuxkpi_may_sleep() || C.vinix_linuxkpi_worker_nice() != 0 {
+		if cpus == 0 || cpus > 64 || !C.tulpar_linuxkpi_may_sleep() || C.tulpar_linuxkpi_worker_nice() != 0 {
 			test.result = -C.EIO
 		} else {
 			for cpu := u32(0); cpu < cpus; cpu++ {
 				if C.VKF_WORKER_TRACE {
-					C.kprintf(c'linuxkpi: worker trace context bind begin target=%u actual_cpu=%u ticks=%lu\n', cpu, C.vinix_linuxkpi_cpu_id(), C.jiffies)
+					C.kprintf(c'linuxkpi: worker trace context bind begin target=%u actual_cpu=%u ticks=%lu\n', cpu, C.tulpar_linuxkpi_cpu_id(), C.jiffies)
 				}
-				if C.vinix_linuxkpi_worker_bind(cpu) != 0 { test.result = -C.EIO }
+				if C.tulpar_linuxkpi_worker_bind(cpu) != 0 { test.result = -C.EIO }
 				if C.VKF_WORKER_TRACE {
-					C.kprintf(c'linuxkpi: worker trace context bind complete target=%u actual_cpu=%u result=%d ticks=%lu\n', cpu, C.vinix_linuxkpi_cpu_id(), test.result, C.jiffies)
+					C.kprintf(c'linuxkpi: worker trace context bind complete target=%u actual_cpu=%u result=%d ticks=%lu\n', cpu, C.tulpar_linuxkpi_cpu_id(), test.result, C.jiffies)
 				}
 				placement(test, cpu, 0)
 			}
@@ -219,33 +219,33 @@ pub fn context(argument voidptr) voidptr {
 			if C.VKF_WORKER_TRACE {
 				C.kprintf(c'linuxkpi: worker trace context invalid CPU/nice checks begin ticks=%lu\n', C.jiffies)
 			}
-			if C.vinix_linuxkpi_worker_bind(cpus) != -C.EINVAL || C.vinix_linuxkpi_worker_bind(u32(-1)) != -C.EINVAL || C.vinix_linuxkpi_worker_set_nice(-21) != -C.EINVAL || C.vinix_linuxkpi_worker_set_nice(20) != -C.EINVAL {
+			if C.tulpar_linuxkpi_worker_bind(cpus) != -C.EINVAL || C.tulpar_linuxkpi_worker_bind(u32(-1)) != -C.EINVAL || C.tulpar_linuxkpi_worker_set_nice(-21) != -C.EINVAL || C.tulpar_linuxkpi_worker_set_nice(20) != -C.EINVAL {
 				test.result = -C.EIO
 			}
 			placement(test, last, 0)
 			if C.VKF_WORKER_TRACE {
 				C.kprintf(c'linuxkpi: worker trace context IRQ-off checks begin ticks=%lu\n', C.jiffies)
 			}
-			irq_flags := C.vinix_linuxkpi_irq_save()
-			if C.vinix_linuxkpi_worker_bind(other) != -C.EWOULDBLOCK || C.vinix_linuxkpi_worker_set_nice(-20) != -C.EWOULDBLOCK || C.vinix_linuxkpi_irq_flags() & (uint(1) << 9) != 0 || C.vinix_linuxkpi_worker_nice() != 0 || C.vinix_linuxkpi_cpu_id() != last {
+			irq_flags := C.tulpar_linuxkpi_irq_save()
+			if C.tulpar_linuxkpi_worker_bind(other) != -C.EWOULDBLOCK || C.tulpar_linuxkpi_worker_set_nice(-20) != -C.EWOULDBLOCK || C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9) != 0 || C.tulpar_linuxkpi_worker_nice() != 0 || C.tulpar_linuxkpi_cpu_id() != last {
 				test.result = -C.EIO
 			}
-			C.vinix_linuxkpi_irq_restore(irq_flags)
+			C.tulpar_linuxkpi_irq_restore(irq_flags)
 			placement(test, last, 0)
 			if C.VKF_WORKER_TRACE {
 				C.kprintf(c'linuxkpi: worker trace context preempt-disabled checks begin ticks=%lu\n', C.jiffies)
 			}
-			C.vinix_linuxkpi_preempt_disable()
-			pinned := C.vinix_linuxkpi_preempt_count()
-			if pinned == 0 || C.vinix_linuxkpi_worker_bind(other) != -C.EWOULDBLOCK || C.vinix_linuxkpi_worker_set_nice(-20) != -C.EWOULDBLOCK || C.vinix_linuxkpi_preempt_count() != pinned || C.vinix_linuxkpi_worker_nice() != 0 || C.vinix_linuxkpi_cpu_id() != last {
+			C.tulpar_linuxkpi_preempt_disable()
+			pinned := C.tulpar_linuxkpi_preempt_count()
+			if pinned == 0 || C.tulpar_linuxkpi_worker_bind(other) != -C.EWOULDBLOCK || C.tulpar_linuxkpi_worker_set_nice(-20) != -C.EWOULDBLOCK || C.tulpar_linuxkpi_preempt_count() != pinned || C.tulpar_linuxkpi_worker_nice() != 0 || C.tulpar_linuxkpi_cpu_id() != last {
 				test.result = -C.EIO
 			}
-			C.vinix_linuxkpi_preempt_enable()
+			C.tulpar_linuxkpi_preempt_enable()
 			placement(test, last, 0)
 			if C.VKF_WORKER_TRACE {
 				C.kprintf(c'linuxkpi: worker trace context high-priority nice set begin ticks=%lu\n', C.jiffies)
 			}
-			if C.vinix_linuxkpi_worker_set_nice(-20) != 0 { test.result = -C.EIO }
+			if C.tulpar_linuxkpi_worker_set_nice(-20) != 0 { test.result = -C.EIO }
 			placement(test, last, -20)
 		}
 		if C.VKF_WORKER_TRACE {
@@ -265,7 +265,7 @@ pub fn context(argument voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_worker_native_selftest']
+@[export: 'tulpar_linuxkpi_worker_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		if C.VKF_WORKER_TRACE {
@@ -275,7 +275,7 @@ pub fn selftest() i32 {
 		mut test := WorkerResult{}
 		C.init_completion(&test.nice_ready)
 		C.init_completion(&test.nice_release)
-		if C.vinix_linuxkpi_worker_nice() != 0 || C.vinix_linuxkpi_worker_timeslice() != 5000 {
+		if C.tulpar_linuxkpi_worker_nice() != 0 || C.tulpar_linuxkpi_worker_timeslice() != 5000 {
 			result = -C.EIO
 		}
 		if C.VKF_WORKER_TRACE {
@@ -285,13 +285,13 @@ pub fn selftest() i32 {
 		if C.VKF_WORKER_TRACE {
 			C.kprintf(c'linuxkpi: worker trace context pthread create begin ticks=%lu\n', C.jiffies)
 		}
-		if C.pthread_create(&native_thread, nil, C.vinix_linuxkpi_fixture_worker_context, &test) != 0 {
+		if C.pthread_create(&native_thread, nil, C.tulpar_linuxkpi_fixture_worker_context, &test) != 0 {
 			return -C.ENOMEM
 		}
 		if C.VKF_WORKER_TRACE {
 			C.kprintf(c'linuxkpi: worker trace context pthread created; wait nice_ready begin ticks=%lu\n', C.jiffies)
 		}
-		if C.wait_for_completion_timeout(&test.nice_ready, 500) == 0 || C.vinix_linuxkpi_worker_nice() != 0 || C.vinix_linuxkpi_worker_timeslice() != 5000 {
+		if C.wait_for_completion_timeout(&test.nice_ready, 500) == 0 || C.tulpar_linuxkpi_worker_nice() != 0 || C.tulpar_linuxkpi_worker_timeslice() != 5000 {
 			result = -C.EIO
 		}
 		if C.VKF_WORKER_TRACE {
@@ -301,7 +301,7 @@ pub fn selftest() i32 {
 		if C.VKF_WORKER_TRACE {
 			C.kprintf(c'linuxkpi: worker trace controller nice_release published; join begin ticks=%lu\n', C.jiffies)
 		}
-		if join(native_thread, &test) != 0 || C.vinix_linuxkpi_worker_nice() != 0 || C.vinix_linuxkpi_worker_timeslice() != 5000 {
+		if join(native_thread, &test) != 0 || C.tulpar_linuxkpi_worker_nice() != 0 || C.tulpar_linuxkpi_worker_timeslice() != 5000 {
 			result = -C.EIO
 		}
 		if C.VKF_WORKER_TRACE {

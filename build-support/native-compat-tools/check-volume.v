@@ -94,7 +94,7 @@ fn main() {
 	assert guesthost.volume_verdict('VOLUME START\nVOLUME DONE full ino=0\r\n') == 0
 	assert guesthost.volume_verdict('VOLUME START\nVOLUME DONE other ino=0\nVOLUME DONE full ino=1\n') == 1
 	assert guesthost.volume_verdict('VOLUME START\nVOLUME DONE full ino=0\nKERNEL PANIC') == 1
-	work := hosttest.work_dir('', 'vinix-volume-supervisor-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-volume-supervisor-check-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	baseline := descriptors()
 	for mode in ['one', 'large', 'invalid'] { check(work, mode, 0) }

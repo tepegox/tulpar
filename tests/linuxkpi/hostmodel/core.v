@@ -93,12 +93,12 @@ fn C.atomic_inc(&C.atomic_t)
 @[c_extern] __global C.EINVAL i32
 @[c_extern] __global C.EIO i32
 fn C.vmh_iowait_end_locked(&C.native_task_model)
-fn C.vinix_linuxkpi_task_view(voidptr, voidptr, i32, i32, &char, usize, bool) voidptr
-fn C.vinix_linuxkpi_task_init(voidptr, voidptr, i32, i32, &char, usize)
-fn C.vinix_linuxkpi_workqueue_task_sleep(voidptr)
-fn C.vinix_linuxkpi_workqueue_task_resume(voidptr)
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_task_view(voidptr, voidptr, i32, i32, &char, usize, bool) voidptr
+fn C.tulpar_linuxkpi_task_init(voidptr, voidptr, i32, i32, &char, usize)
+fn C.tulpar_linuxkpi_workqueue_task_sleep(voidptr)
+fn C.tulpar_linuxkpi_workqueue_task_resume(voidptr)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_percpu_count() u32
 
 fn native_u64(bits u64) C.vmh_u64 {
     mut result := C.vmh_u64{}
@@ -126,7 +126,7 @@ pub fn sync_init(model &C.native_task_model, index u32) {
             queue_lock: C.vmh_mutex_initializer
             queue_changed: C.vmh_condition_initializer
         }
-        C.vinix_linuxkpi_task_init(&model.storage[0], model, model.pid, model.tgid, model.name, 11)
+        C.tulpar_linuxkpi_task_init(&model.storage[0], model, model.pid, model.tgid, model.name, 11)
     }
 }
 
@@ -139,7 +139,7 @@ pub fn sync_destroy(model &C.native_task_model) {
     }
 }
 
-@[export: 'vinix_linuxkpi_clock_ns']
+@[export: 'tulpar_linuxkpi_clock_ns']
 pub fn clock_ns() C.vmh_u64 {
     unsafe {
         now := C.__atomic_load_n(&host_clock_ns, 2)
@@ -149,14 +149,14 @@ pub fn clock_ns() C.vmh_u64 {
         return native_u64(now)
     }
 }
-@[export: 'vinix_linuxkpi_clock_resolution_ns']
+@[export: 'tulpar_linuxkpi_clock_resolution_ns']
 pub fn clock_resolution_ns() u32 { return 1000000 }
-@[export: 'vinix_linuxkpi_test_warn_note']
+@[export: 'tulpar_linuxkpi_test_warn_note']
 pub fn warn_note(file C.vmh_const_char_p, line i32) { unsafe { C.atomic_inc(&time_warnings) } }
 
-@[export: 'vinix_linuxkpi_task_get']
+@[export: 'tulpar_linuxkpi_task_get']
 pub fn task_get(thread voidptr) { unsafe { C.__atomic_fetch_add(&(&C.native_task_model(thread)).pins, u32(1), i32(0)) } }
-@[export: 'vinix_linuxkpi_task_put']
+@[export: 'tulpar_linuxkpi_task_put']
 pub fn task_put(thread voidptr) {
     unsafe {
         task := &C.native_task_model(thread)
@@ -169,11 +169,11 @@ pub fn task_put(thread voidptr) {
         }
     }
 }
-@[export: 'vinix_linuxkpi_task_is_dead']
+@[export: 'tulpar_linuxkpi_task_is_dead']
 pub fn task_is_dead(thread C.vmh_const_void_p) bool {
     return unsafe { C.__atomic_load_n(&(&C.native_task_model(thread)).dead, 2) != 0 }
 }
-@[export: 'vinix_linuxkpi_task_queued']
+@[export: 'tulpar_linuxkpi_task_queued']
 pub fn task_queued(thread C.vmh_const_void_p) bool {
     unsafe {
         task := &C.native_task_model(thread)
@@ -183,7 +183,7 @@ pub fn task_queued(thread C.vmh_const_void_p) bool {
         return queued
     }
 }
-@[export: 'vinix_linuxkpi_task_enqueue']
+@[export: 'tulpar_linuxkpi_task_enqueue']
 pub fn task_enqueue(thread voidptr) bool {
     unsafe {
         task := &C.native_task_model(thread)
@@ -198,7 +198,7 @@ pub fn task_enqueue(thread voidptr) bool {
         return alive
     }
 }
-@[export: 'vinix_linuxkpi_task_dequeue']
+@[export: 'tulpar_linuxkpi_task_dequeue']
 pub fn task_dequeue(thread voidptr) {
     unsafe {
         task := &C.native_task_model(thread)
@@ -209,29 +209,29 @@ pub fn task_dequeue(thread voidptr) {
         C.assert(C.pthread_mutex_unlock(&task.queue_lock) == 0)
     }
 }
-@[export: 'vinix_linuxkpi_task_park']
+@[export: 'tulpar_linuxkpi_task_park']
 pub fn task_park() {
     unsafe {
         task := C.vmh_native_task
         C.assert(task != nil && may_sleep())
         C.__atomic_store_n(&task.parked, task.iteration, i32(3))
-        C.vinix_linuxkpi_workqueue_task_sleep(&task.storage[0])
+        C.tulpar_linuxkpi_workqueue_task_sleep(&task.storage[0])
         C.assert(C.pthread_mutex_lock(&task.queue_lock) == 0)
         for !task.queued { C.assert(C.pthread_cond_wait(&task.queue_changed, &task.queue_lock) == 0) }
         C.assert(C.pthread_mutex_unlock(&task.queue_lock) == 0)
-        C.vinix_linuxkpi_workqueue_task_resume(&task.storage[0])
+        C.tulpar_linuxkpi_workqueue_task_resume(&task.storage[0])
     }
 }
-@[export: 'vinix_linuxkpi_current_task']
+@[export: 'tulpar_linuxkpi_current_task']
 pub fn current_task() &C.task_struct {
     unsafe {
         task := C.vmh_native_task
         C.assert(task != nil)
-        return &C.task_struct(C.vinix_linuxkpi_task_view(&task.storage[0], task, task.pid, task.tgid,
+        return &C.task_struct(C.tulpar_linuxkpi_task_view(&task.storage[0], task, task.pid, task.tgid,
             task.name, C.strlen(task.name), task.must_exit || task.exiting))
     }
 }
-@[export: 'vinix_linuxkpi_task_signal_pending']
+@[export: 'tulpar_linuxkpi_task_signal_pending']
 pub fn signal_pending(thread C.vmh_const_void_p, fatal bool) bool {
     unsafe {
         task := &C.native_task_model(thread)
@@ -240,16 +240,16 @@ pub fn signal_pending(thread C.vmh_const_void_p, fatal bool) bool {
         return !fatal && pending & ~task.masked != 0
     }
 }
-@[export: 'vinix_linuxkpi_need_resched']
+@[export: 'tulpar_linuxkpi_need_resched']
 pub fn need_resched() bool { return C.vmh_resched_pending }
-@[export: 'vinix_linuxkpi_cond_resched']
+@[export: 'tulpar_linuxkpi_cond_resched']
 pub fn cond_resched() i32 {
     if !may_sleep() { return 0 }
     unsafe { C.assert(C.vmh_native_task != nil); C.vmh_native_task.yields++; C.vmh_resched_pending = false }
     return 1
 }
 
-@[export: 'vinix_linuxkpi_alloc_pages']
+@[export: 'tulpar_linuxkpi_alloc_pages']
 pub fn alloc_pages(pages usize, reclaim bool) voidptr {
     unsafe {
         C.__atomic_store_n(&last_reclaim, reclaim, i32(0))
@@ -266,17 +266,17 @@ pub fn alloc_pages(pages usize, reclaim bool) voidptr {
         return ptr
     }
 }
-@[export: 'vinix_linuxkpi_free_pages']
+@[export: 'tulpar_linuxkpi_free_pages']
 pub fn free_pages(base voidptr, pages usize) {
     unsafe { C.assert(C.__atomic_fetch_sub(&live_pages, pages, i32(0)) >= pages); C.free(base) }
 }
-@[export: 'vinix_linuxkpi_page_size']
+@[export: 'tulpar_linuxkpi_page_size']
 pub fn page_size() usize { return 4096 }
-@[noreturn; export: 'vinix_linuxkpi_bug']
+@[noreturn; export: 'tulpar_linuxkpi_bug']
 pub fn bug(file C.vmh_const_char_p, line i32) {
     unsafe {
         if usleep_boundary_check {
-            C.assert(C.vinix_linuxkpi_time_waiters() == 0 && live_pages == 0)
+            C.assert(C.tulpar_linuxkpi_time_waiters() == 0 && live_pages == 0)
             C.fputs(c'usleep boundary BUG with no published records or pages\n', C.stderr)
         }
         C.fprintf(C.stderr, c'Linux compatibility BUG at %s:%d\n', file, line)
@@ -284,13 +284,13 @@ pub fn bug(file C.vmh_const_char_p, line i32) {
     }
 }
 
-@[export: 'vinix_linuxkpi_irq_save']
+@[export: 'tulpar_linuxkpi_irq_save']
 pub fn irq_save() usize {
     flags := if C.vmh_interrupts { usize(1) << 9 } else { usize(0) }
     unsafe { C.vmh_interrupts = false }
     return flags
 }
-@[export: 'vinix_linuxkpi_irq_restore']
+@[export: 'tulpar_linuxkpi_irq_restore']
 pub fn irq_restore(flags usize) {
     unsafe {
         C.vmh_interrupts = flags & (usize(1) << 9) != 0
@@ -301,36 +301,36 @@ pub fn irq_restore(flags usize) {
         }
     }
 }
-@[export: 'vinix_linuxkpi_irq_flags']
+@[export: 'tulpar_linuxkpi_irq_flags']
 pub fn irq_flags() usize { return if C.vmh_interrupts { usize(1) << 9 } else { usize(0) } }
-@[export: 'vinix_linuxkpi_spin_wait']
+@[export: 'tulpar_linuxkpi_spin_wait']
 pub fn spin_wait() {
     unsafe {
         if C.vmh_timer_sync_spins != nil { C.__atomic_fetch_add(C.vmh_timer_sync_spins, u32(1), i32(3)) }
         C.__atomic_signal_fence(5)
     }
 }
-@[export: 'vinix_linuxkpi_preempt_disable']
+@[export: 'tulpar_linuxkpi_preempt_disable']
 pub fn preempt_disable() { unsafe { C.vmh_preempt_depth++ } }
-@[export: 'vinix_linuxkpi_preempt_enable']
+@[export: 'tulpar_linuxkpi_preempt_enable']
 pub fn preempt_enable() { unsafe { C.assert(C.vmh_preempt_depth != 0); C.vmh_preempt_depth-- } }
-@[export: 'vinix_linuxkpi_preempt_enable_no_resched']
+@[export: 'tulpar_linuxkpi_preempt_enable_no_resched']
 pub fn preempt_enable_no_resched() { unsafe { C.assert(C.vmh_preempt_depth != 0); C.vmh_preempt_depth-- } }
-@[export: 'vinix_linuxkpi_preempt_count']
+@[export: 'tulpar_linuxkpi_preempt_count']
 pub fn preempt_count() u32 { return C.vmh_preempt_depth }
-@[export: 'vinix_linuxkpi_maskable_irq_depth']
+@[export: 'tulpar_linuxkpi_maskable_irq_depth']
 pub fn maskable_irq_depth() u32 {
     return unsafe { if C.vmh_native_task == nil { u32(0) } else { C.vmh_native_task.maskable_irq_depth } }
 }
-@[export: 'vinix_linuxkpi_preempt_check_resched']
+@[export: 'tulpar_linuxkpi_preempt_check_resched']
 pub fn preempt_check_resched() {}
-@[export: 'vinix_linuxkpi_cpu_id']
+@[export: 'tulpar_linuxkpi_cpu_id']
 pub fn cpu_id() u32 { return C.vmh_current_cpu }
-@[export: 'vinix_linuxkpi_worker_bind']
+@[export: 'tulpar_linuxkpi_worker_bind']
 pub fn worker_bind(cpu u32) i32 {
     unsafe {
         if !may_sleep() { return -C.EWOULDBLOCK }
-        if cpu >= C.vinix_linuxkpi_percpu_count() || cpu >= 64 { return -C.EINVAL }
+        if cpu >= C.tulpar_linuxkpi_percpu_count() || cpu >= 64 { return -C.EINVAL }
         mut remaining := i32(C.__atomic_load_n(&worker_bind_failure_after, 0))
         for remaining >= 0 {
             if remaining == 0 { C.__atomic_fetch_add(&worker_bind_failures, u32(1), i32(3)); return -C.EIO }
@@ -340,20 +340,20 @@ pub fn worker_bind(cpu u32) i32 {
         return 0
     }
 }
-@[export: 'vinix_linuxkpi_may_sleep']
+@[export: 'tulpar_linuxkpi_may_sleep']
 pub fn may_sleep() bool { return C.vmh_interrupts && C.vmh_preempt_depth == 0 && maskable_irq_depth() == 0 }
-@[export: 'vinix_linuxkpi_worker_set_nice']
+@[export: 'tulpar_linuxkpi_worker_set_nice']
 pub fn worker_set_nice(nice i32) i32 {
     if !may_sleep() { return -C.EWOULDBLOCK }
     if nice < -20 || nice > 19 { return -C.EINVAL }
     unsafe { C.vmh_current_worker_nice = nice }
     return 0
 }
-@[export: 'vinix_linuxkpi_worker_nice']
+@[export: 'tulpar_linuxkpi_worker_nice']
 pub fn worker_nice() i32 { return C.vmh_current_worker_nice }
-@[export: 'vinix_linuxkpi_worker_timeslice']
+@[export: 'tulpar_linuxkpi_worker_timeslice']
 pub fn worker_timeslice() C.vmh_u64 { return native_u64(u64(5000 * (20 - C.vmh_current_worker_nice) / 20)) }
-@[export: 'vinix_linuxkpi_test_refcount_note']
+@[export: 'tulpar_linuxkpi_test_refcount_note']
 pub fn refcount_note(kind i32) {
     unsafe { C.assert(kind >= C.REFCOUNT_ADD_NOT_ZERO_OVF && kind <= C.REFCOUNT_DEC_LEAK); C.atomic_inc(&refcount_warnings) }
 }

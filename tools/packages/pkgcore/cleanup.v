@@ -7,7 +7,7 @@ import os
 import tools.packages.pkgprotocol
 
 struct CleanupIdentity {
-	domain string = 'vinix-generation-cleanup-1'
+	domain string = 'tulpar-generation-cleanup-1'
 	config Config
 	current State
 	previous State

@@ -6,7 +6,7 @@ import hosttest
 import os
 
 fn main() {
-	work := hosttest.work_dir('', 'vinix-native-guest-build-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-native-guest-build-check-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for arch in ['aarch64', 'x86_64'] {
 		for suite in ['hypervisor', 'kernel-resources', 'amd64-console', 'application-sandbox', 'security-audit'] {

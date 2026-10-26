@@ -7,7 +7,7 @@ import abiargs
 
 #include "linuxkpi_kasprintf_v_primitives.h"
 
-fn C.vinix_linuxkpi_warn_format(&C.vks_const_char, i32, &C.vks_const_char, ...)
+fn C.tulpar_linuxkpi_warn_format(&C.vks_const_char, i32, &C.vks_const_char, ...)
 
 const format_alloc_limit = uint(2147483646)
 
@@ -43,7 +43,7 @@ pub fn format_alloc_vasprintf(flags u32, format voidptr, cursor voidptr) voidptr
 		second := if written.count_overflow { u32(-1) } else { u32(written.position) }
 		if u32(first) != second {
 			// The native translation has no imported C source-line identity.
-			C.vinix_linuxkpi_warn_format(&C.vks_const_char(c'kernel/linuxkpi/compatcore/kasprintf.v'), 0,
+			C.tulpar_linuxkpi_warn_format(&C.vks_const_char(c'kernel/linuxkpi/compatcore/kasprintf.v'), 0,
 				&C.vks_const_char(c'different return values (%u and %u) from vsnprintf("%s", ...)'),
 				u32(first), second, &char(format))
 		}
@@ -67,7 +67,7 @@ pub fn format_alloc_vasprintf_const(flags u32, format voidptr, cursor voidptr) v
 
 // The instruction-only variadic prologue has two named arguments and appends
 // its canonical cursor; no va_list parameter normalization is needed here.
-@[export: 'vinix_linuxkpi_kasprintf_entry']
+@[export: 'tulpar_linuxkpi_kasprintf_entry']
 pub fn format_alloc_asprintf_entry(flags u32, format voidptr, cursor voidptr) voidptr {
 	return format_alloc_vasprintf(flags, format, cursor)
 }

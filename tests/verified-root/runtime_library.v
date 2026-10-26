@@ -18,7 +18,7 @@ fn C.GC_get_stack_base(voidptr) i32
 fn C.GC_register_my_thread(voidptr) i32
 fn C.GC_unregister_my_thread() i32
 
-@[export: 'vinix_verified_root_helper']
+@[export: 'tulpar_verified_root_helper']
 fn helper(operation &char, namespace voidptr, arguments voidptr, syntax voidptr) voidptr {
 	C.GC_allow_register_threads()
 	mut registered := false

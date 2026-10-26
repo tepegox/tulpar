@@ -181,8 +181,8 @@ pub fn verify_report(text string, arch string, profiles []string, qualifier_sha 
 pub fn verify_report_jit(text string, arch string, profiles []string, qualifier_sha string,
 	tool_pins map[string]devcore.Pin, work string, outputs map[string]string, jit bool) ! {
 	report := json2.decode[Report](text, strict: true)!
-	if report.schema != 1 || report.kernel != 'Vinix' || report.architecture != arch
-		|| report.uid != 1000 || report.context != 'vinix-native' || report.command_timeout_seconds != 600
+	if report.schema != 1 || report.kernel != 'Tulpar' || report.architecture != arch
+		|| report.uid != 1000 || report.context != 'tulpar-native' || report.command_timeout_seconds != 600
 		|| report.runner_sha256 != qualifier_sha || !report.complete || !report.all_selected_passed
 		|| report.jit_requested != jit || (jit && profiles != ['java'])
 		|| report.requested != profiles || report.results.len != profiles.len {
@@ -234,7 +234,7 @@ pub fn verify_report_jit(text string, arch string, profiles []string, qualifier_
 				hash = outputs[argv[0].all_after(work + '/')] or { return error('executed reference artifact is missing') }
 			}
 			if actual.argv != argv || actual.exit_code != 0 || actual.executable_sha256 != hash
-				|| actual.environment_overrides != if jit { {'VINIX_ALLOW_WX': '1'} } else { map[string]string{} }
+				|| actual.environment_overrides != if jit { {'TULPAR_ALLOW_WX': '1'} } else { map[string]string{} }
 				|| hash.len != 64 || actual.log != project + '/command-' + index.str() + '.log' {
 				return error('reference executed argv, executable pin, status or log changed')
 			}

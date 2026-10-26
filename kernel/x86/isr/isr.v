@@ -65,8 +65,8 @@ fn pf_handler(num u32, mut gpr_state cpulocal.GPRState) {
 		resume := memory.stack_guard_probe_fixup(gpr_state.rip, fault_addr)
 		if resume != 0 { gpr_state.rip = resume; return }
 		if memory.kernel_stack_guard(fault_addr) {
-			C.vinix_stack_guard_diagnostic(gpr_state.rsp, gpr_state.rip, fault_addr)
-			C.vinix_stack_guard_message(c'STACK-GUARD FATAL kernel-stack exhaustion\n')
+			C.tulpar_stack_guard_diagnostic(gpr_state.rsp, gpr_state.rip, fault_addr)
+			C.tulpar_stack_guard_message(c'STACK-GUARD FATAL kernel-stack exhaustion\n')
 			C.printf_panic(c'kernel stack guard: address=0x%llx sp=0x%llx\n', fault_addr, gpr_state.rsp)
 			lib.kpanic(gpr_state, c'Kernel stack guard')
 		}

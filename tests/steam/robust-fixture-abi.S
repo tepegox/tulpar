@@ -22,14 +22,14 @@ SYMBOL(fixture_call_syscall):
 #ifdef STEAM_ROBUST_ORIGINAL
 	b SYMBOL(robust_subject_syscall)
 #else
-	b SYMBOL(vinix_steam_syscall)
+	b SYMBOL(tulpar_steam_syscall)
 #endif
 #else
 #ifdef STEAM_ROBUST_ORIGINAL
 	xor %eax, %eax
 	jmp SYMBOL(robust_subject_syscall)
 #else
-	jmp SYMBOL(vinix_steam_syscall)
+	jmp SYMBOL(tulpar_steam_syscall)
 #endif
 #endif
 

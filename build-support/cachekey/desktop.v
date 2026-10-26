@@ -20,9 +20,9 @@ pub:
 pub fn desktop_prepare(root_path string, compiler_path string, env map[string]string, python_path string) !DesktopInputs {
 	root := resolve_path(root_path)!
 	compiler := resolve_path(compiler_path)!
-	userland := env_path(env, 'VINIX_AARCH64_USERLAND_BUILD_DIR', join_path(root, 'build-aarch64-userland'))!
-	sysroot := env_path(env, 'VINIX_AARCH64_SYSROOT', userland + '/staging')!
-	archive := env_path(env, 'VINIX_AARCH64_DEVTOOLS_ARCHIVE', userland + '/alpine-devtools.tar')!
+	userland := env_path(env, 'TULPAR_AARCH64_USERLAND_BUILD_DIR', join_path(root, 'build-aarch64-userland'))!
+	sysroot := env_path(env, 'TULPAR_AARCH64_SYSROOT', userland + '/staging')!
+	archive := env_path(env, 'TULPAR_AARCH64_DEVTOOLS_ARCHIVE', userland + '/alpine-devtools.tar')!
 	mut layers := [join_path(root, 'build-support/init-aarch64/initramfs.tar'), archive, sysroot]
 	mut selected := map[string]string{}
 	for item in desktop_layer_defaults {
@@ -33,16 +33,16 @@ pub fn desktop_prepare(root_path string, compiler_path string, env map[string]st
 	// resolved among these defaults even though its recursive generation is kept
 	// separate from the large layers' root-only generations.
 	for name in desktop_layer_order { layers << selected[name] }
-	x11 := selected['VINIX_X11_STAGING']
-	doom := selected['VINIX_DOOM_STAGING']
-	gpu := env_path(env, 'VINIX_GPU_SYSROOT', join_path(root, 'build-aarch64-x11/sysroot'))!
+	x11 := selected['TULPAR_X11_STAGING']
+	doom := selected['TULPAR_DOOM_STAGING']
+	gpu := env_path(env, 'TULPAR_GPU_SYSROOT', join_path(root, 'build-aarch64-x11/sysroot'))!
 	sibling := join_path(parent_path(root), 'ui2')
 	ui_default := if path_is_file(sibling + '/v.mod')! {
 		sibling
 	} else {
 		join_path(root, 'third_party/ui2')
 	}
-	ui := env_path(env, 'VINIX_UI2_SOURCE', ui_default)!
+	ui := env_path(env, 'TULPAR_UI2_SOURCE', ui_default)!
 	mut sources := []string{}
 	for item in desktop_source_paths {
 		sources << (if item.starts_with('ui2:') {
@@ -57,22 +57,22 @@ pub fn desktop_prepare(root_path string, compiler_path string, env map[string]st
 		'build-support/content-key', 'build-support/content-key.v', 'build-support/staging-cache', 'build-support/staging-cache.v', 'build-support/desktop-build-key', 'build-support/desktop-build-key.v', 'tools/packages'] {
 		sources << join_path(root, item)
 	}
-	wifi := env['VINIX_WIFI_BUNDLE'] or { '' }
+	wifi := env['TULPAR_WIFI_BUNDLE'] or { '' }
 	if wifi != '' {
 		if wifi.contains('\x00') { return error('embedded null byte') }
 		sources << resolve_path(expand_user(wifi)!)!
 	}
-	image_config := env['VINIX_PACKAGE_IMAGE_CONFIG'] or { '' }
+	image_config := env['TULPAR_PACKAGE_IMAGE_CONFIG'] or { '' }
 	if image_config != '' {
 		if image_config.contains('\x00') { return error('embedded null byte in image package configuration path') }
 		sources << resolve_path(expand_user(image_config)!)!
 	}
-	image_repositories := env['VINIX_PACKAGE_IMAGE_REPOSITORIES'] or { '' }
+	image_repositories := env['TULPAR_PACKAGE_IMAGE_REPOSITORIES'] or { '' }
 	if image_repositories != '' {
 		if image_repositories.contains('\x00') { return error('embedded null byte in image package repository path') }
 		sources << resolve_path(expand_user(image_repositories)!)!
 	}
-	image_applications := env['VINIX_PACKAGE_IMAGE_APPLICATIONS'] or { '' }
+	image_applications := env['TULPAR_PACKAGE_IMAGE_APPLICATIONS'] or { '' }
 	if image_applications != '' {
 		if image_applications.contains('\x00') { return error('embedded null byte in image application requirements path') }
 		sources << resolve_path(expand_user(image_applications)!)!
@@ -108,25 +108,25 @@ pub fn desktop_native_complete(input DesktopInputs, env map[string]string, platf
 
 fn desktop_finish(input DesktopInputs, env map[string]string, platform string, python_version string, pillow_version string, musl_path string, musl_version string, native bool) !string {
 	mut digest := sha256.new()
-	add_field(mut digest, if native { 'vinix-desktop-run-build-key-v3-native' } else { 'vinix-desktop-run-build-key-v2' })
+	add_field(mut digest, if native { 'tulpar-desktop-run-build-key-v3-native' } else { 'tulpar-desktop-run-build-key-v2' })
 	add_text(mut digest, 'platform', platform)
 	if !native {
 		add_text(mut digest, 'python-version', python_version)
 		add_text(mut digest, 'pillow-version', pillow_version)
 	}
-	for item in [DesktopEnv{'optimized-musl', 'VINIX_OPTIMIZED_MUSL', '1'},
-		DesktopEnv{'musl-retain', 'VINIX_MUSL_RETAIN', '1'},
-		DesktopEnv{'musl-compiler', 'VINIX_MUSL_CC_AARCH64', 'aarch64-linux-musl-gcc'}] {
+	for item in [DesktopEnv{'optimized-musl', 'TULPAR_OPTIMIZED_MUSL', '1'},
+		DesktopEnv{'musl-retain', 'TULPAR_MUSL_RETAIN', '1'},
+		DesktopEnv{'musl-compiler', 'TULPAR_MUSL_CC_AARCH64', 'aarch64-linux-musl-gcc'}] {
 		add_text(mut digest, item.label, env[item.variable] or { item.fallback })
 	}
 	add_text(mut digest, 'musl-compiler-version', musl_version)
-	add_text(mut digest, 'with-asahi', env['VINIX_WITH_ASAHI_GPU'] or { '0' })
-	add_text(mut digest, 'macho-linker', env['VINIX_MACHO_LINKER'] or { 'auto' })
-	add_text(mut digest, 'package-image-config', env['VINIX_PACKAGE_IMAGE_CONFIG'] or { '' })
-	add_text(mut digest, 'package-image-repositories', env['VINIX_PACKAGE_IMAGE_REPOSITORIES'] or { '' })
-	add_text(mut digest, 'package-image-applications', env['VINIX_PACKAGE_IMAGE_APPLICATIONS'] or { '' })
-	add_text(mut digest, 'sources', tree_key(input.sources, false, 'vinix-desktop-build-content-v1')!)
-	add_text(mut digest, 'inplace-layer-generation', tree_key(input.in_place, true, 'vinix-desktop-build-metadata-v1')!)
+	add_text(mut digest, 'with-asahi', env['TULPAR_WITH_ASAHI_GPU'] or { '0' })
+	add_text(mut digest, 'macho-linker', env['TULPAR_MACHO_LINKER'] or { 'auto' })
+	add_text(mut digest, 'package-image-config', env['TULPAR_PACKAGE_IMAGE_CONFIG'] or { '' })
+	add_text(mut digest, 'package-image-repositories', env['TULPAR_PACKAGE_IMAGE_REPOSITORIES'] or { '' })
+	add_text(mut digest, 'package-image-applications', env['TULPAR_PACKAGE_IMAGE_APPLICATIONS'] or { '' })
+	add_text(mut digest, 'sources', tree_key(input.sources, false, 'tulpar-desktop-build-content-v1')!)
+	add_text(mut digest, 'inplace-layer-generation', tree_key(input.in_place, true, 'tulpar-desktop-build-metadata-v1')!)
 	for path in input.layers { add_text(mut digest, 'layer:' + path, root_generation(path)!) }
 	mut tools := input.tools.clone()
 	if native { tools = tools.filter(it.name != 'python') }

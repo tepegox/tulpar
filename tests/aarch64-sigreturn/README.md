@@ -25,11 +25,11 @@ Build the ARM64 kernel and stage the genuine musl runtime first, then run:
 ```sh
 tests/aarch64-sigreturn/run \
   --kernel-dir kernel \
-  --state-dir /tmp/vinix-sigreturn-after
+  --state-dir /tmp/tulpar-sigreturn-after
 ```
 
 The runner uses `aarch64-linux-musl-gcc` from PATH; override it with `--cc` or
-`VINIX_AARCH64_CC`. `--musl` selects the real ARM64 loader/libc image. When the
+`TULPAR_AARCH64_CC`. `--musl` selects the real ARM64 loader/libc image. When the
 kernel is built in a worktree without boot dependencies, `--runner-root` selects
 the repository containing the native ARM ISO builder and its boot dependencies.
 Each invocation requires a fresh state directory and snapshots its kernel,

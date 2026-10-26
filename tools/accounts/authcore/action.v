@@ -9,7 +9,7 @@
 //
 //	description = Restart the computer
 //	auth = session
-//	exec = /usr/sbin/vinix-system
+//	exec = /usr/sbin/tulpar-system
 //	arg = power
 //	arg = restart
 //

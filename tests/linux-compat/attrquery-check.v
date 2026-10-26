@@ -108,13 +108,13 @@ fn storage(log string, arch string, phase string) {
 }
 fn failure(log string, arch string) { assert log.contains('LINUX ATTRQUERY DETAIL:'), 'attrquery baseline failure markers required'; semantics(log, 'before', arch, false) }
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
-	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array(); assert rows.len == names.len
 	mut artifacts := {'receipt': digest(state + '/receipt.json'), 'aggregate': digest(state + '.log')}
 	for index, row in rows {
 		entry := row.as_map(); name := entry['name']!.str(); assert name == names[index] && entry['exit_code']!.int() == if failing && index == 0 { 1 } else { 0 } && entry['detail']!.str() == ''
 		for label, path in {'source': state + '/sources/' + name + 'fixture/core.v', 'init': state + '/' + name + '/init', 'iso': state + '/' + name + '/test.iso'} { hash := digest(path); key := if label == 'source' { 'source_sha256' } else if label == 'init' { 'init_sha256' } else { 'iso_sha256' }; assert hash == entry[key]!.str(); artifacts[name + '_' + label] = hash }
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c'); artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 { assert os.read_file(state + '/' + name + '/serial.log')!.contains('LINUX ' + name.to_upper() + ': PASS') }
 	}; return artifacts
@@ -122,8 +122,8 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 fn reference_receipt(state string, arch string, init string) !map[string]string {
 	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['passed']!.bool() && value['finished']!.bool() && value['forced']!.bool() && value['status']!.int() == 0
 	artifacts := value['artifacts']!.as_map_of_strings(); command := value['command']!.as_array().map(it.str()); assert command.contains('-kernel') && command.contains('-initrd') && command.contains('-no-reboot')
-	for label, path in {'kernel': state + '/linux', 'probe': state + '/probe', 'wrapper_source': state + '/source/attrqueryreferenceinit/core.v', 'wrapper_c': state + '/fixture.c', 'wrapper_elf': state + '/init', 'initramfs': state + '/initramfs.cpio', 'serial': state + '/serial.log', 'serial_adapter_c': state + '/serial.c', 'controller_source': '/Users/alex/code/vinix/tests/linux-compat/attrquery-reference.v', 'qemu': command[0]} { assert artifacts[label] == digest(path) }
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/attrqueryreferenceinit/core.v')
+	for label, path in {'kernel': state + '/linux', 'probe': state + '/probe', 'wrapper_source': state + '/source/attrqueryreferenceinit/core.v', 'wrapper_c': state + '/fixture.c', 'wrapper_elf': state + '/init', 'initramfs': state + '/initramfs.cpio', 'serial': state + '/serial.log', 'serial_adapter_c': state + '/serial.c', 'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/attrquery-reference.v', 'qemu': command[0]} { assert artifacts[label] == digest(path) }
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/attrqueryreferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true); return artifacts
 }
 fn scope(area string) {
@@ -174,12 +174,12 @@ fn main() {
 	if '--negative-control' in os.args { assert false,'attrquery assertions must execute'; return }
 	if '--negative-pass-control' in os.args { failure(os.read_file(os.args[2])!,os.args[3]); return }
 	assert os.args.len == 2,'Usage: attrquery-check.v EVIDENCE-AREA (compile without -prod)'
-	area := os.args[1].trim_right('/') + '/'; states := area + 'states/'; root := '/Users/alex/code/vinix/'; out := root + 'tests/linux-compat/results/2026-10-14/'
+	area := os.args[1].trim_right('/') + '/'; states := area + 'states/'; root := '/Users/alex/code/tulpar/'; out := root + 'tests/linux-compat/results/2026-10-14/'
 	os.write_file(area + 'assertion-control.log',control(['--negative-control'],'attrquery assertions must execute'))!
 	os.write_file(area + 'passing-log-control.log',control(['--negative-pass-control',states + 'p2-reference-arm/serial.log','aarch64'],'attrquery baseline failure markers required'))!
 	scope(area)
 	base := os.read_file(area + 'base.txt')!.trim_space(); assert base == '8175c29c1559cad97f58820770d6e88c5befaa38'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'; compiler := compiler_root + 'compiler/v'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'; compiler := compiler_root + 'compiler/v'
 	mut pins := map[string]string{}; for path, value in object(compiler_root + 'compiler-inputs.json')! { pins[path] = value.str() }; assert pins.len == 15146
 	assert pins['v'] == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
 	for path, hash in pins { assert digest(compiler_root + 'compiler/' + path) == hash,path }
@@ -197,14 +197,14 @@ fn main() {
 		for key, hash in preparation(area,out,arch,suffix)! { artifacts[key] = hash }
 		mut identity := map[string]string{}
 		for phase in ['before','after'] {
-			state := states + 'p2-' + phase + '-' + suffix; kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			state := states + 'p2-' + phase + '-' + suffix; kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' { ['attrquery'] } else { ['attrquery','runtime','schedabi','rrabi','open','fcntlabi'] }
 			captured := receipt(state,arch,digest(kernel),names,phase == 'before')!
 			for key, value in captured { artifacts[phase + '_' + key] = value }
 			for key in ['attrquery_source','attrquery_init','attrquery_c'] { if phase == 'before' { identity[key] = captured[key] } else { assert identity[key] == captured[key] } }
 			text := os.read_file(state + '/attrquery/serial.log')!; semantics(text,phase,arch,false); storage(text,arch,phase)
 			ranges(text,arch,false)
-			build := area + 'build-' + phase + '-' + suffix + '.log'; text_build := os.read_file(build)!; assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			build := area + 'build-' + phase + '-' + suffix + '.log'; text_build := os.read_file(build)!; assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			artifacts[phase + '_kernel'] = digest(kernel); artifacts[phase + '_kernel_c'] = digest(area + phase + '-' + suffix + '.c')
 			for label, path in {'receipt':state + '/receipt.json','aggregate':state + '.log','native':state + '/attrquery/serial.log','build':build} { publish(path,out + 'attrquery-' + phase + '-' + arch + '-' + label + if label == 'receipt' { '.json' } else { '.log' })! }
 		}

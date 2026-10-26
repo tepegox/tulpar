@@ -50,7 +50,7 @@ fn root_socket_acls(base &char) [6]i32 {
 			socket_xattr_root(&path[0], index)
 			if index == 0 && (C.strcmp(base, c'/tmp/overlay-volume') == 0
 				|| C.strcmp(base, c'/tmp/overlay-state/diskmerged') == 0) {
-				// Vinix's current ext2 owner encoding rejects IDs above 16 bits.
+				// Tulpar's current ext2 owner encoding rejects IDs above 16 bits.
 				// A failed staged change must leave the socket and ACL owner intact.
 				mut st := C.stat{}
 				check(C.chown(&path[0], 70000, u32(0xffffffff)) == -1
@@ -83,7 +83,7 @@ fn socket_acl_connections(base &char, descriptors [6]i32) {
 			kind := if index == 4 { C.SOCK_SEQPACKET } else if index == 5 { C.SOCK_DGRAM } else { C.SOCK_STREAM }
 			client := C.socket(C.AF_UNIX, kind, 0)
 			check(client >= 0, 543)
-			result := C.vinix_overlay_connect(client, address, u32(sizeof(C.sockaddr_un)))
+			result := C.tulpar_overlay_connect(client, address, u32(sizeof(C.sockaddr_un)))
 			if index in [1, 3] {
 				check(result == 0, 544)
 				accepted := C.accept(descriptors[index], nil, nil)
@@ -93,7 +93,7 @@ fn socket_acl_connections(base &char, descriptors [6]i32) {
 			} else {
 				refused_socket_target(result, 546)
 				if index == 5 {
-					refused_socket_target(C.vinix_overlay_sendto(client, nil, 0, C.MSG_DONTWAIT,
+					refused_socket_target(C.tulpar_overlay_sendto(client, nil, 0, C.MSG_DONTWAIT,
 						address, u32(sizeof(C.sockaddr_un))), 547)
 					mut byte := char(0)
 					check(C.recvfrom(descriptors[index], &byte, 1, C.MSG_DONTWAIT, nil, nil) == -1

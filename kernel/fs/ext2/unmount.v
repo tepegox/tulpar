@@ -19,9 +19,9 @@ fn (mut filesystem EXT2Filesystem) check_unmount() ? {
 	if filesystem.block_size > 4096 { errno.set(errno.eio); return none }
 	// The validated ext2 layout supports block sizes through 4096 bytes.
 	// All scratch is on the stack, including repeated EBUSY retries.
-	bitmap := unsafe { &u8(C.vinix_stack_alloc(4096)) }
-	mut descriptor := unsafe { &EXT2BlockGroupDescriptor(C.vinix_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	bitmap := unsafe { &u8(C.tulpar_stack_alloc(4096)) }
+	mut descriptor := unsafe { &EXT2BlockGroupDescriptor(C.tulpar_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	first := if filesystem.superblock.first_inode < 11 { u32(11) } else { filesystem.superblock.first_inode }
 	for group in 0 .. filesystem.bgd_cnt {
 		unsafe { *descriptor = EXT2BlockGroupDescriptor{} }

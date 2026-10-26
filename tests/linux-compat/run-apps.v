@@ -152,7 +152,7 @@ fn main() {
 	mut snapshots := map[string][]u8{}
 	for kind in ['kernel', 'workloads', 'runtime-probe'] {
 		file := if kind == 'kernel' {
-			options.value('--kernel-dir', '') + '/bin/vinix'
+			options.value('--kernel-dir', '') + '/bin/tulpar'
 		} else {
 			options.value('--' + kind, '')
 		}
@@ -221,7 +221,7 @@ fn main() {
 		eprintln(err.msg())
 		exit(1)
 	}
-	os.write_file_array(state + '/kernel/bin/vinix', snapshots['kernel']) or {
+	os.write_file_array(state + '/kernel/bin/tulpar', snapshots['kernel']) or {
 		eprintln(err.msg())
 		exit(1)
 	}
@@ -266,7 +266,7 @@ fn main() {
 		eprintln('guest did not publish an application report')
 		code = 1
 	}
-	inputs['snapshot_kernel'] = sha256.sum(os.read_bytes(state + '/kernel/bin/vinix') or { []u8{} }).hex()
+	inputs['snapshot_kernel'] = sha256.sum(os.read_bytes(state + '/kernel/bin/tulpar') or { []u8{} }).hex()
 	if disk != '' { inputs['data_disk_after'] = sha256.sum(os.read_bytes(disk) or { eprintln(err.msg()); exit(1) }).hex() }
 	os.write_file(state + '/application-inputs.json', json2.encode(AppReceipt{arch, path, uid, memory, workload_timeout, cases, jit_runtimes, inputs, code},
 		prettify: true
@@ -284,7 +284,7 @@ fn boot_application(state string, arch string, disk string, memory int, timeout 
 	if arch == 'x86_64' && disk != '' {
 		// The release kernel starts SATA drivers when disk boot is requested.
 		// A small preformatted fixture volume cannot trigger auto-installation.
-		os.setenv('VINIX_CMDLINE', os.getenv('VINIX_CMDLINE') + ' vinix.disk=auto', true)
+		os.setenv('TULPAR_CMDLINE', os.getenv('TULPAR_CMDLINE') + ' tulpar.disk=auto', true)
 	}
 	configured := guesthost.launch(init, archive, work, work + '/kernel', arch, true)!
 	mut command := configured.command.clone()

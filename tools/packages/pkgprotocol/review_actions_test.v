@@ -6,8 +6,8 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 struct ActionCase {
 	operation string
@@ -98,7 +98,7 @@ fn test_review_actions_match_versions_in_current_legacy_and_nested_reviews() {
 				unsafe { text.free(); locked.free() }
 			}
 			for warmup in 0 .. 2 {
-				$if track_heap ? { if warmup == 1 { C.vinix_heap_begin() } }
+				$if track_heap ? { if warmup == 1 { C.tulpar_heap_begin() } }
 				for _ in 0 .. 1000 {
 					for text in accepted { mut value := decode_review(text)!; value.close(); value.close() }
 					for text in refused {
@@ -107,7 +107,7 @@ fn test_review_actions_match_versions_in_current_legacy_and_nested_reviews() {
 					}
 				}
 			}
-			$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'review action decoding retained ' + kept.str() }
+			$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'review action decoding retained ' + kept.str() }
 		}
 	}
 	unsafe { (&array(&cases)).free() }

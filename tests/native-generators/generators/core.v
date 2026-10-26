@@ -76,7 +76,7 @@ pub fn compile_fixture(source string, output string, arch string, flags []string
 
 fn project(kind string, output string, arch string, host_clock bool) ! {
 	selected := compiler()!
-	work := hosttest.work_dir('', 'vinix-' + kind + '-')!
+	work := hosttest.work_dir('', 'tulpar-' + kind + '-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	name := if kind == 'compat' { 'compatcore' } else { 'heapbench' }
 	hosttest.module_copy_tree(root() + if kind == 'compat' {
@@ -89,7 +89,7 @@ fn project(kind string, output string, arch string, host_clock bool) ! {
 		hosttest.module_copy_tree(root() + '/kernel/abiargs', work + '/abiargs')!
 		mut text := os.read_file(work + '/compatcore/string.v')!
 		for export_name in ['strchr', 'strpbrk', 'strsep'] {
-			text = text.replace("@[export: '" + export_name + "']", "@[export: 'vinix_linuxkpi_host_" + export_name + "']")
+			text = text.replace("@[export: '" + export_name + "']", "@[export: 'tulpar_linuxkpi_host_" + export_name + "']")
 		}
 		os.write_file(work + '/compatcore/string.v', text)!
 		path := work + '/compatcore/native_runtime.v'
@@ -97,7 +97,7 @@ fn project(kind string, output string, arch string, host_clock bool) ! {
 			mut runtime := os.read_file(path)!
 			for export_name in ['vsnprintf', 'vscnprintf', 'vsprintf', 'snprintf', 'scnprintf',
 				'sprintf'] {
-				runtime = runtime.replace("@[export: '" + export_name + "']", "@[export: 'vinix_linuxkpi_format_test_" + export_name + "']")
+				runtime = runtime.replace("@[export: '" + export_name + "']", "@[export: 'tulpar_linuxkpi_format_test_" + export_name + "']")
 			}
 			os.write_file(path, runtime)!
 		}

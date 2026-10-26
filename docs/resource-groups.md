@@ -1,6 +1,6 @@
 # Resource groups
 
-Vinix's `cgroup2` filesystem enforces hierarchical memory, CPU, disk I/O and
+Tulpar's `cgroup2` filesystem enforces hierarchical memory, CPU, disk I/O and
 task limits on AArch64 and x86_64. A process inherits membership at creation;
 writing its PID, or `0` for the caller, to `cgroup.procs` moves its whole workload.
 Membership, task reservations and creator-owned kernel reservations move together.
@@ -45,7 +45,7 @@ writeback is throttled. Native VirtIO, ATA, AHCI, NVMe and Apple ANS transfers
 use physical device identities; native hardware paths beyond QEMU were built
 but not exercised by these tests.
 
-`resource.pressure` is a Vinix extension on each nonroot group. Open it read-only
+`resource.pressure` is a Tulpar extension on each nonroot group. Open it read-only
 and use `poll` or `epoll` with `POLLIN`/`POLLPRI`. An initial snapshot is ready;
 subsequent configuration changes, pressure level transitions and quota events
 make it ready again. Reading at offset zero acknowledges that generation and

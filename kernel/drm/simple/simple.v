@@ -5,7 +5,7 @@ module simple
 
 // A render-only DRM node for the boot framebuffer.
 //
-// Vinix presents through /dev/fb0, so this driver intentionally has no KMS
+// Tulpar presents through /dev/fb0, so this driver intentionally has no KMS
 // connectors or page flips. Its purpose is to give Mesa's kms_swrast GBM
 // backend ordinary dumb GEM buffers. Aquamarine renders Hyprland into those
 // buffers and copies the completed frame to the firmware framebuffer. On
@@ -235,8 +235,8 @@ pub fn register() {
 	}
 	simple_registered = true
 	mut driver := &drm.DrmDriver{
-		name: 'vinix-dumb'
-		desc: 'Vinix framebuffer dumb-buffer allocator'
+		name: 'tulpar-dumb'
+		desc: 'Tulpar framebuffer dumb-buffer allocator'
 		major: 1
 		minor: 0
 		patchlevel: 0

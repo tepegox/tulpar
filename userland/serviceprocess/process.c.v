@@ -24,7 +24,7 @@ pub fn status(lease int, fallback int) int {
 }
 
 pub fn start(service sessioncore.Service, home string) Process {
-	directory := '${home}/.vinix-service-logs'
+	directory := '${home}/.tulpar-service-logs'
 	defer { unsafe { directory.free() } }
 	if !sessionipc.session_private_directory(directory) { return Process{-1, -1} }
 	path := '${directory}/${service.name.str()}.log'
@@ -41,7 +41,7 @@ pub fn start(service sessioncore.Service, home string) Process {
 		C.close(lease[1])
 		return Process{-1, -1}
 	}
-	runner := sessionipc.helper_path('vinix-service-runner')
+	runner := sessionipc.helper_path('tulpar-service-runner')
 	lease_arg := '--lease-fd=${lease[1]}'
 	defer { unsafe {
 		runner.free()

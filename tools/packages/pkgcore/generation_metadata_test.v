@@ -8,9 +8,9 @@ import time
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 // Valid SDK metadata on either side of the byte limit, without large payloads.
 fn generation_metadata_fixture(delta int) State {
@@ -57,7 +57,7 @@ fn test_generation_metadata_checks_exact_encoded_bytes_and_future_counter_widths
 }
 
 fn test_oversized_activation_preserves_abandoned_work_and_never_stages_any_operation() {
-	directory := os.temp_dir() + '/vinix-state-preflight-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-state-preflight-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory + '/generations/.stage-sentinel')!; os.mkdir(directory + '/objects')!
 	defer { os.rmdir_all(directory) or {} }
 	os.write_file(directory + '/generations/.stage-sentinel/keep', 'interrupted work')!
@@ -77,7 +77,7 @@ fn test_generation_metadata_encoding_retires_success_and_refusal_scratch() {
 	$if track_heap ? {
 		small := State{ generation: 1, architecture: 'aarch64' }
 		large := generation_metadata_fixture(1)
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 64 {
 			text := encode_generation_state(small)!
 			unsafe { text.free() }
@@ -86,8 +86,8 @@ fn test_generation_metadata_encoding_retires_success_and_refusal_scratch() {
 			if _ := encode_generation_state(large) { assert false }
 			else { message := err.msg(); unsafe { message.free(); err.free() } }
 		}
-		kept := C.vinix_heap_end()
-		assert kept == 0 && C.vinix_heap_count() == 0, 'generation metadata retained ${kept} bytes'
+		kept := C.tulpar_heap_end()
+		assert kept == 0 && C.tulpar_heap_count() == 0, 'generation metadata retained ${kept} bytes'
 		println('STATE PREFLIGHT 64 accepted and 8 oversized encodings retain zero tracked bytes PASS')
 	}
 }

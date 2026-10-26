@@ -16,7 +16,7 @@ fn compile_init(args map[string]ah.Value, root string, state string, init string
 	fixture := if native_source { join(state, 'fixture.o')! } else { source }
 	mut command := []string{}
 	if arch == 'aarch64' {
-		sysroot_text := environment('VINIX_AARCH64_SYSROOT', join(root, 'build-aarch64-userland/sysroot')!)!
+		sysroot_text := environment('TULPAR_AARCH64_SYSROOT', join(root, 'build-aarch64-userland/sysroot')!)!
 		sysroot := invoke('Path', [v(ah.Value(sysroot_text))], {}, 'path')!.text()
 		command = [environment('CC', 'clang')!, '--target=aarch64-linux-musl', '--sysroot=' + sysroot,
 			'-static', '-pthread', '-O2', '-fno-stack-protector', '-Wall', '-Wextra', '-Werror',
@@ -53,7 +53,7 @@ fn compile_init(args map[string]ah.Value, root string, state string, init string
 		method(generate, '__call__', [v(ah.Value(tool)), p(core),
 			v(ah.Value(if arch == 'aarch64' { 'arm64' } else { 'amd64' })),
 			ah.Value([ah.Value('tuple'), ah.Value([ah.Value('security_no_main')])])], {}, 'owner')!
-		run([...prefix, '-D_GNU_SOURCE', '-DVINIX_V_RUNTIME', '-I', join(root, include)!, '-c',
+		run([...prefix, '-D_GNU_SOURCE', '-DTULPAR_V_RUNTIME', '-I', join(root, include)!, '-c',
 			core, '-o', obj], null())!
 		command.insert(command.index('-o'), obj)
 	}
@@ -95,14 +95,14 @@ fn main_policy(args map[string]ah.Value) !ah.Value {
 	state_arg := ah.field(args, 'state_dir')
 	state_text := if state_arg is json2.Null {
 		invoke('tempfile.mkdtemp', [], {
-			'prefix': v(ah.Value('vinix-kernel-gaps-'))
+			'prefix': v(ah.Value('tulpar-kernel-gaps-'))
 		}, 'value')!.text()
 	} else {
 		state_arg.text()
 	}
 	state := resolve(state_text)!
 	mkdir(state)!
-	kernel := join(resolve(ah.field(args, 'kernel_dir').text())!, 'bin/vinix')!
+	kernel := join(resolve(ah.field(args, 'kernel_dir').text())!, 'bin/tulpar')!
 	if !flag(path_method(kernel, 'is_file', [], {}, 'value')!) {
 		parser_error('Build the requested kernel first: ' + kernel)!
 	}
@@ -137,15 +137,15 @@ fn main_policy(args map[string]ah.Value) !ah.Value {
 	mut env := call('os.environ.copy')!.object()
 	mut command := []string{}
 	if arch == 'aarch64' {
-		env['VINIX_KERNEL_DIR'] = ah.Value(resolve(ah.field(args, 'kernel_dir').text())!)
-		env['VINIX_INITRAMFS'] = ah.Value(initramfs)
-		env['VINIX_BOOT_DISK'] = ah.Value(join(state, 'boot.img')!)
-		env['VINIX_EFIVARS'] = ah.Value(join(state, 'efivars.fd')!)
-		env['VINIX_QEMU_HOST_SOURCE'] = ah.Value('0')
-		env['VINIX_QEMU_PACKAGE_STORE'] = ah.Value(join(state, 'packages.tar')!)
-		env['VINIX_QEMU_AUDIO'] = ah.Value('off')
-		env['VINIX_QEMU_EXTRA'] = ah.Value('-qmp unix:' + join(state, 'qmp.sock')! + ',server=on,wait=off')
-		if flag(ah.field(args, 'no_network')) { env['VINIX_QEMU_NETWORK'] = ah.Value('0') }
+		env['TULPAR_KERNEL_DIR'] = ah.Value(resolve(ah.field(args, 'kernel_dir').text())!)
+		env['TULPAR_INITRAMFS'] = ah.Value(initramfs)
+		env['TULPAR_BOOT_DISK'] = ah.Value(join(state, 'boot.img')!)
+		env['TULPAR_EFIVARS'] = ah.Value(join(state, 'efivars.fd')!)
+		env['TULPAR_QEMU_HOST_SOURCE'] = ah.Value('0')
+		env['TULPAR_QEMU_PACKAGE_STORE'] = ah.Value(join(state, 'packages.tar')!)
+		env['TULPAR_QEMU_AUDIO'] = ah.Value('off')
+		env['TULPAR_QEMU_EXTRA'] = ah.Value('-qmp unix:' + join(state, 'qmp.sock')! + ',server=on,wait=off')
+		if flag(ah.field(args, 'no_network')) { env['TULPAR_QEMU_NETWORK'] = ah.Value('0') }
 		if call('platform.system')!.text() != 'Darwin' && 'USE_TCG' !in env {
 			env['USE_TCG'] = ah.Value('1')
 		}
@@ -159,17 +159,17 @@ fn main_policy(args map[string]ah.Value) !ah.Value {
 			mkdir(iso_build)!
 			call('shutil.copytree', p(cache), p(join(iso_build, 'limine')!))!
 		}
-		env['VINIX_AMD64_KERNEL'] = ah.Value(kernel)
-		env['VINIX_AMD64_INITRAMFS'] = ah.Value(initramfs)
-		env['VINIX_AMD64_ISO'] = ah.Value(iso)
-		env['VINIX_AMD64_ISO_BUILD_DIR'] = ah.Value(iso_build)
+		env['TULPAR_AMD64_KERNEL'] = ah.Value(kernel)
+		env['TULPAR_AMD64_INITRAMFS'] = ah.Value(initramfs)
+		env['TULPAR_AMD64_ISO'] = ah.Value(iso)
+		env['TULPAR_AMD64_ISO_BUILD_DIR'] = ah.Value(iso_build)
 		run([join(root, 'build-support/build-amd64-iso.sh')!], ah.Value(env))!
-		qemu := call('shutil.which', v(ah.Value(environment('VINIX_QEMU_X86_64', 'qemu-system-x86_64')!)))!
+		qemu := call('shutil.which', v(ah.Value(environment('TULPAR_QEMU_X86_64', 'qemu-system-x86_64')!)))!
 		if qemu is json2.Null || qemu.text() == '' {
 			parser_error('qemu-system-x86_64 is missing')!
 		}
 		base := path_method(path_method(qemu.text(), 'parent', [], {}, 'path')!.text(), 'parent', [], {}, 'path')!.text()
-		firmware := invoke('Path', [v(ah.Value(environment('VINIX_OVMF_CODE', join(base, 'share/qemu/edk2-x86_64-code.fd')!)!))], {}, 'path')!.text()
+		firmware := invoke('Path', [v(ah.Value(environment('TULPAR_OVMF_CODE', join(base, 'share/qemu/edk2-x86_64-code.fd')!)!))], {}, 'path')!.text()
 		command = [qemu.text(), '-machine', 'q35,smm=off', '-accel', 'tcg', '-cpu', 'max', '-m',
 			'1024', '-smp', '2', '-drive', 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware,
 			'-cdrom', iso, '-display', 'none', '-monitor', 'none', '-qmp',

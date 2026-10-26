@@ -11,7 +11,7 @@ fn jit_denied(program &char) {
 		check(pid >= 0, 390)
 		if pid == 0 {
 			check(C.setgroups(0, nil) == 0 && C.setgid(1000) == 0 && C.setuid(1000) == 0, 391)
-			check(C.setenv(c'VINIX_ALLOW_WX', c'1', 1) == 0, 392)
+			check(C.setenv(c'TULPAR_ALLOW_WX', c'1', 1) == 0, 392)
 			args := [program, &char(c'--version'), &char(nil)]!
 			C.execv(program, &args[0])
 			C._exit(if *C.__errno_location() == C.EPERM { 0 } else { 1 })
@@ -33,7 +33,7 @@ fn reference_jit_prepare() bool {
 		check(C.mount(c'none', c'/opt/reference/share/jdk', nil,
 			usize(C.MS_REMOUNT | C.MS_BIND | C.MS_RDONLY | C.MS_NOSUID | C.MS_NODEV), c'wxallowed') == 0, 397)
 		// An approved JDK mount cannot authorize the unrelated build runner.
-		jit_denied(c'/usr/bin/vinix-build')
+		jit_denied(c'/usr/bin/tulpar-build')
 		C.puts(c'DEVELOPMENT JIT APPROVAL PASS: UID 1000 request denied before approval and outside the read-only JDK mount')
 		return true
 	}

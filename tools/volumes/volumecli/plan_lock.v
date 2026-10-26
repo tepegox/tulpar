@@ -37,12 +37,12 @@ fn open_plan_destination(path &char, mut edit PlanEdit, writing bool) bool {
 		else { for i := 0; i < slash; i++ { parent[i] = path[i] } }
 	}
 	edit.directory = C.open(&parent[0], C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
-	if edit.directory < 0 { C.perror(c'vinix-volume: open plan directory'); return false }
+	if edit.directory < 0 { C.perror(c'tulpar-volume: open plan directory'); return false }
 	if writing {
 		for {
 			if C.flock(edit.directory, C.LOCK_EX | C.LOCK_NB) == 0 { break }
 			if unsafe { C.errno == C.EINTR } { continue }
-			C.perror(c'vinix-volume: plan directory is busy or locking failed')
+			C.perror(c'tulpar-volume: plan directory is busy or locking failed')
 			return false
 		}
 		edit.locked = true
@@ -53,7 +53,7 @@ fn open_plan_destination(path &char, mut edit PlanEdit, writing bool) bool {
 fn open_plan_edit(path &char, mut edit PlanEdit, writing bool) bool {
 	if !open_plan_destination(path, mut edit, writing) { return false }
 	edit.source = C.openat(edit.directory, &edit.name[0], C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if edit.source < 0 { C.perror(c'vinix-volume: open saved bundle'); return false }
+	if edit.source < 0 { C.perror(c'tulpar-volume: open saved bundle'); return false }
 	return true
 }
 
@@ -68,7 +68,7 @@ fn close_plan_edit(mut edit PlanEdit) {
 fn publish_edit_bytes(edit &PlanEdit, bytes &u8, size int) bool {
 	if edit.directory < 0 || !edit.locked || size <= 0 { return false }
 	directory := C.fcntl(edit.directory, C.F_DUPFD_CLOEXEC, 0)
-	if directory < 0 { C.perror(c'vinix-volume: duplicate plan directory'); return false }
+	if directory < 0 { C.perror(c'tulpar-volume: duplicate plan directory'); return false }
 	return publish_bytes_at(directory, &edit.name[0], bytes, size)
 }
 

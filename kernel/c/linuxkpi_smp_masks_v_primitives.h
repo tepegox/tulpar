@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_SMP_MASKS_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_SMP_MASKS_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_SMP_MASKS_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_SMP_MASKS_V_PRIMITIVES_H
 #include <stdbool.h>
 #include <stdint.h>
 

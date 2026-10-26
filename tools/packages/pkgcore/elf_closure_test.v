@@ -7,9 +7,9 @@ import tests.packages.elffixture
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn closure_fixture(architecture string, kind string, needed []string, soname string, runpath string) []u8 {
@@ -68,7 +68,7 @@ fn closure_inventory_attempt(root int, images []ProfileElfImage, architecture st
 }
 
 fn test_elf_closure_bounds_dependencies_search_paths_aliases_and_ownership() {
-	work := os.real_path(os.temp_dir()) + '/vinix-elf-closure-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-elf-closure-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	root := capture_prepared_root(work, 'closure fixture')!; defer { C.close(root) }
 	mut cases := 0
@@ -129,17 +129,17 @@ fn test_elf_closure_bounds_dependencies_search_paths_aliases_and_ownership() {
 			closure_attempt(root, images, architecture, expected)
 			descriptors := closure_descriptors()
 			for _ in 0 .. 32 {
-				$if track_heap ? { C.vinix_heap_begin() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				closure_attempt(root, images, architecture, expected)
-				$if track_heap ? { assert C.vinix_heap_end() == 0 && C.vinix_heap_count() == 0, architecture + '/' + fault }
+				$if track_heap ? { assert C.tulpar_heap_end() == 0 && C.tulpar_heap_count() == 0, architecture + '/' + fault }
 			}
 			assert closure_descriptors() == descriptors
 			if fault == 'valid' {
 				closure_inventory_attempt(root, images, architecture)
 				for _ in 0 .. 128 {
-					$if track_heap ? { C.vinix_heap_begin() }
+					$if track_heap ? { C.tulpar_heap_begin() }
 					closure_inventory_attempt(root, images, architecture)
-					$if track_heap ? { assert C.vinix_heap_end() == 0 && C.vinix_heap_count() == 0 }
+					$if track_heap ? { assert C.tulpar_heap_end() == 0 && C.tulpar_heap_count() == 0 }
 				}
 				assert closure_descriptors() == descriptors
 			}

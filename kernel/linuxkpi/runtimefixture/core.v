@@ -46,8 +46,8 @@ struct C.vkf_constlistp {}
 type CompareInt = fn (C.vkf_constvoidp, C.vkf_constvoidp) i32
 type CompareNode = fn (voidptr, C.vkf_constlistp, C.vkf_constlistp) i32
 
-fn C.vinix_linuxkpi_fixture_compare_int(C.vkf_constvoidp, C.vkf_constvoidp) i32
-fn C.vinix_linuxkpi_fixture_compare_node(voidptr, C.vkf_constlistp, C.vkf_constlistp) i32
+fn C.tulpar_linuxkpi_fixture_compare_int(C.vkf_constvoidp, C.vkf_constvoidp) i32
+fn C.tulpar_linuxkpi_fixture_compare_node(voidptr, C.vkf_constlistp, C.vkf_constlistp) i32
 fn C.sort(voidptr, uint, uint, CompareInt, voidptr)
 fn C.INIT_LIST_HEAD(&C.list_head)
 fn C.list_add_tail(&C.list_head, &C.list_head)
@@ -128,16 +128,16 @@ fn C.__alloc_percpu(uint, uint) voidptr
 fn C.per_cpu_ptr(&uint, u32) &uint
 fn C.per_cpu(uint, u32) uint
 fn C.free_percpu(voidptr)
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_tigerlake_id(u16, u16, u32) bool
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
-fn C.vinix_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_tigerlake_id(u16, u16, u32) bool
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_irq_flags() uint
 fn C.preempt_count() u32
 fn C.preempt_disable()
 fn C.preempt_enable_no_resched()
 fn C.irqs_disabled() bool
-fn C.vinix_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_may_sleep() bool
 fn C.might_sleep_if(i32)
 fn C.kprintf(&char, ...) i32
 
@@ -151,7 +151,7 @@ __global C.GFP_ATOMIC u32
 __global C.__GFP_ZERO u32
 
 @[c_extern]
-__global C.vinix_linuxkpi_fixture_percpu_probe uint
+__global C.tulpar_linuxkpi_fixture_percpu_probe uint
 
 struct RuntimeNode {
 mut:
@@ -168,7 +168,7 @@ fn nested_spin_subclass(vns_effect_storage &u32) i32 {
 fn nested_spin_guard(vns_guard &C.spinlock_t, vns_flags &uint, vns_irq uint, vns_depth u32,
 	vns_calls &u32, vns_outcome &i32) &C.spinlock_t {
 	unsafe {
-		if *vns_flags != uint(0xf1a6) || C.vinix_linuxkpi_irq_flags() != vns_irq
+		if *vns_flags != uint(0xf1a6) || C.tulpar_linuxkpi_irq_flags() != vns_irq
 			|| C.preempt_count() != vns_depth { *vns_outcome = -5 }
 		(*vns_calls)++
 		return vns_guard
@@ -178,7 +178,7 @@ fn nested_spin_guard(vns_guard &C.spinlock_t, vns_flags &uint, vns_irq uint, vns
 fn nested_raw_spin_guard(vns_guard &C.raw_spinlock_t, vns_flags &uint, vns_irq uint,
 	vns_depth u32, vns_calls &u32, vns_outcome &i32) &C.raw_spinlock_t {
 	unsafe {
-		if *vns_flags != uint(0xf1a6) || C.vinix_linuxkpi_irq_flags() != vns_irq
+		if *vns_flags != uint(0xf1a6) || C.tulpar_linuxkpi_irq_flags() != vns_irq
 			|| C.preempt_count() != vns_depth { *vns_outcome = -5 }
 		(*vns_calls)++
 		return vns_guard
@@ -187,7 +187,7 @@ fn nested_raw_spin_guard(vns_guard &C.raw_spinlock_t, vns_flags &uint, vns_irq u
 
 fn nested_spin_locks() i32 {
 	unsafe {
-		entry_irq := C.vinix_linuxkpi_irq_flags()
+		entry_irq := C.tulpar_linuxkpi_irq_flags()
 		entry_depth := C.preempt_count()
 		mut outcome := i32(0)
 		for pinned in [false, true]! {
@@ -195,8 +195,8 @@ fn nested_spin_locks() i32 {
 			base := C.preempt_count()
 			for disabled in [false, true]! {
 				mut saved_entry := uint(0)
-				if disabled { saved_entry = C.vinix_linuxkpi_irq_save() }
-				incoming := C.vinix_linuxkpi_irq_flags()
+				if disabled { saved_entry = C.tulpar_linuxkpi_irq_save() }
+				incoming := C.tulpar_linuxkpi_irq_flags()
 				for raw_first in [false, true]! {
 					mut normal := C.spinlock_t{}
 					mut raw := C.raw_spinlock_t{}
@@ -236,16 +236,16 @@ fn nested_spin_locks() i32 {
 					} else {
 						C.spin_unlock_irqrestore(&normal, first_flags)
 					}
-					if C.vinix_linuxkpi_irq_flags() != incoming || C.preempt_count() != base || vns_effects != 0
+					if C.tulpar_linuxkpi_irq_flags() != incoming || C.preempt_count() != base || vns_effects != 0
 						|| C.spin_is_locked(&normal) || C.raw_spin_is_locked(&raw) {
 						outcome = -5
 					}
 				}
-				if disabled { C.vinix_linuxkpi_irq_restore(saved_entry) }
+				if disabled { C.tulpar_linuxkpi_irq_restore(saved_entry) }
 			}
 			if pinned { C.preempt_enable_no_resched() }
 		}
-		if C.vinix_linuxkpi_irq_flags() != entry_irq || C.preempt_count() != entry_depth {
+		if C.tulpar_linuxkpi_irq_flags() != entry_irq || C.preempt_count() != entry_depth {
 			outcome = -5
 		}
 		return outcome
@@ -277,7 +277,7 @@ struct Pair {
 	equal bool
 }
 
-@[export: 'vinix_linuxkpi_fixture_compare_int']
+@[export: 'tulpar_linuxkpi_fixture_compare_int']
 pub fn compare_int(a C.vkf_constvoidp, b C.vkf_constvoidp) i32 {
 	unsafe {
 		x := *(&i32(voidptr(a)))
@@ -286,7 +286,7 @@ pub fn compare_int(a C.vkf_constvoidp, b C.vkf_constvoidp) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_compare_node']
+@[export: 'tulpar_linuxkpi_fixture_compare_node']
 pub fn compare_node(_private voidptr, a C.vkf_constlistp, b C.vkf_constlistp) i32 {
 	unsafe {
 		x := &RuntimeNode(uint(voidptr(a)) - __offsetof(RuntimeNode, list))
@@ -338,7 +338,7 @@ fn kstrtox() i32 {
 			BoolCase{c'o', -22, false}, BoolCase{c'2', -22, false}, BoolCase{c'', -22, false},
 			BoolCase{nil, -22, false}]!
 		mut result := i32(0)
-		flags := C.vinix_linuxkpi_irq_save()
+		flags := C.tulpar_linuxkpi_irq_save()
 		depth := C.preempt_count()
 		C.preempt_disable()
 		for item in unsigned_cases {
@@ -388,8 +388,8 @@ fn kstrtox() i32 {
 		}
 		if !C.irqs_disabled() || C.preempt_count() != depth + 1 { result = -5 }
 		C.preempt_enable_no_resched()
-		C.vinix_linuxkpi_irq_restore(flags)
-		if C.vinix_linuxkpi_irq_flags() != flags || C.preempt_count() != depth { result = -5 }
+		C.tulpar_linuxkpi_irq_restore(flags)
+		if C.tulpar_linuxkpi_irq_flags() != flags || C.preempt_count() != depth { result = -5 }
 		return result
 	}
 }
@@ -414,7 +414,7 @@ fn string_tokens() i32 {
 		mut no_delimiter := [char(33), char(97), char(44), char(98), char(0), char(63)]!
 		mut cursor := &force[0]
 		mut result := i32(0)
-		flags := C.vinix_linuxkpi_irq_save()
+		flags := C.tulpar_linuxkpi_irq_save()
 		depth := C.preempt_count()
 		C.preempt_disable()
 		mut token := C.strsep(&cursor, c',')
@@ -450,8 +450,8 @@ fn string_tokens() i32 {
 		}
 		if !C.irqs_disabled() || C.preempt_count() != depth + 1 { result = -5 }
 		C.preempt_enable_no_resched()
-		C.vinix_linuxkpi_irq_restore(flags)
-		if C.vinix_linuxkpi_irq_flags() != flags || C.preempt_count() != depth { result = -5 }
+		C.tulpar_linuxkpi_irq_restore(flags)
+		if C.tulpar_linuxkpi_irq_flags() != flags || C.preempt_count() != depth { result = -5 }
 		return result
 	}
 }
@@ -483,7 +483,7 @@ fn string_helpers() i32 {
 		mut empty := [char(33), char(0), char(58), char(63)]!
 		empty_expected := [char(33), char(0), char(58), char(63)]!
 		mut result := i32(0)
-		flags := C.vinix_linuxkpi_irq_save()
+		flags := C.tulpar_linuxkpi_irq_save()
 		depth := C.preempt_count()
 		C.preempt_disable()
 		if !C.irqs_disabled() || C.preempt_count() != depth + 1 { result = -5 }
@@ -509,8 +509,8 @@ fn string_helpers() i32 {
 		}
 		if !C.irqs_disabled() || C.preempt_count() != depth + 1 { result = -5 }
 		C.preempt_enable_no_resched()
-		C.vinix_linuxkpi_irq_restore(flags)
-		if C.vinix_linuxkpi_irq_flags() != flags || C.preempt_count() != depth { result = -5 }
+		C.tulpar_linuxkpi_irq_restore(flags)
+		if C.tulpar_linuxkpi_irq_flags() != flags || C.preempt_count() != depth { result = -5 }
 		return result
 	}
 }
@@ -522,7 +522,7 @@ fn sleep_condition_once(value i32, calls &u32) i32 {
 
 // Keep the original C adapter in the separately compiled Linux-header facade.
 // The native IRQ caller checks its real IRQ depth, owner, pins and IF around it.
-@[export: 'vinix_linuxkpi_conditional_irq_fixture']
+@[export: 'tulpar_linuxkpi_conditional_irq_fixture']
 pub fn conditional_irq_fixture() i32 {
 	mut calls := u32(0)
 	C.might_sleep_if(sleep_condition_once(0, unsafe { &calls }))
@@ -531,9 +531,9 @@ pub fn conditional_irq_fixture() i32 {
 
 fn conditional_sleep_checks() i32 {
 	unsafe {
-		entry_irq := C.vinix_linuxkpi_irq_flags()
+		entry_irq := C.tulpar_linuxkpi_irq_flags()
 		entry_depth := C.preempt_count()
-		if !C.vinix_linuxkpi_may_sleep() { return -5 }
+		if !C.tulpar_linuxkpi_may_sleep() { return -5 }
 		mut outcome := i32(0)
 		mut calls := u32(0)
 		mut visited := u32(0)
@@ -543,8 +543,8 @@ fn conditional_sleep_checks() i32 {
 			base := C.preempt_count()
 			for disabled in [false, true]! {
 				mut saved_entry := uint(0)
-				if disabled { saved_entry = C.vinix_linuxkpi_irq_save() }
-				incoming := C.vinix_linuxkpi_irq_flags()
+				if disabled { saved_entry = C.tulpar_linuxkpi_irq_save() }
+				incoming := C.tulpar_linuxkpi_irq_flags()
 				for condition in [false, true]! {
 					visited++
 					// Invalid true cases are fatal and are covered by separate host children.
@@ -553,22 +553,22 @@ fn conditional_sleep_checks() i32 {
 					value := if condition { i32(-17) } else { i32(0) }
 					C.might_sleep_if(sleep_condition_once(value, &calls))
 					executed++
-					if calls != before + 1 || C.vinix_linuxkpi_irq_flags() != incoming
+					if calls != before + 1 || C.tulpar_linuxkpi_irq_flags() != incoming
 						|| C.preempt_count() != base { outcome = -5 }
 				}
-				if disabled { C.vinix_linuxkpi_irq_restore(saved_entry) }
+				if disabled { C.tulpar_linuxkpi_irq_restore(saved_entry) }
 			}
 			if pinned { C.preempt_enable_no_resched() }
 		}
 		if visited != 8 || executed != 5 || calls != 5
-			|| C.vinix_linuxkpi_irq_flags() != entry_irq || C.preempt_count() != entry_depth {
+			|| C.tulpar_linuxkpi_irq_flags() != entry_irq || C.preempt_count() != entry_depth {
 			outcome = -5
 		}
 		return outcome
 	}
 }
 
-@[export: 'vinix_linuxkpi_selftest']
+@[export: 'tulpar_linuxkpi_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		mut ptr := &u8(C.kzalloc(8193, C.GFP_KERNEL))
@@ -587,20 +587,20 @@ pub fn selftest() i32 {
 		}
 		ptr = &u8(grown)
 		mut result := i32(0)
-		local_probe := C.get_cpu_ptr(&C.vinix_linuxkpi_fixture_percpu_probe)
+		local_probe := C.get_cpu_ptr(&C.tulpar_linuxkpi_fixture_percpu_probe)
 		if *local_probe != 17 || C.preempt_count() == 0 { result = -5 }
-		C.this_cpu_add(C.vinix_linuxkpi_fixture_percpu_probe, 5)
-		if C.this_cpu_read(C.vinix_linuxkpi_fixture_percpu_probe) != 22 { result = -5 }
-		C.this_cpu_write(C.vinix_linuxkpi_fixture_percpu_probe, 17)
+		C.this_cpu_add(C.tulpar_linuxkpi_fixture_percpu_probe, 5)
+		if C.this_cpu_read(C.tulpar_linuxkpi_fixture_percpu_probe) != 22 { result = -5 }
+		C.this_cpu_write(C.tulpar_linuxkpi_fixture_percpu_probe, 17)
 		C.put_cpu_ptr(local_probe)
 		slots := &uint(C.__alloc_percpu(sizeof(uint), sizeof(uint)))
 		if slots == nil {
 			result = -12
 		} else {
-			count := C.vinix_linuxkpi_percpu_count()
+			count := C.tulpar_linuxkpi_percpu_count()
 			for index := u32(0); index < count; index++ {
 				slot := C.per_cpu_ptr(slots, index)
-				if *slot != 0 || C.per_cpu(C.vinix_linuxkpi_fixture_percpu_probe, index) != 17 {
+				if *slot != 0 || C.per_cpu(C.tulpar_linuxkpi_fixture_percpu_probe, index) != 17 {
 					result = -5
 				}
 				*slot = 0x12345678 + index
@@ -616,7 +616,7 @@ pub fn selftest() i32 {
 		}
 		C.kfree(ptr)
 		mut numbers := [i32(7), -1, 2, 0, 8, 2, -10]!
-		C.sort(&numbers[0], 7, sizeof(i32), C.vinix_linuxkpi_fixture_compare_int, nil)
+		C.sort(&numbers[0], 7, sizeof(i32), C.tulpar_linuxkpi_fixture_compare_int, nil)
 		for i in 1 .. 7 { if numbers[i - 1] > numbers[i] { result = -5 } }
 		mut head := C.list_head{}
 		C.INIT_LIST_HEAD(&head)
@@ -635,7 +635,7 @@ pub fn selftest() i32 {
 			C.rb_link_node(&nodes[i].tree, parent, link)
 			C.rb_insert_color(&nodes[i].tree, &root)
 		}
-		C.list_sort(nil, &head, C.vinix_linuxkpi_fixture_compare_node)
+		C.list_sort(nil, &head, C.tulpar_linuxkpi_fixture_compare_node)
 		mut index := uint(0)
 		mut entry := head.next
 		for uint(entry) != uint(&head) {
@@ -671,7 +671,7 @@ pub fn selftest() i32 {
 		C.spin_lock_init(&spin_guard)
 		mut flags := uint(0)
 		C.spin_lock_irqsave(&spin_guard, flags)
-		if C.vinix_linuxkpi_may_sleep() { result = -5 }
+		if C.tulpar_linuxkpi_may_sleep() { result = -5 }
 		atomic_object := C.kzalloc(48, C.GFP_ATOMIC)
 		if atomic_object == nil { result = -12 }
 		C.kfree(atomic_object)
@@ -684,7 +684,7 @@ pub fn selftest() i32 {
 			result = -5
 		}
 		C.raw_spin_unlock(&raw)
-		if !C.vinix_linuxkpi_may_sleep() { result = -5 }
+		if !C.tulpar_linuxkpi_may_sleep() { result = -5 }
 		if nested_spin_locks() != 0 { result = -5 }
 		if conditional_sleep_checks() != 0 { result = -5 }
 		mut bits := [3]uint{}
@@ -713,7 +713,7 @@ pub fn selftest() i32 {
 		if string_helpers() != 0 { result = -5 }
 		if kstrtox() != 0 { result = -5 }
 		if string_tokens() != 0 { result = -5 }
-		if !C.vinix_linuxkpi_tigerlake_id(0x8086, 0x9a49, 0x030000) || C.vinix_linuxkpi_tigerlake_id(0x8086, 0x9a49, 0x020000) || C.vinix_linuxkpi_tigerlake_id(0x1234, 0x9a49, 0x030000) {
+		if !C.tulpar_linuxkpi_tigerlake_id(0x8086, 0x9a49, 0x030000) || C.tulpar_linuxkpi_tigerlake_id(0x8086, 0x9a49, 0x020000) || C.tulpar_linuxkpi_tigerlake_id(0x1234, 0x9a49, 0x030000) {
 			result = -5
 		}
 		return result
@@ -726,9 +726,9 @@ $if !linuxkpi_host_test ? {
 	fn C.i915_has_memcpy_from_wc() bool
 	fn C.i915_memcpy_from_wc(voidptr, voidptr, uint) bool
 	fn C.i915_unaligned_memcpy_from_wc(voidptr, voidptr, uint)
-	fn C.vinix_linuxkpi_fixture_xmm_save(voidptr, &u32)
-	fn C.vinix_linuxkpi_fixture_xmm_set(voidptr, &u32)
-	fn C.vinix_linuxkpi_fixture_xmm_clear()
+	fn C.tulpar_linuxkpi_fixture_xmm_save(voidptr, &u32)
+	fn C.tulpar_linuxkpi_fixture_xmm_set(voidptr, &u32)
+	fn C.tulpar_linuxkpi_fixture_xmm_clear()
 	@[aligned:16]
 	struct AlignedWords {
 	mut:
@@ -739,7 +739,7 @@ $if !linuxkpi_host_test ? {
 	mut:
 		bytes [96]u8
 	}
-	@[export: 'vinix_linuxkpi_wc_selftest']
+	@[export: 'tulpar_linuxkpi_wc_selftest']
 	pub fn wc_selftest() i32 {
 		unsafe {
 			mut original := AlignedWords{}
@@ -750,13 +750,13 @@ $if !linuxkpi_host_test ? {
 			mut original_csr := u32(0)
 			mut observed_csr := u32(0)
 			mut result := i32(0)
-			C.vinix_linuxkpi_fixture_xmm_save(&original.words[0], &original_csr)
+			C.tulpar_linuxkpi_fixture_xmm_save(&original.words[0], &original_csr)
 			mut test_csr := (original_csr & ~u32(0x6000)) | u32(0x2000)
-			C.vinix_linuxkpi_fixture_xmm_set(&pattern.words[0], &test_csr)
+			C.tulpar_linuxkpi_fixture_xmm_set(&pattern.words[0], &test_csr)
 			C.kernel_fpu_begin()
-			C.vinix_linuxkpi_fixture_xmm_clear()
+			C.tulpar_linuxkpi_fixture_xmm_clear()
 			C.kernel_fpu_end()
-			C.vinix_linuxkpi_fixture_xmm_save(&observed.words[0], &observed_csr)
+			C.tulpar_linuxkpi_fixture_xmm_save(&observed.words[0], &observed_csr)
 			if observed.words[0] != pattern.words[0] || observed.words[1] != pattern.words[1] || observed_csr != test_csr {
 				result |= 1
 			}
@@ -771,14 +771,14 @@ $if !linuxkpi_host_test ? {
 				if C.memcmp(&destination.bytes[0], &source.bytes[0], 64) != 0 { result |= 8 }
 				C.i915_unaligned_memcpy_from_wc(&destination.bytes[3], &source.bytes[1], 33)
 				if C.memcmp(&destination.bytes[3], &source.bytes[1], 33) != 0 { result |= 16 }
-				C.vinix_linuxkpi_fixture_xmm_save(&observed.words[0], &observed_csr)
+				C.tulpar_linuxkpi_fixture_xmm_save(&observed.words[0], &observed_csr)
 				if observed.words[0] != pattern.words[0] || observed.words[1] != pattern.words[1] || observed_csr != test_csr {
 					result |= 32
 				}
 			} else {
 				for i in 0 .. 96 { if destination.bytes[i] != 0xa5 { result |= 64 } }
 			}
-			C.vinix_linuxkpi_fixture_xmm_set(&original.words[0], &original_csr)
+			C.tulpar_linuxkpi_fixture_xmm_set(&original.words[0], &original_csr)
 			if result == 0 {
 				C.kprintf(c'linuxkpi: unmodified i915 WC copy (%s) and FPU preservation passed\n', if accelerated {
 					&char(c'SSE4.1')

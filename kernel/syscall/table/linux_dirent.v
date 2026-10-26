@@ -12,8 +12,8 @@ import usercopy
 // even a mut Dirent local, leaving a 1536-byte slab allocation per entry.
 // These pointers are only consumed synchronously by readdir/copy_to_user.
 fn linux_getdents(gpr_state voidptr, fdnum int, dirp u64, count u64, legacy bool) (u64, u64) {
-	mut dirent := unsafe { &stat.Dirent(C.vinix_stack_alloc(sizeof(stat.Dirent))) }
-	record := unsafe { &u8(C.vinix_stack_alloc(1064)) }
+	mut dirent := unsafe { &stat.Dirent(C.tulpar_stack_alloc(sizeof(stat.Dirent))) }
+	record := unsafe { &u8(C.tulpar_stack_alloc(1064)) }
 	mut offset := u64(0)
 	for {
 		unsafe { *dirent = stat.Dirent{} }

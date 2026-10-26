@@ -9,8 +9,8 @@ fn C.mkfifo(&char, u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn test_history_decoders_retire_complete_and_partial_results() {
@@ -20,15 +20,15 @@ fn test_history_decoders_retire_complete_and_partial_results() {
 			collection := if publisher { 'indexes' } else { 'repositories' }
 			text := '{"format":1,"' + collection + '":[{"id":"publisher","public_key":"' + 'a'.repeat(64) + '","sequence":18446744073709551615,"index_sha256":"' + 'b'.repeat(64) + '"}]}'
 			broken := text[..text.len - 3]
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 1000 { history := decode_history(text, publisher)!; close_decoded_history(history) }
-			valid := C.vinix_heap_end()
-			C.vinix_heap_begin()
+			valid := C.tulpar_heap_end()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 1000 {
 				if history := decode_history(broken, publisher) { close_decoded_history(history); assert false }
 				else { message := err.msg(); unsafe { message.free(); err.free() } }
 			}
-			invalid := C.vinix_heap_end()
+			invalid := C.tulpar_heap_end()
 			println('HISTORY DECODE publisher=' + publisher.str() + ' 1000 complete decodes retained ' + valid.str() + ' bytes; 1000 partial refusals retained ' + invalid.str() + ' bytes')
 			retained += valid + invalid
 		}
@@ -55,13 +55,13 @@ fn test_history_decoders_preserve_bounded_owned_records_and_exact_writer_bytes()
 					sequence: ~u64(0), index_sha256: 'b'.repeat(64) }
 			}
 			text := history_decode_text(publisher, floors)
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. if count == 4096 { 1 } else { 1000 } {
 				history := decode_history(text, publisher)!; assert history.repositories.len == count
 				if count > 0 { assert history.repositories[count - 1].public_key == floors[count - 1].public_key && history.repositories[0].sequence == ~u64(0) }
 				close_decoded_history(history)
 			}
-			$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+			$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 			first := decode_history(text, publisher)!; second := decode_history(text, publisher)!
 			if count > 0 { assert first.repositories.data != second.repositories.data && first.repositories[0].public_key.str != second.repositories[0].public_key.str }
 			close_decoded_history(first)
@@ -95,17 +95,17 @@ fn test_history_decoders_retire_partial_schema_numeric_string_and_overflow_refus
 			text.replace('"' + collection + '":[', '"' + collection + '":[null,'),
 			history_decode_text(publisher, []RepositoryFloor{len: 2, init: RepositoryFloor{ id: 'same', public_key: 'a'.repeat(64), sequence: 1, index_sha256: 'b'.repeat(64) }})]
 		for input in invalid {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 { refuse_history_decode(input, publisher) }
-			$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+			$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		}
 		mut floors := []RepositoryFloor{cap: 4097}
 		for i in 0 .. 4097 { floors << RepositoryFloor{ id: 'publisher-' + i.str(), public_key: 'a'.repeat(64), sequence: 1, index_sha256: 'b'.repeat(64) } }
 		invalid = [history_decode_text(publisher, floors), ' '.repeat(max_metadata + 1)]
 		for input in invalid {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			refuse_history_decode(input, publisher)
-			$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+			$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		}
 	}
 	println('HISTORY DECODE 1000-cycle partial/schema/numeric/UTF8/duplicate refusals and 4097-record/8-MiB bounds retire all owned scratch PASS')
@@ -117,7 +117,7 @@ fn read_history_decode_fixture(directory string, publisher bool) !TrustHistory {
 }
 
 fn test_history_file_readers_retire_envelopes_preserve_damage_and_allow_restored_retry() {
-	directory := os.temp_dir() + '/vinix-history-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-history-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory + '/.publisher')!; defer { os.rmdir_all(directory) or {} }
 	for publisher in [false, true]! {
 		path := directory + if publisher { '/.publisher/history.json' } else { '/trust-history.json' }
@@ -130,7 +130,7 @@ fn test_history_file_readers_retire_envelopes_preserve_damage_and_allow_restored
 				'fifo' { os.rm(path)!; assert C.mkfifo(path.str, 0o600) == 0 }
 				else {}
 			}
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				if history := read_history_decode_fixture(directory, publisher) {
 					assert failure in ['absent', 'valid']! && history.repositories.len == if failure == 'absent' { 0 } else { 1 }
@@ -141,7 +141,7 @@ fn test_history_file_readers_retire_envelopes_preserve_damage_and_allow_restored
 					unsafe { message.free(); err.free() }
 				}
 			}
-			$if track_heap ? { kept := C.vinix_heap_end(); println('HISTORY FILE publisher=' + publisher.str() + ' ' + failure + ' retained ' + kept.str() + ' bytes'); assert kept == 0 }
+			$if track_heap ? { kept := C.tulpar_heap_end(); println('HISTORY FILE publisher=' + publisher.str() + ' ' + failure + ' retained ' + kept.str() + ' bytes'); assert kept == 0 }
 			if failure == 'partial' { assert os.read_file(path)! == text[..text.len - 1] }
 			if failure == 'fifo' { assert os.lstat(path)!.mode & 0o170000 == 0o010000 }
 			if failure == 'alias' { assert os.readlink(path)! == directory + '/missing' }
@@ -152,12 +152,12 @@ fn test_history_file_readers_retire_envelopes_preserve_damage_and_allow_restored
 		close_decoded_history(history); assert os.read_file(path)! == text
 		blocked := directory + '/blocked-' + publisher.str()
 		os.write_file(blocked, 'ordinary file in place of a parent directory')!
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			if unexpected := read_history_decode_fixture(blocked, publisher) { close_decoded_history(unexpected); assert false }
 			else { message := err.msg(); assert message != ''; unsafe { message.free(); err.free() } }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		assert os.read_file(blocked)! == 'ordinary file in place of a parent directory'
 	}
 	println('HISTORY DECODE 1000 absent/valid/partial/alias/FIFO consumer and publisher reads retire scratch, preserve retained bytes and permit restored retry PASS')

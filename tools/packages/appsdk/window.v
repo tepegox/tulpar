@@ -12,7 +12,7 @@ fn C.write(int, voidptr, uint) int
 
 pub const window_protocol = 1
 pub const window_text_protocol = 2
-pub const window_prefix = 'VINIX-WINDOW-FRAME '
+pub const window_prefix = 'TULPAR-WINDOW-FRAME '
 pub const window_frame_limit = 65536
 pub const window_event_limit = 512
 pub const window_text_event_limit = 2048
@@ -195,7 +195,7 @@ pub fn (mut event WindowEvent) close() {
 }
 
 pub fn publish_window_frame(frame WindowFrame) ! {
-	protocol := os.getenv('VINIX_WINDOW_PROTOCOL')
+	protocol := os.getenv('TULPAR_WINDOW_PROTOCOL')
 	defer { unsafe { protocol.free() } }
 	if (frame.format == window_protocol && protocol != '1') || (frame.format == window_text_protocol && protocol != '2') {
 		return error('launch this application with its declared native window broker protocol')

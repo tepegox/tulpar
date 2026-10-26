@@ -1,6 +1,6 @@
 # Real-time scheduling
 
-Vinix schedules by policy, not only by turn. A thread can be given
+Tulpar schedules by policy, not only by turn. A thread can be given
 `SCHED_FIFO` or `SCHED_RR` at a priority between 1 and 99, or a
 `SCHED_DEADLINE` budget of so much CPU in every period, and the scheduler acts
 on it: a thread holding one of those is picked ahead of every thread that does
@@ -64,7 +64,7 @@ it. What the budget guarantees is therefore a ceiling on what the thread takes
 
 ## What it does not promise
 
-Vinix is not a hard real-time system and this does not make it one. There is no
+Tulpar is not a hard real-time system and this does not make it one. There is no
 guaranteed worst-case latency, no priority inheritance on a contended futex, and
 no interrupt thread a driver can be preempted in favour of. Long non-preemptible
 sections in the kernel are bounded by nothing but how they are written.

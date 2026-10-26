@@ -4,9 +4,9 @@ module pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 const repository_url_accepted = [
 	'https://example.invalid', 'https://example.invalid/', 'https://example.invalid///',
@@ -106,14 +106,14 @@ fn test_repository_url_repeated_validation_keeps_no_allocations() {
 	defer { unsafe { owned.free() } }
 	mut accepted := 0
 	mut refused := 0
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		for url in repository_url_accepted { if valid_repository_url(url) { accepted++ } }
 		for url in repository_url_refused { if !valid_repository_url(url) { refused++ } }
 		if valid_repository_url(owned) { accepted++ }
 	}
 	$if track_heap ? {
-		kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+		kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 		url_require(kept == 0 && count == 0, 'URL scan retained tracked allocations')
 	}
 	url_require(accepted == (repository_url_accepted.len + 1) * 1000

@@ -1,4 +1,4 @@
-Vinix uses Alpine's musl ABI with allocation reuse built into the default
+Tulpar uses Alpine's musl ABI with allocation reuse built into the default
 libc. The source releases and every patch from Alpine's `musl-1.2.5-r11` and
 `musl-1.2.6-r2` recipes are pinned and checked before building. The helper
 selects 1.2.5 or 1.2.6 from the existing staged loader. Newer 1.2.5 packages
@@ -58,10 +58,10 @@ It returns nonzero if a mapping was returned to the kernel; its padding hint
 is ignored.
 
 To build the same libc with upstream retention behavior, set
-`VINIX_MUSL_RETAIN=0`. To keep the unmodified Alpine package altogether, set
-`VINIX_OPTIMIZED_MUSL=0` while rebuilding the staging tree. Compiler commands
-can be supplied through `VINIX_MUSL_CC_X86_64` and `VINIX_MUSL_CC_AARCH64`.
-`VINIX_MUSL_BUILD_DIR` changes the private build cache directory.
+`TULPAR_MUSL_RETAIN=0`. To keep the unmodified Alpine package altogether, set
+`TULPAR_OPTIMIZED_MUSL=0` while rebuilding the staging tree. Compiler commands
+can be supplied through `TULPAR_MUSL_CC_X86_64` and `TULPAR_MUSL_CC_AARCH64`.
+`TULPAR_MUSL_BUILD_DIR` changes the private build cache directory.
 
 `tests/user-alloc/verify.c` tests reuse, zeroing, resizing, aligned allocations,
 observed retention and trimming with live objects, cross-thread ownership transfer,

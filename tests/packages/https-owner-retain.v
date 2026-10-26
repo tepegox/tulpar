@@ -94,7 +94,7 @@ fn retain() ! {
 		save(state + '/packages-https-owner/qemu.log', prefix + arch + '.qemu.txt', mut evidence)!
 		for path in ['guest/init', 'guest/init.c', 'guest/build.log']! { inputs << pin(state + '/' + path)! }
 		for index, name in ['owner', 'core', 'producer']! { for suffix in [name, name + '.c', 'build.log'] { inputs << pin(state + '/guest/program-' + index.str() + '/' + suffix)! } }
-		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/vinix')!
+		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/tulpar')!
 		inputs << pin(os.find_abs_path_of_executable(arch + '-linux-musl-gcc')!)!
 		report := work + '/guest-' + arch + '-1.txt'; assert os.read_file(report)!.contains('1 passed, 0 failed, 0 skipped')
 		save(report, prefix + arch + '.txt', mut evidence)!

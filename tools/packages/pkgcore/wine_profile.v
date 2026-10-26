@@ -185,7 +185,7 @@ fn wine_catalog_with(recipes string, source_roots string, destination string, op
 	scratch = mirror_cost(scratch, scratch)!
 	disk_check(options.available_space(parent)!, mirror_cost(needed, scratch)!, 64 * 1024 * 1024)!
 	disk_check(options.available_space(temporary)!, scratch, 64 * 1024 * 1024)!
-	mut exporting := create_profile_stage(parent, '.vinix-wine-profile', 'Wine profile')!
+	mut exporting := create_profile_stage(parent, '.tulpar-wine-profile', 'Wine profile')!
 	defer { exporting.close() }
 	canonical := write_wine_profile(mut plan, roots, target, options, mut exporting) or { return exporting.failure(err) }
 	defer { unsafe { canonical.free() } }

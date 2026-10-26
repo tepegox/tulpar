@@ -1,6 +1,6 @@
 # Signed package runtime qualification
 
-The V controller builds the production native `vinix-sandbox`, builds the
+The V controller builds the production native `tulpar-sandbox`, builds the
 package/account/session tools for the selected target, and boots the accounts
 guest as init in QEMU. It uses real kernel pledge/unveil enforcement throughout
 `packages-enforced`; the ordinary accounts `packages` scenario retains its exec
@@ -11,10 +11,10 @@ From the checkout, with the matching kernel and the toolchains described in
 
 ```sh
 v -path '@vlib|@vmodules|tests/hardware-platform' run tests/packages/runtime-check.v \
-  --arch aarch64 --kernel /build/arm/kernel/bin/vinix \
+  --arch aarch64 --kernel /build/arm/kernel/bin/tulpar \
   --state-dir /tmp/package-runtime-arm
 v -path '@vlib|@vmodules|tests/hardware-platform' run tests/packages/runtime-check.v \
-  --arch x86_64 --kernel /build/x86/kernel/bin/vinix \
+  --arch x86_64 --kernel /build/x86/kernel/bin/tulpar \
   --state-dir /tmp/package-runtime-x86
 ```
 

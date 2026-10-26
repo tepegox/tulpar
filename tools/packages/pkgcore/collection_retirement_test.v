@@ -14,12 +14,12 @@ struct RetirementLimit { current u64 maximum u64 }
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn retirement_fixture() !string {
-	work := os.temp_dir() + '/vinix-collection-retirement-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-collection-retirement-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for generation in [1, 2] {
 		path := work + '/store/generations/' + generation.str()
 		os.mkdir_all(path)!
@@ -223,12 +223,12 @@ fn test_collection_retirement_releases_owned_scratch() {
 				path := retirement_mixed(work, 3, 3)!
 				targets := collection_targets(work + '/store', State{ generation: 2, previous: 1 })!
 				if damaged { os.chmod(path, 0o777)! }
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 				mut refused := false
 				remove_collection_target(targets[0]) or {
 					refused = true; message := err.msg(); unsafe { message.free(); err.free() }
 				}
-				bytes := C.vinix_heap_end(); count := C.vinix_heap_count()
+				bytes := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				assert refused == damaged && bytes == 0 && count == 0
 				if damaged { os.chmod(path, 0o755)!; remove_collection_target(targets[0])! }
 				close_collection_targets(targets)

@@ -24,12 +24,12 @@ fn check() ! {
 	work := os.args[1]; binary := os.args[2]
 	if os.exists(work) { return error('rollback fixture requires a new workspace') }
 	root := work + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	key := pkgcore.keygen(work + '/seed')!
 	configuration := pkgcore.Config{ architecture: architecture, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(configuration))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(configuration))!
 	service := pkgcore.Service{ root: root }
 	os.mkdir_all(work + '/runtime/bin')!; os.write_file(work + '/runtime/bin/runner', 'isolated runtime')!
 	os.chmod(work + '/runtime/bin/runner', 0o755)!
@@ -66,7 +66,7 @@ fn check() ! {
 	defer { C.close(lease) }
 	for name in os.ls(directory + '/objects')! { os.rm(directory + '/objects/' + name)! }
 	os.rmdir_all(work + '/repository')!
-	personal := root + '/home/user/.local/share/vinix-apps/app'
+	personal := root + '/home/user/.local/share/tulpar-apps/app'
 	os.mkdir_all(personal)!; os.write_file(personal + '/note', 'retained personal data')!
 	catalog := os.read_file(directory + '/catalog.json')!
 	history := os.read_file(directory + '/trust-history.json')!
@@ -106,9 +106,9 @@ fn check() ! {
 	assert os.read_file(directory + '/catalog.json')! == catalog && os.read_file(directory + '/trust-history.json')! == history
 	assert os.read_file(personal + '/note')! == 'retained personal data'
 	command(binary, root, ['remove', 'app'])!
-	assert service.state()!.packages.len == 0 && !os.exists(directory + '/current/share/applications/vinix-app.desktop')
+	assert service.state()!.packages.len == 0 && !os.exists(directory + '/current/share/applications/tulpar-app.desktop')
 	command(binary, root, ['rollback'])!
-	assert service.verify()!.packages == before.packages && os.exists(directory + '/current/share/applications/vinix-app.desktop')
+	assert service.verify()!.packages == before.packages && os.exists(directory + '/current/share/applications/tulpar-app.desktop')
 	assert os.read_file(personal + '/note')! == 'retained personal data'
 	println('ROLLBACK CLI signed app/runtime/all-data closure, reviewed progress, offline source copies, stale approval, leases, cleanup, undo, uninstall and personal data PASS')
 }

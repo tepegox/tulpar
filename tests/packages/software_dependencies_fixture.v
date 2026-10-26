@@ -28,12 +28,12 @@ fn check_software_dependencies() ! {
 	assert software_required_by(rows, 'runtime') == 'alpha'
 	$if track_heap ? {
 		for _ in 0 .. 2 {
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 1000 {
 				assert software_required_by(rows, 'runtime') == 'alpha'
 				assert !software_dependency_usage_incomplete(rows)
 			}
-			assert C.vinix_heap_end() == 0
+			assert C.tulpar_heap_end() == 0
 		}
 		println('SOFTWARE DEPENDENCIES 1000 requested-witness queries retire all tracked graph storage PASS')
 	}

@@ -28,10 +28,10 @@ fn run() !int {
 	mode := os.args.last().all_after_last('/')
 	mut offset := 0
 	if '--continue-at' in os.args { offset = os.args[os.args.index('--continue-at') + 1].int() }
-	mut record := os.open_append(os.getenv('VINIX_OUTPUT_CALLS'))!
+	mut record := os.open_append(os.getenv('TULPAR_OUTPUT_CALLS'))!
 	record.writeln(mode + ' ' + offset.str())!; record.close()
 	// No destination or package-lock descriptor may survive the exec boundary.
-	for path in [os.getenv('VINIX_OUTPUT_TARGET'), os.getenv('VINIX_OUTPUT_LOCK')] {
+	for path in [os.getenv('TULPAR_OUTPUT_TARGET'), os.getenv('TULPAR_OUTPUT_LOCK')] {
 		if path == '' { continue }
 		info := os.stat(path)!
 		for fd in 3 .. 128 {
@@ -44,7 +44,7 @@ fn run() !int {
 	if mode == 'terminated' { C.raise(C.SIGTERM); return 1 }
 	if mode == 'no-range' && offset > 0 { return 33 }
 	if mode == 'empty' { return 0 }
-	data := os.read_bytes(os.getenv('VINIX_OUTPUT_SOURCE'))!
+	data := os.read_bytes(os.getenv('TULPAR_OUTPUT_SOURCE'))!
 	assert offset >= 0 && offset <= data.len
 	if mode == 'partial' { emit(data[offset..offset + 1024])!; return 18 }
 	mut at := offset

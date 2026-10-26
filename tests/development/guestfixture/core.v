@@ -70,10 +70,10 @@ fn check(ok bool, line int) {
 	}
 }
 
-fn require_vinix() {
+fn require_tulpar() {
 	mut kernel := C.utsname{}
 	check(C.uname(unsafe { &kernel }) == 0
-		&& C.strcmp(unsafe { &kernel.sysname[0] }, c'Vinix') == 0, 153)
+		&& C.strcmp(unsafe { &kernel.sysname[0] }, c'Tulpar') == 0, 153)
 }
 
 fn write_text(path &char, value &char, length usize) {
@@ -87,12 +87,12 @@ fn job_payload() i32 {
 	unsafe {
 		token := C.getenv(c'TEST_TOKEN')
 		check(C.getuid() == 1000 && C.geteuid() == 1000 && C.getgid() == 1000 && C.getegid() == 1000, 69)
-		check(token != nil && C.strcmp(token, c'vinix-native-fixture-secret') == 0, 70)
+		check(token != nil && C.strcmp(token, c'tulpar-native-fixture-secret') == 0, 70)
 		check(C.getenv(c'UNSELECTED_PARENT_SECRET') == nil, 71)
 		write_text(c'/home/developer/payload.done', c'completed', 9)
 		// Both streams must be discarded by the scheduler, not saved in logs.
-		C.puts(c'vinix-native-fixture-secret')
-		C.write(2, c'vinix-native-fixture-secret\n', 28)
+		C.puts(c'tulpar-native-fixture-secret')
+		C.write(2, c'tulpar-native-fixture-secret\n', 28)
 		return 0
 	}
 }
@@ -158,7 +158,7 @@ fn emit_receipt(path &char, expected &char, owner_only_file bool) {
 		check(C.fstat(fd, &st) == 0 && st.st_uid == 1000
 			&& (!owner_only_file || st.st_mode & 0o077 == 0), 107)
 		check(count > 0 && count < text.len - 1 && C.close(fd) == 0, 108)
-		check(C.strstr(&text[0], c'vinix-native-fixture-secret') == nil, 109)
+		check(C.strstr(&text[0], c'tulpar-native-fixture-secret') == nil, 109)
 		check(C.strstr(&text[0], expected) != nil, 110)
 		// JSON encoders escape newlines within strings. Remove formatting
 		// line breaks so the full native receipt remains one serial record.
@@ -180,7 +180,7 @@ fn emit_command_log(path &char) {
 		mut text := [8192]char{}
 		count := C.read(fd, &text[0], text.len - 1)
 		check(count >= 0, 255)
-		check(C.strstr(&text[0], c'vinix-native-fixture-secret') == nil, 256)
+		check(C.strstr(&text[0], c'tulpar-native-fixture-secret') == nil, 256)
 		C.printf(c'DEVELOPMENT COMMAND LOG %s\n%s\n', path, &text[0])
 		mut st := C.stat{}
 		check(C.fstat(fd, &st) == 0, 309)
@@ -188,7 +188,7 @@ fn emit_command_log(path &char) {
 			check(C.lseek(fd, -i64(text.len - 1), C.SEEK_END) >= 0, 310)
 			text = [8192]char{}
 			tail := C.read(fd, &text[0], text.len - 1)
-			check(tail >= 0 && C.strstr(&text[0], c'vinix-native-fixture-secret') == nil, 311)
+			check(tail >= 0 && C.strstr(&text[0], c'tulpar-native-fixture-secret') == nil, 311)
 			C.printf(c'DEVELOPMENT COMMAND LOG TAIL %s\n%s\n', path, &text[0])
 		}
 		check(C.close(fd) == 0, 312)
@@ -210,7 +210,7 @@ fn command_log_checks() {
 fn build_checks() {
 	unsafe {
 		check(C.symlink(c'input.txt', c'/home/developer/source/internal-link') == 0, 209)
-		check(command_output(c'/usr/bin/vinix-build', c'hash', c'/home/developer/source', nil, c'/home/developer/source.sha') == 0, 210)
+		check(command_output(c'/usr/bin/tulpar-build', c'hash', c'/home/developer/source', nil, c'/home/developer/source.sha') == 0, 210)
 		mut hash := [66]char{}
 		fd := C.open(c'/home/developer/source.sha', C.O_RDONLY)
 		check(fd >= 0 && C.read(fd, &hash[0], 65) == 65 && C.close(fd) == 0 && hash[64] == char(10), 213)
@@ -227,7 +227,7 @@ fn build_checks() {
 		check(written > 0 && written < plan.len, 222)
 		write_text(c'/home/developer/build.json', &plan[0], usize(written))
 		for output in [&char(c'/home/developer/build-a'), &char(c'/home/developer/build-b')]! {
-			check(command(c'/usr/bin/vinix-build', c'build', c'/home/developer/build.json', output) == 0, 225)
+			check(command(c'/usr/bin/tulpar-build', c'build', c'/home/developer/build.json', output) == 0, 225)
 			mut st := C.stat{}
 			check(C.stat(output, &st) == 0 && st.st_uid == 1000 && st.st_mode & 0o777 == 0o700, 226)
 		}
@@ -243,7 +243,7 @@ fn build_checks() {
 		check(C.close(a) == 0 && C.close(b) == 0 && C.memcmp(&first[0], &second[0], 20) == 0, 236)
 		check(C.memcmp(&first[0], c'build-fixture-input\n', 20) == 0, 237)
 		write_text(c'/home/developer/source/input.txt', c'changed\n', 8)
-		check(command(c'/usr/bin/vinix-build', c'build', c'/home/developer/build.json', c'/home/developer/refused') == 1, 239)
+		check(command(c'/usr/bin/tulpar-build', c'build', c'/home/developer/build.json', c'/home/developer/refused') == 1, 239)
 		check(C.open(c'/home/developer/refused/work/artifact.txt', C.O_RDONLY) == -1, 240)
 		C.puts(c'DEVELOPMENT BUILD PASS: UID 1000, pinned closure, preserved link, epoch, two matching artifacts, changed-input refusal')
 	}
@@ -292,12 +292,12 @@ fn package_checks(output &char) {
 			mut help := [8192]char{}
 			fd := C.open(&path[0], C.O_RDONLY)
 			length := C.read(fd, &help[0], help.len - 1)
-			expected := if C.strcmp(name, c'help-v') == 0 { &char(c'V is a tool for managing V source code.') } else { &char(c'usage: vinix-package') }
+			expected := if C.strcmp(name, c'help-v') == 0 { &char(c'V is a tool for managing V source code.') } else { &char(c'usage: tulpar-package') }
 			check(fd >= 0 && length > 0 && length < help.len - 1 && C.close(fd) == 0
 				&& C.strstr(&help[0], expected) != nil, 281)
 		}
 		C.snprintf(&path[0], path.len, c'%s/work/release/index.json', output)
-		emit_receipt(&path[0], c'org.vinix.native-lscpu', false)
+		emit_receipt(&path[0], c'org.tulpar.native-lscpu', false)
 		C.snprintf(&path[0], path.len, c'%s/work/release/index.sig', output)
 		mut signature := [130]char{}
 		fd_sig := C.open(&path[0], C.O_RDONLY)
@@ -313,7 +313,7 @@ fn package_checks(output &char) {
 		mut log := [512]char{}
 		C.snprintf(&executable[0], executable.len, c'%s/work/lscpu-bin', output)
 		C.snprintf(&log[0], log.len, c'%s/lscpu.sha', output)
-		check(command_output(c'/usr/bin/vinix-build', c'hash', &executable[0], nil, &log[0]) == 0, 284)
+		check(command_output(c'/usr/bin/tulpar-build', c'hash', &executable[0], nil, &log[0]) == 0, 284)
 		mut hash := [66]char{}
 		fd_hash := C.open(&log[0], C.O_RDONLY)
 		check(fd_hash >= 0 && C.read(fd_hash, &hash[0], hash.len) == 65
@@ -322,7 +322,7 @@ fn package_checks(output &char) {
 		C.snprintf(&executable[0], executable.len, c'%s/work/release/objects/%s', output, &hash[0])
 		check(C.stat(&executable[0], &st) == 0 && st.st_uid == 1000 && st.st_mode & 0o777 == 0o644, 286)
 		bytes := u64(st.st_size)
-		check(command_output(c'/usr/bin/vinix-build', c'hash', &executable[0], nil, &log[0]) == 0, 287)
+		check(command_output(c'/usr/bin/tulpar-build', c'hash', &executable[0], nil, &log[0]) == 0, 287)
 		mut object_hash := [66]char{}
 		fd_object := C.open(&log[0], C.O_RDONLY)
 		check(fd_object >= 0 && C.read(fd_object, &object_hash[0], object_hash.len) == 65
@@ -388,7 +388,7 @@ fn native_userland_checks() {
 		if selfhost { check(C.close(marker) == 0, 308) }
 		private_receipt(c'/home/developer/native-build.json', c'/home/developer/native-source')
 		for output in [&char(c'/home/developer/native-a'), &char(c'/home/developer/native-b')]! {
-			status := command(c'/usr/bin/vinix-build', c'build', c'/home/developer/native-build.json', output)
+			status := command(c'/usr/bin/tulpar-build', c'build', c'/home/developer/native-build.json', output)
 			mut path := [256]char{}
 			check(C.snprintf(&path[0], path.len, c'%s/receipt.json', output) > 0, 261)
 			if status != 0 {
@@ -396,7 +396,7 @@ fn native_userland_checks() {
 				emit_command_log(c'/proc/self/limits')
 				emit_command_log(c'/proc/kernel-resources')
 				check(command(c'/bin/busybox', c'ls', c'-la', c'/opt/native/lib') == 0, 268)
-				check(command_output(c'/usr/bin/vinix-build', c'hash', c'/opt/native', nil, c'/home/developer/sdk-pin.sha') == 0, 269)
+				check(command_output(c'/usr/bin/tulpar-build', c'hash', c'/opt/native', nil, c'/home/developer/sdk-pin.sha') == 0, 269)
 				emit_command_log(c'/home/developer/sdk-pin.sha')
 				for step in [&char(c'translate-selfhost-v'), &char(c'compile-selfhost-v'), &char(c'version-selfhost-v'), &char(c'help-v'), &char(c'compile-assertion'), &char(c'compile-fetch'), &char(c'compile-mount'), &char(c'compile-chsh'), &char(c'compile-lscpu'), &char(c'compile-init'), &char(c'inspect-lscpu'),
 					&char(c'compile-package'), &char(c'help-package'), &char(c'pack-package'), &char(c'publish-package')]! {
@@ -404,11 +404,11 @@ fn native_userland_checks() {
 					emit_command_log(&path[0])
 				}
 				C.snprintf(&path[0], path.len, c'%s/receipt.json', output)
-				emit_receipt(&path[0], c'Vinix', false)
+				emit_receipt(&path[0], c'Tulpar', false)
 			}
 			check(status == 0, 262)
 			C.snprintf(&path[0], path.len, c'%s/receipt.json', output)
-			emit_receipt(&path[0], c'Vinix', false)
+			emit_receipt(&path[0], c'Tulpar', false)
 			for directory in [&char(c'.'), &char(c'home'), &char(c'tmp')]! {
 				C.snprintf(&path[0], path.len, c'%s/%s', output, directory)
 				mut st := C.stat{}
@@ -428,9 +428,9 @@ fn native_userland_checks() {
 				mut text := [128]char{}
 				mut expected := [128]char{}
 				if C.strcmp(name, c'init') == 0 {
-					C.snprintf(&expected[0], expected.len, c'init from Vinix\n')
+					C.snprintf(&expected[0], expected.len, c'init from Tulpar\n')
 				} else {
-					C.snprintf(&expected[0], expected.len, c'%s from util-vinix\n', name)
+					C.snprintf(&expected[0], expected.len, c'%s from util-tulpar\n', name)
 				}
 				count := C.read(log, &text[0], text.len - 1)
 				check(log >= 0 && count > 0 && count < text.len - 1 && C.close(log) == 0
@@ -457,8 +457,8 @@ fn account_checks() {
 		command_log_checks()
 		signal_identity_checks()
 		check(C.setenv(c'UNSELECTED_PARENT_SECRET', c'parent-must-not-reach-job', 1) == 0, 118)
-		for program in [&char(c'/usr/bin/vinix-build'), &char(c'/usr/bin/vinix-qualify'),
-			&char(c'/usr/bin/vinix-vm'), &char(c'/usr/bin/vinix-jobs')]! {
+		for program in [&char(c'/usr/bin/tulpar-build'), &char(c'/usr/bin/tulpar-qualify'),
+			&char(c'/usr/bin/tulpar-vm'), &char(c'/usr/bin/tulpar-jobs')]! {
 			check(command(program, c'--help', nil, nil) == 0, 120)
 		}
 		v_smoke := C.open(c'/usr/bin/v-smoke', C.O_RDONLY)
@@ -497,25 +497,25 @@ fn account_checks() {
 			cpu_output_checks(c'/home/developer/lscpu-smoke.log')
 			C.puts(c'DEVELOPMENT CPU PASS: UID 1000, prepared lscpu ELF, procfs CPU count matched')
 		}
-		check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/jobs.json', c'/home/developer/good') == 0, 123)
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/good', nil) == 0, 124)
+		check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/jobs.json', c'/home/developer/good') == 0, 123)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/good', nil) == 0, 124)
 		private_receipt(c'/home/developer/good/state.json', c'"runs":1')
 		private_receipt(c'/home/developer/good/plan.json', c'TEST_TOKEN')
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/good', nil) == 0, 127)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/good', nil) == 0, 127)
 		private_receipt(c'/home/developer/good/state.json', c'"runs":1')
 		mut proof := [10]char{}
 		fd := C.open(c'/home/developer/payload.done', C.O_RDONLY)
 		check(fd >= 0 && C.read(fd, &proof[0], 9) == 9 && C.close(fd) == 0 && C.strcmp(&proof[0], c'completed') == 0, 131)
 		check(C.unlink(c'/home/developer/payload.done') == 0, 132)
 		check(C.chmod(c'/home/developer/token', 0o644) == 0, 133)
-		check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/jobs.json', c'/home/developer/public-token') == 0, 134)
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/public-token', nil) == 1, 135)
+		check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/jobs.json', c'/home/developer/public-token') == 0, 134)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/public-token', nil) == 1, 135)
 		private_receipt(c'/home/developer/public-token/state.json', c'private file must be regular')
 		check(C.open(c'/home/developer/payload.done', C.O_RDONLY) == -1, 137)
 		check(C.chmod(c'/home/developer/token', 0o600) == 0, 138)
 		check(C.symlink(c'token', c'/home/developer/token-link') == 0, 139)
-		check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/link-jobs.json', c'/home/developer/link-token') == 0, 140)
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/link-token', nil) == 1, 141)
+		check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/link-jobs.json', c'/home/developer/link-token') == 0, 140)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/link-token', nil) == 1, 141)
 		private_receipt(c'/home/developer/link-token/state.json', c'cannot open private file')
 		check(C.open(c'/home/developer/payload.done', C.O_RDONLY) == -1, 143)
 		C.puts(c'DEVELOPMENT ACCOUNT PASS: UID 1000 jobs, credentials, environment, receipts, interval, unsafe-file refusal')
@@ -532,14 +532,14 @@ fn account_checks() {
 			check(count > 0 && count < profiles.len - 1 && C.close(sdk) == 0, 257)
 			check(C.setenv(c'PATH', c'/usr/bin:/bin:/opt/native/bin', 1) == 0, 251)
 			C.puts(c'DEVELOPMENT COMPILER VERSIONS:')
-			check(C.setenv(c'VINIX_QUALIFY_TIMEOUT_SECONDS', c'600', 1) == 0, 300)
+			check(C.setenv(c'TULPAR_QUALIFY_TIMEOUT_SECONDS', c'600', 1) == 0, 300)
 			check(command(c'/usr/bin/cc', c'--version', nil, nil) == 0, 253)
 			check(command(c'/usr/bin/c++', c'--version', nil, nil) == 0, 254)
 			if C.strstr(&profiles[0], c',v') != nil {
 				check(command(c'/usr/bin/v', c'version', nil, nil) == 0, 258)
 			}
-			status := command(c'/usr/bin/vinix-qualify', c'--require-vinix', c'/home/developer/qualification', &profiles[0])
-			emit_receipt(c'/home/developer/qualification/report.json', c'vinix-native', false)
+			status := command(c'/usr/bin/tulpar-qualify', c'--require-tulpar', c'/home/developer/qualification', &profiles[0])
+			emit_receipt(c'/home/developer/qualification/report.json', c'tulpar-native', false)
 			if status != 0 {
 				for path in [&char(c'/home/developer/qualification/c/command-0.log'),
 					&char(c'/home/developer/qualification/c/command-1.log'),
@@ -559,7 +559,7 @@ fn account_checks() {
 pub fn run() i32 {
 	unsafe {
 		C.setvbuf(C.stdout, nil, C._IONBF, 0)
-		mode := C.getenv(c'VINIX_DEVELOPMENT_PAYLOAD')
+		mode := C.getenv(c'TULPAR_DEVELOPMENT_PAYLOAD')
 		if mode != nil {
 			if C.strcmp(mode, c'build') == 0 { return build_payload() }
 			if C.strcmp(mode, c'ci-check') == 0 { return ci_payload() }
@@ -568,7 +568,7 @@ pub fn run() i32 {
 			}
 			return job_payload()
 		}
-		require_vinix()
+		require_tulpar()
 		if service_cold_boot() { return 0 }
 		ci_prepare()
 		jit_approved := reference_jit_prepare()
@@ -597,7 +597,7 @@ pub fn run() i32 {
 				&& C.chmod(c'/home/developer/publisher.seed', 0o600) == 0, 292)
 		}
 		// Even root must not silently run a schedule labelled as another account.
-		check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/jobs.json', c'/root/wrong-owner') == 1, 159)
+		check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/jobs.json', c'/root/wrong-owner') == 1, 159)
 		pid := C.fork()
 		check(pid >= 0, 161)
 		if pid == 0 {

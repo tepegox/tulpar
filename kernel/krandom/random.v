@@ -4,7 +4,7 @@ module krandom
 import klock
 import katomic
 
-fn C.vinix_hw_random64(out &u64) int
+fn C.tulpar_hw_random64(out &u64) int
 
 struct Generator {
 mut:
@@ -176,10 +176,10 @@ pub fn stir() {
 	}
 	mut fresh := [4]u64{}
 	mut fresh_words := 0
-	for fresh_words < fresh.len && C.vinix_hw_random64(&fresh[fresh_words]) != 0 {
+	for fresh_words < fresh.len && C.tulpar_hw_random64(&fresh[fresh_words]) != 0 {
 		fresh_words++
 	}
-	domain := 'Vinix kernel CSPRNG reseed v1'
+	domain := 'Tulpar kernel CSPRNG reseed v1'
 	mut input := []u8{len: domain.len + 32 + 64 + 32 + 8} @[freed]
 	mut at := domain.len
 	unsafe { C.memcpy(input.data, domain.str, domain.len) }
@@ -306,7 +306,7 @@ fn jitter_entropy_seed(mut output [64]u8) bool {
 	}
 	healthy := distinct >= 4 && u64(commonest) * 16 < u64(jitter_samples) * 15
 	if healthy {
-		domain := 'Vinix kernel CSPRNG jitter v1'
+		domain := 'Tulpar kernel CSPRNG jitter v1'
 		mut input := []u8{len: domain.len + samples.len + 1} @[freed]
 		unsafe {
 			C.memcpy(input.data, domain.str, domain.len)

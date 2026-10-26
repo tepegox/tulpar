@@ -21,7 +21,7 @@
 // Everywhere else display_survives_deep() says no, and /sys/power/mem_sleep
 // lists only s2idle -- unless the machine has no framebuffer at all, where
 // there is nothing to lose, or the kernel command line has
-// vinix.deep_sleep=force, for a machine that is run without a screen or whose
+// tulpar.deep_sleep=force, for a machine that is run without a screen or whose
 // firmware is known to restore the mode itself.
 @[has_globals]
 module syspower

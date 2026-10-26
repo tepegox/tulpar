@@ -22,18 +22,18 @@ fn C.kmem_cache_alloc(&C.kmem_cache, u32) voidptr
 fn C.kmem_cache_free(&C.kmem_cache, voidptr)
 fn C.kmem_cache_size(&C.kmem_cache) uint
 fn C.kmem_cache_shrink(&C.kmem_cache) i32
-fn C.vinix_linuxkpi_test_alloc_oom(i32)
-fn C.vinix_linuxkpi_page_size() uint
-fn C.vinix_linuxkpi_alloc_gfp_pages(uint, u32) voidptr
-fn C.vinix_linuxkpi_free_pages(voidptr, uint)
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_test_alloc_oom(i32)
+fn C.tulpar_linuxkpi_page_size() uint
+fn C.tulpar_linuxkpi_alloc_gfp_pages(uint, u32) voidptr
+fn C.tulpar_linuxkpi_free_pages(voidptr, uint)
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_may_sleep() bool
 fn C.memchr_inv(voidptr, i32, uint) voidptr
 fn C.memset(voidptr, i32, uint) voidptr
 fn C.__atomic_add_fetch(&u32, u32, i32) u32
@@ -48,8 +48,8 @@ fn C.cond_resched() i32
 fn C.pthread_create(voidptr, voidptr, CacheThread, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
-fn C.vinix_linuxkpi_fixture_cache_ctor(voidptr)
-fn C.vinix_linuxkpi_fixture_cache_thread(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_cache_ctor(voidptr)
+fn C.tulpar_linuxkpi_fixture_cache_thread(voidptr) voidptr
 
 @[c_extern]
 __global C.GFP_KERNEL u32
@@ -115,7 +115,7 @@ mut:
 	started     bool
 }
 
-@[export: 'vinix_linuxkpi_fixture_cache_ctor']
+@[export: 'tulpar_linuxkpi_fixture_cache_ctor']
 pub fn cache_ctor(object voidptr) {
 	unsafe {
 		mut value := &CacheObject(object)
@@ -129,20 +129,20 @@ pub fn cache_ctor(object voidptr) {
 fn cache_basic() i32 {
 	unsafe {
 		mut result := i32(0)
-		C.vinix_linuxkpi_test_alloc_oom(0)
-		if C.vinix_linuxkpi_alloc_gfp_pages(0, C.GFP_KERNEL) != nil { result = -5 }
-		if C.vinix_linuxkpi_alloc_gfp_pages(~uint(0) / C.vinix_linuxkpi_page_size() + 1, C.GFP_KERNEL) != nil {
+		C.tulpar_linuxkpi_test_alloc_oom(0)
+		if C.tulpar_linuxkpi_alloc_gfp_pages(0, C.GFP_KERNEL) != nil { result = -5 }
+		if C.tulpar_linuxkpi_alloc_gfp_pages(~uint(0) / C.tulpar_linuxkpi_page_size() + 1, C.GFP_KERNEL) != nil {
 			result = -5
 		}
-		unsupported := C.vinix_linuxkpi_alloc_gfp_pages(1, C.GFP_KERNEL | C.__GFP_DMA32)
+		unsupported := C.tulpar_linuxkpi_alloc_gfp_pages(1, C.GFP_KERNEL | C.__GFP_DMA32)
 		if unsupported != nil {
-			C.vinix_linuxkpi_free_pages(unsupported, 1)
+			C.tulpar_linuxkpi_free_pages(unsupported, 1)
 			result = -5
 		}
-		probe := C.vinix_linuxkpi_alloc_gfp_pages(1, C.GFP_KERNEL)
-		C.vinix_linuxkpi_test_alloc_oom(-1)
+		probe := C.tulpar_linuxkpi_alloc_gfp_pages(1, C.GFP_KERNEL)
+		C.tulpar_linuxkpi_test_alloc_oom(-1)
 		if probe != nil {
-			C.vinix_linuxkpi_free_pages(probe, 1)
+			C.tulpar_linuxkpi_free_pages(probe, 1)
 			result = -5
 		}
 		rejected := [C.SLAB_TYPESAFE_BY_RCU, C.SLAB_RECLAIM_ACCOUNT, C.SLAB_CACHE_DMA,
@@ -154,17 +154,17 @@ fn cache_basic() i32 {
 				result = -5
 			}
 		}
-		mut irq := C.vinix_linuxkpi_irq_save()
+		mut irq := C.tulpar_linuxkpi_irq_save()
 		unexpected := C.kmem_cache_create(c'native-atomic-create', 97, 0, 0, CacheCtor(nil))
-		C.vinix_linuxkpi_irq_restore(irq)
+		C.tulpar_linuxkpi_irq_restore(irq)
 		if unexpected != nil {
 			C.kmem_cache_destroy(unexpected)
 			result = -5
 		}
 		for stage in 0 .. 2 {
-			C.vinix_linuxkpi_test_alloc_oom(i32(stage))
+			C.tulpar_linuxkpi_test_alloc_oom(i32(stage))
 			failed := C.kmem_cache_create(c'native-create-rollback', 97, 0, 0, CacheCtor(nil))
-			C.vinix_linuxkpi_test_alloc_oom(-1)
+			C.tulpar_linuxkpi_test_alloc_oom(-1)
 			if failed != nil {
 				C.kmem_cache_destroy(failed)
 				result = -5
@@ -175,12 +175,12 @@ fn cache_basic() i32 {
 			cache := C.kmem_cache_create(c'native-alignment', 97, alignment[i], C.SLAB_HWCACHE_ALIGN, CacheCtor(nil))
 			if cache == nil { return -12 }
 			mut refill_irq := uint(0)
-			if i == 0 { refill_irq = C.vinix_linuxkpi_irq_save() }
+			if i == 0 { refill_irq = C.tulpar_linuxkpi_irq_save() }
 			object := C.kmem_cache_zalloc(cache, C.GFP_KERNEL)
-			if i == 0 && ((C.vinix_linuxkpi_irq_flags() & (uint(1) << 9)) != 0 || C.vinix_linuxkpi_preempt_count() != 0) {
+			if i == 0 && ((C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9)) != 0 || C.tulpar_linuxkpi_preempt_count() != 0) {
 				result = -5
 			}
-			if i == 0 { C.vinix_linuxkpi_irq_restore(refill_irq) }
+			if i == 0 { C.tulpar_linuxkpi_irq_restore(refill_irq) }
 			if object == nil {
 				C.kmem_cache_destroy(cache)
 				return -12
@@ -200,11 +200,11 @@ fn cache_basic() i32 {
 		}
 		mut objects := [128]&CacheObject{}
 		mut count := u32(0)
-		cache := C.kmem_cache_create(c'native-constructor', sizeof(CacheObject), 0, C.SLAB_HWCACHE_ALIGN, C.vinix_linuxkpi_fixture_cache_ctor)
+		cache := C.kmem_cache_create(c'native-constructor', sizeof(CacheObject), 0, C.SLAB_HWCACHE_ALIGN, C.tulpar_linuxkpi_fixture_cache_ctor)
 		if cache == nil { return -12 }
-		C.vinix_linuxkpi_test_alloc_oom(0)
+		C.tulpar_linuxkpi_test_alloc_oom(0)
 		mut failed := &CacheObject(C.kmem_cache_alloc(cache, C.GFP_KERNEL))
-		C.vinix_linuxkpi_test_alloc_oom(-1)
+		C.tulpar_linuxkpi_test_alloc_oom(-1)
 		if failed != nil {
 			C.kmem_cache_free(cache, failed)
 			result = -5
@@ -217,7 +217,7 @@ fn cache_basic() i32 {
 		}
 		count = 1
 		constructors := C.__atomic_load_n(&cache_ctor_calls, 2)
-		C.vinix_linuxkpi_test_alloc_oom(0)
+		C.tulpar_linuxkpi_test_alloc_oom(0)
 		for count < 128 {
 			objects[count] = &CacheObject(C.kmem_cache_alloc(cache, C.GFP_ATOMIC))
 			if objects[count] == nil { break }
@@ -237,7 +237,7 @@ fn cache_basic() i32 {
 		only_free := objects[0]
 		C.kmem_cache_free(cache, only_free)
 		objects[0] = nil
-		C.vinix_linuxkpi_test_alloc_oom(0)
+		C.tulpar_linuxkpi_test_alloc_oom(0)
 		rejected_gfp := [C.GFP_KERNEL | C.__GFP_DMA32, C.GFP_KERNEL | C.__GFP_NOFAIL,
 			C.GFP_KERNEL | C.__GFP_ACCOUNT]!
 		for gfp in rejected_gfp {
@@ -247,25 +247,25 @@ fn cache_basic() i32 {
 				result = -5
 			}
 		}
-		irq = C.vinix_linuxkpi_irq_save()
+		irq = C.tulpar_linuxkpi_irq_save()
 		objects[0] = &CacheObject(C.kmem_cache_alloc(cache, C.GFP_KERNEL))
-		if (C.vinix_linuxkpi_irq_flags() & (uint(1) << 9)) != 0 || C.vinix_linuxkpi_preempt_count() != 0 {
+		if (C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9)) != 0 || C.tulpar_linuxkpi_preempt_count() != 0 {
 			result = -5
 		}
-		C.vinix_linuxkpi_irq_restore(irq)
+		C.tulpar_linuxkpi_irq_restore(irq)
 		if uint(objects[0]) != uint(only_free) || objects[0] == nil || objects[0].magic != 0x6b70692d63616368 || objects[0].generation != 17 || C.memchr_inv(&objects[0].payload[0], 0xb7, sizeof(objects[0].payload)) != nil {
 			result = -5
 		}
 		if C.kmem_cache_shrink(cache) != 1 { result = -5 }
 		for i := u32(0); i < count; i++ { C.kmem_cache_free(cache, objects[i]) }
 		if C.kmem_cache_shrink(cache) != 0 { result = -5 }
-		C.vinix_linuxkpi_test_alloc_oom(0)
+		C.tulpar_linuxkpi_test_alloc_oom(0)
 		failed = &CacheObject(C.kmem_cache_alloc(cache, C.GFP_NOWAIT))
 		if failed != nil {
 			C.kmem_cache_free(cache, failed)
 			result = -5
 		}
-		C.vinix_linuxkpi_test_alloc_oom(-1)
+		C.tulpar_linuxkpi_test_alloc_oom(-1)
 		zeroed := C.kmem_cache_zalloc(cache, C.GFP_KERNEL)
 		if zeroed == nil || C.memchr_inv(zeroed, 0, sizeof(CacheObject)) != nil { result = -5 }
 		C.kmem_cache_free(cache, zeroed)
@@ -274,11 +274,11 @@ fn cache_basic() i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_cache_thread']
+@[export: 'tulpar_linuxkpi_fixture_cache_thread']
 pub fn cache_thread(argument voidptr) voidptr {
 	unsafe {
 		mut test := &CacheWorker(argument)
-		test.result = C.vinix_linuxkpi_worker_bind(test.cpu)
+		test.result = C.tulpar_linuxkpi_worker_bind(test.cpu)
 		C.complete(&test.entered)
 		C.wait_for_completion(&test.go)
 		for repeat := u32(0); test.result == 0 && repeat < 64 && C.__atomic_load_n(&test.cancel, 2) == 0; repeat++ {
@@ -286,16 +286,16 @@ pub fn cache_thread(argument voidptr) voidptr {
 			mut count := u32(0)
 			for count < 16 {
 				mut irq := uint(0)
-				if (repeat & 1) != 0 { irq = C.vinix_linuxkpi_irq_save() }
+				if (repeat & 1) != 0 { irq = C.tulpar_linuxkpi_irq_save() }
 				objects[count] = &CacheObject(C.kmem_cache_alloc(test.cache, if (repeat & 1) != 0 {
 					C.GFP_ATOMIC
 				} else {
 					C.GFP_KERNEL
 				}))
-				if ((C.vinix_linuxkpi_irq_flags() & (uint(1) << 9)) != 0) != ((repeat & 1) == 0) || C.vinix_linuxkpi_preempt_count() != 0 {
+				if ((C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9)) != 0) != ((repeat & 1) == 0) || C.tulpar_linuxkpi_preempt_count() != 0 {
 					test.result = -5
 				}
-				if (repeat & 1) != 0 { C.vinix_linuxkpi_irq_restore(irq) }
+				if (repeat & 1) != 0 { C.tulpar_linuxkpi_irq_restore(irq) }
 				if objects[count] == nil {
 					test.result = -12
 					break
@@ -316,7 +316,7 @@ pub fn cache_thread(argument voidptr) voidptr {
 				C.kmem_cache_free(test.cache, objects[i])
 			}
 			C.cond_resched()
-			if C.vinix_linuxkpi_cpu_id() != test.cpu || !C.vinix_linuxkpi_may_sleep() {
+			if C.tulpar_linuxkpi_cpu_id() != test.cpu || !C.tulpar_linuxkpi_may_sleep() {
 				test.result = -5
 			}
 		}
@@ -344,7 +344,7 @@ fn cache_workers(cache &C.kmem_cache, tests &CacheWorker, cpus u32, result &i32)
 			C.init_completion(&test.release)
 			C.init_completion(&test.done)
 			test.initialized = true
-			if C.pthread_create(&test.thread, nil, C.vinix_linuxkpi_fixture_cache_thread, test) != 0 {
+			if C.pthread_create(&test.thread, nil, C.tulpar_linuxkpi_fixture_cache_thread, test) != 0 {
 				*result = -12
 				return
 			}
@@ -377,14 +377,14 @@ fn cache_workers(cache &C.kmem_cache, tests &CacheWorker, cpus u32, result &i32)
 	}
 }
 
-@[export: 'vinix_linuxkpi_cache_native_selftest']
+@[export: 'tulpar_linuxkpi_cache_native_selftest']
 pub fn cache_selftest() i32 {
 	unsafe {
 		mut result := cache_basic()
-		cache := C.kmem_cache_create(c'native-concurrent', sizeof(CacheObject), 0, C.SLAB_HWCACHE_ALIGN, C.vinix_linuxkpi_fixture_cache_ctor)
+		cache := C.kmem_cache_create(c'native-concurrent', sizeof(CacheObject), 0, C.SLAB_HWCACHE_ALIGN, C.tulpar_linuxkpi_fixture_cache_ctor)
 		if cache == nil { return -12 }
 		mut tests := [4]CacheWorker{}
-		cpus := C.vinix_linuxkpi_percpu_count()
+		cpus := C.tulpar_linuxkpi_percpu_count()
 		cache_workers(cache, &tests[0], cpus, &result)
 		for i in 0 .. 4 {
 			C.__atomic_store_n(&tests[i].cancel, 1, 3)

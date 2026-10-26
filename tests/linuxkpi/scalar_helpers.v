@@ -173,7 +173,7 @@ fn run_profile(keep string) ! {
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
 	pin := hosttest.upstream_pin()!
 	hosttest.verify_upstream(linux, pin)!
-	work := hosttest.work_dir(keep, 'vinix-scalar-helpers-')!
+	work := hosttest.work_dir(keep, 'tulpar-scalar-helpers-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
 	compiler_path := os.real_path(os.find_abs_path_of_executable(compiler[0]) or { return error('Missing compiler executable') })
@@ -245,8 +245,8 @@ fn run_profile(keep string) ! {
 		for first in ['kernel-first', 'uapi-first'] {
 			for wrapper in ['overlay', 'original-kbuild'] {
 				tag := standard + '-' + first + '-' + wrapper
-				mut argv := [...common, '-std=' + standard, '-DVINIX_LINUXKPI',
-					'-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
+				mut argv := [...common, '-std=' + standard, '-DTULPAR_LINUXKPI',
+					'-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
 					os.join_path(root, 'tests/linuxkpi/scalarfixture/scalar_host_resource.h'),
 					'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include',
 					'linux/kconfig.h', '-include',

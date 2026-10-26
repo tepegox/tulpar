@@ -3,7 +3,7 @@ module krandom
 
 // Prefer RDSEED to RDRAND, and leave the output untouched on failure.
 // Carry must be read in the same asm block as the random instruction.
-@[export: 'vinix_hw_random64']
+@[export: 'tulpar_hw_random64']
 fn hardware_random64(out &u64) i32 {
 	mut a := u32(0)
 	mut b := u32(0)

@@ -8,7 +8,7 @@ import klock
 import lib
 import xnualloc
 
-// The default bitmap path remains the independent Vinix implementation.
+// The default bitmap path remains the independent Tulpar implementation.
 // -d xnu_bitmap selects the APSL-preserving translation in xnualloc.
 // This does not select XNU magazines, VM expansion, or the full zone allocator.
 // Each size class has a list of nonempty, nonfull pages and at most one

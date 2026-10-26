@@ -366,7 +366,7 @@ fn reclaim_tx() {
 	}
 }
 
-@[export: 'vinix_rtl8169_send']
+@[export: 'tulpar_rtl8169_send']
 pub fn send(frame voidptr, length u64) int {
 	if !rtl_ready || !rtl_link || frame == unsafe { nil } || length < 14 || length > 1518 {
 		return -1

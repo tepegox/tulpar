@@ -3,7 +3,7 @@ module planguest
 
 fn volume_growth_tool(parent &char, source &char, password &char, length &char, output &char, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'plan-grow-volume'), parent, source, password, length, output, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'plan-grow-volume'), parent, source, password, length, output, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
@@ -24,19 +24,19 @@ fn volume_growth_metadata(source &char, output &char, bytes u64, length u64) {
 fn volume_growth_view(parent &char, config &char, force_readonly bool, saved_readonly bool, length u64, initialize bool) {
 	unsafe {
 		volume_seal_open_tool(parent, config, c'/root/next.pass', force_readonly, 0)
-		info := status(c'/dev/mapper/vinix60'); readonly := force_readonly || saved_readonly
+		info := status(c'/dev/mapper/tulpar60'); readonly := force_readonly || saved_readonly
 		check(info.flags & 64 != 0 && (info.flags & 1 != 0) == readonly && info.bytes == length
 			&& info.start == 15728640 && info.disk_id == status(parent).disk_id, c'grown encrypted mapping geometry, mode and parent')
-		fd := C.open(c'/dev/mapper/vinix60', if readonly { C.O_RDONLY } else { C.O_RDWR }); check(fd >= 0, c'open grown encrypted view')
+		fd := C.open(c'/dev/mapper/tulpar60', if readonly { C.O_RDONLY } else { C.O_RDWR }); check(fd >= 0, c'open grown encrypted view')
 		crypt_data(fd, 0, 0x73); crypt_data(fd, 4096, 0xa6)
-		if readonly { check(C.open(c'/dev/mapper/vinix60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'grown saved readonly cannot escalate') }
+		if readonly { check(C.open(c'/dev/mapper/tulpar60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'grown saved readonly cannot escalate') }
 		else {
 			mut data := [512]u8{init: 0xa6}; check(C.pwrite(fd, &data[0], 512, 4096) == 512, c'grown writable data')
 			if initialize { data = [512]u8{init: 0xc2}; check(C.pwrite(fd, &data[0], 512, 8192) == 512, c'initialize newly exposed encrypted data') }
 			check(C.fsync(fd) == 0, c'persist grown encrypted data')
 		}
 		if length == 12288 { crypt_data(fd, 8192, 0xc2) }
-		check(C.close(fd) == 0, c'close grown encrypted view'); simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		check(C.close(fd) == 0, c'close grown encrypted view'); simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 	}
 }
 
@@ -50,21 +50,21 @@ fn planned_volume_growth(parent &char, wrong &char) {
 		volume_growth_tool(parent, c'/root/volume-next.sealed', c'/root/next.pass', c'8193', c'/root/no-growth.sealed', 1)
 		check(C.open(c'/root/no-growth.sealed', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'rejected growth publishes nothing')
 		volume_seal_open_tool(parent, c'/root/volume-next.sealed', c'/root/next.pass', false, 0)
-		before := status(c'/dev/mapper/vinix60'); live := C.open(c'/dev/mapper/vinix60', C.O_RDWR); check(live >= 0, c'hold original encrypted descriptor')
+		before := status(c'/dev/mapper/tulpar60'); live := C.open(c'/dev/mapper/tulpar60', C.O_RDWR); check(live >= 0, c'hold original encrypted descriptor')
 		mut ciphertext := [512]u8{}; mut after := [512]u8{}
 		raw := C.open(parent, C.O_RDONLY); check(raw >= 0 && C.pread(raw, &ciphertext[0], 512, 15728640) == 512, c'original ciphertext before planning')
 		volume_growth_tool(parent, c'/root/volume-next.sealed', c'/root/next.pass', c'8192', c'/root/volume-grown.sealed', 0)
-		check(status(c'/dev/mapper/vinix60').bytes == 4096 && status(c'/dev/mapper/vinix60').generation == before.generation, c'growth planning preserves active mapping')
-		tool(c'grow', c'/dev/mapper/vinix60', c'8192', nil, nil, 0)
-		check(status(c'/dev/mapper/vinix60').generation == before.generation, c'explicit live encrypted growth preserves generation')
+		check(status(c'/dev/mapper/tulpar60').bytes == 4096 && status(c'/dev/mapper/tulpar60').generation == before.generation, c'growth planning preserves active mapping')
+		tool(c'grow', c'/dev/mapper/tulpar60', c'8192', nil, nil, 0)
+		check(status(c'/dev/mapper/tulpar60').generation == before.generation, c'explicit live encrypted growth preserves generation')
 		crypt_data(live, 0, 0x73); crypt_data(live, 4096, 0xa6); check(C.close(live) == 0, c'held descriptor survives live growth')
-		simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		volume_growth_tool(parent, c'/root/volume-ro-next.sealed', c'/root/next.pass', c'8192', c'/root/volume-grown-ro.sealed', 0)
 		volume_growth_metadata(c'/root/volume-next.sealed', c'/root/volume-grown.sealed', 16777216, 8192)
 		volume_growth_metadata(c'/root/volume-ro-next.sealed', c'/root/volume-grown-ro.sealed', 16777216, 8192)
 		tool(c'create', parent, c'61', c'15732736', c'4096', 0)
-		volume_seal_open_tool(parent, c'/root/volume-grown.sealed', c'/root/next.pass', true, 1); missing(c'/dev/mapper/vinix60')
-		simple(c'remove', c'/dev/mapper/vinix61', nil, 0)
+		volume_seal_open_tool(parent, c'/root/volume-grown.sealed', c'/root/next.pass', true, 1); missing(c'/dev/mapper/tulpar60')
+		simple(c'remove', c'/dev/mapper/tulpar61', nil, 0)
 		volume_growth_view(parent, c'/root/volume-grown.sealed', false, false, 8192, false)
 		volume_growth_view(parent, c'/root/volume-grown-ro.sealed', false, true, 8192, false)
 		check(C.pread(raw, &after[0], 512, 15728640) == 512 && C.close(raw) == 0 && C.memcmp(&ciphertext[0], &after[0], 512) == 0, c'growth preserves original ciphertext and tweak positions')

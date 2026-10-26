@@ -17,8 +17,8 @@ fn invoke(program string, arguments []string) ! {
 fn compile_image_tools(build &pkgcore.ImageToolBuild, architecture string, repository string, v string, cc string, compiler_args []string) ! {
 	work := build.directory()!
 	defer { unsafe { work.free() } }
-	for pair in [['vinix-package', 'tools/packages/main.v'], ['vinix-session', 'tools/accounts/session.v'],
-		['vinix-linux-runner', 'tools/packages/linux-runner.v']] {
+	for pair in [['tulpar-package', 'tools/packages/main.v'], ['tulpar-session', 'tools/accounts/session.v'],
+		['tulpar-linux-runner', 'tools/packages/linux-runner.v']] {
 		source := work + '/' + pair[0] + '.c'
 		binary := work + '/' + pair[0]
 		defer { unsafe { source.free(); binary.free() } }
@@ -39,11 +39,11 @@ fn stage() ! {
 	mut staging := ''
 	mut compiler := ''
 	mut compiler_args := []string{}
-	mut configuration := os.getenv('VINIX_PACKAGE_IMAGE_CONFIG')
-	mut repositories := os.getenv('VINIX_PACKAGE_IMAGE_REPOSITORIES')
+	mut configuration := os.getenv('TULPAR_PACKAGE_IMAGE_CONFIG')
+	mut repositories := os.getenv('TULPAR_PACKAGE_IMAGE_REPOSITORIES')
 	mut check := false
 	mut required_applications := []string{}
-	mut applications := os.getenv('VINIX_PACKAGE_IMAGE_APPLICATIONS')
+	mut applications := os.getenv('TULPAR_PACKAGE_IMAGE_APPLICATIONS')
 	mut applications_explicit := false
 	mut deployment_output := ''
 	mut arguments := os.args[1..].clone()
@@ -115,7 +115,7 @@ fn stage() ! {
 	} else if required_applications.len > 0 {
 		image_applications = unsafe { &image_configuration }.prepare_applications(unsafe { &image_repositories }, required_applications)!
 	}
-	if compiler == '' { compiler = os.getenv('VINIX_MUSL_CC_' + architecture.to_upper()) }
+	if compiler == '' { compiler = os.getenv('TULPAR_MUSL_CC_' + architecture.to_upper()) }
 	if compiler == '' { compiler = architecture + '-linux-musl-gcc' }
 	// A compiler is an executable path, never shell text.
 	if compiler_args.len == 0 { compiler_args = [compiler] }

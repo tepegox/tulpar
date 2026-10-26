@@ -6,7 +6,7 @@ fn C.memcmp(voidptr, voidptr, usize) i32
 
 fn rewrap_tool(input &char, old &char, next &char, output &char, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'rewrap-key'), input, old, next, output, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'rewrap-key'), input, old, next, output, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
@@ -14,15 +14,15 @@ fn rewrap_tool(input &char, old &char, next &char, output &char, expected i32) {
 fn rewrap_view(parent &char, envelope &char, readonly bool) {
 	unsafe {
 		sealed_open_path_tool(parent, envelope, c'/root/next.pass', readonly, 0)
-		info := status(c'/dev/mapper/vinix60')
+		info := status(c'/dev/mapper/tulpar60')
 		check(info.flags & 64 != 0 && (info.flags & 1 != 0) == readonly, c'rewrapped mapping mode')
-		fd := C.open(c'/dev/mapper/vinix60', if readonly { C.O_RDONLY } else { C.O_RDWR })
+		fd := C.open(c'/dev/mapper/tulpar60', if readonly { C.O_RDONLY } else { C.O_RDWR })
 		check(fd >= 0, c'open rewrapped volume')
-		if readonly { check(C.open(c'/dev/mapper/vinix60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'rewrapped readonly access') }
+		if readonly { check(C.open(c'/dev/mapper/tulpar60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'rewrapped readonly access') }
 		else { mut data := [512]u8{init: 0x73}; check(C.pwrite(fd, &data[0], 512, 0) == 512, c'rewrapped writable data') }
 		crypt_data(fd, 0, 0x73)
 		check(C.close(fd) == 0, c'close rewrapped volume')
-		simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 	}
 }
 
@@ -47,7 +47,7 @@ fn planned_rewrap(parent &char) {
 		rewrap_tool(c'/root/crypt.sealed', c'/root/crypt.pass', c'/root/next.pass', c'/root/rewrapped.sealed', 0)
 		rewrap_read(c'/root/rewrapped.sealed', &result[0])
 		check(C.memcmp(&original[40], &result[40], 16) != 0 && C.memcmp(&original[56], &result[56], 12) != 0, c'rewrap fresh salt and nonce')
-		sealed_open_path_tool(parent, c'/root/rewrapped.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/vinix60')
+		sealed_open_path_tool(parent, c'/root/rewrapped.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/tulpar60')
 		rewrap_view(parent, c'/root/rewrapped.sealed', false); rewrap_view(parent, c'/root/rewrapped.sealed', true)
 		sealed_view(parent, true)
 		rewrap_tool(c'/root/crypt.sealed', c'/root/crypt.pass', c'/root/next.pass', c'/root/rewrapped.sealed', 1)
@@ -91,7 +91,7 @@ fn rewrap_retention(parent &char) {
 fn rewrap_reordered_boot(parent &char) {
 	unsafe {
 		check(C.unlink(c'/root/crypt.key') == 0, c'delete raw key before rewrapped boot unlock')
-		sealed_open_path_tool(parent, c'/root/rewrapped.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/vinix60')
+		sealed_open_path_tool(parent, c'/root/rewrapped.sealed', c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/tulpar60')
 		rewrap_view(parent, c'/root/rewrapped.sealed', true)
 		check(C.open(c'/root/crypt.key', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'rewrapped boot creates no raw key')
 		sealed_file_tool(c'/root/rewrapped.sealed', c'/root/next.pass', c'/root/crypt.key', false, 0); recovery_check(c'/root/crypt.key')

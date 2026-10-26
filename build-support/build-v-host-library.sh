@@ -11,7 +11,7 @@ host_library_output=$2
 shift 2
 support_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$support_dir/find-v.sh"
-host_python=${VINIX_HOST_PYTHON:-python3}
+host_python=${TULPAR_HOST_PYTHON:-python3}
 host_python_headers=$("$support_dir/source-tools/run" cpython-headers "$host_python")
 host_library_cflags="-I$host_python_headers"
 if [ "$(uname -s)" = Darwin ]; then

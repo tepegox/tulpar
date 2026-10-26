@@ -5,7 +5,7 @@ fn fixture() Windows {
 	mut s := Windows{}
 	s.update_displays([Display{ id: text('panel') or { panic(err) }, area: Rect{ w: 1200, h: 800 }, primary: true }]) or { panic(err) }
 	for i in 0 .. 3 {
-		s.windows[i] = Placement{ app: text('vinix-editor') or { panic(err) }, instance: i, display: text('panel') or { panic(err) }, frame: Rect{10, 20, 500, 300}, restore: Rect{10, 20, 500, 300} }
+		s.windows[i] = Placement{ app: text('tulpar-editor') or { panic(err) }, instance: i, display: text('panel') or { panic(err) }, frame: Rect{10, 20, 500, 300}, restore: Rect{10, 20, 500, 300} }
 	}
 	s.count = 3
 	return s

@@ -1,11 +1,11 @@
 #!/bin/sh
-# Build hwcheck as a static program for a Vinix machine.
+# Build hwcheck as a static program for a Tulpar machine.
 #
 #   tools/hwcheck/build aarch64|x86_64 OUTPUT
 #
-# The V compiler is found as for every other build (V, VINIX_V_COMPILER). The
+# The V compiler is found as for every other build (V, TULPAR_V_COMPILER). The
 # AArch64 C compiler needs the musl sysroot of the userland build
-# (VINIX_AARCH64_SYSROOT, by default build-aarch64-userland/sysroot); the
+# (TULPAR_AARCH64_SYSROOT, by default build-aarch64-userland/sysroot); the
 # x86-64 one is a musl cross compiler (CC_AMD64, by default
 # x86_64-linux-musl-gcc).
 set -eu
@@ -17,12 +17,12 @@ fi
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 . "$repo/build-support/find-v.sh"
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-hwcheck.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-hwcheck.XXXXXX")
 trap 'rm -rf "$work"' 0
 
 case "$1" in
     aarch64)
-        sysroot=${VINIX_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
+        sysroot=${TULPAR_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
         "$V" -os linux -arch arm64 -gc none -d no_backtrace -o "$work/hwcheck.c" "$repo/tools/hwcheck/hwcheck.v"
         "${CC:-clang}" --target=aarch64-linux-musl --sysroot="$sysroot" -static -O1 -w \
             -fno-stack-protector -L"$sysroot/lib" -fuse-ld=lld -o "$2" "$work/hwcheck.c" -lm -lpthread

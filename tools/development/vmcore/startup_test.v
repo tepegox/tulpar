@@ -30,7 +30,7 @@ fn startup_case(root string, state string, kind string) ! {
 		if os.exists(root + '/' + name) { os.rm(root + '/' + name)! }
 	}
 	if kind == 'fail' { os.write_file(root + '/emulator.fail', '')! }
-	mut owner := os.new_process(root + '/vinix-vm')
+	mut owner := os.new_process(root + '/tulpar-vm')
 	owner.set_args(['start', state])
 	owner.set_redirect_stdio()
 	owner.run()
@@ -47,7 +47,7 @@ fn startup_case(root string, state string, kind string) ! {
 		time.sleep(10 * time.millisecond)
 	}
 	assert !os.exists(state + '/qmp.sock') && !os.exists(state + '/agent.sock')
-	query := startup_command([root + '/vinix-vm', 'guest-ping', state])!
+	query := startup_command([root + '/tulpar-vm', 'guest-ping', state])!
 	assert query.status != 0 && query.stderr.contains('VM startup'), query.stderr
 	if kind == 'cancel' { owner.signal_term() }
 	else { os.write_file(root + '/emulator.release', '')! }
@@ -87,16 +87,16 @@ fn test_start_serializes_channel_replacement_and_releases_leases_on_every_exit()
 		return
 	}
 	image_tool := os.find_abs_path_of_executable('qemu-img')!
-	root := '/tmp/vinix-vm-startup-${os.getpid()}'
+	root := '/tmp/tulpar-vm-startup-${os.getpid()}'
 	devcore.fresh_directory(root)!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/emulator.path', qemu)!
-	for binary, source in {'emulator': 'vmfixture/emulator.v', 'vinix-vm': 'vm.v'} {
+	for binary, source in {'emulator': 'vmfixture/emulator.v', 'tulpar-vm': 'vm.v'} {
 		build := startup_command([@VEXE, '-enable-globals', '-gc', 'none', '-cc', 'cc',
 			'-o', root + '/' + binary, os.dir(os.dir(@FILE)) + '/' + source])!
 		assert build.status == 0, build.stderr
 	}
-	firmware := os.getenv_opt('VINIX_VM_TEST_FIRMWARE') or {
+	firmware := os.getenv_opt('TULPAR_VM_TEST_FIRMWARE') or {
 		if os.is_dir('/opt/homebrew/share/qemu') { '/opt/homebrew/share/qemu' } else { '/usr/share/qemu' }
 	}
 	os.write_file(root + '/raw.img', '\x00'.repeat(1024 * 1024))!
@@ -125,7 +125,7 @@ fn test_start_serializes_channel_replacement_and_releases_leases_on_every_exit()
 	disk := devcore.file_hash(state + '/disk.qcow2')!
 	os.write_file(state + '/qemu.log', 'preserve-log')!
 	mut query := guest_lease(state)!
-	refused := startup_command([root + '/vinix-vm', 'start', state])!
+	refused := startup_command([root + '/tulpar-vm', 'start', state])!
 	assert refused.status != 0 && refused.stderr.contains('guest agent query'), refused.stderr
 	assert os.lstat(state + '/qmp.sock')!.inode == qmp_inode
 	assert os.lstat(state + '/agent.sock')!.inode == agent_inode
@@ -136,7 +136,7 @@ fn test_start_serializes_channel_replacement_and_releases_leases_on_every_exit()
 	for kind in ['fail', 'cancel', 'ready'] { startup_case(root, state, kind)! }
 	// A spawn error occurs before the startup observer can release the lease.
 	os.chmod(root + '/emulator', 0o600)!
-	failed := startup_command([root + '/vinix-vm', 'start', state])!
+	failed := startup_command([root + '/tulpar-vm', 'start', state])!
 	assert failed.status != 0
 	mut channel := guest_lease(state)!
 	channel.release()

@@ -97,7 +97,7 @@ cp -rp uacpi-repository/include/uacpi/* c/uacpi/
 cp -rp uacpi-repository/source/* c/uacpi/
 
 # 2.2.1.  Keep the third-party tree generated so security updates remain a
-# one-line pin change and the Vinix-specific port stays reviewable.
+# one-line pin change and the Tulpar-specific port stays reviewable.
 clone_repo_commit \
     https://github.com/lwip-tcpip/lwip.git \
     lwip-repository \

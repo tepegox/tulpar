@@ -1,23 +1,23 @@
 # Virtualization and KVM support
 
-Vinix supports running as a guest under Linux KVM. It also has an experimental
+Tulpar supports running as a guest under Linux KVM. It also has an experimental
 native Intel VT-x hypervisor. These use different userspace APIs:
 
 | Use case | Current support |
 | --- | --- |
-| Run amd64 Vinix under QEMU/KVM on an x86_64 Linux host | Supported by the desktop launcher and ISO boot checks. |
-| Run arm64 Vinix under QEMU/KVM on an AArch64 Linux host | Supported by the ISO boot checks. |
-| Create hardware-accelerated VMs inside amd64 Vinix | Intel VT-x through `/dev/hypervisor`; one vCPU and at most 1 GiB RAM per VM. Larger-memory allocation and mappings are tested separately from physical VM entry. |
-| Use Linux's `/dev/kvm` API inside Vinix | Not implemented on either architecture. |
-| Run another arm64 Vinix instance through QEMU inside Vinix | TCG software emulation through `vinix-qemu`. |
+| Run amd64 Tulpar under QEMU/KVM on an x86_64 Linux host | Supported by the desktop launcher and ISO boot checks. |
+| Run arm64 Tulpar under QEMU/KVM on an AArch64 Linux host | Supported by the ISO boot checks. |
+| Create hardware-accelerated VMs inside amd64 Tulpar | Intel VT-x through `/dev/hypervisor`; one vCPU and at most 1 GiB RAM per VM. Larger-memory allocation and mappings are tested separately from physical VM entry. |
+| Use Linux's `/dev/kvm` API inside Tulpar | Not implemented on either architecture. |
+| Run another arm64 Tulpar instance through QEMU inside Tulpar | TCG software emulation through `tulpar-qemu`. |
 
-## Run Vinix as a KVM guest
+## Run Tulpar as a KVM guest
 
 KVM runs on the Linux host, which needs a working KVM kernel backend,
 hardware virtualization enabled in firmware, a QEMU build with KVM support,
 and read/write access to the host's `/dev/kvm`. On x86_64 the host can use
-Intel VT-x or AMD SVM; the Intel-only limit of Vinix's own hypervisor does not
-restrict running Vinix as a guest. Use an image matching the host architecture.
+Intel VT-x or AMD SVM; the Intel-only limit of Tulpar's own hypervisor does not
+restrict running Tulpar as a guest. Use an image matching the host architecture.
 QEMU documents its supported host accelerators in its
 [system emulator introduction](https://www.qemu.org/docs/master/system/introduction.html).
 
@@ -34,13 +34,13 @@ successfully. Listing an accelerator alone does not prove it can initialize.
 If `/dev/kvm` is missing, check the Linux host's KVM setup and firmware; if
 access is denied, use the host distribution's KVM device permissions.
 
-With the released `vinix-amd64.iso`, create a new disk once and boot:
+With the released `tulpar-amd64.iso`, create a new disk once and boot:
 
 ```sh
-qemu-img create -f qcow2 vinix-amd64.qcow2 16G
+qemu-img create -f qcow2 tulpar-amd64.qcow2 16G
 qemu-system-x86_64 -machine q35 -accel kvm -cpu host -m 4096 -smp 2 \
-    -cdrom vinix-amd64.iso \
-    -drive file=vinix-amd64.qcow2,format=qcow2 \
+    -cdrom tulpar-amd64.iso \
+    -drive file=tulpar-amd64.qcow2,format=qcow2 \
     -nic user,model=e1000
 ```
 
@@ -56,23 +56,23 @@ For an amd64 desktop built from this checkout:
 
 The launcher selects KVM with `-cpu host` when `/dev/kvm` is readable and
 writable. Otherwise it selects HVF on an Intel Mac or TCG software emulation.
-An explicit `VINIX_QEMU_ACCEL` overrides this selection; specify the CPU too:
+An explicit `TULPAR_QEMU_ACCEL` overrides this selection; specify the CPU too:
 
 ```sh
-VINIX_QEMU_ACCEL=kvm ./scripts/run-desktop-amd64.sh --no-build -cpu host
-VINIX_QEMU_ACCEL=tcg ./scripts/run-desktop-amd64.sh --no-build -cpu max
+TULPAR_QEMU_ACCEL=kvm ./scripts/run-desktop-amd64.sh --no-build -cpu host
+TULPAR_QEMU_ACCEL=tcg ./scripts/run-desktop-amd64.sh --no-build -cpu max
 ```
 
 The selection checks device permissions; it does not retry with TCG if KVM
 initialization fails. Use the explicit TCG command in that case. `--no-build`
-requires an existing `vinix-desktop-amd64.iso`. The desktop launcher also needs
-x86_64 UEFI firmware; set `VINIX_OVMF_CODE` if it is not found automatically.
+requires an existing `tulpar-desktop-amd64.iso`. The desktop launcher also needs
+x86_64 UEFI firmware; set `TULPAR_OVMF_CODE` if it is not found automatically.
 
 For release-image boot checks on a matching Linux host, run either:
 
 ```sh
-./scripts/test-iso.sh --no-virtualbox vinix-amd64.iso
-./scripts/test-iso.sh --no-virtualbox vinix-arm64.iso
+./scripts/test-iso.sh --no-virtualbox tulpar-amd64.iso
+./scripts/test-iso.sh --no-virtualbox tulpar-arm64.iso
 ```
 
 The ISO runner selects KVM when the host device is writable (and, for arm64,
@@ -80,17 +80,17 @@ the host is AArch64). The AArch64 development runner
 `scripts/run-desktop-aarch64.sh` uses HVF by default, or TCG with `USE_TCG=1`;
 it does not automatically select Linux KVM.
 
-## Host VMs inside Vinix
+## Host VMs inside Tulpar
 
 The native backend requires Intel VMX, EPT with INVEPT, and unrestricted-guest support
-available to the amd64 Vinix kernel. When Vinix itself runs in a VM, the outer
+available to the amd64 Tulpar kernel. When Tulpar itself runs in a VM, the outer
 hypervisor must expose nested VT-x for `/dev/hypervisor` to become available.
-Running Vinix as an ordinary KVM guest does not require nested VT-x.
+Running Tulpar as an ordinary KVM guest does not require nested VT-x.
 
-At boot, Vinix checks VMX and runs a real-mode guest self-test before publishing
+At boot, Tulpar checks VMX and runs a real-mode guest self-test before publishing
 the root-only `/dev/hypervisor` device. A successful boot logs
 `hypervisor: /dev/hypervisor ready`. If VMX is unavailable or the self-test
-fails, Vinix continues booting without the device.
+fails, Tulpar continues booting without the device.
 
 This backend targets small firmware and device-model experiments. AMD SVM,
 an ARM hardware virtualization backend, multiple vCPUs, interrupt injection,
@@ -100,9 +100,9 @@ and the [hypervisor checks](../tests/hypervisor/README.md) for validation and
 the distinction between host model checks and actual VM-entry coverage.
 
 Linux KVM applications expect `/dev/kvm` and `KVM_*` ioctls, as specified in the
-[Linux KVM API](https://docs.kernel.org/virt/kvm/api.html). Vinix's
-`VINIX_HV_*` ioctls are a separate interface, so QEMU `-accel kvm` cannot use
-the native backend. For QEMU running inside arm64 Vinix, follow the
+[Linux KVM API](https://docs.kernel.org/virt/kvm/api.html). Tulpar's
+`TULPAR_HV_*` ioctls are a separate interface, so QEMU `-accel kvm` cannot use
+the native backend. For QEMU running inside arm64 Tulpar, follow the
 [nested QEMU instructions](qemu-nested.md), which use `-accel tcg`.
 
 ## Manage QEMU guests
@@ -113,5 +113,5 @@ QMP, and pairs offline disk snapshots with firmware snapshots. It supports
 explicit QEMU accelerators, multiple virtual CPUs, user-mode networking,
 loopback SSH forwarding, read-only virtio-9p shares and a guest-agent channel.
 Its real QEMU host tests cover lifecycle, locking and snapshot restoration.
-Installed Vinix uses TCG with its existing authorized JIT policy; native
+Installed Tulpar uses TCG with its existing authorized JIT policy; native
 Intel/AMD/ARM hardware-accelerated VM hosting remains incomplete.

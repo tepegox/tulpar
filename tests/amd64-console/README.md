@@ -13,7 +13,7 @@ The init forks a worker, checks zero-length and nonblocking reads from
 It reports original assertion line numbers and expressions on failure, then
 sleeps as PID1 after collecting the worker. The harness captures COM1 and stops
 its own VM; its timeout detects a crash or blocked syscall. This syscall fixture
-must run in a Vinix guest.
+must run in a Tulpar guest.
 
 The original 57-line C fixture is recoverable at commit
 `33be42d72dba174bf643ab5be7fc57ab53d974a6:tests/amd64-console/test.c`.

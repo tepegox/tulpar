@@ -4,10 +4,10 @@
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-file-backup --work /tmp/file-backup-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/kernel/bin/tulpar \
   --file-backup --work /tmp/file-backup-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/kernel/bin/tulpar \
   --file-backup --work /tmp/file-backup-x86
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/file_backup_artifacts.v \
   /tmp/file-backup-arm /tmp/file-backup-arm-artifacts

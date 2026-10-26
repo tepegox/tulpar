@@ -5,7 +5,7 @@ there is no replacement semaphore, synthetic MM field or C implementation.
 
 Run `V=/path/to/v v -path 'tests/linuxkpi|@vlib|@vmodules' run
 tests/linuxkpi/rwsem.v --keep-dir /new/evidence/directory` from the repository
-root. The selected compiler must support native Vinix module generation and
+root. The selected compiler must support native Tulpar module generation and
 host orchestration; an explicit compiler router may select separate binaries.
 The Linux source defaults to the pinned third-party tree and may be set with
 `LINUXKPI_SOURCE_DIR`. `CC` selects the C compiler command.

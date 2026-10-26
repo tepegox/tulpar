@@ -104,7 +104,7 @@ pub fn initialise(config_text string, destination string) ! {
 
 pub fn arguments(config Config, state string) ![]string {
 	option_path(state)!
-	mut result := [config.qemu.path, '-name', 'vinix-managed', '-accel', config.accelerator, '-machine',
+	mut result := [config.qemu.path, '-name', 'tulpar-managed', '-accel', config.accelerator, '-machine',
 		if config.architecture == 'aarch64' { 'virt,gic-version=3' } else { 'q35,smm=off' }, '-cpu',
 		if config.accelerator == 'tcg' { 'max' } else { 'host' }, '-m', config.memory_mib.str(),
 		'-smp', config.cpus.str(), '-display', 'none', '-monitor', 'none', '-qmp',
@@ -139,9 +139,9 @@ pub fn arguments(config Config, state string) ![]string {
 		result << ['-fsdev',
 			'local,id=share,path=${config.shared_directory},security_model=none,readonly=on', '-device',
 			if config.architecture == 'aarch64' {
-				'virtio-9p-device,fsdev=share,mount_tag=vinix-share'
+				'virtio-9p-device,fsdev=share,mount_tag=tulpar-share'
 			} else {
-				'virtio-9p-pci,fsdev=share,mount_tag=vinix-share'
+				'virtio-9p-pci,fsdev=share,mount_tag=tulpar-share'
 			}]
 	}
 	if config.guest_agent {

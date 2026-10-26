@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT */
-#ifndef VINIX_LINUXKPI_DMA_RESV_V_CONTRACT_H
-#define VINIX_LINUXKPI_DMA_RESV_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_DMA_RESV_V_CONTRACT_H
+#define TULPAR_LINUXKPI_DMA_RESV_V_CONTRACT_H
 #include "linuxkpi_dma_fence_v_contract.h"
 #define u64 vkh_linux_u64
 #include <linux/dma-resv.h>

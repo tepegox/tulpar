@@ -153,7 +153,7 @@ fn bundle_mock_renameat(from_fd i32, from &char, to_fd i32, to &char) i32 {
 }
 
 fn test_bundle_publication_handles_interruption_short_writes_and_every_durability_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-bundle-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-bundle-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -201,7 +201,7 @@ fn test_bundle_publication_handles_interruption_short_writes_and_every_durabilit
 }
 
 fn test_add_and_remove_commands_use_atomic_publication_and_cleanup_on_every_io_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-edit-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-edit-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -236,7 +236,7 @@ fn test_add_and_remove_commands_use_atomic_publication_and_cleanup_on_every_io_f
 }
 
 fn test_enroll_and_forget_commands_preserve_inputs_and_use_atomic_publication_on_io_failures() {
-	work := os.join_path(os.temp_dir(), 'vinix-membership-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-membership-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -272,7 +272,7 @@ fn test_enroll_and_forget_commands_preserve_inputs_and_use_atomic_publication_on
 }
 
 fn test_allocation_uses_shared_atomic_publisher_for_every_io_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-space-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-space-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -303,7 +303,7 @@ fn test_allocation_uses_shared_atomic_publisher_for_every_io_fault() {
 }
 
 fn test_pool_membership_and_allocation_publish_metadata_and_mappings_together_on_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -348,7 +348,7 @@ fn test_pool_membership_and_allocation_publish_metadata_and_mappings_together_on
 }
 
 fn test_pool_expansion_growth_and_equal_size_retries_complete_the_shared_durability_protocol() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-growth-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-growth-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -391,7 +391,7 @@ fn test_pool_expansion_growth_and_equal_size_retries_complete_the_shared_durabil
 }
 
 fn test_pool_expansion_and_growth_detect_buffered_stdout_failure_after_complete_publication() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-growth-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-growth-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -428,7 +428,7 @@ fn test_pool_expansion_and_growth_detect_buffered_stdout_failure_after_complete_
 }
 
 fn test_pool_batches_publish_all_rows_or_preserve_old_file_and_retry_every_durability_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-batch-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-batch-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -479,7 +479,7 @@ fn test_pool_batches_publish_all_rows_or_preserve_old_file_and_retry_every_durab
 }
 
 fn test_pool_batch_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-batch-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-batch-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -518,7 +518,7 @@ fn test_pool_batch_preview_and_publication_detect_buffered_stdout_failure() {
 }
 
 fn test_pool_growth_batches_complete_publication_and_equal_size_retries_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-grow-batch-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-grow-batch-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -566,7 +566,7 @@ fn test_pool_growth_batches_complete_publication_and_equal_size_retries_under_ev
 }
 
 fn test_pool_growth_batch_preview_and_publication_detect_buffered_output_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-grow-batch-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-grow-batch-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -603,7 +603,7 @@ fn test_pool_growth_batch_preview_and_publication_detect_buffered_output_failure
 }
 
 fn test_pool_expansion_batches_publish_whole_members_and_equal_end_retries_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-expand-batch-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-expand-batch-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -650,7 +650,7 @@ fn test_pool_expansion_batches_publish_whole_members_and_equal_end_retries_under
 }
 
 fn test_pool_expansion_batch_preview_and_publication_detect_buffered_output_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-expand-batch-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-expand-batch-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -702,7 +702,7 @@ fn members_io_fixture(mut set PlanSet, present bool) {
 }
 
 fn test_pool_membership_batches_and_retries_use_shared_atomic_publication_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-members-batch-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-members-batch-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -747,7 +747,7 @@ fn test_pool_membership_batches_and_retries_use_shared_atomic_publication_under_
 }
 
 fn test_pool_membership_batch_previews_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-members-batch-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-members-batch-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -783,7 +783,7 @@ fn test_pool_membership_batch_previews_and_publication_detect_buffered_stdout_fa
 }
 
 fn test_priority_changes_and_all_keep_retries_use_atomic_publication_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-priority-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-priority-io-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut order := PoolOrder{count: 2}; order.disks[0] = 1; order.disks[1] = 0
@@ -817,7 +817,7 @@ fn test_priority_changes_and_all_keep_retries_use_atomic_publication_under_every
 }
 
 fn test_priority_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-priority-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-priority-output-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut order := PoolOrder{count: 2}; order.disks[0] = 1; order.disks[1] = 0
@@ -842,7 +842,7 @@ fn test_priority_preview_and_publication_detect_buffered_stdout_failure() {
 }
 
 fn test_mapping_removal_batches_and_absent_retries_are_atomic_under_every_publisher_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-removal-batch-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-removal-batch-io-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut batch := MappingRemovalBatch{count: 3}
@@ -878,7 +878,7 @@ fn test_mapping_removal_batches_and_absent_retries_are_atomic_under_every_publis
 }
 
 fn test_mapping_removal_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-removal-batch-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-removal-batch-output-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut batch := MappingRemovalBatch{count: 2}; batch.slots[0] = 3; batch.slots[1] = 2
@@ -917,7 +917,7 @@ fn enrollment_io_fixture(mut set PlanSet, mut first Plan, mut second Plan) {
 }
 
 fn test_enrollment_pins_and_rechecks_every_source_and_closes_all_descriptors_on_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-enrollment-read-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-enrollment-read-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; first_path := work + '/first.vmap'; second_path := work + '/second.vmap'
 	replacement_path := work + '/replacement.vmap'; moved_path := work + '/moved.vmap'
@@ -956,7 +956,7 @@ fn test_enrollment_pins_and_rechecks_every_source_and_closes_all_descriptors_on_
 }
 
 fn test_enrollment_batches_and_all_keep_retries_use_atomic_publication_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-enrollment-publish-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-enrollment-publish-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; first_path := work + '/first.vmap'; second_path := work + '/second.vmap'
 	for retry in [false, true] {
@@ -993,7 +993,7 @@ fn test_enrollment_batches_and_all_keep_retries_use_atomic_publication_under_eve
 }
 
 fn test_enrollment_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-enrollment-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-enrollment-output-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; first_path := work + '/first.vmap'; second_path := work + '/second.vmap'
 	for preview in [false, true] {
@@ -1041,7 +1041,7 @@ fn forget_io_fixture(mut set PlanSet, mut batch DiskForgetBatch, mut expected Pl
 }
 
 fn test_forget_batches_and_absent_retries_preserve_complete_sets_under_publisher_faults() {
-	work := os.join_path(os.temp_dir(), 'vinix-forget-publish-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-forget-publish-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	for retry in [false, true] {
@@ -1069,7 +1069,7 @@ fn test_forget_batches_and_absent_retries_preserve_complete_sets_under_publisher
 }
 
 fn test_forget_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-forget-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-forget-output-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	for preview in [false, true] {
@@ -1110,7 +1110,7 @@ fn addition_io_fixture(mut set PlanSet, mut batch MappingAdditionBatch, mut expe
 }
 
 fn test_explicit_addition_batches_and_keep_retries_use_atomic_publication_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-addition-publish-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-addition-publish-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	for retry in [false, true] {
@@ -1135,7 +1135,7 @@ fn test_explicit_addition_batches_and_keep_retries_use_atomic_publication_under_
 }
 
 fn test_explicit_addition_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-addition-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-addition-output-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	for preview in [false, true] {
@@ -1176,7 +1176,7 @@ fn explicit_growth_io_fixture(mut set PlanSet, mut batch MappingGrowthBatch, mut
 }
 
 fn test_explicit_growth_and_equal_size_retries_publish_whole_sets_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-explicit-growth-publish-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-explicit-growth-publish-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	for retry in [false, true] {
@@ -1201,7 +1201,7 @@ fn test_explicit_growth_and_equal_size_retries_publish_whole_sets_under_every_fa
 }
 
 fn test_explicit_growth_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-explicit-growth-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-explicit-growth-output-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	for preview in [false, true] {
@@ -1245,7 +1245,7 @@ fn contraction_io_fixture(mut set PlanSet, mut batch PoolContractionBatch, mut e
 }
 
 fn test_pool_contraction_and_equal_end_retries_publish_complete_sets_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-contraction-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
+	work := os.join_path(os.temp_dir(), 'tulpar-contraction-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	for retry in [false, true] {
 		for mode in 1 .. 7 {
 			mut set := PlanSet{}; mut batch := PoolContractionBatch{}; mut expected := PlanSet{}
@@ -1264,7 +1264,7 @@ fn test_pool_contraction_and_equal_end_retries_publish_complete_sets_under_every
 }
 
 fn test_pool_contraction_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-contraction-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
+	work := os.join_path(os.temp_dir(), 'tulpar-contraction-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	for preview in [false, true] {
 		mut set := PlanSet{}; mut batch := PoolContractionBatch{}; mut expected := PlanSet{}
 		contraction_io_fixture(mut set, mut batch, mut expected); bundle_io = BundleIO{}; assert publish_bundle(path.str, &set) && C.fflush(C.stdout) == 0
@@ -1294,7 +1294,7 @@ fn resize_io_fixture(mut set PlanSet, mut batch PoolResizeBatch, mut expected Pl
 }
 
 fn test_cross_pool_resize_and_equal_bound_retries_publish_complete_sets_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-resize-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
+	work := os.join_path(os.temp_dir(), 'tulpar-resize-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	for retry in [false, true] { for mode in 1 .. 7 {
 		mut set := PlanSet{}; mut batch := PoolResizeBatch{}; mut expected := PlanSet{}
 		resize_io_fixture(mut set, mut batch, mut expected); bundle_io = BundleIO{}; assert publish_bundle(path.str, &set)
@@ -1311,7 +1311,7 @@ fn test_cross_pool_resize_and_equal_bound_retries_publish_complete_sets_under_ev
 }
 
 fn test_cross_pool_resize_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-resize-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
+	work := os.join_path(os.temp_dir(), 'tulpar-resize-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	for preview in [false, true] {
 		mut set := PlanSet{}; mut batch := PoolResizeBatch{}; mut expected := PlanSet{}
 		resize_io_fixture(mut set, mut batch, mut expected); bundle_io = BundleIO{}; assert publish_bundle(path.str, &set) && C.fflush(C.stdout) == 0
@@ -1328,7 +1328,7 @@ fn test_cross_pool_resize_preview_and_publication_detect_buffered_stdout_failure
 }
 
 fn test_multi_pool_batches_publish_all_rows_or_preserve_old_file_and_retry_every_durability_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-pool-batch-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-pool-batch-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -1381,7 +1381,7 @@ fn test_multi_pool_batches_publish_all_rows_or_preserve_old_file_and_retry_every
 
 
 fn test_multi_pool_batch_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-pool-batch-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-pool-batch-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -1423,7 +1423,7 @@ fn test_multi_pool_batch_preview_and_publication_detect_buffered_stdout_failure(
 }
 
 fn test_multi_pool_growth_batches_complete_publication_and_equal_size_retries_under_every_fault() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-growth-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-growth-io-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -1472,7 +1472,7 @@ fn test_multi_pool_growth_batches_complete_publication_and_equal_size_retries_un
 }
 
 fn test_multi_pool_growth_preview_and_publication_detect_buffered_stdout_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-growth-output-${os.getpid()}'); os.mkdir(work)!
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-growth-output-${os.getpid()}'); os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut batch := MultiPoolGrowthBatch{count: 2}; batch.pools[0] = 3; batch.pools[1] = 4

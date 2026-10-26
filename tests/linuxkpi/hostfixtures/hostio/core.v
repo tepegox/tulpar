@@ -8,13 +8,13 @@ struct C.wait_bit_key {}
 struct C.wait_queue_head {}
 @[typedef] struct C.atomic_long_t {}
 struct C.mutex { owner C.atomic_long_t }
-fn C.vinix_linuxkpi_task_in_iowait(voidptr) bool
-fn C.vinix_linuxkpi_task_dequeue(voidptr)
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_iowait_block(voidptr)
-fn C.vinix_linuxkpi_iowait_count(u32) u32
-fn C.vinix_linuxkpi_irq_flags() usize
-fn C.vinix_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_task_in_iowait(voidptr) bool
+fn C.tulpar_linuxkpi_task_dequeue(voidptr)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_iowait_block(voidptr)
+fn C.tulpar_linuxkpi_iowait_count(u32) u32
+fn C.tulpar_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_preempt_count() u32
 fn C.io_schedule_prepare() i32
 fn C.io_schedule_finish(i32)
 fn C.io_schedule()
@@ -62,7 +62,7 @@ pub fn iowait_end_locked(task &C.native_task_model) { unsafe {
  C.assert(C.__atomic_fetch_sub(&iowait_counts[cpu],u32(1),4)!=0)
  task.iowait_cpu_plus_one=0
 } }
-@[export: 'vinix_linuxkpi_iowait_block']
+@[export: 'tulpar_linuxkpi_iowait_block']
 pub fn iowait_block(owner voidptr) { unsafe {
  task:=&C.native_task_model(owner)
  C.assert(usize(task)==usize(C.vmh_native_task))
@@ -72,14 +72,14 @@ pub fn iowait_block(owner voidptr) { unsafe {
   hook(task)
  }
  C.assert(C.pthread_mutex_lock(&task.queue_lock)==0)
- if !task.queued && !task.dead && C.vinix_linuxkpi_task_in_iowait(&task.storage[0]) {
+ if !task.queued && !task.dead && C.tulpar_linuxkpi_task_in_iowait(&task.storage[0]) {
   C.assert(task.iowait_cpu_plus_one==0 && C.vmh_current_cpu<4)
   C.__atomic_fetch_add(&iowait_counts[C.vmh_current_cpu],u32(1),4)
   task.iowait_cpu_plus_one=C.vmh_current_cpu+1
  }
  C.assert(C.pthread_mutex_unlock(&task.queue_lock)==0)
 } }
-@[export: 'vinix_linuxkpi_iowait_count']
+@[export: 'tulpar_linuxkpi_iowait_count']
 pub fn iowait_count(cpu u32) u32 { unsafe {
  C.assert(cpu<4)
  return u32(C.__atomic_load_n(&iowait_counts[cpu],2))
@@ -126,7 +126,7 @@ pub fn wake_before_block(task &C.native_task_model) { unsafe {
  C.assert(actor!=nil && actor.signal_before_block)
  C.__atomic_fetch_add(&actor.before_block_calls,u32(1),3)
  C.__atomic_store_n(&C.vmh_u64(&task.pending),u64(1)<<14,3)
- C.assert(C.vinix_linuxkpi_task_enqueue(task))
+ C.assert(C.tulpar_linuxkpi_task_enqueue(task))
 } }
 @[export: 'vmh_io_actor_thread']
 pub fn io_thread(argument voidptr) voidptr { unsafe {
@@ -141,11 +141,11 @@ pub fn io_thread(argument voidptr) voidptr { unsafe {
  else if actor.operation==bit_timeout { actor.result=C.out_of_line_wait_on_bit_timeout(actor.word,3,C.bit_wait_io_timeout,actor.state,usize(actor.timeout)) }
  else if actor.operation==nested {
   outer:=C.io_schedule_prepare();inner:=C.io_schedule_prepare()
-  C.assert(outer==0 && inner==1 && C.vinix_linuxkpi_task_in_iowait(&actor.model.storage[0]))
+  C.assert(outer==0 && inner==1 && C.tulpar_linuxkpi_task_in_iowait(&actor.model.storage[0]))
   C.set_current_state(actor.state);C.io_schedule()
-  C.assert(C.vinix_linuxkpi_task_in_iowait(&actor.model.storage[0]))
+  C.assert(C.tulpar_linuxkpi_task_in_iowait(&actor.model.storage[0]))
   C.io_schedule_finish(inner)
-  C.assert(C.vinix_linuxkpi_task_in_iowait(&actor.model.storage[0]))
+  C.assert(C.tulpar_linuxkpi_task_in_iowait(&actor.model.storage[0]))
   C.io_schedule_finish(outer)
  } else {
   C.set_current_state(actor.state)
@@ -154,7 +154,7 @@ pub fn io_thread(argument voidptr) voidptr { unsafe {
   else { C.io_schedule() }
  }
  C.assert(C.task_is_running(C.current) && C.vmh_interrupts && C.vmh_preempt_depth==0)
- C.assert(!C.vinix_linuxkpi_task_in_iowait(&actor.model.storage[0]))
+ C.assert(!C.tulpar_linuxkpi_task_in_iowait(&actor.model.storage[0]))
  C.assert(actor.model.iowait_cpu_plus_one==0 && C.vmh_host_iowait_before_block==unsafe { nil })
  C.__atomic_store_n(&actor.returned,u32(1),3)
  if actor.operation==bit_lock && actor.result==0 {
@@ -174,9 +174,9 @@ fn start(actor &IoActor, operation u32, cpu u32,state u32) { unsafe {
 } }
 fn parked(actor &IoActor) { unsafe {
  wait_value(&actor.model.parked,1)
- C.assert(!C.vinix_linuxkpi_task_queued(&actor.model))
+ C.assert(!C.tulpar_linuxkpi_task_queued(&actor.model))
  if actor.operation==plain { C.assert(actor.model.iowait_cpu_plus_one==0) }
- else { C.assert(C.vinix_linuxkpi_task_in_iowait(&actor.model.storage[0]));C.assert(actor.model.iowait_cpu_plus_one==actor.cpu+1) }
+ else { C.assert(C.tulpar_linuxkpi_task_in_iowait(&actor.model.storage[0]));C.assert(actor.model.iowait_cpu_plus_one==actor.cpu+1) }
 } }
 fn join(actor &IoActor) { unsafe {
  wait_value(&actor.done,1);C.assert(C.pthread_join(actor.thread,nil)==0)
@@ -189,22 +189,22 @@ fn count_wait(cpu u32,expected u32) {
  C.assert(false) // Original I/O accounting progress assertion.
 }
 fn tokens() { unsafe {
- zero_counts();C.assert(!C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
- outer:=C.io_schedule_prepare();C.assert(outer==0 && C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
- inner:=C.io_schedule_prepare();C.assert(inner==1 && C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+ zero_counts();C.assert(!C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+ outer:=C.io_schedule_prepare();C.assert(outer==0 && C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+ inner:=C.io_schedule_prepare();C.assert(inner==1 && C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
  mut child:=C.native_task_model{};C.vmh_sync_model_init(&child,250)
- C.vinix_linuxkpi_task_inherit(&child.storage[0],&child,child.pid,child.tgid,&C.vmh_native_task.storage[0])
- C.assert(!C.vinix_linuxkpi_task_in_iowait(&child.storage[0]));C.vmh_sync_model_destroy(&child)
+ C.tulpar_linuxkpi_task_inherit(&child.storage[0],&child,child.pid,child.tgid,&C.vmh_native_task.storage[0])
+ C.assert(!C.tulpar_linuxkpi_task_in_iowait(&child.storage[0]));C.vmh_sync_model_destroy(&child)
  zero_counts();C.io_schedule();C.set_current_state(C.TASK_UNINTERRUPTIBLE)
  C.assert(C.io_schedule_timeout(0)==0)
- C.assert(C.task_is_running(C.current) && C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+ C.assert(C.task_is_running(C.current) && C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
  zero_counts();C.io_schedule_finish(inner)
- C.assert(C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
- C.io_schedule_finish(outer);C.assert(!C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+ C.assert(C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+ C.io_schedule_finish(outer);C.assert(!C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
  C.vmh_native_task.pending=u64(1)<<14;C.set_current_state(C.TASK_INTERRUPTIBLE)
  C.assert(C.io_schedule_timeout(10)==10)
- C.assert(C.task_is_running(C.current) && !C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
- C.vmh_native_task.pending=0;zero_counts();C.assert(C.vinix_linuxkpi_time_waiters()==0)
+ C.assert(C.task_is_running(C.current) && !C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+ C.vmh_native_task.pending=0;zero_counts();C.assert(C.tulpar_linuxkpi_time_waiters()==0)
 } }
 fn cpu_counts() { unsafe {
  mut actors:=[4]IoActor{};cpus:=[u32(1),1,3,2]!
@@ -222,12 +222,12 @@ fn cpu_counts() { unsafe {
 fn deadlines() { unsafe {
  for outcome:=u32(0);outcome<3;outcome++ {
   mut actor:=IoActor{timeout:10};start(&actor,timed,outcome,C.TASK_INTERRUPTIBLE);parked(&actor)
-  C.assert(C.nr_iowait_cpu(i32(outcome))==1 && C.nr_iowait()==1 && C.vinix_linuxkpi_time_waiters()==1)
+  C.assert(C.nr_iowait_cpu(i32(outcome))==1 && C.nr_iowait()==1 && C.tulpar_linuxkpi_time_waiters()==1)
   advance(if outcome!=0 { u64(3) } else { u64(10) })
   if outcome==1 { C.assert(C.wake_up_process(&C.task_struct(&actor.model.storage[0]))!=0) }
-  else if outcome==2 { C.__atomic_store_n(&C.vmh_u64(&actor.model.pending),u64(1)<<14,3);C.assert(C.vinix_linuxkpi_task_enqueue(&actor.model)) }
+  else if outcome==2 { C.__atomic_store_n(&C.vmh_u64(&actor.model.pending),u64(1)<<14,3);C.assert(C.tulpar_linuxkpi_task_enqueue(&actor.model)) }
   zero_counts();join(&actor)
-  C.assert(actor.result==if outcome!=0 { isize(7) } else { isize(0) } && C.vinix_linuxkpi_time_waiters()==0)
+  C.assert(actor.result==if outcome!=0 { isize(7) } else { isize(0) } && C.tulpar_linuxkpi_time_waiters()==0)
  }
 } }
 fn bits() { unsafe {
@@ -236,12 +236,12 @@ fn bits() { unsafe {
   C.set_bit(3,&word);mut actor:=IoActor{word:&word,timeout:10}
   start(&actor,operation,round%4,C.TASK_INTERRUPTIBLE);parked(&actor)
   C.assert(C.nr_iowait()==1 && C.nr_iowait_cpu(i32(round%4))==1)
-  if cancel!=0 { C.__atomic_store_n(&C.vmh_u64(&actor.model.pending),u64(1)<<14,3);C.assert(C.vinix_linuxkpi_task_enqueue(&actor.model)) }
+  if cancel!=0 { C.__atomic_store_n(&C.vmh_u64(&actor.model.pending),u64(1)<<14,3);C.assert(C.tulpar_linuxkpi_task_enqueue(&actor.model)) }
   else { C.clear_and_wake_up_bit(3,&word) }
   zero_counts()
   if cancel==0 && operation==bit_lock { wait_value(&actor.returned,1);C.__atomic_store_n(&actor.release,u32(1),3) }
   join(&actor);C.assert(actor.result==if cancel!=0 { isize(-C.EINTR) } else { isize(0) })
-  C.assert(!C.waitqueue_active(C.bit_waitqueue(&word,3)) && C.vinix_linuxkpi_time_waiters()==0)
+  C.assert(!C.waitqueue_active(C.bit_waitqueue(&word,3)) && C.tulpar_linuxkpi_time_waiters()==0)
   C.clear_and_wake_up_bit(3,&word)
  } } }
  C.set_bit(3,&word)
@@ -254,27 +254,27 @@ fn bits() { unsafe {
  advance(3);C.assert(C.wake_up_process(&C.task_struct(&actor.model.storage[0]))!=0)
  count_wait(3,1);C.assert(C.nr_iowait()==1);advance(7);join(&actor)
  C.assert(actor.result==-C.EAGAIN && C.test_bit(3,&word))
- C.assert(!C.waitqueue_active(C.bit_waitqueue(&word,3)) && C.vinix_linuxkpi_time_waiters()==0)
+ C.assert(!C.waitqueue_active(C.bit_waitqueue(&word,3)) && C.tulpar_linuxkpi_time_waiters()==0)
  C.clear_and_wake_up_bit(3,&word);zero_counts()
 } }
 fn dying_dequeue() { unsafe {
  controller:=C.vmh_native_task;mut dying:=C.native_task_model{}
  C.vmh_sync_model_init(&dying,251);C.vmh_native_task=&dying;C.vmh_current_cpu=1
  token:=C.io_schedule_prepare();C.assert(token==0)
- C.vinix_linuxkpi_task_dequeue(&dying);C.vinix_linuxkpi_iowait_block(&dying)
+ C.tulpar_linuxkpi_task_dequeue(&dying);C.tulpar_linuxkpi_iowait_block(&dying)
  C.assert(C.nr_iowait()==1 && C.nr_iowait_cpu(1)==1)
- C.__atomic_store_n(&dying.dead,true,3);C.vinix_linuxkpi_task_dead(&dying.storage[0])
- C.assert(!C.vinix_linuxkpi_task_enqueue(&dying));C.assert(C.nr_iowait_cpu(1)==1)
- C.vinix_linuxkpi_task_dequeue(&dying);zero_counts();C.io_schedule_finish(token)
- C.assert(!C.vinix_linuxkpi_task_in_iowait(&dying.storage[0]))
+ C.__atomic_store_n(&dying.dead,true,3);C.tulpar_linuxkpi_task_dead(&dying.storage[0])
+ C.assert(!C.tulpar_linuxkpi_task_enqueue(&dying));C.assert(C.nr_iowait_cpu(1)==1)
+ C.tulpar_linuxkpi_task_dequeue(&dying);zero_counts();C.io_schedule_finish(token)
+ C.assert(!C.tulpar_linuxkpi_task_in_iowait(&dying.storage[0]))
  C.vmh_native_task=controller;C.vmh_sync_model_destroy(&dying)
 } }
 fn queue_edges() { unsafe {
  mut actor:=IoActor{};start(&actor,nested,2,C.TASK_UNINTERRUPTIBLE);parked(&actor)
  C.assert(C.nr_iowait_cpu(2)==1);C.assert(C.pthread_mutex_lock(&actor.model.queue_lock)==0)
  actor.model.reject_enqueue=true;C.assert(C.pthread_mutex_unlock(&actor.model.queue_lock)==0)
- C.assert(!C.vinix_linuxkpi_task_enqueue(&actor.model))
- C.assert(C.nr_iowait_cpu(2)==1 && !C.vinix_linuxkpi_task_queued(&actor.model))
+ C.assert(!C.tulpar_linuxkpi_task_enqueue(&actor.model))
+ C.assert(C.nr_iowait_cpu(2)==1 && !C.tulpar_linuxkpi_task_queued(&actor.model))
  C.assert(C.pthread_mutex_lock(&actor.model.queue_lock)==0);actor.model.reject_enqueue=false
  C.assert(C.pthread_mutex_unlock(&actor.model.queue_lock)==0)
  C.assert(C.wake_up_process(&C.task_struct(&actor.model.storage[0]))!=0);zero_counts();join(&actor)
@@ -289,7 +289,7 @@ pub fn io_tests() { unsafe {
  C.vmh_native_task=&controller;C.vmh_current_cpu=0;before:=C.vmh_live_pages
  C.assert(!C.vmh_fail_allocation);C.vmh_fail_allocation=true
  tokens();cpu_counts();deadlines();bits();queue_edges();dying_dequeue()
- C.assert(C.vmh_live_pages==before && C.vinix_linuxkpi_time_waiters()==0);zero_counts()
+ C.assert(C.vmh_live_pages==before && C.tulpar_linuxkpi_time_waiters()==0);zero_counts()
  C.vmh_fail_allocation=false;C.vmh_native_task=nil;C.vmh_sync_model_destroy(&controller)
 } }
 const mutex_direct=u32(0)
@@ -332,7 +332,7 @@ pub fn mutex_thread(argument voidptr) voidptr { unsafe {
   token:=C.io_schedule_prepare();actor.result=C.mutex_lock_interruptible(actor.lockp);C.io_schedule_finish(token)
  }
  C.vmh_host_iowait_before_block=unsafe { nil }
- C.assert(C.vinix_linuxkpi_task_in_iowait(&actor.model.storage[0])==actor.prior_intent)
+ C.assert(C.tulpar_linuxkpi_task_in_iowait(&actor.model.storage[0])==actor.prior_intent)
  C.assert(actor.model.iowait_cpu_plus_one==0 && C.task_is_running(C.current))
  C.assert(C.vmh_interrupts && C.vmh_preempt_depth==0)
  if actor.result==0 {
@@ -341,7 +341,7 @@ pub fn mutex_thread(argument voidptr) voidptr { unsafe {
   wait_value(&actor.release,1);C.mutex_unlock(actor.lockp)
  }
  if outer>=0 { C.io_schedule_finish(outer) }
- C.assert(!C.vinix_linuxkpi_task_in_iowait(&actor.model.storage[0]))
+ C.assert(!C.tulpar_linuxkpi_task_in_iowait(&actor.model.storage[0]))
  C.__atomic_store_n(&C.vmh_u64(&actor.model.pending),u64(0),3);C.__atomic_store_n(&actor.done,u32(1),3)
  C.vmh_mutex_io_current=nil;C.vmh_native_task=nil
  return nil
@@ -351,7 +351,7 @@ fn mutex_start(actor &MutexActor,lockp &C.mutex,operation u32,cpu u32,prior bool
  C.vmh_sync_model_init(&actor.model,280+cpu);actor.model.iteration=1
  C.assert(C.pthread_create(&actor.thread,nil,C.vmh_mutex_io_thread,actor)==0)
  wait_value(&actor.entered,1);wait_value(&actor.model.parked,1)
- C.assert(!C.vinix_linuxkpi_task_queued(&actor.model))
+ C.assert(!C.tulpar_linuxkpi_task_queued(&actor.model))
  C.assert(actor.model.iowait_cpu_plus_one==if operation==mutex_ordinary { u32(0) } else { cpu+1 })
 } }
 fn mutex_join(actor &MutexActor) { unsafe {
@@ -363,25 +363,25 @@ fn next_subclass(subclass &u32) u32 { unsafe { value:=*subclass;(*subclass)++;re
 fn mutex_fast() { unsafe {
  mut lockp:=C.mutex{};C.mutex_init(&lockp)
  mut calls:=u32(0);mut subclass:=u32(0)
- irq:=C.vinix_linuxkpi_irq_flags();depth:=C.vinix_linuxkpi_preempt_count()
+ irq:=C.tulpar_linuxkpi_irq_flags();depth:=C.tulpar_linuxkpi_preempt_count()
  for round:=u32(0);round<128;round++ {
   C.mutex_lock_io(lock_argument(&lockp,&calls))
   C.assert(C.atomic_long_read(&lockp.owner)==isize(C.current))
-  C.assert(!C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+  C.assert(!C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
   C.assert(C.vmh_native_task.dequeued==0 && C.vmh_native_task.iowait_cpu_plus_one==0)
   zero_counts();C.mutex_unlock(&lockp)
   outer:=C.io_schedule_prepare();C.assert(outer==0)
   // Keep the side effect inside the imported macro so the public header's
   // CONFIG_DEBUG_LOCK_ALLOC=n discarded annotation remains observable.
   C.mutex_lock_io_nested(lock_argument(&lockp,&calls),next_subclass(&subclass))
-  C.assert(C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+  C.assert(C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
   C.assert(C.vmh_native_task.dequeued==0 && C.vmh_native_task.iowait_cpu_plus_one==0)
   zero_counts();C.mutex_unlock(&lockp)
-  C.assert(C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
-  C.io_schedule_finish(outer);C.assert(!C.vinix_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+  C.assert(C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
+  C.io_schedule_finish(outer);C.assert(!C.tulpar_linuxkpi_task_in_iowait(&C.vmh_native_task.storage[0]))
  }
  C.assert(calls==256 && subclass==0)
- C.assert(irq==C.vinix_linuxkpi_irq_flags() && depth==C.vinix_linuxkpi_preempt_count())
+ C.assert(irq==C.tulpar_linuxkpi_irq_flags() && depth==C.tulpar_linuxkpi_preempt_count())
  C.assert(C.vmh_mutex_waiters(&lockp)==0);C.mutex_destroy(&lockp)
 } }
 fn mutex_fifo_and_cancel() { unsafe {
@@ -395,14 +395,14 @@ fn mutex_fifo_and_cancel() { unsafe {
  C.assert(C.nr_iowait()==3 && C.nr_iowait_cpu(1)==2 && C.nr_iowait_cpu(2)==1)
  C.assert(C.nr_iowait_cpu(0)==0 && C.nr_iowait_cpu(3)==0)
  C.__atomic_store_n(&C.vmh_u64(&actors[1].model.pending),u64(1)<<14,3)
- C.assert(C.vinix_linuxkpi_task_enqueue(&actors[1].model));mutex_join(&actors[1])
+ C.assert(C.tulpar_linuxkpi_task_enqueue(&actors[1].model));mutex_join(&actors[1])
  C.assert(actors[1].result==-C.EINTR && C.__atomic_load_n(&actors[1].acquired,2)==0)
  C.assert(C.vmh_mutex_waiters(&lockp)==3 && C.nr_iowait()==2 && C.nr_iowait_cpu(2)==0)
  for round:=u32(0);round<2;round++ {
   C.__atomic_store_n(&C.vmh_u64(&actors[3].model.pending),u64(1)<<if round!=0 { u32(8) } else { u32(14) },3)
-  C.assert(C.vinix_linuxkpi_task_enqueue(&actors[3].model))
+  C.assert(C.tulpar_linuxkpi_task_enqueue(&actors[3].model))
   wait_value(&actors[3].block_calls,round+2);count_wait(1,2)
-  C.assert(!C.vinix_linuxkpi_task_queued(&actors[3].model))
+  C.assert(!C.tulpar_linuxkpi_task_queued(&actors[3].model))
   C.assert(C.vmh_mutex_waiters(&lockp)==3 && C.__atomic_load_n(&actors[3].acquired,2)==0 && C.nr_iowait()==2)
  }
  C.vmh_current_cpu=0;C.mutex_unlock(&lockp);order:=[u32(0),2,3]!

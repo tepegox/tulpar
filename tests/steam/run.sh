@@ -13,7 +13,7 @@
 set -eu
 
 repo=$(cd "$(dirname "$0")/../.." && pwd)
-initramfs=${VINIX_DESKTOP_INITRAMFS:-"$repo/build-support/init-aarch64/initramfs-desktop.tar"}
+initramfs=${TULPAR_DESKTOP_INITRAMFS:-"$repo/build-support/init-aarch64/initramfs-desktop.tar"}
 if [ -s "$initramfs.gz" ] && [ "$initramfs.gz" -nt "$initramfs" ]; then
 	initramfs="$initramfs.gz"
 fi
@@ -32,12 +32,12 @@ minimum_mem=$(( image_mb * 2 + 4096 ))
 if [ "$minimum_mem" -lt 32768 ]; then
 	minimum_mem=32768
 fi
-mem=${VINIX_QEMU_MEM:-$minimum_mem}
+mem=${TULPAR_QEMU_MEM:-$minimum_mem}
 
 exec "$repo/tests/browsers/run_vm" \
 	--steam \
 	--initramfs "$initramfs" \
-	--state-dir "${VINIX_STEAM_STATE_DIR:-$repo/build/steam-vm}" \
+	--state-dir "${TULPAR_STEAM_STATE_DIR:-$repo/build/steam-vm}" \
 	--mem "$mem" \
-	--timeout "${VINIX_QEMU_TIMEOUT:-3600}" \
+	--timeout "${TULPAR_QEMU_TIMEOUT:-3600}" \
 	"$@"

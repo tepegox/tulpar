@@ -49,19 +49,19 @@ inventory, so the report does not claim a hermetic host toolchain.
 Run from the repository containing these files. `OUT` must not exist:
 
 ```sh
-VINIX_ROOT="$PWD"
-VINIX_V="$VINIX_ROOT/build/package-https-runtime-work/toolchain/v"
-VINIX_CC=/opt/homebrew/opt/llvm/bin/clang
-OUT="$VINIX_ROOT/build/wine-pe-admission-host-new"
-export VEXE="$VINIX_V" V_MACOS_V3_CALLER_VEXE="$VINIX_V"
+TULPAR_ROOT="$PWD"
+TULPAR_V="$TULPAR_ROOT/build/package-https-runtime-work/toolchain/v"
+TULPAR_CC=/opt/homebrew/opt/llvm/bin/clang
+OUT="$TULPAR_ROOT/build/wine-pe-admission-host-new"
+export VEXE="$TULPAR_V" V_MACOS_V3_CALLER_VEXE="$TULPAR_V"
 export V_MACOS_V3_CALLER_VEXE_PRESENT=1 V_MACOS_V3_CALLER_VCHILD_PRESENT=0
 export V_MACOS_V3_NO_FALLBACK=1 V_C_ERROR_BUG_REPORT_DISABLED=1
-"$VINIX_V" -backend c -cc "$VINIX_CC" -prod -gc none -manualfree \
-  -path "$VINIX_ROOT|@vlib|@vmodules" \
-  -o "$VINIX_ROOT/build/wine-pe-admission-check" \
+"$TULPAR_V" -backend c -cc "$TULPAR_CC" -prod -gc none -manualfree \
+  -path "$TULPAR_ROOT|@vlib|@vmodules" \
+  -o "$TULPAR_ROOT/build/wine-pe-admission-check" \
   tests/packages/wine-pe-admission-check.v
-"$VINIX_ROOT/build/wine-pe-admission-check" \
-  "$VINIX_V" "$VINIX_CC" "$VINIX_ROOT" "$OUT"
+"$TULPAR_ROOT/build/wine-pe-admission-check" \
+  "$TULPAR_V" "$TULPAR_CC" "$TULPAR_ROOT" "$OUT"
 ```
 
 To include a real local producer receipt, append its directory, the exact

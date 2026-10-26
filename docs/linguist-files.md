@@ -33,7 +33,7 @@ trees listed in `.gitattributes` are also marked vendored: `third_party`,
 `kernel/freestnd-c-hdrs`, `kernel/cc-runtime`, `kernel/c/flanterm`,
 `kernel/c/nanoprintf*.h`, `kernel/c/uacpi`, `kernel/uacpi-repository`,
 `kernel/c/lwip` and `kernel/lwip-repository`. Those downloaded kernel trees
-are currently untracked. Vinix source that calls these libraries remains counted.
+are currently untracked. Tulpar source that calls these libraries remains counted.
 
 Immutable first-party/generated benchmark snapshots are recovered from pinned
 Git blobs using `tests/alloc-bench/materialize-evidence.py`. Their removal from
@@ -66,7 +66,7 @@ depend on its deployed Linguist version and the default-branch revision.
 | `apple-boot/tests/boot-fixture-v-abi.h` | 276 |
 | `apple-boot/tests/converter-v-abi.h` | 443 |
 | `apple-boot/tests/helper-fixture-v-abi.h` | 193 |
-| `base-files/usr/include/vinix/hypervisor.h` | 1,318 |
+| `base-files/usr/include/tulpar/hypervisor.h` | 1,318 |
 | `build-support/aarch64-cc-shim/stdatomic.h` | 4,425 |
 | `build-support/android/androidhost/probe_spawn_abi.h` | 706 |
 | `build-support/android/atl-configuration-v-abi.h` | 1,394 |
@@ -118,7 +118,7 @@ depend on its deployed Linguist version and the default-branch revision.
 | `desktop/quicklook_stb.h` | 454 |
 | `desktop/reminders_heap_test_guard.h` | 618 |
 | `desktop/tools/tests/heap_tracker.h` | 1,786 |
-| `desktop/windowfb/capi/vinix_window.h` | 3,644 |
+| `desktop/windowfb/capi/tulpar_window.h` | 3,644 |
 | `games/n64/abi.h` | 657 |
 | `games/ps1/abi.h` | 1,098 |
 | `games/ps2/abi.h` | 657 |
@@ -215,9 +215,9 @@ depend on its deployed Linguist version and the default-branch revision.
 | `kernel/c/unistd.h` | 45 |
 | `kernel/c/varargs_abi.h` | 569 |
 | `kernel/c/verity.h` | 1,518 |
-| `kernel/c/vinix_endpoint.h` | 349 |
-| `kernel/c/vinix_inet6.h` | 1,534 |
-| `kernel/c/vinix_net.h` | 2,728 |
+| `kernel/c/tulpar_endpoint.h` | 349 |
+| `kernel/c/tulpar_inet6.h` | 1,534 |
+| `kernel/c/tulpar_net.h` | 2,728 |
 | `kernel/c/vmx.h` | 1,446 |
 | `kernel/c/x86_irq_v_contract.h` | 804 |
 | `kernel/c/x86_mitigations.h` | 1,098 |
@@ -281,11 +281,11 @@ depend on its deployed Linguist version and the default-branch revision.
 | `kernel/linuxkpi/include/linux/timex.h` | 247 |
 | `kernel/linuxkpi/include/linux/types.h` | 2,287 |
 | `kernel/linuxkpi/include/linux/uaccess.h` | 5,243 |
-| `kernel/linuxkpi/include/vinix/format.h` | 2,001 |
-| `kernel/linuxkpi/include/vinix/gfp.h` | 503 |
-| `kernel/linuxkpi/include/vinix/printk.h` | 2,368 |
-| `kernel/linuxkpi/include/vinix/runtime.h` | 5,108 |
-| `kernel/linuxkpi/include/vinix/user_access_scope.h` | 1,233 |
+| `kernel/linuxkpi/include/tulpar/format.h` | 2,001 |
+| `kernel/linuxkpi/include/tulpar/gfp.h` | 503 |
+| `kernel/linuxkpi/include/tulpar/printk.h` | 2,368 |
+| `kernel/linuxkpi/include/tulpar/runtime.h` | 5,108 |
+| `kernel/linuxkpi/include/tulpar/user_access_scope.h` | 1,233 |
 | `tests/aarch64-sigreturn/init.c` | 1,335 |
 | `tests/aarch64-sigreturn/probe.c` | 5,638 |
 | `tests/aarch64-syscalls/smoke.c` | 80,734 |
@@ -720,7 +720,7 @@ depend on its deployed Linguist version and the default-branch revision.
 | `build-support/dhewm3/build` | 135 |
 | `build-support/dhewm3/run-dhewm3` | 571 |
 | `build-support/dictionary/prepare` | 124 |
-| `build-support/docker/vinix-dockerd` | 1,499 |
+| `build-support/docker/tulpar-dockerd` | 1,499 |
 | `build-support/doom/run-doom` | 656 |
 | `build-support/dota2/compile-v-compat` | 120 |
 | `build-support/dota2/mesa-build` | 134 |
@@ -769,8 +769,8 @@ depend on its deployed Linguist version and the default-branch revision.
 | `build-support/python-smoke` | 167 |
 | `build-support/qemu-storage.sh` | 9,938 |
 | `build-support/qemu-system/tests/run` | 131 |
-| `build-support/qemu-system/vinix-qemu` | 1,481 |
-| `build-support/qemu-system/vinix-qemu-desktop` | 851 |
+| `build-support/qemu-system/tulpar-qemu` | 1,481 |
+| `build-support/qemu-system/tulpar-qemu-desktop` | 851 |
 | `build-support/roblox/build` | 178 |
 | `build-support/roblox/run-roblox` | 1,318 |
 | `build-support/roblox/run-roblox-client` | 182 |
@@ -804,14 +804,14 @@ depend on its deployed Linguist version and the default-branch revision.
 | `build-support/v-command` | 1,409 |
 | `build-support/venus/prepare-qemu` | 210 |
 | `build-support/venus/tests/run` | 133 |
-| `build-support/vinix-desktop-build` | 12,928 |
-| `build-support/vinix-desktop-reload` | 3,872 |
-| `build-support/vinix-files-sync` | 2,361 |
-| `build-support/vinix-host-sync` | 4,410 |
-| `build-support/vinix-persist-packages` | 5,219 |
-| `build-support/vinix-pkg` | 44,282 |
-| `build-support/vinix-pkg-wrapper` | 616 |
-| `build-support/vinix-version-check` | 1,591 |
+| `build-support/tulpar-desktop-build` | 12,928 |
+| `build-support/tulpar-desktop-reload` | 3,872 |
+| `build-support/tulpar-files-sync` | 2,361 |
+| `build-support/tulpar-host-sync` | 4,410 |
+| `build-support/tulpar-persist-packages` | 5,219 |
+| `build-support/tulpar-pkg` | 44,282 |
+| `build-support/tulpar-pkg-wrapper` | 616 |
+| `build-support/tulpar-version-check` | 1,591 |
 | `build-support/virglrenderer/build-host.sh` | 3,543 |
 | `build-support/x86-translation/compile-v-office` | 165 |
 | `build-support/x86-translation/patch-msxml-unicode` | 177 |
@@ -855,8 +855,8 @@ depend on its deployed Linguist version and the default-branch revision.
 | `gl-triangle/run-m1-agx-smoke` | 820 |
 | `gl-triangle/run-virgl-smoke` | 676 |
 | `gl-triangle/stage` | 136 |
-| `installer/macos/fetch-vinix-payload.sh` | 1,774 |
-| `installer/macos/install-vinix.sh` | 8,814 |
+| `installer/macos/fetch-tulpar-payload.sh` | 1,774 |
+| `installer/macos/install-tulpar.sh` | 8,814 |
 | `installer/macos/test.sh` | 2,523 |
 | `kernel/get-deps` | 3,277 |
 | `kernel/linuxkpi/audit` | 130 |
@@ -911,7 +911,7 @@ depend on its deployed Linguist version and the default-branch revision.
 | `scripts/build-v-aarch64.sh` | 12,102 |
 | `scripts/build-v-amd64.sh` | 160 |
 | `scripts/build-venus-aarch64.sh` | 3,888 |
-| `scripts/build-vinix-guest-disk.sh` | 222 |
+| `scripts/build-tulpar-guest-disk.sh` | 222 |
 | `scripts/build-voffice-aarch64.sh` | 6,888 |
 | `scripts/build-x11-aarch64.sh` | 20,691 |
 | `scripts/build-x11-amd64.sh` | 197 |
@@ -960,7 +960,7 @@ depend on its deployed Linguist version and the default-branch revision.
 | `tests/alloc-bench/results/2026-10-02-userspace/catalina-reproduction/measure-recorded` | 393 |
 | `tests/alloc-bench/results/2026-10-02-userspace/check-recompute` | 155 |
 | `tests/alloc-bench/results/2026-10-02-userspace/compare` | 147 |
-| `tests/alloc-bench/results/2026-10-02-userspace/excluded/vinix-release-1-preboot/run-vinix-before-fix` | 381 |
+| `tests/alloc-bench/results/2026-10-02-userspace/excluded/tulpar-release-1-preboot/run-tulpar-before-fix` | 381 |
 | `tests/alloc-bench/results/2026-10-02-userspace/recompute` | 149 |
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/allocation-audit-final/capture-x86-diagnostic` | 230 |
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/allocation-audit-final/run` | 211 |
@@ -969,8 +969,8 @@ depend on its deployed Linguist version and the default-branch revision.
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/allocator-x86-v4/init.sh` | 2,156 |
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/allocator-x86-v4/verify-x86-v4-final` | 227 |
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/benchmark-runners-final/macos-driver` | 401 |
-| `tests/alloc-bench/results/2026-10-02-userspace/validation/benchmark-runners-final/run-vinix` | 379 |
-| `tests/alloc-bench/results/2026-10-02-userspace/validation/benchmark-runners-final/vinix-driver` | 401 |
+| `tests/alloc-bench/results/2026-10-02-userspace/validation/benchmark-runners-final/run-tulpar` | 379 |
+| `tests/alloc-bench/results/2026-10-02-userspace/validation/benchmark-runners-final/tulpar-driver` | 401 |
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/campaign-coordinator` | 222 |
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/campaign-coordinator-guard-stop/useralloc-v4-final-cohorts` | 234 |
 | `tests/alloc-bench/results/2026-10-02-userspace/validation/campaign-v4-complete/useralloc-final-driver` | 411 |
@@ -1018,7 +1018,7 @@ depend on its deployed Linguist version and the default-branch revision.
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/excluded/desktop-perf-controller/validate-completed` | 226 |
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/recompute` | 149 |
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/campaign-complete/catalina-measure` | 393 |
-| `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/campaign-complete/run-vinix` | 379 |
+| `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/campaign-complete/run-tulpar` | 379 |
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/campaign-complete/useralloc-final-driver` | 411 |
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/campaign-complete/useralloc-macos-final-driver` | 417 |
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/campaign-complete/useralloc-v6-final-cohorts` | 234 |
@@ -1042,9 +1042,9 @@ depend on its deployed Linguist version and the default-branch revision.
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/source-freeze/evidence/correctness-v6-x86-driver` | 239 |
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/v5-hot-diagnostic/run` | 211 |
 | `tests/alloc-bench/results/2026-10-03-userspace-v6/validation/v5-hot-diagnostic/summarize` | 217 |
-| `tests/alloc-bench/run-kernel-vinix` | 374 |
+| `tests/alloc-bench/run-kernel-tulpar` | 374 |
 | `tests/alloc-bench/run-macos` | 373 |
-| `tests/alloc-bench/run-vinix` | 373 |
+| `tests/alloc-bench/run-tulpar` | 373 |
 | `tests/alloc-bench/test-evidence-owner` | 153 |
 | `tests/alloc-bench/test-kmod-info` | 165 |
 | `tests/alloc-bench/test-native-reports` | 153 |
@@ -1327,7 +1327,7 @@ depend on its deployed Linguist version and the default-branch revision.
 | `tests/packages/sublime-smoke.sh` | 2,661 |
 | `tests/packages/test-qemu-package-store` | 157 |
 | `tests/packages/test-qemu-persistence.sh` | 4,298 |
-| `tests/packages/test-vinix-pkg.sh` | 24,354 |
+| `tests/packages/test-tulpar-pkg.sh` | 24,354 |
 | `tests/packages/x-window-check` | 141 |
 | `tests/pagecache/check-generated` | 146 |
 | `tests/pagecache/run-guest` | 182 |

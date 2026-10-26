@@ -116,7 +116,7 @@ pub const source_acpi = 2
 // are sized from its page count) and after the higher half is mapped (the ACPI
 // tables are read through it), and before smp brings the other CPUs up.
 pub fn initialise() {
-	// A device tree is Vinix's native aarch64 description and is already parsed
+	// A device tree is Tulpar's native aarch64 description and is already parsed
 	// by the time this runs; ACPI is what a UEFI machine provides. Try the one
 	// that costs nothing to look at first.
 	mut found := discover_devicetree()
@@ -540,7 +540,7 @@ pub fn syscall_getcpu(_ voidptr, cpu_ptr u64, node_ptr u64, _tcache u64) (u64, u
 const max_nodemask_bits = u64(8 * 1024)
 
 // Read a Linux nodemask. `maxnode` counts bits, not words, and zero means "no
-// mask at all". Vinix supports sixteen nodes, so one word is always enough;
+// mask at all". Tulpar supports sixteen nodes, so one word is always enough;
 // bits above that must be clear or the request names a node which cannot exist.
 fn read_nodemask(nodemask u64, maxnode u64) ?u64 {
 	if nodemask == 0 || maxnode == 0 {
@@ -663,7 +663,7 @@ pub fn syscall_get_mempolicy(_ voidptr, mode_ptr u64, nodemask u64, maxnode u64,
 
 // mbind(addr, len, mode, nodemask, maxnode, flags).
 //
-// Vinix has no per-range policy store, so a binding applies to the process the
+// Tulpar has no per-range policy store, so a binding applies to the process the
 // way set_mempolicy(2) does. That is weaker than Linux, and deliberately so: a
 // caller that binds one arena and then faults it in gets its pages from the
 // nodes it asked for, which is the effect programs use mbind for. Pages already

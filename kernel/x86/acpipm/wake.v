@@ -23,7 +23,7 @@
 //
 // /sys/power/acpi_wakeup lists the devices: name, wake source, the deepest
 // state, the event, how it is told, and how many sleeps it was armed for.
-// `vinix.acpi_wake=off` leaves all of it undone.
+// `tulpar.acpi_wake=off` leaves all of it undone.
 @[has_globals]
 module acpipm
 
@@ -157,5 +157,5 @@ fn initialise_wake() {
 }
 
 fn wake_decide() {
-	acpipm_wake_off = !devcore.boot_flag('vinix.acpi_wake=', true)
+	acpipm_wake_off = !devcore.boot_flag('tulpar.acpi_wake=', true)
 }

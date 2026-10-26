@@ -123,9 +123,9 @@ fn main() {
 }
 
 fn run_native() ! {
-	work := hosttest.work_dir('', 'vinix-scheduler-qos-')!
+	work := hosttest.work_dir('', 'tulpar-scheduler-qos-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
-	generator := os.getenv('VINIX_SCHEDULER_QOS_GENERATOR')
+	generator := os.getenv('TULPAR_SCHEDULER_QOS_GENERATOR')
 	if generator != '' {
 		policyhost.inherited([generator, policyhost.root(), work])!
 	} else {

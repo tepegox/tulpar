@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_FORMAT_HOST_V_CONTRACT_H
-#define VINIX_FORMAT_HOST_V_CONTRACT_H
+#ifndef TULPAR_FORMAT_HOST_V_CONTRACT_H
+#define TULPAR_FORMAT_HOST_V_CONTRACT_H
 #include "host_model_v_contract.h"
 #include "varargs_abi.h"
 #define u64 vmh_linux_u64
-#include <vinix/format.h>
+#include <tulpar/format.h>
 #include <linux/ioport.h>
 #include <linux/printk.h>
 #undef u64

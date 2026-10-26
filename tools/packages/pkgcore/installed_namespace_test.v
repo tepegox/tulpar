@@ -22,12 +22,12 @@ struct NamespaceLimit { current u64 maximum u64 }
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn namespace_fixture() !(string, State, Plan) {
-	work := os.temp_dir() + '/vinix-installed-namespace-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-installed-namespace-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	mut packages := []Installed{}
 	for id in ['app', 'runtime', 'assets'] {
 		base := work + '/store/generations/1/apps/' + id
@@ -41,8 +41,8 @@ fn namespace_fixture() !(string, State, Plan) {
 			public_key: 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a' }
 	}
 	os.mkdir_all(work + '/store/generations/1/share/applications')!
-	os.write_file(work + '/store/generations/1/share/applications/vinix-app.desktop', desktop_entry(packages[0].package))!
-	os.chmod(work + '/store/generations/1/share/applications/vinix-app.desktop', 0o644)!
+	os.write_file(work + '/store/generations/1/share/applications/tulpar-app.desktop', desktop_entry(packages[0].package))!
+	os.chmod(work + '/store/generations/1/share/applications/tulpar-app.desktop', 0o644)!
 	return work, State{ generation: 1, architecture: 'aarch64', requested: ['app'], packages: packages }, Plan{ packages: packages }
 }
 
@@ -206,9 +206,9 @@ fn test_installed_namespace_releases_owned_checker_scratch() {
 		directory := work + '/store'
 		for damaged in [false, true] {
 			if damaged { namespace_damage(work, 'app', 'file')! }
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 128 { assert installed_namespace_valid(directory, 1, state.packages[0].package) != damaged }
-			bytes := C.vinix_heap_end(); assert bytes == 0 && C.vinix_heap_count() == 0
+			bytes := C.tulpar_heap_end(); assert bytes == 0 && C.tulpar_heap_count() == 0
 		}
 		println('INSTALLED NAMESPACE 128 healthy and 128 refused namespace checks retain zero checker allocations PASS')
 	}

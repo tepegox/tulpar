@@ -10,7 +10,7 @@ pub fn syscall_content(source string) !string {
 	mut bodies := []string{}
 	for name in syscall_names { bodies << extract(source, name, 'syscall')! }
 	for i, body in bodies { if allocation(body, 'syscall') { return failure('SystemExit', 'Unexpected allocation in ' + syscall_names[i]) } }
-	if bodies[7].count('vinix_stack_alloc(') != 1 { return failure('SystemExit', 'Policy request must use exactly one caller-stack descriptor') }
+	if bodies[7].count('tulpar_stack_alloc(') != 1 { return failure('SystemExit', 'Policy request must use exactly one caller-stack descriptor') }
 	declarations := bodies.map(strip_right(it[..it.index('{') or { 0 }]) + ';').join('\n')
 	return syscall_adapters + declarations + '\n' + bodies.join('\n\n') + syscall_tests
 }
@@ -59,7 +59,7 @@ pub fn mounted_content(source string, architecture string) !(string, int) {
 	for name in names { bodies[name] = extract(source, name, 'mounted')! }
 	for name in names { if allocation(bodies[name], 'mounted') { return failure('RuntimeError', 'per-call allocation in ' + name) } }
 	for name in ['resource__block_identity', 'fs__begin_filesystem_block_mount'] {
-		if bodies[name].count('vinix_stack_alloc(') != 1 { return failure('RuntimeError', 'missing bounded caller-stack dispatch in ' + name) }
+		if bodies[name].count('tulpar_stack_alloc(') != 1 { return failure('RuntimeError', 'missing bounded caller-stack dispatch in ' + name) }
 	}
 	transfer := extract(source, 'pipe__move_between', 'mounted')!
 	// Keep Python's short-circuit evaluation: a missing later token is inspected
@@ -107,7 +107,7 @@ pub fn dispatch(row map[string]json2.Any) !json2.Any {
 	mut count := 0
 	content := if family == 'syscall' { syscall_content(source)! } else if family == 'execute' { value, total := execute_content(source)!; count = total; value } else { value, total := mounted_content(source, text(row, 'arch'))!; count = total; value }
 	if operation == 'content' { return json2.Any(content.bytes().hex()) }
-	prefix := if family == 'syscall' { 'vinix-syscall-policy-host-' } else if family == 'execute' { 'vinix-xom-generated-' } else { 'vinix-block-generated-' }
+	prefix := if family == 'syscall' { 'tulpar-syscall-policy-host-' } else if family == 'execute' { 'tulpar-xom-generated-' } else { 'tulpar-block-generated-' }
 	filename := if family == 'syscall' { 'host' } else { 'test' }
 	directory := temporary(prefix)!
 	compile_test(directory, filename, content, family) or { retire(directory)!; return err }

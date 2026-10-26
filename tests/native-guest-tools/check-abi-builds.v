@@ -38,7 +38,7 @@ fn record(state string, build guesthost.AbiBuild, mut failures []string) {
 
 fn matrix() int {
 	state_arg := if os.args.len > 1 { os.args[1] } else { '' }
-	work := hosttest.work_dir(state_arg, 'vinix-abi-build-check-') or { panic(err) }
+	work := hosttest.work_dir(state_arg, 'tulpar-abi-build-check-') or { panic(err) }
 	defer { if state_arg == '' { hosttest.remove_work_dir(work) or { panic(err) } } }
 	mut failures := []string{}
 	for arch in ['aarch64', 'x86_64'] {

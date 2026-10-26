@@ -52,7 +52,7 @@ fn main() {
  if '--negative-control' in os.args {assert false,'tidfault performance assertions must execute'; return}
  assert os.args.len == 2,'Usage: tidfault-perf-check.v EVIDENCE-AREA (compile without -prod; add tests/desktop-perf to the V module path)'
  area := os.args[1].trim_right('/')+'/'
- root := '/Users/alex/code/vinix/'
+ root := '/Users/alex/code/tulpar/'
  out := root+'tests/linux-compat/results/2026-10-15/'
  mut pins := map[string]string{}
  mut growth := []string{}
@@ -85,13 +85,13 @@ fn main() {
  // investigated and explicitly reported rather than accepted implicitly.
  assert growth == ['PERF-OPS variant=new scenario=ops round=1 op=rename dir=/root count=200 bytes_per_op=1 size-256:+1']
  native := json2.decode[json2.Any](os.read_file(area+'states/p2-after-arm/receipt.json')!)!.as_map()
- kernel := area+'kernel-arm/kernel/bin/vinix'; assert digest(kernel) == native['kernel_sha256']!.str()
+ kernel := area+'kernel-arm/kernel/bin/tulpar'; assert digest(kernel) == native['kernel_sha256']!.str()
  pins[kernel] = digest(kernel); pins[area+'states/p2-after-arm/receipt.json'] = digest(area+'states/p2-after-arm/receipt.json')
  helper := area+'desktop-retention'; helper_time := os.file_last_mod_unix(helper)
  for directory in ['tests/desktop-perf/perfrunner','tests/desktop-perf/perfconsole','tests/desktop-perf/perfreport','tools/sourcecommand','tests/linuxkpi/hosttest'] {
   for path in os.walk_ext(root+directory,'.v') {assert os.file_last_mod_unix(path) <= helper_time,'harness changed after the executable was compiled: '+path; pins[path] = digest(path)}
  }
- for path in [root+'tests/desktop-perf/measure.c',root+'tests/desktop-perf/perf-init.sh',root+'scripts/run-aarch64.sh',root+'build-support/init-aarch64/initramfs-desktop.tar',root+'logs/desktop-ram-fix/vinix-desktop-arm64',root+'build/qemu-horizontal/bin/qemu-system-aarch64',root+'boot-image/edk2-aarch64-code-2048x1536.fd'] {assert os.file_last_mod_unix(path) <= helper_time; pins[path] = digest(path)}
+ for path in [root+'tests/desktop-perf/measure.c',root+'tests/desktop-perf/perf-init.sh',root+'scripts/run-aarch64.sh',root+'build-support/init-aarch64/initramfs-desktop.tar',root+'logs/desktop-ram-fix/tulpar-desktop-arm64',root+'build/qemu-horizontal/bin/qemu-system-aarch64',root+'boot-image/edk2-aarch64-code-2048x1536.fd'] {assert os.file_last_mod_unix(path) <= helper_time; pins[path] = digest(path)}
  assert os.read_file(area+'perf-ops-producer.log')! == ''
  assert os.read_file(area+'performance-audit-refused-compile.log')!.contains('strtod') && os.read_file(area+'performance-audit-refused-compile.log')!.contains('stdlib.h')
  assert os.read_file(area+'performance-strict-refusal.log.status')!.trim_space() == '1' && os.read_file(area+'performance-strict-refusal.log')!.contains('bytes_per_op')

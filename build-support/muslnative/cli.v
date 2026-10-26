@@ -54,13 +54,13 @@ pub fn cli(argv []string, root string, support string, legacy bool) int {
 		eprintln('max-page-size must be a power of two of at least 4096')
 		return 2
 	}
-	if os.getenv_opt('VINIX_OPTIMIZED_MUSL') or { '1' } == '0' {
-		println("    keeping Alpine's packaged musl (VINIX_OPTIMIZED_MUSL=0)")
+	if os.getenv_opt('TULPAR_OPTIMIZED_MUSL') or { '1' } == '0' {
+		println("    keeping Alpine's packaged musl (TULPAR_OPTIMIZED_MUSL=0)")
 		return 0
 	}
-	retain := os.getenv_opt('VINIX_MUSL_RETAIN') or { '1' }
+	retain := os.getenv_opt('TULPAR_MUSL_RETAIN') or { '1' }
 	if retain !in ['0', '1'] {
-		eprintln('VINIX_MUSL_RETAIN must be 0 or 1')
+		eprintln('TULPAR_MUSL_RETAIN must be 0 or 1')
 		return 2
 	}
 	options := Options{
@@ -68,7 +68,7 @@ pub fn cli(argv []string, root string, support string, legacy bool) int {
 		support:          args.value('--support-dir', support)
 		arch:             arch
 		stage:            stage
-		cache:            args.value('--build-dir', os.getenv_opt('VINIX_MUSL_BUILD_DIR') or { root + '/build/musl' })
+		cache:            args.value('--build-dir', os.getenv_opt('TULPAR_MUSL_BUILD_DIR') or { root + '/build/musl' })
 		cc:               args.value('--cc', '')
 		jobs:             jobs
 		max_page_size:    max_page_size

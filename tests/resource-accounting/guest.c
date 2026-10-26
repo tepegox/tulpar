@@ -68,7 +68,7 @@ static void transfer(int fd, void *data, size_t amount, int writing)
 
 static unsigned char *allocate(size_t amount)
 {
-    /* Vinix eagerly fills small mappings. Reserve a demand-paged span, then
+    /* Tulpar eagerly fills small mappings. Reserve a demand-paged span, then
      * keep only the touched prefix so every test owns exactly `amount`. */
     size_t reserved = amount < 64 * MIB ? 64 * MIB : amount;
     unsigned char *memory = mmap(NULL, reserved, PROT_READ | PROT_WRITE,

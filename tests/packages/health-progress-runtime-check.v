@@ -26,7 +26,7 @@ fn artifact(role string, path string) !Artifact {
 fn suite() hwhost.Suite {
 	return hwhost.Suite{ name: 'package-health-progress', guest: 'tests/packages/health-progress-guest',
 		module_paths: ['.', 'tools/accounts'], directories: ['tmp:1777'], programs: [
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/health_test.v', path: 'usr/share/package-fixtures/health-core' },
 			hwhost.Program{ source: 'tools/packages/pkgprotocol/health_test.v', path: 'usr/share/package-fixtures/health-protocol' },
 			hwhost.Program{ source: 'tests/packages/health-report-check.v', path: 'usr/share/package-fixtures/health-probe' },
@@ -46,7 +46,7 @@ fn check() !int {
 	args := os.args[1..]; options := hwhost.parse_options(args)!
 	if options.help || options.list { return hwhost.run_suite(suite(), args, @FILE) }
 	if !os.is_file(options.kernel) { return error('--kernel is not a file') }
-	work := os.temp_dir() + '/vinix-health-progress-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-health-progress-' + os.getpid().str()
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	os.cp(options.kernel, work + '/kernel')!
@@ -56,7 +56,7 @@ fn check() !int {
 		base := options.state_dir
 		root := base + '/guest/root/usr/share/package-fixtures/'
 		receipt := Receipt{ architecture: options.arch, completed_at: time.now().unix(), artifacts: [kernel,
-			artifact('guest-init', base + '/guest/init')!, artifact('package-cli', base + '/guest/root/usr/bin/vinix-package')!, artifact('health-core', root + 'health-core')!, artifact('health-protocol', root + 'health-protocol')!,
+			artifact('guest-init', base + '/guest/init')!, artifact('package-cli', base + '/guest/root/usr/bin/tulpar-package')!, artifact('health-core', root + 'health-core')!, artifact('health-protocol', root + 'health-protocol')!,
 			artifact('health-probe', root + 'health-probe')!,
 			artifact('serial-log', base + '/packages-health-progress/serial.log')!] }
 		os.write_file(base + '/qualification.json', json2.encode(receipt) + '\n')!

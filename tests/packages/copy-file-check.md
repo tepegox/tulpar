@@ -78,7 +78,7 @@ The maintained distribution driver discovers the core runner and runs the bounde
 reproduction. `--before` requires the previous implementation. Sanitizers disable
 leak detection and make undefined behavior fatal. The unchanged real TLS fixture
 runs through `--direct-tests --https-only`. The Linux guest controller accepts
-recorded target kernels and `VINIX_LINUX_SANDBOX`, rebuilding its probe, explicit
+recorded target kernels and `TULPAR_LINUX_SANDBOX`, rebuilding its probe, explicit
 musl loader/runtime and current package/account/session/init programs without
 invoking the legacy staging wrapper. See [Linux qualification](linux-runtime-check.md).
 

@@ -24,7 +24,7 @@ fn C.vkiw_or32(&u32, u32, i32) u32
 fn C.vkiw_compare32(&u32, &u32, u32, i32, i32) bool
 fn C.vkiw_fence(i32)
 fn C.vkr_rcu_ready() bool
-fn C.vinix_linuxkpi_irqwork_send_ipi(u32)
+fn C.tulpar_linuxkpi_irqwork_send_ipi(u32)
 
 __global (
 	vkiw_published u32
@@ -45,15 +45,15 @@ fn irqwork_valid_head(storage voidptr) {
 	require(!is_null(storage) && uint(storage) % sizeof(voidptr) == 0)
 }
 fn irqwork_sleepable_context() bool {
-	return C.vinix_linuxkpi_may_sleep() && C.vinix_linuxkpi_smp_task_present()
-		&& C.vinix_linuxkpi_maskable_irq_depth() == 0 && C.vinix_linuxkpi_preempt_count() == 0
-		&& (C.vinix_linuxkpi_irq_flags() & 512) != 0
+	return C.tulpar_linuxkpi_may_sleep() && C.tulpar_linuxkpi_smp_task_present()
+		&& C.tulpar_linuxkpi_maskable_irq_depth() == 0 && C.tulpar_linuxkpi_preempt_count() == 0
+		&& (C.tulpar_linuxkpi_irq_flags() & 512) != 0
 }
 fn irqwork_irq_context(cpu u32) {
 	require(irq_work_ready() && cpu < unsafe { vkiw_cpu_count }
-		&& cpu == C.vinix_linuxkpi_cpu_id()
-		&& (C.vinix_linuxkpi_irq_flags() & 512) == 0
-		&& C.vinix_linuxkpi_maskable_irq_depth() != 0)
+		&& cpu == C.tulpar_linuxkpi_cpu_id()
+		&& (C.tulpar_linuxkpi_irq_flags() & 512) == 0
+		&& C.tulpar_linuxkpi_maskable_irq_depth() != 0)
 }
 fn irqwork_running_locked(storage voidptr) u32 {
 	unsafe {
@@ -71,7 +71,7 @@ pub fn irq_work_bootstrap(count u32) i32 {
 	if count == 0 || count > 256 || !C.vkm_cpu_masks_ready() || !C.vks_smp_ready()
 		|| !C.vkr_rcu_ready() || count != C.vkm_cpu_ids() || count != C.vkm_online_count() { return -22 }
 	if irq_work_ready() { return -114 }
-	if !C.vinix_linuxkpi_smp_boot_context() { return -1 }
+	if !C.tulpar_linuxkpi_smp_boot_context() { return -1 }
 	unsafe {
 		C.vkp_spin_init(&vkiw_guard)
 		vkiw_cpu_count = count
@@ -87,8 +87,8 @@ pub fn irq_work_queue(storage voidptr, requested i32) bool {
 	unsafe {
 		require(irq_work_ready() && requested >= -1)
 		irqwork_valid_head(storage)
-		C.vinix_linuxkpi_preempt_disable()
-		source := C.vinix_linuxkpi_cpu_id()
+		C.tulpar_linuxkpi_preempt_disable()
+		source := C.tulpar_linuxkpi_cpu_id()
 		require(source < vkiw_cpu_count)
 		target := if requested == -1 { source } else { u32(requested) }
 		require(target < vkiw_cpu_count)
@@ -99,7 +99,7 @@ pub fn irq_work_queue(storage voidptr, requested i32) bool {
 		old := C.vkiw_or32(&work.flags, 0x23, 5)
 		if (old & 1) != 0 {
 			C.vkp_spin_unlock_irqrestore(&vkiw_guard, lock_flags)
-			C.vinix_linuxkpi_preempt_enable()
+			C.tulpar_linuxkpi_preempt_enable()
 			return false
 		}
 		lazy := target == source && (old & 4) != 0
@@ -109,8 +109,8 @@ pub fn irq_work_queue(storage voidptr, requested i32) bool {
 		C.vkp_spin_unlock_irqrestore(&vkiw_guard, lock_flags)
 		// Publication can already run and retire the object on another CPU.
 		// Only captured scalar routing values remain live in this producer.
-		if raise { C.vinix_linuxkpi_irqwork_send_ipi(target) }
-		C.vinix_linuxkpi_preempt_enable()
+		if raise { C.tulpar_linuxkpi_irqwork_send_ipi(target) }
+		C.tulpar_linuxkpi_preempt_enable()
 		return true
 	}
 }
@@ -118,10 +118,10 @@ pub fn irq_work_queue(storage voidptr, requested i32) bool {
 pub fn irq_work_single(storage voidptr) {
 	unsafe {
 		irqwork_valid_head(storage)
-		owner_cpu := C.vinix_linuxkpi_cpu_id()
+		owner_cpu := C.tulpar_linuxkpi_cpu_id()
 		irqwork_irq_context(owner_cpu)
-		entry_depth := C.vinix_linuxkpi_maskable_irq_depth()
-		entry_pins := C.vinix_linuxkpi_preempt_count()
+		entry_depth := C.tulpar_linuxkpi_maskable_irq_depth()
+		entry_pins := C.tulpar_linuxkpi_preempt_count()
 		work := &C.vkiw_work(storage)
 		mut run := IrqWorkRun{work: storage}
 		// Taking this address in the enclosing unsafe scope keeps the native
@@ -141,10 +141,10 @@ pub fn irq_work_single(storage voidptr) {
 		callback(&C.irq_work(storage))
 		// The original BUSY transition follows the callback. Its enclosing
 		// storage must remain backed through this CAS (RCU self-free is safe).
-		require(C.vinix_linuxkpi_cpu_id() == owner_cpu
-			&& (C.vinix_linuxkpi_irq_flags() & 512) == 0
-			&& C.vinix_linuxkpi_maskable_irq_depth() == entry_depth
-			&& C.vinix_linuxkpi_preempt_count() == entry_pins)
+		require(C.tulpar_linuxkpi_cpu_id() == owner_cpu
+			&& (C.tulpar_linuxkpi_irq_flags() & 512) == 0
+			&& C.tulpar_linuxkpi_maskable_irq_depth() == entry_depth
+			&& C.tulpar_linuxkpi_preempt_count() == entry_pins)
 		retired_flags := C.vkp_spin_lock_irqsave(&vkiw_guard)
 		mut expected := flags
 		C.vkiw_compare32(&work.flags, &expected, flags & ~u32(2), 5, 0)
@@ -190,13 +190,13 @@ pub fn irq_work_tick(cpu u32) {
 pub fn irq_work_tick_all() {
 	unsafe {
 		if !irq_work_ready() { return }
-		require((C.vinix_linuxkpi_irq_flags() & 512) == 0
-			&& C.vinix_linuxkpi_maskable_irq_depth() != 0)
+		require((C.tulpar_linuxkpi_irq_flags() & 512) == 0
+			&& C.tulpar_linuxkpi_maskable_irq_depth() != 0)
 		for cpu := u32(0); cpu < vkiw_cpu_count; cpu++ {
 			lock_flags := C.vkp_spin_lock_irqsave(&vkiw_guard)
 			pending := !is_null(vkiw_lazy[cpu])
 			C.vkp_spin_unlock_irqrestore(&vkiw_guard, lock_flags)
-			if pending { C.vinix_linuxkpi_irqwork_send_ipi(cpu) }
+			if pending { C.tulpar_linuxkpi_irqwork_send_ipi(cpu) }
 		}
 	}
 }
@@ -205,7 +205,7 @@ pub fn irq_work_needs_cpu() bool {
 	unsafe {
 		require(irq_work_ready())
 		lock_flags := C.vkp_spin_lock_irqsave(&vkiw_guard)
-		cpu := C.vinix_linuxkpi_cpu_id()
+		cpu := C.tulpar_linuxkpi_cpu_id()
 		require(cpu < vkiw_cpu_count)
 		needed := !is_null(vkiw_lazy[cpu])
 		C.vkp_spin_unlock_irqrestore(&vkiw_guard, lock_flags)
@@ -215,11 +215,11 @@ pub fn irq_work_needs_cpu() bool {
 @[export: 'vkiw_raise']
 pub fn irq_work_raise() {
 	require(irq_work_ready())
-	C.vinix_linuxkpi_preempt_disable()
-	cpu := C.vinix_linuxkpi_cpu_id()
+	C.tulpar_linuxkpi_preempt_disable()
+	cpu := C.tulpar_linuxkpi_cpu_id()
 	require(cpu < unsafe { vkiw_cpu_count })
-	C.vinix_linuxkpi_irqwork_send_ipi(cpu)
-	C.vinix_linuxkpi_preempt_enable()
+	C.tulpar_linuxkpi_irqwork_send_ipi(cpu)
+	C.tulpar_linuxkpi_preempt_enable()
 }
 @[export: 'vkiw_running_count']
 pub fn irq_work_running_count(storage voidptr) u32 {
@@ -255,7 +255,7 @@ pub fn irq_work_sync(storage voidptr) {
 			if waiting { require(vkiw_sync_waits != u64(-1)); vkiw_sync_waits++ }
 			C.vkp_spin_unlock_irqrestore(&vkiw_guard, lock_flags)
 			if !waiting { return }
-			C.vinix_linuxkpi_spin_wait()
+			C.tulpar_linuxkpi_spin_wait()
 		}
 	}
 }

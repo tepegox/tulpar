@@ -10,8 +10,8 @@ fn C.usleep(u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn transport_cycles() int { return $if track_heap ? { 1000 } $else { 16 } }
@@ -64,13 +64,13 @@ fn test_transport_decoding_owns_literals_and_retires_all_storage() {
 	for request in cases {
 		text := request.encode()!
 		mut warm := decode(text)!; warm.close()
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. transport_cycles() {
 			mut parsed := decode(text)!
 			assert parsed.nonce == request.nonce && parsed.arguments == request.arguments
 			parsed.close(); parsed.close()
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 		// Accepted fields outlive the encoded source, and a sibling close cannot
 		// invalidate them. All three owners can be retired independently.
 		mut first := decode(text)!; mut second := decode(text)!
@@ -81,9 +81,9 @@ fn test_transport_decoding_owns_literals_and_retires_all_storage() {
 	}
 	large := Request{ nonce: 'a'.repeat(32), arguments: ['run-args', 'app', '--', ...[]string{len: 16, init: '\x01'.repeat(4095)}] }
 	text := large.encode()!; assert text.len > 390_000 && text.len < request_limit
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 16 { mut parsed := decode(text)!; assert parsed.arguments == large.arguments; parsed.close() }
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	$if track_heap ? { println('LAUNCH TRANSPORT tracked decoding: six literal/max-count paths x1000 and 16 escaped 64-KiB requests retained 0 bytes') }
 	println('LAUNCH TRANSPORT independent owned requests, five modes, all non-NUL byte values, 772-value envelope and escaped 64-KiB boundary PASS')
 }
@@ -115,9 +115,9 @@ fn test_transport_malformed_and_bounded_input_retires_partial_records() {
 	assert bad.len == 33
 	for value in bad {
 		transport_refuse(value)
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. transport_cycles() { transport_refuse(value) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	}
 	$if track_heap ? { println('LAUNCH TRANSPORT tracked refusals: 33 malformed/schema/limit paths x1000 retained 0 bytes') }
 	println('LAUNCH TRANSPORT every truncated prefix, noncanonical fields/escapes/types, NUL, argument/document/byte and envelope limits refuse with retired scratch PASS')
@@ -129,7 +129,7 @@ fn test_transport_receipts_and_wire_roundtrips_retire_all_storage() {
 	defer { C.close(independent) }
 	before := transport_fd_count()
 	for code in [0, 37, 126, 127, 143, 255]! {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. transport_cycles() {
 			pair := transport_pair(); defer { C.close(pair[0]); C.close(pair[1]) }
 			send_request(pair[0], request)!
@@ -141,14 +141,14 @@ fn test_transport_receipts_and_wire_roundtrips_retire_all_storage() {
 			send_result(pair[1], captured, code)!; assert C.shutdown(pair[1], C.SHUT_WR) == 0
 			assert receive_result(pair[0], request)! == code
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 		assert transport_fd_count() == before
 		transport_settle()
 	}
 	for invalid in [Request{ nonce: 'bad', arguments: ['run', 'app'] }, Request{ nonce: request.nonce, arguments: ['update', 'app'] }] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. transport_cycles() { assert invalid.receipt(37) == '' }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	}
 	$if track_heap ? {
 		println('LAUNCH TRANSPORT tracked wire: six status paths x1000 and two invalid receipt paths x1000 retained 0 bytes and no descriptors')
@@ -164,7 +164,7 @@ fn test_transport_incomplete_wire_and_completion_refusals_retire_storage() {
 		receipt.replace(request.nonce, 'b'.repeat(32)), 'x'.repeat(129)]
 	before := transport_fd_count()
 	for text in bad_receipts {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. transport_cycles() {
 			pair := transport_pair()
 			assert C.write(pair[1], text.str, uint(text.len)) == text.len
@@ -172,13 +172,13 @@ fn test_transport_incomplete_wire_and_completion_refusals_retire_storage() {
 			if _ := receive_result(pair[0], request) { assert false } else { transport_error(err) }
 			C.close(pair[0]); C.close(pair[1])
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 		assert transport_fd_count() == before
 		transport_settle()
 	}
 	packets := [ []u8{}, [u8(1), 0], [u8(0), 0, 0, 0], [u8(1), 0, 8, 0], [u8(8), 0, 0, 0, `{`, `}`] ]
 	for packet in packets {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. transport_cycles() {
 			pair := transport_pair()
 			if packet.len != 0 { assert C.write(pair[1], packet.data, uint(packet.len)) == packet.len }
@@ -186,15 +186,15 @@ fn test_transport_incomplete_wire_and_completion_refusals_retire_storage() {
 			if mut accepted := receive_request(pair[0]) { accepted.close(); assert false } else { transport_error(err) }
 			C.close(pair[0])
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 		assert transport_fd_count() == before
 		transport_settle()
 	}
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. transport_cycles() {
 		if _ := receive_result(-1, request) { assert false } else { transport_error(err) }
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	$if track_heap ? {
 		println('LAUNCH TRANSPORT tracked wire refusals: nine receipts, five request packets and read errors x1000 retained 0 bytes and no descriptors')
 	}

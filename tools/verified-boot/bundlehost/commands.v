@@ -118,7 +118,7 @@ fn loader_command(args []string) ! {
 	for name in ['clang', 'ld.lld', 'llvm-ar', 'llvm-objcopy', 'make', 'patch'] {
 		os.find_abs_path_of_executable(name) or { return error('required command not found: ' + name) }
 	}
-	work := temporary(os.dir(output), '.vinix-limine-')!
+	work := temporary(os.dir(output), '.tulpar-limine-')!
 	defer { retire(work) }
 	archive := if options.has('--source-archive') {
 		absolute(options.value('--source-archive', ''))
@@ -152,7 +152,7 @@ fn loader_command(args []string) ! {
 	arch := options.value('--arch', '')
 	if arch == 'aarch64' {
 		run_in(['patch', '-p1', '--batch', '-i',
-			root() + '/build-support/limine/' + limine_version + '-vinix-base-revision-2.patch'], source)!
+			root() + '/build-support/limine/' + limine_version + '-tulpar-base-revision-2.patch'], source)!
 	}
 	run_in(['./configure', '--enable-uefi-' + if arch == 'x86_64' { 'x86-64' } else { arch },
 		'--disable-uefi-cd', '--disable-bios', '--disable-bios-cd', '--disable-bios-pxe'], source)!

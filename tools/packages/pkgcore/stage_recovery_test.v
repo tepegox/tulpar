@@ -14,14 +14,14 @@ struct RecoveryLimit { current u64 maximum u64 }
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 struct RecoveryFixture { root string directory string config Config }
 
 fn recovery_fixture() !RecoveryFixture {
-	root := os.temp_dir() + '/vinix-stage-recovery-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	root := os.temp_dir() + '/tulpar-stage-recovery-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	directory := root + '/store'
 	generation := directory + '/generations/1'
 	os.mkdir_all(generation + '/apps/app')!; os.mkdir_all(generation + '/share/applications')!
@@ -180,20 +180,20 @@ fn test_stage_recovery_rechecks_nested_directories_and_never_follows_replaced_an
 }
 
 fn recovery_change_inflight(phase string) {
-	if phase != os.getenv('VINIX_RECOVERY_PHASE') { return }
-	root := os.getenv('VINIX_RECOVERY_ROOT')
+	if phase != os.getenv('TULPAR_RECOVERY_PHASE') { return }
+	root := os.getenv('TULPAR_RECOVERY_ROOT')
 	stage := root + '/store/generations/.stage-2'
 	os.rename(stage, root + '/saved') or { panic(err) }
-	recovery_replacement(RecoveryFixture{ root: root }, stage, os.getenv('VINIX_RECOVERY_KIND')) or { panic(err) }
+	recovery_replacement(RecoveryFixture{ root: root }, stage, os.getenv('TULPAR_RECOVERY_KIND')) or { panic(err) }
 }
 
 fn test_stage_recovery_failure_cleanup_preserves_changed_roots_and_outside_data() {
-	defer { for key in ['VINIX_RECOVERY_ROOT', 'VINIX_RECOVERY_PHASE', 'VINIX_RECOVERY_KIND'] { os.unsetenv(key) } }
+	defer { for key in ['TULPAR_RECOVERY_ROOT', 'TULPAR_RECOVERY_PHASE', 'TULPAR_RECOVERY_KIND'] { os.unsetenv(key) } }
 	mut cases := 0
 	for phase in ['prepared', 'staged'] {
 		for kind in ['directory', 'alias', 'fifo', 'file', 'missing'] {
 			f := recovery_fixture()!; defer { os.rmdir_all(f.root) or {} }
-			for key, value in {'VINIX_RECOVERY_ROOT': f.root, 'VINIX_RECOVERY_PHASE': phase, 'VINIX_RECOVERY_KIND': kind} { os.setenv(key, value, true) }
+			for key, value in {'TULPAR_RECOVERY_ROOT': f.root, 'TULPAR_RECOVERY_PHASE': phase, 'TULPAR_RECOVERY_KIND': kind} { os.setenv(key, value, true) }
 			mut refused := false
 			transact(f.config, f.directory, 'remove', ['app'], TransactionOptions{ checkpoint: recovery_change_inflight }) or { refused = true }
 			assert refused
@@ -276,13 +276,13 @@ fn test_stage_recovery_checker_releases_owned_scratch() {
 			for _ in 0 .. 128 {
 				stage := if damaged { f.directory + '/generations/.stage-refuse' } else { recovery_mixed_stage(f, 4)! }
 				if damaged { os.symlink(f.root + '/outside', stage)! }
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 				mut refused := false
 				recover_generation_stages(f.directory) or {
 					message := err.msg(); refused = true
 					unsafe { message.free(); err.free() }
 				}
-				bytes := C.vinix_heap_end(); count := C.vinix_heap_count()
+				bytes := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				assert refused == damaged && bytes == 0 && count == 0
 				if damaged { os.rm(stage)! }
 			}

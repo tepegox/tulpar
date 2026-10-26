@@ -53,7 +53,7 @@ fn security_host(args []string, tool string) !int {
 			return error('Requested host architecture requires a native runner')
 		}
 	}
-	work := hosttest.work_dir(parsed.options['--keep-dir'], 'vinix-' + tool + '-host-')!
+	work := hosttest.work_dir(parsed.options['--keep-dir'], 'tulpar-' + tool + '-host-')!
 	defer { if '--keep-dir' !in parsed.options { retire(work) } }
 	mut build := SecurityBuild{ work: work }
 	mut defines := ['-d', 'security_no_main']
@@ -68,8 +68,8 @@ fn security_host(args []string, tool string) !int {
 		'sandbox' { '/tools/sandbox' }
 		else { '/tools/security-audit' }
 	}
-	mut core_flags := [...common, '-D_GNU_SOURCE', '-DVINIX_V_RUNTIME']
-	if tool != 'audit' { core_flags << '-DVINIX_SECURITY_FIXTURE' }
+	mut core_flags := [...common, '-D_GNU_SOURCE', '-DTULPAR_V_RUNTIME']
+	if tool != 'audit' { core_flags << '-DTULPAR_SECURITY_FIXTURE' }
 	if tool == 'mac' {
 		core_flags << ['-Dprctl=mock_prctl', '-Dlsetxattr=mock_lsetxattr', '-Dexecvp=mock_execvp']
 	}
@@ -117,7 +117,7 @@ fn security_host(args []string, tool string) !int {
 	if tool == 'audit' {
 		build.invoke([root() + '/build-support/security-tools/compile-v-core', tool,
 			work + '/collector.c', '--arch', v_arch])!
-		build.invoke([...common, '-D_GNU_SOURCE', '-DVINIX_V_RUNTIME', '-I', tool_directory,
+		build.invoke([...common, '-D_GNU_SOURCE', '-DTULPAR_V_RUNTIME', '-I', tool_directory,
 			work + '/collector.c', '-o', work + '/collector'])!
 	}
 	front := root() + match tool {

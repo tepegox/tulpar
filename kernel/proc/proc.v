@@ -149,7 +149,7 @@ fn adjust_policy_count(was_special bool, now_special bool) {
 }
 
 // Linux resource numbers.  Keeping the complete table matters even for limits
-// which are only advisory in Vinix today: prlimit64/getrlimit must preserve a
+// which are only advisory in Tulpar today: prlimit64/getrlimit must preserve a
 // value instead of rejecting a perfectly ordinary libc probe.
 pub const rlimit_cpu = 0
 pub const rlimit_fsize = 1
@@ -1120,7 +1120,7 @@ pub fn deadline_bandwidth_ppm(except_tid int) u64 {
 // anything with the answer. A `&Process` never leaves this file.
 
 // The command name Linux puts in comm and in the parenthesised field of stat.
-// A Vinix process is named for the path it was executed from with its pid
+// A Tulpar process is named for the path it was executed from with its pid
 // appended; the part that corresponds to comm is the basename without that.
 fn command_name(name string) string {
 	start, end := command_name_bounds(name)
@@ -1224,7 +1224,7 @@ pub fn process_command(pid int) string {
 		return ''
 	}
 	// Formatting helpers borrow this builder; str() returns independent owned bytes.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(32) }
 	add_task_command(mut text, process, threads_by_tid[pid], false)
 	return text.str()
@@ -1242,7 +1242,7 @@ pub fn thread_command(pid int, tid int) string {
 	if tid <= 0 || tid >= max_pid { return '' }
 	task := threads_by_tid[tid]
 	if task == unsafe { nil } || voidptr(task.process) != voidptr(process) { return '' }
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(32) }
 	add_task_command(mut text, process, task, false)
 	return text.str()
@@ -1489,7 +1489,7 @@ fn dump_threads() {
 }
 
 // The first fields of /proc/<pid>/stat and /proc/<pid>/task/<tid>/stat.
-// Everything Vinix does not account for
+// Everything Tulpar does not account for
 // is reported as zero rather than invented; readers take the fields they know.
 // Ids are shown as `viewer` numbers them.
 pub fn process_stat_line(pid int, tid int, viewer &Namespace) string {
@@ -1531,7 +1531,7 @@ pub fn process_stat_line(pid int, tid int, viewer &Namespace) string {
 	shown_ppid := pid_in(process_at(process.ppid), viewer)
 	shown_pgid := pgid_in(process, viewer)
 	shown_sid := sid_in(process, viewer)
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(256) }
 	text.add_decimal(shown_pid)
 	text.add(' (')
@@ -1610,7 +1610,7 @@ pub fn process_status_text(pid int, tid int, viewer &Namespace) string {
 	shown_tid := if tid == 0 { shown_pid } else { tid_in(target, viewer) }
 	shown_ppid := pid_in(process_at(process.ppid), viewer)
 	// Borrowed synchronously by formatting helpers; the owned bytes are consumed below.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(512) }
 	text.add('Name:\t')
 	add_task_command(mut text, process, target, true)

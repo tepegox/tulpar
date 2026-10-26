@@ -19,16 +19,16 @@ export LIBGL_DRIVERS_PATH=/usr/lib/xorg/modules/dri:/usr/lib/dri
 export XDG_RUNTIME_DIR=/run/user/0
 
 fail() {
-	echo "VINIX LIBREOFFICE: FAIL $*"
-	echo "VINIX LIBREOFFICE TEST: FAIL"
+	echo "TULPAR LIBREOFFICE: FAIL $*"
+	echo "TULPAR LIBREOFFICE TEST: FAIL"
 	exit 1
 }
 
 echo
-echo "VINIX LIBREOFFICE TEST: START"
+echo "TULPAR LIBREOFFICE TEST: START"
 
 [ -x /usr/bin/run-libreoffice ] || fail "no /usr/bin/run-libreoffice"
-[ -x /usr/bin/vinix-wine-host ] || fail "no /usr/bin/vinix-wine-host"
+[ -x /usr/bin/tulpar-wine-host ] || fail "no /usr/bin/tulpar-wine-host"
 [ -x /usr/lib/libreoffice/program/soffice.bin ] \
 	|| fail "no LibreOffice program directory"
 [ -e /usr/lib/libreoffice/program/libvclplug_gtk3lo.so ] \
@@ -38,8 +38,8 @@ mkdir -p /tmp /run/user/0 /dev/shm /var/log /tmp/.X11-unix /var/lib/xkb
 chmod 1777 /tmp /dev/shm /tmp/.X11-unix
 
 # A persistent /root can shadow the copy the image ships there.
-if [ -x /usr/share/vinix/x-window-check ]; then
-	x_window_check=/usr/share/vinix/x-window-check
+if [ -x /usr/share/tulpar/x-window-check ]; then
+	x_window_check=/usr/share/tulpar/x-window-check
 else
 	x_window_check=/root/x-window-check
 fi
@@ -50,14 +50,14 @@ fi
 export SAL_LOG="${SAL_LOG:-+WARN}"
 
 display=:99
-surface=/tmp/vinix-libreoffice
+surface=/tmp/tulpar-libreoffice
 # The bridge treats end of file on stdin as "the window closed", so its input
 # pipe has to stay open for as long as the test runs.
-sleep 3600 | /usr/bin/vinix-wine-host "$display" "$surface" 1280x900x24 \
+sleep 3600 | /usr/bin/tulpar-wine-host "$display" "$surface" 1280x900x24 \
 	/usr/bin/run-libreoffice >/tmp/libreoffice.log 2>&1 &
 host_pid=$!
 
-echo "VINIX LIBREOFFICE: launching Writer through the desktop's X11 bridge"
+echo "TULPAR LIBREOFFICE: launching Writer through the desktop's X11 bridge"
 
 surfaced=false
 mapped=false
@@ -70,7 +70,7 @@ while [ "$i" -lt 600 ]; do
 	fi
 	if [ "$surfaced" != true ] && [ -e "$surface/Xvfb_screen0" ]; then
 		surfaced=true
-		echo "VINIX LIBREOFFICE PASS: the hosted display has a framebuffer"
+		echo "TULPAR LIBREOFFICE PASS: the hosted display has a framebuffer"
 	fi
 	if "$x_window_check" "$display" 'LibreOffice Writer' 2>/dev/null; then
 		mapped=true
@@ -91,7 +91,7 @@ if [ "$mapped" != true ]; then
 	fail "no Writer window appeared within ${i}s"
 fi
 
-echo "VINIX LIBREOFFICE PASS: Writer window mapped after ${i}s"
+echo "TULPAR LIBREOFFICE PASS: Writer window mapped after ${i}s"
 
 # A mapped window is not a document anyone can read: VCL maps its toplevel
 # before it has laid the page out. Hold the launch to the pixels, and read them
@@ -100,7 +100,7 @@ echo "VINIX LIBREOFFICE PASS: Writer window mapped after ${i}s"
 painted=false
 k=0
 while [ "$k" -lt 300 ]; do
-	colours=$(/usr/share/vinix/surface-probe colors "$surface/Xvfb_screen0" 2>/dev/null)
+	colours=$(/usr/share/tulpar/surface-probe colors "$surface/Xvfb_screen0" 2>/dev/null)
 	[ -n "$colours" ] || colours=0
 	if [ "$colours" -gt 8 ]; then
 		painted=true
@@ -114,5 +114,5 @@ if [ "$painted" != true ]; then
 	fail "the Writer window stayed blank for ${k}s after it was mapped"
 fi
 
-echo "VINIX LIBREOFFICE PASS: the document was drawn ${k}s after the window appeared"
-echo "VINIX LIBREOFFICE TEST: PASS"
+echo "TULPAR LIBREOFFICE PASS: the document was drawn ${k}s after the window appeared"
+echo "TULPAR LIBREOFFICE TEST: PASS"

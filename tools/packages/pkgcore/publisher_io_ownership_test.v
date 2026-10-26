@@ -6,9 +6,9 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn publisher_io_refused(result IError, expected string) {
@@ -42,7 +42,7 @@ fn publisher_io_once(mode string, root int, path string) ! {
 }
 
 fn test_publisher_io_repeated_admission_locking_and_durability_retire_scratch() {
-	work := os.real_path(os.temp_dir()) + '/vinix-publisher-io-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-publisher-io-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	defer { os.rmdir_all(work) or {} }
 	source := work + '/source'; workspace := work + '/repository'; file := work + '/file'
 	outside := work + '/new/deep/repository'; contained := source + '/new/deep/repository'
@@ -66,10 +66,10 @@ fn test_publisher_io_repeated_admission_locking_and_durability_retire_scratch() 
 		defer { if mode == 'hard-linked' { os.rm(linked) or { panic(err) } } }
 		mut maximum := u64(0); mut records := u32(0)
 		for _ in 0 .. 128 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			publisher_io_once(mode, root, path)!
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 			}
 		}

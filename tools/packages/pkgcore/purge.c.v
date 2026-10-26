@@ -139,7 +139,7 @@ fn personal_data_parent_mode(home string, uid u32, create bool) !int {
 	mut directory := personal_data_home(home, uid)!
 	mut retained := false
 	defer { if !retained { C.close(directory) } }
-	for part in ['.local', 'share', 'vinix-apps']! {
+	for part in ['.local', 'share', 'tulpar-apps']! {
 		next := personal_data_child(directory, part, uid, create)!
 		if next < 0 { return -1 }
 		C.close(directory); directory = next

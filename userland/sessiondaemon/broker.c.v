@@ -76,7 +76,7 @@ fn (mut daemon SessionDaemon) handle(peer sessionipc.SessionCredentials, request
 
 fn (mut daemon SessionDaemon) save() ! {
 	if !daemon.changed { return }
-	path := '${daemon.home}/.vinix-notifications'
+	path := '${daemon.home}/.tulpar-notifications'
 	record := daemon.notifications.encode()
 	defer {
 		unsafe {
@@ -95,7 +95,7 @@ pub fn run(home string, control int) {
 	directory := sessionipc.session_runtime_directory()
 	defer { unsafe { directory.free() } }
 	if !sessionipc.session_private_directory(directory) {
-		eprintln('vinix-session: unsafe runtime directory')
+		eprintln('tulpar-session: unsafe runtime directory')
 		return
 	}
 	lock_path := '${directory}/lock'
@@ -127,7 +127,7 @@ pub fn run(home string, control int) {
 	mut daemon := &SessionDaemon{ home: home }
 	mut control_live := true
 	daemon.exchange = &sessioncore.Exchange{}
-	policy_path := '${home}/.vinix-shell-policy'
+	policy_path := '${home}/.tulpar-shell-policy'
 	policy_record := sessioncore.load(policy_path, 32768) or { '' }
 	daemon.policy = sessioncore.decode_policy(policy_record) or { sessioncore.Policy{} }
 	if daemon.policy.timezone.len > 0 {
@@ -142,7 +142,7 @@ pub fn run(home string, control int) {
 	daemon.load_services()
 	os.signal_opt(.term, session_stop_signal) or {}
 	os.signal_opt(.int, session_stop_signal) or {}
-	state_path := '${home}/.vinix-notifications'
+	state_path := '${home}/.tulpar-notifications'
 	record := sessioncore.load(state_path, 256 * 1024) or { '' }
 	daemon.notifications = sessioncore.decode_notifications(record) or { sessioncore.Notifications{} }
 	unsafe {
@@ -162,10 +162,10 @@ pub fn run(home string, control int) {
 		daemon.services_tick()
 		if daemon.changed && sessionipc.monotonic_millis() - daemon.last_save >= 1000 {
 			daemon.last_save = sessionipc.monotonic_millis()
-			daemon.save() or { session_log_error('vinix-session: ', err) }
+			daemon.save() or { session_log_error('tulpar-session: ', err) }
 		}
 		if daemon.stop && daemon.operation_pid == 0 && daemon.supervisor.finished() {
-			daemon.save() or { session_log_error('vinix-session: ', err) }
+			daemon.save() or { session_log_error('tulpar-session: ', err) }
 			return
 		}
 		mut readiness := [C.pollfd{ fd: fd, events: C.POLLIN },
@@ -205,13 +205,13 @@ fn (mut daemon SessionDaemon) serve_request(client int, peer sessionipc.SessionC
 		return false
 	}
 	mut reply := daemon.handle(peer, request, compositor) or {
-		session_log_error('vinix-session: request rejected: ', err)
+		session_log_error('tulpar-session: request rejected: ', err)
 		'error\tdenied'
 	}
 	// Alarm registration/cancellation is durable before acknowledging it.
 	if daemon.changed {
 		daemon.save() or {
-			session_log_error('vinix-session: state publication failed: ', err)
+			session_log_error('tulpar-session: state publication failed: ', err)
 			if reply != 'ok' && reply != 'empty' && reply != 'error\tdenied' {
 				unsafe { reply.free() }
 			}
@@ -297,11 +297,11 @@ fn (mut daemon SessionDaemon) services_tick() {
 }
 
 fn (mut daemon SessionDaemon) load_services() {
-	path := '${daemon.home}/.vinix-services'
+	path := '${daemon.home}/.tulpar-services'
 	defer { unsafe { path.free() } }
 	record := sessioncore.load(path, 64 * 1024) or {
 		if C.getuid() == 0 {
-			executable := sessionipc.helper_path('vinix-timesync')
+			executable := sessionipc.helper_path('tulpar-timesync')
 			defer { unsafe { executable.free() } }
 			mut service := sessioncore.Service{ name: sessioncore.text('clock-sync') or { return }, executable: sessioncore.text(executable) or { return }, system: true, restart: .on_failure }
 			daemon.supervisor.services[0] = service
@@ -312,14 +312,14 @@ fn (mut daemon SessionDaemon) load_services() {
 	}
 	defer { unsafe { record.free() } }
 	daemon.supervisor = sessioncore.decode_services(record, C.getuid() == 0) or {
-		session_log_error('vinix-session: refusing invalid service configuration: ', err)
+		session_log_error('tulpar-session: refusing invalid service configuration: ', err)
 		return
 	}
 	daemon.migrate_clock_service()
 }
 
 fn (daemon &SessionDaemon) save_services() ! {
-	path := '${daemon.home}/.vinix-services'
+	path := '${daemon.home}/.tulpar-services'
 	record := daemon.supervisor.encode()
 	defer {
 		unsafe {
@@ -331,7 +331,7 @@ fn (daemon &SessionDaemon) save_services() ! {
 }
 
 fn session_limit_service_log(home string, name string) {
-	path := '${home}/.vinix-service-logs/${name}.log'
+	path := '${home}/.tulpar-service-logs/${name}.log'
 	defer { unsafe { path.free() } }
 	mut info := C.stat{}
 	if C.lstat(&char(path.str), &info) != 0 || u32(info.st_mode) & C.S_IFMT != C.S_IFREG || info.st_size <= 1024 * 1024 {
@@ -340,7 +340,7 @@ fn session_limit_service_log(home string, name string) {
 	fd := C.open(&char(path.str), C.O_WRONLY | C.O_TRUNC | C.O_NOFOLLOW | C.O_CLOEXEC, 0)
 	if fd < 0 { return }
 	defer { sessionipc.desktop_close(fd) }
-	message := 'vinix-session: log exceeded 1 MiB; older output discarded\n'
+	message := 'tulpar-session: log exceeded 1 MiB; older output discarded\n'
 	C.write(fd, message.str, uint(message.len))
 }
 

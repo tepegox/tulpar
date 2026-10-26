@@ -54,7 +54,7 @@ fn external(args []string) !int {
 		hosttest.Option{ name: '--kernel-dir', value: true },
 	], 'Usage: run-guest [--arch aarch64|amd64] [--state-dir FRESH-DIR] --kernel-dir DIR')!
 	arch := options.value('--arch', 'amd64')
-	work := work_dir(options, 'vinix-external-mount-')!
+	work := work_dir(options, 'tulpar-external-mount-')!
 	defer { remove_private(work, options) }
 	kernel_dir := kernel(work, options.value('--kernel-dir', ''), arch)!
 	executable := tool()!
@@ -130,7 +130,7 @@ fn external(args []string) !int {
 		return error('Read-only ext4 volume changed')
 	}
 	// Extract the partition after unmount, check Linux can read the ext2 write,
-	// and let e2fsck independently validate all metadata touched by Vinix.
+	// and let e2fsck independently validate all metadata touched by Tulpar.
 	disk := os.read_bytes(work + '/ext2' + suffix)!
 	start := if arch == 'amd64' { 1024 * 1024 } else { 0 }
 	os.write_file_array(work + '/ext2-after.img', disk[start..start + 64 * 1024 * 1024])!

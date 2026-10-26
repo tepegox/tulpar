@@ -5,7 +5,7 @@ module main
 import os
 import crypto.sha256
 
-const service_names = ['vinix-session', 'vinix-timesync', 'vinix-service-runner']
+const service_names = ['tulpar-session', 'tulpar-timesync', 'tulpar-service-runner']
 const service_sources = ['session', 'timesync', 'runner']
 
 fn run(program string, args []string) ! {
@@ -91,7 +91,7 @@ fn main() {
 		exit(2)
 	}
 	mut compiler := os.getenv('V')
-	if compiler == '' { compiler = os.getenv('VINIX_V_COMPILER') }
+	if compiler == '' { compiler = os.getenv('TULPAR_V_COMPILER') }
 	if compiler == '' {
 		compiler = os.find_abs_path_of_executable('v') or { os.home_dir() + '/code/v/v' }
 	}
@@ -104,8 +104,8 @@ fn main() {
 	}
 	mut llvm := os.getenv('LLVM_BIN')
 	if llvm == '' { llvm = '/opt/homebrew/opt/llvm/bin' }
-	clang := if arch == 'amd64' && os.getenv('VINIX_AMD64_CLANG') != '' {
-		os.getenv('VINIX_AMD64_CLANG')
+	clang := if arch == 'amd64' && os.getenv('TULPAR_AMD64_CLANG') != '' {
+		os.getenv('TULPAR_AMD64_CLANG')
 	} else if os.is_executable(llvm + '/clang') {
 		llvm + '/clang'
 	} else {

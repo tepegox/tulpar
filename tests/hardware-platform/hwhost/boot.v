@@ -46,10 +46,10 @@ pub fn build_program_with_flags(host Host, source string, directory string, name
 	compile << ['-o', c_file, source]
 	run_tool(compile, map[string]string{}, log, tool_seconds)!
 	if host.arch == 'aarch64' {
-		sysroot := environment_or('VINIX_AARCH64_SYSROOT', shared_path(host.root, os.join_path('build-aarch64-userland',
+		sysroot := environment_or('TULPAR_AARCH64_SYSROOT', shared_path(host.root, os.join_path('build-aarch64-userland',
 			'sysroot')))
 		if !os.is_dir(sysroot) {
-			return error('no AArch64 musl sysroot at ${sysroot}; set VINIX_AARCH64_SYSROOT')
+			return error('no AArch64 musl sysroot at ${sysroot}; set TULPAR_AARCH64_SYSROOT')
 		}
 		run_tool([environment_or('CC_AARCH64', 'clang'), '--target=aarch64-linux-musl',
 			'--sysroot=' + sysroot, '-static', '-O1', '-w', '-D_GNU_SOURCE', '-fno-stack-protector',
@@ -115,18 +115,18 @@ fn boot_fat_size(files []u64) !u64 {
 // and the initramfs from the same volume. Returns the QEMU arguments that
 // attach the firmware and the volume.
 fn boot_media_aarch64(host Host, kernel string, initramfs string, cmdline string, state string) ![]string {
-	loader := environment_or('VINIX_LIMINE_BOOTAA64', shared_path(host.root, os.join_path('boot-image',
+	loader := environment_or('TULPAR_LIMINE_BOOTAA64', shared_path(host.root, os.join_path('boot-image',
 		'limine-bin', 'BOOTAA64.EFI')))
 	if !os.is_file(loader) {
-		return error('no Limine for AArch64 at ${loader}; set VINIX_LIMINE_BOOTAA64')
+		return error('no Limine for AArch64 at ${loader}; set TULPAR_LIMINE_BOOTAA64')
 	}
 	base := os.read_file(os.join_path(host.root, 'build-support', 'limine.conf'))!
-	// vinix.qemu_platform=1 tells the kernel there is no device tree to find
+	// tulpar.qemu_platform=1 tells the kernel there is no device tree to find
 	// Apple hardware in. The entry is the file's last, so its options go at
 	// the end.
 	config := os.join_path(state, 'limine.conf')
 	os.write_file(config, base.trim_right('\n') +
-		'\n    cmdline: ${('vinix.qemu_platform=1 ' + cmdline).trim_space()}\n')!
+		'\n    cmdline: ${('tulpar.qemu_platform=1 ' + cmdline).trim_space()}\n')!
 	image := os.join_path(state, 'boot.img')
 	os.write_file(image, '')!
 	os.truncate(image, boot_fat_size([os.file_size(loader), os.file_size(config), os.file_size(kernel), os.file_size(initramfs)])!)!
@@ -134,7 +134,7 @@ fn boot_media_aarch64(host Host, kernel string, initramfs string, cmdline string
 	run_tool(['mformat', '-F', '-i', image, '::'], map[string]string{}, log, tool_seconds)!
 	run_tool(['mmd', '-i', image, '::/EFI', '::/EFI/BOOT', '::/boot'], map[string]string{}, log, tool_seconds)!
 	for pair in [[loader, '::/EFI/BOOT/BOOTAA64.EFI'], [config, '::/boot/limine.conf'],
-		[kernel, '::/boot/vinix'], [initramfs, '::/boot/initramfs.tar']] {
+		[kernel, '::/boot/tulpar'], [initramfs, '::/boot/initramfs.tar']] {
 		run_tool(['mcopy', '-i', image, pair[0], pair[1]], map[string]string{}, log, tool_seconds)!
 	}
 	// The firmware writes its variables: each boot gets its own copy, so one
@@ -152,7 +152,7 @@ fn boot_media_aarch64(host Host, kernel string, initramfs string, cmdline string
 fn boot_media_x86_64(host Host, kernel string, initramfs string, cmdline string, state string) ![]string {
 	build := os.join_path(state, 'iso')
 	os.mkdir_all(build)!
-	cache := environment_or('VINIX_AMD64_LIMINE_DIR', shared_path(host.root, os.join_path('build-amd64-iso',
+	cache := environment_or('TULPAR_AMD64_LIMINE_DIR', shared_path(host.root, os.join_path('build-amd64-iso',
 		'limine')))
 	os.mkdir_all(cache)!
 	// Made once: a scenario that boots again with another command line
@@ -163,11 +163,11 @@ fn boot_media_x86_64(host Host, kernel string, initramfs string, cmdline string,
 	}
 	iso := os.join_path(state, 'test.iso')
 	run_tool([os.join_path(host.root, 'build-support', 'build-amd64-iso.sh')], {
-		'VINIX_AMD64_KERNEL':        kernel
-		'VINIX_AMD64_INITRAMFS':     initramfs
-		'VINIX_AMD64_ISO':           iso
-		'VINIX_AMD64_ISO_BUILD_DIR': build
-		'VINIX_CMDLINE':             cmdline
+		'TULPAR_AMD64_KERNEL':        kernel
+		'TULPAR_AMD64_INITRAMFS':     initramfs
+		'TULPAR_AMD64_ISO':           iso
+		'TULPAR_AMD64_ISO_BUILD_DIR': build
+		'TULPAR_CMDLINE':             cmdline
 	}, os.join_path(state, 'image.log'), tool_seconds)!
 	return ['-drive', 'if=pflash,format=raw,unit=0,readonly=on,file=' + host.firmware, '-cdrom',
 		iso]

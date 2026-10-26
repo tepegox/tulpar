@@ -14,7 +14,7 @@ struct PolicyCompiler {
 
 fn policy_compiler(arch string) !PolicyCompiler {
 	if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		return PolicyCompiler{
 			command: [...hosttest.shell_split(os.getenv_opt('CC') or { 'clang' })!,
 				'--target=aarch64-linux-musl', '--sysroot=' + sdk]
@@ -34,7 +34,7 @@ pub fn prepare_diagnostic(module_path string, adapter string) ! {
 }
 
 pub fn compile_diagnostic(output string, adapter string, arch string, flags []string) !string {
-	work := hosttest.work_dir('', 'vinix-stack-diagnostic-policy-')!
+	work := hosttest.work_dir('', 'tulpar-stack-diagnostic-policy-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	prepare_diagnostic(work + '/diagnosticpolicy', adapter)!
 	compile_module(work + '/diagnosticpolicy', output, arch, flags)!
@@ -112,7 +112,7 @@ pub fn build_policy_guest(state string, arch string, family string, prod bool, r
 		nativepolicy.prepare_console(sources)!
 		for name in ['printf_v.h', 'varargs_abi.h'] { os.cp(root() + '/kernel/c/' + name, sources + '/' + name)! }
 		flags = [...compiler.command, '-std=gnu11', '-O2', '-Wall', '-Wextra', '-Werror',
-			'-Wno-unused-function', '-Wno-unused-parameter', '-D_GNU_SOURCE', '-DVINIX_V_RUNTIME',
+			'-Wno-unused-function', '-Wno-unused-parameter', '-D_GNU_SOURCE', '-DTULPAR_V_RUNTIME',
 			'-fno-stack-protector', '-fno-strict-aliasing', '-I', sources]
 		nativepolicy.generate_console(sources, state + '/policy.c', if arch == 'aarch64' { 'arm64' } else { 'amd64' }, prod)!
 		objects << [state + '/policy.o', state + '/abi.o', state + '/nanoprintf.o']
@@ -129,12 +129,12 @@ pub fn build_policy_guest(state string, arch string, family string, prod bool, r
 	for name in modules {
 		object := state + '/' + name + '.o'
 		mut extra := []string{}
-		if name in ['fixture', 'diagnosticfixture', 'hookprobe'] { extra << '-Dmain=vinix_independent_fixture' }
+		if name in ['fixture', 'diagnosticfixture', 'hookprobe'] { extra << '-Dmain=tulpar_independent_fixture' }
 		if family == 'print' && prod { extra << '-DPROD' }
 		if name == 'hookprobe' { extra << ['-I', sources + '/hosthooks'] }
 		if name == 'diagnosticfixture' && reference != '' {
 			os.cp(reference, sources + '/original.c')!
-			if arch == 'aarch64' { extra << '-DVINIX_STACK_ARM' }
+			if arch == 'aarch64' { extra << '-DTULPAR_STACK_ARM' }
 			run([...flags, ...extra, '-c', sources + '/original.c', '-o', object])!
 		} else {
 			compile_module(sources + '/' + name, object, arch, [...flags, ...extra])!
@@ -176,7 +176,7 @@ fn policy_guest_checked(arguments []string, family string) !int {
 	timeout := parsed.integer('--timeout', 600) or { return error_with_code('invalid integer for --timeout', 2) }
 	if timeout <= 0 { return error_with_code('timeout must be positive', 2) }
 	state_arg := resolve(parsed.value('--state-dir', ''))!
-	state := if family == 'tracker-live' { state_arg } else { hosttest.work_dir(state_arg, 'vinix-policy-guest-')! }
+	state := if family == 'tracker-live' { state_arg } else { hosttest.work_dir(state_arg, 'tulpar-policy-guest-')! }
 	if family == 'tracker-live' { os.mkdir_all(state)! }
 	arch := parsed.value('--arch', '')
 	init := if family == 'tracker-live' {
@@ -234,7 +234,7 @@ pub fn hypervisor_abi_command(arguments []string) int {
 }
 
 fn hypervisor_abi() ! {
-	work := hosttest.work_dir('', 'vinix-hypervisor-abi-')!
+	work := hosttest.work_dir('', 'tulpar-hypervisor-abi-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	module_path := root() + '/tests/hypervisor/abifixture'
 	run([root() + '/build-support/compile-v-module', module_path, work + '/fixture.c', '--arch', policyhost.caller_arch()])!

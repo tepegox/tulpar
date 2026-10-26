@@ -12,7 +12,7 @@ fn C.reboot(int) int
 fn C.usleep(u32) int
 
 fn check() ! {
-	os.unsetenv('VINIX_PACKAGE_PACK_CLI')
+	os.unsetenv('TULPAR_PACKAGE_PACK_CLI')
 	for name in ['pack-ownership', 'pack-source', 'copy', 'import-capture', 'import', 'catalog', 'release', 'publisher-io', 'durability']! {
 		mut child := os.new_process('/usr/share/package-fixtures/' + name)
 		child.set_redirect_stdio_merged(); child.run()

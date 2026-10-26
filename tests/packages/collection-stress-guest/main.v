@@ -29,16 +29,16 @@ fn check() ! {
 		for snapshot in [false, true]! {
 			for mode in ['fresh', 'retained', 'reclaim', 'leased', 'unsafe-root', 'unsafe-stage',
 				'bad-number', 'object-directory', 'bad-current', 'bad-previous', 'busy-before-config']! {
-				os.setenv('VINIX_COLLECTION_CASE', architecture + (if snapshot { ' explicit ' } else { ' service ' }) + mode, true)
+				os.setenv('TULPAR_COLLECTION_CASE', architecture + (if snapshot { ' explicit ' } else { ' service ' }) + mode, true)
 				child('/usr/share/package-fixtures/request', 'COLLECTION REQUEST selected case PASS', ceiling)!
 			}
 		}
 		for mode in ['bad-config', 'invalid-root']! {
-			os.setenv('VINIX_COLLECTION_CASE', architecture + ' service ' + mode, true)
+			os.setenv('TULPAR_COLLECTION_CASE', architecture + ' service ' + mode, true)
 			child('/usr/share/package-fixtures/request', 'COLLECTION REQUEST selected case PASS', ceiling)!
 		}
 	}
-	os.unsetenv('VINIX_COLLECTION_CASE')
+	os.unsetenv('TULPAR_COLLECTION_CASE')
 	println('COLLECTION STRESS 48 cases with 64 measured calls after 8 warmups PASS')
 	child('/usr/share/package-fixtures/retirement-0', 'COLLECTION RETIREMENT', ceiling)!
 	child('/usr/share/package-fixtures/retirement-1', 'COLLECTION RETIREMENT', ceiling)!

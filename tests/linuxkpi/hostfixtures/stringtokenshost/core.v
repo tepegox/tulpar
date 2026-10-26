@@ -50,12 +50,12 @@ fn C.sysconf(i32) isize
 fn C.mmap(voidptr,usize,i32,i32,i32,isize) voidptr
 fn C.mprotect(voidptr,usize,i32) i32
 fn C.munmap(voidptr,usize) i32
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_irq_flags() usize
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable_no_resched()
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable_no_resched()
 struct Character { text &char character i32 offset isize }
 struct Search { text &char set &char offset isize }
 struct Token { offset usize next isize value &char }
@@ -168,8 +168,8 @@ pub fn string_tokens_tests() { unsafe {
  mut readonly_text:=[4]Mapping{}; mut readonly_set:=[4]Mapping{}
  for i:=usize(0); i<guarded.len; i++ { readonly_text[i]=mapping(guarded[i].text,page_size,true,false); readonly_set[i]=mapping(guarded[i].set,page_size,true,false) }
  writable_tokens:=mapping(c'a,,b,',page_size,false,false); writable_trim:=mapping(c'\x20\x09\x77\x6f\x72\x64\x20\xa0',page_size,false,false); writable_empty:=mapping(c'',page_size,false,false); left_spaces:=mapping(c' \t\r\n',page_size,false,true)
- pages:=C.vmh_live_pages; original_depth:=C.vinix_linuxkpi_preempt_count(); original_cpu:=C.vmh_current_cpu; original_irq:=C.vinix_linuxkpi_irq_flags()
- allocation_failure:=C.vmh_fail_allocation; C.vmh_fail_allocation=true; flags:=C.vinix_linuxkpi_irq_save(); C.vinix_linuxkpi_preempt_disable(); C.vinix_linuxkpi_preempt_disable(); depth:=C.vinix_linuxkpi_preempt_count(); irq:=C.vinix_linuxkpi_irq_flags()
+ pages:=C.vmh_live_pages; original_depth:=C.tulpar_linuxkpi_preempt_count(); original_cpu:=C.vmh_current_cpu; original_irq:=C.tulpar_linuxkpi_irq_flags()
+ allocation_failure:=C.vmh_fail_allocation; C.vmh_fail_allocation=true; flags:=C.tulpar_linuxkpi_irq_save(); C.tulpar_linuxkpi_preempt_disable(); C.tulpar_linuxkpi_preempt_disable(); depth:=C.tulpar_linuxkpi_preempt_count(); irq:=C.tulpar_linuxkpi_irq_flags()
  for i:=usize(0); i<characters.len; i++ { result:=chr(characters[i].text,characters[i].character); C.assert(result==(if characters[i].offset<0 { &char(nil) } else { characters[i].text+characters[i].offset })) }
  for i:=usize(0); i<searches.len; i++ { result:=pbrk(searches[i].text,searches[i].set); C.assert(result==(if searches[i].offset<0 { &char(nil) } else { searches[i].text+searches[i].offset })) }
  for i:=usize(0); i<sequences.len; i++ { mut input:=Input{}; C.memset(&input,0xa5,sizeof(input)); input.after=0x5a
@@ -197,9 +197,9 @@ pub fn string_tokens_tests() { unsafe {
  mut empty_cursor:=writable_empty.text; C.assert(sep(&empty_cursor,c'')==writable_empty.text && empty_cursor==nil); C.assert(u8(writable_empty.text[-1])==0xa5)
  C.assert(trim(left_spaces.text)==left_spaces.text); C.assert(C.memcmp(left_spaces.text,c'\x00\x09\x0d\x0a',5)==0); C.assert(u8(left_spaces.text[5])==0xa5)
  mut alias:=[10]char{}; C.memcpy(&alias[0],c' \tvalue \n',10); C.assert(C.strstrip(&alias[0])==&alias[0]+2 && C.strcmp(&alias[2],c'value')==0)
- C.assert(C.vmh_live_pages==pages && C.vinix_linuxkpi_preempt_count()==depth && C.vinix_linuxkpi_irq_flags()==irq && C.vmh_current_cpu==original_cpu)
- C.vinix_linuxkpi_preempt_enable_no_resched(); C.vinix_linuxkpi_preempt_enable_no_resched(); C.vinix_linuxkpi_irq_restore(flags); C.vmh_fail_allocation=allocation_failure
- C.assert(C.vinix_linuxkpi_preempt_count()==original_depth && C.vinix_linuxkpi_irq_flags()==original_irq && C.vmh_live_pages==pages)
+ C.assert(C.vmh_live_pages==pages && C.tulpar_linuxkpi_preempt_count()==depth && C.tulpar_linuxkpi_irq_flags()==irq && C.vmh_current_cpu==original_cpu)
+ C.tulpar_linuxkpi_preempt_enable_no_resched(); C.tulpar_linuxkpi_preempt_enable_no_resched(); C.tulpar_linuxkpi_irq_restore(flags); C.vmh_fail_allocation=allocation_failure
+ C.assert(C.tulpar_linuxkpi_preempt_count()==original_depth && C.tulpar_linuxkpi_irq_flags()==original_irq && C.vmh_live_pages==pages)
  for i:=usize(0); i<guarded.len; i++ { C.assert(C.munmap(readonly_text[i].mapping,3*page_size)==0); C.assert(C.munmap(readonly_set[i].mapping,3*page_size)==0) }
  C.assert(C.munmap(writable_tokens.mapping,3*page_size)==0); C.assert(C.munmap(writable_trim.mapping,3*page_size)==0); C.assert(C.munmap(writable_empty.mapping,3*page_size)==0); C.assert(C.munmap(left_spaces.mapping,3*page_size)==0)
  after:=&char(c' after'); C.assert(skip(after)==after+1)

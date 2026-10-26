@@ -101,7 +101,7 @@ the commits, host tests, both architecture builds and QEMU checks.
 | `kernel/c/brcm_wifi.c` | 641 |
 | `kernel/c/agx_fake_g17.c` | 313 |
 | `kernel/c/agx_fake_g17_encode.c` | 1,158 |
-| `kernel/c/vinix_net.c` | 1,375 |
+| `kernel/c/tulpar_net.c` | 1,375 |
 | `kernel/c/linuxkpi_string.c` | 181 |
 | `kernel/c/linuxkpi_kstrtox.c` | 398 |
 | `kernel/c/linuxkpi_bitmap.c` | 300 |
@@ -178,7 +178,7 @@ their lines do not correspond directly to retained original implementation.
 | LinuxKPI allocation, format and logging | 1,456 | 840 | `6b18ca9e` |
 | LinuxKPI tasks, clocks and timers | 1,071 | 718 | `2172fb48` |
 | LinuxKPI synchronization, SRCU and workqueues | 2,724 | 1,704 | `9b785b5f` |
-| Shared Vinix/XNU heap sampler | 334 | 273 | `069f76c3` |
+| Shared Tulpar/XNU heap sampler | 334 | 273 | `069f76c3` |
 | X11 input and Wine/clipboard bridges | 1,808 | 1,712 | `58f63ef8` |
 | ARM init variants | 811 | 731 | `58f63ef8` |
 | Wi-Fi CLI | 110 | 110 | `58f63ef8` |
@@ -745,7 +745,7 @@ The portable allocation benchmark preserves six workloads, CLI behavior,
 failure cleanup order. On each actual Darwin ARM/x86 host ABI, all 136
 original-C/V controlled-clock/fault cases passed ASan/UBSan, including every
 mixed-batch allocation-failure prefix. All four native C/V guests passed
-with six results and final checksum 453. An end-to-end Vinix runner also
+with six results and final checksum 453. An end-to-end Tulpar runner also
 generated and compiled the artifact with genuine guest GCC 14.2.0 and passed
 all six workloads. Its initial shared-artifact dynamic constant table stayed
 zero because `_vinit` was not called; maintained V now initializes its
@@ -753,7 +753,7 @@ permanent fixed table once. That failure is preserved. Final help text adds
 `-I .` to the generated-artifact build command; both SDK executable instruction
 bytes remain identical. The evidence filename repair `944c12e1` preserves all
 136 distinct output pairs per host ABI. Existing archived results remain
-immutable; no new paired Vinix/macOS timing campaign or ratio is claimed.
+immutable; no new paired Tulpar/macOS timing campaign or ratio is claimed.
 Local receipts include `alloc-bench-validation.json` and the Wi-Fi stage
 receipts. All new lifetime boundaries received peer review.
 
@@ -866,7 +866,7 @@ original 32/33-event limits. Strict musl GCC C/V builds and both complete native
 guests passed against the reused default kernel. Fixed stack records retain
 synchronous poll/read borrows and original reap/close order; no allocator
 imports appear. `poll-validation.json` records peer lifetime review. This
-x86/Vinix-specific fixture adds no ARM or host sanitizer claim.
+x86/Tulpar-specific fixture adds no ARM or host sanitizer claim.
 
 The POSIX timer oracle (`ad82c434`, 230) preserves all 59 original check
 expressions and lines, signal delivery, native union-sigval callback identity,
@@ -1350,7 +1350,7 @@ Every 100-warmup/3,000-operation Slab measurement stays flat. Actual kernels
 and archive init members extracted from all six ARM boot disks and both x86
 ISOs match the immutable kernels and separately built SDK ELFs. Generated
 sources, objects and all six SDK ELFs are also byte-identical under explicit
-frozen V/VEXE/VINIX compiler settings. Independent full native evidence peer:
+frozen V/VEXE/TULPAR compiler settings. Independent full native evidence peer:
 `execute-only-fixture/peer-final-native-validation-ps2-port.json` (SHA256
 `2e762dbe6a9db09c0d14b95876bc0982ee5bfa723657116ab2167ae30ad2811c`);
 `postcommit-final.json` pins the exact five committed paths. These fixture
@@ -1430,7 +1430,7 @@ checks. Native credential/capability output records and the 17-pointer argv
 bank remain on the stack with their original borrowed lifetimes. Strict C/V
 SDK links and native layouts pass on both architectures. All four original
 C/V guest controls and both exact maintained-runner V controls pass real
-Vinix enforcement under the original 180-second allowance. The maintained
+Tulpar enforcement under the original 180-second allowance. The maintained
 compiler initially exposed a missing production-header include; the one-line
 relative include correction preserves the same declarations. Different final
 link orders required the two additional native controls. Fresh independent

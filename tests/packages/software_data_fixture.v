@@ -27,14 +27,14 @@ fn check_data_report_content(app &SoftwareApp) {
 	assert text.contains(expected_count); unsafe { count.free(); expected_count.free() }
 	if app.data_pending != '' {
 		id := 'Permanently delete data for: ' + app.data_pending
-		location := 'Only this account\'s ~/.local/share/vinix-apps/' + app.data_pending + ' directory is deleted.'
+		location := 'Only this account\'s ~/.local/share/tulpar-apps/' + app.data_pending + ' directory is deleted.'
 		assert text.contains(id) && text.contains(location)
 		unsafe { id.free(); location.free() }
 		assert text.contains('This cannot be undone') && text.contains('Documents granted to the application stay in their original locations')
 		assert text.contains('installed state, live leases and filesystem safety') && text.contains('Reading does not approve deletion')
 	} else if app.data_selected >= 0 && app.data_selected < app.data_status.rows.len {
 		row := app.data_status.rows[app.data_selected]
-		id := 'Application: ' + row.id; location := 'Location: ~/.local/share/vinix-apps/' + row.id
+		id := 'Application: ' + row.id; location := 'Location: ~/.local/share/tulpar-apps/' + row.id
 		assert text.contains(id) && text.contains(location)
 		unsafe { id.free(); location.free() }
 		assert text.contains('Application is installed.') == row.installed
@@ -75,7 +75,7 @@ fn check_data_reader_boundaries() ! {
 fn software_data_service_fixture(args []string) !bool {
 	if args[1..] == ['--json', 'data-list'] {
 		status := fixture_personal_data_status()
-		println(json2.encode(pkgprotocol.PersonalDataStatus{ ...status, rows: status.rows.filter(it.id != 'removed-app' || !os.exists(os.getenv('VINIX_SOFTWARE_DATA_FIXTURE'))) }))
+		println(json2.encode(pkgprotocol.PersonalDataStatus{ ...status, rows: status.rows.filter(it.id != 'removed-app' || !os.exists(os.getenv('TULPAR_SOFTWARE_DATA_FIXTURE'))) }))
 		return true
 	}
 	if args[1] == 'purge-data' {
@@ -86,7 +86,7 @@ fn software_data_service_fixture(args []string) !bool {
 			exit(17)
 		}
 		assert args[2] == 'removed-app'
-		os.write_file(os.getenv('VINIX_SOFTWARE_DATA_FIXTURE'), 'removed-app')!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_DATA_FIXTURE'), 'removed-app')!
 		return true
 	}
 	return false
@@ -101,9 +101,9 @@ fn fixture_personal_data_status() pkgprotocol.PersonalDataStatus {
 }
 
 fn check_software_data() ! {
-	receipt := os.temp_dir() + '/vinix-software-data-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_DATA_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_DATA_FIXTURE') }
+	receipt := os.temp_dir() + '/tulpar-software-data-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_DATA_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_DATA_FIXTURE') }
 	mut app := SoftwareApp{ administration_required: true, service_path: os.executable(), output: []u8{cap: 8192}, query: []u8{cap: 256} }
 	app.handle('software.data')!
 	assert app.data_mode && app.worker.args == ['--json', 'data-list'] && !app.admin_prompt
@@ -188,7 +188,7 @@ fn check_software_data_memory() ! {
 		mut app := SoftwareApp{ administration_required: true, data_mode: true, output: text.bytes() }
 		unsafe { app.output.flags |= .noslices }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for input in [wide, invalid, text]! {
 					app.output.clear(); for byte in input { app.output << byte }
@@ -208,7 +208,7 @@ fn check_software_data_memory() ! {
 			}
 			unsafe { app.status.free() }; app.status = ''
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		app.close_app(); unsafe { text.free(); wide.free() }
 		assert kept == 0, 'personal data management retained ${kept} bytes'
 		println('Software personal data: 1000 wide/invalid/valid decode/select/render/confirm/cancel/retire cycles retain zero tracked bytes')

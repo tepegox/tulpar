@@ -112,7 +112,7 @@ pub fn (mut monitor Monitor) command(name string, arguments map[string]json2.Any
 // wire format and saved-controller error policy unchanged.
 pub fn (mut monitor Monitor) request(name string, arguments map[string]json2.Any) !json2.Any {
 	monitor.sequence++
-	id := 'vinix-' + monitor.sequence.str()
+	id := 'tulpar-' + monitor.sequence.str()
 	mut object := {'execute': json2.Any(name), 'id': json2.Any(id)}
 	if arguments.len > 0 { object['arguments'] = json2.Any(arguments) }
 	monitor.send(object)!

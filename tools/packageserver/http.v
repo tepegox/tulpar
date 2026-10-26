@@ -145,7 +145,7 @@ fn (request &Request) send(data []u8) ! {
 
 fn (request &Request) headers(status int, size u64, mime string, no_store bool) ! {
 	reason := match status { 200 { 'OK' } 204 { 'No Content' } 400 { 'Bad Request' } 404 { 'Not Found' } 413 { 'Request Entity Too Large' } 501 { 'Not Implemented' } else { 'Service Unavailable' } }
-	mut text := 'HTTP/1.0 ${status} ${reason}\r\nServer: VinixPackageStore/1\r\n'
+	mut text := 'HTTP/1.0 ${status} ${reason}\r\nServer: TulparPackageStore/1\r\n'
 	if status != 204 { text += 'Content-Length: ${size}\r\nContent-Type: ${mime}\r\n' }
 	if no_store { text += 'Cache-Control: no-store\r\n' }
 	request.send((text + '\r\n').bytes())!
@@ -195,7 +195,7 @@ fn (mut request Request) dispatch() ! {
 		request.response(200, content, 'text/plain; charset=utf-8', true)!; return
 	}
 	if request.server.config.source != '' {
-		if first[1] == '/vinix-source.tar' {
+		if first[1] == '/tulpar-source.tar' {
 			work := temporary()!
 			defer { os.rmdir_all(work) or { eprintln(err) } }
 			archive := work + '/source.tar'
@@ -203,7 +203,7 @@ fn (mut request Request) dispatch() ! {
 			request.send_file(archive, 'application/x-tar')!; return
 		}
 		parts := first[1].trim_left('/').split('/')
-		apps := {'vinix-files': 'files-live', 'vinix-activity': 'activity-live', 'vinix-settings': 'settings-live'}
+		apps := {'tulpar-files': 'files-live', 'tulpar-activity': 'activity-live', 'tulpar-settings': 'settings-live'}
 		if parts.len == 2 && parts[0] in apps && parts[1] in ['binary', 'version'] {
 			path := request.server.config.source + '/build-aarch64-desktop-apps/' + apps[parts[0]] + '/' + if parts[1] == 'version' { 'version' } else { parts[0] }
 			if !os.exists(path) { request.failure(404, 'Not Found')!; return }
@@ -270,7 +270,7 @@ fn (mut request Request) save(length i64) ! {
 
 pub fn temporary() !string {
 	base := if os.getenv('TMPDIR') != '' { os.getenv('TMPDIR') } else { os.temp_dir() }
-	mut name := (base + '/vinix-source-store.XXXXXX\x00').bytes()
+	mut name := (base + '/tulpar-source-store.XXXXXX\x00').bytes()
 	if isnil(C.mkdtemp(name.data)) { return os.error_posix() }
 	return name.bytestr().all_before('\x00')
 }

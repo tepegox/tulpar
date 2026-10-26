@@ -7,8 +7,8 @@ import tools.packages.pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 struct HttpsOwnerLimit { current u64 maximum u64 }
 fn C.getrlimit(int, voidptr) int
@@ -23,9 +23,9 @@ fn https_owner_cycles() int {
 }
 
 fn https_owner_change(phase string, path string) ! {
-	wanted := os.getenv('VINIX_HTTPS_OWNER_PHASE')
-	kind := os.getenv('VINIX_HTTPS_OWNER_KIND')
-	outside := os.getenv('VINIX_HTTPS_OWNER_OUTSIDE')
+	wanted := os.getenv('TULPAR_HTTPS_OWNER_PHASE')
+	kind := os.getenv('TULPAR_HTTPS_OWNER_KIND')
+	outside := os.getenv('TULPAR_HTTPS_OWNER_OUTSIDE')
 	defer { unsafe { wanted.free(); kind.free(); outside.free() } }
 	if wanted != phase { return }
 	if kind == 'grow' {
@@ -38,7 +38,7 @@ fn https_owner_change(phase string, path string) ! {
 }
 
 fn https_owner_event(event pkgprotocol.Progress) {
-	path := os.getenv('VINIX_HTTPS_OWNER_TARGET')
+	path := os.getenv('TULPAR_HTTPS_OWNER_TARGET')
 	defer { unsafe { path.free() } }
 	phase := if event.current == event.total { 'finish' }
 		else if event.current == 0 || event.current == 512 { 'start' } else { '' }
@@ -46,8 +46,8 @@ fn https_owner_event(event pkgprotocol.Progress) {
 }
 
 fn https_owner_flush(fd int) int {
-	mode := os.getenv('VINIX_HTTPS_OWNER_FLUSH')
-	path := os.getenv('VINIX_HTTPS_OWNER_TARGET')
+	mode := os.getenv('TULPAR_HTTPS_OWNER_FLUSH')
+	path := os.getenv('TULPAR_HTTPS_OWNER_TARGET')
 	marker := path + '.flushed'
 	defer { unsafe { mode.free(); path.free(); marker.free() } }
 	mut info := C.stat{}
@@ -67,8 +67,8 @@ fn https_owner_scope(work string, producer string, text string, mode string, res
 	defer { unsafe { label.free() } }
 	path := work + '/target'; outside := work + '/outside'; calls := work + '/calls'
 	defer { unsafe { path.free(); outside.free(); calls.free() } }
-	for name, value in {'VINIX_OUTPUT_SOURCE': work + '/source', 'VINIX_OUTPUT_CALLS': calls,
-		'VINIX_OUTPUT_TARGET': path, 'VINIX_HTTPS_OWNER_TARGET': path, 'VINIX_HTTPS_OWNER_OUTSIDE': outside} {
+	for name, value in {'TULPAR_OUTPUT_SOURCE': work + '/source', 'TULPAR_OUTPUT_CALLS': calls,
+		'TULPAR_OUTPUT_TARGET': path, 'TULPAR_HTTPS_OWNER_TARGET': path, 'TULPAR_HTTPS_OWNER_OUTSIDE': outside} {
 		os.setenv(name, value, true)
 	}
 	parts := mode.split('-')
@@ -76,8 +76,8 @@ fn https_owner_scope(work string, producer string, text string, mode string, res
 	phase := if mode.starts_with('change-') { parts[1] } else { '' }
 	kind := if phase != '' { parts[2] } else { '' }
 	flush := if mode.starts_with('flush-') { parts[1] } else { '' }
-	os.setenv('VINIX_HTTPS_OWNER_PHASE', phase, true); os.setenv('VINIX_HTTPS_OWNER_KIND', kind, true)
-	os.setenv('VINIX_HTTPS_OWNER_FLUSH', flush, true)
+	os.setenv('TULPAR_HTTPS_OWNER_PHASE', phase, true); os.setenv('TULPAR_HTTPS_OWNER_KIND', kind, true)
+	os.setenv('TULPAR_HTTPS_OWNER_FLUSH', flush, true)
 	program := if mode == 'missing-program' { work + '/absent' } else { producer.clone() }
 	route := if mode in ['full', 'no-range', 'empty', 'partial', 'oversized', 'failure', 'terminated']! { mode } else { 'full' }
 	url := if mode == 'insecure' { 'http://fixture/full' } else if mode == 'nul' { 'https://fixture/\x00full' } else { 'https://fixture/' + route }
@@ -100,7 +100,7 @@ fn https_owner_scope(work string, producer string, text string, mode string, res
 			if mode == 'fifo' { os.rm(path)!; assert C.mkfifo(path.str, 0o600) == 0 }
 			maximum := if mode == 'empty' { u64(if resume { 512 } else { 0 }) }
 				else if mode == 'prefix-limit' { u64(16) } else { u64(text.len) }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			mut refused := false
 			used_prefix := fetch_https_with(url, path, maximum, resume, mode == 'offline', event, https_owner_event,
 				HttpsOutputOptions{program: program, checkpoint: https_owner_change, flush: https_owner_flush}) or {
@@ -113,12 +113,12 @@ fn https_owner_scope(work string, producer string, text string, mode string, res
 				assert message.contains(wanted), label + ': ' + message
 				unsafe { message.free(); err.free() }; refused = true; false
 			}
-			$if track_heap ? { bytes := C.vinix_heap_end(); if pass == 1 { retained += bytes } }
+			$if track_heap ? { bytes := C.tulpar_heap_end(); if pass == 1 { retained += bytes } }
 			expected_failure := mode !in ['full', 'no-range', 'empty', 'flush-interrupted']!
 			assert refused == expected_failure, label
 			if !refused { assert used_prefix == (resume && mode != 'no-range'), label }
 			mut status := i32(0)
-			assert C.vinix_package_waitpid(-1, unsafe { &status }, C.WNOHANG) == -1 && C.errno == C.ECHILD
+			assert C.tulpar_package_waitpid(-1, unsafe { &status }, C.WNOHANG) == -1 && C.errno == C.ECHILD
 			assert os.read_file(outside)! == 'foreign bytes'
 			if mode in ['full', 'no-range', 'flush-interrupted']! { assert os.read_file(path)! == text }
 			if mode == 'empty' { assert os.file_size(path) == if resume { 512 } else { 0 } }
@@ -140,7 +140,7 @@ fn https_owner_scope(work string, producer string, text string, mode string, res
 
 fn test_complete_https_transport_owns_process_arguments_fallback_and_refusal_scratch() {
 	assert os.args.len == 3 && os.args[1] == '--producer'
-	work := os.temp_dir() + '/vinix-https-owner-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-https-owner-' + os.getpid().str()
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	text := '0123456789abcdef'.repeat(1024)
 	os.write_file(work + '/source', text)!

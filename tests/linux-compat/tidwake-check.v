@@ -127,7 +127,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -158,7 +158,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -183,12 +183,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/tidwake-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/tidwake-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/tidwakereferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/tidwakereferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -212,7 +212,7 @@ fn definition(source string, marker string) string {
 fn main() {
 	if '--scope-only' in os.args {
 		area := os.args[2].trim_right('/')+'/'
-		check_source(area,'/Users/alex/code/vinix/')!
+		check_source(area,'/Users/alex/code/tulpar/')!
 		for suffix in ['arm','x86'] {check_c(area,suffix)!}
 		println('Native clear-child-tid source/C scope: PASS')
 		return
@@ -228,7 +228,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: tidwake-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	sdk_and_primary(area, out)!
@@ -241,7 +241,7 @@ fn main() {
 	os.write_file(area+'scope-check.log','arm/x86: exact whole production C differs only in clear_child_tid shared-key maximum1 wake call plus exact dead futex__wake/futex__wake_key wrappers and declarations removed by reachability; unchanged pointer retirement, scalar store/error path, locks, ownership, Process/Thread/map refs and release; no allocation/free/pin/stack promotion or normalization\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '3d8363a1a0c70075cf470610321c77c10fbfd411'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -329,7 +329,7 @@ fn main() {
 			'linux_primary_source':     digest(area + 'linux-fork-v6.12.c')
 			'linux_primary_pin':        digest(area + 'linux-source.sha256')
 			'private_sdk': digest(area + 'sdk-inputs.json')
-			'sdk_prior_inputs': digest('/Users/alex/.cache/vinix-linux-compat/robustcreds-20261015/sdk-inputs.json')
+			'sdk_prior_inputs': digest('/Users/alex/.cache/tulpar-linux-compat/robustcreds-20261015/sdk-inputs.json')
 			'arm_compiler_adapter': digest(area + 'arm-cc.v')
 			'arm_compiler_adapter_binary': digest(area + 'arm-cc')
 			'prior_diagnostics': digest(area + 'diagnostic-pins.json')
@@ -346,7 +346,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + 'p1-' + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['tidwake']
 			} else {
@@ -366,7 +366,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + if phase == 'before' { 'initial-build-' + suffix + '-before.log' } else { 'build-' + suffix + '-after-producer.log' }
 			assert os.read_file(producer)!.trim_space() == suffix + ' ' + phase + ' production build: PASS'
 			artifacts[phase + '_build_producer'] = digest(producer)
@@ -521,10 +521,10 @@ fn check_c(area string,suffix string) ! {
  for declaration in ['u64 futex__wake(u64 virt);\n','u64 futex__wake_key(u64 virt, bool private);\n'] {assert expected.count(declaration) == 1; expected = expected.replace(declaration,'')}
  matches := expected == after
  assert matches,'Exact whole production C: one wake call and exact dead-wrapper/declaration removal; no normalization'
- for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','vinix_stack_alloc(','pin_process(','unpin_process(','copy_from_user(','copy_to_user('] {assert old.count(token) == new.count(token),token}
+ for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','tulpar_stack_alloc(','pin_process(','unpin_process(','copy_from_user(','copy_to_user('] {assert old.count(token) == new.count(token),token}
 }
 fn sdk_and_primary(area string,out string) ! {
- sdk := object(area+'sdk-inputs.json')!; prior := object('/Users/alex/.cache/vinix-linux-compat/robustcreds-20261015/sdk-inputs.json')!; assert sdk.len == 2014 && prior.len == sdk.len
+ sdk := object(area+'sdk-inputs.json')!; prior := object('/Users/alex/.cache/tulpar-linux-compat/robustcreds-20261015/sdk-inputs.json')!; assert sdk.len == 2014 && prior.len == sdk.len
  mut found := map[string]bool{}
  for path in os.walk_ext(area+'sdk','') {assert os.inode(path).typ == .regular; local := path.all_after(area+'sdk/'); assert local in sdk && local !in found; found[local] = true}; assert found.len == sdk.len
  for path,hash in sdk {assert hash.str() == prior[path]!.str() && digest(area+'sdk/'+path) == hash.str(),path}
@@ -539,7 +539,7 @@ fn sdk_and_primary(area string,out string) ! {
 }
 fn diagnostics(area string,out string) ! {
  mut pins := map[string]string{}
- first := os.read_file(area+'initial-probe.v')!; final := os.read_file('/Users/alex/code/vinix/tests/linux-compat/tidwakefixture/core.v')!
+ first := os.read_file(area+'initial-probe.v')!; final := os.read_file('/Users/alex/code/tulpar/tests/linux-compat/tidwakefixture/core.v')!
  old := '*C.__errno_location() = 0; result := C.syscall(C.SYS_tgkill'
  assert first.count(old) == 1 && first.replace(old,'mut error_slot := C.__errno_location(); *error_slot = 0; result := C.syscall(C.SYS_tgkill') == final
  assert os.read_file(area+'helper-preflight.log')!.contains('cannot dereference a function call on the left side of an assignment') && !os.exists(area+'states/preflight-arm/init')

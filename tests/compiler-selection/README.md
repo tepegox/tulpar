@@ -12,7 +12,7 @@ V stand-in for `uname` supplies both host profiles. It also compiles and lists
 a real one-object AArch64 ELF archive using Clang and LLVM, then removes its
 temporary tree on success or failure. It does not build a kernel.
 
-For the native cleanup check, set `VINIX_ARCHIVER_CHECK` to a compiled test
+For the native cleanup check, set `TULPAR_ARCHIVER_CHECK` to a compiled test
 command and run `v -nocache -cc cc test tests/compiler-selection/archivercheck`.
 This verifies a successful real archive run and a forced compiler failure,
 including removal of each run's temporary directory.

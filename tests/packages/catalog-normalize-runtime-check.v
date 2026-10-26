@@ -23,7 +23,7 @@ fn normalize_suite() hwhost.Suite {
 			hwhost.Program{ source: 'tools/packages/pkgcore/composition_test.v', path: 'usr/share/package-fixtures/composition' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/release_test.v', path: 'usr/share/package-fixtures/release' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/composition_ownership_test.v', path: 'usr/share/package-fixtures/composition-ownership' },
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/catalog_plan_test.v', path: 'usr/share/package-fixtures/catalog-plan' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/import_limits_test.v', path: 'usr/share/package-fixtures/import-limits' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/import_test.v', path: 'usr/share/package-fixtures/import' },
@@ -55,8 +55,8 @@ fn normalize_suite() hwhost.Suite {
 fn normalize_guest() !int {
 	options := hwhost.parse_options(os.args[1..])!
 	if options.help || options.list { return hwhost.run_suite(normalize_suite(), os.args[1..], @FILE) }
-	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('VINIX_HWTEST_TCG') != '1' {
-		return error('provide VINIX_HWTEST_TCG=1, --kernel and a new --state-dir')
+	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('TULPAR_HWTEST_TCG') != '1' {
+		return error('provide TULPAR_HWTEST_TCG=1, --kernel and a new --state-dir')
 	}
 	repository := hwhost.find_root(@FILE)!
 	host := hwhost.find_host(repository, options.arch, options.qemu)!
@@ -72,7 +72,7 @@ fn normalize_guest() !int {
 	root := hwhost.build_extras(host, definition, work + '/guest')!
 	mut artifacts := [normalize_artifact('kernel', work + '/kernel')!, normalize_artifact('guest-init', guest)!]
 	for name in ['catalog-normalize', 'catalog', 'composition', 'release', 'composition-ownership', 'catalog-plan', 'import-limits', 'import']! { artifacts << normalize_artifact(name, root + '/usr/share/package-fixtures/' + name)! }
-	artifacts << normalize_artifact('package-cli', root + '/usr/bin/vinix-package')!
+	artifacts << normalize_artifact('package-cli', root + '/usr/bin/tulpar-package')!
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: work + '/kernel', guest: guest, extras: root,
 		state: work + '/packages-catalog-normalize', timeout: if options.timeout > 300 { options.timeout } else { 300 }, keep: true })
 	println(hwhost.report(options.arch, outcome))

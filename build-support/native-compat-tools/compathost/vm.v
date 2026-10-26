@@ -38,9 +38,9 @@ fn guest_archive(work string) !string {
 // Snapshot the requested kernel; each runtime owns its archive, ISO, variables
 // image and QMP socket. The desktop launcher starts a Python package server.
 fn runtime_guest(work string, kernel_dir string, inputs map[string]json2.Any, expected []string, failures []string, timeout int, build_only bool) !int {
-	kernel := work + '/kernel/bin/vinix'
+	kernel := work + '/kernel/bin/tulpar'
 	os.mkdir_all(os.dir(kernel))!
-	hosttest.module_copy_file_preserving_stat(resolve(kernel_dir)! + '/bin/vinix', kernel)!
+	hosttest.module_copy_file_preserving_stat(resolve(kernel_dir)! + '/bin/tulpar', kernel)!
 	header := os.read_bytes(kernel)!
 	if header.len < 20 || header[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1] || header[18] != 183 || header[19] != 0 {
 		return error('Runtime guest requires a little-endian ARM ELF64 kernel')
@@ -75,13 +75,13 @@ fn robust_guest(args []string) !int {
 		'Exercise both actual Steam x86 ABIs through an isolated ARM linux-user guest.') or { return error_with_code(err.msg(), 2) }
 	needed(parsed, ['--work', '--kernel-dir'])!
 	timeout := timeout_option(parsed, 600)!
-	work := hosttest.work_dir(parsed.options['--work'], 'vinix-steam-guest-')!
+	work := hosttest.work_dir(parsed.options['--work'], 'tulpar-steam-guest-')!
 	robust_native(work + '/sources')!
 	native := resolve(if '--native-root' in parsed.options { parsed.options['--native-root'] } else { root() + '/build-aarch64-userland/staging' })!
 	translator := resolve(if '--translator-root' in parsed.options { parsed.options['--translator-root'] } else { root() + '/build-aarch64-steam/translator-only/staging' })!
 	mut files := {'bin/busybox': native + '/bin/busybox', 'lib/ld-musl-aarch64.so.1': native + '/lib/ld-musl-aarch64.so.1'}
 	mut variants := []string{}
-	mut script := '#!/bin/sh\nset -eu\nexport PATH=/bin:/usr/bin VINIX_ALLOW_WX=1\nunset LD_PRELOAD LD_LIBRARY_PATH\nmount -t proc proc /proc 2>/dev/null || true\n'
+	mut script := '#!/bin/sh\nset -eu\nexport PATH=/bin:/usr/bin TULPAR_ALLOW_WX=1\nunset LD_PRELOAD LD_LIBRARY_PATH\nmount -t proc proc /proc 2>/dev/null || true\n'
 	for arch in ['i386', 'x86_64'] {
 		files['usr/bin/qemu-' + arch] = translator + '/usr/bin/qemu-' + arch
 		for label in ['original', 'v'] {
@@ -125,13 +125,13 @@ fn office_guest(args []string) !int {
 		hosttest.Option{name: '--kernel-dir', value: true}, hosttest.Option{name: '--fixtures', value: true},
 		hosttest.Option{name: '--timeout', value: true}, hosttest.Option{name: '--build-only'}], 0,
 		'Usage: run-vm --state-dir FRESH-DIR --kernel-dir DIR --fixtures DIR [--timeout SECONDS] [--build-only]',
-		'Execute Windows64 C/V licensing goldens in staged Wine on Vinix.') or { return error_with_code(err.msg(), 2) }
+		'Execute Windows64 C/V licensing goldens in staged Wine on Tulpar.') or { return error_with_code(err.msg(), 2) }
 	needed(parsed, ['--state-dir', '--kernel-dir', '--fixtures'])!
 	timeout := timeout_option(parsed, 900)!
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-office-guest-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-office-guest-')!
 	rootfs := work + '/root'
 	stage := root() + '/build-aarch64-x86-translation/staging'
-	runtime := stage + '/usr/libexec/vinix-x86_64/root'
+	runtime := stage + '/usr/libexec/tulpar-x86_64/root'
 	native := root() + '/build-aarch64-userland/staging'
 	mut files := {'bin/busybox': native + '/bin/busybox', 'lib/ld-musl-aarch64.so.1': native + '/lib/ld-musl-aarch64.so.1',
 		'usr/bin/qemu-x86_64': stage + '/usr/bin/qemu-x86_64', 'usr/bin/run-x86-64': root() + '/build-support/x86-translation/run-x86-64',
@@ -185,8 +185,8 @@ fn office_guest(args []string) !int {
 	for name in os.ls(rootfs + '/runtime/usr/lib/wine/x86_64-windows')! {
 		os.symlink('/runtime/usr/lib/wine/x86_64-windows/' + name, rootfs + '/root/.wine/drive_c/windows/system32/' + name)!
 	}
-	mut script := '#!/bin/sh\nset -eu\nexport PATH=/bin:/usr/bin HOME=/root USER=root VINIX_ALLOW_WX=1\n'
-	script += 'export VINIX_X86_64_ROOT=/runtime WINEPREFIX=/root/.wine WINEARCH=win64 WINEDEBUG=+seh\n'
+	mut script := '#!/bin/sh\nset -eu\nexport PATH=/bin:/usr/bin HOME=/root USER=root TULPAR_ALLOW_WX=1\n'
+	script += 'export TULPAR_X86_64_ROOT=/runtime WINEPREFIX=/root/.wine WINEARCH=win64 WINEDEBUG=+seh\n'
 	script += 'export WINEDLLPATH=/runtime/usr/lib/wine/x86_64-unix:/runtime/usr/lib/wine/x86_64-windows\n'
 	script += 'export WINELOADERNOEXEC=1 WINESERVER=/usr/bin/wineserver WINEDLLOVERRIDES=winemenubuilder.exe=d\n'
 	script += 'mount -t proc proc /proc 2>/dev/null || true\nulimit -s 32768\n'

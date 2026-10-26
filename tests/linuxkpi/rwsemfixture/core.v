@@ -205,7 +205,7 @@ fn signal_state(state u32, c &Context) bool {
 	}
 }
 
-@[export:'vinix_linuxkpi_may_sleep']
+@[export:'tulpar_linuxkpi_may_sleep']
 pub fn may_sleep() bool {
 	c := context()
 	return c.active && c.flags & 512 != 0 && c.pins == 0 && c.irq_depth == 0
@@ -320,7 +320,7 @@ pub fn allocate_zero(_bytes usize, _flags u32) voidptr {
 	return allocate(_bytes, _flags)
 }
 
-@[export:'vinix_linuxkpi_bug'; noreturn]
+@[export:'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(reason C.rsh_const_charp, line i32) {
 	unsafe {
 		if fatal_watch {

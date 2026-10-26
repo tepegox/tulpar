@@ -49,6 +49,6 @@ execution. The maintained builder can be repeated with
 
 Qualification uses the isolated V 0.5.2 `c6bb06f` compiler documented by the
 [policy host tools](../native-policy-tools/README.md). Local logs, frozen
-originals and manifests are under `/tmp/vinix-policy-guest-qualification-*`;
-guest logs are `/tmp/vinix-policy-guest-real-*.log`. Maintained commands do not
+originals and manifests are under `/tmp/tulpar-policy-guest-qualification-*`;
+guest logs are `/tmp/tulpar-policy-guest-real-*.log`. Maintained commands do not
 depend on those directories.

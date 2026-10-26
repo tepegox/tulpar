@@ -1,6 +1,6 @@
 # Sealed-key credential rewrap qualification
 
-`rewrap-key` uses the existing authenticated `VINIXKP1` envelope and fixed scrypt
+`rewrap-key` uses the existing authenticated `TULPARKP1` envelope and fixed scrypt
 profile. It preserves the volume key and publishes a separate envelope using new
 private credential bytes, fresh salt and nonce. See [commands, ordering and
 access-retirement limits](../../docs/storage-volumes.md#changing-sealed-key-credentials).

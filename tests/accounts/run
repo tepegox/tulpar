@@ -9,7 +9,7 @@ set -eu
 here=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 . "$here/../../build-support/find-v.sh"
 export V
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-accounts-run.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-accounts-run.XXXXXX")
 trap 'rm -rf "$work"' 0
 trap 'exit 129' HUP
 trap 'exit 130' INT

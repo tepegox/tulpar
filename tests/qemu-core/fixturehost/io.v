@@ -248,16 +248,16 @@ fn spawn_command_preferred(argv []string, env map[string]string, actions voidptr
 		mut defaults := u32(0)
 		C.sigemptyset(&defaults)
 		C.sigaddset(&defaults, C.SIGPIPE)
-		if C.VINIX_QEMU_SIGXFSZ != 0 { C.sigaddset(&defaults, C.VINIX_QEMU_SIGXFSZ) }
-		if C.VINIX_QEMU_SIGXFZ != 0 { C.sigaddset(&defaults, C.VINIX_QEMU_SIGXFZ) }
+		if C.TULPAR_QEMU_SIGXFSZ != 0 { C.sigaddset(&defaults, C.TULPAR_QEMU_SIGXFSZ) }
+		if C.TULPAR_QEMU_SIGXFZ != 0 { C.sigaddset(&defaults, C.TULPAR_QEMU_SIGXFZ) }
 		default_status := C.posix_spawnattr_setsigdefault(&attributes, &defaults)
 		if default_status != 0 { return file_error('', default_status) }
 	} $else {
 		mut defaults := C.sigset_t{}
 		C.sigemptyset(&defaults)
 		C.sigaddset(&defaults, C.SIGPIPE)
-		if C.VINIX_QEMU_SIGXFSZ != 0 { C.sigaddset(&defaults, C.VINIX_QEMU_SIGXFSZ) }
-		if C.VINIX_QEMU_SIGXFZ != 0 { C.sigaddset(&defaults, C.VINIX_QEMU_SIGXFZ) }
+		if C.TULPAR_QEMU_SIGXFSZ != 0 { C.sigaddset(&defaults, C.TULPAR_QEMU_SIGXFSZ) }
+		if C.TULPAR_QEMU_SIGXFZ != 0 { C.sigaddset(&defaults, C.TULPAR_QEMU_SIGXFZ) }
 		default_status := C.posix_spawnattr_setsigdefault(&attributes, &defaults)
 		if default_status != 0 { return file_error('', default_status) }
 	}

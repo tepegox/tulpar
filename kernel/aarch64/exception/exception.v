@@ -165,8 +165,8 @@ pub fn stack_exhausted(gpr_state &cpulocal.GPRState) {
 		state.pc = resume
 		return
 	}
-	C.vinix_stack_guard_diagnostic(gpr_state.sp, gpr_state.pc, far)
-	C.vinix_stack_guard_message(c'STACK-GUARD FATAL emergency-stack exhaustion\n')
+	C.tulpar_stack_guard_diagnostic(gpr_state.sp, gpr_state.pc, far)
+	C.tulpar_stack_guard_message(c'STACK-GUARD FATAL emergency-stack exhaustion\n')
 	C.printf_panic(c'kernel stack guard: exhausted sp=0x%llx pc=0x%llx far=0x%llx\n', gpr_state.sp, gpr_state.pc, far)
 	fault_handler(0x25, cpu.read_esr_el1(), far, gpr_state)
 }

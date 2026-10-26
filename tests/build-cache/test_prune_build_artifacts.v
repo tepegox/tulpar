@@ -63,7 +63,7 @@ fn check_policy(root string) ! {
 	mut preserved := []string{}
 	for name in ['build/minecraft-desktop-root.ext2', 'build/minecraft-desktop-boot.img',
 		'build/macos.qcow2', 'build/downloads/initramfs.tar', 'build/staging/initramfs.tar',
-		'build/vinix-installer/initramfs.tar', 'build/sources.tar.gz', 'build/desktop-root-seed.tar.gz',
+		'build/tulpar-installer/initramfs.tar', 'build/sources.tar.gz', 'build/desktop-root-seed.tar.gz',
 		'build/initramfs-desktop-qemu.tar', 'build/initramfs-desktop-qemu.iso',
 		'build/initramfs-desktop-full.iso', 'build-support/init-aarch64/initramfs.tar',
 		'build-support/init-aarch64/initramfs-desktop.tar'] {
@@ -123,7 +123,7 @@ fn check_overrides(root string) ! {
 }
 
 fn invoke(root string, extra []string, env map[string]string) !hosttest.Result {
-	argv := if tool := os.getenv_opt('VINIX_PRUNE_TOOL') {
+	argv := if tool := os.getenv_opt('TULPAR_PRUNE_TOOL') {
 		[tool]
 	} else {
 		[os.executable(), '--worker']
@@ -142,7 +142,7 @@ fn check_native(root string) ! {
 	assert prunehost.prune(root, 0, map[string]bool{}, false, clock() + 1, prunehost.NativeInspector{})!.count == 1
 	future := fixture(root, 'build/${token}-future-initramfs.tar')!
 	mut env := os.environ()
-	env['VINIX_DESKTOP_INITRAMFS'] = future
+	env['TULPAR_DESKTOP_INITRAMFS'] = future
 	mut child := os.new_process(os.executable())
 	defer {
 		if child.is_alive() {
@@ -171,11 +171,11 @@ fn check_native(root string) ! {
 	kept_iso := fixture(root, 'build/${token}-override-initramfs.iso')!
 	removable := fixture(root, 'build/${token}-automatic-initramfs.tar')!
 	env = os.environ()
-	env['VINIX_PRUNE_BUILD'] = '0'
+	env['TULPAR_PRUNE_BUILD'] = '0'
 	assert invoke(root, ['--automatic'], env)!.code == 0 && os.exists(removable)
-	env['VINIX_PRUNE_BUILD'] = '1'
-	env['VINIX_DESKTOP_INITRAMFS'] = kept
-	env['VINIX_AMD64_DESKTOP_ISO'] = kept_iso
+	env['TULPAR_PRUNE_BUILD'] = '1'
+	env['TULPAR_DESKTOP_INITRAMFS'] = kept
+	env['TULPAR_AMD64_DESKTOP_ISO'] = kept_iso
 	automatic := invoke(root, ['--automatic'], env)!
 	assert automatic.code == 0
 	assert os.exists(kept) && os.exists(kept_iso) && !os.exists(removable), automatic.stdout + automatic.stderr
@@ -186,22 +186,22 @@ fn check_native(root string) ! {
 	os.symlink(os.executable(), root + '/bin/ps')!
 	mut broken := os.environ()
 	broken['PATH'] = root + '/bin'
-	broken['VINIX_PRUNE_TEST_PS_MODE'] = 'fail'
+	broken['TULPAR_PRUNE_TEST_PS_MODE'] = 'fail'
 	assert invoke(root, []string{}, broken)!.code == 1
 	assert invoke(root, ['--automatic'], broken)!.code == 0
 	assert os.exists(kept) && os.exists(kept_iso)
-	broken['VINIX_PRUNE_TEST_PS_MODE'] = 'ok'
+	broken['TULPAR_PRUNE_TEST_PS_MODE'] = 'ok'
 	os.symlink(os.executable(), root + '/bin/lsof')!
-	broken['VINIX_PRUNE_TEST_LSOF_MODE'] = 'fail'
+	broken['TULPAR_PRUNE_TEST_LSOF_MODE'] = 'fail'
 	failed_lsof := invoke(root, []string{}, broken)!
 	assert failed_lsof.code == 1 && failed_lsof.stderr.contains('could not inspect open build archives')
 	assert !failed_lsof.stderr.contains('private-environment-fixture')
 	assert os.exists(kept) && os.exists(kept_iso)
-	broken['VINIX_PRUNE_TEST_LSOF_MODE'] = 'protect'
-	broken['VINIX_PRUNE_TEST_PROTECTED'] = kept
+	broken['TULPAR_PRUNE_TEST_LSOF_MODE'] = 'protect'
+	broken['TULPAR_PRUNE_TEST_PROTECTED'] = kept
 	protected := invoke(root, ['--keep', kept_iso], broken)!
 	assert protected.code == 0 && protected.stdout == '' && os.exists(kept)
-	broken['VINIX_PRUNE_TEST_LSOF_MODE'] = 'empty'
+	broken['TULPAR_PRUNE_TEST_LSOF_MODE'] = 'empty'
 	assert invoke(root, ['--keep', kept_iso, '--dry-run'], broken)!.stdout.contains('Would remove build/' + os.file_name(kept))
 	for value in ['nan', 'inf', '-1', 'invalid'] {
 		assert invoke(root, ['--older-than-days=' + value], os.environ())!.code == 2
@@ -228,7 +228,7 @@ fn check_lock(root string) ! {
 		child.close()
 	}
 	mut env := os.environ()
-	env['VINIX_PRUNE_TEST_READY'] = root + '/ready'
+	env['TULPAR_PRUNE_TEST_READY'] = root + '/ready'
 	child.set_args(['--worker', '--root', root])
 	child.set_environment(env)
 	child.set_redirect_stdio()
@@ -266,22 +266,22 @@ fn check_names(root string) ! {
 
 fn main() {
 	if os.file_name(os.args[0]) == 'ps' {
-		if os.getenv('VINIX_PRUNE_TEST_PS_MODE') == 'fail' { exit(17) }
+		if os.getenv('TULPAR_PRUNE_TEST_PS_MODE') == 'fail' { exit(17) }
 		return
 	}
 	if os.file_name(os.args[0]) == 'lsof' {
-		match os.getenv('VINIX_PRUNE_TEST_LSOF_MODE') {
+		match os.getenv('TULPAR_PRUNE_TEST_LSOF_MODE') {
 			'fail' {
 				eprintln('private-environment-fixture')
 				exit(17)
 			}
-			'protect' { println('n' + os.getenv('VINIX_PRUNE_TEST_PROTECTED')) }
+			'protect' { println('n' + os.getenv('TULPAR_PRUNE_TEST_PROTECTED')) }
 			else { exit(1) }
 		}
 		return
 	}
 	if os.args.len > 1 && os.args[1] == '--worker' {
-		if ready := os.getenv_opt('VINIX_PRUNE_TEST_READY') { os.write_file(ready, 'ready')! }
+		if ready := os.getenv_opt('TULPAR_PRUNE_TEST_READY') { os.write_file(ready, 'ready')! }
 		prunehost.run(os.args[2..])
 		return
 	}
@@ -292,7 +292,7 @@ fn main() {
 		input.read(mut buffer) or {}
 		return
 	}
-	root := hosttest.resolve_path(hosttest.work_dir('', 'vinix-prune-check-')!)!
+	root := hosttest.resolve_path(hosttest.work_dir('', 'tulpar-prune-check-')!)!
 	defer { hosttest.remove_work_dir(root) or { panic(err) } }
 	check_names(root)!
 	check_policy(root)!

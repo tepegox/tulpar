@@ -8,8 +8,8 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn manifest_selected(selection string) bool {
@@ -63,7 +63,7 @@ fn test_manifest_decode_owns_complete_and_growing_template_and_inventory_fields(
 				text := manifest_document(count, architecture); defer { unsafe { text.free() } }
 				last_path := 'share/' + (count - 1).str()
 				tracked := count != max_files
-				$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+				$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 				for _ in 0 .. if tracked { cycles } else { 1 } {
 					value := decode_manifest(text, inventory)!
 					assert value.architecture == architecture && value.files.len == count && value.files[count - 1].path == last_path
@@ -72,7 +72,7 @@ fn test_manifest_decode_owns_complete_and_growing_template_and_inventory_fields(
 					close_decoded_package(value)
 				}
 				$if track_heap ? { if tracked {
-					kept := C.vinix_heap_end(); assert kept == 0
+					kept := C.tulpar_heap_end(); assert kept == 0
 					println('MANIFEST DECODE ' + architecture + ' ' + mode + ' ' + count.str() + ' payloads: 1000 cycles retained ' + kept.str() + ' bytes')
 				} }
 				if !tracked { continue }
@@ -95,7 +95,7 @@ fn test_manifest_decode_preserves_source_defaults_and_requires_complete_inventor
 		'{"dependencies":[{}, {"id":"base"}],"files":[{}, {"path":"ignored"}]}',
 		'{"id":"data","name":"Data","version":"1.0.0","architecture":"all","kind":"data","license":"MIT"}']
 	for text in inputs {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles {
 			p := decode_manifest(text, false)!
 			assert p.sdk == 1 && p.window_protocol == 0 && !p.proprietary && !p.firmware
@@ -104,7 +104,7 @@ fn test_manifest_decode_preserves_source_defaults_and_requires_complete_inventor
 			close_decoded_package(p)
 			manifest_refusal(text, true)
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	}
 	full := decode_manifest('{"files":[{"bytes":18446744073709551615}],"sdk":2147483647,"window_protocol":2147483647}', false)!
 	assert full.files[0].bytes == ~u64(0) && full.sdk == max_i32 && full.window_protocol == max_i32
@@ -129,14 +129,14 @@ fn test_manifest_decode_retires_every_truncated_prefix_and_late_refusals() {
 		text.replace('"minimum":"1.0.0"', '"minimum":null'), text.replace('"executable":false', '"executable":null'),
 		text.replace('"permissions":["files"]', '"permissions":["audio","display","files","network","process","files"]')]
 	for inventory in [false, true]! {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for end in 0 .. text.len { manifest_refusal(unsafe { tos(text.str, end) }, inventory) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		for number, input in inputs {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. cycles { manifest_refusal(input, inventory) }
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); assert kept == 0
+				kept := C.tulpar_heap_end(); assert kept == 0
 				println('MANIFEST DECODE refusal ' + number.str() + ' inventory=' + inventory.str() + ': 1000 cycles retained ' + kept.str() + ' bytes')
 			}
 		}
@@ -169,7 +169,7 @@ fn test_manifest_decode_enforces_metadata_and_nested_bounds_before_publication()
 
 fn test_manifest_decode_pack_refusal_leaves_destination_absent_and_retry_uses_source_files() {
 	if !manifest_selected('pack') { return }
-	root := os.temp_dir() + '/vinix-manifest-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	root := os.temp_dir() + '/tulpar-manifest-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(root + '/source/share')!; defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/source/share/data', 'payload')!
 	path := root + '/manifest.json'; destination := root + '/repository'

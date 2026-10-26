@@ -7,7 +7,7 @@ import userland.sessionipc
 fn test_legacy_clock_migration_preserves_policy_and_server_and_custom_services() {
 	mut daemon := SessionDaemon{}
 	daemon.supervisor.count = 3
-	for i, executable in ['/usr/bin/vinix-desktop', '/opt/custom-clock', '/usr/bin/vinix-desktop-gpu'] {
+	for i, executable in ['/usr/bin/tulpar-desktop', '/opt/custom-clock', '/usr/bin/tulpar-desktop-gpu'] {
 		mut service := sessioncore.Service{
 			name:          sessioncore.text(if i == 2 { 'custom-service' } else { 'clock-sync' })!
 			executable:    sessioncore.text(executable)!
@@ -24,7 +24,7 @@ fn test_legacy_clock_migration_preserves_policy_and_server_and_custom_services()
 	other := daemon.supervisor.services[2]
 	daemon.migrate_clock_service()
 	clock := daemon.supervisor.services[0]
-	path := sessionipc.helper_path('vinix-timesync')
+	path := sessionipc.helper_path('tulpar-timesync')
 	defer { unsafe { path.free() } }
 	assert clock.executable.str() == path
 	assert !clock.enabled && clock.restart == .always && clock.restart_limit == 9

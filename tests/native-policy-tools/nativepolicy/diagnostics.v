@@ -5,7 +5,7 @@ import hosttest
 import os
 
 fn diagnostics() ! {
-	owner := private_work('vinix-stack-diagnostics-')!
+	owner := private_work('tulpar-stack-diagnostics-')!
 	defer { retire(owner) }
 	common := concat([hosttest.env_default('CC', 'clang')], clang_arch(arch()), ['-std=gnu11', '-O2', '-g',
 		'-Wall', '-Wextra', '-Werror', '-fsanitize=address,undefined', '-fno-omit-frame-pointer'])

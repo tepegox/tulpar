@@ -1,5 +1,5 @@
 description = Change the name of this computer
 auth = admin
-exec = /usr/sbin/vinix-system
+exec = /usr/sbin/tulpar-system
 arg = hostname
 param = hostname

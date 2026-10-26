@@ -19,7 +19,7 @@ its 60-second deadline, inherited standard streams and kill/reap on timeout.
 Other builds and fixtures keep their original lack of a deadline. All temporary
 source and executable owners are private and retired after success or failure;
 init's explicitly requested fresh work directory remains available for review.
-`V` and `VINIX_V_COMPILER` retain the repository compiler selection policy.
+`V` and `TULPAR_V_COMPILER` retain the repository compiler selection policy.
 
 The CPU declaration and assertion templates are the unchanged V literals from
 the retired controller. They exercise the actual three production arithmetic
@@ -51,7 +51,7 @@ The qualification compiler is an isolated V 0.5.2 `c6bb06f` build, with a privat
 stdlib declaration-header correction for its truncated RAND_MAX preprocessor
 block. The shared compiler and checkout remain untouched. Qualification logs,
 original Git controls, generated artifacts and receipts are under
-`/tmp/vinix-native-policy-qualification-arm`,
-`/tmp/vinix-native-policy-qualification-x86-complete` and
-`/tmp/vinix-native-policy-qualification-san-complete`. Local receipts support
+`/tmp/tulpar-native-policy-qualification-arm`,
+`/tmp/tulpar-native-policy-qualification-x86-complete` and
+`/tmp/tulpar-native-policy-qualification-san-complete`. Local receipts support
 the checks; the maintained commands do not depend on those directories.

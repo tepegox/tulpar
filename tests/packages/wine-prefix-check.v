@@ -62,7 +62,7 @@ fn check() ! {
 	}
 	prefix := os.read_file(root + '/tools/packages/wineadapter/prefix.c.v')!
 	test := os.read_file(root + '/tools/packages/wineadapter/prefix_test.v')!
-	if !test.contains('for _ in 0 .. 1000 {') || !test.contains('assert C.vinix_heap_end() == 0') {
+	if !test.contains('for _ in 0 .. 1000 {') || !test.contains('assert C.tulpar_heap_end() == 0') {
 		return error('prefix test must measure 1000 real cycles with a zero-byte assertion')
 	}
 	mut runs := []PrefixRun{}
@@ -76,7 +76,7 @@ fn check() ! {
 			source = source.replace('C.fstat(fd, unsafe { &info })', 'C.fstat(fd, &info)')
 			source = source.replace('C.fstat(fd, unsafe { &source })', 'C.fstat(fd, &source)')
 			variant = variant.replace('for _ in 0 .. 1000 {', 'for _ in 0 .. 64 {')
-			variant = variant.replace('assert C.vinix_heap_end() == 0', 'assert C.vinix_heap_end() == 165888')
+			variant = variant.replace('assert C.tulpar_heap_end() == 0', 'assert C.tulpar_heap_end() == 165888')
 		}
 		os.write_file(module_dir + '/prefix.c.v', source)!
 		os.write_file(module_dir + '/prefix_test.v', variant)!

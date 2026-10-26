@@ -38,8 +38,8 @@ fn check() ! {
 	// The direct mode also retains declarations in fixture executables. The
 	// compiler's pruning can otherwise omit types used by imported JSON structs.
 	helper_flags := if '--direct-tests' in os.args { ['-no-skip-unused'] } else { []string{} }
-	temporary := os.getenv_opt('VINIX_PACKAGE_TEST_WORK') or { os.temp_dir() }
-	work := temporary + '/vinix-distribution-check-' + os.getpid().str()
+	temporary := os.getenv_opt('TULPAR_PACKAGE_TEST_WORK') or { os.temp_dir() }
+	work := temporary + '/tulpar-distribution-check-' + os.getpid().str()
 	os.mkdir_all(work + '/software')!
 	defer { os.rmdir_all(work) or {} }
 	if '--https' in os.args || '--https-only' in os.args {
@@ -55,7 +55,7 @@ fn check() ! {
 	if '--software-only' !in os.args {
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-o', work + '/launch-child',
 			repository + '/tests/packages/launch-process-child.v'])!
-		os.setenv('VINIX_PACKAGE_LAUNCH_CHILD', os.real_path(work + '/launch-child'), true)
+		os.setenv('TULPAR_PACKAGE_LAUNCH_CHILD', os.real_path(work + '/launch-child'), true)
 		check_tests(v, ['-gc', 'none'], repository + '/tools/packages/signing', work)!
 		run(v, [...helper_flags, '-enable-globals', '-d', 'track_heap', '-gc', 'none', '-manualfree',
 			'-path', '@vlib|@vmodules|' + repository, '-o', work + '/signing-allocation-check',
@@ -251,45 +251,45 @@ fn check() ! {
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-d', 'track_heap', '-o', work + '/registration-memory', repository + '/tests/packages/registration-memory.v'])!
 		run(work + '/registration-memory', [])!
 		check_tests(v, ['-gc', 'none', '-manualfree'], repository + '/desktop/packagecore', work)!
-		run(v, [...helper_flags, '-gc', 'none', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts', '-o', work + '/vinix-package', repository + '/tools/packages/main.v'])!
-		run(work + '/vinix-package', ['--help'])!
+		run(v, [...helper_flags, '-gc', 'none', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts', '-o', work + '/tulpar-package', repository + '/tools/packages/main.v'])!
+		run(work + '/tulpar-package', ['--help'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-o', work + '/cli-check', repository + '/tests/packages/distribution-cli.v'])!
-		run(work + '/cli-check', [work + '/vinix-package'])!
+		run(work + '/cli-check', [work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/cleanup-check', repository + '/tests/packages/cleanup-check.v'])!
-		run(work + '/cleanup-check', [work + '/cleanup-cli', work + '/vinix-package'])!
+		run(work + '/cleanup-check', [work + '/cleanup-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/rollback-check', repository + '/tests/packages/rollback-check.v'])!
-		run(work + '/rollback-check', [work + '/rollback-cli', work + '/vinix-package'])!
+		run(work + '/rollback-check', [work + '/rollback-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/deployment-snapshot-check', repository + '/tests/packages/deployment-snapshot-check.v'])!
-		run(work + '/deployment-snapshot-check', [work + '/deployment-snapshot-cli', work + '/vinix-package'])!
+		run(work + '/deployment-snapshot-check', [work + '/deployment-snapshot-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/launcher-parent-check', repository + '/tests/packages/launcher-parent-check.v'])!
-		run(work + '/launcher-parent-check', [work + '/launcher-parent-cli', work + '/vinix-package'])!
+		run(work + '/launcher-parent-check', [work + '/launcher-parent-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/repair-check', repository + '/tests/packages/repair-check.v'])!
 		run(work + '/repair-check', [work + '/repair-service'])!
-		run(work + '/repair-check', [work + '/repair-cli', work + '/vinix-package'])!
+		run(work + '/repair-check', [work + '/repair-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/installation-health-check', repository + '/tests/packages/installation-health-check.v'])!
 		run(work + '/installation-health-check', [work + '/installation-health-service'])!
-		run(work + '/installation-health-check', [work + '/installation-health-cli', work + '/vinix-package'])!
+		run(work + '/installation-health-check', [work + '/installation-health-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/verify-progress-check', repository + '/tests/packages/verify-progress-check.v'])!
 		run(work + '/verify-progress-check', [work + '/verify-progress-service'])!
-		run(work + '/verify-progress-check', [work + '/verify-progress-cli', work + '/vinix-package'])!
+		run(work + '/verify-progress-check', [work + '/verify-progress-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/state-preflight-check', repository + '/tests/packages/state-preflight-check.v'])!
 		run(work + '/state-preflight-check', [work + '/state-preflight-service'])!
-		run(work + '/state-preflight-check', [work + '/state-preflight-cli', work + '/vinix-package'])!
+		run(work + '/state-preflight-check', [work + '/state-preflight-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/cache-preflight-check', repository + '/tests/packages/cache-preflight-check.v'])!
 		run(work + '/cache-preflight-check', [work + '/cache-preflight-service'])!
-		run(work + '/cache-preflight-check', [work + '/cache-preflight-cli', work + '/vinix-package'])!
+		run(work + '/cache-preflight-check', [work + '/cache-preflight-cli', work + '/tulpar-package'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository,
 			'-o', work + '/elf-profile-check', repository + '/tests/packages/elf-profile-check.v'])!
-		run(work + '/elf-profile-check', [work + '/vinix-package', work + '/elf-profiles'])!
+		run(work + '/elf-profile-check', [work + '/tulpar-package', work + '/elf-profiles'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/metadata-race-check', repository + '/tests/packages/metadata-race-check.v'])!
 		run(work + '/metadata-race-check', [work + '/metadata-races'])!
@@ -310,7 +310,7 @@ fn check() ! {
 		run(work + '/pack-source-check', [work + '/pack-source'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/publisher-workspace-check', repository + '/tests/packages/publisher-workspace-check.v'])!
-		run(work + '/publisher-workspace-check', [work + '/vinix-package', work + '/publisher-workspace'])!
+		run(work + '/publisher-workspace-check', [work + '/tulpar-package', work + '/publisher-workspace'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/signing-repeat-check', repository + '/tests/packages/signing-repeat-check.v'])!
 		run(work + '/signing-repeat-check', [work + '/signing-repeat'])!
@@ -327,7 +327,7 @@ fn check() ! {
 			'-o', work + '/atomic-write-check', repository + '/tests/packages/atomic-write-check.v'])!
 		run(work + '/atomic-write-check', [work + '/atomic-writes'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-o', work + '/signing-seed-check', repository + '/tests/packages/signing-seed-check.v'])!
-		run(work + '/signing-seed-check', [work + '/vinix-package', work + '/signing-seeds'])!
+		run(work + '/signing-seed-check', [work + '/tulpar-package', work + '/signing-seeds'])!
 		run(v, [...helper_flags, '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 			'-o', work + '/durability-check', repository + '/tests/packages/durability-check.v'])!
 		run(work + '/durability-check', [work + '/durability'])!
@@ -406,9 +406,9 @@ fn check() ! {
 	os.cp(repository + '/tests/packages/software_data_fixture.v', work + '/software/data_fixture.v')!
 	os.cp(repository + '/tests/packages/software_terminal_fixture.v', work + '/software/terminal_fixture.v')!
 	os.cp(repository + '/tests/packages/software_fixture.v', work + '/software/main.v')!
-	modules := os.getenv_opt('VINIX_PACKAGE_TEST_UI2') or { repository + '/build/vmodules' }
+	modules := os.getenv_opt('TULPAR_PACKAGE_TEST_UI2') or { repository + '/build/vmodules' }
 	if !os.is_file(modules + '/ui2/v.mod') {
-		return error('Software UI checks need a staged headless ui2 module; set VINIX_PACKAGE_TEST_UI2 to its parent directory')
+		return error('Software UI checks need a staged headless ui2 module; set TULPAR_PACKAGE_TEST_UI2 to its parent directory')
 	}
 	// The UI overlay supplies ui2 only. Resolve repository modules before it
 	// so older helper copies cannot hide current desktop/package interfaces.
@@ -462,9 +462,9 @@ fn check() ! {
 			staging := work + '/' + architecture
 			os.mkdir_all(staging)!
 			run(work + '/package-stage', ['--arch', architecture, '--staging', staging])!
-			assert os.read_file(staging + '/usr/share/licenses/vinix-packages/ed25519-MIT.txt')!
+			assert os.read_file(staging + '/usr/share/licenses/tulpar-packages/ed25519-MIT.txt')!
 				== os.read_file(repository + '/tools/packages/signing/LICENSE')!
-			assert os.read_file(staging + '/usr/share/licenses/vinix-packages/application-sdk-MIT.txt')!
+			assert os.read_file(staging + '/usr/share/licenses/tulpar-packages/application-sdk-MIT.txt')!
 				== os.read_file(repository + '/tools/packages/appsdk/LICENSE')!
 			println('Package signing license staged (${architecture})')
 		}
@@ -472,7 +472,7 @@ fn check() ! {
 	if '--desktop' in os.args {
 		// Reuse generated VML/example assets while reading every current desktop
 		// implementation file directly. This never runs the Python staging shim.
-		assets := os.getenv_opt('VINIX_PACKAGE_TEST_DESKTOP') or { repository + '/build/app-src' }
+		assets := os.getenv_opt('TULPAR_PACKAGE_TEST_DESKTOP') or { repository + '/build/app-src' }
 		overlay := work + '/desktop'
 		os.mkdir_all(overlay)!
 		for name in os.ls(assets)! {

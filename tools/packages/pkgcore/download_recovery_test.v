@@ -21,15 +21,15 @@ struct DownloadRecoveryFixture {
 
 fn download_recovery_record(event pkgprotocol.Progress) {
 	event.validate() or { panic(err) }
-	mut file := os.open_file(os.getenv('VINIX_DOWNLOAD_RECOVERY_EVENTS'), 'a', 0o600) or { panic(err) }
+	mut file := os.open_file(os.getenv('TULPAR_DOWNLOAD_RECOVERY_EVENTS'), 'a', 0o600) or { panic(err) }
 	file.writeln(json2.encode(event)) or { panic(err) }
 	file.close()
 }
 
 fn download_recovery_fixture(label string) !DownloadRecoveryFixture {
-	work := os.temp_dir() + '/vinix-download-recovery-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-download-recovery-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	root := work + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	os.mkdir_all(work + '/source/bin')!
 	text := 'authenticated application payload\n'.repeat(4096)
 	os.write_file(work + '/source/bin/app', text)!
@@ -37,7 +37,7 @@ fn download_recovery_fixture(label string) !DownloadRecoveryFixture {
 	key := keygen(work + '/seed')!
 	config := Config{ architecture: 'aarch64', repositories: [Repository{ id: 'trusted',
 		url: 'file://' + work + '/repository', public_key: key }], policy: Policy{ offline: true, reserve_bytes: 0 } }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	os.write_file(work + '/manifest.json', json2.encode(Package{ id: 'app', name: 'Application', version: '1.0.0',
 		architecture: 'aarch64', kind: 'native', license: 'MIT', entrypoint: 'bin/app' }))!
 	p := pack(work + '/manifest.json', work + '/source', work + '/repository')!
@@ -50,13 +50,13 @@ fn download_recovery_fixture(label string) !DownloadRecoveryFixture {
 	object := directory + '/objects/' + p.files[0].sha256
 	os.rm(object)!
 	os.write_file(work + '/events', '')!
-	os.setenv('VINIX_DOWNLOAD_RECOVERY_EVENTS', work + '/events', true)
+	os.setenv('TULPAR_DOWNLOAD_RECOVERY_EVENTS', work + '/events', true)
 	return DownloadRecoveryFixture{ work: work, root: root, directory: directory, object: object,
 		part: object + '.part', source: work + '/repository/objects/' + p.files[0].sha256, text: text, payload: p.files[0] }
 }
 
 fn (fixture DownloadRecoveryFixture) close() {
-	os.unsetenv('VINIX_DOWNLOAD_RECOVERY_EVENTS')
+	os.unsetenv('TULPAR_DOWNLOAD_RECOVERY_EVENTS')
 	os.rmdir_all(fixture.work) or { panic(err) }
 }
 

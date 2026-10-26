@@ -12,7 +12,7 @@ fn C.setrlimit(int, voidptr) int
 struct ImportCaptureLimit { current u64 maximum u64 }
 
 fn import_capture_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-import-capture-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-import-capture-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/root/tree')!
 	os.mkdir(work + '/root/other')!
 	os.write_file(work + '/root/tree/data', 'original')!
@@ -32,23 +32,23 @@ fn import_capture_recipe(work string, source string) !string {
 }
 
 fn import_capture_change(phase string, relative string) ! {
-	if phase != os.getenv('VINIX_IMPORT_CAPTURE_PHASE') || relative != os.getenv('VINIX_IMPORT_CAPTURE_ENTRY') { return }
+	if phase != os.getenv('TULPAR_IMPORT_CAPTURE_PHASE') || relative != os.getenv('TULPAR_IMPORT_CAPTURE_ENTRY') { return }
 	// One mutation per attempt, including multi-block hash/copy loops.
-	os.unsetenv('VINIX_IMPORT_CAPTURE_PHASE')
-	path := os.getenv('VINIX_IMPORT_CAPTURE_PATH')
-	match os.getenv('VINIX_IMPORT_CAPTURE_CHANGE') {
+	os.unsetenv('TULPAR_IMPORT_CAPTURE_PHASE')
+	path := os.getenv('TULPAR_IMPORT_CAPTURE_PATH')
+	match os.getenv('TULPAR_IMPORT_CAPTURE_CHANGE') {
 		'error' { return error('injected prepared import failure') }
 		'grow' { mut file := os.open_append(path)!; file.write_string('extra')!; file.close() }
 		'shrink' { os.truncate(path, 0)! }
 		'exec' { os.chmod(path, 0o755)! }
-		'content' { os.write_file(path, os.getenv('VINIX_IMPORT_CAPTURE_CONTENT'))! }
+		'content' { os.write_file(path, os.getenv('TULPAR_IMPORT_CAPTURE_CONTENT'))! }
 		'add' { os.write_file(path + '/added', 'extra entry')! }
 		'remove' { os.rm(path + '/data')! }
 		'rename' { os.rename(path + '/data', path + '/renamed')! }
 		else {
 			os.rename(path, path + '.saved')!
-			match os.getenv('VINIX_IMPORT_CAPTURE_CHANGE') {
-				'alias' { os.symlink(os.getenv('VINIX_IMPORT_CAPTURE_TARGET'), path)! }
+			match os.getenv('TULPAR_IMPORT_CAPTURE_CHANGE') {
+				'alias' { os.symlink(os.getenv('TULPAR_IMPORT_CAPTURE_TARGET'), path)! }
 				'fifo' { assert C.mkfifo(path.str, 0o600) == 0 }
 				'ordinary' { os.write_file(path, 'external')! }
 				'directory' { os.mkdir(path)!; os.write_file(path + '/data', 'external')! }
@@ -61,7 +61,7 @@ fn import_capture_change(phase string, relative string) ! {
 
 fn import_capture_hook(phase string, entry string, path string, target string, change string) PackSourceOptions {
 	for key, value in { 'PHASE': phase, 'ENTRY': entry, 'PATH': path, 'TARGET': target, 'CHANGE': change } {
-		os.setenv('VINIX_IMPORT_CAPTURE_' + key, value, true)
+		os.setenv('TULPAR_IMPORT_CAPTURE_' + key, value, true)
 	}
 	return PackSourceOptions{ checkpoint: import_capture_change }
 }
@@ -73,7 +73,7 @@ fn import_capture_descriptors() int {
 }
 
 fn import_capture_scratch() ![]string {
-	prefix := 'vinix-pack-root-' + os.getpid().str() + '-'
+	prefix := 'tulpar-pack-root-' + os.getpid().str() + '-'
 	return os.ls(os.temp_dir())!.filter(it.starts_with(prefix))
 }
 
@@ -141,7 +141,7 @@ fn test_prepared_import_rejects_same_size_rewrites_between_hash_and_copy() {
 		defer { os.rmdir_all(work) or {} }
 		text := 'o'.repeat(131073)
 		os.write_file(work + '/root/tree/data', text)!
-		os.setenv('VINIX_IMPORT_CAPTURE_CONTENT', 'x'.repeat(text.len), true)
+		os.setenv('TULPAR_IMPORT_CAPTURE_CONTENT', 'x'.repeat(text.len), true)
 		options := import_capture_hook(phase, 'tree/data', work + '/root/tree/data', '', 'content')
 		recipe := import_capture_recipe(work, 'tree/data')!
 		mut diagnostic := ''
@@ -206,7 +206,7 @@ fn test_prepared_import_pinned_inventory_and_empty_payloads_keep_canonical_bytes
 	defer { close_decoded_package(pinned) }
 	assert p == pinned && p.files.len == 2 && p.files[0].executable && p.files[1].bytes == 0
 	options := import_capture_hook('hashed', 'tree/data', work + '/root/tree/data', '', 'content')
-	os.setenv('VINIX_IMPORT_CAPTURE_CONTENT', 'external', true)
+	os.setenv('TULPAR_IMPORT_CAPTURE_CONTENT', 'external', true)
 	mut refused := false
 	pack_root_descriptor_with(recipe, root, work + '/denied', true, options) or { refused = err.msg().contains('inventory differs') }
 	assert refused && !os.exists(work + '/denied') && import_capture_scratch()!.len == 0

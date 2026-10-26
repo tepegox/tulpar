@@ -12,9 +12,9 @@ struct ReleaseOwnerLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 #include "@VMODROOT/../../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 }
 
 fn release_owner_close(mut info ReleaseInfo) {
@@ -24,7 +24,7 @@ fn release_owner_close(mut info ReleaseInfo) {
 // Structural payloads are signed and copied, never executed. The seed, expiry
 // and declarations are fixed so independent builds have identical signed bytes.
 fn release_owner_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-release-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-release-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/repository', mode: 0o700)!; os.mkdir_all(work + '/source')!; os.mkdir(work + '/output')!
 	os.write_file(work + '/seed', '00'.repeat(32) + '\n')!; os.chmod(work + '/seed', 0o600)!
 	for architecture in ['aarch64', 'x86_64']! {
@@ -60,8 +60,8 @@ fn release_owner_write(path string, text string) ! {
 }
 
 fn release_owner_checkpoint(phase string, input string) ! {
-	mode := os.getenv('VINIX_RELEASE_OWNER_MODE'); defer { unsafe { mode.free() } }
-	if phase == 'created' { assert C.setenv(c'VINIX_RELEASE_OWNER_STAGE', input.str, 1) == 0 }
+	mode := os.getenv('TULPAR_RELEASE_OWNER_MODE'); defer { unsafe { mode.free() } }
+	if phase == 'created' { assert C.setenv(c'TULPAR_RELEASE_OWNER_STAGE', input.str, 1) == 0 }
 	if mode == phase { return error('injected release checkpoint refusal') }
 	if phase == 'seed' && mode == 'captured-seed' {
 		saved := input + '.saved'; defer { unsafe { saved.free() } }
@@ -69,14 +69,14 @@ fn release_owner_checkpoint(phase string, input string) ! {
 		release_owner_write(input, '1111111111111111111111111111111111111111111111111111111111111111\n')!
 	}
 	if phase == 'created' && mode.starts_with('root-replaced') {
-		work := os.getenv('VINIX_RELEASE_OWNER_WORK'); saved := work + '/saved-stage'; keep := input + '/keep'
+		work := os.getenv('TULPAR_RELEASE_OWNER_WORK'); saved := work + '/saved-stage'; keep := input + '/keep'
 		defer { unsafe { work.free(); saved.free(); keep.free() } }
 		assert C.rename(input.str, saved.str) == 0; assert C.mkdir(input.str, 0o700) == 0
 		release_owner_write(keep, 'preserved replacement')!
 		if mode == 'root-replaced-refused' { return error('injected release checkpoint refusal') }
 	}
 	if phase == 'staged' && mode == 'history-write' {
-		work := os.getenv('VINIX_RELEASE_OWNER_WORK'); path := work + '/repository/.publisher/history.json'; keep := path + '/keep'
+		work := os.getenv('TULPAR_RELEASE_OWNER_WORK'); path := work + '/repository/.publisher/history.json'; keep := path + '/keep'
 		defer { unsafe { work.free(); path.free(); keep.free() } }; assert C.mkdir(path.str, 0o700) == 0; release_owner_write(keep, 'preserved history replacement')!
 	}
 	if phase == 'staged' && mode in ['late-index', 'late-signature', 'extra-entry']! {
@@ -88,13 +88,13 @@ fn release_owner_checkpoint(phase string, input string) ! {
 		path := input + '/index.json'; defer { unsafe { path.free() } }; release_owner_write(path, '{}')!
 	}
 	if phase == 'reserved' && mode == 'raced-target' {
-		path := os.getenv('VINIX_RELEASE_OWNER_TARGET'); keep := path + '/keep'
+		path := os.getenv('TULPAR_RELEASE_OWNER_TARGET'); keep := path + '/keep'
 		defer { unsafe { path.free(); keep.free() } }; assert C.mkdir(path.str, 0o700) == 0; release_owner_write(keep, 'preserved replacement')!
 	}
 }
 
 fn release_owner_space(_ string) !u64 {
-	mode := os.getenv('VINIX_RELEASE_OWNER_MODE'); defer { unsafe { mode.free() } }
+	mode := os.getenv('TULPAR_RELEASE_OWNER_MODE'); defer { unsafe { mode.free() } }
 	if mode == 'space-error' { return error('injected release space refusal') }
 	return if mode == 'no-space' { u64(0) } else { ~u64(0) }
 }
@@ -184,7 +184,7 @@ fn release_owner_prepare(mode string, work string, target string, history string
 }
 
 fn test_complete_release_builder_retires_signed_publication_and_refusal_storage() {
-	defer { for name in ['MODE', 'WORK', 'TARGET', 'STAGE']! { os.unsetenv('VINIX_RELEASE_OWNER_' + name) } }
+	defer { for name in ['MODE', 'WORK', 'TARGET', 'STAGE']! { os.unsetenv('TULPAR_RELEASE_OWNER_' + name) } }
 	for mode in ['complete', 'nested', 'in-place', 'invalid-seed', 'unsafe-seed', 'missing-seed', 'nul-seed', 'alias-seed',
 		'invalid-id', 'zero-sequence', 'expired', 'invalid-manifest', 'duplicate-manifest', 'missing-object', 'changed-object',
 		'bad-history', 'equivocation', 'rollback', 'unresolved', 'seed-payload', 'no-space', 'space-error',
@@ -197,15 +197,15 @@ fn test_complete_release_builder_retires_signed_publication_and_refusal_storage(
 		golden := os.read_file(target + '/index.json')!; signature := os.read_file(target + '/index.sig')!; history := os.read_file(workspace + '/.publisher/history.json')!
 		assert index_digest(golden) == '1cfdd899be97f03a74ec4d2176acf68e2b4e2d8ef541a440bcc82a38272dc112'
 		release_owner_close(mut warm); println('RELEASE OWNER golden=' + index_digest(golden))
-		os.setenv('VINIX_RELEASE_OWNER_MODE', mode, true); os.setenv('VINIX_RELEASE_OWNER_WORK', work, true); os.setenv('VINIX_RELEASE_OWNER_TARGET', target, true)
+		os.setenv('TULPAR_RELEASE_OWNER_MODE', mode, true); os.setenv('TULPAR_RELEASE_OWNER_WORK', work, true); os.setenv('TULPAR_RELEASE_OWNER_TARGET', target, true)
 		mut original := ReleaseOwnerLimit{}; assert C.getrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		limited := ReleaseOwnerLimit{ current: 32, maximum: original.maximum }; assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limited }) == 0
 		before := release_owner_descriptors(); mut maximum := u64(0); mut records := u32(0)
 		for _ in 0 .. 8 {
 			release_owner_reset(work)!; release_owner_prepare(mode, work, target, history)!
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			release_owner_attempt(mode, work, target)
-			$if track_heap ? { kept := C.vinix_heap_end(); count := C.vinix_heap_count(); if kept > maximum { maximum = kept }; if count > records { records = count } }
+			$if track_heap ? { kept := C.tulpar_heap_end(); count := C.tulpar_heap_count(); if kept > maximum { maximum = kept }; if count > records { records = count } }
 			assert release_owner_descriptors() == before
 			if mode in ['complete', 'nested', 'captured-seed']! { assert os.read_file(target + '/index.json')! == golden && os.read_file(target + '/index.sig')! == signature }
 			else if mode == 'in-place' { assert !os.exists(target) && os.read_file(workspace + '/index.json')! == golden && os.read_file(workspace + '/index.sig')! == signature }
@@ -213,15 +213,15 @@ fn test_complete_release_builder_retires_signed_publication_and_refusal_storage(
 			else if mode == 'raced-target' { assert os.read_file(target + '/keep')! == 'preserved replacement' }
 			else { assert !os.exists(target) }
 			if mode.starts_with('root-replaced') {
-				stage := os.getenv('VINIX_RELEASE_OWNER_STAGE'); assert os.read_file(stage + '/keep')! == 'preserved replacement' && os.is_dir(work + '/saved-stage')
-			} else { assert os.ls(work + '/output')!.all(!it.starts_with('.vinix-release-')) }
+				stage := os.getenv('TULPAR_RELEASE_OWNER_STAGE'); assert os.read_file(stage + '/keep')! == 'preserved replacement' && os.is_dir(work + '/saved-stage')
+			} else { assert os.ls(work + '/output')!.all(!it.starts_with('.tulpar-release-')) }
 			if mode == 'history-write' { assert os.read_file(workspace + '/.publisher/history.json/keep')! == 'preserved history replacement' }
 			else if mode in ['complete', 'nested', 'captured-seed', 'reserved', 'reserved-index', 'raced-target', 'equivocation', 'rollback']! { assert os.exists(workspace + '/.publisher/history.json') }
 			else if mode != 'bad-history' { assert !os.exists(workspace + '/.publisher/history.json') }
 		}
 		assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		$if track_heap ? { println('RELEASE OWNER case=' + mode + ' retained=' + maximum.str() + ' allocations=' + records.str()); $if !release_owner_baseline ? { assert maximum == 0 && records == 0 } }
-		release_owner_reset(work)!; os.unsetenv('VINIX_RELEASE_OWNER_MODE')
+		release_owner_reset(work)!; os.unsetenv('TULPAR_RELEASE_OWNER_MODE')
 		mut retry := publish_release(workspace, 'fixture', seed, 1, 2100000000, target)!
 		assert os.read_file(target + '/index.json')! == golden && os.read_file(target + '/index.sig')! == signature; release_owner_close(mut retry)
 		assert os.read_file(seed)! == '00'.repeat(32) + '\n'

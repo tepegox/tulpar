@@ -9,8 +9,8 @@ import tools.packages.pkgprotocol
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn C.mkfifo(&char, u32) int
@@ -32,8 +32,8 @@ fn policy_lifecycle_id(i int, long bool) string {
 // Synthetic installed metadata deliberately has no usable catalog or payloads.
 // Policy administration reads provenance, never performs integrity/acquisition.
 fn policy_lifecycle_fixture(count int, architecture string, long bool) !(string, Service, string) {
-	root := os.temp_dir() + '/vinix-policy-lifecycle-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	configuration := root + '/etc/vinix-packages/config.json'
+	root := os.temp_dir() + '/tulpar-policy-lifecycle-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	configuration := root + '/etc/tulpar-packages/config.json'
 	os.mkdir_all(os.dir(configuration))!
 	mut allowed := []string{cap: count}; mut pins := []Dependency{cap: count}; mut licenses := []string{cap: count}
 	mut packages := []Installed{cap: count}; mut requested := []string{cap: 1}
@@ -92,7 +92,7 @@ fn test_policy_lifecycle_owned_reviews_and_unchanged_applies() {
 		for count in [0, 1, 64, 4096]! {
 			if !policy_lifecycle_selected('owned-' + architecture + '-' + count.str()) { continue }
 			root, service, path := policy_lifecycle_fixture(count, architecture, false)!; defer { os.rmdir_all(root) or {} }
-			directory := state_directory(root); configuration := root + '/etc/vinix-packages/config.json'
+			directory := state_directory(root); configuration := root + '/etc/tulpar-packages/config.json'
 			before := os.read_file(configuration)!; metadata := directory + '/current/state.json'
 			state_text := if count == 0 { '' } else { os.read_file(metadata)! }
 			expected := policy_lifecycle_legacy_fingerprint(root, path)!
@@ -100,7 +100,7 @@ fn test_policy_lifecycle_owned_reviews_and_unchanged_applies() {
 			// use. Warm each shape before measuring repeat-call ownership.
 			mut warm := service.review_policy(path)!; assert warm.fingerprint == expected; warm.close()
 			tracked := count != 4096; cycles := if tracked { $if track_heap ? { 1000 } $else { 64 } } else { 1 }
-			$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+			$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 			for _ in 0 .. cycles {
 				mut review := service.review_policy(path)!
 				assert review.architecture == architecture && review.rows.len == count && review.fingerprint == expected
@@ -108,15 +108,15 @@ fn test_policy_lifecycle_owned_reviews_and_unchanged_applies() {
 				if count > 0 { assert review.rows.last().name == 'Data é🚀' && review.rows.last().diagnostic_before.contains('revoked') }
 				review.close(); review.close()
 			}
-			$if track_heap ? { if tracked { kept := C.vinix_heap_end(); assert kept == 0 } }
+			$if track_heap ? { if tracked { kept := C.tulpar_heap_end(); assert kept == 0 } }
 			if count == 0 { assert !os.exists(directory) }
 			// Repeated apply measures the existing store; first creation is checked
 			// functionally, separately from the platform mkdir_all implementation.
 			guard := acquire(directory)!; guard.release()
-			$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+			$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 			for _ in 0 .. cycles { mut result := service.apply_policy(path, expected)!; assert result.policy.reserve_bytes == 17; result.close(); result.close() }
 			$if track_heap ? { if tracked {
-				kept := C.vinix_heap_end(); assert kept == 0
+				kept := C.tulpar_heap_end(); assert kept == 0
 				println('POLICY LIFECYCLE ' + architecture + ' ' + count.str() + ' entries: 1000 review and no-op apply cycles retained 0 bytes')
 			} }
 			assert os.read_file(configuration)! == before
@@ -144,7 +144,7 @@ fn test_policy_lifecycle_changed_applies_and_dependency_disclosure() {
 	if !policy_lifecycle_selected('apply') { return }
 	for architecture in ['aarch64', 'x86_64']! {
 		root, service, path := policy_lifecycle_fixture(2, architecture, false)!; defer { os.rmdir_all(root) or {} }
-		configuration := root + '/etc/vinix-packages/config.json'
+		configuration := root + '/etc/tulpar-packages/config.json'
 		original := os.read_file(configuration)!.replace('"id":"other"', '"id":"fixture"').replace(policy_lifecycle_stale, policy_lifecycle_key)
 		os.write_file(configuration, original)!
 		directory := state_directory(root); state_text := os.read_file(directory + '/current/state.json')!
@@ -159,19 +159,19 @@ fn test_policy_lifecycle_changed_applies_and_dependency_disclosure() {
 		mut ba := service.review_policy(path_a)!; fingerprint_ba := ba.fingerprint.clone(); ba.close()
 		mut restored := service.apply_policy(path_a, fingerprint_ba)!; restored.close()
 		cycles := $if track_heap ? { 1000 } $else { 64 }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles {
 			mut blocked := service.apply_policy(path, fingerprint_ab)!; assert blocked.policy.permissions.len == 1
 			mut allowed := service.apply_policy(path_a, fingerprint_ba)!; assert allowed.policy.permissions.len == 2
 			assert blocked.policy.permissions.len == 1; blocked.close(); allowed.close()
 		}
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0
+			kept := C.tulpar_heap_end(); assert kept == 0
 			println('POLICY LIFECYCLE ' + architecture + ' 1000 changed apply pairs retained 0 bytes')
 		}
 		assert os.read_file(configuration)! == original && os.read_file(directory + '/current/state.json')! == state_text
 		assert os.readlink(directory + '/current')! == 'generations/7' && os.ls(directory + '/generations')! == ['7']
-		assert os.ls(directory + '/objects')!.len == 0 && os.ls(root + '/etc/vinix-packages')! == ['config.json']
+		assert os.ls(directory + '/objects')!.len == 0 && os.ls(root + '/etc/tulpar-packages')! == ['config.json']
 	}
 	println('POLICY LIFECYCLE alternating changed apply pairs retire scratch; permission denial crosses dependency cycles, explicit firmware/licenses persist, only configuration changes PASS')
 }
@@ -188,7 +188,7 @@ fn policy_lifecycle_refusal(service Service, path string, fingerprint string, re
 fn test_policy_lifecycle_refusals_retire_storage_and_allow_restored_retry() {
 	if !policy_lifecycle_selected('refusals') { return }
 	root, service, path := policy_lifecycle_fixture(2, 'aarch64', false)!; defer { os.rmdir_all(root) or {} }
-	configuration := root + '/etc/vinix-packages/config.json'; config_text := os.read_file(configuration)!
+	configuration := root + '/etc/tulpar-packages/config.json'; config_text := os.read_file(configuration)!
 	directory := state_directory(root); metadata := directory + '/current/state.json'; state_text := os.read_file(metadata)!
 	proposal := os.read_file(path)!
 	mut initial := service.review_policy(path)!; fingerprint := initial.fingerprint.clone(); initial.close()
@@ -202,8 +202,8 @@ fn test_policy_lifecycle_refusals_retire_storage_and_allow_restored_retry() {
 			'proposal-fifo' { os.rm(path)!; assert C.mkfifo(path.str, 0o600) == 0 }
 			'proposal-size' { os.write_file(path, ' '.repeat(max_metadata + 1))! }
 			'unsafe-file' { os.chmod(configuration, 0o666)! }
-			'unsafe-parent' { os.chmod(root + '/etc/vinix-packages', 0o777)! }
-			'missing-parent' { os.rename(root + '/etc/vinix-packages', root + '/etc/saved')! }
+			'unsafe-parent' { os.chmod(root + '/etc/tulpar-packages', 0o777)! }
+			'missing-parent' { os.rename(root + '/etc/tulpar-packages', root + '/etc/saved')! }
 			'objects' { os.rmdir(directory + '/objects')!; os.symlink(root + '/etc', directory + '/objects')! }
 			'generations' { os.chmod(directory + '/generations', 0o777)! }
 			'lock' { os.rm(directory + '/lock')!; os.symlink(configuration, directory + '/lock')! }
@@ -214,17 +214,17 @@ fn test_policy_lifecycle_refusals_retire_storage_and_allow_restored_retry() {
 		expected := if failure == 'busy' { 'another package transaction' } else if failure == 'stale' { 'stale' } else { '' }
 		confirmation := if failure == 'digest' { 'invalid' } else if failure == 'stale' { policy_lifecycle_stale } else { fingerprint }
 		cycles := $if track_heap ? { 1000 } $else { 64 }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { policy_lifecycle_refusal(service, path, confirmation, review_also, expected) }
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0, failure + ' retained ' + kept.str()
+			kept := C.tulpar_heap_end(); assert kept == 0, failure + ' retained ' + kept.str()
 			println('POLICY LIFECYCLE ' + failure + ': 1000 refusals retained 0 bytes')
 		}
 		match failure {
 			'proposal-alias', 'proposal-fifo' { os.rm(path)! }
 			'unsafe-file' { os.chmod(configuration, 0o644)! }
-			'unsafe-parent' { os.chmod(root + '/etc/vinix-packages', 0o755)! }
-			'missing-parent' { os.rename(root + '/etc/saved', root + '/etc/vinix-packages')! }
+			'unsafe-parent' { os.chmod(root + '/etc/tulpar-packages', 0o755)! }
+			'missing-parent' { os.rename(root + '/etc/saved', root + '/etc/tulpar-packages')! }
 			'objects' { os.rm(directory + '/objects')!; os.mkdir(directory + '/objects')! }
 			'generations' { os.chmod(directory + '/generations', 0o755)! }
 			'lock' { os.rm(directory + '/lock')!; os.write_file(directory + '/lock', '')!; os.chmod(directory + '/lock', 0o644)! }
@@ -236,7 +236,7 @@ fn test_policy_lifecycle_refusals_retire_storage_and_allow_restored_retry() {
 		mut saved := service.apply_policy(path, retry.fingerprint)!; saved.close(); retry.close()
 		assert os.read_file(configuration)! == config_text && os.read_file(metadata)! == state_text
 		assert os.readlink(directory + '/current')! == 'generations/7'
-		assert os.ls(directory + '/objects')!.len == 0 && os.ls(root + '/etc/vinix-packages')! == ['config.json']
+		assert os.ls(directory + '/objects')!.len == 0 && os.ls(root + '/etc/tulpar-packages')! == ['config.json']
 	}
 	println('POLICY LIFECYCLE configuration/state/proposal/stale/ownership/directory/lock/busy refusals retire scratch, preserve activation and permit restored retry PASS')
 }
@@ -246,7 +246,7 @@ fn test_policy_lifecycle_review_size_refusal_preserves_sources() {
 	// All individual documents fit 8 MiB. Their complete impact disclosure does
 	// not. The maximum legitimate live owner set exceeds the tracker's table.
 	root, service, path := policy_lifecycle_fixture(4096, 'x86_64', true)!; defer { os.rmdir_all(root) or {} }
-	configuration := root + '/etc/vinix-packages/config.json'; before := os.read_file(configuration)!
+	configuration := root + '/etc/tulpar-packages/config.json'; before := os.read_file(configuration)!
 	directory := state_directory(root); state_text := os.read_file(directory + '/current/state.json')!
 	proposal := os.read_file(path)!
 	assert before.len < max_metadata && state_text.len < max_metadata && proposal.len < max_metadata

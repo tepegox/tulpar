@@ -9,17 +9,17 @@ checkpoint callback. Production CLI commands expose no checkpoint switch.
 
 ```sh
 v -path '@vlib|@vmodules|tests/hardware-platform' run tests/packages/persistence-check.v \
-  --arch aarch64 --kernel /build/arm/kernel/bin/vinix \
+  --arch aarch64 --kernel /build/arm/kernel/bin/tulpar \
   --state-dir /tmp/packages-persist-arm --failures-only
 v -path '@vlib|@vmodules|tests/hardware-platform' run tests/packages/persistence-check.v \
-  --arch x86_64 --kernel /build/x86/kernel/bin/vinix \
+  --arch x86_64 --kernel /build/x86/kernel/bin/tulpar \
   --state-dir /tmp/packages-persist-x86 --failures-only
 ```
 
 The [hardware controller requirements](../hardware-platform/README.md) apply.
-Install `mke2fs` or set `VINIX_MKE2FS` to its executable. The disk uses 4 KiB
+Install `mke2fs` or set `TULPAR_MKE2FS` to its executable. The disk uses 4 KiB
 blocks, 128-byte inodes and the supported ext2 filetype/sparse-super/large-file
-features. AArch64 uses the kernel's `vinix.qemu_persist=1` persistent-home boot
+features. AArch64 uses the kernel's `tulpar.qemu_persist=1` persistent-home boot
 path; x86_64 mounts the prepared disk from userspace. `--list` prints the cases;
 `--scenario NAME` selects one. State directories must be new or empty.
 

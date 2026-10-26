@@ -6,10 +6,10 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export HOME=/root
 export SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-echo "VINIX GNUMERIC PACKAGE TEST"
+echo "TULPAR GNUMERIC PACKAGE TEST"
 
 if [ ! -x /usr/bin/Xorg ]; then
-	echo "Gnumeric test needs the Vinix Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
+	echo "Gnumeric test needs the Tulpar Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
 	exit 1
 fi
 
@@ -83,7 +83,7 @@ fi
 # The shared test helper exits successfully after Gnumeric has shown its GTK
 # window and synchronised with Xorg. Any earlier loader/startup failure wins.
 if ! LD_PRELOAD=/root/libgtk-smoke-auto-close.so \
-	VINIX_GTK_SMOKE_BUILDER_BOUNDARY=0 GDK_SYNCHRONIZE=1 \
+	TULPAR_GTK_SMOKE_BUILDER_BOUNDARY=0 GDK_SYNCHRONIZE=1 \
 	DISPLAY="$display" /usr/bin/gnumeric --no-splash \
 	>/tmp/gnumeric.log 2>&1; then
 	cat /tmp/gnumeric.log >&2
@@ -92,4 +92,4 @@ if ! LD_PRELOAD=/root/libgtk-smoke-auto-close.so \
 fi
 
 echo "PASS Gnumeric opened a spreadsheet window"
-echo "VINIX GNUMERIC PACKAGE TEST: PASS"
+echo "TULPAR GNUMERIC PACKAGE TEST: PASS"

@@ -9,7 +9,7 @@ const init_layout = '\n_Static_assert(sizeof(initcore__SignalAction) == 32 && of
 
 pub fn generate_init(tool string, destination string, host bool, echo bool, wifi bool) ! {
 	if tool !in ['shell', 'full', 'desktop'] { return error('Unknown init policy') }
-	work := private_work('vinix-init-v-')!
+	work := private_work('tulpar-init-v-')!
 	defer { retire(work) }
 	hosttest.module_copy_tree(root() + '/build-support/init-aarch64/initcore', work + '/initcore')!
 	if host {
@@ -18,7 +18,7 @@ pub fn generate_init(tool string, destination string, host bool, echo bool, wifi
 			path := work + '/initcore/' + name
 			mut text := read(path)!
 			for symbol in ['memcpy', 'memset', 'memmove', '_start'] {
-				text = text.replace("@[export: '" + symbol + "']", "@[export: 'vinix_init_host_" + symbol + "']")
+				text = text.replace("@[export: '" + symbol + "']", "@[export: 'tulpar_init_host_" + symbol + "']")
 			}
 			write(path, text)!
 		}
@@ -100,7 +100,7 @@ fn validate_init(work string, arguments hosttest.Arguments) ! {
 	for echo in [false, true] {
 		generated := work + '/init.c'
 		generate_init('desktop', generated, true, echo, false)!
-		defines := concat(['-DVINIX_INIT_HOST_TEST'], if echo { ['-DVINIX_BUSYBOX_ECHO_TEST'] } else { []string{} })
+		defines := concat(['-DTULPAR_INIT_HOST_TEST'], if echo { ['-DTULPAR_BUSYBOX_ECHO_TEST'] } else { []string{} })
 		executable := work + if echo { '/echo-test' } else { '/test' }
 		run(concat(common, defines, ['-I' + init, generated, fixture, '-o', executable]))!
 		run(concat([executable], if echo { ['echo'] } else { []string{} }))!
@@ -153,7 +153,7 @@ fn init_command(arguments []string) int {
 	}
 	keep := parsed.options['--work-dir'] or { '' }
 	work := hosttest.work_dir(if '--work-dir' in parsed.options && keep == '' { '.' } else { keep },
-		'vinix-init-fixture-') or { eprintln(err.msg()); return 1 }
+		'tulpar-init-fixture-') or { eprintln(err.msg()); return 1 }
 	defer { if '--work-dir' !in parsed.options { retire(work) } }
 	validate_init(work, parsed) or { eprintln(err.msg()); return 1 }
 	println('INIT POLICY HOST/ARM LINK TEST: PASS')

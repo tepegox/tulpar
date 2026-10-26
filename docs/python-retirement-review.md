@@ -44,7 +44,7 @@ ext2 C/prebuilt/ACL/error/signal workflows, guest verdict/QMP/UTF-8/signal check
 300 failed archive constructors and the Android closure pass with the adapters
 absent. The ext2 V fixture retains its documented `memdup` build failure;
 its C/prebuilt workflows pass. No Python, SDK interpreter initialization,
-graphics application or Vinix guest executed in that qualification.
+graphics application or Tulpar guest executed in that qualification.
 
 Apply only the retirement paths and related documentation to the current main
 tree, preserving subsequent V ports and unrelated staged files. Regenerate the

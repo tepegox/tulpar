@@ -17,7 +17,7 @@ fn reboot(args []string) !int {
 		hosttest.Option{ name: '--build-only' },
 	],
 		'Usage: run_vm --init ELF --initramfs TAR --state-dir DIR [--arch aarch64|x86_64] [--timeout 240] [--kernel-dir DIR]\n       run.sh [--arch aarch64|x86_64] [--state-dir DIR] [--build-only]')!
-	arch := options.value('--arch', os.getenv_opt('VINIX_REBOOT_PERSISTENCE_ARCH') or { 'aarch64' })
+	arch := options.value('--arch', os.getenv_opt('TULPAR_REBOOT_PERSISTENCE_ARCH') or { 'aarch64' })
 	if arch !in ['aarch64', 'x86_64'] {
 		return argument('unsupported reboot-persistence architecture: ' + arch)
 	}
@@ -30,11 +30,11 @@ fn reboot(args []string) !int {
 		return argument('missing required --init, --initramfs or --state-dir')
 	}
 	mut selected := options.values.clone()
-	if !options.has('--state-dir') && os.getenv('VINIX_REBOOT_PERSISTENCE_STATE_DIR') != '' {
-		selected['--state-dir'] = [os.getenv('VINIX_REBOOT_PERSISTENCE_STATE_DIR')]
+	if !options.has('--state-dir') && os.getenv('TULPAR_REBOOT_PERSISTENCE_STATE_DIR') != '' {
+		selected['--state-dir'] = [os.getenv('TULPAR_REBOOT_PERSISTENCE_STATE_DIR')]
 	}
 	owned := guesthost.Options{ values: selected }
-	work := work_dir(owned, 'vinix-reboot-persistence-')!
+	work := work_dir(owned, 'tulpar-reboot-persistence-')!
 	defer { remove_private(work, owned) }
 	init := if options.has('--init') {
 		resolve(options.value('--init', ''))!

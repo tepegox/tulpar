@@ -4,7 +4,7 @@ module identitycore
 import os
 
 fn test_identity_replaces_package_links_without_modifying_their_targets() {
-	work := os.join_path(os.temp_dir(), 'vinix-identity-stage-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-identity-stage-${os.getpid()}')
 	os.mkdir_all(work + '/root/bin')!
 	os.mkdir_all(work + '/root/usr/bin')!
 	os.mkdir_all(work + '/root/usr/lib')!
@@ -40,11 +40,11 @@ fn test_identity_replaces_package_links_without_modifying_their_targets() {
 
 fn test_identity_rejects_host_root_missing_roots_and_linked_directories() {
 	source := os.dir(os.dir(@FILE)) + '/uname'
-	for path in ['', '/', '/path/that/does/not/exist/vinix-identity'] {
+	for path in ['', '/', '/path/that/does/not/exist/tulpar-identity'] {
 		stage(path, source) or { continue }
 		assert false
 	}
-	work := os.join_path(os.temp_dir(), 'vinix-identity-guard-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-identity-guard-${os.getpid()}')
 	os.mkdir_all(work + '/root')!
 	os.mkdir_all(work + '/outside')!
 	defer { os.rmdir_all(work) or {} }

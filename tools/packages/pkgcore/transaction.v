@@ -6,7 +6,7 @@ import strings
 import tools.packages.pkgprotocol
 
 pub fn state_directory(root string) string {
-	return rooted_package_path(root, '/var/lib/vinix-packages')
+	return rooted_package_path(root, '/var/lib/tulpar-packages')
 }
 
 // Borrow the trimmed prefix only while constructing the independent path.
@@ -17,12 +17,12 @@ fn rooted_package_path(root string, suffix string) string {
 }
 
 pub fn load_config(root string) !Config {
-	path := rooted_package_path(root, '/etc/vinix-packages/config.json')
+	path := rooted_package_path(root, '/etc/tulpar-packages/config.json')
 	defer { unsafe { path.free() } }
 	if root == '' || root == '/' {
 		directory := state_directory(root)
 		defer { unsafe { directory.free() } }
-		for trusted in ['/etc/vinix-packages', path, directory]! {
+		for trusted in ['/etc/tulpar-packages', path, directory]! {
 			mut info := C.stat{}
 			if C.lstat(trusted.str, unsafe { &info }) != 0 {
 				if C.errno == C.ENOENT { continue }
@@ -257,11 +257,11 @@ fn desktop_entry(p Package) string {
 	defer { unsafe { text.free(); free(voidptr(text)) } }
 	text.write_string('[Desktop Entry]\nType=Application\nName='); text.write_string(p.name)
 	text.write_string('\nComment='); text.write_string(p.description)
-	text.write_string('\nExec=/usr/bin/vinix-package run '); text.write_string(p.id)
+	text.write_string('\nExec=/usr/bin/tulpar-package run '); text.write_string(p.id)
 	text.write_string(' %F\nTerminal=false\nMimeType=')
 	for i, mime in p.associations { if i > 0 { text.write_u8(`;`) }; text.write_string(mime) }
-	text.write_string(';\nX-Vinix-Package='); text.write_string(p.id)
-	text.write_string('\nX-Vinix-Runtime='); text.write_string(p.runtime); text.write_u8(`\n`)
+	text.write_string(';\nX-Tulpar-Package='); text.write_string(p.id)
+	text.write_string('\nX-Tulpar-Runtime='); text.write_string(p.runtime); text.write_u8(`\n`)
 	return text.str()
 }
 
@@ -471,7 +471,7 @@ fn activate_repair_plan_from_locked(config Config, directory string, current Sta
 			sync_file(target)!
 		}
 		if p.kind !in ['data', 'runtime'] {
-			entry := stage + '/share/applications/vinix-' + p.id + '.desktop'
+			entry := stage + '/share/applications/tulpar-' + p.id + '.desktop'
 			text := desktop_entry(p)
 			defer { unsafe { entry.free(); text.free() } }
 			os.write_file(entry, text)!

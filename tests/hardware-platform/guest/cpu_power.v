@@ -17,7 +17,7 @@
 // Speed. A virtual machine has nothing to set, and must say so: the driver is
 // `none`, the frequencies are what the processor reports, and a write that
 // cannot be honoured fails. cpu-power-simulated boots with a made-up driver
-// (vinix.cpufreq=simulate) so that the path from a governor to each CPU's own
+// (tulpar.cpufreq=simulate) so that the path from a governor to each CPU's own
 // register write runs: `performance` puts every CPU at its highest frequency,
 // `powersave` at its lowest, and a profile sets both for all of them.
 module main

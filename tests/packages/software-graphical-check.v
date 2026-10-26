@@ -213,7 +213,7 @@ fn admit_desktop(desktop string, ordinary bool) ! {
 		return
 	}
 	manifest := json2.decode[map[string]string](os.read_file(path)!)!
-	if manifest['vinix-desktop'] != sha256.sum(os.read_bytes(desktop)!).hex() {
+	if manifest['tulpar-desktop'] != sha256.sum(os.read_bytes(desktop)!).hex() {
 		return error('desktop build receipt does not match the supplied compositor')
 	}
 	for name, expected in manifest {
@@ -221,7 +221,7 @@ fn admit_desktop(desktop string, ordinary bool) ! {
 		if name.starts_with('/') || '..' in name.split('/') {
 			return error('desktop build receipt contains an invalid path')
 		}
-		input := directory + if name.starts_with('app/') || name == 'vinix-desktop' {
+		input := directory + if name.starts_with('app/') || name == 'tulpar-desktop' {
 			'/' + name
 		} else {
 			'/source/' + name
@@ -330,7 +330,7 @@ fn graphical_boot(arch string, qemu string, arguments []string, qmp string, work
 		}
 		click(mut monitor, 512, 439)!
 	}
-	wait_marker(mut child, log, deadline, 'vinix-desktop: ready')!
+	wait_marker(mut child, log, deadline, 'tulpar-desktop: ready')!
 	if ordinary { wait_marker(mut child, log, deadline, 'SOFTWARE GRAPHICAL ordinary-compositor')! }
 	time.sleep(2 * time.second)
 	if first_run && boot == 2 {
@@ -490,8 +490,8 @@ fn check() ! {
 	admit_desktop(desktop, ordinary == 'true')!
 	work := required(options, '--out')!
 	if os.exists(work) { return error('output directory must be new') }
-	config := input + '/etc/vinix-packages/config.json'
-	if !os.is_file(config) || os.exists(input + '/var/lib/vinix-packages/state.json') {
+	config := input + '/etc/tulpar-packages/config.json'
+	if !os.is_file(config) || os.exists(input + '/var/lib/tulpar-packages/state.json') {
 		return error('requires a fresh, production-staged signed native image root')
 	}
 	configuration := pkgcore.load_config(input)!
@@ -537,9 +537,9 @@ fn check() ! {
 	invoke('cp', ['-Rp', input + '/.', work + '/rootfs'])!
 	if first_run == 'true' {
 		if os.exists(work + '/rootfs/usr/bin/pkg') { return error('first-run fixture requires no legacy pkg') }
-		declaration := work + '/rootfs/usr/share/vinix-packages/applications.json'
+		declaration := work + '/rootfs/usr/share/tulpar-packages/applications.json'
 		os.write_file(declaration, json2.encode({'format': json2.Any(1),
-			'architecture': json2.Any(arch), 'packages': json2.Any([json2.Any('org.vinix.counter')])}) + '\n')!
+			'architecture': json2.Any(arch), 'packages': json2.Any([json2.Any('org.tulpar.counter')])}) + '\n')!
 		os.chmod(declaration, 0o644)!
 		os.write_file(work + '/rootfs/etc/software-graphical-first-run', '1\n')!
 		pin(mut artifacts, mut artifact_paths, 'release-declaration', declaration)!
@@ -551,7 +551,7 @@ fn check() ! {
 	})!
 	if publisher := options['--publisher'] {
 		// Refresh this private fixture's validity with its original signing key.
-		repository := work + '/rootfs/usr/share/vinix-packages/repositories/native'
+		repository := work + '/rootfs/usr/share/tulpar-packages/repositories/native'
 		os.rmdir_all(repository)!
 		// A fresh workspace avoids changing the original publisher's retained
 		// anti-rollback history or reusing a sequence for different bytes.
@@ -559,24 +559,24 @@ fn check() ! {
 			work + '/publisher-workspace'])!
 		pkgcore.publish_release(work + '/publisher-workspace', 'native', os.real_path(publisher) + '/seed', u64(time.now().unix()), time.now().unix() + 3600, repository)!
 	}
-	os.cp(desktop, work + '/rootfs/usr/bin/vinix-desktop')!
-	os.chmod(work + '/rootfs/usr/bin/vinix-desktop', 0o755)!
+	os.cp(desktop, work + '/rootfs/usr/bin/tulpar-desktop')!
+	os.chmod(work + '/rootfs/usr/bin/tulpar-desktop', 0o755)!
 	guest := hwhost.build_program(host, work + '/source/guest', work + '/guest-build', 'init', ['.'])!
 	os.mkdir_all(work + '/rootfs/sbin')!
 	os.cp(guest, work + '/rootfs/sbin/init')!
 	os.chmod(work + '/rootfs/sbin/init', 0o755)!
 	if installed == 'true' {
 		os.write_file(work + '/rootfs/etc/software-graphical-installed', '1\n')!
-		os.write_file(work + '/rootfs/.vinix-image-id', 'vinix-software-graphical-installed-1\n')!
+		os.write_file(work + '/rootfs/.tulpar-image-id', 'tulpar-software-graphical-installed-1\n')!
 		mut proof := map[string]string{}
-		for path in ['/sbin/init', '/usr/bin/vinix-desktop', '/usr/bin/vinix-package',
-			'/usr/bin/vinix-sandbox', '/usr/sbin/vinix-account', '/usr/sbin/vinix-authd',
-			'/usr/sbin/vinix-session', '/usr/share/vinix/actions/packages-change',
-			'/usr/share/vinix/actions/packages-launch', '/etc/vinix-packages/config.json'] {
+		for path in ['/sbin/init', '/usr/bin/tulpar-desktop', '/usr/bin/tulpar-package',
+			'/usr/bin/tulpar-sandbox', '/usr/sbin/tulpar-account', '/usr/sbin/tulpar-authd',
+			'/usr/sbin/tulpar-session', '/usr/share/tulpar/actions/packages-change',
+			'/usr/share/tulpar/actions/packages-launch', '/etc/tulpar-packages/config.json'] {
 			proof[path] = sha256.sum(os.read_bytes(work + '/rootfs' + path)!).hex()
 		}
 		if first_run == 'true' {
-			proof['/usr/share/vinix-packages/applications.json'] = artifacts['release-declaration']
+			proof['/usr/share/tulpar-packages/applications.json'] = artifacts['release-declaration']
 		}
 		os.write_file(work + '/rootfs/usr/share/software-graphical-installed.json', json2.encode(proof) + '\n')!
 		os.write_file(work + '/system.vjfs', '')!
@@ -588,9 +588,9 @@ fn check() ! {
 		hwhost.Host{...host, root: plainiso.prepare(root, work)!}
 	} else { host }
 	media := hwhost.boot_media(media_host, kernel, work + '/initramfs.tar', if installed == 'true' && arch == 'aarch64' {
-		'quiet vinix.disk=auto'
+		'quiet tulpar.disk=auto'
 	} else { 'quiet' }, work)!
-	qmp := '/tmp/vinix-software-graphical-' + os.getpid().str() + '.qmp'
+	qmp := '/tmp/tulpar-software-graphical-' + os.getpid().str() + '.qmp'
 	defer { os.rm(qmp) or {}; os.rm(qmp + '.power') or {} }
 	mut arguments := if arch == 'aarch64' {
 		['-machine', 'virt,gic-version=3', '-accel', 'hvf', '-cpu', 'host', '-device', 'ramfb',
@@ -630,7 +630,7 @@ fn check() ! {
 	build_receipt := os.dir(desktop) + '/desktop-build.json'
 	if os.is_file(build_receipt) {
 		manifest := json2.decode[map[string]string](os.read_file(build_receipt)!)!
-		if manifest['vinix-desktop'] != sha256.sum(os.read_bytes(desktop)!).hex() {
+		if manifest['tulpar-desktop'] != sha256.sum(os.read_bytes(desktop)!).hex() {
 			return error('desktop build receipt does not match the supplied compositor')
 		}
 		os.cp(build_receipt, work + '/desktop-build.json')!
@@ -640,7 +640,7 @@ fn check() ! {
 	for name, path in {
 		'kernel':    kernel
 		'desktop':   desktop
-		'config':    work + '/rootfs/etc/vinix-packages/config.json'
+		'config':    work + '/rootfs/etc/tulpar-packages/config.json'
 		'initramfs': work + '/initramfs.tar'
 		'serial':    work + '/serial.log'
 		'guest':     guest
@@ -649,7 +649,7 @@ fn check() ! {
 	} {
 		pin(mut artifacts, mut artifact_paths, name, path)!
 	}
-	repository := work + '/rootfs/usr/share/vinix-packages/repositories/native'
+	repository := work + '/rootfs/usr/share/tulpar-packages/repositories/native'
 	for path in os.walk_ext(repository, '') {
 		if os.is_file(path) {
 			pin(mut artifacts, mut artifact_paths, 'repository/' + path[repository.len + 1..], path)!

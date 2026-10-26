@@ -27,7 +27,7 @@ fn workspace_grace(name string) ! {
 }
 
 fn check() ! {
-	os.unsetenv('VINIX_IMPORT_LIMITS_BEFORE')
+	os.unsetenv('TULPAR_IMPORT_LIMITS_BEFORE')
 	for name in ['import-capture', 'import-limits', 'pack-source', 'native-profile']! { workspace_child(name, [])! }
 	for name in ['complete', 'pinned', 'opened', 'directory', 'copied', 'publisher-file', 'object-directory', 'manifest-directory']! {
 		workspace_grace(name)!; workspace_child('workspace', ['case', name])!

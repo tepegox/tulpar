@@ -96,7 +96,7 @@ crash recovery while deferred cleanup is pending are not qualified here.
 Direct xattr reads/changes were unsupported in these kernels. The subsequent
 [pathname xattr correction](socket-xattrs.md) qualifies live inode ACL access
 without granting socket descriptions filesystem attribute access.
-Bound transport/path metadata still share Vinix's
+Bound transport/path metadata still share Tulpar's
 resource representation; this does not qualify Linux sockfs separation. Generic
 metadata staging still has its existing concurrent mutation/rollback limitation.
 Broader capability/MAC/namespace matrices, crash consistency and full OCI or

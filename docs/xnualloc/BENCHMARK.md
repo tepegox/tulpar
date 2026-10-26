@@ -1,7 +1,7 @@
-# Vinix heap benchmark: bitmap slabs vs XNU zones
+# Tulpar heap benchmark: bitmap slabs vs XNU zones
 
 Measured 2026-09-11 with the opt-in `-d heap_benchmark` kernel workload. The
-comparison uses the merged Vinix reclaimable bitmap-slab backend (the default)
+comparison uses the merged Tulpar reclaimable bitmap-slab backend (the default)
 and the XNU-inspired zone/cache backend selected by `-d xnu_zone`.
 
 ## Method
@@ -20,7 +20,7 @@ and before scheduler startup. Each boot performs one unrecorded warm-up of both
 workloads, followed by five recorded samples. The table therefore reports the
 median of 15 samples. An allocator operation is one `malloc` or one `free`.
 
-| Workload | Operations/sample | Vinix bitmap median TSC ticks/op | XNU zone median TSC ticks/op | XNU change |
+| Workload | Operations/sample | Tulpar bitmap median TSC ticks/op | XNU zone median TSC ticks/op | XNU change |
 |---|---:|---:|---:|---:|
 | Hot 64-byte allocate/free pairs | 200,000 | 318.435 | 478.260 | 50.19% slower |
 | 256-object mixed-size batches across all 14 classes | 24,576 | 1,245.483 | 1,172.933 | 5.83% faster |
@@ -33,7 +33,7 @@ The memory record was identical across all three boots:
 
 | Backend | Permanent cache metadata | Payload retained before trim | Released by trim | Payload unreclaimed after trim |
 |---|---:|---:|---:|---:|
-| Vinix bitmap | 0 KiB | 32 KiB | 32 KiB | 0 KiB |
+| Tulpar bitmap | 0 KiB | 32 KiB | 32 KiB | 0 KiB |
 | XNU zone | 56 KiB | 176 KiB | 176 KiB | 0 KiB |
 
 ## Interpretation

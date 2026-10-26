@@ -70,7 +70,7 @@ fn work_dir(keep string) !string {
 		os.mkdir(path)!
 		return os.real_path(path)
 	}
-	mut pattern := (os.join_path(os.temp_dir(), 'vinix-pci-topology-XXXXXX') + '\x00').bytes()
+	mut pattern := (os.join_path(os.temp_dir(), 'tulpar-pci-topology-XXXXXX') + '\x00').bytes()
 	unsafe {
 		result := C.mkdtemp(&char(pattern.data))
 		if result == nil { return error('Cannot create private temporary directory') }
@@ -440,8 +440,8 @@ fn test_capabilities(bdf u32, header u8, null_read bool, result &u16) i64 {
 '
 
 const model_header = "
-#ifndef VINIX_TOPOLOGY_MODEL_H
-#define VINIX_TOPOLOGY_MODEL_H
+#ifndef TULPAR_TOPOLOGY_MODEL_H
+#define TULPAR_TOPOLOGY_MODEL_H
 #include <stdbool.h>
 #include <stdint.h>
 void *topology_model_allocate(uint64_t size);
@@ -554,20 +554,20 @@ void topology_model_prepare(uint32_t bdf, uint16_t offset, uint8_t width) {
     preparations++;
     transaction_fails = fail_read && preparations == fail_read;
 }
-void vinix_pci_config_lock(void) {
+void tulpar_pci_config_lock(void) {
     CHECK(!locked);
     saved_irq = irq_enabled; saved_pins = pins;
     irq_enabled = false; pins++;
     CHECK(pthread_mutex_lock(&transport) == 0);
     locked = true; lock_count++;
 }
-void vinix_pci_config_unlock(void) {
+void tulpar_pci_config_unlock(void) {
     CHECK(locked && !irq_enabled && pins == saved_pins + 1);
     locked = false; unlock_count++;
     CHECK(pthread_mutex_unlock(&transport) == 0);
     pins = saved_pins; irq_enabled = saved_irq;
 }
-uint32_t vinix_pci_config_limit(uint32_t bus) {
+uint32_t tulpar_pci_config_limit(uint32_t bus) {
     CHECK(locked && !irq_enabled && pins == saved_pins + 1);
     return transaction_fails || bus == unavailable_bus ? 0 : 256;
 }
@@ -575,7 +575,7 @@ static struct Image *image(uint32_t bdf) {
     for (unsigned i = 0; i < image_count; i++) if (images[i].bdf == bdf) return &images[i];
     return NULL;
 }
-uint32_t vinix_pci_config_read_raw(uint32_t bus, uint32_t slot, uint32_t function,
+uint32_t tulpar_pci_config_read_raw(uint32_t bus, uint32_t slot, uint32_t function,
         uint32_t offset, uint32_t width) {
     CHECK(locked && !irq_enabled && pins == saved_pins + 1);
     CHECK(BDF(bus,slot,function) == prepared_bdf && offset == prepared_offset && width == prepared_width);
@@ -588,7 +588,7 @@ uint32_t vinix_pci_config_read_raw(uint32_t bus, uint32_t slot, uint32_t functio
     for (uint32_t i = 0; i < width; i++) value |= (uint32_t)record->bytes[offset + i] << (8 * i);
     return value;
 }
-void vinix_pci_config_write_raw(uint32_t bus, uint32_t slot, uint32_t function,
+void tulpar_pci_config_write_raw(uint32_t bus, uint32_t slot, uint32_t function,
         uint32_t offset, uint32_t width, uint32_t value) {
     (void)bus; (void)slot; (void)function; (void)offset; (void)width; (void)value;
     writes++; CHECK(false);

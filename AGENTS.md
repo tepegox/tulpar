@@ -45,9 +45,9 @@ the machine's used memory for good. Find leaks by measuring, not by reading.
 1. Build the kernel in a git worktree (`git worktree add`, then symlink the
    untracked dependency directories under `kernel/` from this checkout), so
    other sessions' edits stay out of it. Point the harness at it with
-   `VINIX_KERNEL_DIR=<worktree>/kernel`.
+   `TULPAR_KERNEL_DIR=<worktree>/kernel`.
 2. Measure what stays allocated.
-   - `tests/desktop-perf/run new=<vinix-desktop> --scenarios=ops,churn,cache`
+   - `tests/desktop-perf/run new=<tulpar-desktop> --scenarios=ops,churn,cache`
      boots the image in QEMU with no desktop.
    - `ops` does each common kind of system call 200 times (files on tmpfs and
      ext2, renames, sockets, pipes, epoll, /proc reads, mmap, threads, fork...)
@@ -61,7 +61,7 @@ the machine's used memory for good. Find leaks by measuring, not by reading.
    slab allocation and its call chain (`kernel/c/alloc_track.c`). Reading
    `/proc/allocstart` starts over and `/proc/allocsites` lists what is still
    live. The harness prints them as `PERF-SITE` lines on such a kernel;
-   `tests/kernel-allocs/sites kernel/bin/vinix < run.log` names the
+   `tests/kernel-allocs/sites kernel/bin/tulpar < run.log` names the
    functions.
 4. Read the generated C (`kernel/obj/blob.c`) for the function at fault. V
    allocates where the source shows nothing (`memdup`,

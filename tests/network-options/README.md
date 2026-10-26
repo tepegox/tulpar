@@ -11,15 +11,15 @@ and retry, send backpressure/output failures, and abort-close callback cleanup.
 Build the kernel for the desired architecture, then run:
 
 ```sh
-VINIX_QEMU_RT_NO_BUILD=1 tests/network-options/run
+TULPAR_QEMU_RT_NO_BUILD=1 tests/network-options/run
 tests/network-options/run --arch amd64
 ```
 
 The ARM64 runner uses the native V ABI controller. Its optional
-`VINIX_VM_RUNNER_ROOT`, `VINIX_KERNEL_DIR` and `VINIX_AARCH64_SYSROOT` settings
+`TULPAR_VM_RUNNER_ROOT`, `TULPAR_KERNEL_DIR` and `TULPAR_AARCH64_SYSROOT` settings
 support isolated worktree builds. The AMD64 runner uses
 `x86_64-linux-musl-gcc`, the existing ISO builder and QEMU TCG; set
-`VINIX_AMD64_KERNEL` to select an already-built kernel. Each boot uses private
+`TULPAR_AMD64_KERNEL` to select an already-built kernel. Each boot uses private
 images and requires all four test groups and the final PASS marker.
 
 The guest checks socket option bounds/readback, rejected unsupported options,

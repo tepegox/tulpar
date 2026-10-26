@@ -7,14 +7,14 @@ fn delegate_definition(name string, body string) string {
 
 fn test_ipv6_delegate_reaches_scratch_and_preserves_all_rejections() {
 	call := 'return inet__InetSocket__recvfrom_flags(this, handle, buf, count, _addr, addrlen, 0);'
-	owner := 'vinix_stack_alloc(Endpoint);\nfor (;;) { copy(); }'
+	owner := 'tulpar_stack_alloc(Endpoint);\nfor (;;) { copy(); }'
 	fixture := delegate_definition('inet__InetSocket__recvfrom', call) +
 		delegate_definition('inet__InetSocket__recvfrom_flags', owner)
 	assert ipv6_check(parse(fixture)!, 'inet__InetSocket__recvfrom')! == 'PASS inet__InetSocket__recvfrom: endpoint/Text scratch stays on caller stack'
 	for before, after in {
 		call:                           call.replace(', 0);', ', flags);')
-		'vinix_stack_alloc(Endpoint);': 'copy();'
-		'for (;;) { copy(); }':         'for (;;) { vinix_stack_alloc(Endpoint); }'
+		'tulpar_stack_alloc(Endpoint);': 'copy();'
+		'for (;;) { copy(); }':         'for (;;) { tulpar_stack_alloc(Endpoint); }'
 	} {
 		ipv6_check(parse(fixture.replace(before, after))!, 'inet__InetSocket__recvfrom') or { continue }
 		assert false, 'accepted broken IPv6 delegate/scratch: ${before}'
@@ -31,7 +31,7 @@ fn test_ipv6_delegate_reaches_scratch_and_preserves_all_rejections() {
 	}
 	for source in [delegate_definition('inet__InetSocket__recvfrom', call),
 		fixture.replace(call, call + '\n' + call),
-		fixture.replace(call, 'vinix_stack_alloc(Endpoint);\n' + call)] {
+		fixture.replace(call, 'tulpar_stack_alloc(Endpoint);\n' + call)] {
 		ipv6_check(parse(source)!, 'inet__InetSocket__recvfrom') or { continue }
 		assert false, 'accepted missing or duplicated receive delegate'
 	}

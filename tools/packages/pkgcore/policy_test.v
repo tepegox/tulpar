@@ -7,14 +7,14 @@ import time
 import tools.packages.pkgprotocol
 
 fn policy_fixture(label string, installed bool) !(string, Service, Config) {
-	work := os.temp_dir() + '/vinix-policy-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-policy-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	root := work + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	key := keygen(work + '/seed')!
 	config := Config{ architecture: 'aarch64', launch_user: 'alex',
 		repositories: [Repository{ id: 'fixture', url: 'file://' + work + '/repository', public_key: key }]
 		policy: Policy{ licenses: ['Vendor-EULA'], allow_firmware: true, reserve_bytes: 0 } }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	service := Service{ root: root }
 	if installed {
 		os.mkdir_all(work + '/source/bin')!
@@ -46,7 +46,7 @@ fn test_policy_review_is_read_only_canonical_and_reports_dependency_effects() {
 	work, service, config := policy_fixture('impact', true)!
 	defer { os.rmdir_all(work) or {} }
 	directory := state_directory(service.root)
-	before_config := os.read_file(service.root + '/etc/vinix-packages/config.json')!
+	before_config := os.read_file(service.root + '/etc/tulpar-packages/config.json')!
 	before_state := service.state()!
 	before_history := os.read_file(directory + '/trust-history.json')!
 	path := policy_file(work, Policy{ allowed: ['runtime', 'app'], permissions: [], reserve_bytes: 0 })!
@@ -64,7 +64,7 @@ fn test_policy_review_is_read_only_canonical_and_reports_dependency_effects() {
 	mut document_client := pkgprotocol.decode_policy_document(json2.encode(service.policy()!))!
 	assert document_client.policy.allow_firmware && document_client.policy.licenses == ['Vendor-EULA']
 	document_client.close()
-	assert os.read_file(service.root + '/etc/vinix-packages/config.json')! == before_config
+	assert os.read_file(service.root + '/etc/tulpar-packages/config.json')! == before_config
 	assert service.state()! == before_state && os.read_file(directory + '/trust-history.json')! == before_history
 	os.write_file(path, json2.encode(PolicyDocument{ architecture: 'aarch64', policy: Policy{ ...review.proposed, allowed: ['app', 'runtime'] } }))!
 	mut reordered := service.review_policy(path)!
@@ -121,7 +121,7 @@ fn test_policy_apply_binds_configuration_state_and_proposed_document() {
 	stale = false
 	service.apply_policy(path, review.fingerprint) or { stale = err.msg().contains('stale') }
 	assert stale && load_config(service.root)!.repositories.len == 0
-	save_configuration(service.root + '/etc/vinix-packages/config.json', config)!
+	save_configuration(service.root + '/etc/tulpar-packages/config.json', config)!
 	service.transact('remove', ['app'], TransactionOptions{})!
 	stale = false
 	service.apply_policy(path, review.fingerprint) or { stale = err.msg().contains('stale') }
@@ -183,7 +183,7 @@ fn test_policy_reader_and_writer_locks_and_unsafe_configuration() {
 	service.apply_policy(path, review.fingerprint) or { messages << err.msg() }
 	guard.release()
 	assert messages.len == 3 && messages.all(it.contains('another package transaction'))
-	configuration := service.root + '/etc/vinix-packages/config.json'
+	configuration := service.root + '/etc/tulpar-packages/config.json'
 	os.chmod(configuration, 0o666)!
 	mut refused := false
 	service.apply_policy(path, review.fingerprint) or { refused = err.msg().contains('administrator-owned') }
@@ -207,7 +207,7 @@ fn test_policy_documents_reject_unknown_and_duplicate_keys_before_review_or_appl
 	defer { reviewed.close() }
 	state := service.state()!
 	history := os.read_file(state_directory(service.root) + '/trust-history.json')!
-	configuration := os.read_file(service.root + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(service.root + '/etc/tulpar-packages/config.json')!
 	for invalid in [
 		valid.replace('"format":1', '"format":1,"format":1'),
 		valid.replace('"format":1', '"format":1,"f\\u006frmat":1'),
@@ -228,7 +228,7 @@ fn test_policy_documents_reject_unknown_and_duplicate_keys_before_review_or_appl
 		service.review_policy(path) or { assert err.msg().contains('document field'); rejected += 1 }
 		service.apply_policy(path, reviewed.fingerprint) or { assert err.msg().contains('document field'); rejected += 1 }
 		assert rejected == 2, invalid
-		assert os.read_file(service.root + '/etc/vinix-packages/config.json')! == configuration
+		assert os.read_file(service.root + '/etc/tulpar-packages/config.json')! == configuration
 		assert service.state()! == state && os.read_file(state_directory(service.root) + '/trust-history.json')! == history
 	}
 	// Escaped key spelling is accepted when unique, and does not change identity.

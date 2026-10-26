@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "guard": "VINIX_GENERATED_SPINLOCK_ADAPTERS_H",
+  "guard": "TULPAR_GENERATED_SPINLOCK_ADAPTERS_H",
   "sources": [
     "headercore/primitive.v"
   ],
@@ -13,7 +13,7 @@
   ],
   "native_call_adapters": [
     {
-      "name": "vinix_spin_lock_irqsave_nested",
+      "name": "tulpar_spin_lock_irqsave_nested",
       "parameters": [
         "lock",
         "flags",
@@ -26,7 +26,7 @@
           "type": "unsigned_long"
         },
         {
-          "call": "vinix_spin_lock_irqsave_nested_native",
+          "call": "tulpar_spin_lock_irqsave_nested_native",
           "arguments": [
             "lock"
           ],
@@ -43,7 +43,7 @@
       "shape": "statement",
       "steps": [
         {
-          "call": "vinix_local_irq_save",
+          "call": "tulpar_local_irq_save",
           "arguments": [],
           "publish": "flags"
         },
@@ -70,7 +70,7 @@
           ]
         },
         {
-          "call": "vinix_local_irq_restore",
+          "call": "tulpar_local_irq_restore",
           "arguments": [
             "flags"
           ]
@@ -86,26 +86,26 @@
       "shape": "expression",
       "steps": [
         {
-          "call": "vinix_local_irq_save",
+          "call": "tulpar_local_irq_save",
           "arguments": [],
           "publish": "flags"
         },
         {
-          "capture": "__vinix_acquired",
+          "capture": "__tulpar_acquired",
           "call": "spin_trylock",
           "arguments": [
             "lock"
           ]
         },
         {
-          "unless": "__vinix_acquired",
-          "call": "vinix_local_irq_restore",
+          "unless": "__tulpar_acquired",
+          "call": "tulpar_local_irq_restore",
           "arguments": [
             "flags"
           ]
         },
         {
-          "result": "__vinix_acquired"
+          "result": "__tulpar_acquired"
         }
       ]
     }

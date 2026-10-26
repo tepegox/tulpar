@@ -10,7 +10,7 @@ fn refused(binary string, mode string, source []string, expected string) ! {
 	if code != 1 || !output.contains(expected) { return error(mode + ': code ' + code.str() + ': ' + output) }
 }
 fn check() ! {
-	if os.args.len != 2 { return error('usage: command-ownership-cli VINIX_PACKAGE') }
+	if os.args.len != 2 { return error('usage: command-ownership-cli TULPAR_PACKAGE') }
 	ordinary := os.geteuid() != 0
 	isolated := ordinary && pkglaunch.needs_isolation()!
 	for mode in ['run-args', 'run-terminal-args']! {

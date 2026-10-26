@@ -64,7 +64,7 @@ V=/path/to/reviewed/v /tmp/release-owner-check /build/new-release-host
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/release-owner-runtime tests/packages/release-owner-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/release-owner-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-release-arm
 ```

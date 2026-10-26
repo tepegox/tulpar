@@ -18,9 +18,9 @@ struct GenerationAdmissionLimit { current u64 maximum u64 }
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 struct GenerationFixture {
 	root string
@@ -29,7 +29,7 @@ struct GenerationFixture {
 }
 
 fn generation_fixture() !GenerationFixture {
-	root := os.temp_dir() + '/vinix-generation-admission-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	root := os.temp_dir() + '/tulpar-generation-admission-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(root)!
 	public_key, private_key := ed25519.generate_key()!
 	repository := root + '/repository'
@@ -56,14 +56,14 @@ fn generation_fixture() !GenerationFixture {
 
 fn generation_damage_state(phase string) {
 	if phase != 'staged' { return }
-	os.write_file(os.getenv('VINIX_GENERATION_FIXTURE') + '/generations/.stage-2/state.json', '{}') or { panic(err) }
+	os.write_file(os.getenv('TULPAR_GENERATION_FIXTURE') + '/generations/.stage-2/state.json', '{}') or { panic(err) }
 }
 
 fn test_generation_admission_refuses_late_state_change() {
 	f := generation_fixture()!
 	defer { os.rmdir_all(f.root) or {} }
-	os.setenv('VINIX_GENERATION_FIXTURE', f.directory, true)
-	defer { os.unsetenv('VINIX_GENERATION_FIXTURE') }
+	os.setenv('TULPAR_GENERATION_FIXTURE', f.directory, true)
+	defer { os.unsetenv('TULPAR_GENERATION_FIXTURE') }
 	mut refused := false
 	transact(f.config, f.directory, 'upgrade', [], TransactionOptions{ checkpoint: generation_damage_state }) or { refused = true }
 	changed := os.readlink(f.directory + '/current')! != 'generations/1'
@@ -73,13 +73,13 @@ fn test_generation_admission_refuses_late_state_change() {
 }
 
 fn generation_mutate(phase string) {
-	if phase != os.getenv('VINIX_GENERATION_PHASE') { return }
-	root := os.getenv('VINIX_GENERATION_ROOT')
+	if phase != os.getenv('TULPAR_GENERATION_PHASE') { return }
+	root := os.getenv('TULPAR_GENERATION_ROOT')
 	if os.exists(root + '/mutated') { return }
 	os.write_file(root + '/mutated', phase) or { panic(err) }
-	stage := os.getenv('VINIX_GENERATION_TARGET')
-	subject := os.getenv('VINIX_GENERATION_SUBJECT')
-	kind := os.getenv('VINIX_GENERATION_KIND')
+	stage := os.getenv('TULPAR_GENERATION_TARGET')
+	subject := os.getenv('TULPAR_GENERATION_SUBJECT')
+	kind := os.getenv('TULPAR_GENERATION_KIND')
 	path := if subject == '' { stage } else { stage + '/' + subject }
 	match kind {
 		'content' {
@@ -108,7 +108,7 @@ fn generation_mutate(phase string) {
 }
 
 fn generation_report(event pkgprotocol.Progress) {
-	path := os.getenv('VINIX_GENERATION_EVENTS')
+	path := os.getenv('TULPAR_GENERATION_EVENTS')
 	if path == '' { return }
 	mut file := os.open_append(path) or { panic(err) }
 	file.writeln(json2.encode(event)) or { panic(err) }
@@ -120,8 +120,8 @@ fn generation_case(f GenerationFixture, phase string, subject string, kind strin
 	generation := next_generation(f.directory)!
 	number := generation.str()
 	target := f.directory + '/generations/' + if phase in ['published', 'activate'] { number } else { '.stage-' + number }
-	for key, value in {'VINIX_GENERATION_PHASE': phase, 'VINIX_GENERATION_SUBJECT': subject,
-		'VINIX_GENERATION_KIND': kind, 'VINIX_GENERATION_TARGET': target} { os.setenv(key, value, true) }
+	for key, value in {'TULPAR_GENERATION_PHASE': phase, 'TULPAR_GENERATION_SUBJECT': subject,
+		'TULPAR_GENERATION_KIND': kind, 'TULPAR_GENERATION_TARGET': target} { os.setenv(key, value, true) }
 	os.write_file(f.root + '/events', '')!
 	mut message := ''
 	transact(f.config, f.directory, 'upgrade', [], TransactionOptions{
@@ -150,16 +150,16 @@ fn test_generation_complete_admission_preserves_activation_and_retries_offline()
 	os.write_file(f.root + '/outside', 'preserved')!; os.chmod(f.root + '/outside', 0o600)!
 	os.mkdir(f.root + '/outside-dir')!; os.chmod(f.root + '/outside-dir', 0o700)!
 	os.write_file(f.root + '/outside-dir/keep', 'preserved')!
-	os.setenv('VINIX_GENERATION_ROOT', f.root, true)
-	os.setenv('VINIX_GENERATION_EVENTS', f.root + '/events', true)
-	defer { for key in ['VINIX_GENERATION_ROOT', 'VINIX_GENERATION_EVENTS', 'VINIX_GENERATION_PHASE',
-		'VINIX_GENERATION_TARGET', 'VINIX_GENERATION_SUBJECT', 'VINIX_GENERATION_KIND'] { os.unsetenv(key) } }
+	os.setenv('TULPAR_GENERATION_ROOT', f.root, true)
+	os.setenv('TULPAR_GENERATION_EVENTS', f.root + '/events', true)
+	defer { for key in ['TULPAR_GENERATION_ROOT', 'TULPAR_GENERATION_EVENTS', 'TULPAR_GENERATION_PHASE',
+		'TULPAR_GENERATION_TARGET', 'TULPAR_GENERATION_SUBJECT', 'TULPAR_GENERATION_KIND'] { os.unsetenv(key) } }
 	old_text := os.read_file(f.directory + '/generations/1/state.json')!
 	catalog := os.read_file(f.directory + '/catalog.json')!
 	history := os.read_file(f.directory + '/trust-history.json')!
 	mut cases := 0
 	for phase in ['prepared', 'staged', 'published'] {
-		for subject in ['state.json', 'apps/app/bin/app', 'share/applications/vinix-app.desktop', 'lease'] {
+		for subject in ['state.json', 'apps/app/bin/app', 'share/applications/tulpar-app.desktop', 'lease'] {
 			for kind in ['content', 'missing', 'alias', 'fifo', 'link', 'mode'] {
 				generation_case(f, phase, subject, kind)!; cases++
 			}
@@ -177,7 +177,7 @@ fn test_generation_complete_admission_preserves_activation_and_retries_offline()
 	assert cases == 90
 	// All authenticated downloads survived refusal; no repository is needed.
 	os.rmdir_all(f.root + '/repository')!
-	os.unsetenv('VINIX_GENERATION_EVENTS')
+	os.unsetenv('TULPAR_GENERATION_EVENTS')
 	retry := transact(f.config, f.directory, 'upgrade', [], TransactionOptions{})!
 	assert retry.previous == 1 && retry.packages[0].package.version == '2.0.0'
 	restored := rollback(f.config, f.directory)!
@@ -187,13 +187,13 @@ fn test_generation_complete_admission_preserves_activation_and_retries_offline()
 }
 
 fn generation_publication_race(phase string) {
-	if phase == 'staged' { os.mkdir(os.getenv('VINIX_GENERATION_FIXTURE') + '/generations/2') or { panic(err) } }
+	if phase == 'staged' { os.mkdir(os.getenv('TULPAR_GENERATION_FIXTURE') + '/generations/2') or { panic(err) } }
 }
 
 fn test_generation_publication_preserves_a_raced_empty_destination() {
 	f := generation_fixture()!; defer { os.rmdir_all(f.root) or {} }
-	os.setenv('VINIX_GENERATION_FIXTURE', f.directory, true)
-	defer { os.unsetenv('VINIX_GENERATION_FIXTURE') }
+	os.setenv('TULPAR_GENERATION_FIXTURE', f.directory, true)
+	defer { os.unsetenv('TULPAR_GENERATION_FIXTURE') }
 	mut message := ''
 	transact(f.config, f.directory, 'upgrade', [], TransactionOptions{ checkpoint: generation_publication_race }) or { message = err.msg() }
 	assert message.contains('without replacing')
@@ -212,13 +212,13 @@ fn test_generation_rollback_admission_binds_captured_metadata_and_checks_after_p
 	path := f.directory + '/generations/1/state.json'
 	text := os.read_file(path)! + '\n '
 	os.write_file(path, text)!
-	os.setenv('VINIX_GENERATION_ROOT', f.root, true)
-	os.setenv('VINIX_GENERATION_EVENTS', f.root + '/events', true)
-	defer { for key in ['VINIX_GENERATION_ROOT', 'VINIX_GENERATION_EVENTS', 'VINIX_GENERATION_PHASE',
-		'VINIX_GENERATION_TARGET', 'VINIX_GENERATION_SUBJECT', 'VINIX_GENERATION_KIND'] { os.unsetenv(key) } }
+	os.setenv('TULPAR_GENERATION_ROOT', f.root, true)
+	os.setenv('TULPAR_GENERATION_EVENTS', f.root + '/events', true)
+	defer { for key in ['TULPAR_GENERATION_ROOT', 'TULPAR_GENERATION_EVENTS', 'TULPAR_GENERATION_PHASE',
+		'TULPAR_GENERATION_TARGET', 'TULPAR_GENERATION_SUBJECT', 'TULPAR_GENERATION_KIND'] { os.unsetenv(key) } }
 	for subject, kind in {'state.json': 'content', 'lease': 'content', 'apps/app/bin/app': 'mode', '': 'extra'} {
-		for key, value in {'VINIX_GENERATION_PHASE': 'activate', 'VINIX_GENERATION_TARGET': f.directory + '/generations/1',
-			'VINIX_GENERATION_SUBJECT': subject, 'VINIX_GENERATION_KIND': kind} { os.setenv(key, value, true) }
+		for key, value in {'TULPAR_GENERATION_PHASE': 'activate', 'TULPAR_GENERATION_TARGET': f.directory + '/generations/1',
+			'TULPAR_GENERATION_SUBJECT': subject, 'TULPAR_GENERATION_KIND': kind} { os.setenv(key, value, true) }
 		os.write_file(f.root + '/events', '')!
 		mut refused := false
 		rollback_progress(f.config, f.directory, '', generation_report) or { refused = true }
@@ -232,7 +232,7 @@ fn test_generation_rollback_admission_binds_captured_metadata_and_checks_after_p
 			else { os.rm(f.directory + '/generations/1/unrequested')! }
 		}
 	}
-	os.unsetenv('VINIX_GENERATION_EVENTS')
+	os.unsetenv('TULPAR_GENERATION_EVENTS')
 	restored := rollback(f.config, f.directory)!
 	assert restored.generation == 7 && restored.previous == 2 && restored.packages[0].package.version == '1.0.0'
 	assert os.read_file(path)! == text
@@ -284,13 +284,13 @@ fn test_generation_admission_releases_checker_scratch() {
 				'namespace' { root + '/extra' }
 				'metadata' { root + '/state.json' }
 				'payload' { root + '/apps/app/bin/app' }
-				'registration' { root + '/share/applications/vinix-app.desktop' }
+				'registration' { root + '/share/applications/tulpar-app.desktop' }
 				else { root + '/lease' }
 			}
 			saved := if kind in ['valid', 'namespace'] { '' } else { os.read_file(path)! }
 			mode := if kind == 'payload' { 0o755 } else if kind in ['lease', 'valid'] { 0o444 } else { 0o644 }
 			if kind != 'valid' { os.chmod(path, 0o600) or {}; os.write_file(path, 'changed')!; os.chmod(path, mode)! }
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 128 {
 				mut refused := false
 				verify_generation_tree(root, state, text, true) or {
@@ -299,7 +299,7 @@ fn test_generation_admission_releases_checker_scratch() {
 				}
 				assert refused == (kind != 'valid')
 			}
-			bytes := C.vinix_heap_end(); count := C.vinix_heap_count()
+			bytes := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			assert bytes == 0 && count == 0, kind + ': checker scratch retained'
 			if kind == 'namespace' { os.rm(path)! }
 			else if kind != 'valid' { os.chmod(path, 0o600)!; os.write_file(path, saved)!; os.chmod(path, mode)! }

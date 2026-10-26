@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Declaration and ABI metadata only; all executable transport/checks are V. */
-#ifndef VINIX_RWSEM_HOST_FIXTURE_H
-#define VINIX_RWSEM_HOST_FIXTURE_H
+#ifndef TULPAR_RWSEM_HOST_FIXTURE_H
+#define TULPAR_RWSEM_HOST_FIXTURE_H
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>

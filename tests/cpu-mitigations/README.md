@@ -30,9 +30,9 @@ assembly, which compiler flags alone would not rewrite.
 ```sh
 tests/cpu-mitigations/check-policy
 tests/cpu-mitigations/check-assembly
-tests/cpu-mitigations/check-linked build-amd64-kernel/bin/vinix
+tests/cpu-mitigations/check-linked build-amd64-kernel/bin/tulpar
 VINIX_VM_RUNNER_ROOT=/Users/alex/code/vinix \
-VINIX_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/vinix" \
+TULPAR_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/tulpar" \
 tests/cpu-mitigations/run --cpu max
 ```
 
@@ -74,5 +74,5 @@ Final production-source results:
 | `--cpu qemu64` guest | PASS, retained Slab 1064 to 1064 KiB |
 | `--cpu max --segments` guest | PASS, unchanged core TLS/LDT/32-bit suite |
 
-The final run logs are `/tmp/vinix-cpu-mitigations-{policy,assembly,linked}.log`
-and `/tmp/vinix-cpu-mitigations-amd64-{max,qemu64,segments}-final.log`.
+The final run logs are `/tmp/tulpar-cpu-mitigations-{policy,assembly,linked}.log`
+and `/tmp/tulpar-cpu-mitigations-amd64-{max,qemu64,segments}-final.log`.

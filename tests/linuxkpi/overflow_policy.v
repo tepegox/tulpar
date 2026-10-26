@@ -54,7 +54,7 @@ fn replace_policy_macro(text string, name string) !string {
 		stop := start + (text[start..].index('\n') or { text.len - start })
 		end := if stop < text.len { stop + 1 } else { stop }
 		if stop < text.len && text[start..stop].starts_with(needle) {
-			result += '#include <vinix/integer_policy.h>\n'; count++
+			result += '#include <tulpar/integer_policy.h>\n'; count++
 		} else { result += text[start..end] }
 		start = end
 	}
@@ -73,7 +73,7 @@ fn prepare(work string, arch string) ! {
 	os.mkdir(os.join_path(work, 'headercore'))!
 	os.cp(os.join_path(root, 'kernel/linuxkpi/headercore/policy.v'), os.join_path(work, 'headercore/policy.v'))!
 	schema_path := os.join_path(root, 'kernel/linuxkpi/abi/overflow.json')
-	hosttest.generate_abi(schema_path, work, os.join_path(work, 'V/include/vinix/integer_policy.h'))!
+	hosttest.generate_abi(schema_path, work, os.join_path(work, 'V/include/tulpar/integer_policy.h'))!
 	baseline := os.join_path(work, 'original/include')
 	for header in ['linux/overflow.h', 'linux/slab.h', 'linux/preempt.h', 'linux/irqflags.h', 'asm/processor.h'] {
 		path := os.join_path(baseline, header)
@@ -85,7 +85,7 @@ fn prepare(work string, arch string) ! {
 	for record in schema['native_intrinsic_bindings']!.as_array() { replacement = remove_macro(replacement, record.as_map()['name']!.str())! }
 	boundary := schema['boundary']!.as_map()
 	for record in boundary['native_constant_expression_macros']!.as_array() { replacement = remove_macro(replacement, record.as_map()['name']!.str())! }
-	replacement = replacement.replace_once('#include <linux/const.h>\n', '#include <linux/const.h>\n#include <vinix/integer_policy.h>\n')
+	replacement = replacement.replace_once('#include <linux/const.h>\n', '#include <linux/const.h>\n#include <tulpar/integer_policy.h>\n')
 	generated := os.join_path(work, 'V/include/linux')
 	os.mkdir_all(generated)!
 	os.write_file(os.join_path(generated, 'overflow.h'), replacement)!
@@ -94,12 +94,12 @@ fn prepare(work string, arch string) ! {
 	for header, name in {'slab.h': 'ZERO_OR_NULL_PTR', 'preempt.h': 'preemptible'} {
 		os.write_file(os.join_path(generated, header), replace_policy_macro(os.read_file(os.join_path(baseline, 'linux', header))!, name)!)!
 	}
-	os.mkdir_all(os.join_path(baseline, 'vinix'))!
-	os.write_file(os.join_path(baseline, 'vinix/integer_policy.h'), '#include <linux/overflow.h>\n#include <linux/slab.h>\n#include <linux/preempt.h>\n')!
+	os.mkdir_all(os.join_path(baseline, 'tulpar'))!
+	os.write_file(os.join_path(baseline, 'tulpar/integer_policy.h'), '#include <linux/overflow.h>\n#include <linux/slab.h>\n#include <linux/preempt.h>\n')!
 	for kind in ['original', 'V'] {
 		for schema_name, header in {'spinlock': 'spinlock_adapters', 'atomic-exchange': 'atomic_exchange'} {
 			hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema_name + '.json'), os.join_path(root, 'kernel/linuxkpi'),
-				os.join_path(work, kind, 'include/vinix', header + '.h'))!
+				os.join_path(work, kind, 'include/tulpar', header + '.h'))!
 		}
 	}
 	hosttest.generate_header_primitives(os.join_path(work, 'primitive.c'), arch, true, true)!
@@ -162,14 +162,14 @@ fn run_profile(requested_arch string) ! {
 	if machine !in ['arm64', 'aarch64', 'x86_64', 'amd64'] { return error('Unsupported native host: ' + machine) }
 	native_arch := if machine in ['arm64', 'aarch64'] { 'arm64' } else { 'amd64' }
 	arch := if requested_arch != '' { requested_arch } else { native_arch }
-	work := hosttest.work_dir('', 'vinix-overflow-policy-')!
+	work := hosttest.work_dir('', 'tulpar-overflow-policy-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	prepare(work, arch)!
 	mut flags := [hosttest.env_default('CC', 'clang'), '-std=gnu11', '-fgnu89-inline', '-O1', '-g',
 		'-ffreestanding', '-fno-builtin', '-fwrapv', '-fno-strict-aliasing', '-ffunction-sections', '-fdata-sections',
 		'-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter', '-D_FORTIFY_SOURCE=0',
-		'-D__sputc=vop_header_sputc', '-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-DVINIX_LINUXKPI',
-		'-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-Dvop_i128=__int128', '-include', os.join_path(root, 'tests/linuxkpi/host_types.h'),
+		'-D__sputc=vop_header_sputc', '-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-DTULPAR_LINUXKPI',
+		'-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-Dvop_i128=__int128', '-include', os.join_path(root, 'tests/linuxkpi/host_types.h'),
 		'-include', 'linux/kconfig.h', '-include', os.join_path(linux, 'include/linux/compiler_types.h'), '-iquote', os.join_path(root, 'kernel/c'),
 		'-I' + os.join_path(root, 'kernel/linuxkpi/include'), '-I' + os.join_path(linux, 'include'), '-I' + os.join_path(linux, 'include/uapi'),
 		'-I' + os.join_path(linux, 'arch/x86/include'), '-I' + os.join_path(linux, 'arch/x86/include/uapi')]

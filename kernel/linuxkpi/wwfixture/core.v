@@ -6,7 +6,7 @@ module wwfixture
 #include "linuxkpi_ww_fixture_v_contract.h"
 struct C.task_struct {
 	__state      u32
-	vinix_thread voidptr
+	tulpar_thread voidptr
 }
 
 struct C.list_head {}
@@ -48,17 +48,17 @@ struct C.pthread_t {}
 
 type WwWorker = fn (voidptr) voidptr
 
-fn C.vinix_linuxkpi_fixture_ww_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_ww_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, WwWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
 fn C.get_task_struct(&C.task_struct) &C.task_struct
 fn C.put_task_struct(&C.task_struct)
 fn C.task_is_running(&C.task_struct) bool
-fn C.vinix_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_may_sleep() bool
 fn C.cond_resched() i32
 fn C.msleep(u32)
-fn C.vinix_linuxkpi_task_queued(voidptr) bool
+fn C.tulpar_linuxkpi_task_queued(voidptr) bool
 fn C.time_after_eq(uint, uint) bool
 fn C.__atomic_load_n(&u32, i32) u32
 
@@ -85,7 +85,7 @@ fn C.complete_all(&C.completion)
 fn C.wait_for_completion(&C.completion)
 fn C.wait_for_completion_timeout(&C.completion, uint) uint
 fn C.completion_done(&C.completion) bool
-fn C.vinix_linuxkpi_test_task_signal(voidptr, u64)
+fn C.tulpar_linuxkpi_test_task_signal(voidptr, u64)
 fn C.raw_spin_lock_irqsave(&C.raw_spinlock_t, uint)
 fn C.raw_spin_unlock_irqrestore(&C.raw_spinlock_t, uint)
 fn C.list_empty(&C.list_head) bool
@@ -152,7 +152,7 @@ mut:
 fn parked(task &C.task_struct, state u32) i32 {
 	unsafe {
 		deadline := C.jiffies + 500
-		for C.__atomic_load_n(&task.__state, 2) != state || C.vinix_linuxkpi_task_queued(task.vinix_thread) {
+		for C.__atomic_load_n(&task.__state, 2) != state || C.tulpar_linuxkpi_task_queued(task.tulpar_thread) {
 			if C.time_after_eq(C.jiffies, deadline) { return -C.EIO }
 			C.msleep(1)
 		}
@@ -160,7 +160,7 @@ fn parked(task &C.task_struct, state u32) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_ww_worker']
+@[export: 'tulpar_linuxkpi_fixture_ww_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut ctx := C.ww_acquire_ctx{}
@@ -253,7 +253,7 @@ pub fn worker(argument voidptr) voidptr {
 			expected_context := if test.use_context { uint(&ctx) } else { uint(0) }
 			if test.lock_result == 0 { held[0] = true }
 			if test.operation == .interrupt {
-				C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, 0)
+				C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, 0)
 				if test.lock_result != -C.EINTR || (test.use_context && ctx.acquired != 0) {
 					test.result = -C.EIO
 				}
@@ -267,7 +267,7 @@ pub fn worker(argument voidptr) voidptr {
 			if ctx.acquired != 0 { test.result = -C.EIO }
 			C.ww_acquire_fini(&ctx)
 		}
-		if !C.task_is_running(C.current) || !C.vinix_linuxkpi_may_sleep() { test.result = -C.EIO }
+		if !C.task_is_running(C.current) || !C.tulpar_linuxkpi_may_sleep() { test.result = -C.EIO }
 		C.complete(&test.done)
 		C.pthread_exit(nil)
 		return nil
@@ -289,7 +289,7 @@ fn init_test(test &NativeWwTest, wait_die bool, operation Operation, use_context
 
 fn start(test &NativeWwTest) i32 {
 	unsafe {
-		if C.pthread_create(&test.worker_id, nil, C.vinix_linuxkpi_fixture_ww_worker, test) != 0 {
+		if C.pthread_create(&test.worker_id, nil, C.tulpar_linuxkpi_fixture_ww_worker, test) != 0 {
 			return -C.ENOMEM
 		}
 		test.started = true
@@ -410,7 +410,7 @@ fn single_body(test &NativeWwTest, held &bool, interruptible bool) i32 {
 		state := if interruptible { C.TASK_INTERRUPTIBLE } else { C.TASK_UNINTERRUPTIBLE }
 		if parked(test.task, state) != 0 || C.completion_done(&test.done) { result = -C.EIO }
 		if interruptible {
-			C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, u64(1) << 14)
+			C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, u64(1) << 14)
 			if C.wait_for_completion_timeout(&test.done, 500) == 0 || test.lock_result != -C.EINTR {
 				result = -C.EIO
 			}
@@ -478,7 +478,7 @@ fn repeated() i32 {
 				if a.ctx != nil || C.ww_mutex_trylock(&a, nil) { result = -C.EIO }
 				C.ww_mutex_unlock(&a)
 			}
-			if !C.vinix_linuxkpi_may_sleep() { result = -C.EIO }
+			if !C.tulpar_linuxkpi_may_sleep() { result = -C.EIO }
 		}
 		C.ww_mutex_destroy(&a)
 		C.ww_mutex_destroy(&b)
@@ -486,7 +486,7 @@ fn repeated() i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_ww_mutex_native_selftest']
+@[export: 'tulpar_linuxkpi_ww_mutex_native_selftest']
 pub fn selftest() i32 {
 	mut result := i32(0)
 	if repeated() != 0 {

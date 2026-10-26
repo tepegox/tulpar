@@ -41,7 +41,7 @@ fn policy_buffer_putchar(character i32, context voidptr) {
 	}
 }
 
-@[export: 'vinix_printf_policy']
+@[export: 'tulpar_printf_policy']
 pub fn printf_policy(format &char, arguments voidptr, kind i32) i32 {
 	unsafe {
 		if kind == 0 {
@@ -61,7 +61,7 @@ pub fn printf_policy(format &char, arguments voidptr, kind i32) i32 {
 }
 
 // V's assertion backend emits only %s and %.*s, plus a literal suffix.
-@[export: 'vinix_fprintf_policy']
+@[export: 'tulpar_fprintf_policy']
 pub fn fprintf_policy(format &char, arguments voidptr) i32 {
 	unsafe {
 		mut rest := format

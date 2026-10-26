@@ -32,7 +32,7 @@ fn test_encrypted_growth_preserves_identity_offsets_modes_and_keys_at_native_sec
 
 fn test_encrypted_growth_cli_rejects_invalid_sizes_paths_and_arity_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-grow-volume'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'8192'), &char(c'/unused'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-grow-volume'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'8192'), &char(c'/unused'), &char(nil)]!
 		for count in [2, 3, 4, 5, 6, 8] { assert run(count, &args[0]) == 2 }
 		for at in [2, 3, 4, 6] { args[at] = &char(c''); assert run(7, &args[0]) == 2; args[at] = &char(c'/unused') }
 		for value in [c'', c'0', c'-1', c'0x2000', c'8192x', c'18446744073709551616'] { args[5] = &char(value); assert run(7, &args[0]) == 2 }

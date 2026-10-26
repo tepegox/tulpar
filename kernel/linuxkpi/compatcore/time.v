@@ -13,9 +13,9 @@ __global C.jiffies u64
 @[c_extern]
 __global C.jiffies_64 u64
 
-fn C.vinix_linuxkpi_clock_ns() u64
-fn C.vinix_linuxkpi_clock_resolution_ns() u32
-fn C.vinix_linuxkpi_timer_tick()
+fn C.tulpar_linuxkpi_clock_ns() u64
+fn C.tulpar_linuxkpi_clock_resolution_ns() u32
+fn C.tulpar_linuxkpi_timer_tick()
 fn C.vkt_jiffies_address() uint
 fn C.vkt_max_sec_in_jiffies() u64
 fn C.vkt_sec_conversion() u32
@@ -65,7 +65,7 @@ fn vkt_deadline_remove(wait &VktDeadline) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_time_tick']
+@[export: 'tulpar_linuxkpi_time_tick']
 pub fn time_tick(now_ns u64) {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkt_deadline_lock)
@@ -85,11 +85,11 @@ pub fn time_tick(now_ns u64) {
 			}
 		}
 		C.vkp_spin_unlock_irqrestore(&vkt_deadline_lock, flags)
-		C.vinix_linuxkpi_timer_tick()
+		C.tulpar_linuxkpi_timer_tick()
 	}
 }
 
-@[export: 'vinix_linuxkpi_time_waiters']
+@[export: 'tulpar_linuxkpi_time_waiters']
 pub fn time_waiters() uint {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkt_deadline_lock)
@@ -100,7 +100,7 @@ pub fn time_waiters() uint {
 	}
 }
 
-@[export: 'vinix_linuxkpi_test_task_time_waiters']
+@[export: 'tulpar_linuxkpi_test_task_time_waiters']
 pub fn time_task_waiters(task voidptr) uint {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkt_deadline_lock)
@@ -116,15 +116,15 @@ pub fn time_task_waiters(task voidptr) uint {
 @[export: 'schedule_timeout']
 pub fn time_schedule_timeout(timeout i64) i64 {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		if timeout == i64(0x7fffffffffffffff) {
 			task_schedule()
 			return timeout
 		}
 		if timeout <= 0 {
-			if timeout < 0 { vinix_linuxkpi_warn(c'linuxkpi_time.v', 0) }
+			if timeout < 0 { tulpar_linuxkpi_warn(c'linuxkpi_time.v', 0) }
 			set_task_state(0)
-			if timeout == 0 { C.vinix_linuxkpi_cond_resched() }
+			if timeout == 0 { C.tulpar_linuxkpi_cond_resched() }
 			return 0
 		}
 		mut wait := VktDeadline{task: C.vkp_current()}
@@ -152,11 +152,11 @@ pub fn time_schedule_killable(timeout i64) i64 { set_task_state(258); return tim
 pub fn time_schedule_idle(timeout i64) i64 { set_task_state(1026); return time_schedule_timeout(timeout) }
 
 @[export: 'ktime_get']
-pub fn time_ktime_get() i64 { return i64(C.vinix_linuxkpi_clock_ns()) }
+pub fn time_ktime_get() i64 { return i64(C.tulpar_linuxkpi_clock_ns()) }
 @[export: 'ktime_get_raw']
-pub fn time_ktime_raw() i64 { return i64(C.vinix_linuxkpi_clock_ns()) }
+pub fn time_ktime_raw() i64 { return i64(C.tulpar_linuxkpi_clock_ns()) }
 @[export: 'ktime_get_resolution_ns']
-pub fn time_resolution() u32 { return C.vinix_linuxkpi_clock_resolution_ns() }
+pub fn time_resolution() u32 { return C.tulpar_linuxkpi_clock_resolution_ns() }
 @[export: 'ktime_get_ts64']
 pub fn time_get_ts64(value &C.vkt_timespec64) { unsafe { *value = time_ns_to_ts64(time_ktime_get()) } }
 @[export: 'ktime_get_raw_ts64']
@@ -232,14 +232,14 @@ pub fn time_msleep(milliseconds u32) {
 @[export: 'usleep_range_state']
 pub fn time_usleep_range_state(minimum u64, maximum u64, state u32) {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
-		now := C.vinix_linuxkpi_clock_ns()
+		require(C.tulpar_linuxkpi_may_sleep())
+		now := C.tulpar_linuxkpi_clock_ns()
 		require(maximum >= minimum && now <= u64(0x7fffffffffffffff) && maximum <= (u64(0x7fffffffffffffff) - now) / 1000)
 		mut wait := VktDeadline{task: C.vkp_current(), expires_ns: now + minimum * 1000, absolute: true}
 		for {
 			set_task_state(state)
 			mut flags := C.vkp_spin_lock_irqsave(&vkt_deadline_lock)
-			if C.vinix_linuxkpi_clock_ns() >= wait.expires_ns {
+			if C.tulpar_linuxkpi_clock_ns() >= wait.expires_ns {
 				C.vkp_spin_unlock_irqrestore(&vkt_deadline_lock, flags)
 				set_task_state(0)
 				return
@@ -251,8 +251,8 @@ pub fn time_usleep_range_state(minimum u64, maximum u64, state u32) {
 			vkt_deadline_remove(&wait)
 			C.vkp_spin_unlock_irqrestore(&vkt_deadline_lock, flags)
 			set_task_state(0)
-			if C.vinix_linuxkpi_clock_ns() >= wait.expires_ns { return }
-			C.vinix_linuxkpi_cond_resched()
+			if C.tulpar_linuxkpi_clock_ns() >= wait.expires_ns { return }
+			C.tulpar_linuxkpi_cond_resched()
 		}
 	}
 }
@@ -265,13 +265,13 @@ pub fn time_msleep_interruptible(milliseconds u32) u64 {
 }
 @[export: 'ndelay']
 pub fn time_ndelay(nanoseconds u64) {
-	start := C.vinix_linuxkpi_clock_ns()
-	for C.vinix_linuxkpi_clock_ns() - start < nanoseconds { C.vinix_linuxkpi_spin_wait() }
+	start := C.tulpar_linuxkpi_clock_ns()
+	for C.tulpar_linuxkpi_clock_ns() - start < nanoseconds { C.tulpar_linuxkpi_spin_wait() }
 }
 @[export: 'udelay']
 pub fn time_udelay(microseconds u64) { require(microseconds <= u64(-1) / 1000); time_ndelay(microseconds * 1000) }
 
-@[export: 'vinix_linuxkpi_time_selftest']
+@[export: 'tulpar_linuxkpi_time_selftest']
 pub fn time_selftest() i32 {
 	unsafe {
 		if C.vkt_jiffies_address() != uint(&C.jiffies_64) { return -5 }

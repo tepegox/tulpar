@@ -7,13 +7,13 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn pack_owned_fixture(count int) !(string, string, string, string) {
-	work := os.real_path(os.temp_dir()) + '/vinix-pack-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-pack-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	root := work + '/source'; manifest := work + '/manifest.json'; repository := work + '/repository'
 	os.mkdir_all(root + '/d')!
 	for index in 0 .. count {
@@ -84,10 +84,10 @@ fn test_pack_owned_cold_cached_walks_and_late_refusals_retire_every_inventory() 
 				mut maximum := u64(0); mut records := u32(0)
 				for _ in 0 .. cycles {
 					if cold { os.rmdir_all(objects)!; os.mkdir(objects)! }
-					$if track_heap ? { C.vinix_heap_begin() }
+					$if track_heap ? { C.tulpar_heap_begin() }
 					pack_owned_walk(root, repository, options, mode != 'complete')!
 					$if track_heap ? {
-						kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+						kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 						if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 					}
 				}
@@ -111,10 +111,10 @@ fn test_pack_owned_existing_workspace_calls_retire_inventory_and_filesystem_scra
 			options := PackSourceOptions{ checkpoint: if mode == 'locked' { pack_owned_locked } else if mode == 'hashed' { pack_owned_refuse } else { mirror_no_checkpoint } }
 			mut maximum := u64(0); mut records := u32(0)
 			for _ in 0 .. 16 {
-				$if track_heap ? { C.vinix_heap_begin() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				pack_owned_once(root, manifest, repository, options, mode != 'complete')!
 				$if track_heap ? {
-					kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+					kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 					if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 				}
 			}
@@ -187,7 +187,7 @@ fn test_pack_owned_late_validation_publication_and_object_directory_failures_pre
 }
 
 fn test_pack_owned_cli_replies_preserve_pack_and_prepared_root_json() {
-	binary := os.getenv('VINIX_PACKAGE_PACK_CLI')
+	binary := os.getenv('TULPAR_PACKAGE_PACK_CLI')
 	if binary == '' { return }
 	work, root, manifest, repository := pack_owned_fixture(2)!
 	defer { os.rmdir_all(work) or {} }

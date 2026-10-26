@@ -4,17 +4,17 @@
 `hash-recovery-volume-auto`/`verify-recovery-volume-auto` authenticate and erase
 secrets before retaining the existing read-only identity-discovery pin.
 Verification validates its complete private reference before discovery. Exact
-`VINIXCH1` bytes, complete extent hashing, output and no-overwrite publication
+`TULPARCH1` bytes, complete extent hashing, output and no-overwrite publication
 match explicit-device commands. See [the contract](../../docs/storage-volumes.md#identity-based-automatic-ciphertext-checksums).
 
 ```sh
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-ciphertext-auto --work /tmp/ciphertext-auto-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --ciphertext-auto --work /tmp/ciphertext-auto-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --ciphertext-auto --work /tmp/ciphertext-auto-x86
 ```
 

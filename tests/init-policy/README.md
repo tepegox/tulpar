@@ -1,7 +1,7 @@
 # Init policy fixtures
 
-The current desktop fixture is a stand-in for `/usr/sbin/vinix-session` and
-requires the exact `graphical --desktop /usr/bin/vinix-desktop` entry command.
+The current desktop fixture is a stand-in for `/usr/sbin/tulpar-session` and
+requires the exact `graphical --desktop /usr/bin/tulpar-desktop` entry command.
 It checks init's supervision boundary; it does not execute the account manager
 or graphical login. The separate [graphical login checks](../graphical-login/check.md)
 cover those programs. The historical direct-compositor C guest is incompatible
@@ -32,7 +32,7 @@ with ASan/UBSan, including its synchronous volume restore hook:
 
 ```sh
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --host --work /tmp/vinix-init-and-volume-host
+  --host --work /tmp/tulpar-init-and-volume-host
 ```
 
 This covers both normal and BusyBox echo variants and checks absent utility,
@@ -58,12 +58,12 @@ Build an ARM kernel and musl sysroot, then run:
 ```sh
 tests/init-policy/run-vm \
   --kernel-dir /absolute/path/to/kernel \
-  --state-dir "$(mktemp -d /tmp/vinix-init-policy.XXXXXX)"
+  --state-dir "$(mktemp -d /tmp/tulpar-init-policy.XXXXXX)"
 ```
 
 Use a fresh, short state path: QEMU's Unix monitor socket is limited to
 104 bytes on macOS. The default allowance remains 600 seconds per policy.
-`VINIX_V_COMPILER` selects V, `VINIX_AARCH64_SYSROOT` selects musl headers
+`TULPAR_V_COMPILER` selects V, `TULPAR_AARCH64_SYSROOT` selects musl headers
 and libraries, and `LD_AARCH64` selects the freestanding policy linker.
 The historical `--reference-guest=/path/to/original-guest.c` control used its
 original three mode defines and every original assertion.

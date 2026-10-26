@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-only
-// Intel VT-x backend for the Vinix hypervisor.
+// Intel VT-x backend for the Tulpar hypervisor.
 @[has_globals]
 module hypervisor
 
@@ -14,43 +14,43 @@ import x86.msr
 
 #include "vmx.h"
 
-fn C.vinix_vmx_on(physical_address u64) i32
+fn C.tulpar_vmx_on(physical_address u64) i32
 
-fn C.vinix_vmx_off() i32
+fn C.tulpar_vmx_off() i32
 
-fn C.vinix_vmx_clear(physical_address u64) i32
+fn C.tulpar_vmx_clear(physical_address u64) i32
 
-fn C.vinix_vmx_load(physical_address u64) i32
+fn C.tulpar_vmx_load(physical_address u64) i32
 
-fn C.vinix_vmx_write(field u64, value u64) i32
+fn C.tulpar_vmx_write(field u64, value u64) i32
 
-fn C.vinix_vmx_read(field u64, value &u64) i32
+fn C.tulpar_vmx_read(field u64, value &u64) i32
 
-fn C.vinix_vmx_invept(kind u64, eptp u64) i32
+fn C.tulpar_vmx_invept(kind u64, eptp u64) i32
 
-fn C.vinix_vmx_enter(registers &C.vinix_vmx_registers) i32
+fn C.tulpar_vmx_enter(registers &C.tulpar_vmx_registers) i32
 
-fn C.vinix_vmx_fxsave(state voidptr)
+fn C.tulpar_vmx_fxsave(state voidptr)
 
-fn C.vinix_vmx_fxrstor(state voidptr)
+fn C.tulpar_vmx_fxrstor(state voidptr)
 
-fn C.vinix_vmx_sgdt(descriptor &C.vinix_vmx_descriptor)
+fn C.tulpar_vmx_sgdt(descriptor &C.tulpar_vmx_descriptor)
 
-fn C.vinix_vmx_sidt(descriptor &C.vinix_vmx_descriptor)
+fn C.tulpar_vmx_sidt(descriptor &C.tulpar_vmx_descriptor)
 
-fn C.vinix_vmx_read_cs() u16
+fn C.tulpar_vmx_read_cs() u16
 
-fn C.vinix_vmx_read_ss() u16
+fn C.tulpar_vmx_read_ss() u16
 
-fn C.vinix_vmx_read_ds() u16
+fn C.tulpar_vmx_read_ds() u16
 
-fn C.vinix_vmx_read_es() u16
+fn C.tulpar_vmx_read_es() u16
 
-fn C.vinix_vmx_read_fs() u16
+fn C.tulpar_vmx_read_fs() u16
 
-fn C.vinix_vmx_read_gs() u16
+fn C.tulpar_vmx_read_gs() u16
 
-fn C.vinix_vmx_read_tr() u16
+fn C.tulpar_vmx_read_tr() u16
 
 const ia32_feature_control = u32(0x03a)
 const ia32_sysenter_cs = u32(0x174)
@@ -219,12 +219,12 @@ pub mut:
 }
 
 fn vmwrite(field u64, value u64) bool {
-	return C.vinix_vmx_write(field, value) == 0
+	return C.tulpar_vmx_write(field, value) == 0
 }
 
 fn vmread(field u64) ?u64 {
 	mut value := u64(0)
-	if C.vinix_vmx_read(field, &value) != 0 {
+	if C.tulpar_vmx_read(field, &value) != 0 {
 		return none
 	}
 	return value
@@ -311,7 +311,7 @@ pub fn initialise_cpu(cpu_number u64) bool {
 	}
 	cpu.write_cr0(cr0)
 	cpu.write_cr4(cr4)
-	if C.vinix_vmx_on(u64(region)) != 0 {
+	if C.tulpar_vmx_on(u64(region)) != 0 {
 		cpu.write_cr0(old_cr0)
 		cpu.write_cr4(old_cr4)
 		memory.pmm_free(region, 1)
@@ -378,11 +378,11 @@ fn control_msrs() (u32, u32, u32, u32) {
 }
 
 fn (mut vm Vm) configure_vmcs() bool {
-	if C.vinix_vmx_clear(vm.vmcs) != 0 || C.vinix_vmx_load(vm.vmcs) != 0 {
+	if C.tulpar_vmx_clear(vm.vmcs) != 0 || C.tulpar_vmx_load(vm.vmcs) != 0 {
 		return false
 	}
 	defer {
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 	}
 	pin_msr, primary_msr, exit_msr, entry_msr := control_msrs()
 	pin := adjusted_control(pin_msr, 1, 1) or { return false }
@@ -560,7 +560,7 @@ pub fn (mut vm Vm) get_registers() ?Registers {
 	return vm.registers
 }
 
-fn segment_base(gdt C.vinix_vmx_descriptor, selector u16) u64 {
+fn segment_base(gdt C.tulpar_vmx_descriptor, selector u16) u64 {
 	index := u64(selector & ~u16(7))
 	if index + 15 > u64(gdt.limit) {
 		return 0
@@ -573,11 +573,11 @@ fn segment_base(gdt C.vinix_vmx_descriptor, selector u16) u64 {
 }
 
 fn write_host_state() bool {
-	mut gdtr := C.vinix_vmx_descriptor{}
-	mut idtr := C.vinix_vmx_descriptor{}
-	C.vinix_vmx_sgdt(&gdtr)
-	C.vinix_vmx_sidt(&idtr)
-	tr := C.vinix_vmx_read_tr()
+	mut gdtr := C.tulpar_vmx_descriptor{}
+	mut idtr := C.tulpar_vmx_descriptor{}
+	C.tulpar_vmx_sgdt(&gdtr)
+	C.tulpar_vmx_sidt(&idtr)
+	tr := C.tulpar_vmx_read_tr()
 	mut ok := true
 	ok = ok && vmwrite(vmcs_host_cr0, cpu.read_cr0())
 	ok = ok && vmwrite(vmcs_host_cr3, cpu.read_cr3())
@@ -586,8 +586,8 @@ fn write_host_state() bool {
 	// LDT, and a user's LDT or TLS selector with that bit taken off would
 	// name another descriptor. run() puts the thread's FS and GS back.
 	ok = ok && vmwrite(vmcs_host_es_selector, 0)
-	ok = ok && vmwrite(vmcs_host_cs_selector, C.vinix_vmx_read_cs() & ~u16(7))
-	ok = ok && vmwrite(vmcs_host_ss_selector, C.vinix_vmx_read_ss() & ~u16(7))
+	ok = ok && vmwrite(vmcs_host_cs_selector, C.tulpar_vmx_read_cs() & ~u16(7))
+	ok = ok && vmwrite(vmcs_host_ss_selector, C.tulpar_vmx_read_ss() & ~u16(7))
 	ok = ok && vmwrite(vmcs_host_ds_selector, 0)
 	ok = ok && vmwrite(vmcs_host_fs_selector, 0)
 	ok = ok && vmwrite(vmcs_host_gs_selector, 0)
@@ -614,11 +614,11 @@ pub fn (mut vm Vm) set_entry(rip u64, rsp u64, rflags u64) bool {
 	current := cpulocal.current()
 	if vm.destroyed || rip >= vm.memory_size() || rsp > vm.memory_size()
 		|| current.cpu_number >= u64(vmx_regions.len) || vmx_regions[current.cpu_number] == 0
-		|| C.vinix_vmx_load(vm.vmcs) != 0 {
+		|| C.tulpar_vmx_load(vm.vmcs) != 0 {
 		return false
 	}
 	ok := vm.write_guest_entry(rip, rsp, rflags)
-	if C.vinix_vmx_clear(vm.vmcs) != 0 {
+	if C.tulpar_vmx_clear(vm.vmcs) != 0 {
 		return false
 	}
 	return ok
@@ -629,15 +629,15 @@ pub fn (mut vm Vm) advance_rip(length u32) bool {
 	defer { vm.l.release() }
 	current := cpulocal.current()
 	if vm.destroyed || current.cpu_number >= u64(vmx_regions.len)
-		|| vmx_regions[current.cpu_number] == 0 || C.vinix_vmx_load(vm.vmcs) != 0 {
+		|| vmx_regions[current.cpu_number] == 0 || C.tulpar_vmx_load(vm.vmcs) != 0 {
 		return false
 	}
 	rip := vmread(vmcs_guest_rip) or {
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 		return false
 	}
 	ok := vmwrite(vmcs_guest_rip, rip + length)
-	if C.vinix_vmx_clear(vm.vmcs) != 0 {
+	if C.tulpar_vmx_clear(vm.vmcs) != 0 {
 		return false
 	}
 	return ok
@@ -648,22 +648,22 @@ pub fn (mut vm Vm) get_entry() ?(u64, u64, u64) {
 	defer { vm.l.release() }
 	current := cpulocal.current()
 	if vm.destroyed || current.cpu_number >= u64(vmx_regions.len)
-		|| vmx_regions[current.cpu_number] == 0 || C.vinix_vmx_load(vm.vmcs) != 0 {
+		|| vmx_regions[current.cpu_number] == 0 || C.tulpar_vmx_load(vm.vmcs) != 0 {
 		return none
 	}
 	rip := vmread(vmcs_guest_rip) or {
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 		return none
 	}
 	rsp := vmread(vmcs_guest_rsp) or {
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 		return none
 	}
 	rflags := vmread(vmcs_guest_rflags) or {
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 		return none
 	}
-	if C.vinix_vmx_clear(vm.vmcs) != 0 {
+	if C.tulpar_vmx_clear(vm.vmcs) != 0 {
 		return none
 	}
 	return rip, rsp, rflags
@@ -687,21 +687,21 @@ pub fn (mut vm Vm) run() ?VmExit {
 	// An EPT root's physical page can be recycled after destruction. Flush
 	// before every entry on this CPU, including migration to another CPU.
 	kind := ept_invalidation_kind(msr.rdmsr(ia32_vmx_ept_vpid_cap)) or { return none }
-	if C.vinix_vmx_invept(kind, vm.ram.pml4 | 0x1e) != 0 { return none }
-	if C.vinix_vmx_load(vm.vmcs) != 0 {
+	if C.tulpar_vmx_invept(kind, vm.ram.pml4 | 0x1e) != 0 { return none }
+	if C.tulpar_vmx_load(vm.vmcs) != 0 {
 		return none
 	}
 	if !write_host_state() {
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 		return none
 	}
 	host_fpu := voidptr(vm.host_fpu + memory.get_hhdm_offset())
 	guest_fpu := voidptr(vm.guest_fpu + memory.get_hhdm_offset())
-	C.vinix_vmx_fxsave(host_fpu)
-	C.vinix_vmx_fxrstor(guest_fpu)
+	C.tulpar_vmx_fxsave(host_fpu)
+	C.tulpar_vmx_fxrstor(guest_fpu)
 	fs_selector := cpu.fs_selector()
 	gs_selector := cpu.gs_selector()
-	entry_result := C.vinix_vmx_enter(unsafe { &C.vinix_vmx_registers(&vm.registers) })
+	entry_result := C.tulpar_vmx_enter(unsafe { &C.tulpar_vmx_registers(&vm.registers) })
 	// A VM exit sets the GDT limit to 0xffff and leaves no LDT: this CPU's
 	// own go back, the LDT's descriptor still in the GDT. Then the FS and GS
 	// selectors the thread had, which loaded a moment ago from the same
@@ -717,22 +717,22 @@ pub fn (mut vm Vm) run() ?VmExit {
 	if gs_selector & 0xfffc != 0 {
 		cpu.load_user_gs_selector(gs_selector)
 	}
-	C.vinix_vmx_fxsave(guest_fpu)
-	C.vinix_vmx_fxrstor(host_fpu)
+	C.tulpar_vmx_fxsave(guest_fpu)
+	C.tulpar_vmx_fxrstor(host_fpu)
 	if entry_result != 0 {
 		error_code := vmread(vmcs_vm_instruction_error) or { u64(-1) }
 		C.printf(c'hypervisor: VMLAUNCH failed (%llu)\n', error_code)
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 		return none
 	}
 	reason := vmread(vmcs_exit_reason) or {
-		C.vinix_vmx_clear(vm.vmcs)
+		C.tulpar_vmx_clear(vm.vmcs)
 		return none
 	}
 	qualification := vmread(vmcs_exit_qualification) or { u64(0) }
 	instruction_length := vmread(vmcs_exit_instruction_length) or { u64(0) }
 	interruption_info := vmread(vmcs_exit_interruption_info) or { u64(0) }
-	if C.vinix_vmx_clear(vm.vmcs) != 0 {
+	if C.tulpar_vmx_clear(vm.vmcs) != 0 {
 		return none
 	}
 	return VmExit{

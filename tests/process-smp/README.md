@@ -13,7 +13,7 @@ tests/process-smp/run --arch x86_64 --kernel-dir /work/x86/kernel --state-dir /t
 The runner defaults to four CPUs and 4096 MiB of RAM, uses a static musl fixture
 as init and requires `PROCESS-SMP PASS`. It disables networking and keeps
 disposable boot artifacts and transcripts in its state directory. Use a fresh
-directory for each run. AArch64 uses `VINIX_AARCH64_SYSROOT` (default
+directory for each run. AArch64 uses `TULPAR_AARCH64_SYSROOT` (default
 `build-aarch64-userland/sysroot`); x86_64 uses `CC_AMD64` (default
 `x86_64-linux-musl-gcc`). Forty simultaneous timer owners exercise capacity
 beyond the former 32-entry table. x86_64 threads each reserve two 2 MiB kernel
@@ -61,7 +61,7 @@ Run the remaining matrix on both kernels:
 
 Also run `tests/posix-timer/run` on AArch64 and amd64, and the AArch64 desktop
 performance scenarios `ops,churn,cache` and `idle,apps,drag` with
-`VINIX_KERNEL_DIR=KERNEL`. Run `tests/kernel-allocs/run.sh`, compare failures to
+`TULPAR_KERNEL_DIR=KERNEL`. Run `tests/kernel-allocs/run.sh`, compare failures to
 the same-compiler baseline and do not expand the allocation allowance file.
 The broader filesystem retention audit remains a separate roadmap item.
 

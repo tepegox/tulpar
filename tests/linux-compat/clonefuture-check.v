@@ -132,7 +132,7 @@ fn storage(log string, arch string, _phase string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -163,7 +163,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -188,12 +188,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/clonefuture-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/clonefuture-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/clonefuturereferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/clonefuturereferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -411,13 +411,13 @@ fn refusals(area string,out string) ! {
  diagnostic:=os.read_file(second+'reproduced.log')!
  assert diagnostic.contains('v_fixed_index') && diagnostic.contains('pointer-sign')
  repaired:=middle.replace('mut active:=[128]u8{};mut future:=[128]u8{}','mut active:=[128]char{};mut future:=[128]char{}').replace('fn cycle(state &State,index i32) bool {','fn cycle(state &State,index i32) bool {unsafe {').replace('\n}\n\nfn qualify(','\n}}\n\nfn qualify(')
- assert repaired==os.read_file('/Users/alex/code/vinix/tests/linux-compat/clonefuturefixture/core.v')!
+ assert repaired==os.read_file('/Users/alex/code/tulpar/tests/linux-compat/clonefuturefixture/core.v')!
  mut pins:=map[string]string{}
  for path in os.walk_ext(folder,'') {if os.inode(path).typ==.regular {pins[path.all_after(folder)]=digest(path)}}
  for path in os.walk_ext(second,'') {if os.inode(path).typ==.regular {pins['c-refusal/'+path.all_after(second)]=digest(path)}}
  reference:=area+'reference-route-refusal/'
  controller:=os.read_file(reference+'reference.v')!
- assert controller.replace('namespace=','route=')==os.read_file('/Users/alex/code/vinix/tests/linux-compat/clonefuture-reference.v')!
+ assert controller.replace('namespace=','route=')==os.read_file('/Users/alex/code/tulpar/tests/linux-compat/clonefuture-reference.v')!
  assert os.read_file(reference+'states__reference-arm.log.status')!.trim_space()=='1'
  assert os.read_file(reference+'reference-arm-producer.log')!.contains('Invalid reference outcomes')
  value:=object(reference+'state/receipt.json')!
@@ -437,7 +437,7 @@ fn refusals(area string,out string) ! {
 
 fn main() {
 	if '--scope-only' in os.args {
-		scope(os.args[2].trim_right('/') + '/', '/Users/alex/code/vinix/')!
+		scope(os.args[2].trim_right('/') + '/', '/Users/alex/code/tulpar/')!
 		println('Native clonefuture exact source/C scope: PASS')
 		return
 	}
@@ -451,7 +451,7 @@ fn main() {
 	}
 	assert os.args.len in [2, 3] && (os.args.len == 2 || os.args[2] == '--verify-only'), 'Usage: clonefuture-check.v EVIDENCE-AREA [--verify-only] (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := if os.args.len == 3 {
 		area + 'preview/'
 	} else {
@@ -479,12 +479,12 @@ fn main() {
 			} else {
 				['clonefuture', 'runtime', 'clonecgperm']
 			}
-			kernel := digest(state + '/kernel/bin/vinix')
+			kernel := digest(state + '/kernel/bin/tulpar')
 			assert kernel == digest(area + '/' + if phase == 'before' {
 				'baseline-' + suffix
 			} else {
 				'kernel-' + suffix
-			} + '/kernel/bin/vinix')
+			} + '/kernel/bin/tulpar')
 			got := receipt(state, arch, kernel, names, phase == 'before')!
 			for key, hash in got { artifacts[phase + '_' + key] = hash }
 			log := os.read_file(state + '/clonefuture/serial.log')!
@@ -531,12 +531,12 @@ fn main() {
 	}
 	assert digest(area + 'states/preflight-arm/fixture.c') == digest(area + 'states/before-arm/clonefuture/fixture.c')
 	assert os.read_file(area + 'preflight.log')!.contains('Probe compiler preflight: PASS')
-	pins := object('/Users/alex/.cache/vinix-linux-compat/proctask-20261014/compiler-inputs.json')!
+	pins := object('/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/compiler-inputs.json')!
 	assert pins.len == 15146
 	for path, hash in pins {
-		assert digest('/Users/alex/.cache/vinix-linux-compat/proctask-20261014/compiler/' + path) == hash.str(), path
+		assert digest('/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/compiler/' + path) == hash.str(), path
 	}
-	sdk := object('/Users/alex/.cache/vinix-linux-compat/tidfault-20261015/sdk-inputs.json')!
+	sdk := object('/Users/alex/.cache/tulpar-linux-compat/tidfault-20261015/sdk-inputs.json')!
 	assert sdk.len == 2014
 	for path, hash in sdk {
 		assert digest(area + 'sdk/' + path) == hash.str(), path

@@ -454,7 +454,7 @@ int main(int argc, char **argv) {
     remap_races();
     cgroup_fault_policy();
     if (failures) printf("FAIL: process inspection (%d checks)\n", failures);
-    else puts("VINIX PROCESS INSPECTION: PASS");
+    else puts("TULPAR PROCESS INSPECTION: PASS");
     fflush(stdout);
     sync();
     reboot(RB_POWER_OFF);

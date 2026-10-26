@@ -1,6 +1,6 @@
 # Hardware qualification matrix
 
-Which machines Vinix runs on, what on each of them works, and on what
+Which machines Tulpar runs on, what on each of them works, and on what
 evidence. It is the published matrix roadmap workstream 4 asks for, and it
 follows the roadmap's rules:
 
@@ -26,7 +26,7 @@ matrix does not improve on what they record.
 | x86-64 VM | QEMU `pc` (i440fx), BIOS, 1 CPU | Limine from the ISO | implemented | VM: `scripts/test-iso.sh` only; none of the power or device scenarios |
 | x86-64 VM | VirtualBox, BIOS, SATA | ISO | implemented | VM: `scripts/test-iso.sh --virtualbox` in CI; none of the power or device scenarios |
 | AArch64 VM | QEMU `virt`, GICv3, UEFI (EDK2), 4 CPUs | Limine from a FAT disk | implemented | VM: hardware-platform on QEMU 11.1.1 (HVF) |
-| AArch64 VM | VirtualBox, EFI | ISO | partial | VM: boots from memory; "Vinix has no driver for the disk controllers VirtualBox gives an arm64 VM" (README) |
+| AArch64 VM | VirtualBox, EFI | ISO | partial | VM: boots from memory; "Tulpar has no driver for the disk controllers VirtualBox gives an arm64 VM" (README) |
 | Intel PC | none named | -- | open | none. A Tiger Lake Core i5-1135G7 laptop is the i915 work's target ([linux-i915](linux-i915.md)); no boot of it is recorded |
 | AMD PC | none named | -- | open | none |
 | Apple M1 | MacBook Air (J313, t8103) | m1n1, U-Boot, UEFI, Limine | partial | physical target of the installer and of every Apple driver; no completed checklist. Each driver's document says it has not been validated on the machine |
@@ -48,19 +48,19 @@ State and evidence for the capabilities of [hardware-platform](hardware-platform
 | Unbind, remove, reset, failure recovery | implemented (VM: e1000, ahci) | implemented (VM: e1000) | untried | open |
 | PCI hotplug, rescan | implemented (VM: a PCIe port the kernel polls, and a card announced by firmware through ACPI; e1000 only) | implemented (VM: a PCIe port the kernel polls; e1000 only) | untried | open: ports are not watched on Apple hardware |
 | DMA domains | implemented (VM) | implemented (VM), no IOMMU | untried | open: Apple drivers program their DARTs themselves |
-| IOMMU isolation | implemented (VM: VT-d and AMD-Vi, opt-in) | open (no SMMU driver) | untried; opt-in `vinix.iommu=1` | partial: DART per driver, not through `dma` |
+| IOMMU isolation | implemented (VM: VT-d and AMD-Vi, opt-in) | open (no SMMU driver) | untried; opt-in `tulpar.iommu=1` | partial: DART per driver, not through `dma` |
 | Firmware loader | implemented (VM) | implemented (VM) | untried | open: Wi-Fi firmware still comes from userspace |
 | Power off, restart with devices stopped | implemented (VM) | implemented (VM) | untried | partial: restart through the watchdog untried; power off needs the SMC and ends halted |
 | Power button | implemented (VM) | implemented (VM, polled) | untried | open |
 | Embedded controller | implemented (VM: a simulated controller in a self-test kernel; an ordinary kernel only against ports nothing answers at) | -- (no ACPI on this kernel) | host: the protocol against a simulated controller; untried | -- (Apple's is the SMC) |
 | Lid | implemented (VM: scripted ACPI lid, and one read through the simulated embedded controller) | open | untried; read through the embedded controller on most laptops, and that driver has met only a simulated one | open |
 | Suspend to idle, wake sources, alarm | implemented (VM) | implemented (VM) | untried | open: untried, and the idle loop polls |
-| Suspend to RAM | implemented (VM: ACPI S3 under OVMF with QEMU's standard VGA; e1000, AHCI, PS/2 and serial only; behind VT-d and AMD-Vi) | open (no platform sleep to ask for) | untried: no firmware's way back has been met, wake-up devices are not armed, and it is offered only where the display can be brought back or `vinix.deep_sleep=force` | open |
-| Hibernation (suspend to disk) | implemented (VM: an image on a named SATA disk, the machine switched off and the image gone back into at the next start under OVMF; behind VT-d and AMD-Vi; with four- and five-level page tables; not encrypted) | open (no `disk` state) | untried: it needs two boots to have the same memory, firmware regions and ACPI tables at the same addresses, which no firmware has been asked; ACPI S4 is not used; opt-in `vinix.hibernate=<device>` | open |
+| Suspend to RAM | implemented (VM: ACPI S3 under OVMF with QEMU's standard VGA; e1000, AHCI, PS/2 and serial only; behind VT-d and AMD-Vi) | open (no platform sleep to ask for) | untried: no firmware's way back has been met, wake-up devices are not armed, and it is offered only where the display can be brought back or `tulpar.deep_sleep=force` | open |
+| Hibernation (suspend to disk) | implemented (VM: an image on a named SATA disk, the machine switched off and the image gone back into at the next start under OVMF; behind VT-d and AMD-Vi; with four- and five-level page tables; not encrypted) | open (no `disk` state) | untried: it needs two boots to have the same memory, firmware regions and ACPI tables at the same addresses, which no firmware has been asked; ACPI S4 is not used; opt-in `tulpar.hibernate=<device>` | open |
 | Screen sleep, backlight | partial (VM: the boot framebuffer is dark during a sleep; a backlight firmware sets -- ACPI `_BCM` -- is dimmed for a sleep and its keys work, against scripted panels only; no display power control, no backlight that needs the graphics driver) | partial (VM: the same) | untried | partial: brightness through DCP, opt-in ([M1 AGX](m1-agx-bringup.md)); the panel is not darkened for a sleep |
 | Battery, charger, time left | implemented (VM: scripted ACPI battery, and one read through the simulated embedded controller) | implemented (VM: a simulated Apple SMC in a self-test kernel; the machine itself has no battery) | untried; read through the embedded controller on most laptops, and that driver has met only a simulated one | implemented (host, VM): status, the SMC's percentage and time estimates, charge, current, voltage and cycles in `/sys`, and the percentage and telemetry in `/dev`, against a simulated SMC ([M1 battery](m1-battery.md)); **no physical run** |
 | Charge limit | open | implemented (VM: the simulated SMC's `CHWA`, 80 or 100) | open | implemented (host, VM) on firmware with `CHWA`, written only on request and read back; whether this machine's firmware has the key is not known; no physical run |
-| CPU idle states | implemented (VM: HLT) | implemented (VM: WFI) | host: MWAIT tables; untried | open by default (polls); `vinix.apple_idle=wfi` untried |
+| CPU idle states | implemented (VM: HLT) | implemented (VM: WFI) | host: MWAIT tables; untried | open by default (polls); `tulpar.apple_idle=wfi` untried |
 | CPU frequency | implemented (VM: simulated driver) | implemented (VM: simulated driver) | host: HWP, SpeedStep, CPPC encodings; untried | host: cluster DVFS sequence; off by default, untried |
 | Temperature, thermal limit | implemented (VM: made-up zone, and a scripted ACPI thermal zone) | implemented (VM: made-up zone, and a simulated Apple SMC's sensors) | host: coretemp, k10temp, RAPL decoding; ACPI thermal zones untried, and none has been read through an embedded controller, simulated or real | implemented (host, VM): four SMC temperatures in one zone with no trip points, shown and not acted on, against a simulated SMC; the SoC's own temperature is not among them; no physical run |
 | Fans | implemented (VM: scripted ACPI fans of each kind, driven by a zone's active trips) | partial (VM: a simulated Apple SMC's fan, shown and not driven) | untried; a laptop's fans are usually its embedded controller's and not in ACPI | -- (this machine has none; the SMC's fans of an M1 with one are shown, not driven, and only a simulated one has been read) |
@@ -111,22 +111,22 @@ driver's own document says the machine has not validated it.
 
 | Family | Device | Driver | State | Evidence and limits |
 | --- | --- | --- | --- | --- |
-| Storage | Apple ANS2 NVMe | `apple/ans` | implemented (host) | opt-in `vinix.apple_ans=1`. "The full V/kernel build and a physical M1 SSD test have not been performed." ([apple-ans](apple-ans.md)) |
+| Storage | Apple ANS2 NVMe | `apple/ans` | implemented (host) | opt-in `tulpar.apple_ans=1`. "The full V/kernel build and a physical M1 SSD test have not been performed." ([apple-ans](apple-ans.md)) |
 | Ethernet | none built in | -- | -- | USB Ethernet has no driver |
-| Wireless | Broadcom BCM4378 | `apple/wifi` | implemented (host) | opt-in `vinix.apple_wifi=1`. "Physical BCM4378 operation still needs validation on M1 Air hardware" ([apple-wifi](apple-wifi.md)) |
+| Wireless | Broadcom BCM4378 | `apple/wifi` | implemented (host) | opt-in `tulpar.apple_wifi=1`. "Physical BCM4378 operation still needs validation on M1 Air hardware" ([apple-wifi](apple-wifi.md)) |
 | Bluetooth | BCM4378 | none | open | |
 | Graphics | firmware framebuffer | `dev/fbdev/simple` | implemented | what the machine displays through today |
 | Graphics | AGX G13, DCP | `gpu/agx`, `gpu/dcp` | implemented (host) | opt-in. "No step of the sequence above has been run on hardware from this tree" ([M1 AGX](m1-agx-bringup.md)) |
 | Audio | speakers (TAS2770) | `apple/speakers` | implemented (host) | opt-in. "None of this has been checked on the machine itself yet" ([M1 speakers](m1-speakers.md)). No headphone jack, no microphones |
 | Input | SPI keyboard and trackpad | `apple/spi_keyboard` | implemented (host) | [apple-spi-touchpad](apple-spi-touchpad.md): not built and booted on an M1 Air for that change |
 | Input | USB | none on Apple hardware | open | xHCI is driven on PCI only |
-| Platform | SMC battery, charger, temperatures, charge limit | `apple/smc` | implemented (host, VM) | on by default; `vinix.apple_smc=legacy` for the device nodes alone. Run against a simulated SMC on the build machine and in QEMU. "No part of this driver, old or new, has run on a Mac" ([M1 battery](m1-battery.md)). Which of its keys this machine has, and whether its firmware has the charge limit key, is not known |
+| Platform | SMC battery, charger, temperatures, charge limit | `apple/smc` | implemented (host, VM) | on by default; `tulpar.apple_smc=legacy` for the device nodes alone. Run against a simulated SMC on the build machine and in QEMU. "No part of this driver, old or new, has run on a Mac" ([M1 battery](m1-battery.md)). Which of its keys this machine has, and whether its firmware has the charge limit key, is not known |
 | Platform | Type-C display hotplug | `apple/typec` | implemented (host) | opt-in; display attach and detach only |
 | Platform | AIC, PMGR, watchdog, DART | `aarch64/*`, `apple/dart` | implemented | the machine boots through them; four CPUs started |
 
 ## Vendor dependencies
 
-What the reference set needs that Vinix cannot write for itself.
+What the reference set needs that Tulpar cannot write for itself.
 
 | Dependency | Needed for | Where it comes from | Status |
 | --- | --- | --- | --- |
@@ -137,14 +137,14 @@ What the reference set needs that Vinix cannot write for itself.
 | Intel graphics DMC, GuC, HuC | i915 display power states and media | `linux-firmware`; redistributable | no consumer yet; the firmware loader is where it would come from |
 | Intel, Realtek, MediaTek Wi-Fi firmware | PC wireless | `linux-firmware`; redistributable | no driver |
 | NVIDIA | NVIDIA graphics | proprietary, or nouveau with signed firmware | open; not planned in this workstream |
-| ACPI tables and the embedded controller's behaviour | PC battery, lid, keys, thermal | each machine's firmware; per-model quirks | uACPI interprets the tables and `x86/acpiec` drives the controller by the specification and Linux's defaults; no machine's quirks are known, and two of Linux's per-model ones are boot options (`vinix.ec=`) |
+| ACPI tables and the embedded controller's behaviour | PC battery, lid, keys, thermal | each machine's firmware; per-model quirks | uACPI interprets the tables and `x86/acpiec` drives the controller by the specification and Linux's defaults; no machine's quirks are known, and two of Linux's per-model ones are boot options (`tulpar.ec=`) |
 | USB-IF, PCI-SIG, NVMe, AHCI, Intel VT-d, AMD-Vi specifications | everything on a bus | public | followed; Linux 6.6 is the reference for behaviour firmware gets wrong |
 
 ## The physical checklist
 
 What "qualified" means for a machine. It is run on the machine itself, from
 an installed system or the release image, by someone who can see and touch
-it. Record the image's `/etc/vinix-release`, the machine's exact model and
+it. Record the image's `/etc/tulpar-release`, the machine's exact model and
 firmware version, and the output of each command.
 
 `hwcheck` prints the first half of the record. Build it for the machine and
@@ -170,12 +170,12 @@ hwcheck --rehearse-sleep > report.md
    `/sys/class/backlight/*/brightness` and the panel with it. A panel that
    is listed there and does not change is one whose firmware hands the
    work to a graphics driver this system does not have: record it, and
-   `vinix.acpi_backlight=off` takes it out of the way.
+   `tulpar.acpi_backlight=off` takes it out of the way.
    A USB keyboard and mouse plugged straight into the machine at start:
    keys and the pointer work, and `/sys/bus/usb/xhci` counts their
    reports. Then the same through a hub, which is expected not to work, to
    know what the machine's own keyboard is behind; if a keyboard that worked
-   before no longer does, `vinix.usb=off` and record it.
+   before no longer does, `tulpar.usb=off` and record it.
 5. **Power off and restart.** Twenty of each from the desktop's menu and
    twenty by the power button. The machine must go off, and come back with
    no filesystem repair.
@@ -183,7 +183,7 @@ hwcheck --rehearse-sleep > report.md
    suspended and resumed and none failed, and which PCI functions were put
    into D3hot and that each came back (`/sys/power/pci_d3`: none refused,
    none not back); then use every device again. If one does not work,
-   repeat the rehearsal with `vinix.pci_d3=off` on the command line: if it
+   repeat the rehearsal with `tulpar.pci_d3=off` on the command line: if it
    works then, the fault is D3hot's and not its driver's resume. Record
    which.
 7. **Sleep.** Fifty cycles of each depth the machine offers
@@ -211,7 +211,7 @@ hwcheck --rehearse-sleep > report.md
    On an Apple machine, first the seven steps of
    [M1 battery](m1-battery.md#on-an-m1), which begin under macOS with
    `tools/apple-smc/smcprobe` and with the kernel started as
-   `vinix.apple_smc=legacy`. Then, for this step: `capacity` against
+   `tulpar.apple_smc=legacy`. Then, for this step: `capacity` against
    macOS's percentage read just before the restart; `/dev/battery` the same
    number, read once to its end; `status` with the charger in, out and with
    the battery full; record `/sys/devices/platform/apple-smc/smc/keys` and

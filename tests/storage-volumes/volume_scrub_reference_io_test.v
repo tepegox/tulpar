@@ -79,7 +79,7 @@ fn cipher_bind_input(state int) []u8 {
 }
 fn cipher_bind_expected(state int) string {
 	zero := '0'.repeat(64)
-	return 'format=VINIXCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=${int(state == 0)} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(cipher_bind_input(state).bytestr()) + '\n' +
+	return 'format=TULPARCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=${int(state == 0)} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(cipher_bind_input(state).bytestr()) + '\n' +
 		'disk_bytes=1048576 sector=512 identity=mbr:00000001 slot=63 offset=8192 bytes=73728 readonly=1 result=${if state == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} actual_sha256=${if state == 0 { zero } else { '0'.repeat(63) + state.str() }}\n'
 }
 
@@ -87,14 +87,14 @@ fn cipher_bind_check(first string, second string, mode int, expected i32) string
 	capture := os.dir(first) + '/history-capture'; assert C.fflush(C.stdout) == 0
 	saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	cipher_bind_io = CipherBindIO{active: true, mode: mode}
-	unsafe { args := [&char(c'vinix-volume'), &char(c'verify-volume-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'verify-volume-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert cipher_bind_io.opened == cipher_bind_io.closed; cipher_bind_io.active = false
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }
-	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=VINIXCS1') && !text.contains('disk_bytes=') }; return text
+	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=TULPARCS1') && !text.contains('disk_bytes=') }; return text
 }
 fn test_cipher_binding_real_private_cli_complete_binding_read_output_faults_and_pinned_owners() {
-	work := os.join_path(os.temp_dir(), 'vinix-cipher-binding-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/first'; second := work + '/second'; left := cipher_bind_manifest()
+	work := os.join_path(os.temp_dir(), 'tulpar-cipher-binding-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/first'; second := work + '/second'; left := cipher_bind_manifest()
 	for state in 0 .. 3 {
 		right := cipher_bind_input(state); os.write_file_array(first, left)!; os.write_file_array(second, right)!; os.chmod(first, 0o600)!; os.chmod(second, 0o600)!
 		for mode in 0 .. 21 {

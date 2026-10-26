@@ -39,7 +39,7 @@ fn main() {
 
 fn check() ! {
 	root := os.real_path(@DIR + '/../..')
-	work := os.join_path(os.temp_dir(), 'vinix-ext-host-' + os.getpid().str())
+	work := os.join_path(os.temp_dir(), 'tulpar-ext-host-' + os.getpid().str())
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	write(work, 'v.mod', "Module { name: 'ext_mount_tests' }\n")!
@@ -99,7 +99,7 @@ fn check() ! {
 	os.setenv('VMODULES', work + '/modules', true)
 	compiler := os.getenv_opt('V') or { @VEXE }
 	mut argv := [compiler, '-enable-globals', '-gc', 'none']
-	if os.getenv('VINIX_HOST_SANITIZE') == '1' {
+	if os.getenv('TULPAR_HOST_SANITIZE') == '1' {
 		argv << ['-cc', 'clang', '-cflags', '-fsanitize=address,undefined', '-ldflags',
 			'-fsanitize=address,undefined']
 	}

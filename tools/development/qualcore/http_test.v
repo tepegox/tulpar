@@ -18,7 +18,7 @@ fn test_http_status_and_header_framing_reject_truncated_or_invalid_responses() {
 }
 
 fn test_http_artifact_creation_refuses_existing_files_and_symlink_aliases() {
-	root := sourcecommand.temporary('vinix-http-private')!
+	root := sourcecommand.temporary('tulpar-http-private')!
 	defer { os.rmdir_all(root) or {} }
 	write_private_http(root + '/token', 'sentinel')!
 	assert os.stat(root + '/token')!.mode & 0o777 == 0o600

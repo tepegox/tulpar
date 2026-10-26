@@ -63,8 +63,8 @@ firmware and a kernel are required; see the [hardware harness](../hardware-platf
 ```sh
 v -nocache -path '@vlib|@vmodules|tests/hardware-platform' \
   -o /tmp/image-tools-runtime tests/packages/image-tools-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
-  VINIX_IMAGE_TOOLS_STAGE="$PWD/build/new-image-tools-host/stage" \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+  TULPAR_IMAGE_TOOLS_STAGE="$PWD/build/new-image-tools-host/stage" \
   /tmp/image-tools-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-image-tools-arm
 ```

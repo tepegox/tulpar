@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_RESV_HOST_CONTRACT_H
-#define VINIX_RESV_HOST_CONTRACT_H
+#ifndef TULPAR_RESV_HOST_CONTRACT_H
+#define TULPAR_RESV_HOST_CONTRACT_H
 /* Original records, inline adapters and atomic/page transport declarations.
  * Every reservation, reference, wait and grace-period algorithm is V. */
 #include "../freefixture/contract.h"

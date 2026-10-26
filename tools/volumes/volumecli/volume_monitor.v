@@ -17,7 +17,7 @@ fn encode_ciphertext_monitor(reference &u8, observed &u8, recovery bool, sample 
 			|| C.snprintf(&actual[i * 2], uint(65 - i * 2), c'%02x', u32(observed[i])) != 2
 			|| C.snprintf(&fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(digest[i])) != 2 { return 0 }
 	} }
-	length := int(C.snprintf(output, uint(2048), c'format=VINIXCM1 operation=monitored-ciphertext source=%s sample=%lu changed_samples=%lu session_changed=%lu\nformat=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
+	length := int(C.snprintf(output, uint(2048), c'format=TULPARCM1 operation=monitored-ciphertext source=%s sample=%lu changed_samples=%lu session_changed=%lu\nformat=TULPARCS1 operation=scrubbed-ciphertext mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n',
 		if recovery { &char(c'recovery') } else { &char(c'volume') }, sample, changed_samples, u64(changed_samples != 0), u64(!changed), u64(changed), &fingerprint[0], disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags,
 		if changed { &char(c'changed') } else { &char(c'match') }, &expected[0], &actual[0]))
 	return if length > 0 && length < 2048 { length } else { 0 }
@@ -42,7 +42,7 @@ fn monitor_volume_ciphertext(input &char, credential &char, reference &char, int
 	if !open_plan_edit(reference, mut work.edit, false) || read_private_key_fd(work.edit.source, &saved[0], volume_ciphertext_bytes, volume_ciphertext_bytes) != volume_ciphertext_bytes { return 1 }
 	if !volume_ciphertext_matches(&saved[0], volume_ciphertext_bytes, &work.disk, &work.request.data) { return plan_error(c'ciphertext reference does not match authenticated geometry') }
 	fd := ciphertext_scrub_parent(unsafe { nil }, &work.disk, mut work.status)
-	if fd < 0 { C.perror(c'vinix-volume: open ciphertext monitor parent'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open ciphertext monitor parent'); return 1 }; defer { C.close(fd) }
 	mut sample := u64(1); mut changed_samples := u64(0)
 	for {
 		if !volume_seal_recheck(fd, mut *work) || !read_volume_ciphertext(fd, &work.disk, &work.request.data, unsafe { &observed })

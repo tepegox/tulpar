@@ -4,8 +4,8 @@ import klock
 import event.eventstruct
 import katomic
 import errno
-#define vinix_stack_alloc __builtin_alloca
-fn C.vinix_stack_alloc(usize) voidptr
+#define tulpar_stack_alloc __builtin_alloca
+fn C.tulpar_stack_alloc(usize) voidptr
 pub const o_rdonly=0
 pub const o_wronly=1
 pub const o_rdwr=2

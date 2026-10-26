@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module pkgprotocol
 
-pub const progress_prefix = 'VINIX-PACKAGE-PROGRESS '
+pub const progress_prefix = 'TULPAR-PACKAGE-PROGRESS '
 pub const progress_limit = 8192
 
 // Counters describe the current phase, not completion of the whole operation.

@@ -8,8 +8,8 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn root_recipe_selected(selection string) bool {
@@ -66,7 +66,7 @@ fn test_root_recipe_decoder_owns_templates_and_growing_selectors() {
 			defer { unsafe { text.free() } }
 			last := 'share/' + (count - 1).str()
 			cycles := if count == 1024 { 1 } else { $if track_heap ? { 1000 } $else { 64 } }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. cycles {
 				value := decode_root_recipe(text)!
 				assert value.format == 1 && value.entries.len == count && value.entries[count - 1].path == last
@@ -75,7 +75,7 @@ fn test_root_recipe_decoder_owns_templates_and_growing_selectors() {
 				close_decoded_root_recipe(value)
 			}
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); assert kept == 0
+				kept := C.tulpar_heap_end(); assert kept == 0
 				println('ROOT RECIPE ' + architecture + ' ' + count.str() + ' selectors: ' + cycles.str() + ' cycles retained ' + kept.str() + ' bytes')
 			}
 			source := text.clone()
@@ -96,7 +96,7 @@ fn test_root_recipe_defaults_and_complete_selector_requirements() {
 		'{"manifest":{"sdk":1,"window_protocol":0,"files":[{"bytes":18446744073709551615}]},"entries":[{"source":"COPYING","path":"COPYING"}]}']
 	cycles := $if track_heap ? { 1000 } $else { 64 }
 	for text in inputs {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles {
 			value := decode_root_recipe(text)!
 			assert value.format == 1 && value.manifest.sdk == 1 && value.manifest.window_protocol == 0
@@ -105,7 +105,7 @@ fn test_root_recipe_defaults_and_complete_selector_requirements() {
 			if text.contains('184467') { assert value.manifest.files[0].bytes == ~u64(0) }
 			close_decoded_root_recipe(value)
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	}
 	println('ROOT RECIPE omitted format and nested manifest defaults, full payload integers and reordered fields preserve admission and retire scratch PASS')
 }
@@ -126,16 +126,16 @@ fn test_root_recipe_partial_schema_and_semantic_refusals_retire_storage() {
 		text.replace('"bytes":1', '"bytes":18446744073709551616'), text.replace('"bytes":1', '"bytes":1e0'),
 		'{"manifest":{}}', '{"entries":[]}', '{"manifest":{},"entries":[]}',
 		'{"manifest":{},"entries":[{}]}', '{"manifest":null,"entries":[{"source":"a","path":"b"}]}']
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for end in 0 .. text.len { root_recipe_refusal(unsafe { tos(text.str, end) }) }
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	cycles := $if track_heap ? { 1000 } $else { 64 }
 	for number, input in inputs {
 		assert input != text
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { root_recipe_refusal(input) }
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0
+			kept := C.tulpar_heap_end(); assert kept == 0
 			println('ROOT RECIPE refusal ' + number.str() + ': 1000 cycles retained ' + kept.str() + ' bytes')
 		}
 	}
@@ -184,19 +184,19 @@ fn test_root_recipe_overlap_validation_is_allocation_free_and_keeps_path_boundar
 		entries := [RootEntry{source: 'source/a', path: pair[0]}, RootEntry{source: 'source/b', path: pair[1]}]
 		recipe := RootRecipe{ entries: entries }
 		refuse := pair[0] == pair[1] || (pair[0] + '/').starts_with(pair[1] + '/') || (pair[1] + '/').starts_with(pair[0] + '/')
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			if _ := validate_root_recipe(recipe) { assert !refuse }
 			else { message := err.msg(); assert refuse && message == 'overlapping prepared-root destinations'; unsafe { message.free(); err.free() } }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	}
 	println('ROOT RECIPE 1000 borrowed selector validation cycles preserve equal/parent/child/Unicode/component boundaries and retire scratch PASS')
 }
 
 fn test_root_recipe_refusal_preserves_import_source_and_workspace_then_restored_retry_packs() {
 	if !root_recipe_selected('pack') { return }
-	root := os.temp_dir() + '/vinix-root-recipe-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	root := os.temp_dir() + '/tulpar-root-recipe-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(root + '/source')!; defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/source/COPYING', 'redistribution terms')!
 	valid := '{"manifest":{"id":"data","name":"Data","version":"1.0.0","architecture":"all","kind":"data","license":"MIT","files":[{}]},"entries":[{"source":"COPYING","path":"COPYING"}]}'

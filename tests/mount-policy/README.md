@@ -2,8 +2,8 @@
 
 Build the kernel for the selected architecture, then run
 `tests/mount-policy/run.sh aarch64` or `tests/mount-policy/run.sh amd64`.
-`VINIX_KERNEL_DIR` selects an isolated ARM64 kernel worktree and
-`VINIX_AMD64_KERNEL` selects the built x86-64 binary. The musl sysroot and VM
+`TULPAR_KERNEL_DIR` selects an isolated ARM64 kernel worktree and
+`TULPAR_AMD64_KERNEL` selects the built x86-64 binary. The musl sysroot and VM
 configuration use the same variables as the OpenBSD security suite.
 
 The static guest init checks noexec for ELF executables, scripts, symlinks,

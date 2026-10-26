@@ -30,7 +30,7 @@ pub fn check_child(args []string) ! {
 	}
 	if args[0] == 'reboot' {
 		for marker in ['START', 'WROTE MARKER, REBOOTING', 'SYNCING', 'START', 'SYNCING', 'PASS'] {
-			println('VINIX REBOOT PERSISTENCE: ' + marker)
+			println('TULPAR REBOOT PERSISTENCE: ' + marker)
 			time.sleep(15 * time.millisecond)
 		}
 		return
@@ -77,11 +77,11 @@ fn failed_export(source string, output string) ! {
 // An explicitly selected host model exercises the complete controller case
 // sequence. Physical kernel durability remains the separate real guest check.
 pub fn check_vm() ! {
-	if os.getenv('VINIX_DISK_TEST_MODEL') != '1' {
+	if os.getenv('TULPAR_DISK_TEST_MODEL') != '1' {
 		return error('Host journal model was not selected')
 	}
-	mode := strconv.atoi(os.getenv('VINIX_CMDLINE').all_after('vinix.journal_mode='))!
-	mut trace := os.open_append(os.getenv('VINIX_DISK_TEST_TRACE'))!
+	mode := strconv.atoi(os.getenv('TULPAR_CMDLINE').all_after('tulpar.journal_mode='))!
+	mut trace := os.open_append(os.getenv('TULPAR_DISK_TEST_TRACE'))!
 	trace.writeln(mode.str())!
 	trace.close()
 	println('JOURNAL START')
@@ -95,7 +95,7 @@ pub fn check_vm() ! {
 }
 
 fn check_journal_sequence(work string) ! {
-	variables := ['VINIX_QEMU_X86_64', 'VINIX_DISK_TEST_MODEL', 'VINIX_DISK_TEST_TRACE']
+	variables := ['TULPAR_QEMU_X86_64', 'TULPAR_DISK_TEST_MODEL', 'TULPAR_DISK_TEST_TRACE']
 	mut previous := map[string]string{}
 	for name in variables { if value := os.getenv_opt(name) { previous[name] = value } }
 	defer { for name in variables {
@@ -110,7 +110,7 @@ fn check_journal_sequence(work string) ! {
 	mut elf := []u8{len: 20}
 	for index, byte in [u8(0x7f), `E`, `L`, `F`, 2, 1] { elf[index] = byte }
 	elf[18] = 62
-	os.write_file_array(work + '/model-kernel/bin/vinix', elf)!
+	os.write_file_array(work + '/model-kernel/bin/tulpar', elf)!
 	if journal(['--arch', 'amd64', '--state-dir', work + '/journal-model', '--kernel-dir',
 		work + '/model-kernel'])! != 0 {
 		return error('Controlled journal case sequence failed')
@@ -241,7 +241,7 @@ fn check_images(work string, executable string) ! {
 }
 
 pub fn check() ! {
-	work := hosttest.work_dir('', 'vinix-disk-check-')!
+	work := hosttest.work_dir('', 'tulpar-disk-check-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	for text, wanted in {
 		'Type: regular Mode: 0600 Links: 2':                 {

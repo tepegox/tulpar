@@ -23,7 +23,7 @@ growth. Fork clears locks and future mode in the child; exec creates a fresh
 address space. Unmap, fixed replacement, heap shrink and remap update accounting
 through the surviving ranges. `/proc/<pid>/status` reports `VmLck` in KiB.
 Discard advice refuses locked pages. Current mapping ownership keeps resident
-frames and mapped file-cache pages referenced; Vinix currently has no swap.
+frames and mapped file-cache pages referenced; Tulpar currently has no swap.
 
 Lock changes preflight all ranges and limits, populate outside the map lock,
 then revalidate residency and policy before committing. Failure leaves prior
@@ -40,10 +40,10 @@ with `EINVAL` so the process break continues to refer to its original arena.
 Build kernels first and point the isolated guest runners at them:
 
 ```sh
-VINIX_KERNEL_DIR="$PWD/kernel" \
-  VINIX_AARCH64_SYSROOT=/path/to/aarch64/sysroot \
+TULPAR_KERNEL_DIR="$PWD/kernel" \
+  TULPAR_AARCH64_SYSROOT=/path/to/aarch64/sysroot \
   CC=/path/to/clang tests/memlock/run.sh aarch64
-VINIX_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/vinix" \
+TULPAR_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/tulpar" \
   tests/memlock/run.sh amd64
 ```
 
@@ -56,7 +56,7 @@ usage and print retained allocation sites on an `ALLOC_TRACK=1` kernel.
 
 Run `tests/mapped-writeback/run --arch aarch64 --steps=private`
 and `--arch amd64 --steps=private` with the same kernel overrides (and
-`VINIX_QEMU_RT_NO_BUILD=1` for a prebuilt ARM kernel). That EXT2 guest verifies
+`TULPAR_QEMU_RT_NO_BUILD=1` for a prebuilt ARM kernel). That EXT2 guest verifies
 dirty locked private remaps leave cached aliases and disk contents unchanged,
 unlocks allow discard/reload, and 500 private remap/unlink/close/unmap operations
 keep allocations bounded. Its host then checks every byte of the backing file

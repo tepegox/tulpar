@@ -5,8 +5,8 @@ import os
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn refused(data string, builtins string) bool {
@@ -17,7 +17,7 @@ fn refused(data string, builtins string) bool {
 
 fn test_private_prefix_links_policy_and_identity() {
 	if C.geteuid() == 0 || os.getegid() == 0 { panic('run Wine prefix tests under an ordinary host account') }
-	temporary := os.real_path(os.temp_dir()) + '/vinix-wine-prefix-' + os.getpid().str()
+	temporary := os.real_path(os.temp_dir()) + '/tulpar-wine-prefix-' + os.getpid().str()
 	defer { os.rmdir_all(temporary) or {}; unsafe { temporary.free() } }
 	os.mkdir_all(temporary)!
 	data := temporary + '/data'
@@ -41,7 +41,7 @@ fn test_private_prefix_links_policy_and_identity() {
 	baseline_fd := C.open(c'/dev/null', C.O_RDONLY | C.O_CLOEXEC)
 	assert baseline_fd >= 0
 	C.close(baseline_fd)
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		mut value := prepare_prefix(data, builtins)!
 		value.recheck(data)!
@@ -49,7 +49,7 @@ fn test_private_prefix_links_policy_and_identity() {
 		value.close()
 	}
 	$if track_heap ? {
-		assert C.vinix_heap_end() == 0
+		assert C.tulpar_heap_end() == 0
 	}
 	final_fd := C.open(c'/dev/null', C.O_RDONLY | C.O_CLOEXEC)
 	assert final_fd == baseline_fd

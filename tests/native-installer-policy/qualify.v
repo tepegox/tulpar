@@ -68,8 +68,8 @@ fn run() ! {
 	}
 	checked([work + '/main', '--help'], os.environ(), work + '/help.log')!
 	mut environment := os.environ()
-	environment['VINIX_TARGET_DISK'] = 'disk0oops'
-	environment['VINIX_SPACE_BYTES'] = '32000000000'
+	environment['TULPAR_TARGET_DISK'] = 'disk0oops'
+	environment['TULPAR_SPACE_BYTES'] = '32000000000'
 	for args in [[]string{}, ['--unknown']] {
 		result := sourcecommand.capture_full([work + '/main', ...args], environment, -1, 1024 * 1024, cachecli.cancelled)!
 		assert result.status == if args.len == 0 { 1 } else { 2 }, result.str()
@@ -86,7 +86,7 @@ fn run() ! {
 			assert names['_' + name], arch + '/' + name
 		}
 	}
-	for path in ['installer/macos/install-vinix.sh', 'installer/macos/test.sh',
+	for path in ['installer/macos/install-tulpar.sh', 'installer/macos/test.sh',
 		'scripts/build-macos-installer.sh'] {
 		checked(['/bin/sh', '-n', root + '/' + path], os.environ(), work + '/' + os.file_name(path) + '-syntax.log')!
 	}
@@ -96,7 +96,7 @@ fn run() ! {
 		'receipts':    json2.Any(receipts)
 		'sdk_sha256':  json2.Any(sha256.sum(os.read_bytes(sdk)!).hex())
 		'sdk_exports': json2.Any(cpythonapi.symbols.len)
-		'limits':      json2.Any('Native policy/reference/callback and existing ui2 tests only. Shutdown and delay are replaced by V recorders. Both SDK Mach-O slices inspected as data. No SDK initialization, Python execution, authentication, APFS mutation, installation, shutdown, or Vinix guest executed.')
+		'limits':      json2.Any('Native policy/reference/callback and existing ui2 tests only. Shutdown and delay are replaced by V recorders. Both SDK Mach-O slices inspected as data. No SDK initialization, Python execution, authentication, APFS mutation, installation, shutdown, or Tulpar guest executed.')
 	}), prettify: true) + '\n')!
 	println('PASS installer qualification ' + profile)
 }

@@ -10,7 +10,7 @@ fn C.execv(&char, &&char) int
 
 fn run_linux() ! {
 	if os.args.len < 3 {
-		return error('usage: vinix-linux-runner ABSOLUTE_PACKAGED_LOADER ABSOLUTE_APPLICATION [ARGS...]')
+		return error('usage: tulpar-linux-runner ABSOLUTE_PACKAGED_LOADER ABSOLUTE_APPLICATION [ARGS...]')
 	}
 	loader := os.args[1]
 	application := os.args[2]

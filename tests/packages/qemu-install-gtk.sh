@@ -1,6 +1,6 @@
 #!/bin/sh
 # Long-running QEMU integration probe. Boot a desktop initramfs with the V full init policy
-# and this file as /etc/vinix-boot-test.sh, then inspect the saved host overlay.
+# and this file as /etc/tulpar-boot-test.sh, then inspect the saved host overlay.
 set -eu
 
 echo "QEMU GTK PERSISTENCE: waiting for DHCP"

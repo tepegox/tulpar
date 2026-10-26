@@ -141,7 +141,7 @@ fn (mut check BoundsChecks) successful(reference string, schema_exists bool, pin
 			}
 			mut hashed := [
 				os.join_path(check.profiles[profile], 'generated/autoconf.h'),
-				os.join_path(check.profiles[profile], 'vinix/atomic_exchange.h'),
+				os.join_path(check.profiles[profile], 'tulpar/atomic_exchange.h'),
 				os.join_path(check.root, 'kernel/linuxkpi/include/linux/spinlock_types_raw.h'),
 				check.archive,
 				os.join_path(check.root, 'tests/linuxkpi/generate_bounds.v'),
@@ -150,7 +150,7 @@ fn (mut check BoundsChecks) successful(reference string, schema_exists bool, pin
 				provenance['compiler_path']!.str(),
 			]
 			if schema_exists {
-				hashed << os.join_path(check.profiles[profile], 'vinix/integer_policy.h')
+				hashed << os.join_path(check.profiles[profile], 'tulpar/integer_policy.h')
 			}
 			inputs := provenance['input_sha256']!.as_map()
 			for path in hashed {
@@ -216,7 +216,7 @@ fn (mut check BoundsChecks) failures(probe string) ! {
 	check.rejected('changed-archive', output, check.flags('native', 'gnu99'), 'archive SHA256 differs', bundle, check.linux, changed_archive, check.compiler)!
 	changed_source := os.join_path(check.work, 'changed-source')
 	hardlink_tree(check.linux, changed_source)!
-	manifest := hosttest.decode_json(os.read_file(os.join_path(changed_source, '.vinix-upstream.json'))!)!.as_map()
+	manifest := hosttest.decode_json(os.read_file(os.join_path(changed_source, '.tulpar-upstream.json'))!)!.as_map()
 	changed_name := manifest['files']!.as_map().keys()[0]
 	altered := os.join_path(changed_source, changed_name)
 	original_sha := hosttest.file_digest(os.join_path(check.linux, changed_name))!
@@ -323,7 +323,7 @@ fn run_profile(keep string) ! {
 	linux := hosttest.resolve_path(hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(hosttest.upstream_default(), 'linux-' + version)))!
 	archive := os.join_path(os.dir(linux), 'linux-' + version + '.tar.xz')
 	compiler := hosttest.env_default('CC', 'clang')
-	work := hosttest.work_dir(keep, 'vinix-bounds-generation-')!
+	work := hosttest.work_dir(keep, 'tulpar-bounds-generation-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut guarded := [@FILE, os.join_path(root, 'tests/linuxkpi/bounds_compiler_probe.v'),
 		os.join_path(root, 'tests/linuxkpi/generate_bounds.v'),
@@ -361,7 +361,7 @@ fn run_profile(keep string) ! {
 		os.write_file(os.join_path(include, 'generated/autoconf.h'), selected)!
 		for schema, header in adapters {
 			hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema),
-				os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'vinix', header))!
+				os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'tulpar', header))!
 		}
 		profiles[name] = include
 	}

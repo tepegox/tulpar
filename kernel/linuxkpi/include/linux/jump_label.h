@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_JUMP_LABEL_H
-#define VINIX_LINUX_JUMP_LABEL_H
+#ifndef TULPAR_LINUX_JUMP_LABEL_H
+#define TULPAR_LINUX_JUMP_LABEL_H
 #include <linux/atomic.h>
 /* Equivalent branch semantics without Linux's text-patching optimization.
  * Only the boolean static-branch API is currently supported. */

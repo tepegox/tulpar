@@ -15,30 +15,30 @@ fn image_tools_descriptors() int {
 }
 
 fn image_tools_write(fd int, data voidptr, count uint) int {
-	mode := os.getenv('VINIX_IMAGE_TOOLS_MODE')
+	mode := os.getenv('TULPAR_IMAGE_TOOLS_MODE')
 	defer { unsafe { mode.free() } }
 	if mode == 'write' { return 0 }
 	return C.write(fd, data, count)
 }
 
 fn image_tools_flush(fd int) int {
-	mode := os.getenv('VINIX_IMAGE_TOOLS_MODE')
-	number := os.getenv('VINIX_IMAGE_TOOLS_FLUSH').int() + 1
-	os.setenv('VINIX_IMAGE_TOOLS_FLUSH', number.str(), true)
+	mode := os.getenv('TULPAR_IMAGE_TOOLS_MODE')
+	number := os.getenv('TULPAR_IMAGE_TOOLS_FLUSH').int() + 1
+	os.setenv('TULPAR_IMAGE_TOOLS_FLUSH', number.str(), true)
 	if (mode == 'flush-file' && number == 3) || (mode == 'late-flush' && number == 4) { return -1 }
 	return C.fsync(fd)
 }
 
 fn image_tools_space(_ string) !u64 {
-	mode := os.getenv('VINIX_IMAGE_TOOLS_MODE')
+	mode := os.getenv('TULPAR_IMAGE_TOOLS_MODE')
 	if mode == 'disk' { return 0 }
 	if mode == 'query' { return error('injected tool disk query refusal') }
 	return ~u64(0)
 }
 
 fn image_tools_checkpoint(phase string, workspace string) ! {
-	mode := os.getenv('VINIX_IMAGE_TOOLS_MODE')
-	work := os.getenv('VINIX_IMAGE_TOOLS_WORK')
+	mode := os.getenv('TULPAR_IMAGE_TOOLS_MODE')
+	work := os.getenv('TULPAR_IMAGE_TOOLS_WORK')
 	if phase == 'captured' && mode == 'captured-change' {
 		for name in image_tool_names { os.write_file(workspace + '/' + name, 'later compiler output')! }
 	}
@@ -70,7 +70,7 @@ fn image_tools_fixture(root string) ! {
 }
 
 fn image_tools_case(architecture string, mode string) ! {
-	work := os.real_path(os.temp_dir()) + '/vinix-image-tools-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-image-tools-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/image')!; os.mkdir(work + '/scratch')!; os.mkdir(work + '/outside')!
 	defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/outside/keep', 'outside preserved')!
@@ -82,7 +82,7 @@ fn image_tools_case(architecture string, mode string) ! {
 	defer { build.close() }
 	workspace := unsafe { &build }.directory()!
 	assert os.stat(workspace)!.mode & 0o777 == 0o700
-	assert os.file_name(workspace).starts_with('.vinix-package-build-')
+	assert os.file_name(workspace).starts_with('.tulpar-package-build-')
 	mut expected := [][]u8{}
 	for i, name in image_tool_names {
 		mut data := elffixture.image(architecture, 'static'); data[400] = u8(i + 1)
@@ -102,11 +102,11 @@ fn image_tools_case(architecture string, mode string) ! {
 		'writable' { os.chmod(bad, 0o777)! }
 		'oversize' { fd := C.open(bad.str, C.O_WRONLY); assert fd >= 0; assert C.ftruncate(fd, 64 * 1024 * 1024 + 1) == 0; C.close(fd) }
 		'parent-alias' { os.rename(work + '/image/usr/libexec', work + '/saved-libexec')!; os.symlink(work + '/outside', work + '/image/usr/libexec')! }
-		'destination-directory' { os.rm(work + '/image/usr/libexec/vinix/vinix-linux-runner')!; os.mkdir(work + '/image/usr/libexec/vinix/vinix-linux-runner')! }
-		'leaf-alias' { os.rm(work + '/image/usr/bin/vinix-package')!; os.symlink(work + '/outside/keep', work + '/image/usr/bin/vinix-package')! }
+		'destination-directory' { os.rm(work + '/image/usr/libexec/tulpar/tulpar-linux-runner')!; os.mkdir(work + '/image/usr/libexec/tulpar/tulpar-linux-runner')! }
+		'leaf-alias' { os.rm(work + '/image/usr/bin/tulpar-package')!; os.symlink(work + '/outside/keep', work + '/image/usr/bin/tulpar-package')! }
 		else {}
 	}
-	os.setenv('VINIX_IMAGE_TOOLS_MODE', mode, true); os.setenv('VINIX_IMAGE_TOOLS_WORK', work, true); os.setenv('VINIX_IMAGE_TOOLS_FLUSH', '0', true)
+	os.setenv('TULPAR_IMAGE_TOOLS_MODE', mode, true); os.setenv('TULPAR_IMAGE_TOOLS_WORK', work, true); os.setenv('TULPAR_IMAGE_TOOLS_FLUSH', '0', true)
 	mut problem := ''
 	unsafe { &build }.publish_with(ImageToolOptions{ checkpoint: image_tools_checkpoint, available_space: image_tools_space,
 		write: image_tools_write, flush: image_tools_flush }) or {
@@ -121,7 +121,7 @@ fn image_tools_case(architecture string, mode string) ! {
 	for i, name in image_tool_names {
 		root := if mode == 'root-replaced' { work + '/saved-image' } else { work + '/image' }
 		parent := if mode == 'parent-replaced' && i == 0 { work + '/saved-bin' }
-			else if mode == 'parent-alias' && i == 2 { work + '/saved-libexec/vinix' } else { root + image_tool_parents[i] }
+			else if mode == 'parent-alias' && i == 2 { work + '/saved-libexec/tulpar' } else { root + image_tool_parents[i] }
 		path := parent + '/' + name
 		if mode == 'destination-directory' && i == 2 { assert os.is_dir(path) }
 		else if mode in ['complete', 'leaf-alias', 'captured-change']! || (mode == 'late-flush' && i == 0) {
@@ -139,7 +139,7 @@ fn image_tools_case(architecture string, mode string) ! {
 }
 
 fn test_image_tools_validate_complete_captured_outputs_before_controlled_atomic_publication() {
-	defer { for name in ['MODE', 'WORK', 'FLUSH']! { os.unsetenv('VINIX_IMAGE_TOOLS_' + name) } }
+	defer { for name in ['MODE', 'WORK', 'FLUSH']! { os.unsetenv('TULPAR_IMAGE_TOOLS_' + name) } }
 	for architecture in ['aarch64', 'x86_64']! {
 		for mode in ['complete', 'missing-0', 'missing-1', 'missing-2', 'wrong-0', 'wrong-1', 'wrong-2', 'truncated',
 			'dynamic', 'invalid-segment', 'alias', 'hardlink', 'nonexec', 'writable', 'oversize', 'disk', 'query', 'write',

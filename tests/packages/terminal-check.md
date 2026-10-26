@@ -10,7 +10,7 @@ arguments and the existing Terminal renderer inside Software.
 
 The shared V [PTY constructor](../../desktop/ptycore/pty.c.v) claims a new
 controlling terminal, sets geometry before exec, attaches standard streams and
-closes higher descriptors. Linux/Vinix uses `close_range`; host fixtures snapshot
+closes higher descriptors. Linux/Tulpar uses `close_range`; host fixtures snapshot
 their open `/dev/fd` entries before fork. The production package terminal starts
 the trusted service directly, without an intermediary shell. Output is bounded
 by the Terminal renderer and its existing scrollback limits.

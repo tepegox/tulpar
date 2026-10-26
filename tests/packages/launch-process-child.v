@@ -20,7 +20,7 @@ fn check() !int {
 	if os.args[1] == 'signal' { C.raise(C.SIGTERM); return 99 }
 	if os.args[1] == 'observe' {
 		text := json2.encode(Observation{ arguments: os.args[3..], directory: os.getwd(),
-			environment: os.getenv('VINIX_LAUNCH_PROCESS_LITERAL'), uid: os.geteuid(), gid: os.getegid() })
+			environment: os.getenv('TULPAR_LAUNCH_PROCESS_LITERAL'), uid: os.geteuid(), gid: os.getegid() })
 		os.write_file(os.args[2], text)!
 		return 37
 	}

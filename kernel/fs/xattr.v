@@ -75,7 +75,7 @@ fn xattr_target_by_path(_path charptr, follow bool, access u32) ?XAttrTarget {
 		errno.set(errno.enoent)
 		return none
 	}
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(at_fdcwd, path, identity)?
 	held := retain_path_target_on_mount(parent, path, follow, identity)?
 	mut transferred := false

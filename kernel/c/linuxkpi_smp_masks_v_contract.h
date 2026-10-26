@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_SMP_MASKS_V_CONTRACT_H
-#define VINIX_LINUXKPI_SMP_MASKS_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_SMP_MASKS_V_CONTRACT_H
+#define TULPAR_LINUXKPI_SMP_MASKS_V_CONTRACT_H
 #include "linuxkpi_smp_masks_v_primitives.h"
 #include "linuxkpi_common_v_contract.h"
 #include <linux/cpumask.h>
@@ -18,7 +18,7 @@ _Static_assert(sizeof(atomic_t) == sizeof(int32_t) &&
 	"original online-counter field storage");
 _Static_assert(sizeof(nr_cpu_ids) == sizeof(uint32_t),
 	"original logical CPU bound storage");
-#ifndef VINIX_LINUXKPI_HOST_TEST
+#ifndef TULPAR_LINUXKPI_HOST_TEST
 _Static_assert(__builtin_types_compatible_p(uint64_t, unsigned long),
 	"native V words preserve the original unsigned-long mask type");
 #endif

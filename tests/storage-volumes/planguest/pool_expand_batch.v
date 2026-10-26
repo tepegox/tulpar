@@ -4,7 +4,7 @@ module planguest
 fn pool_expand_batch(path &char, pool &char, first &char, first_end &char,
 	second &char, second_end &char, preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'pool-preview-expand-batch') } else { &char(c'pool-expand-batch') },
 			path, pool, first, first_end, second, second_end, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
@@ -32,8 +32,8 @@ fn planned_pool_expand_batch(parent &char, other &char) {
 		mut original := [8768]u8{}
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'expansion batch baseline')
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9')
-		held := C.open(c'/dev/mapper/vinix2', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9')
+		held := C.open(c'/dev/mapper/tulpar2', C.O_RDONLY)
 		check(held >= 0, c'hold old view across expansion batch')
 		mut output := [4096]char{}
 		for preview in [false, true]! {
@@ -68,24 +68,24 @@ fn planned_pool_expand_batch(parent &char, other &char) {
 		check(contains(&output[0], c'request=0 disk=1 action=keep') && contains(&output[0], c'request=1 disk=0 action=keep'), c'equal-end retry keeps both members')
 		bundle_unchanged(c'/root/saved.vset', &expanded[0], size)
 		pool_allocate(c'/root/saved.vset', c'3', c'14', c'8192', true, 0)
-		missing(c'/dev/mapper/vinix14')
+		missing(c'/dev/mapper/tulpar14')
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
-		view := status(c'/dev/mapper/vinix14')
+		view := status(c'/dev/mapper/tulpar14')
 		check(view.disk_id == status(parent).disk_id && view.start == 6291456 && view.bytes == 8192 && view.flags & 1 == 1,
 			c'reverse expansion request order retains original first-fit member priority')
-		check(status(c'/dev/mapper/vinix2').generation == first.generation && status(c'/dev/mapper/vinix2').bytes == first.bytes
-			&& status(c'/dev/mapper/vinix9').generation == second.generation && status(c'/dev/mapper/vinix9').bytes == second.bytes
+		check(status(c'/dev/mapper/tulpar2').generation == first.generation && status(c'/dev/mapper/tulpar2').bytes == first.bytes
+			&& status(c'/dev/mapper/tulpar9').generation == second.generation && status(c'/dev/mapper/tulpar9').bytes == second.bytes
 			&& first.disk_id == status(parent).disk_id && second.disk_id == status(other).disk_id, c'expansion preserves live geometry and generations')
 		mut data := [4096]u8{}
 		check(C.pread(held, &data[0], 4096, 0) == 4096 && C.close(held) == 0, c'held old view survives expansion and replay')
 		for byte in data { check(byte == 0x6d, c'old data preserved across pool expansion') }
 		simple(c'plan-remove', c'/root/saved.vset', c'14', 0)
-		simple(c'remove', c'/dev/mapper/vinix14', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar14', nil, 0)
 		tool(c'pool-remove', c'/root/saved.vset', c'3', c'0', nil, 0)
 		tool(c'pool-remove', c'/root/saved.vset', c'3', c'1', nil, 0)
 		pool_members(c'/root/saved.vset')
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
-		copy_plan(c'/root/saved.vset', c'/etc/vinix/volumes.vset')
+		copy_plan(c'/root/saved.vset', c'/etc/tulpar/volumes.vset')
 		C.printf(c'PLAN POOL EXPANSION BATCH PASSED: complete rollback/previews, writer exclusion, exact eligibility and retained member priority/views\n')
 	}
 }

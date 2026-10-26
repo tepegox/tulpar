@@ -102,7 +102,7 @@ diff -urN --no-dereference xf86-video-fbdev-clean/src/fbdev.c xf86-video-fbdev-w
 +	FBDevPtr fPtr = FBDEVPTR(pScrn);
 +	const char *method = xf86GetOptValString(fPtr->Options, OPTION_ACCEL_METHOD);
 +	const char *node = xf86GetOptValString(fPtr->Options, OPTION_RENDER_NODE);
-+	const char *force_software = getenv("VINIX_FORCE_SOFTWARE_GL");
++	const char *force_software = getenv("TULPAR_FORCE_SOFTWARE_GL");
 +	void *module;
 +
 +	if ((method && !xf86NameCmp(method, "none")) ||

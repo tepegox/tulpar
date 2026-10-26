@@ -5,12 +5,12 @@ import json2
 import os
 import time
 
-const media = '/usr/share/vinix-packages/repositories/native'
+const media = '/usr/share/tulpar-packages/repositories/native'
 const newer_media = '/usr/share/software-maintenance-release-1.1.0'
-const launcher = '/var/lib/vinix-packages/current/share/applications/vinix-org.vinix.counter.desktop'
+const launcher = '/var/lib/tulpar-packages/current/share/applications/tulpar-org.tulpar.counter.desktop'
 
 fn approvals() !int {
-	log := os.read_file('/var/log/vinix/auth.log') or { '' }
+	log := os.read_file('/var/log/tulpar/auth.log') or { '' }
 	defer { unsafe { log.free() } }
 	if log.contains('graphical acceptance password') { return error('password appeared in authentication audit') }
 	lines := log.split_into_lines()
@@ -23,14 +23,14 @@ fn approvals() !int {
 }
 
 fn state_text() string {
-	return os.read_file('/var/lib/vinix-packages/current/state.json') or { '' }
+	return os.read_file('/var/lib/tulpar-packages/current/state.json') or { '' }
 }
 
 fn verify_state(version string, count int) ! {
-	command(['/usr/bin/vinix-package', 'verify'], '')!
+	command(['/usr/bin/tulpar-package', 'verify'], '')!
 	state := json2.decode[json2.Any](state_text())!.as_map()
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
-	configuration := json2.decode[json2.Any](os.read_file('/etc/vinix-packages/config.json')!)!.as_map()
+	configuration := json2.decode[json2.Any](os.read_file('/etc/tulpar-packages/config.json')!)!.as_map()
 	key := configuration['repositories']!.as_array()[0].as_map()['public_key']!.str()
 	if state['architecture']!.str() != architecture || approvals()! != count {
 		return error('maintenance architecture or exact ordinary approval count differs')
@@ -41,20 +41,20 @@ fn verify_state(version string, count int) ! {
 			return error('uninstall retained package state or active launcher')
 		}
 	} else {
-		if packages.len != 1 || state['requested']!.as_array().map(it.str()) != ['org.vinix.counter'] {
+		if packages.len != 1 || state['requested']!.as_array().map(it.str()) != ['org.tulpar.counter'] {
 			return error('maintenance activated a different requested closure')
 		}
 		installed := packages[0].as_map()
 		package := installed['package']!.as_map()
 		if installed['repository']!.str() != 'native' || installed['public_key']!.str() != key ||
-			package['id']!.str() != 'org.vinix.counter' || package['version']!.str() != version ||
+			package['id']!.str() != 'org.tulpar.counter' || package['version']!.str() != version ||
 			package['architecture']!.str() != architecture || package['kind']!.str() != 'native' ||
 			package['license']!.str() != 'MIT' || package['permissions']!.as_array().map(it.str()) != ['display'] ||
-			!os.read_file(launcher)!.contains('org.vinix.counter') {
+			!os.read_file(launcher)!.contains('org.tulpar.counter') {
 			return error('maintenance signed manifest/provenance or launcher differs')
 		}
 	}
-	metadata := os.lstat('/var/lib/vinix-packages/current/state.json')!
+	metadata := os.lstat('/var/lib/tulpar-packages/current/state.json')!
 	if metadata.uid != 0 || metadata.mode & 0o022 != 0 { return error('package state is writable by ordinary account') }
 }
 
@@ -93,7 +93,7 @@ fn maintenance_proposal(operation string, names []string, count int, value strin
 	defer { unsafe { before.free() } }
 	data := if value != '' { private_data(value)! } else { InstalledFile{} }
 	if approvals()! != count { return error('unexpected approval before read-only maintenance review') }
-	mut child := os.new_process('/usr/bin/vinix-package')
+	mut child := os.new_process('/usr/bin/tulpar-package')
 	defer { child.close() }
 	child.set_args(['review', operation, ...names])
 	child.set_redirect_stdio()
@@ -118,7 +118,7 @@ fn maintenance(mut desktop os.Process, fresh bool) ! {
 	deadline := time.sys_mono_now() + 1200 * time.second
 	if fresh {
 		require_uninstalled()!
-		maintenance_proposal('install', ['org.vinix.counter'], 0, '')!
+		maintenance_proposal('install', ['org.tulpar.counter'], 0, '')!
 		wait_version(mut desktop, '1.0.0', 1, deadline)!
 		println('SOFTWARE MAINTENANCE installed version=1.0.0 approvals=1 exact-signed-state launcher PASS')
 		wait_data(mut desktop, '2', deadline)!
@@ -136,7 +136,7 @@ fn maintenance(mut desktop os.Process, fresh bool) ! {
 		println('SOFTWARE MAINTENANCE newer signed medium available PASS')
 		for {
 			if !desktop.is_alive() || time.sys_mono_now() >= deadline { return error('GUI refresh timed out') }
-			catalog := os.read_file('/var/lib/vinix-packages/catalog.json') or { '' }
+			catalog := os.read_file('/var/lib/tulpar-packages/catalog.json') or { '' }
 			updated := catalog.contains(pattern)
 			unsafe { catalog.free() }
 			if updated && approvals()! == 2 { break }
@@ -160,13 +160,13 @@ fn maintenance(mut desktop os.Process, fresh bool) ! {
 	wait_version(mut desktop, '1.0.0', 4, deadline)!
 	if private_data('3')! != data { return error('rollback changed retained private file metadata') }
 	println('SOFTWARE MAINTENANCE rolled-back version=1.0.0 approvals=4 private=3 launcher PASS')
-	maintenance_proposal('remove', ['org.vinix.counter'], 4, '3')!
+	maintenance_proposal('remove', ['org.tulpar.counter'], 4, '3')!
 	wait_version(mut desktop, '', 5, deadline)!
 	if private_data('3')! != data { return error('uninstall changed retained private file metadata') }
 	for path in [media + '-initial/objects', media + '/objects'] { os.rmdir_all(path)! }
 	println('SOFTWARE MAINTENANCE uninstalled requested=[] packages=[] launcher-absent approvals=5 private=3 PASS')
 	println('SOFTWARE MAINTENANCE cache-only both repository payload directories absent PASS')
-	maintenance_proposal('install', ['org.vinix.counter'], 5, '3')!
+	maintenance_proposal('install', ['org.tulpar.counter'], 5, '3')!
 	wait_version(mut desktop, '1.1.0', 6, deadline)!
 	if private_data('3')! != data || os.exists(media + '-initial/objects') || os.exists(media + '/objects') {
 		return error('cached reinstall changed private data or restored repository payloads')

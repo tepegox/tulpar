@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Original compiler policy and native type assertions only. */
-#ifndef VINIX_CPU_POLICY_FIXTURE_H
-#define VINIX_CPU_POLICY_FIXTURE_H
+#ifndef TULPAR_CPU_POLICY_FIXTURE_H
+#define TULPAR_CPU_POLICY_FIXTURE_H
 #include "../policytransport/contract.h"
 #define u64 vpp_linux_u64
 #define timezone vpp_linux_timezone

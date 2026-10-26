@@ -30,7 +30,7 @@ fn suite() hwhost.Suite {
 			hwhost.Program{ source: 'tools/packages/pkgcore/command_test.v', path: 'usr/share/package-fixtures/command' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/session_test.v', path: 'usr/share/package-fixtures/session' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/context_test.v', path: 'usr/share/package-fixtures/context' },
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
 			hwhost.Program{ source: 'tests/packages/command-ownership-cli.v', path: 'usr/share/package-fixtures/command-cli' },
 		], scenarios: [hwhost.Scenario{ name: 'packages-command-ownership', arches: ['aarch64', 'x86_64'],
 			about: 'owned bounded literal launch requests, reusable cleanup, unchanged session/sandbox/context arguments',
@@ -49,7 +49,7 @@ fn check() !int {
 	args := os.args[1..]; options := hwhost.parse_options(args)!
 	if options.help || options.list { return hwhost.run_suite(suite(), args, @FILE) }
 	if !os.is_file(options.kernel) { return error('--kernel is not a file') }
-	work := os.temp_dir() + '/vinix-command-ownership-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-command-ownership-' + os.getpid().str()
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	os.cp(options.kernel, work + '/kernel')!
 	kernel := artifact('kernel', work + '/kernel')!
@@ -59,7 +59,7 @@ fn check() !int {
 		receipt := Receipt{ architecture: options.arch, completed_at: time.now().unix(), artifacts: [kernel,
 			artifact('guest-init', base + '/guest/init')!, artifact('command-ownership', root + 'command-ownership')!,
 			artifact('command', root + 'command')!, artifact('session', root + 'session')!, artifact('context', root + 'context')!,
-			artifact('package-service', base + '/guest/root/usr/bin/vinix-package')!, artifact('command-cli', root + 'command-cli')!,
+			artifact('package-service', base + '/guest/root/usr/bin/tulpar-package')!, artifact('command-cli', root + 'command-cli')!,
 			artifact('serial-log', base + '/packages-command-ownership/serial.log')!] }
 		os.write_file(base + '/qualification.json', json2.encode(receipt) + '\n')!
 	}

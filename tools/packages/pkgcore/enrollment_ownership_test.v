@@ -9,12 +9,12 @@ import tools.packages.signing
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn enrollment_ownership_fixture() !(string, Repository) {
-	root := os.real_path(os.temp_dir()) + '/vinix-enrollment-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	root := os.real_path(os.temp_dir()) + '/tulpar-enrollment-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(root + '/repo')!; os.mkdir_all(root + '/work')!
 	private := signing.new_key_from_seed([]u8{len: 32, init: 7})
 	return root, Repository{ id: 'fixture', url: 'file://' + root + '/repo', public_key: private.public_key().hex() }
@@ -72,7 +72,7 @@ fn test_large_rejected_enrollment_and_signature_read_failures_release_owned_inpu
 			else {}
 		}
 		for _ in 0 .. 16 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			if snapshot, index := read_enrollment_snapshot(repository, index_path, signature_path) {
 				close_decoded_index(index); unsafe { snapshot.text.free(); snapshot.signature.free() }; assert false
 			} else {
@@ -80,7 +80,7 @@ fn test_large_rejected_enrollment_and_signature_read_failures_release_owned_inpu
 				assert message.contains(match kind { 'signature' { 'signature verification failed' } 'hex' { 'invalid hex char' } else { 'bounded regular file' } })
 				unsafe { message.free(); err.free() }
 			}
-			$if track_heap ? { kept := C.vinix_heap_end(); count := C.vinix_heap_count(); assert kept == 0 && count == 0, '${kind}: ${kept} bytes / ${count} allocations retained' }
+			$if track_heap ? { kept := C.tulpar_heap_end(); count := C.tulpar_heap_count(); assert kept == 0 && count == 0, '${kind}: ${kept} bytes / ${count} allocations retained' }
 		}
 		assert os.read_file(index_path)! == text && repository.id == 'fixture'
 	}
@@ -111,7 +111,7 @@ fn test_proposed_configuration_owns_new_identity_and_borrows_retained_fields() {
 	proposed := Repository{ ...repository, id: 'new' }
 	for input in [proposed, Repository{ ...proposed, public_key: 'bad' }, Repository{ ...proposed, public_key: '01' + '00'.repeat(31) }] {
 		for iteration in 0 .. 17 {
-			$if track_heap ? { if iteration > 0 { C.vinix_heap_begin() } }
+			$if track_heap ? { if iteration > 0 { C.tulpar_heap_begin() } }
 			if next := enrollment_configuration(current, input) {
 				assert input == proposed && next.repositories.len == 2 && next.repositories[0].id == 'fixture'
 				close_enrollment_configuration(next, input.id)
@@ -121,7 +121,7 @@ fn test_proposed_configuration_owns_new_identity_and_borrows_retained_fields() {
 			}
 			$if track_heap ? {
 				if iteration > 0 {
-					kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+					kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 					assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained'
 				}
 			}
@@ -143,7 +143,7 @@ fn test_repository_review_results_survive_source_retirement_and_rejected_builds_
 	history := TrustHistory{}
 	for operation in ['enroll', 'unknown'] {
 		for iteration in 0 .. 17 {
-			$if track_heap ? { if iteration > 0 { C.vinix_heap_begin() } }
+			$if track_heap ? { if iteration > 0 { C.tulpar_heap_begin() } }
 			if operation == 'enroll' {
 				mut owned := repository_review(current, history, operation, repository, 'authenticated index', index)!
 				owned.close()
@@ -156,7 +156,7 @@ fn test_repository_review_results_survive_source_retirement_and_rejected_builds_
 			}
 			$if track_heap ? {
 				if iteration > 0 {
-					kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+					kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 					assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained'
 				}
 			}
@@ -172,8 +172,8 @@ fn test_repository_review_results_survive_source_retirement_and_rejected_builds_
 
 fn test_public_repository_review_preserves_trust_state_and_remains_usable_after_private_cleanup() {
 	root, repository := enrollment_ownership_fixture()!; defer { os.rmdir_all(root) or {} }
-	os.mkdir_all(root + '/etc/vinix-packages')!
-	path := root + '/etc/vinix-packages/config.json'
+	os.mkdir_all(root + '/etc/tulpar-packages')!
+	path := root + '/etc/tulpar-packages/config.json'
 	configuration := json2.encode(Config{ architecture: 'aarch64', launch_user: 'alex', policy: Policy{ offline: true, permissions: ['files'] } })
 	os.write_file(path, configuration)!; os.chmod(path, 0o644)!
 	write_owned_enrollment_index(root, repository.id, 7, 2000000000)!

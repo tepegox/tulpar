@@ -10,7 +10,7 @@ creating its disposable owner, writes the original metadata/main and modules,
 then builds and runs every original assertion. The native owner removes its
 temporary tree on success and returned failures.
 Normal calls use `build-support/run-v-tool.sh` and `build-support/find-v.sh`;
-`VINIX_SCHEDULER_PREEMPTION_GENERATOR` can select an already built generator.
+`TULPAR_SCHEDULER_PREEMPTION_GENERATOR` can select an already built generator.
 `V` retains its compiler meaning. The generator's `--extract SOURCE
 NAME` entry point permits independent comparisons against the old extractor.
 Strict UTF-8, universal newlines and literal Unix path bytes are preserved.

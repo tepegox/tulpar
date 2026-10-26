@@ -184,7 +184,7 @@ fn capacity_io_fixture(path string, sector u64, kind u32) PlanSet {
 }
 
 fn test_capacity_probe_success_retries_interruptions_and_noop_preserves_desired_state() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-probe-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-probe-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -218,7 +218,7 @@ fn test_capacity_probe_success_retries_interruptions_and_noop_preserves_desired_
 }
 
 fn test_bad_probes_geometry_identity_and_input_files_never_publish_and_close_the_disk() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-refuse-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-refuse-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -256,7 +256,7 @@ fn test_bad_probes_geometry_identity_and_input_files_never_publish_and_close_the
 }
 
 fn test_capacity_publication_faults_preserve_old_or_complete_new_bundle_and_drain_descriptors() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-publish-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-publish-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -285,7 +285,7 @@ fn test_capacity_publication_faults_preserve_old_or_complete_new_bundle_and_drai
 }
 
 fn test_capacity_report_flush_failure_is_reported_after_publication_with_no_open_device() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'

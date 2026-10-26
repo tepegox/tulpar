@@ -24,12 +24,12 @@ fn check() ! {
 	work := os.args[1]; binary := os.args[2]
 	if os.exists(work) { return error('cleanup fixture requires a new workspace') }
 	root := work + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	key := pkgcore.keygen(work + '/seed')!
 	configuration := pkgcore.Config{ architecture: architecture, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(configuration))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(configuration))!
 	service := pkgcore.Service{ root: root }
 	for version in 1 .. 5 {
 		os.mkdir_all(work + '/source/bin')!
@@ -47,8 +47,8 @@ fn check() ! {
 	os.mkdir(directory + '/generations/.stage-retained')!
 	os.write_file(directory + '/generations/.stage-retained/payload', 'interrupted recovery')!
 	os.write_file(directory + '/objects/' + 'f'.repeat(64) + '.part', 'interrupted download')!
-	os.mkdir_all(root + '/home/user/.local/share/vinix-apps/app')!
-	os.write_file(root + '/home/user/.local/share/vinix-apps/app/data', 'personal data')!
+	os.mkdir_all(root + '/home/user/.local/share/tulpar-apps/app')!
+	os.write_file(root + '/home/user/.local/share/tulpar-apps/app/data', 'personal data')!
 	state_bytes := os.read_file(directory + '/current/state.json')!
 	objects := os.ls(directory + '/objects')!.sorted()
 	lease := C.open((directory + '/generations/2/lease').str, C.O_RDONLY | C.O_CLOEXEC)
@@ -75,7 +75,7 @@ fn check() ! {
 	assert os.read_file(directory + '/current/state.json')! == state_bytes && os.readlink(directory + '/current')! == 'generations/4'
 	assert os.ls(directory + '/objects')!.sorted() == objects
 	assert os.read_file(directory + '/generations/.stage-retained/payload')! == 'interrupted recovery'
-	assert os.read_file(root + '/home/user/.local/share/vinix-apps/app/data')! == 'personal data'
+	assert os.read_file(root + '/home/user/.local/share/tulpar-apps/app/data')! == 'personal data'
 	assert service.verify()!.generation == 4
 	mut empty := pkgprotocol.decode_cleanup_review(command(binary, root, ['cleanup-review'])!)!; defer { empty.close() }
 	assert empty.generations.len == 0

@@ -19,7 +19,7 @@ fn run_profile(keep string) ! {
 	archive := os.join_path(os.dir(linux), 'linux-' + pin['version']!.str() + '.tar.xz')
 	compiler_text := hosttest.env_default('CC', 'clang')
 	compiler := hosttest.shell_split(compiler_text)!
-	work := hosttest.work_dir(keep, 'vinix-pgtable-types-')!
+	work := hosttest.work_dir(keep, 'tulpar-pgtable-types-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	include := os.join_path(work, 'include')
 	hosttest.audit_headers(include)!

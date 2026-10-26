@@ -61,7 +61,7 @@ import security
 
 #include "pci_config_arm_test.h"
 
-fn C.vinix_pci_config_arm_context_selftest() int
+fn C.tulpar_pci_config_arm_context_selftest() int
 
 @[_linker_section: '.requests']
 @[cinit]
@@ -260,7 +260,7 @@ fn start_pci() {
 		panic('Invalid or conflicting PCIe configuration aperture')
 	}
 	$if pci_config_test ? {
-		if C.vinix_pci_config_arm_context_selftest() != 0 {
+		if C.tulpar_pci_config_arm_context_selftest() != 0 {
 			panic('ARM PCI configuration context self-test failed')
 		}
 		C.kprintf(c'pci: ARM checked config widths, bounds and interrupt masks passed\n')
@@ -355,7 +355,7 @@ fn is_cmdline_space(c u8) bool {
 }
 
 // Allocation-free exact token lookup for decisions made before _vinit. Unlike
-// a substring search, `vinix.display=external-test` must not change scanout.
+// a substring search, `tulpar.display=external-test` must not change scanout.
 fn early_cmdline_has_token(token string) bool {
 	kernel_file := limine.kernel_file()
 	if kernel_file == unsafe { nil } || kernel_file.cmdline == unsafe { nil } {
@@ -391,7 +391,7 @@ fn early_cmdline_has_token(token string) bool {
 
 fn kmain() {
 	// Before anything that returns: see lib/stack_protector.v.
-	C.vinix_stack_guard_init()
+	C.tulpar_stack_guard_init()
 	memory.configure_page_size()
 	// Read the cmdline before touching anything else. The framebuffer used to
 	// be written first, which made it impossible to tell a kernel that never
@@ -399,9 +399,9 @@ fn kmain() {
 	// screen Limine hands over, and neither reaches the code that could say
 	// otherwise. The cmdline only walks a Limine response, so it is the
 	// cheapest thing that can run before the answer is needed.
-	halt_at_stage = early_cmdline_value('vinix.halt_at=')
-	skip_early_term := early_cmdline_contains('vinix.no_early_term=1')
-	external_display := early_cmdline_has_token('vinix.display=external')
+	halt_at_stage = early_cmdline_value('tulpar.halt_at=')
+	skip_early_term := early_cmdline_contains('tulpar.no_early_term=1')
+	external_display := early_cmdline_has_token('tulpar.display=external')
 	term.select_framebuffer(external_display)
 
 	// Stage 0 deliberately precedes every access to hardware state, so its
@@ -427,7 +427,7 @@ fn kmain() {
 	// Prove the signal channel itself works before trusting what it reports.
 	// A deliberate null store should reboot the machine; if it does not, PSCI
 	// reset is unavailable here and a quiet machine means nothing.
-	if early_cmdline_contains('vinix.force_fault=1') {
+	if early_cmdline_contains('tulpar.force_fault=1') {
 		fault_probe := unsafe { &u64(nil) }
 		unsafe {
 			*fault_probe = 0
@@ -471,20 +471,20 @@ fn kmain() {
 		// 13 proves flanterm_fb_init returned; 14 proves it can render.
 		// Both are drawn after its clear, so they survive on screen.
 		boot_stage(13)
-		print('\n=== Vinix aarch64 (early) ===\n')
+		print('\n=== Tulpar aarch64 (early) ===\n')
 		term.report_framebuffer_selection()
 		boot_stage(14)
 	}
 
-	force_qemu_platform = early_cmdline_has_token('vinix.qemu_platform=1')
+	force_qemu_platform = early_cmdline_has_token('tulpar.qemu_platform=1')
 
 	// QEMU's virt machine names itself in its ACPI tables, so an image booted
-	// in QEMU without vinix.qemu_platform=1 -- a release ISO, say -- still gets
+	// in QEMU without tulpar.qemu_platform=1 -- a release ISO, say -- still gets
 	// its keyboard, tablet and interrupt controller.
-	// vinix.platform=acpi skips this, so the path other UEFI machines take can
+	// tulpar.platform=acpi skips this, so the path other UEFI machines take can
 	// be exercised in QEMU.
 	if !force_qemu_platform && firmware.is_qemu()
-		&& !early_cmdline_contains('vinix.platform=acpi') {
+		&& !early_cmdline_contains('tulpar.platform=acpi') {
 		force_qemu_platform = true
 	}
 
@@ -492,7 +492,7 @@ fn kmain() {
 	// so missing DTB on real hardware does not trigger invalid MMIO accesses.
 	if force_qemu_platform {
 		uart.initialise(memory.get_hhdm_offset() + 0x09000000)
-		uart.puts(c'\n=== Vinix aarch64 booting (qemu mode) ===\n')
+		uart.puts(c'\n=== Tulpar aarch64 booting (qemu mode) ===\n')
 	}
 	security.initialise_boot_policy()
 
@@ -525,7 +525,7 @@ fn kmain() {
 	if !skip_early_term {
 		term.initialise()
 	}
-	print('\n=== Vinix aarch64 ===\n')
+	print('\n=== Tulpar aarch64 ===\n')
 	if !have_dt {
 		print('WARNING: No usable device tree blob\n')
 	}
@@ -541,7 +541,7 @@ fn kmain() {
 		uart_phys := firmware.console_uart() or { firmware.dsdt_pl011() or { u64(0) } }
 		if uart_phys != 0 {
 			uart.initialise(memory.map_mmio(uart_phys, 0x1000))
-			uart.puts(c'\n=== Vinix aarch64 booting (ACPI) ===\n')
+			uart.puts(c'\n=== Tulpar aarch64 booting (ACPI) ===\n')
 		}
 	}
 
@@ -552,7 +552,7 @@ fn kmain() {
 		print('virtio-input done\n')
 
 	} else {
-		print('skipping qemu MMIO init (set vinix.qemu_platform=1 to enable)\n')
+		print('skipping qemu MMIO init (set tulpar.qemu_platform=1 to enable)\n')
 	}
 
 	// ARM Generic Timer

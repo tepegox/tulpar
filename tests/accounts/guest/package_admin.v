@@ -32,21 +32,21 @@ fn qualify_package_admin(mut t Test) ! {
 	os.mkdir_all('/tmp/package-publisher', mode: 0o700)!
 	key := pkgcore.keygen('/tmp/package-publisher/admin-seed')!
 	pkgcore.publish(repository, 'admin-publisher', '/tmp/package-publisher/admin-seed', 1, time.now().unix() + 3600)!
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
 		policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['repo-enroll', 'admin-publisher', 'file://' + repository, key])!
 	package_success(['update'])!
 	service := pkgcore.Service{}
 	mut review := service.review('install', ['admin-fixture'])!
 	defer { review.close() }
-	ordinary_review := run(['/usr/bin/vinix-package', 'review', 'install', 'admin-fixture'], '', db, alex)
+	ordinary_review := run(['/usr/bin/tulpar-package', 'review', 'install', 'admin-fixture'], '', db, alex)
 	assert ordinary_review.status == 0, ordinary_review.output
 	mut displayed := pkgprotocol.decode_review(ordinary_review.output.trim_space())!
 	assert displayed.fingerprint == review.fingerprint && displayed.rows.len == review.rows.len
 	displayed.close()
-	command := ['/usr/bin/vinix-package', 'admin', '--progress', 'apply', review.fingerprint, 'install', 'admin-fixture']
+	command := ['/usr/bin/tulpar-package', 'admin', '--progress', 'apply', review.fingerprint, 'install', 'admin-fixture']
 	not_admin := run(command, sam_password + '\n', db, sam)
 	assert not_admin.status != 0 && not_admin.output.contains('cannot approve'), not_admin.output
 	wrong := run(command, 'wrong password\n', db, alex)
@@ -59,12 +59,12 @@ fn qualify_package_admin(mut t Test) ! {
 	assert peer_probe.status == 0 && service.state()!.generation == 0, peer_probe.output
 	installed := run(command, alex_password + '\n', db, alex)
 	assert installed.status == 0 && installed.output.contains(pkgprotocol.progress_prefix) && installed.output.contains('Activated package generation 1'), installed.output
-	assert service.state()!.generation == 1 && owner_of('/var/lib/vinix-packages/current/state.json') == 0
-	assert !installed.output.contains(alex_password) && !installed.output.contains('VINIX-PACKAGE-ADMIN ')
+	assert service.state()!.generation == 1 && owner_of('/var/lib/tulpar-packages/current/state.json') == 0
+	assert !installed.output.contains(alex_password) && !installed.output.contains('TULPAR-PACKAGE-ADMIN ')
 	stale := run(command, alex_password + '\n', db, alex)
 	assert stale.status != 0 && stale.output.contains('stale') && service.state()!.generation == 1, stale.output
 	for args in [['run', 'admin-fixture'], ['--root', '/tmp', 'update'], ['install', 'admin-fixture']] {
-		refused := run(['/usr/bin/vinix-package', 'admin', ...args], alex_password + '\n', db, alex)
+		refused := run(['/usr/bin/tulpar-package', 'admin', ...args], alex_password + '\n', db, alex)
 		assert refused.status != 0 && service.state()!.generation == 1, refused.output
 	}
 	assert os.ls('/run/user/1000')!.all(!it.starts_with('pkg-'))
@@ -78,11 +78,11 @@ fn qualify_package_admin(mut t Test) ! {
 	assert index_schema.status == 0, index_schema.output
 	mut removal := service.review('remove', ['admin-fixture'])!
 	defer { removal.close() }
-	removed := run(['/usr/bin/vinix-package', 'admin', 'apply', removal.fingerprint, 'remove', 'admin-fixture'], alex_password + '\n', db, alex)
+	removed := run(['/usr/bin/tulpar-package', 'admin', 'apply', removal.fingerprint, 'remove', 'admin-fixture'], alex_password + '\n', db, alex)
 	assert removed.status == 0 && service.state()!.packages.len == 0, removed.output
 	mut rollback := service.review('rollback', [])!
 	defer { rollback.close() }
-	restored := run(['/usr/bin/vinix-package', 'admin', 'apply', rollback.fingerprint, 'rollback'], alex_password + '\n', db, alex)
+	restored := run(['/usr/bin/tulpar-package', 'admin', 'apply', rollback.fingerprint, 'rollback'], alex_password + '\n', db, alex)
 	assert restored.status == 0 && service.state()!.packages.len == 1, restored.output
 	mut disconnected_review := service.review('remove', ['admin-fixture'])!
 	defer { disconnected_review.close() }
@@ -100,7 +100,7 @@ fn qualify_package_admin(mut t Test) ! {
 		t.say('PACKAGE ADMIN disconnected-worker state: ' + json2.encode(service.state()!))
 		for pid in os.ls('/proc')! {
 			command_line := os.read_file('/proc/' + pid + '/cmdline') or { continue }
-			if command_line.contains('vinix-package') {
+			if command_line.contains('tulpar-package') {
 				t.say('PACKAGE ADMIN disconnected-worker process: ' + pid + '\n' + (os.read_file('/proc/' + pid + '/status') or { '' }))
 			}
 		}
@@ -108,9 +108,9 @@ fn qualify_package_admin(mut t Test) ! {
 	assert completed && service.verify()!.packages.len == 0
 	mut revoke := pkgcore.review_repository('', 'revoke', pkgcore.Repository{ id: 'admin-publisher' }, false)!
 	defer { revoke.close() }
-	revoked := run(['/usr/bin/vinix-package', 'admin', 'repo-apply', revoke.fingerprint, 'revoke', 'admin-publisher'], alex_password + '\n', db, alex)
+	revoked := run(['/usr/bin/tulpar-package', 'admin', 'repo-apply', revoke.fingerprint, 'revoke', 'admin-publisher'], alex_password + '\n', db, alex)
 	assert revoked.status == 0 && pkgcore.load_config('')!.repositories.len == 0, revoked.output
-	log := os.read_file('/var/log/vinix/auth.log')!
+	log := os.read_file('/var/log/tulpar/auth.log')!
 	assert log.contains('uid=1000 run packages-change as alex: exit 0') && !log.contains(alex_password)
 	assert os.ls('/run/user/1000')!.all(!it.starts_with('pkg-'))
 	t.say('PACKAGE ADMIN reviewed-remove rollback trust-revocation root-state audit no-password-log clean-runtime PASS')

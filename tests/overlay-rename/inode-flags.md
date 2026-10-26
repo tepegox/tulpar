@@ -7,7 +7,7 @@ before selecting the writable resource, then checks upper support, MAC and
 securelevel before applying the flags. An authorized unchanged value remains
 a no-op. This follows the upper-layer destination used by
 [Linux v6.12 file-attribute updates](https://github.com/torvalds/linux/blob/v6.12/fs/overlayfs/inode.c).
-Vinix retains its existing supported bits and backend flag storage.
+Tulpar retains its existing supported bits and backend flag storage.
 
 Copy-up also refuses an orphaned or removed lower-only alias under
 `overlay_lock`. A held descriptor after unlink or rename replacement must not

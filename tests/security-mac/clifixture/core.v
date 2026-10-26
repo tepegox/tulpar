@@ -31,7 +31,7 @@ __global mac_fixture_mask u64
 
 // The native variadic entry transports four unsigned-long words to this
 // fixed-argument callback. Assertions and captured state remain in V.
-@[export: 'vinix_mac_cli_capture']
+@[export: 'tulpar_mac_cli_capture']
 pub fn capture(option i32, command u64, domain u64, kind u64, mask u64) i32 {
 	C.assert(option == 0x56584d41)
 	mac_fixture_command = i32(command)
@@ -44,7 +44,7 @@ pub fn capture(option i32, command u64, domain u64, kind u64, mask u64) i32 {
 
 @[export: 'mock_lsetxattr']
 pub fn label(path &C.mac_cli_const_char, name &C.mac_cli_const_char, value &C.mac_cli_const_void, size uint, flags i32) i32 {
-	C.assert(C.strcmp(unsafe { &char(path) }, c'/test') == 0 && C.strcmp(unsafe { &char(name) }, c'security.vinix') == 0)
+	C.assert(C.strcmp(unsafe { &char(path) }, c'/test') == 0 && C.strcmp(unsafe { &char(name) }, c'security.tulpar') == 0)
 	C.assert(size == 2 && C.memcmp(unsafe { voidptr(value) }, c'28', 2) == 0 && flags == 0)
 	mac_fixture_labeling++
 	return 0
@@ -86,15 +86,15 @@ pub fn entry() i32 {
 		C.assert(C.vm_permissions(c'none', value) == 0 && *value == 0)
 		mut bad_permissions := [&char(c''), &char(c'read,'), &char(c',read'), &char(c'read,,write'), &char(c'read,read'), &char(c'unknown'), &char(c'all'), &char(c'none,read')]!
 		for i := uint(0); i < uint(bad_permissions.len); i++ { C.assert(C.vm_permissions(bad_permissions[i], value) != 0) }
-		mut rule := [&char(c'vinix-mac'), &char(c'rule'), &char(c'15'), &char(c'31'), &char(c'inspect,read,search')]!
+		mut rule := [&char(c'tulpar-mac'), &char(c'rule'), &char(c'15'), &char(c'31'), &char(c'inspect,read,search')]!
 		C.assert(invoke(5, &rule[0]) == 0 && mac_fixture_calls == 1 && mac_fixture_command == 1 && mac_fixture_domain == 15 && mac_fixture_kind == 31 && mac_fixture_mask == 259)
-		mut invalid_rule := [&char(c'vinix-mac'), &char(c'rule'), &char(c'0'), &char(c'31'), &char(c'read')]!
+		mut invalid_rule := [&char(c'tulpar-mac'), &char(c'rule'), &char(c'0'), &char(c'31'), &char(c'read')]!
 		C.assert(invoke(5, &invalid_rule[0]) == 2 && mac_fixture_calls == 1)
-		mut seal := [&char(c'vinix-mac'), &char(c'seal')]!
+		mut seal := [&char(c'tulpar-mac'), &char(c'seal')]!
 		C.assert(invoke(2, &seal[0]) == 0 && mac_fixture_calls == 2 && mac_fixture_command == 2 && mac_fixture_domain == 0 && mac_fixture_kind == 0 && mac_fixture_mask == 0)
-		mut labels := [&char(c'vinix-mac'), &char(c'label'), &char(c'28'), &char(c'/test')]!
+		mut labels := [&char(c'tulpar-mac'), &char(c'label'), &char(c'28'), &char(c'/test')]!
 		C.assert(invoke(4, &labels[0]) == 0 && mac_fixture_labeling == 1)
-		mut run := [&char(c'vinix-mac'), &char(c'run'), &char(c'15'), &char(c'/program'), &char(c'argument')]!
+		mut run := [&char(c'tulpar-mac'), &char(c'run'), &char(c'15'), &char(c'/program'), &char(c'argument')]!
 		C.assert(invoke(5, &run[0]) == 1 && mac_fixture_calls == 3 && mac_fixture_execution == 1)
 		C.puts(c'security MAC CLI tests passed')
 	}

@@ -3,4 +3,4 @@ module main
 #include <stdio.h>
 fn C.puts(&char) i32
 
-fn main() { C.puts(c'Hello from Alpine GCC on Vinix!') }
+fn main() { C.puts(c'Hello from Alpine GCC on Tulpar!') }

@@ -74,7 +74,7 @@ It retains all 36 original checks, six fork/wait/exec cases, eight errno resets
 and all 41 bounding-capability checks. Credential and capability output
 records and the 17-pointer launcher argument array stay on the stack. The
 guest links the unchanged production V launcher and native serial constructor;
-it uses real Vinix syscalls, unlike the injected host oracle. Paired original-C
+it uses real Tulpar syscalls, unlike the injected host oracle. Paired original-C
 and V static builds with both musl SDKs and all four complete native controls
 passed under the original 180-second allowance. Actual boot-image kernels and
 archived init executables matched the selected immutable kernels and SDK
@@ -86,5 +86,5 @@ The native regression compiles the production Calculator profile directly,
 then verifies capability and root-identity removal, `no_new_privs`, anonymous
 memory allocation, preservation of nonadjacent compositor pipe descriptors,
 closure of another inherited descriptor, and fatal network/path violations.
-The same profile remains active in a private UTS namespace, where Vinix's
-Linux-compatible uname retains the kernel-owned `-vinix` release suffix.
+The same profile remains active in a private UTS namespace, where Tulpar's
+Linux-compatible uname retains the kernel-owned `-tulpar` release suffix.

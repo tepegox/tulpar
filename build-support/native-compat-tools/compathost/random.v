@@ -106,13 +106,13 @@ fn random_command(args []string) !int {
 	guest := '--arch' in parsed.options
 	if guest { needed(parsed, ['--state-dir', '--kernel-dir', '--guest-state-dir'])! }
 	if '--build-only' in parsed.options && !guest { return error_with_code('--build-only needs --arch', 2) }
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-net-random-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-net-random-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	selected := if '--host-arch' in parsed.options { parsed.options['--host-arch'] } else { policyhost.caller_arch() }
 	arch := if guest { parsed.options['--arch'] } else if selected == 'arm64' { 'aarch64' } else { 'x86_64' }
 	mut flags := []string{}
 	if guest && arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		flags = [...compiler_prefix('CC_AARCH64', 'clang')!, '--target=aarch64-linux-musl', '--sysroot=' + sdk, '-fuse-ld=lld', '-L' + sdk + '/lib']
 	} else if guest { flags = compiler_prefix('CC_AMD64', 'x86_64-linux-musl-gcc')! } else {
 		flags = compiler_prefix('CC', 'clang')!
@@ -120,14 +120,14 @@ fn random_command(args []string) !int {
 	}
 	flags << ['-std=gnu11', '-O2', '-g', '-Wall', '-Wextra', '-Werror', '-fno-builtin']
 	if !guest {
-		sanitizers := os.getenv_opt('VINIX_NET_RANDOM_SANITIZERS') or { 'address,undefined' }
+		sanitizers := os.getenv_opt('TULPAR_NET_RANDOM_SANITIZERS') or { 'address,undefined' }
 		if sanitizers != 'none' { flags << ['-fsanitize=' + sanitizers, '-fno-omit-frame-pointer'] }
 	}
 	control := if '--original-reference' in parsed.options { resolve(parsed.options['--original-reference'])! } else { '' }
 	if guest {
 		binary := random_build(work + '/native', arch, flags, control, true)!
 		if '--build-only' in parsed.options { return 0 }
-		state := hosttest.work_dir(parsed.options['--guest-state-dir'], 'vinix-net-random-guest-')!
+		state := hosttest.work_dir(parsed.options['--guest-state-dir'], 'tulpar-net-random-guest-')!
 		return guesthost.guest('', binary, state, parsed.options['--kernel-dir'], arch, ['net-random: PASS'], ['FAIL:'], false, true, 3600)!
 	}
 	binary := random_build(work + '/v', arch, flags, '', false)!
@@ -136,7 +136,7 @@ fn random_command(args []string) !int {
 	// allocator-import guard on macOS; retain leak checking on supported hosts.
 	mut asan_default := 'detect_leaks=1'
 	$if macos { asan_default = 'detect_leaks=0' }
-	env['ASAN_OPTIONS'] = os.getenv_opt('VINIX_NET_RANDOM_ASAN_OPTIONS') or { asan_default }
+	env['ASAN_OPTIONS'] = os.getenv_opt('TULPAR_NET_RANDOM_ASAN_OPTIONS') or { asan_default }
 	env['UBSAN_OPTIONS'] = 'halt_on_error=1'
 	result := hosttest.capture([binary], '', 180, env)!
 	if result.code != 0 || !result.stdout.contains('net-random: PASS') || ['runtime error', 'AddressSanitizer', 'LeakSanitizer'].any(result.stderr.contains(it)) {

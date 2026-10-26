@@ -170,7 +170,7 @@ fn deliverable_signal(t &proc.Thread, mask u64) bool {
 // queue and marks the wakeup as signal-driven, which is what ends the await.
 fn sleep_for_signal(timeout &time.TimeSpec, wanted u64) bool {
 	mut timer := &time.Timer(unsafe { nil })
-	storage := unsafe { &&eventstruct.Event(C.vinix_stack_alloc(sizeof(voidptr))) }
+	storage := unsafe { &&eventstruct.Event(C.tulpar_stack_alloc(sizeof(voidptr))) }
 	mut count := 0
 	if timeout != unsafe { nil } {
 		timer = time.new_timer(*timeout)

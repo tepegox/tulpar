@@ -40,7 +40,7 @@ pub fn (mut p Policy) bind(key string, action string) ! {
 pub fn (p &Policy) encode() string {
 	mut w := &Writer{}
 	defer { unsafe { free(w) } }
-	w.add('vinix-shell-policy\t2')
+	w.add('tulpar-shell-policy\t2')
 	for value in [int(p.gestures), int(p.clipboard_history), int(p.clipboard_apps),
 		int(p.allow_capture), p.timezone_minutes]! {
 		w.add('\t')
@@ -83,7 +83,7 @@ pub fn decode_policy(record string) !Policy {
 		f := fields(unsafe { tos(record.str + start, end - start) })!
 		start = end + 1
 		if !header {
-			if f.values[0] != 'vinix-shell-policy' || (f.values[1] == '1' && f.count != 7) || (f.values[1] == '2' && f.count != 8) || f.values[1] !in [
+			if f.values[0] != 'tulpar-shell-policy' || (f.values[1] == '1' && f.count != 7) || (f.values[1] == '2' && f.count != 8) || f.values[1] !in [
 				'1',
 				'2',
 			] {

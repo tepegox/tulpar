@@ -1,5 +1,5 @@
 // Shared opt-in allocator workload. The same generated V source is compiled
-// with GCC for Vinix and XNU; only the native ABI header selects the platform.
+// with GCC for Tulpar and XNU; only the native ABI header selects the platform.
 @[translated]
 module heapbench
 

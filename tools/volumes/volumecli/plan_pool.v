@@ -241,7 +241,7 @@ fn report_pool_space(set &PlanSet, pool u32) bool {
 fn space_pool_plan(path &char, pool u32) i32 {
 	fd := C.open(path, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
 	if fd < 0 {
-		C.perror(c'vinix-volume: open pool bundle')
+		C.perror(c'tulpar-volume: open pool bundle')
 		return 1
 	}
 	defer { C.close(fd) }

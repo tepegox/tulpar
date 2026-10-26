@@ -17,7 +17,7 @@ conservative fallback.
 [Linux v6.12 `do_mknodat`](https://github.com/torvalds/linux/blob/v6.12/fs/namei.c)
 likewise resolves a creation path with its mount and dispatches regular files
 separately from device/FIFO creation. This qualification covers the supported
-Vinix forms below; it does not change Vinix's refusal of socket placeholders or
+Tulpar forms below; it does not change Tulpar's refusal of socket placeholders or
 claim Linux's complete invalid-mode and combined-error ordering.
 
 Use `--case nodes` or `nd-0` through `nd-7`. Native `all` and Linux

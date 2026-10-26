@@ -3,8 +3,8 @@ module pkgcore
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn removal_fixture_package(id string, dependencies []Dependency) Installed {
@@ -107,7 +107,7 @@ fn test_desired_root_buffers_retire_on_success_growth_and_refusal_without_changi
 		empty := []string{}
 		operations := ['install', 'remove', 'upgrade', 'deploy']!
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for operation in operations {
 					names := if operation == 'remove' { remove } else if operation == 'upgrade' { empty } else { additions }
@@ -135,7 +135,7 @@ fn test_desired_root_buffers_retire_on_success_growth_and_refusal_without_changi
 				unsafe { (&array(&plan.requested)).free(); (&array(&plan.packages)).free() }
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'root planning retained ${kept} bytes'
 		assert state.requested == roots && roots[0] == 'root-0' && roots.last() == 'root-63' && additions.last() == 'extra-63'
 		println('Removal guidance: 1000 root-planning install/remove/upgrade/deploy and removal-plan success/refusal cycles retain zero tracked bytes and preserve borrowed inputs PASS')

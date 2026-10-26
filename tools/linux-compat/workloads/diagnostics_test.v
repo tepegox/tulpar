@@ -4,7 +4,7 @@ import os
 import time
 
 fn test_proc_reader_bounds_data_without_using_reported_file_size() {
-	root := os.join_path(os.temp_dir(), 'vinix-diagnostic-${os.getpid()}-${time.now().unix_nano()}')
+	root := os.join_path(os.temp_dir(), 'tulpar-diagnostic-${os.getpid()}-${time.now().unix_nano()}')
 	os.mkdir_all(root + '/42')!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/meminfo', 'm'.repeat(8192))!
@@ -28,7 +28,7 @@ fn test_unknown_length_stream_is_still_bounded() {
 }
 
 fn test_failure_diagnostics_preserve_exit_and_deadline_verdicts() {
-	root := os.join_path(os.temp_dir(), 'vinix-diagnostic-run-${os.getpid()}-${time.now().unix_nano()}')
+	root := os.join_path(os.temp_dir(), 'tulpar-diagnostic-run-${os.getpid()}-${time.now().unix_nano()}')
 	os.mkdir_all(root + '/work')!
 	os.mkdir(root + '/proc')!
 	defer { os.rmdir_all(root) or {} }

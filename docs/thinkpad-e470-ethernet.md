@@ -58,7 +58,7 @@ than acquisition counters. The desktop checks `SIOCGIFFLAGS` (`IFF_RUNNING`)
 before querying the address: a present adapter without a link displays
 `Ethernet: disconnected`; `acquiring an address` requires a link. An old lease
 does not make an unplugged adapter appear connected. This tray change needs
-the updated `vinix-desktop` executable as well as the carrier-aware kernel.
+the updated `tulpar-desktop` executable as well as the carrier-aware kernel.
 The desktop `network_status` regression checks no-cable startup, acquisition,
 lease/unplug transitions, hidden stale addresses, English/Russian text and
 the host's native interface-flags ioctl ABI.
@@ -81,7 +81,7 @@ an E470; the DHCP changes still require a physical retest.
 ```sh
 v run tests/rtl8169/run.v
 v run tests/kernel-bootlog/run.v
-tests/hardware-platform/run --arch x86_64 --kernel /path/to/vinix --scenario bootlog
+tests/hardware-platform/run --arch x86_64 --kernel /path/to/tulpar --scenario bootlog
 ```
 
 For `--scenario net-carrier`, build a separate test kernel with

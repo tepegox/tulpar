@@ -64,7 +64,7 @@ fn data_reference_expected(before &DataManifest, after &DataManifest) string {
 	mut left := [11392]u8{}; mut right := [11392]u8{}
 	ln := encode_data_manifest(before, &left[0]); rn := encode_data_manifest(after, &right[0])
 	changed := int(before.digests.values[0] != after.digests.values[0]) + int(before.digests.values[1] != after.digests.values[1])
-	mut text := 'format=VINIXDH1 operation=compared-data-references disks=2 mappings=2 stable=${2 - changed} changed=${changed} algorithm=sha256 before_reference_sha256=' + hex.encode(sha256.sum(left[..ln])) + ' after_reference_sha256=' + hex.encode(sha256.sum(right[..rn])) + '\n'
+	mut text := 'format=TULPARDH1 operation=compared-data-references disks=2 mappings=2 stable=${2 - changed} changed=${changed} algorithm=sha256 before_reference_sha256=' + hex.encode(sha256.sum(left[..ln])) + ' after_reference_sha256=' + hex.encode(sha256.sum(right[..rn])) + '\n'
 	for disk in 0 .. 2 {
 		key := before.set.plans[disk].key; row := before.set.plans[disk].rows[0]
 		identity := if key.kind == 1 { 'mbr:00000001' } else { 'gpt:00000002-0000-0000-0000-000000000083' }
@@ -78,7 +78,7 @@ fn data_reference_check(first string, second string, mode int, expected i32) str
 	capture := os.dir(first) + '/compare-capture'; assert C.fflush(C.stdout) == 0
 	saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	data_io = DataIO{}; data_auto_calls = 0; data_reference_io = DataReferenceIO{active: true, mode: mode}
-	unsafe { args := [&char(c'vinix-volume'), &char(c'compare-data-references'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'compare-data-references'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert data_reference_io.opened == data_reference_io.closed && data_io.opened == 0 && data_io.writes == 0 && data_auto_calls == 0
 	data_reference_io.active = false; assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }
@@ -86,7 +86,7 @@ fn data_reference_check(first string, second string, mode int, expected i32) str
 }
 
 fn test_offline_plain_reference_exact_reports_complete_readers_no_physical_io_and_error_precedence() {
-	work := os.join_path(os.temp_dir(), 'vinix-data-reference-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-data-reference-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	first := work + '/first'; second := work + '/second'; mut before := DataManifest{}; mut devices := DataDevices{}; data_io_fixture(mut before, mut devices)
 	mut left := [11392]u8{}; ln := encode_data_manifest(unsafe { &before }, &left[0]); os.write_file_array(first, left[..ln])!
 	for mask in 0 .. 4 {

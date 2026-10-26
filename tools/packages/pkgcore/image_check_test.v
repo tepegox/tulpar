@@ -8,7 +8,7 @@ import time
 fn C.mkfifo(&char, u32) int
 
 fn image_check_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-image-check-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-image-check-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work, mode: 0o700)!
 	return work
 }
@@ -55,7 +55,7 @@ fn test_image_input_check_reports_reproducible_trust_policy_and_signed_bundle_wi
 		assert text == unsafe { &configuration }.check_repositories(unsafe { &repositories })!
 		report := json2.decode[ImageInputCheck](text)!
 		assert report.format == 1 && report.architecture == architecture && report.root == root
-		assert report.configuration_path == root + '/etc/vinix-packages/config.json' && report.configuration_action == 'initialize'
+		assert report.configuration_path == root + '/etc/tulpar-packages/config.json' && report.configuration_action == 'initialize'
 		assert report.configuration_sha256 == hash_file(source)!
 		assert report.configuration.launch_user == 'alex' && report.configuration.policy.offline
 		assert report.configuration.policy.licenses == ['Company-EULA'] && report.configuration.policy.allow_firmware
@@ -86,12 +86,12 @@ fn test_image_input_check_preserves_existing_configuration_and_consumer_state() 
 	root := work + '/image'; os.mkdir(root)!
 	mut initial := prepare_image_configuration(root, 'aarch64', '')!
 	assert unsafe { &initial }.publish()!; initial.close()
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	original := os.read_file(path)!
 	os.write_file(path, ' \n' + original + '\t')!
 	retained := os.read_file(path)!
-	os.mkdir_all(root + '/var/lib/vinix-packages')!
-	os.write_file(root + '/var/lib/vinix-packages/trust-history.json', 'retained consumer history')!
+	os.mkdir_all(root + '/var/lib/tulpar-packages')!
+	os.write_file(root + '/var/lib/tulpar-packages/trust-history.json', 'retained consumer history')!
 	mut configuration := prepare_image_configuration(root, 'aarch64', work + '/missing ignored source')!
 	defer { configuration.close() }
 	mut repositories := unsafe { &configuration }.prepare_repositories('')!
@@ -101,7 +101,7 @@ fn test_image_input_check_preserves_existing_configuration_and_consumer_state() 
 	assert report.configuration_action == 'preserve' && report.configuration_sha256 == hash_file(path)!
 	assert report.configuration.repositories.len == 0 && !report.bundle_supplied && report.bundle_action == 'none'
 	assert report.bundled_repositories.len == 0 && report.bundle_required_bytes == 0 && report.bundle_reserve_bytes == 0
-	assert os.read_file(path)! == retained && os.read_file(root + '/var/lib/vinix-packages/trust-history.json')! == 'retained consumer history'
+	assert os.read_file(path)! == retained && os.read_file(root + '/var/lib/tulpar-packages/trust-history.json')! == 'retained consumer history'
 	assert os.ls(root)!.sorted() == ['etc', 'var']
 	println('IMAGE INPUT CHECK preserved literal existing configuration and consumer history; no-bundle scope and zero bundle estimate PASS')
 }
@@ -128,8 +128,8 @@ fn test_image_input_check_revalidates_captured_inputs_and_refuses_mismatched_pla
 	mut unrelated := prepare_image_configuration(other, 'aarch64', '')!
 	defer { unrelated.close() }
 	if _ := unsafe { &unrelated }.check_repositories(unsafe { &repositories }) { assert false } else {}
-	os.mkdir_all(root + '/var/lib/vinix-packages')!
-	os.write_file(root + '/var/lib/vinix-packages/keep', 'state appeared')!
+	os.mkdir_all(root + '/var/lib/tulpar-packages')!
+	os.write_file(root + '/var/lib/tulpar-packages/keep', 'state appeared')!
 	if _ := unsafe { &configuration }.check_repositories(unsafe { &repositories }) { assert false } else {}
 	os.rmdir_all(root + '/var')!
 	os.rename(root, root + '-saved')!; os.mkdir(root)!
@@ -139,14 +139,14 @@ fn test_image_input_check_revalidates_captured_inputs_and_refuses_mismatched_pla
 }
 
 fn test_image_input_check_cli_uses_preflight_before_any_compiler_lookup() {
-	binary := os.getenv('VINIX_PACKAGE_STAGE_CHECK_CLI')
+	binary := os.getenv('TULPAR_PACKAGE_STAGE_CHECK_CLI')
 	if binary == '' { return }
 	work, key := image_check_fixture(false)!; defer { os.rmdir_all(work) or {} }
 	root := work + '/image root ; $literal'; os.mkdir(root)!
 	source := image_check_source(work, 'x86_64', key, false)!
-	os.setenv('VINIX_PACKAGE_IMAGE_CONFIG', work + '/ignored-invalid-config', true)
-	os.setenv('VINIX_PACKAGE_IMAGE_REPOSITORIES', work + '/ignored-invalid-bundle', true)
-	defer { os.unsetenv('VINIX_PACKAGE_IMAGE_CONFIG'); os.unsetenv('VINIX_PACKAGE_IMAGE_REPOSITORIES') }
+	os.setenv('TULPAR_PACKAGE_IMAGE_CONFIG', work + '/ignored-invalid-config', true)
+	os.setenv('TULPAR_PACKAGE_IMAGE_REPOSITORIES', work + '/ignored-invalid-bundle', true)
+	defer { os.unsetenv('TULPAR_PACKAGE_IMAGE_CONFIG'); os.unsetenv('TULPAR_PACKAGE_IMAGE_REPOSITORIES') }
 	mut expected := ''
 	for placement in [0, 1]! {
 		mut args := ['--arch', 'x86_64', '--staging', root, '--config', source, '--repositories', work + '/bundle', '--cc', work + '/nonexistent-compiler']
@@ -160,8 +160,8 @@ fn test_image_input_check_cli_uses_preflight_before_any_compiler_lookup() {
 		assert report.configuration.repositories[0].id == 'remote' && report.configuration_action == 'initialize'
 		assert os.ls(root)!.len == 0 && !os.exists(work + '/nonexistent-compiler')
 	}
-	os.setenv('VINIX_PACKAGE_IMAGE_CONFIG', source, true)
-	os.setenv('VINIX_PACKAGE_IMAGE_REPOSITORIES', work + '/bundle', true)
+	os.setenv('TULPAR_PACKAGE_IMAGE_CONFIG', source, true)
+	os.setenv('TULPAR_PACKAGE_IMAGE_REPOSITORIES', work + '/bundle', true)
 	mut from_env := os.new_process(binary)
 	from_env.set_args(['--check', '--arch', 'x86_64', '--staging', root, '--cc', work + '/nonexistent-compiler'])
 	from_env.set_redirect_stdio_merged(); from_env.run(); env_text := from_env.stdout_slurp(); from_env.wait(); env_code := from_env.code; from_env.close()
@@ -191,7 +191,7 @@ fn test_image_input_check_distinguishes_preserved_bundles_and_refuses_unsafe_or_
 	mut configuration := prepare_image_configuration(root, 'aarch64', source)!
 	mut repositories := unsafe { &configuration }.prepare_repositories(work + '/bundle')!
 	// An occupied fresh configuration would make actual publication refuse too.
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	os.write_file(configuration.path, configuration.text)!
 	if _ := unsafe { &configuration }.check_repositories(unsafe { &repositories }) { assert false } else {}
 	assert os.read_file(configuration.path)! == configuration.text

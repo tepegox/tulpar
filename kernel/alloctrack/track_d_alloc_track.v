@@ -45,7 +45,7 @@ fn slot_of(pointer u64) u64 {
 	return (hash >> 20) & 65535
 }
 
-@[export: 'vinix_alloc_track_enter']
+@[export: 'tulpar_alloc_track_enter']
 pub fn track_enter(pointer voidptr, size u64, frame &u64) {
 	unsafe {
 		if C.at_load(&at_enabled, 0) == 0 || uint(pointer) == 0 { return }

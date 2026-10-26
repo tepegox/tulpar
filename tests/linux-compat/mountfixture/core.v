@@ -42,7 +42,7 @@ pub fn run() int {
   if !check(C.mount(device, c'/mnt/store', c'ext42', 0, nil) == -1 && *C.__errno_location() == C.ENODEV, c'unknown filesystem') { return 1 }
   if !check(C.mount(device, c'/mnt/store', c'ext2', 0, nil) == 0, c'ordinary ext2 mount') { return 1 }
   fd := C.open(c'/mnt/store/persistent-marker', C.O_CREAT | C.O_RDWR | C.O_TRUNC, 0o600)
-  if !check(fd >= 0 && C.write(fd, c'vinix-ext2-42', 13) == 13 && C.close(fd) == 0, c'write mounted volume') { return 1 }
+  if !check(fd >= 0 && C.write(fd, c'tulpar-ext2-42', 13) == 13 && C.close(fd) == 0, c'write mounted volume') { return 1 }
   if !check(C.symlink(device, c'/dev/compat-mount-alias') == 0, c'source alias') { return 1 }
   if !check(C.mount(c'/dev/compat-mount-alias', c'/mnt/alias', c'ext2', usize(C.MS_RDONLY), nil) == 0, c'readonly alias mount') { return 1 }
   reopened := C.open(c'/mnt/alias/persistent-marker', C.O_RDONLY)

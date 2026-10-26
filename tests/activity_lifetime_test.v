@@ -5,10 +5,10 @@ import ui2
 
 #include "@VMODROOT/heap_tracker.h"
 
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
-fn C.vinix_heap_size_at(index u32) u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
+fn C.tulpar_heap_size_at(index u32) u64
 
 fn test_activity_browsing_releases_repeated_snapshot_and_frame_allocations() {
 	mut app := ActivityApp{}
@@ -19,7 +19,7 @@ fn test_activity_browsing_releases_repeated_snapshot_and_frame_allocations() {
 	begin_frame_elements()
 	warm := app.build(ui2.rect(0, 0, 900, 540))!
 	free_tree(warm)
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	for iteration in 0 .. 100 {
 		app.monitor.hierarchy = iteration % 2 == 1
 		header.sample_ns += 1_000_000_000
@@ -30,9 +30,9 @@ fn test_activity_browsing_releases_repeated_snapshot_and_frame_allocations() {
 		free_tree(tree)
 	}
 	app.close_app()
-	live := C.vinix_heap_end()
+	live := C.tulpar_heap_end()
 	if live != 0 {
-		for index in u32(0) .. C.vinix_heap_count() { eprintln(C.vinix_heap_size_at(index)) }
+		for index in u32(0) .. C.tulpar_heap_count() { eprintln(C.tulpar_heap_size_at(index)) }
 	}
 	assert live == 0, 'Activity Monitor repeated snapshots kept ${live} bytes'
 }
@@ -46,7 +46,7 @@ fn test_activity_inspector_releases_cached_line_rebuilds_and_frames() {
 	begin_frame_elements()
 	warm := inspector.build(900, 540)
 	free_tree(warm)
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	for _ in 0 .. 100 {
 		inspector.rebuild_lines()
 		begin_frame_elements()
@@ -54,9 +54,9 @@ fn test_activity_inspector_releases_cached_line_rebuilds_and_frames() {
 		free_tree(tree)
 	}
 	inspector.close()
-	live := C.vinix_heap_end()
+	live := C.tulpar_heap_end()
 	if live != 0 {
-		for index in u32(0) .. C.vinix_heap_count() { eprintln(C.vinix_heap_size_at(index)) }
+		for index in u32(0) .. C.tulpar_heap_count() { eprintln(C.tulpar_heap_size_at(index)) }
 	}
 	assert live == 0, 'Inspector repeated line rebuilding kept ${live} bytes'
 }
@@ -79,12 +79,12 @@ fn test_activity_short_process_view_with_all_columns_keeps_pool_buffer_owned() {
 		app.monitor.columns = columns
 		begin_frame_elements()
 		free_tree(app.build(ui2.rect(0, 0, 900, 400))!)
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 12 {
 			begin_frame_elements()
 			free_tree(app.build(ui2.rect(0, 0, 900, 400))!)
 		}
-		live := C.vinix_heap_end()
+		live := C.tulpar_heap_end()
 		assert live == 0, 'short process view with columns ${columns} retained ${live} bytes'
 	}
 }

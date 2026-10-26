@@ -7,8 +7,8 @@ import strings
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn local_offer_fixture(directory string) !string {
@@ -30,7 +30,7 @@ fn local_offer_fixture(directory string) !string {
 	}
 	joined := rows.join(',')
 	defer { unsafe { joined.free() } }
-	text := '{"format":1,"status":"local-qualification-only","source_closure_complete":false,"runtime":"org.vinix.wine-runtime","version":"9.17-r1","architecture":"aarch64","reason":"Corresponding source is incomplete; local testing only.","artifacts":[' + joined + ']}'
+	text := '{"format":1,"status":"local-qualification-only","source_closure_complete":false,"runtime":"org.tulpar.wine-runtime","version":"9.17-r1","architecture":"aarch64","reason":"Corresponding source is incomplete; local testing only.","artifacts":[' + joined + ']}'
 	path := directory + '/source-offer.json'
 	defer { unsafe { path.free() } }
 	os.write_file(path, text)!
@@ -52,11 +52,11 @@ fn check_local_refusal(directory string) {
 	baseline := C.open(c'/dev/null', C.O_RDONLY | C.O_CLOEXEC)
 	assert baseline >= 0
 	C.close(baseline)
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 32 {
-		assert local_offer_refused(directory, 'org.vinix.wine-runtime', '9.17-r1', 'aarch64')
+		assert local_offer_refused(directory, 'org.tulpar.wine-runtime', '9.17-r1', 'aarch64')
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	check := C.open(c'/dev/null', C.O_RDONLY | C.O_CLOEXEC)
 	assert check == baseline
 	C.close(check)
@@ -65,7 +65,7 @@ fn check_local_refusal(directory string) {
 fn test_local_source_inventory_identity_digests_links_and_cleanup() {
 	pid := os.getpid().str()
 	base := os.real_path(os.temp_dir())
-	temporary := base + '/vinix-wine-source-' + pid
+	temporary := base + '/tulpar-wine-source-' + pid
 	defer { os.rmdir_all(temporary) or {}; unsafe { temporary.free(); base.free(); pid.free() } }
 	os.mkdir(temporary)!
 	directory := temporary + '/notices'
@@ -73,22 +73,22 @@ fn test_local_source_inventory_identity_digests_links_and_cleanup() {
 	os.mkdir(directory)!
 	text := local_offer_fixture(directory)!
 	defer { unsafe { text.free() } }
-	mut offer := admit_local_source_offer(directory, 'org.vinix.wine-runtime', '9.17-r1', 'aarch64')!
+	mut offer := admit_local_source_offer(directory, 'org.tulpar.wine-runtime', '9.17-r1', 'aarch64')!
 	assert offer.artifacts.len == 3 && !offer.source_closure_complete
 	offer.close(); offer.close()
 	baseline_fd := C.open(c'/dev/null', C.O_RDONLY | C.O_CLOEXEC)
 	assert baseline_fd >= 0
 	C.close(baseline_fd)
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 100 {
-		mut repeated := admit_local_source_offer(directory, 'org.vinix.wine-runtime', '9.17-r1', 'aarch64')!
+		mut repeated := admit_local_source_offer(directory, 'org.tulpar.wine-runtime', '9.17-r1', 'aarch64')!
 		repeated.close(); repeated.close()
-		assert local_offer_refused(directory, 'org.vinix.other', '9.17-r1', 'aarch64')
-		assert local_offer_refused(directory, 'org.vinix.wine-runtime', '9.17-r2', 'aarch64')
-		assert local_offer_refused(directory, 'org.vinix.wine-runtime', '9.17-r1', 'x86_64')
+		assert local_offer_refused(directory, 'org.tulpar.other', '9.17-r1', 'aarch64')
+		assert local_offer_refused(directory, 'org.tulpar.wine-runtime', '9.17-r2', 'aarch64')
+		assert local_offer_refused(directory, 'org.tulpar.wine-runtime', '9.17-r1', 'x86_64')
 	}
 	$if track_heap ? {
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, kept.str()
 		println('LOCAL SOURCE ADMISSION 100 success and 300 identity refusal cycles retain zero tracked V bytes PASS')
 	}
@@ -150,7 +150,7 @@ fn test_local_source_inventory_identity_digests_links_and_cleanup() {
 	os.write_file(manifest, '')!
 	check_local_refusal(directory)
 	os.write_file(manifest, text)!
-	mut restored := admit_local_source_offer(directory, 'org.vinix.wine-runtime', '9.17-r1', 'aarch64')!
+	mut restored := admit_local_source_offer(directory, 'org.tulpar.wine-runtime', '9.17-r1', 'aarch64')!
 	restored.close()
 	println('LOCAL SOURCE ADMISSION exact inventory, runtime/host identity, hashes, size bounds, linked/empty/non-file refusal and restoration PASS')
 	println('LOCAL SOURCE ADMISSION every file/notice/manifest refusal repeated 32 times closes all descriptors PASS')
@@ -159,7 +159,7 @@ fn test_local_source_inventory_identity_digests_links_and_cleanup() {
 fn test_maximum_local_source_inventory_has_bounded_owned_storage() {
 	pid := os.getpid().str()
 	base := os.real_path(os.temp_dir())
-	directory := base + '/vinix-wine-source-maximum-' + pid
+	directory := base + '/tulpar-wine-source-maximum-' + pid
 	defer { os.rmdir_all(directory) or {}; unsafe { directory.free(); base.free(); pid.free() } }
 	os.mkdir(directory)!
 	text := local_offer_fixture(directory)!
@@ -186,13 +186,13 @@ fn test_maximum_local_source_inventory_has_bounded_owned_storage() {
 	baseline := C.open(c'/dev/null', C.O_RDONLY | C.O_CLOEXEC)
 	assert baseline >= 0
 	C.close(baseline)
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 8 {
-		mut offer := admit_local_source_offer(directory, 'org.vinix.wine-runtime', '9.17-r1', 'aarch64')!
+		mut offer := admit_local_source_offer(directory, 'org.tulpar.wine-runtime', '9.17-r1', 'aarch64')!
 		assert offer.artifacts.len == 256
 		offer.close()
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	check := C.open(c'/dev/null', C.O_RDONLY | C.O_CLOEXEC)
 	assert check == baseline
 	C.close(check)

@@ -22,10 +22,10 @@ fn task(name string, argv []string, work string) !Check {
 
 fn check() ! {
 	if os.args.len != 2 { return error('usage: import-materialization-ownership-check NEW_WORK_DIRECTORY; set V to a reviewed compiler') }
-	archive := os.getenv('VINIX_PROFILE_EXPORT_SOURCE')
+	archive := os.getenv('TULPAR_PROFILE_EXPORT_SOURCE')
 	if !os.is_file(archive) || os.file_size(archive) != 11388848
 		|| sha256.sum(os.read_bytes(archive)!).hex() != '05ee0b03119b45c0bdb4df654b96802e909e0a752f72e4fe3794f487229e5a41' {
-		return error('provide VINIX_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive for captured profile export checks')
+		return error('provide TULPAR_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive for captured profile export checks')
 	}
 	work := os.abs_path(os.args[1])
 	if os.exists(work) || os.is_link(work) { return error('qualification work directory must be new') }
@@ -35,9 +35,9 @@ fn check() ! {
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-cflags', '-O1', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	mut checks := []Check{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true); os.setenv('VINIX_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('VINIX_PACKAGE_PACK_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true); os.setenv('TULPAR_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('TULPAR_PACKAGE_PACK_CLI', cli, true)
 	for name in ['import_materialization_ownership', 'import_lookup', 'import_capture', 'import_limits', 'import', 'prepared_root', 'pack_ownership', 'pack_source', 'native_profile', 'sqlite_profile', 'ffmpeg_profile', 'wine_profile', 'apple_profile', 'profile_inventory', 'profile_export', 'catalog', 'composition', 'catalog_export', 'release', 'export_stage']! {
 		binary := work + '/' + name
 		checks << task(name + '-compile', [v, ...flags, '-o', binary, repository + '/tools/packages/pkgcore/' + name + '_test.v'], work)!

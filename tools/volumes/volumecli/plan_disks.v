@@ -17,7 +17,7 @@ fn enroll_bundle_disk(path &char, source &char) i32 {
 	if !read_bundle(edit.source, mut set, false) { return 1 }
 	input := C.open(source, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
 	if input < 0 {
-		C.perror(c'vinix-volume: open enrollment plan')
+		C.perror(c'tulpar-volume: open enrollment plan')
 		return 1
 	}
 	defer { C.close(input) }

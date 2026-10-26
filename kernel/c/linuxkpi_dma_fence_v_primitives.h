@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_DMA_FENCE_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_DMA_FENCE_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_DMA_FENCE_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_DMA_FENCE_V_PRIMITIVES_H
 #include "linuxkpi_v_primitives.h"
 struct dma_fence;
 struct dma_fence_cb;
@@ -62,10 +62,10 @@ void *vdf_fence_get(void *);
 void *vdf_current_get(void);
 void vdf_task_put(void *);
 void vdf_wake(void *);
-void vinix_linuxkpi_set_task_state(uint32_t);
-bool vinix_linuxkpi_smp_task_present(void);
-uint32_t vinix_linuxkpi_maskable_irq_depth(void);
-uint32_t vinix_linuxkpi_preempt_count(void);
-unsigned long vinix_linuxkpi_irq_flags(void);
+void tulpar_linuxkpi_set_task_state(uint32_t);
+bool tulpar_linuxkpi_smp_task_present(void);
+uint32_t tulpar_linuxkpi_maskable_irq_depth(void);
+uint32_t tulpar_linuxkpi_preempt_count(void);
+unsigned long tulpar_linuxkpi_irq_flags(void);
 void vkr_kvfree_call_rcu(void *, void *);
 #endif

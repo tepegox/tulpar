@@ -12,12 +12,12 @@ Build an isolated ARM kernel with `LIMINE_MP=1`, then run:
 ```sh
 tests/fsync-scope/run \
   --kernel-dir=/path/to/isolated/kernel \
-  --runner-root=/path/to/vinix \
-  --work=/path/to/vinix/build/fsync-new
+  --runner-root=/path/to/tulpar \
+  --work=/path/to/tulpar/build/fsync-new
 ```
 
 Use a fresh `--work` directory for each run. The runner needs the ARM musl
-sysroot under the runner root, or `VINIX_AARCH64_SYSROOT`, and the existing
+sysroot under the runner root, or `TULPAR_AARCH64_SYSROOT`, and the existing
 QEMU runner dependencies. It captures `serial.log` and `results.json`, which
 record the kernel and native fixture hashes and verify the exported host file
 is unchanged. The host file stays read-only. Only this test's NBD negotiation

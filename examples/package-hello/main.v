@@ -7,7 +7,7 @@ import tools.packages.appsdk
 fn main() {
 	mut context := appsdk.load() or { eprintln(err); exit(1) }
 	defer { context.close() }
-	println('Hello from a signed Vinix application package.')
+	println('Hello from a signed Tulpar application package.')
 	println('Application: ' + context.id + ' ' + context.version)
 	println('Private application data: ' + context.data_directory)
 	for path in os.args[1..] {

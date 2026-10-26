@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "guard": "VINIX_GENERATED_ATOMIC_EXCHANGE_H",
+  "guard": "TULPAR_GENERATED_ATOMIC_EXCHANGE_H",
   "sources": ["exchangecore/core.v", "exchange128core/core.v"],
   "native_atomic_adapters": [
     {
@@ -8,16 +8,16 @@
       "operation": "exchange",
       "parameters": ["ptr", "value"],
       "widths": [1, 2, 4, 8, 16],
-      "small_export": "vinix_arch_exchange_bits",
-      "wide_export": "vinix_arch_exchange_128"
+      "small_export": "tulpar_arch_exchange_bits",
+      "wide_export": "tulpar_arch_exchange_128"
     },
     {
       "name": "arch_cmpxchg_relaxed",
       "operation": "compare_exchange",
       "parameters": ["ptr", "old", "value"],
       "widths": [1, 2, 4, 8, 16],
-      "small_export": "vinix_arch_compare_exchange_bits",
-      "wide_export": "vinix_arch_compare_exchange_128"
+      "small_export": "tulpar_arch_compare_exchange_bits",
+      "wide_export": "tulpar_arch_compare_exchange_128"
     }
   ],
   "aliases": [

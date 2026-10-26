@@ -19,7 +19,7 @@ struct C.vrt_calls {
 
 fn C.rdtsc() C.vkt_cycles
 fn C.get_cycles() C.vkt_cycles
-fn C.vinix_linuxkpi_raw_tsc() u64
+fn C.tulpar_linuxkpi_raw_tsc() u64
 fn C.memcpy(voidptr, voidptr, usize) voidptr
 fn C.puts(&char) i32
 
@@ -34,7 +34,7 @@ fn bits(value C.vkt_cycles) u64 {
 
 @[direct_array_access]
 fn check(value u64) {
-	calls := C.vrt_calls{ counter: C.rdtsc, cycles: C.get_cycles, raw: C.vinix_linuxkpi_raw_tsc }
+	calls := C.vrt_calls{ counter: C.rdtsc, cycles: C.get_cycles, raw: C.tulpar_linuxkpi_raw_tsc }
 	for available in [false, true]! {
 		spy.configure(value, available)
 		spy.require(calls.raw() == value && spy.read_count() == 1 && spy.query_count() == 0, 1)

@@ -51,7 +51,7 @@ fn (c Config) common() []string {
 
 fn generated_flags() []string {
 	return ['-Wno-unused-function', '-ffreestanding', '-fno-builtin', '-fno-strict-aliasing',
-		'-DVINIX_V_RUNTIME']
+		'-DTULPAR_V_RUNTIME']
 }
 
 fn (c Config) cross() []string {
@@ -131,7 +131,7 @@ fn (c Config) generate(name string, files []string, arch string, model bool) !st
 	if C.mkdir(source.str, u32(0o777)) != 0 {
 		return fixturehost.FileError{ filename: source, number: int(C.errno), message: os.get_error_msg(C.errno) }
 	}
-	fixturehost.write(join(source, 'v.mod'), "Module { name: 'vinix_vmx_tests' }\n")!
+	fixturehost.write(join(source, 'v.mod'), "Module { name: 'tulpar_vmx_tests' }\n")!
 	for i, filename in files {
 		hosttest.module_copy_file(c.path('kernel/lib/' + filename), join(source, 'source' + i.str() + '.v'))!
 	}
@@ -214,7 +214,7 @@ fn control_blocks(text string) []string {
 fn check_instructions(assembly string, text string) ! {
 	for pair in [['on', 'vmxon'], ['off', 'vmxoff'], ['clear', 'vmclear'], ['load', 'vmptrld'],
 		['write', 'vmwriteq'], ['read', 'vmreadq'], ['invept', 'invept']] {
-		marker := '<vinix_vmx_' + pair[0] + '>:'
+		marker := '<tulpar_vmx_' + pair[0] + '>:'
 		offset := assembly.index(marker) or { return CheckError{ kind: 'IndexError', message: 'list index out of range' } }
 		suffix := assembly[offset + marker.len..]
 		function := suffix.all_before('\n\n')

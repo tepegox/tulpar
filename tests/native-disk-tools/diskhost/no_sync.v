@@ -22,7 +22,7 @@ fn no_sync(args []string) !int {
 	if !options.has('--state-dir') && !options.has('--build-fixture') {
 		return argument('missing required --state-dir')
 	}
-	work := work_dir(options, 'vinix-disk-no-sync-')!
+	work := work_dir(options, 'tulpar-disk-no-sync-')!
 	defer { remove_private(work, options) }
 	init := if options.has('--init') {
 		resolve(options.value('--init', ''))!
@@ -44,16 +44,16 @@ fn no_sync(args []string) !int {
 		}
 		println('==> Boot for ' + step)
 		if cut(configured, work + '/epochs/' + step, guesthost.PowercutPolicy{
-			start:    'VINIX NO SYNC: START'
-			done:     'VINIX NO SYNC: DONE'
+			start:    'TULPAR NO SYNC: START'
+			done:     'TULPAR NO SYNC: DONE'
 			phase:    step
-			failures: ['VINIX NO SYNC: FAIL', 'FATAL EXCEPTION', 'KERNEL PANIC']
+			failures: ['TULPAR NO SYNC: FAIL', 'FATAL EXCEPTION', 'KERNEL PANIC']
 			lookback: 8192
 		}, seconds, false)! != 0 {
 			return 1
 		}
 		text := os.read_file(work + '/epochs/' + step + '/serial.log')!
-		_, number := guesthost.powercut_done(text, 'VINIX NO SYNC: DONE') or { return error('Missing completed inode') }
+		_, number := guesthost.powercut_done(text, 'TULPAR NO SYNC: DONE') or { return error('Missing completed inode') }
 		problems := check_no_sync(executable, work + '/root.ext2', step, number)!
 		if problems.len > 0 {
 			for problem in problems {

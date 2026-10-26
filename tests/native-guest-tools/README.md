@@ -93,8 +93,8 @@ verdict; no new production kernel build or physical hardware run is claimed.
 
 Qualification uses the isolated V 0.5.2 `c6bb06f` compiler described in the
 [policy host qualification](../native-policy-tools/README.md). Local logs and
-receipts are under `/tmp/vinix-native-guest-qualification-{arm,x86,san}` and
-`/tmp/vinix-native-guest-final-checks`; maintained commands do not depend on
+receipts are under `/tmp/tulpar-native-guest-qualification-{arm,x86,san}` and
+`/tmp/tulpar-native-guest-final-checks`; maintained commands do not depend on
 those directories. No Python was run.
 
 The init-policy, process-churn, memlock, standalone realtime and N64 instruction-

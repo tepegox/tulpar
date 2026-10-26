@@ -4,7 +4,7 @@ module pkgcore
 import os
 
 pub const neovim_application_id = 'org.neovim.editor'
-pub const neovim_runtime_id = 'org.vinix.neovim-runtime'
+pub const neovim_runtime_id = 'org.tulpar.neovim-runtime'
 pub const neovim_profile_version = '0.12.5'
 
 const neovim_archives = {
@@ -20,7 +20,7 @@ const neovim_archives = {
 const neovim_notices = ['licenses/neovim-LICENSE.txt', 'licenses/libuv-LICENSE',
 	'licenses/lua-COPYRIGHT', 'licenses/luv-LICENSE.txt', 'licenses/lpeg-LICENSE',
 	'licenses/lua-compat-LICENSE', 'licenses/utf8proc-LICENSE.md', 'licenses/tree-sitter-LICENSE',
-	'licenses/musl-COPYRIGHT', 'licenses/vinix-COPYING', 'licenses/v-COPYRIGHT',
+	'licenses/musl-COPYRIGHT', 'licenses/tulpar-COPYING', 'licenses/v-COPYRIGHT',
 	'licenses/gcc-14.2.0-COPYING.RUNTIME', 'licenses/gcc-14.2.0-COPYING3',
 	'sources/build.json', 'sources/neovim-build.v', 'sources/neovim-runner.v',
 	'sources/nvimcompat-libuv.v', 'sources/libuv-patches.json']
@@ -59,7 +59,7 @@ mut:
 
 fn neovim_templates(arch string, version string) []RootRecipe {
 	mut entries := []RootEntry{}
-	for path in ['bin/vinix-neovim-runner', 'share/nvim/runtime']! {
+	for path in ['bin/tulpar-neovim-runner', 'share/nvim/runtime']! {
 		entries << RootEntry{source: path.clone(), path: path.clone()}
 	}
 	for path in neovim_notices { entries << RootEntry{source: path.clone(), path: path.clone()} }
@@ -73,7 +73,7 @@ fn neovim_templates(arch string, version string) []RootRecipe {
 		manifest: Package{id: neovim_application_id, version: neovim_profile_version, architecture: arch,
 			name: 'Neovim', description: 'Terminal text editor with Lua, Vimscript syntax and the complete upstream runtime. Uses Lua 5.1 without JIT; external tools and grammar parsers are not bundled.',
 			homepage: 'https://neovim.io/', license: 'Apache-2.0 AND Vim AND MIT AND Unicode-DFS-2016 AND (GPL-3.0-or-later WITH GCC-exception-3.1)', kind: 'linux',
-			runtime: neovim_runtime_id, entrypoint: 'bin/vinix-neovim-runner', permissions: ['files', 'process'],
+			runtime: neovim_runtime_id, entrypoint: 'bin/tulpar-neovim-runner', permissions: ['files', 'process'],
 			arguments: ['@RUNTIME@/share/nvim/runtime'.clone(), '@APP@/bin/nvim'.clone()],
 			dependencies: [Dependency{id: neovim_runtime_id, minimum: '1.0.0', before: '2.0.0'}]}
 		entries: [RootEntry{source: 'bin/nvim'.clone(), path: 'bin/nvim'.clone()},
@@ -177,7 +177,7 @@ fn neovim_catalog_with(version string, source_roots string, destination string, 
 	scratch = mirror_cost(scratch, scratch)!
 	disk_check(options.available_space(parent)!, mirror_cost(needed, scratch)!, 64 * 1024 * 1024)!
 	disk_check(options.available_space(temporary)!, scratch, 64 * 1024 * 1024)!
-	mut exporting := create_profile_stage(parent, '.vinix-neovim-profile', 'Neovim profile')!
+	mut exporting := create_profile_stage(parent, '.tulpar-neovim-profile', 'Neovim profile')!
 	defer { exporting.close() }
 	canonical := write_neovim_profile(target, roots, options, mut exporting, mut plan) or { return exporting.failure(err) }
 	defer { unsafe { canonical.free() } }

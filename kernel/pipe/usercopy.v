@@ -28,7 +28,7 @@ pub fn syscall_pipe_checked(gpr_state voidptr, pipefds &i32, flags int) (u64, u6
 	// Let construction fail first, then use the checked copy for all pointers.
 	// syscall_pipe fills both words before success, and neither it nor the
 	// checked user copy retains this caller's scratch beyond the call.
-	local := unsafe { &i32(C.vinix_stack_alloc(2 * sizeof(i32))) }
+	local := unsafe { &i32(C.tulpar_stack_alloc(2 * sizeof(i32))) }
 	ret, code := syscall_pipe(gpr_state, local, open_flags)
 	if code != 0 {
 		return ret, code

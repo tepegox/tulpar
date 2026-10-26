@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
-#ifndef VINIX_SW_FENCE_HOST_CONTRACT_H
-#define VINIX_SW_FENCE_HOST_CONTRACT_H
-#if defined(VINIX_SW_FENCE_PRINTK_TRANSPORT) || defined(VINIX_SW_FENCE_ORIGINAL_NOTICE)
+#ifndef TULPAR_SW_FENCE_HOST_CONTRACT_H
+#define TULPAR_SW_FENCE_HOST_CONTRACT_H
+#if defined(TULPAR_SW_FENCE_PRINTK_TRANSPORT) || defined(TULPAR_SW_FENCE_ORIGINAL_NOTICE)
 #include <stdint.h>
 struct seq_file;
 #include <linux/slab.h>
@@ -11,7 +11,7 @@ struct seq_file;
 #include "i915_sw_fence.h"
 #include "i915_selftest.h"
 int swh_printk(const char *,const char *,const char *,uint64_t,void *);
-#ifdef VINIX_SW_FENCE_PRINTK_TRANSPORT
+#ifdef TULPAR_SW_FENCE_PRINTK_TRANSPORT
 #define _printk swh_printk
 #endif
 #else

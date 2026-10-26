@@ -14,11 +14,11 @@ v -backend c -o /tmp/distribution-check tests/packages/distribution-check.v
 /tmp/distribution-check --direct-tests --software-only --desktop
 ```
 
-`VINIX_PACKAGE_TEST_UI2` names the parent of the staged `ui2` module;
-`VINIX_PACKAGE_TEST_DESKTOP` names generated desktop assets. `V` selects the
-compiler and `VINIX_UI2_SOURCE` selects ui2 sources for the launcher heap fixture.
+`TULPAR_PACKAGE_TEST_UI2` names the parent of the staged `ui2` module;
+`TULPAR_PACKAGE_TEST_DESKTOP` names generated desktop assets. `V` selects the
+compiler and `TULPAR_UI2_SOURCE` selects ui2 sources for the launcher heap fixture.
 Set `CPATH` to the repository's `desktop` directory for the native fixture's GPU
-ABI headers; `VINIX_PACKAGE_TEST_WORK` can select a private temporary parent.
+ABI headers; `TULPAR_PACKAGE_TEST_WORK` can select a private temporary parent.
 `--software-only` skips unchanged core/protocol/CLI runners; omitting it runs
 those checks as well. All runners remain V implementations.
 

@@ -1,25 +1,25 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_SPINLOCK_H
-#define VINIX_LINUX_SPINLOCK_H
+#ifndef TULPAR_LINUX_SPINLOCK_H
+#define TULPAR_LINUX_SPINLOCK_H
 #include <linux/kernel.h>
-#include <vinix/runtime.h>
+#include <tulpar/runtime.h>
 #include <linux/spinlock_types.h>
 #include <asm/barrier.h>
 /* The original x86 spinlock header exposes this real native spin hint. */
 #include <asm/processor.h>
 void spin_lock_init(spinlock_t *);
-bool vinix_raw_spin_trylock(spinlock_t *);
+bool tulpar_raw_spin_trylock(spinlock_t *);
 void spin_lock(spinlock_t *);
 bool spin_trylock(spinlock_t *);
 void spin_unlock(spinlock_t *);
 bool spin_is_locked(const spinlock_t *);
 void spin_lock_irq(spinlock_t *);
 void spin_unlock_irq(spinlock_t *);
-#include <vinix/spinlock_adapters.h>
+#include <tulpar/spinlock_adapters.h>
 /* The pinned no-lockdep nested IRQ-save form discards subclass entirely.
  * Generated metadata retains its original unsigned-long flags witness. */
 #ifndef CONFIG_DEBUG_LOCK_ALLOC
-#define spin_lock_irqsave_nested vinix_spin_lock_irqsave_nested
+#define spin_lock_irqsave_nested tulpar_spin_lock_irqsave_nested
 #define raw_spin_lock_irqsave_nested spin_lock_irqsave_nested
 #endif
 #define raw_spin_lock_init spin_lock_init

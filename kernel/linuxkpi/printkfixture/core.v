@@ -8,7 +8,7 @@ module printkfixture
 struct C.completion {}
 @[typedef] struct C.pthread_t {}
 @[typedef] struct C.vkfp_const_record_p {}
-struct C.vinix_linuxkpi_printk_record {
+struct C.tulpar_linuxkpi_printk_record {
  sequence u64
  caller u64
  format_status u32
@@ -17,7 +17,7 @@ struct C.vinix_linuxkpi_printk_record {
  flags u8
  text [1024]char
 }
-struct C.vinix_linuxkpi_printk_state {
+struct C.tulpar_linuxkpi_printk_state {
  submitted u64
  retired u64
  dropped u64
@@ -31,36 +31,36 @@ struct C.vinix_linuxkpi_printk_state {
 }
 type Sink = fn (C.vkfp_const_record_p, voidptr)
 type NativeThread = fn (voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_printk_sink(C.vkfp_const_record_p, voidptr)
-fn C.vinix_linuxkpi_fixture_printk_produce(voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_printk_flusher(voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_nested_format(&char, ...) i32
-fn C.vinix_linuxkpi_fixture_nested_emit(&char, ...) i32
+fn C.tulpar_linuxkpi_fixture_printk_sink(C.vkfp_const_record_p, voidptr)
+fn C.tulpar_linuxkpi_fixture_printk_produce(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_printk_flusher(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_nested_format(&char, ...) i32
+fn C.tulpar_linuxkpi_fixture_nested_emit(&char, ...) i32
 fn C.vkr_format_entry(&char, uint, &char, voidptr, &u32) i32
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable_no_resched()
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_test_worker_oom(i32)
-fn C.vinix_linuxkpi_test_alloc_oom(i32)
-fn C.vinix_linuxkpi_test_printk_locks() i32
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable_no_resched()
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_test_worker_oom(i32)
+fn C.tulpar_linuxkpi_test_alloc_oom(i32)
+fn C.tulpar_linuxkpi_test_printk_locks() i32
 fn C._printk(&char, ...) i32
 fn C.snprintf(&char, uint, &char, ...) i32
 fn C.scnprintf(&char, uint, &char, ...) i32
-fn C.vinix_linuxkpi_printk_snapshot() u64
-fn C.vinix_linuxkpi_printk_get_state(&C.vinix_linuxkpi_printk_state)
-fn C.vinix_linuxkpi_printk_flush(u64, u32) i32
-fn C.vinix_linuxkpi_printk_shutdown() i32
-fn C.vinix_linuxkpi_printk_bootstrap() i32
-fn C.vinix_linuxkpi_printk_test_fail_create(bool)
-fn C.vinix_linuxkpi_printk_test_pause(bool, u32) i32
-fn C.vinix_linuxkpi_printk_test_sink(Sink, voidptr) i32
+fn C.tulpar_linuxkpi_printk_snapshot() u64
+fn C.tulpar_linuxkpi_printk_get_state(&C.tulpar_linuxkpi_printk_state)
+fn C.tulpar_linuxkpi_printk_flush(u64, u32) i32
+fn C.tulpar_linuxkpi_printk_shutdown() i32
+fn C.tulpar_linuxkpi_printk_bootstrap() i32
+fn C.tulpar_linuxkpi_printk_test_fail_create(bool)
+fn C.tulpar_linuxkpi_printk_test_pause(bool, u32) i32
+fn C.tulpar_linuxkpi_printk_test_sink(Sink, voidptr) i32
 fn C.pthread_create(voidptr, voidptr, NativeThread, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
@@ -97,17 +97,17 @@ fn C.kprintf(&char, ...) i32
  C.ETIMEDOUT i32
  C.GFP_KERNEL u32
  C.LOCKDEP_STILL_OK i32
- C.VINIX_PRINTK_CONT u32
- C.VINIX_PRINTK_NEWLINE u32
- C.VINIX_PRINTK_TRUNCATED u32
- C.VINIX_FORMAT_TRUNCATED u32
- C.VINIX_FORMAT_INVALID u32
+ C.TULPAR_PRINTK_CONT u32
+ C.TULPAR_PRINTK_NEWLINE u32
+ C.TULPAR_PRINTK_TRUNCATED u32
+ C.TULPAR_FORMAT_TRUNCATED u32
+ C.TULPAR_FORMAT_INVALID u32
 )
 
 enum Phase { basic producers overflow snapshot }
 struct Capture {
 mut:
- records [16]C.vinix_linuxkpi_printk_record
+ records [16]C.tulpar_linuxkpi_printk_record
  first_entered C.completion
  first_release C.completion
  late_entered C.completion
@@ -152,64 +152,64 @@ mut:
 fn expect(result &i32, condition bool, original_line i32) {
  unsafe { if !condition && *result == 0 { *result = -original_line } }
 }
-fn irqs_enabled() bool { return C.vinix_linuxkpi_irq_flags() & (uint(1) << 9) != 0 }
+fn irqs_enabled() bool { return C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9) != 0 }
 
-@[export: 'vinix_linuxkpi_printk_locked_probe']
+@[export: 'tulpar_linuxkpi_printk_locked_probe']
 pub fn locked_probe() i32 {
  unsafe {
   mut result := i32(0)
-  pinned := C.vinix_linuxkpi_preempt_count()
+  pinned := C.tulpar_linuxkpi_preempt_count()
   irqs := irqs_enabled()
   expect(&result, C._printk(c'\x01\x36native held-lock probe\n') == 22, 37)
-  expect(&result, C.vinix_linuxkpi_preempt_count() == pinned && irqs_enabled() == irqs, 39)
+  expect(&result, C.tulpar_linuxkpi_preempt_count() == pinned && irqs_enabled() == irqs, 39)
   return result
  }
 }
 
-@[export: 'vinix_linuxkpi_printk_bootstrap_native_selftest']
+@[export: 'tulpar_linuxkpi_printk_bootstrap_native_selftest']
 pub fn bootstrap_test() i32 {
  unsafe {
   mut result := i32(0)
-  mut state := C.vinix_linuxkpi_printk_state{}
-  C.vinix_linuxkpi_printk_get_state(&state)
+  mut state := C.tulpar_linuxkpi_printk_state{}
+  C.tulpar_linuxkpi_printk_get_state(&state)
   if state.worker_live { return -C.EALREADY }
   expect(&result, C._printk(c'\x01\x36native logging preboot\n') == 22, 49)
-  before := C.vinix_linuxkpi_printk_snapshot()
-  expect(&result, C.vinix_linuxkpi_printk_flush(before, 0) == -C.ENODEV, 51)
-  C.vinix_linuxkpi_printk_test_fail_create(true)
-  mut error := C.vinix_linuxkpi_printk_bootstrap()
-  C.vinix_linuxkpi_printk_test_fail_create(false)
+  before := C.tulpar_linuxkpi_printk_snapshot()
+  expect(&result, C.tulpar_linuxkpi_printk_flush(before, 0) == -C.ENODEV, 51)
+  C.tulpar_linuxkpi_printk_test_fail_create(true)
+  mut error := C.tulpar_linuxkpi_printk_bootstrap()
+  C.tulpar_linuxkpi_printk_test_fail_create(false)
   expect(&result, error == -C.ENOMEM, 55)
-  C.vinix_linuxkpi_printk_get_state(&state)
+  C.tulpar_linuxkpi_printk_get_state(&state)
   expect(&result, !state.worker_live && state.submitted == before, 57)
   if state.worker_live {
-   C.BUG_ON(C.vinix_linuxkpi_printk_shutdown() != 0)
+   C.BUG_ON(C.tulpar_linuxkpi_printk_shutdown() != 0)
    return if result != 0 { result } else { -C.EIO }
   }
   for stage in 1 .. 5 {
-   C.vinix_linuxkpi_test_worker_oom(i32(stage))
-   error = C.vinix_linuxkpi_printk_bootstrap()
-   C.vinix_linuxkpi_test_worker_oom(0)
+   C.tulpar_linuxkpi_test_worker_oom(i32(stage))
+   error = C.tulpar_linuxkpi_printk_bootstrap()
+   C.tulpar_linuxkpi_test_worker_oom(0)
    expect(&result, error == -C.ENOMEM, 66)
-   C.vinix_linuxkpi_printk_get_state(&state)
+   C.tulpar_linuxkpi_printk_get_state(&state)
    expect(&result, !state.worker_live && state.submitted == before, 68)
    if state.worker_live {
-    C.BUG_ON(C.vinix_linuxkpi_printk_shutdown() != 0)
+    C.BUG_ON(C.tulpar_linuxkpi_printk_shutdown() != 0)
     return if result != 0 { result } else { -C.EIO }
    }
   }
   if result != 0 { return result }
-  error = C.vinix_linuxkpi_printk_bootstrap()
+  error = C.tulpar_linuxkpi_printk_bootstrap()
   if error != 0 { return error }
-  expect(&result, C.vinix_linuxkpi_printk_bootstrap() == 0, 77)
-  expect(&result, C.vinix_linuxkpi_printk_flush(before, 2000) == 0, 78)
-  C.vinix_linuxkpi_printk_get_state(&state)
+  expect(&result, C.tulpar_linuxkpi_printk_bootstrap() == 0, 77)
+  expect(&result, C.tulpar_linuxkpi_printk_flush(before, 2000) == 0, 78)
+  C.tulpar_linuxkpi_printk_get_state(&state)
   expect(&result, state.worker_live && state.retired == state.submitted && state.queued == 0 && !state.in_flight, 81)
   return result
  }
 }
 
-@[export: 'vinix_linuxkpi_fixture_nested_format_entry']
+@[export: 'tulpar_linuxkpi_fixture_nested_format_entry']
 pub fn nested_format_entry(format &char, cursor voidptr) i32 {
  unsafe {
   mut result := i32(0)
@@ -225,7 +225,7 @@ pub fn nested_format_entry(format &char, cursor voidptr) i32 {
 
 fn formats() i32 {
  unsafe {
-  mut result := C.vinix_linuxkpi_fixture_nested_format(c'mode=%u/%s', u32(1920), c'ok')
+  mut result := C.tulpar_linuxkpi_fixture_nested_format(c'mode=%u/%s', u32(1920), c'ok')
   mut text := [96]char{}
   mut physical := u64(0x1234)
   mut fourcc := u32(0x3231564e)
@@ -247,19 +247,19 @@ fn formats() i32 {
  }
 }
 
-fn inspect(capture &Capture, record &C.vinix_linuxkpi_printk_record, result &i32, index u32) {
+fn inspect(capture &Capture, record &C.tulpar_linuxkpi_printk_record, result &i32, index u32) {
  unsafe {
   if index == 0 {
-   expect(result, C.vinix_linuxkpi_printk_flush(record.sequence, 0) == -C.EDEADLK, 161)
-   expect(result, C.vinix_linuxkpi_printk_test_pause(true, 0) == -C.EDEADLK, 162)
-   expect(result, C.vinix_linuxkpi_printk_shutdown() == -C.EDEADLK, 163)
+   expect(result, C.tulpar_linuxkpi_printk_flush(record.sequence, 0) == -C.EDEADLK, 161)
+   expect(result, C.tulpar_linuxkpi_printk_test_pause(true, 0) == -C.EDEADLK, 162)
+   expect(result, C.tulpar_linuxkpi_printk_shutdown() == -C.EDEADLK, 163)
   }
   if capture.phase == .producers {
    id := u32(u8(record.text[10])) - u32(`0`)
    tens := u32(u8(record.text[18])) - u32(`0`)
    units := u32(u8(record.text[19])) - u32(`0`)
    round := tens * 10 + units
-   expect(result, record.length == 46 && id < 4 && tens < 10 && units < 10 && round < 64 && record.level == 6 && record.flags == C.VINIX_PRINTK_NEWLINE && record.format_status == 0, 174)
+   expect(result, record.length == 46 && id < 4 && tens < 10 && units < 10 && round < 64 && record.level == 6 && record.flags == C.TULPAR_PRINTK_NEWLINE && record.format_status == 0, 174)
    if id < 4 && round < 64 && tens < 10 && units < 10 {
     mut expected := [47]char{}
     C.memcpy(&expected[0], c'native id=0 round=00 str=stable bytes=c0 ff ee', sizeof(expected))
@@ -286,14 +286,14 @@ fn inspect(capture &Capture, record &C.vinix_linuxkpi_printk_record, result &i32
  }
 }
 
-@[export: 'vinix_linuxkpi_fixture_printk_sink']
+@[export: 'tulpar_linuxkpi_fixture_printk_sink']
 pub fn sink(record_const C.vkfp_const_record_p, argument voidptr) {
  unsafe {
   mut capture := &Capture(argument)
-  record := &C.vinix_linuxkpi_printk_record(record_const)
+  record := &C.tulpar_linuxkpi_printk_record(record_const)
   mut result := capture.result
   index := capture.count
-  expect(&result, C.vinix_linuxkpi_may_sleep() && irqs_enabled() && C.vinix_linuxkpi_preempt_count() == 0, 153)
+  expect(&result, C.tulpar_linuxkpi_may_sleep() && irqs_enabled() && C.tulpar_linuxkpi_preempt_count() == 0, 153)
   expect(&result, record.length < 1024 && record.text[record.length] == 0 && record.caller == 0 && record.sequence > capture.last_sequence, 156)
   capture.last_sequence = record.sequence
   if record.length < 1024 && record.text[record.length] == 0 { inspect(capture, record, &result, index) }
@@ -312,15 +312,15 @@ pub fn sink(record_const C.vkfp_const_record_p, argument voidptr) {
 
 fn attach(capture &Capture, phase Phase) i32 {
  unsafe {
-  if C.vinix_linuxkpi_printk_flush(C.vinix_linuxkpi_printk_snapshot(), 2000) != 0 { return -C.EIO }
-  if C.vinix_linuxkpi_printk_test_pause(true, 2000) != 0 { return -C.EIO }
+  if C.tulpar_linuxkpi_printk_flush(C.tulpar_linuxkpi_printk_snapshot(), 2000) != 0 { return -C.EIO }
+  if C.tulpar_linuxkpi_printk_test_pause(true, 2000) != 0 { return -C.EIO }
   *capture = Capture{phase: phase}
   C.init_completion(&capture.first_entered)
   C.init_completion(&capture.first_release)
   C.init_completion(&capture.late_entered)
   C.init_completion(&capture.late_release)
-  result := C.vinix_linuxkpi_printk_test_sink(C.vinix_linuxkpi_fixture_printk_sink, capture)
-  if result != 0 { C.BUG_ON(C.vinix_linuxkpi_printk_test_pause(false, 0) != 0) }
+  result := C.tulpar_linuxkpi_printk_test_sink(C.tulpar_linuxkpi_fixture_printk_sink, capture)
+  if result != 0 { C.BUG_ON(C.tulpar_linuxkpi_printk_test_pause(false, 0) != 0) }
   return result
  }
 }
@@ -329,17 +329,17 @@ fn detach(capture &Capture) i32 {
   mut result := i32(0)
   C.complete_all(&capture.first_release)
   C.complete_all(&capture.late_release)
-  C.BUG_ON(C.vinix_linuxkpi_printk_test_pause(false, 0) != 0)
-  expect(&result, C.vinix_linuxkpi_printk_flush(C.vinix_linuxkpi_printk_snapshot(), 2000) == 0, 229)
+  C.BUG_ON(C.tulpar_linuxkpi_printk_test_pause(false, 0) != 0)
+  expect(&result, C.tulpar_linuxkpi_printk_flush(C.tulpar_linuxkpi_printk_snapshot(), 2000) == 0, 229)
   // Quiesce every callback before removing its borrowed stack argument.
-  C.BUG_ON(C.vinix_linuxkpi_printk_test_pause(true, 2000) != 0)
-  C.BUG_ON(C.vinix_linuxkpi_printk_test_sink(Sink(nil), nil) != 0)
-  C.BUG_ON(C.vinix_linuxkpi_printk_test_pause(false, 0) != 0)
+  C.BUG_ON(C.tulpar_linuxkpi_printk_test_pause(true, 2000) != 0)
+  C.BUG_ON(C.tulpar_linuxkpi_printk_test_sink(Sink(nil), nil) != 0)
+  C.BUG_ON(C.tulpar_linuxkpi_printk_test_pause(false, 0) != 0)
   return if result != 0 { result } else { capture.result }
  }
 }
 
-@[export: 'vinix_linuxkpi_fixture_nested_emit_entry']
+@[export: 'tulpar_linuxkpi_fixture_nested_emit_entry']
 pub fn nested_emit_entry(format &char, cursor voidptr) i32 {
  unsafe {
   mut nested := VaDescriptor{fmt: format, va: cursor}
@@ -360,25 +360,25 @@ fn basic_emit(result &i32) {
   C.memset(owned, i32(`X`), sizeof(OwnedText))
   C.kfree(owned)
   mut nested := [char(`s`), char(`t`), char(`a`), char(`b`), char(`l`), char(`e`), char(0)]!
-  expect(result, C.vinix_linuxkpi_fixture_nested_emit(c'%s/%d', &nested[0], i32(-9)) == 16, 264)
+  expect(result, C.tulpar_linuxkpi_fixture_nested_emit(c'%s/%d', &nested[0], i32(-9)) == 16, 264)
   C.memset(&nested[0], i32(`x`), sizeof(nested))
   expect(result, C._printk(c'%s%sowned %d\n', c'\x01\x35', c'\x01\x63', i32(7)) == 7, 266)
   expect(result, C._printk(c'\x01\x63tail') == 4, 267)
   expect(result, C._printk(c'\x01\x36new\n') == 3, 268)
-  expect(result, C.vinix_linuxkpi_test_printk_locks() == 0, 269)
-  C.vinix_linuxkpi_test_alloc_oom(0)
-  flags := C.vinix_linuxkpi_irq_save()
-  C.vinix_linuxkpi_preempt_disable()
-  C.vinix_linuxkpi_preempt_disable()
+  expect(result, C.tulpar_linuxkpi_test_printk_locks() == 0, 269)
+  C.tulpar_linuxkpi_test_alloc_oom(0)
+  flags := C.tulpar_linuxkpi_irq_save()
+  C.tulpar_linuxkpi_preempt_disable()
+  C.tulpar_linuxkpi_preempt_disable()
   // Escape the initial 'a' separately so C's hex escape cannot consume it.
   expect(result, C._printk(c'\x01\x34\x61tomic producer\n') == 15, 273)
-  expect(result, !irqs_enabled() && C.vinix_linuxkpi_preempt_count() == 2, 274)
-  expect(result, C.vinix_linuxkpi_printk_flush(C.vinix_linuxkpi_printk_snapshot(), 0) == -C.EWOULDBLOCK, 275)
-  C.vinix_linuxkpi_preempt_enable_no_resched()
-  C.vinix_linuxkpi_preempt_enable_no_resched()
-  C.vinix_linuxkpi_irq_restore(flags)
+  expect(result, !irqs_enabled() && C.tulpar_linuxkpi_preempt_count() == 2, 274)
+  expect(result, C.tulpar_linuxkpi_printk_flush(C.tulpar_linuxkpi_printk_snapshot(), 0) == -C.EWOULDBLOCK, 275)
+  C.tulpar_linuxkpi_preempt_enable_no_resched()
+  C.tulpar_linuxkpi_preempt_enable_no_resched()
+  C.tulpar_linuxkpi_irq_restore(flags)
   probe := C.kmalloc(17, C.GFP_KERNEL)
-  C.vinix_linuxkpi_test_alloc_oom(-1)
+  C.tulpar_linuxkpi_test_alloc_oom(-1)
   expect(result, probe == nil, 280)
   C.kfree(probe)
   mut large := [1124]char{}
@@ -395,32 +395,32 @@ fn basic() i32 {
   mut capture := Capture{}
   mut result := attach(&capture, .basic)
   if result != 0 { return result }
-  mut before := C.vinix_linuxkpi_printk_state{}
-  mut after := C.vinix_linuxkpi_printk_state{}
-  C.vinix_linuxkpi_printk_get_state(&before)
+  mut before := C.tulpar_linuxkpi_printk_state{}
+  mut after := C.tulpar_linuxkpi_printk_state{}
+  C.tulpar_linuxkpi_printk_get_state(&before)
   basic_emit(&result)
   cleanup := detach(&capture)
   if result == 0 { result = cleanup }
   if result != 0 { return result }
-  C.vinix_linuxkpi_printk_get_state(&after)
-  expect(&result, capture.count == 10 && irqs_enabled() && C.vinix_linuxkpi_preempt_count() == 0, 296)
+  C.tulpar_linuxkpi_printk_get_state(&after)
+  expect(&result, capture.count == 10 && irqs_enabled() && C.tulpar_linuxkpi_preempt_count() == 0, 296)
   expect(&result, after.truncated == before.truncated + 1 && after.format_errors == before.format_errors + 1, 298)
   expect(&result, C.strcmp(&capture.records[0].text[0], c'owned=short-lived bytes=c0 ff ee') == 0, 299)
   expect(&result, C.strcmp(&capture.records[1].text[0], c'nested:stable/-9') == 0, 300)
-  expect(&result, C.strcmp(&capture.records[2].text[0], c'owned 7') == 0 && capture.records[2].level == 5 && capture.records[2].flags == C.VINIX_PRINTK_CONT | C.VINIX_PRINTK_NEWLINE, 303)
-  expect(&result, C.strcmp(&capture.records[3].text[0], c'tail') == 0 && capture.records[3].flags == C.VINIX_PRINTK_CONT && C.strcmp(&capture.records[4].text[0], c'new') == 0 && capture.records[4].flags == C.VINIX_PRINTK_NEWLINE, 307)
+  expect(&result, C.strcmp(&capture.records[2].text[0], c'owned 7') == 0 && capture.records[2].level == 5 && capture.records[2].flags == C.TULPAR_PRINTK_CONT | C.TULPAR_PRINTK_NEWLINE, 303)
+  expect(&result, C.strcmp(&capture.records[3].text[0], c'tail') == 0 && capture.records[3].flags == C.TULPAR_PRINTK_CONT && C.strcmp(&capture.records[4].text[0], c'new') == 0 && capture.records[4].flags == C.TULPAR_PRINTK_NEWLINE, 307)
   expect(&result, C.strcmp(&capture.records[5].text[0], c'native held-lock probe') == 0 && C.strcmp(&capture.records[6].text[0], c'native held-lock probe') == 0 && C.strcmp(&capture.records[7].text[0], c'atomic producer') == 0, 310)
-  expect(&result, capture.records[8].length == 1023 && capture.records[8].flags == C.VINIX_PRINTK_TRUNCATED && capture.records[8].format_status == C.VINIX_FORMAT_TRUNCATED && C.memchr_inv(&capture.records[8].text[0], i32(`a`), 1023) == nil, 314)
-  expect(&result, C.strcmp(&capture.records[9].text[0], c'before') == 0 && capture.records[9].format_status == C.VINIX_FORMAT_INVALID, 316)
+  expect(&result, capture.records[8].length == 1023 && capture.records[8].flags == C.TULPAR_PRINTK_TRUNCATED && capture.records[8].format_status == C.TULPAR_FORMAT_TRUNCATED && C.memchr_inv(&capture.records[8].text[0], i32(`a`), 1023) == nil, 314)
+  expect(&result, C.strcmp(&capture.records[9].text[0], c'before') == 0 && capture.records[9].format_status == C.TULPAR_FORMAT_INVALID, 316)
   return result
  }
 }
 
-@[export: 'vinix_linuxkpi_fixture_printk_produce']
+@[export: 'tulpar_linuxkpi_fixture_printk_produce']
 pub fn produce(argument voidptr) voidptr {
  unsafe {
   mut test := &Producer(argument)
-  mut result := C.vinix_linuxkpi_worker_bind(test.cpu)
+  mut result := C.tulpar_linuxkpi_worker_bind(test.cpu)
   C.complete(&test.entered)
   C.wait_for_completion(&test.go)
   for round := u32(0); result == 0 && round < 64 && C.__atomic_load_n(&test.cancel, 2) == 0; round++ {
@@ -428,19 +428,19 @@ pub fn produce(argument voidptr) voidptr {
    mut bytes := [u8(0xc0), u8(0xff), u8(0xee)]!
    pins := if round & 2 != 0 { u32(2) } else { u32(0) }
    mut flags := uint(0)
-   if round & 1 != 0 { flags = C.vinix_linuxkpi_irq_save() }
-   for i := u32(0); i < pins; i++ { C.vinix_linuxkpi_preempt_disable() }
+   if round & 1 != 0 { flags = C.tulpar_linuxkpi_irq_save() }
+   for i := u32(0); i < pins; i++ { C.tulpar_linuxkpi_preempt_disable() }
    expect(&result, C._printk(c'\x01\x36native id=%u round=%02u str=%s bytes=%3ph\n', test.index, round, &borrowed[0], &bytes[0]) == 46, 342)
    C.add_taint(test.index, C.LOCKDEP_STILL_OK)
    expect(&result, C.test_taint(test.index), 344)
-   expect(&result, C.vinix_linuxkpi_preempt_count() == pins && irqs_enabled() == (round & 1 == 0), 346)
+   expect(&result, C.tulpar_linuxkpi_preempt_count() == pins && irqs_enabled() == (round & 1 == 0), 346)
    C.memset(&borrowed[0], i32(`X`), sizeof(borrowed))
    C.memset(&bytes[0], 0, sizeof(bytes))
-   for i := u32(0); i < pins; i++ { C.vinix_linuxkpi_preempt_enable_no_resched() }
-   if round & 1 != 0 { C.vinix_linuxkpi_irq_restore(flags) }
-   expect(&result, C.vinix_linuxkpi_may_sleep() && C.vinix_linuxkpi_cpu_id() == test.cpu, 350)
+   for i := u32(0); i < pins; i++ { C.tulpar_linuxkpi_preempt_enable_no_resched() }
+   if round & 1 != 0 { C.tulpar_linuxkpi_irq_restore(flags) }
+   expect(&result, C.tulpar_linuxkpi_may_sleep() && C.tulpar_linuxkpi_cpu_id() == test.cpu, 350)
    if round % 8 == 7 {
-    expect(&result, C.vinix_linuxkpi_printk_flush(C.vinix_linuxkpi_printk_snapshot(), 2000) == 0, 354)
+    expect(&result, C.tulpar_linuxkpi_printk_flush(C.tulpar_linuxkpi_printk_snapshot(), 2000) == 0, 354)
     C.cond_resched()
    }
   }
@@ -453,7 +453,7 @@ pub fn produce(argument voidptr) voidptr {
 
 fn producers_body(tests &Producer, result &i32) {
  unsafe {
-  cpus := C.vinix_linuxkpi_percpu_count()
+  cpus := C.tulpar_linuxkpi_percpu_count()
   if cpus == 0 || cpus > 64 { *result = -C.EOPNOTSUPP; return }
   taint_before := C.get_taint()
   for i := u32(0); i < 4; i++ {
@@ -463,11 +463,11 @@ fn producers_body(tests &Producer, result &i32) {
    C.init_completion(&tests[i].go)
    C.init_completion(&tests[i].done)
    tests[i].initialized = true
-   if C.pthread_create(&tests[i].thread, nil, C.vinix_linuxkpi_fixture_printk_produce, &tests[i]) != 0 { *result = -C.ENOMEM; return }
+   if C.pthread_create(&tests[i].thread, nil, C.tulpar_linuxkpi_fixture_printk_produce, &tests[i]) != 0 { *result = -C.ENOMEM; return }
    tests[i].started = true
    if C.wait_for_completion_timeout(&tests[i].entered, 2000) == 0 { *result = -C.EIO; return }
   }
-  C.BUG_ON(C.vinix_linuxkpi_printk_test_pause(false, 0) != 0)
+  C.BUG_ON(C.tulpar_linuxkpi_printk_test_pause(false, 0) != 0)
   for i := u32(0); i < 4; i++ { C.complete(&tests[i].go) }
   for i := u32(0); i < 4; i++ {
    if C.wait_for_completion_timeout(&tests[i].done, 2000) == 0 { *result = -C.EIO; return }
@@ -481,9 +481,9 @@ fn producers() i32 {
   mut result := attach(&capture, .producers)
   if result != 0 { return result }
   mut tests := [4]Producer{}
-  mut before := C.vinix_linuxkpi_printk_state{}
-  mut after := C.vinix_linuxkpi_printk_state{}
-  C.vinix_linuxkpi_printk_get_state(&before)
+  mut before := C.tulpar_linuxkpi_printk_state{}
+  mut after := C.tulpar_linuxkpi_printk_state{}
+  C.tulpar_linuxkpi_printk_get_state(&before)
   producers_body(&tests[0], &result)
   for i := u32(0); i < 4; i++ {
    C.__atomic_store_n(&tests[i].cancel, 1, 3)
@@ -497,27 +497,27 @@ fn producers() i32 {
   cleanup := detach(&capture)
   if result == 0 { result = cleanup }
   if result != 0 { return result }
-  C.vinix_linuxkpi_printk_get_state(&after)
+  C.tulpar_linuxkpi_printk_get_state(&after)
   expect(&result, capture.count == 256 && after.dropped == before.dropped && after.submitted == before.submitted + 256 && after.retired == after.submitted, 409)
   for i := u32(0); i < 4; i++ { expect(&result, capture.seen[i] == ~u64(0), 411) }
   return result
  }
 }
 
-fn overflow_body(capture &Capture, before &C.vinix_linuxkpi_printk_state, result &i32) {
+fn overflow_body(capture &Capture, before &C.tulpar_linuxkpi_printk_state, result &i32) {
  unsafe {
   expect(result, C._printk(c'held') == 4, 423)
-  first := C.vinix_linuxkpi_printk_snapshot()
-  C.BUG_ON(C.vinix_linuxkpi_printk_test_pause(false, 0) != 0)
+  first := C.tulpar_linuxkpi_printk_snapshot()
+  C.BUG_ON(C.tulpar_linuxkpi_printk_test_pause(false, 0) != 0)
   if C.wait_for_completion_timeout(&capture.first_entered, 2000) == 0 { *result = -C.EIO; return }
   for i := u32(0); i < 80; i++ { expect(result, C._printk(c'overflow=%02u', i) == 11, 428) }
-  last := C.vinix_linuxkpi_printk_snapshot()
-  mut held := C.vinix_linuxkpi_printk_state{}
-  C.vinix_linuxkpi_printk_get_state(&held)
+  last := C.tulpar_linuxkpi_printk_snapshot()
+  mut held := C.tulpar_linuxkpi_printk_state{}
+  C.tulpar_linuxkpi_printk_get_state(&held)
   expect(result, held.queued == 64 && held.in_flight && held.retired == first - 1 && held.dropped == before.dropped + 16 && held.submitted == first + 80, 433)
-  expect(result, C.vinix_linuxkpi_printk_flush(first + 10, 0) == -C.ETIMEDOUT, 434)
+  expect(result, C.tulpar_linuxkpi_printk_flush(first + 10, 0) == -C.ETIMEDOUT, 434)
   C.complete(&capture.first_release)
-  expect(result, C.vinix_linuxkpi_printk_flush(last, 2000) == 0, 436)
+  expect(result, C.tulpar_linuxkpi_printk_flush(last, 2000) == 0, 436)
  }
 }
 fn overflow() i32 {
@@ -526,25 +526,25 @@ fn overflow() i32 {
   mut result := attach(&capture, .overflow)
   if result != 0 { return result }
   capture.hold_first = true
-  mut before := C.vinix_linuxkpi_printk_state{}
-  mut after := C.vinix_linuxkpi_printk_state{}
-  C.vinix_linuxkpi_printk_get_state(&before)
+  mut before := C.tulpar_linuxkpi_printk_state{}
+  mut after := C.tulpar_linuxkpi_printk_state{}
+  C.tulpar_linuxkpi_printk_get_state(&before)
   overflow_body(&capture, &before, &result)
   cleanup := detach(&capture)
   if result == 0 { result = cleanup }
   if result != 0 { return result }
-  C.vinix_linuxkpi_printk_get_state(&after)
+  C.tulpar_linuxkpi_printk_get_state(&after)
   expect(&result, capture.count == 65 && after.retired == after.submitted && after.queued == 0 && !after.in_flight && after.dropped == before.dropped + 16, 445)
   return result
  }
 }
 
-@[export: 'vinix_linuxkpi_fixture_printk_flusher']
+@[export: 'tulpar_linuxkpi_fixture_printk_flusher']
 pub fn flush_thread(argument voidptr) voidptr {
  unsafe {
   mut test := &Flusher(argument)
   C.complete(&test.entered)
-  test.result = C.vinix_linuxkpi_printk_flush(test.snapshot, 2000)
+  test.result = C.tulpar_linuxkpi_printk_flush(test.snapshot, 2000)
   C.complete(&test.done)
   C.pthread_exit(nil)
   return nil
@@ -553,10 +553,10 @@ pub fn flush_thread(argument voidptr) voidptr {
 fn snapshot_body(capture &Capture, flusher &Flusher, started &bool, result &i32) {
  unsafe {
   expect(result, C._printk(c'old') == 3, 474)
-  flusher.snapshot = C.vinix_linuxkpi_printk_snapshot()
-  C.BUG_ON(C.vinix_linuxkpi_printk_test_pause(false, 0) != 0)
+  flusher.snapshot = C.tulpar_linuxkpi_printk_snapshot()
+  C.BUG_ON(C.tulpar_linuxkpi_printk_test_pause(false, 0) != 0)
   if C.wait_for_completion_timeout(&capture.first_entered, 2000) == 0 { *result = -C.EIO; return }
-  if C.pthread_create(&flusher.thread, nil, C.vinix_linuxkpi_fixture_printk_flusher, flusher) != 0 { *result = -C.ENOMEM; return }
+  if C.pthread_create(&flusher.thread, nil, C.tulpar_linuxkpi_fixture_printk_flusher, flusher) != 0 { *result = -C.ENOMEM; return }
   *started = true
   if C.wait_for_completion_timeout(&flusher.entered, 2000) == 0 { *result = -C.EIO; return }
   expect(result, !C.completion_done(&flusher.done), 483)
@@ -564,8 +564,8 @@ fn snapshot_body(capture &Capture, flusher &Flusher, started &bool, result &i32)
   C.complete(&capture.first_release)
   if C.wait_for_completion_timeout(&capture.late_entered, 2000) == 0 { *result = -C.EIO; return }
   expect(result, C.wait_for_completion_timeout(&flusher.done, 2000) != 0 && flusher.result == 0, 487)
-  mut state := C.vinix_linuxkpi_printk_state{}
-  C.vinix_linuxkpi_printk_get_state(&state)
+  mut state := C.tulpar_linuxkpi_printk_state{}
+  C.tulpar_linuxkpi_printk_get_state(&state)
   expect(result, state.in_flight && state.retired == flusher.snapshot && capture.count == 1, 490)
  }
 }
@@ -592,7 +592,7 @@ fn snapshot() i32 {
  }
 }
 
-@[export: 'vinix_linuxkpi_printk_native_selftest']
+@[export: 'tulpar_linuxkpi_printk_native_selftest']
 pub fn selftest() i32 {
  mut result := formats()
  if result == 0 { result = basic() }

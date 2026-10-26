@@ -353,7 +353,7 @@ fn amdvi_show_domains(context voidptr, mut text lib.Text) {
 }
 
 fn amdvi_publish_file(unit &AmdviUnit, leaf string, show fs.SysfsShow) {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(48) }
 	text.add('class/iommu/')
 	text.add(unit.name)

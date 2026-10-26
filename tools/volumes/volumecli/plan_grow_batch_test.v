@@ -121,7 +121,7 @@ fn test_growth_identity_follows_compaction_and_uses_sector_alignment_outside_poo
 }
 
 fn test_full_195_argument_growth_cli_preserves_v2_limit_and_equal_size_retries() {
-	work := os.join_path(os.temp_dir(), 'vinix-explicit-growth-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-explicit-growth-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}
 	for disk in 0 .. 64 {
@@ -143,7 +143,7 @@ fn test_full_195_argument_growth_cli_preserves_v2_limit_and_equal_size_retries()
 		values << unsafe { cstring_to_vstring(&identity[0]) }; values << disk.str(); values << '8192'
 	}
 	unsafe {
-		mut args := [196]&char{}; args[0] = &char(c'vinix-volume'); args[2] = path.str
+		mut args := [196]&char{}; args[0] = &char(c'tulpar-volume'); args[2] = path.str
 		for i in 0 .. values.len { args[3 + i] = values[i].str }
 		args[1] = &char(c'plan-preview-grow-batch'); assert run(195, &args[0]) == 0 && os.read_bytes(path)! == original
 		args[1] = &char(c'plan-grow-batch'); assert run(195, &args[0]) == 0
@@ -155,7 +155,7 @@ fn test_full_195_argument_growth_cli_preserves_v2_limit_and_equal_size_retries()
 }
 
 fn test_invalid_growth_sources_counts_and_later_cli_tokens_never_publish_prefixes() {
-	work := os.join_path(os.temp_dir(), 'vinix-explicit-growth-cli-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-explicit-growth-cli-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}; explicit_growth_fixture(mut set, 0, 1)
 	assert publish_bundle(path.str, &set); original := os.read_bytes(path)!; os.symlink(path, work + '/alias')!
@@ -164,7 +164,7 @@ fn test_invalid_growth_sources_counts_and_later_cli_tokens_never_publish_prefixe
 		for bad in [work + '/missing', work, work + '/alias'] { assert grow_batch_bundle_plan(bad.str, &batch, preview) == 1 }
 	}
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-grow-batch'), path.str,
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-grow-batch'), path.str,
 			&char(c'mbr:00000001'), &char(c'0'), &char(c'8192'),
 			&char(c'gpt:00000002-0000-0000-0000-000000000055'), &char(c'1'), &char(c'8192'), &char(nil)]!
 		for command in [c'plan-grow-batch', c'plan-preview-grow-batch'] {

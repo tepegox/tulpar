@@ -96,14 +96,14 @@ fn main() {
 
 fn run_native() ! {
 	root := policyhost.root()
-	generator := os.getenv('VINIX_SCHEDULER_PREEMPTION_GENERATOR')
+	generator := os.getenv('TULPAR_SCHEDULER_PREEMPTION_GENERATOR')
 	// Keep source-read failures ahead of fixture ownership, as in the original front.
 	program := if generator != '' {
 		policyhost.capture([generator, '--assemble', root])!
 	} else {
 		assemble(root)!
 	}
-	work := hosttest.work_dir('', 'vinix-enqueue-policy-')!
+	work := hosttest.work_dir('', 'tulpar-enqueue-policy-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	os.write_file(unix_path(work, 'v.mod'), "Module { name: 'preemption_test' }\n")!
 	os.write_file(unix_path(work, 'main.v'), program)!

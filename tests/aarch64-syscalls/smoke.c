@@ -130,7 +130,7 @@ static int mount_rejects_bad_strings(void) {
                                ENAMETOOLONG, "mount unterminated source");
 
     // Two pages of the machine's size, the second inaccessible, with the
-    // string on the last byte of the first. arm64 Vinix has 16 KiB pages: with
+    // string on the last byte of the first. arm64 Tulpar has 16 KiB pages: with
     // 4 KiB assumed, musl's mprotect() rounded the second "page" down to the
     // one real page, and writing the string faulted for good.
     size_t page = (size_t)sysconf(_SC_PAGESIZE);
@@ -1728,11 +1728,11 @@ int main(int argc, char **argv, char **envp) {
           "System V shared memory after IPC_RMID");
 
     check(sethostname("syscall-smoke", 13) == 0, "sethostname");
-    check(syscall(SYS_setdomainname, "vinix.test", 10) == 0, "setdomainname");
+    check(syscall(SYS_setdomainname, "tulpar.test", 10) == 0, "setdomainname");
     struct utsname uts;
     check(uname(&uts) == 0 && !strcmp(uts.machine, "aarch64") &&
               !strcmp(uts.nodename, "syscall-smoke") &&
-              !strcmp(uts.domainname, "vinix.test"),
+              !strcmp(uts.domainname, "tulpar.test"),
           "uname hostname and domainname");
 
     const char *mount_dir = "/tmp/aarch64-syscall-mount";
@@ -1774,7 +1774,7 @@ int main(int argc, char **argv, char **envp) {
     check(security_child_succeeded(effective_child),
           "real root with non-root euid is denied");
     check(uname(&uts) == 0 && !strcmp(uts.nodename, "syscall-smoke") &&
-              !strcmp(uts.domainname, "vinix.test"),
+              !strcmp(uts.domainname, "tulpar.test"),
           "denied name changes leave system state intact");
 
     pid_t root_effective_child = fork();
@@ -1782,7 +1782,7 @@ int main(int argc, char **argv, char **envp) {
         if (setresuid(1000, 0, 0) != 0 || getuid() != 1000 || geteuid() != 0)
             _exit(1);
         if (sethostname("syscall-smoke", 13) != 0 ||
-            syscall(SYS_setdomainname, "vinix.test", 10) != 0 ||
+            syscall(SYS_setdomainname, "tulpar.test", 10) != 0 ||
             (mount_ready && syscall(SYS_umount2, mount_dir, 0) != 0) ||
             !failed_with_errno(syscall(SYS_reboot, 0, 0, 0, NULL), EINVAL, "root reboot invalid magic"))
             _exit(2);

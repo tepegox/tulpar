@@ -12,11 +12,11 @@ fn invoke(program string, args []string) ! {
 fn check() ! {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
-	work := os.temp_dir() + '/vinix-removal-space-check-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-removal-space-check-' + os.getpid().str()
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	header := work + '/statvfs.h'
-	os.write_file(header, '#include <sys/statvfs.h>\n#define statvfs(...) vinix_removal_fixture_statvfs(__VA_ARGS__)\n')!
+	os.write_file(header, '#include <sys/statvfs.h>\n#define statvfs(...) tulpar_removal_fixture_statvfs(__VA_ARGS__)\n')!
 	mut flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-d', 'mocked_space',
 		'-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts', '-cflags', '-include ' + header]
 	if '--sanitize' in os.args {

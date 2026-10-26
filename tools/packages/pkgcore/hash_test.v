@@ -19,7 +19,7 @@ fn C.setrlimit(int, voidptr) int
 struct HashLimit { current u64 maximum u64 }
 
 fn hash_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-hash-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-hash-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }

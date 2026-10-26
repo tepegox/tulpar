@@ -6,9 +6,9 @@ import time
 
 $if track_heap ? {
 #include "@VMODROOT/../../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 }
 
 fn flush_attempt(path string, refused bool) {
@@ -17,7 +17,7 @@ fn flush_attempt(path string, refused bool) {
 }
 
 fn test_recursive_publisher_flush_retires_names_and_paths_on_success_and_nested_refusal() {
-	work := os.real_path(os.temp_dir()) + '/vinix-flush-owner-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-flush-owner-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/tree/branch/leaf')!; os.mkdir_all(work + '/other/leaf')!
 	defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/other/leaf/keep', 'preserved alias target')!
@@ -30,10 +30,10 @@ fn test_recursive_publisher_flush_retires_names_and_paths_on_success_and_nested_
 		flush_attempt(path, refused)
 		mut maximum := u64(0); mut records := u32(0)
 		for _ in 0 .. 64 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			flush_attempt(path, refused)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if count > records { records = count }
 			}
 		}

@@ -12,7 +12,7 @@ The production policy and fixture assertions remain independent of the generator
 The normal entry point builds a generator with `build-support/run-v-tool.sh`,
 installs it with mode `0700` in the original disposable owner, and reuses it for
 both phases. The temporary owner removes it on success, failure or interrupt.
-`VINIX_BLOCK_POLICY_GENERATOR` can select an already built generator. `V` keeps
+`TULPAR_BLOCK_POLICY_GENERATOR` can select an already built generator. `V` keeps
 its existing meaning for the production fixture compiler and also selects the
 generator compiler through `build-support/find-v.sh`.
 

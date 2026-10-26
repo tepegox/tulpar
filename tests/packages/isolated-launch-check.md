@@ -99,9 +99,9 @@ Run the package host driver with the reviewed V compiler and headless UI module:
 ```sh
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
-V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/vinix/desktop \
-  VINIX_PACKAGE_TEST_WORK=/path/to/private/work \
-  VINIX_PACKAGE_TEST_UI2=/path/to/headless/modules \
+V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/tulpar/desktop \
+  TULPAR_PACKAGE_TEST_WORK=/path/to/private/work \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/headless/modules \
   /tmp/distribution-check --direct-tests --cross
 ```
 
@@ -110,9 +110,9 @@ Build [the V guest controller](isolated-launch-check.v) with the repository and
 target, a retained target kernel, and a new state directory:
 
 ```sh
-VINIX_HWTEST_TCG=1 V=/path/to/v \
-  VINIX_ISOLATED_SANDBOX=/path/to/target/vinix-sandbox \
-  VINIX_AMD64_LIMINE_DIR=/path/to/retained/limine \
+TULPAR_HWTEST_TCG=1 V=/path/to/v \
+  TULPAR_ISOLATED_SANDBOX=/path/to/target/tulpar-sandbox \
+  TULPAR_AMD64_LIMINE_DIR=/path/to/retained/limine \
   /tmp/isolated-launch-check --arch=x86_64 --kernel=/path/to/target/kernel \
   --scenario=packages-isolated-launch --state-dir=/tmp/new-isolated-state
 ```

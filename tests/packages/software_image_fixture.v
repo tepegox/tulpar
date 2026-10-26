@@ -136,7 +136,7 @@ fn image_close_window(mut app SoftwareApp) ! {
 	image_wait(mut app)!
 }
 fn image_counter(mut app SoftwareApp) ! {
-	image_select(mut app, 'org.vinix.counter')!
+	image_select(mut app, 'org.tulpar.counter')!
 	image_control(mut app, 'software.run')!
 	assert !app.admin_prompt && app.window_protocol == 1
 	image_frame(mut app, 1)!
@@ -148,7 +148,7 @@ fn image_counter(mut app SoftwareApp) ! {
 }
 fn image_memo(mut app SoftwareApp, edit bool) ! {
 	// Use the same request a Start/Open With client sends to a Software window.
-	app.handle(packagecore.request_prefix + json2.encode(packagecore.Request{ id: 'org.vinix.memo' }))!
+	app.handle(packagecore.request_prefix + json2.encode(packagecore.Request{ id: 'org.tulpar.memo' }))!
 	image_frame(mut app, 1)!
 	assert app.window_protocol == 2 && !app.admin_prompt
 	if edit {
@@ -163,7 +163,7 @@ fn image_memo(mut app SoftwareApp, edit bool) ! {
 }
 
 fn image_counter_reopen(mut app SoftwareApp) ! {
-	image_select(mut app, 'org.vinix.counter')!
+	image_select(mut app, 'org.tulpar.counter')!
 	image_control(mut app, 'software.run')!
 	image_frame(mut app, 1)!
 	assert app.window_protocol == 1 && app.window_frame.elements.any(it.text == 'Count: 1')
@@ -172,15 +172,15 @@ fn image_counter_reopen(mut app SoftwareApp) ! {
 
 fn image_release_observation() ![]string {
 	mut result := []string{}
-	for path in ['/etc/vinix-packages/config.json', pkgprotocol.image_applications_path,
-		'/var/lib/vinix-packages/current/state.json', '/var/lib/vinix-packages/catalog.json',
-		'/var/lib/vinix-packages/trust-history.json']! {
+	for path in ['/etc/tulpar-packages/config.json', pkgprotocol.image_applications_path,
+		'/var/lib/tulpar-packages/current/state.json', '/var/lib/tulpar-packages/catalog.json',
+		'/var/lib/tulpar-packages/trust-history.json']! {
 		if !os.exists(path) { result << 'absent'; continue }
 		bytes := os.read_bytes(path)!
 		defer { unsafe { bytes.free() } }
 		result << sha256.sum(bytes).hex()
 	}
-	result << os.readlink('/var/lib/vinix-packages/current') or { '' }
+	result << os.readlink('/var/lib/tulpar-packages/current') or { '' }
 	return result
 }
 
@@ -234,14 +234,14 @@ fn image_cold_maintenance(mut app SoftwareApp, phase string, password string) ! 
 		image_apply(mut app, 'software.rollback', password)!
 		assert app.rows.all(it.installed_version == '1.0.0')
 		image_release_audit(mut app, 'cold-rollback', '1.0.0')!
-		for id in ['org.vinix.counter', 'org.vinix.memo', 'org.vinix.package-hello']! {
+		for id in ['org.tulpar.counter', 'org.tulpar.memo', 'org.tulpar.package-hello']! {
 			image_select(mut app, id)!
 			image_apply(mut app, 'software.remove', password)!
-			assert !os.exists('/var/lib/vinix-packages/current/share/applications/vinix-' + id + '.desktop')
+			assert !os.exists('/var/lib/tulpar-packages/current/share/applications/tulpar-' + id + '.desktop')
 		}
 		assert app.rows.all(it.installed_version == '')
 		image_release_audit(mut app, 'cold-removed', '')!
-		for id in ['org.vinix.counter', 'org.vinix.memo', 'org.vinix.package-hello']! {
+		for id in ['org.tulpar.counter', 'org.tulpar.memo', 'org.tulpar.package-hello']! {
 			image_select(mut app, id)!
 			image_apply(mut app, 'software.install', password)!
 		}
@@ -293,16 +293,16 @@ fn image_run() ! {
 		image_memo(mut app, true)!
 		document := os.home_dir() + '/software document ; $literal.txt'
 		os.write_file(document, 'Explicit ordinary-user document grant')!
-		app.handle(packagecore.request_prefix + json2.encode(packagecore.Request{ id: 'org.vinix.package-hello', document: document }))!
+		app.handle(packagecore.request_prefix + json2.encode(packagecore.Request{ id: 'org.tulpar.package-hello', document: document }))!
 		image_wait(mut app)!
 		assert app.status.contains('Explicit ordinary-user document grant'), app.status
 		println('SOFTWARE IMAGE ordinary-admin real-refresh cancel bad-password review install progress native-window-1-2 document-grant PASS')
 	} else if phase == 'standard' {
 		image_release_audit(mut app, 'standard-account', '1.0.0')!
-		image_select(mut app, 'org.vinix.counter')!
+		image_select(mut app, 'org.tulpar.counter')!
 		image_apply_standard_refusal(mut app, password)!
 		image_counter(mut app)!
-		assert !os.exists('/home/alex/.local/share/vinix-apps/org.vinix.counter/counter.txt')
+		assert !os.exists('/home/alex/.local/share/tulpar-apps/org.tulpar.counter/counter.txt')
 		println('SOFTWARE IMAGE standard-account denied-administration own-isolated-launch private-data PASS')
 	} else if phase == 'updates' {
 		image_control(mut app, 'software.refresh')!
@@ -317,11 +317,11 @@ fn image_run() ! {
 		println('SOFTWARE IMAGE reviewed-update rollback retained-memo PASS')
 	} else {
 		assert phase == 'reinstall'
-		image_select(mut app, 'org.vinix.memo')!
+		image_select(mut app, 'org.tulpar.memo')!
 		image_apply(mut app, 'software.remove', password)!
-		image_select(mut app, 'org.vinix.memo')!
+		image_select(mut app, 'org.tulpar.memo')!
 		assert app.rows[app.selected].installed_version == ''
-		assert !os.exists('/var/lib/vinix-packages/current/share/applications/vinix-org.vinix.memo.desktop')
+		assert !os.exists('/var/lib/tulpar-packages/current/share/applications/tulpar-org.tulpar.memo.desktop')
 		image_apply(mut app, 'software.install', password)!
 		image_memo(mut app, false)!
 		println('SOFTWARE IMAGE updates rollback uninstall registration cached-reinstall retained-memo PASS')

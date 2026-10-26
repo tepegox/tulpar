@@ -11,7 +11,7 @@
 #define timezone vks_linux_timezone
 #define ffs vks_linux_ffs
 #define fls vks_linux_fls
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmacro-redefined"
 #endif
@@ -36,7 +36,7 @@ _Static_assert(__same_type(&drm_atomic_set_fb_for_plane,
     (void (*)(struct drm_plane_state *, struct drm_framebuffer *))0),
     "original framebuffer declaration");
 
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic pop
 #endif
 #undef fls

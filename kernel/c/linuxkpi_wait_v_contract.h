@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUXKPI_WAIT_V_CONTRACT_H
-#define VINIX_LINUXKPI_WAIT_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_WAIT_V_CONTRACT_H
+#define TULPAR_LINUXKPI_WAIT_V_CONTRACT_H
 #include "linuxkpi_common_v_contract.h"
 #include <linux/ww_mutex.h>
 #include <linux/completion.h>
@@ -47,8 +47,8 @@ VKW_MATCH_FIELD(vkw_completion, completion, done);
 VKW_MATCH_FIELD(vkw_completion, completion, wait);
 _Static_assert(BITS_PER_LONG == 64, "V wait hash uses the native 64-bit word");
 
-int vinix_linuxkpi_var_wake_function(struct wait_queue_entry *, unsigned int, int, void *);
+int tulpar_linuxkpi_var_wake_function(struct wait_queue_entry *, unsigned int, int, void *);
 _Static_assert(__builtin_types_compatible_p(__typeof__(((struct vkw_wait_entry *)0)->func), wait_queue_func_t), "native wait callback type");
-_Static_assert(_Generic(&wake_bit_function, wait_queue_func_t: 1, default: 0) && _Generic(&vinix_linuxkpi_var_wake_function, wait_queue_func_t: 1, default: 0) && _Generic(&autoremove_wake_function, wait_queue_func_t: 1, default: 0), "registered wake callback types");
+_Static_assert(_Generic(&wake_bit_function, wait_queue_func_t: 1, default: 0) && _Generic(&tulpar_linuxkpi_var_wake_function, wait_queue_func_t: 1, default: 0) && _Generic(&autoremove_wake_function, wait_queue_func_t: 1, default: 0), "registered wake callback types");
 _Static_assert(_Generic(&bit_wait, wait_bit_action_f *: 1, default: 0) && _Generic(&bit_wait_timeout, wait_bit_action_f *: 1, default: 0), "native bit action types");
 #endif

@@ -8,8 +8,8 @@ import time
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn plan_observation_cycles() int {
 	$if plan_observation_baseline ? { return 2 }
@@ -30,7 +30,7 @@ fn observed_plan_call(service Service, config Config, directory string, snapshot
 
 fn observed_plan_scope(label string, service Service, config Config, directory string, snapshot bool, operation string, names []string, count int, version string, expected string) {
 	for warmup in 0 .. 2 {
-		if warmup == 1 { $if track_heap ? { C.vinix_heap_begin() } }
+		if warmup == 1 { $if track_heap ? { C.tulpar_heap_begin() } }
 		for _ in 0 .. plan_observation_cycles() {
 			mut result := observed_plan_call(service, config, directory, snapshot, operation, names) or {
 				message := err.msg(); assert expected != '' && message.contains(expected), label + ': ' + message
@@ -46,7 +46,7 @@ fn observed_plan_scope(label string, service Service, config Config, directory s
 			retire_observed_plan(mut result)
 		}
 	}
-	mut kept := u64(0); $if track_heap ? { kept = C.vinix_heap_end() }
+	mut kept := u64(0); $if track_heap ? { kept = C.tulpar_heap_end() }
 	println('PLAN OBSERVATION ' + label + ' retained ' + kept.str() + ' tracked bytes')
 	$if !plan_observation_baseline ? { assert kept == 0, label }
 }
@@ -71,9 +71,9 @@ fn test_complete_plan_observations_retire_preparation_and_owned_replies() {
 	$if !track_heap ? { return }
 	$if track_heap ? {
 		for arch in ['aarch64', 'x86_64']! {
-			work := os.temp_dir() + '/vinix-plan-observation-' + arch + '-' + os.getpid().str()
-			root := work + '/root'; directory := state_directory(root); path := root + '/etc/vinix-packages/config.json'
-			os.mkdir_all(root + '/etc/vinix-packages')!; os.mkdir_all(work + '/source/bin')!
+			work := os.temp_dir() + '/tulpar-plan-observation-' + arch + '-' + os.getpid().str()
+			root := work + '/root'; directory := state_directory(root); path := root + '/etc/tulpar-packages/config.json'
+			os.mkdir_all(root + '/etc/tulpar-packages')!; os.mkdir_all(work + '/source/bin')!
 			os.write_file(work + '/source/bin/app', 'signed application\n')!; os.chmod(work + '/source/bin/app', 0o755)!
 			defer { os.rmdir_all(work) or {} }
 			key := keygen(work + '/seed')!
@@ -191,14 +191,14 @@ fn test_plan_copies_preserve_every_manifest_field_and_retire_independently() {
 			assert first.packages[0].package.files[0].sha256.str != source.packages[0].package.files[0].sha256.str
 			assert first.requested[0].str != source.requested[0].str
 			for warmup in 0 .. 2 {
-				if warmup == 1 { $if track_heap ? { C.vinix_heap_begin() } }
+				if warmup == 1 { $if track_heap ? { C.tulpar_heap_begin() } }
 				for _ in 0 .. 1000 {
 					mut copy := owned_plan(source)
 					assert copy == source && copy.packages[32].package.files[0].bytes == 9876543210
 					retire_observed_plan(mut copy)
 				}
 			}
-			mut kept := u64(0); $if track_heap ? { kept = C.vinix_heap_end() }
+			mut kept := u64(0); $if track_heap ? { kept = C.tulpar_heap_end() }
 			assert kept == 0
 			println('PLAN OBSERVATION ' + arch + ' 1000 complete nested copies retained ' + kept.str() + ' tracked bytes')
 			text := json2.encode(source); source.close(); first.close(); first.close()

@@ -87,7 +87,7 @@ fn check_freestanding_frontend(work string, generated string, include string) !j
 				tag := target.all_before('-') + '-' + standard + '-' + optimization
 				flags := [hosttest.env_default('CC', 'clang'), '--target=' + target, '-std=' + standard,
 					'-' + optimization, '-ffreestanding', '-nostdinc', '-fno-builtin', '-fwrapv',
-					'-DVINIX_V_RUNTIME', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function',
+					'-DTULPAR_V_RUNTIME', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function',
 					'-Wno-unused-parameter', '-isystem', os.join_path(root, 'kernel/freestnd-c-hdrs'),
 					'-I' + include, '-I' + os.join_path(root, 'kernel/c')]
 				obj := os.join_path(work, tag + '-core.o')
@@ -98,7 +98,7 @@ fn check_freestanding_frontend(work string, generated string, include string) !j
 				mut abi_build := flags.clone(); abi_build << ['-c', os.join_path(work, 'abi.c'), '-o', abi]; command(abi_build)!
 				imports := command([hosttest.tool('llvm-nm'), '-u', obj])!.stdout
 				names := imports.split_into_lines().filter(it.trim_space() != '').map(it.fields().last())
-				if names != ['vinix_linuxkpi_raw_copy_from_user_nocache'] { return error('Unexpected freestanding frontend import:\n${imports}') }
+				if names != ['tulpar_linuxkpi_raw_copy_from_user_nocache'] { return error('Unexpected freestanding frontend import:\n${imports}') }
 				os.write_file(os.join_path(work, tag + '-core-imports.txt'), imports)!
 				results[tag] = map[string]json2.Any{
 					'object_sha256': json2.Any(hosttest.sha(obj)!)
@@ -127,7 +127,7 @@ fn check_native_primitive(work string) !json2.Any {
 		for optimization in ['O0', 'O1', 'O2'] {
 			tag := 'primitive-' + standard + '-' + optimization
 			flags := [hosttest.env_default('CC', 'clang'), '--target=x86_64-unknown-none', '-std=' + standard,
-				'-' + optimization, '-ffreestanding', '-nostdinc', '-fno-builtin', '-fwrapv', '-DVINIX_V_RUNTIME',
+				'-' + optimization, '-ffreestanding', '-nostdinc', '-fno-builtin', '-fwrapv', '-DTULPAR_V_RUNTIME',
 				'-mno-80387', '-mno-mmx', '-mno-sse', '-mno-sse2', '-mno-red-zone', '-mcmodel=kernel',
 				'-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
 				'-isystem', os.join_path(root, 'kernel/freestnd-c-hdrs'), '-I' + os.join_path(root, 'kernel/c')]
@@ -208,7 +208,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	root := hosttest.root()
 	arch := $if arm64 { 'arm64' } $else $if amd64 { 'amd64' } $else { '' }
 	if arch == '' { return error('Unsupported host architecture') }
-	work := hosttest.work_dir(keep, 'vinix-nocache-host-')!
+	work := hosttest.work_dir(keep, 'tulpar-nocache-host-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	core := os.join_path(work, 'compatcore')
 	os.mkdir(core)!
@@ -245,7 +245,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	mut caller := ['-DPUBLIC_HEADER="' + relative_public + '"']
 	if os.file_name(public) == 'uaccess.h' {
 		linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
-		caller << ['-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
+		caller << ['-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
 			'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h',
 			'-include', os.join_path(linux, 'include/linux/compiler_types.h'),
 			'-I' + os.join_path(root, 'kernel/linuxkpi/include'), '-I' + os.join_path(linux, 'include'),
@@ -258,7 +258,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	for standard in ['gnu99', 'gnu11'] {
 		mut flags := common.clone(); flags << '-std=' + standard
 		production := os.join_path(work, standard + '-core.o')
-		mut argv := flags.clone(); argv << ['-DVINIX_V_RUNTIME', '-I' + os.join_path(root, 'kernel/c'), '-c', generated, '-o', production]
+		mut argv := flags.clone(); argv << ['-DTULPAR_V_RUNTIME', '-I' + os.join_path(root, 'kernel/c'), '-c', generated, '-o', production]
 		command(argv)!
 		imports := command(['nm', '-u', production])!.stdout
 		os.write_file(os.join_path(work, standard + '-imports.txt'), imports)!
@@ -320,7 +320,7 @@ _Static_assert(__builtin_types_compatible_p(
     __typeof__(&__copy_from_user_inatomic_nocache),
     int32_t (*)(void *, void *, uint32_t)), "actual V export must retain x86 int/u32 ABI");
 _Static_assert(__builtin_types_compatible_p(
-    __typeof__(&vinix_linuxkpi_raw_copy_from_user_nocache),
+    __typeof__(&tulpar_linuxkpi_raw_copy_from_user_nocache),
     uint32_t (*)(void *, void *, uint32_t)), "native callback must retain uint32 residual ABI");
 '
 
@@ -360,7 +360,7 @@ static int reject_callback;
  * Synthetic addresses are never dereferenced. A checked readable prefix is
  * copied with ordinary host RAM operations; this cannot prove NT/WC behavior.
  * Missing pages and COW/resolution policy are native guest responsibilities. */
-uint32_t vinix_linuxkpi_raw_copy_from_user_nocache(void *destination,
+uint32_t tulpar_linuxkpi_raw_copy_from_user_nocache(void *destination,
                                                 void *source, uint32_t size) {
     CHECK(!reject_callback);
     bridge_calls++;

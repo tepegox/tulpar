@@ -9,7 +9,7 @@ pub fn memlock_features() []string {
 	return ['MEMLOCK PASS: range population and limits', 'MEMLOCK PASS: file and guard mappings',
 		'MEMLOCK PASS: fork, remap, replacement and exec', 'MEMLOCK PASS: current, future and heap locking',
 		'MEMLOCK PASS: capability and unsupported flags', 'MEMLOCK PASS: concurrent file replacement and remap',
-		'MEMLOCK PASS: repeated lock and unlock stay flat', 'VINIX MEMLOCK: PASS']
+		'MEMLOCK PASS: repeated lock and unlock stay flat', 'TULPAR MEMLOCK: PASS']
 }
 
 pub fn memlock_command(arguments []string) int {
@@ -32,7 +32,7 @@ fn memlock_checked(arguments []string) !int {
 	for name in if arm { ['--init', '--initramfs', '--state-dir'] } else { ['--iso', '--firmware'] } {
 		if !parsed.has(name) { return SerialArgumentError{'missing required ' + name} }
 	}
-	state := if parsed.has('--state-dir') { resolve(parsed.value('--state-dir', ''))! } else { hosttest.work_dir('', 'vinix-memlock-vm-')! }
+	state := if parsed.has('--state-dir') { resolve(parsed.value('--state-dir', ''))! } else { hosttest.work_dir('', 'tulpar-memlock-vm-')! }
 	defer { if !parsed.has('--state-dir') { hosttest.remove_work_dir(state) or { eprintln(err.msg()) } } }
 	mkdir_literal(state)!
 	mut command := []string{}
@@ -40,9 +40,9 @@ fn memlock_checked(arguments []string) !int {
 	capture := resolve(parsed.value('--capture', ''))!
 	if arm {
 		configured := serial_arm_launch(resolve(parsed.value('--init', ''))!, resolve(parsed.value('--initramfs', ''))!,
-			state, resolve(os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' })!, root(), 2048, '')!
+			state, resolve(os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' })!, root(), 2048, '')!
 		command = configured.command
-		command << ['-object', 'filter-dump,id=vinixdump,netdev=net0,file=' + capture]
+		command << ['-object', 'filter-dump,id=tulpardump,netdev=net0,file=' + capture]
 		env = configured.env
 	} else {
 		command = serial_x86_command(resolve(parsed.value('--iso', ''))!, parsed.value('--qemu', 'qemu-system-x86_64'),
@@ -52,6 +52,6 @@ fn memlock_checked(arguments []string) !int {
 	// The security runner settles for two seconds on both architectures and
 	// decides from its captured verdicts, independently of the natural exit.
 	policyhost.command_checkpoint()!
-	return boot_abi_from(command, env, state, 'x86_64', memlock_features(), 'VINIX MEMLOCK: PASS',
-		['VINIX MEMLOCK: FAIL', 'KERNEL PANIC', 'FATAL EXCEPTION'], timeout, true, root())!
+	return boot_abi_from(command, env, state, 'x86_64', memlock_features(), 'TULPAR MEMLOCK: PASS',
+		['TULPAR MEMLOCK: FAIL', 'KERNEL PANIC', 'FATAL EXCEPTION'], timeout, true, root())!
 }

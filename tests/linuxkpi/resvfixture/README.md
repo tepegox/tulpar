@@ -4,7 +4,7 @@ Run from the repository root with a fresh output directory:
 
 ```sh
 build-support/run-v-tool.sh tests/linuxkpi/dma_resv.v \
-  --keep-directory /tmp/vinix-reservation-host
+  --keep-directory /tmp/tulpar-reservation-host
 ```
 
 The V controller verifies the unchanged pinned Linux 6.6.157 import and executes

@@ -7,8 +7,8 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn publisher_recipe_fixture() RootRecipe {
@@ -118,7 +118,7 @@ fn test_publisher_recipes_preserve_canonical_bytes_escapes_and_template_defaults
 }
 
 fn test_prepared_root_refuses_ambiguous_templates_before_creating_a_workspace() {
-	work := os.real_path(os.temp_dir()) + '/vinix-root-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-root-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/root')!
 	defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/root/COPYING', 'redistribution terms')!
@@ -146,7 +146,7 @@ fn test_prepared_root_refuses_ambiguous_templates_before_creating_a_workspace() 
 }
 
 fn test_catalog_schema_failure_preserves_existing_workspaces_and_composition_destination() {
-	work := os.real_path(os.temp_dir()) + '/vinix-catalog-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-catalog-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/existing')!
 	defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/existing/keep', 'retained publisher workspace')!
@@ -159,7 +159,7 @@ fn test_catalog_schema_failure_preserves_existing_workspaces_and_composition_des
 	mut composed := false
 	compose_catalog([CatalogSource{id: 'notices', catalog: work + '/catalog.json'}], work + '/new-lock') or { composed = true }
 	assert composed && !os.exists(work + '/new-lock')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-'))
 }
 
 fn test_publisher_schema_scanners_retire_owned_keys_and_required_field_lists() {
@@ -174,7 +174,7 @@ fn test_publisher_schema_scanners_retire_owned_keys_and_required_field_lists() {
 			publisher_without(root, 'entries'), root.replace('"manifest":', '"unknown":false,"manifest":'),
 			root.replace('"sdk":1', '"sdk":1,"s\\u0064k":1')]
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for i, input in inputs {
 					mut accepted := true
@@ -194,7 +194,7 @@ fn test_publisher_schema_scanners_retire_owned_keys_and_required_field_lists() {
 				}
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'publisher recipe scanners retained ${kept} bytes'
 		println('Publisher recipe scanners: 1000 valid/null/missing/unknown/duplicate cycles retain zero tracked bytes')
 	}

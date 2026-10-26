@@ -24,7 +24,7 @@ fn main() {
 		} else if arg.starts_with('--session-control-fd=') {
 			control = int(sessioncore.number(arg['--session-control-fd='.len..], 3, 2147483647)!)
 		} else if arg != '--session-services' {
-			eprintln('Usage: vinix-session [--session-home=PATH] --session-control-fd=FD')
+			eprintln('Usage: tulpar-session [--session-home=PATH] --session-control-fd=FD')
 			exit(2)
 		}
 	}
@@ -33,7 +33,7 @@ fn main() {
 		exit(2)
 	}
 	if sessionipc.session_control_peer(control) == none {
-		eprintln('vinix-session: an inherited compositor connection is required')
+		eprintln('tulpar-session: an inherited compositor connection is required')
 		exit(2)
 	}
 	sessiondaemon.run(home, control)

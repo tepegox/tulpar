@@ -35,7 +35,7 @@ or successful exec), and a still-running call have `completed=0`; their result
 and errno fields are not a completed outcome. Results are unsigned kernel
 ABI values. A sequence that was overwritten cannot update a newer record.
 
-[`vinix-security-audit`](../../tools/security-audit/README.md) adds a userspace
+[`tulpar-security-audit`](../../tools/security-audit/README.md) adds a userspace
 persistent collector with explicit loss and completion records. Run its parser,
 collection, filesystem-permission and rotation regressions with
 `tests/security-audit/collector-run.sh`. Persistence requires a persistent log

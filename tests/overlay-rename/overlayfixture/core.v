@@ -561,7 +561,7 @@ pub fn run() int {
 			check(C.mount(c'tmpfs', c'/tmp/overlay-state', c'tmpfs', 0, nil) == -1
 				&& *C.__errno_location() == C.EPERM, 39)
 			// The portable reference uses a real device number. Linux permits
-			// unprivileged 0/0 whiteouts; Vinix's separate refusal remains tested.
+			// unprivileged 0/0 whiteouts; Tulpar's separate refusal remains tested.
 			denied_device := if access { u64(0x103) } else { u64(0) }
 			check(C.mknod(c'/tmp/overlay-state/denied-device', u32(C.S_IFCHR | 0o600), denied_device) == -1
 				&& *C.__errno_location() == C.EPERM, 119)

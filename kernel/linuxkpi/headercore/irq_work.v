@@ -23,9 +23,9 @@ pub fn irq_work_queue_on(work &C.irq_work, cpu i32) bool {
 	return C.vkiw_queue(work, if cpu < 0 { i32(-2) } else { cpu })
 }
 @[export: 'irq_work_run']
-pub fn irq_work_run() { C.vkiw_drain(C.vinix_linuxkpi_cpu_id()) }
+pub fn irq_work_run() { C.vkiw_drain(C.tulpar_linuxkpi_cpu_id()) }
 @[export: 'irq_work_tick']
-pub fn irq_work_tick() { C.vkiw_tick(C.vinix_linuxkpi_cpu_id()) }
+pub fn irq_work_tick() { C.vkiw_tick(C.tulpar_linuxkpi_cpu_id()) }
 @[export: 'irq_work_needs_cpu']
 pub fn irq_work_needs_cpu() bool { return C.vkiw_needs_cpu() }
 @[export: 'irq_work_single']

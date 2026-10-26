@@ -13,8 +13,8 @@ import tools.packages.appsdk
 $if track_heap ? {
 	#include "tools/tests/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 struct Desktop {
 	tz_offset_seconds i64
@@ -745,7 +745,7 @@ fn check_software_admin_memory() ! {
 		mut app := SoftwareApp{ worker: os.new_process('unused') }
 		app.worker.use_stdio_ctl = true; app.worker.stdio_fd[0] = pipe[1]
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.begin_admin_prompt()
 				check_admin_empty_paste(mut app)
@@ -757,7 +757,7 @@ fn check_software_admin_memory() ! {
 			}
 			unsafe { app.status.free() }; app.status = ''
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		C.close(pipe[0]); app.retire_worker(); app.close_app()
 		assert kept == 0, 'administrator approval retained ${kept} bytes'
 		println('Software administrator approval: 1000 prompt/edit/render/wipe cycles retain zero tracked bytes')
@@ -772,7 +772,7 @@ fn check_window_broker_memory() ! {
 	unsafe { app.output.flags |= .noslices; app.window_pending.flags |= .noslices }
 	mut sequence := u64(1)
 	for warmup in 0 .. 2 {
-		if warmup == 1 { C.vinix_heap_begin() }
+		if warmup == 1 { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			frame := software_text_frame(sequence, 'é🚀')
 			text := frame.encode()!
@@ -796,7 +796,7 @@ fn check_window_broker_memory() ! {
 		unsafe { app.status.free() }
 		app.status = ''
 	}
-	kept := C.vinix_heap_end()
+	kept := C.tulpar_heap_end()
 	app.close_app()
 	assert kept == 0, 'native window broker retained ${kept} bytes'
 	println('Native window broker: 1000 fragmented text frames, focus/edit/discard, UI builds and owned-tree retirements retain zero tracked bytes')
@@ -829,7 +829,7 @@ fn software_mirror_service_fixture(args []string) !bool {
 		assert args.len == 5 && args[2] == 'd'.repeat(64) && args[3] == mirror_fixture_destination
 		if args[4] == '/changed-lock' { eprintln('fixture: offline mirror review is stale; review again'); exit(23) }
 		assert args[4] == mirror_fixture_lock || args[4].len > 200
-		os.write_file(os.getenv('VINIX_SOFTWARE_MIRROR_FIXTURE'), json2.encode(args[2..]))!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_MIRROR_FIXTURE'), json2.encode(args[2..]))!
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'copy', package: 'runtime', repository: 'runtime-publisher', path: 'bin/app', current: 4096, total: 4096 }))
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete', current: 1, total: 1 }))
 		println('Offline deployment mirror ready: ' + args[3] + '/_deployment.json')
@@ -850,7 +850,7 @@ fn software_mirror_service_fixture(args []string) !bool {
 		assert args.len == 5 && args[2] == 'c'.repeat(64) && args[4] == 'editor'
 		if args[3] == '/stale' { eprintln('fixture: offline mirror review is stale; review again'); exit(23) }
 		assert args[3] == mirror_fixture_destination || args[3].len > 200
-		os.write_file(os.getenv('VINIX_SOFTWARE_MIRROR_FIXTURE'), json2.encode(args[2..]))!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_MIRROR_FIXTURE'), json2.encode(args[2..]))!
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'copy', package: 'editor', repository: 'trusted', path: 'bin/app', current: 4096, total: 4096 }))
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete', current: 1, total: 1 }))
 		println('Offline mirror ready: ' + args[3])
@@ -860,9 +860,9 @@ fn software_mirror_service_fixture(args []string) !bool {
 }
 
 fn check_software_mirror() ! {
-	receipt := os.temp_dir() + '/vinix-software-mirror-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_MIRROR_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_MIRROR_FIXTURE') }
+	receipt := os.temp_dir() + '/tulpar-software-mirror-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_MIRROR_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_MIRROR_FIXTURE') }
 	mut app := SoftwareApp{ service_path: os.executable(), output: []u8{cap: 8192},
 		rows: [SoftwareRow{ id: 'editor', name: 'Editor', requested: true, installed_version: '1.0.0' }], selected: 0 }
 	defer { app.close_app() }
@@ -945,9 +945,9 @@ fn check_software_mirror() ! {
 }
 
 fn check_software_locked_mirror() ! {
-	receipt := os.temp_dir() + '/vinix-software-locked-mirror-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_MIRROR_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_MIRROR_FIXTURE') }
+	receipt := os.temp_dir() + '/tulpar-software-locked-mirror-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_MIRROR_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_MIRROR_FIXTURE') }
 	// Organization locks work even when this machine has no catalog selection
 	// or installed roots. The reviewed document supplies the package intent.
 	mut app := SoftwareApp{ service_path: os.executable(), output: []u8{cap: 8192}, selected: -1 }
@@ -1096,7 +1096,7 @@ fn software_deployment_service_fixture(args []string) !bool {
 		assert args.len == 4 && args[2] == 'c'.repeat(64)
 		if args[3] == '/stale.json' { eprintln('fixture: deployment review is stale; review again'); exit(23) }
 		assert args[3] in [deployment_fixture_path, '/empty.json']
-		os.write_file(os.getenv('VINIX_SOFTWARE_DEPLOYMENT_FIXTURE'), json2.encode(args[2..]))!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_DEPLOYMENT_FIXTURE'), json2.encode(args[2..]))!
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete' }))
 		return true
 	}
@@ -1104,9 +1104,9 @@ fn software_deployment_service_fixture(args []string) !bool {
 }
 
 fn check_software_deployment() ! {
-	receipt := os.temp_dir() + '/vinix-software-deployment-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_DEPLOYMENT_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_DEPLOYMENT_FIXTURE') }
+	receipt := os.temp_dir() + '/tulpar-software-deployment-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_DEPLOYMENT_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_DEPLOYMENT_FIXTURE') }
 	mut app := SoftwareApp{ service_path: os.executable(), output: []u8{cap: 8192}, query: []u8{cap: 256} }
 	defer { app.close_app() }
 	app.handle('software.deployment')!
@@ -1235,7 +1235,7 @@ fn check_software_progress() ! {
 const repository_fixture_url = 'file:///private/tmp/repository with spaces; $literal'
 
 fn repository_fixture_status() !pkgprotocol.RepositoryStatus {
-	path := os.getenv('VINIX_SOFTWARE_REPOSITORY_FIXTURE')
+	path := os.getenv('TULPAR_SOFTWARE_REPOSITORY_FIXTURE')
 	if path != '' && os.exists(path) { return json2.decode[pkgprotocol.RepositoryStatus](os.read_file(path)!)! }
 	return pkgprotocol.RepositoryStatus{ format: 1, architecture: 'aarch64',
 		repositories: [pkgprotocol.Repository{ id: 'fixture', url: repository_fixture_url, public_key: 'a'.repeat(64) }],
@@ -1268,7 +1268,7 @@ fn software_repository_service_fixture(args []string) !bool {
 	if args[1] == 'repo-review' {
 		operation := args[2]
 		id := args[3]
-		if operation == 'enroll' && os.getenv('VINIX_SOFTWARE_REPOSITORY_BROKEN') == '1' {
+		if operation == 'enroll' && os.getenv('TULPAR_SOFTWARE_REPOSITORY_BROKEN') == '1' {
 			eprintln('fixture: damaged replay history blocks enrollment; restore trusted metadata'); exit(34)
 		}
 		if id == 'bad-signature' { eprintln('fixture: repository signature verification failed'); exit(31) }
@@ -1283,7 +1283,7 @@ fn software_repository_service_fixture(args []string) !bool {
 	if args[1] == 'repo-apply' {
 		if args[2] == 'e'.repeat(64) { eprintln('fixture: repository review is stale; review again'); exit(32) }
 		assert args[2] == 'd'.repeat(64)
-		path := os.getenv('VINIX_SOFTWARE_REPOSITORY_FIXTURE')
+		path := os.getenv('TULPAR_SOFTWARE_REPOSITORY_FIXTURE')
 		assert path != ''
 		current := repository_fixture_status()!
 		operation := args[3]
@@ -1313,12 +1313,12 @@ fn software_repository_service_fixture(args []string) !bool {
 }
 
 fn check_repository_management() ! {
-	path := os.temp_dir() + '/vinix-software-repositories-' + os.getpid().str()
-	previous := os.getenv_opt('VINIX_SOFTWARE_REPOSITORY_FIXTURE')
-	os.setenv('VINIX_SOFTWARE_REPOSITORY_FIXTURE', path, true)
+	path := os.temp_dir() + '/tulpar-software-repositories-' + os.getpid().str()
+	previous := os.getenv_opt('TULPAR_SOFTWARE_REPOSITORY_FIXTURE')
+	os.setenv('TULPAR_SOFTWARE_REPOSITORY_FIXTURE', path, true)
 	defer {
 		os.rm(path) or {}
-		if value := previous { os.setenv('VINIX_SOFTWARE_REPOSITORY_FIXTURE', value, true) } else { os.unsetenv('VINIX_SOFTWARE_REPOSITORY_FIXTURE') }
+		if value := previous { os.setenv('TULPAR_SOFTWARE_REPOSITORY_FIXTURE', value, true) } else { os.unsetenv('TULPAR_SOFTWARE_REPOSITORY_FIXTURE') }
 	}
 	mut app := SoftwareApp{ service_path: os.executable(), query: []u8{cap: 256}, output: []u8{cap: 8192} }
 	app.handle('software.repositories')!
@@ -1371,7 +1371,7 @@ fn check_repository_management() ! {
 	// maintenance metadata. Enrollment remains blocked; revocation is reviewed.
 	os.write_file(path, json2.encode(pkgprotocol.RepositoryStatus{ ...repository_fixture_status()!, repositories: [
 		pkgprotocol.Repository{ id: 'fixture', url: repository_fixture_url, public_key: 'a'.repeat(64) }] }))!
-	os.setenv('VINIX_SOFTWARE_REPOSITORY_BROKEN', '1', true)
+	os.setenv('TULPAR_SOFTWARE_REPOSITORY_BROKEN', '1', true)
 	app.read_repositories(); wait_for_software(mut app)
 	assert app.repository_status.scope == 'configuration' && app.repository_status.repositories.len == 1
 	app.handle('software.row.0')!
@@ -1382,7 +1382,7 @@ fn check_repository_management() ! {
 	app.handle('software.repository.confirm')!; wait_for_software(mut app)
 	assert app.repository_status.repositories.len == 0 && app.status.contains('revoked')
 	assert repository_fixture_status()!.history.len == 1
-	os.unsetenv('VINIX_SOFTWARE_REPOSITORY_BROKEN')
+	os.unsetenv('TULPAR_SOFTWARE_REPOSITORY_BROKEN')
 	println('Software configured repositories: damaged metadata does not block reviewed revocation; enrollment remains refused PASS')
 	// Invalid input, invalid response and changed intent never enable confirmation.
 	for id in ['bad-signature', 'wrong-format', 'wrong-intent', 'stale'] {

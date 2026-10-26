@@ -27,7 +27,7 @@ fn encode_data_scrub_reference(manifest &DataManifest, report &DataScrubReport, 
 	mut reference := [65]char{}; mut fingerprint := [65]char{}
 	if !data_reference_fingerprint(manifest, &reference[0]) || !data_scrub_fingerprint(report, &fingerprint[0]) { return 0 }
 	mut changed := 0; for i in 0 .. report.count { if report.expected[i] != report.actual[i] { changed++ } }
-	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=VINIXSR1 operation=verified-data-scrub-reference disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s report_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &reference[0], &fingerprint[0]))
+	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=TULPARSR1 operation=verified-data-scrub-reference disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s report_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &reference[0], &fingerprint[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut identity := [41]char{}; mut expected := [65]char{}; mut actual := [65]char{}; mut record := 0
 	for disk in 0 .. manifest.set.count {

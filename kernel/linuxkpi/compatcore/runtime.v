@@ -4,7 +4,7 @@ module compatcore
 
 #include "linuxkpi_v_primitives.h"
 
-fn C.vinix_linuxkpi_alloc_pages(uint, bool) voidptr
+fn C.tulpar_linuxkpi_alloc_pages(uint, bool) voidptr
 fn C.vkr_page_owner_byte(voidptr) u8
 fn C.vkr_page_owner_tag(voidptr) u64
 
@@ -20,19 +20,19 @@ mut:
 	owner_tag u64
 }
 
-@[export: 'vinix_linuxkpi_gfp_supported']
+@[export: 'tulpar_linuxkpi_gfp_supported']
 pub fn runtime_gfp_supported(flags u32) bool {
 	supported := u32(3264 | 0x20 | 0x100 | 0x2000 | 0x10000 | 0x4000)
 	return (flags & ~supported) == 0
 }
 
-@[export: 'vinix_linuxkpi_alloc_gfp_pages']
+@[export: 'tulpar_linuxkpi_alloc_gfp_pages']
 pub fn runtime_alloc_gfp_pages(pages uint, flags u32) voidptr {
 	if pages == 0 || !runtime_gfp_supported(flags) { return unsafe { nil } }
-	page_size := C.vinix_linuxkpi_page_size()
+	page_size := C.tulpar_linuxkpi_page_size()
 	if page_size == 0 || pages > uint(-1) / page_size { return unsafe { nil } }
-	reclaim := (flags & 3264) == 3264 && C.vinix_linuxkpi_may_sleep()
-	return C.vinix_linuxkpi_alloc_pages(pages, reclaim)
+	reclaim := (flags & 3264) == 3264 && C.tulpar_linuxkpi_may_sleep()
+	return C.tulpar_linuxkpi_alloc_pages(pages, reclaim)
 }
 
 @[export: 'vkr_kmalloc']
@@ -40,7 +40,7 @@ pub fn runtime_kmalloc(size uint, flags u32) voidptr {
 	unsafe {
 		if size == 0 { return voidptr(16) }
 		if !runtime_gfp_supported(flags) { return nil }
-		page_size := C.vinix_linuxkpi_page_size()
+		page_size := C.tulpar_linuxkpi_page_size()
 		mut alignment := size & (uint(0) - size)
 		if alignment < 16 { alignment = 16 }
 		if size > uint(-1) - sizeof(RuntimeAllocation) { return nil }
@@ -104,7 +104,7 @@ pub fn page_allocation_size(ptr voidptr) uint {
 		requested := allocation.requested
 		pages := allocation.pages
 		base := uint(allocation.base)
-		page_size := C.vinix_linuxkpi_page_size()
+		page_size := C.tulpar_linuxkpi_page_size()
 		require(requested != 0 && page_size != 0 && (page_size & (page_size - 1)) == 0)
 		require(pages != 0 && pages <= uint(-1) / page_size)
 		require(base != 0 && (base & (page_size - 1)) == 0 && base <= prefix)
@@ -135,7 +135,7 @@ pub fn runtime_kfree(ptr voidptr) {
 		if uint(ptr) <= 16 { return }
 		allocation := &RuntimeAllocation(uint(ptr) - sizeof(RuntimeAllocation))
 		pages := allocation.pages
-		C.vinix_linuxkpi_free_pages(allocation.base, pages)
+		C.tulpar_linuxkpi_free_pages(allocation.base, pages)
 	}
 }
 
@@ -162,7 +162,7 @@ pub fn runtime_kmemdup(src voidptr, size uint, flags u32) voidptr {
 	return result
 }
 
-@[export: 'vinix_linuxkpi_tigerlake_id']
+@[export: 'tulpar_linuxkpi_tigerlake_id']
 pub fn runtime_tigerlake_id(vendor u16, device u16, class_code u32) bool {
  // The supported device is the imported INTEL_TGL_12_GT2_IDS 0x9a49 entry.
  return vendor == 0x8086 && device == 0x9a49 && (class_code & 0xff0000) == 0x030000

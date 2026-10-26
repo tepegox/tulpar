@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native ABI metadata and libc/compiler interfaces; executable models are V. */
-#ifndef VINIX_CPU_POLICY_TRANSPORT_H
-#define VINIX_CPU_POLICY_TRANSPORT_H
+#ifndef TULPAR_CPU_POLICY_TRANSPORT_H
+#define TULPAR_CPU_POLICY_TRANSPORT_H
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>

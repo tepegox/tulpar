@@ -4,7 +4,7 @@ module sched
 
 import memory
 
-fn C.vinix_stack_guard_message(message charptr)
+fn C.tulpar_stack_guard_message(message charptr)
 
 __global kernel_thread_stack_test_stage int
 
@@ -31,6 +31,6 @@ fn selftest_thread_stacks() {
 			free_thread_memory(thr)
 			if memory.free_bytes() != baseline { panic('Guarded thread retirement retained pages') }
 		}
-		C.vinix_stack_guard_message(c'STACK-GUARD PASS 32 unpublished thread allocation/rollback/retirement cycles\n')
+		C.tulpar_stack_guard_message(c'STACK-GUARD PASS 32 unpublished thread allocation/rollback/retirement cycles\n')
 	}
 }

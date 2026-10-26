@@ -5,12 +5,12 @@ import strings
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn source_fixture() string {
-	return '{"format":1,"status":"local-qualification-only","source_closure_complete":false,"runtime":"org.vinix.wine-runtime","version":"9.17-r1","architecture":"aarch64","reason":"Incomplete corresponding source; local experiment only.","artifacts":[{"path":"runtime-LICENSE.txt","kind":"notice","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","url":"local:publisher"}]}'
+	return '{"format":1,"status":"local-qualification-only","source_closure_complete":false,"runtime":"org.tulpar.wine-runtime","version":"9.17-r1","architecture":"aarch64","reason":"Incomplete corresponding source; local experiment only.","artifacts":[{"path":"runtime-LICENSE.txt","kind":"notice","sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","url":"local:publisher"}]}'
 }
 
 fn source_refused(text string) bool {
@@ -24,7 +24,7 @@ fn test_local_source_offer_scope_types_bounds_and_owned_fields() {
 	mut owned := text.clone()
 	mut offer := decode_local_source_offer(owned)!
 	unsafe { owned.free() }
-	assert offer.runtime == 'org.vinix.wine-runtime' && offer.artifacts[0].path == 'runtime-LICENSE.txt'
+	assert offer.runtime == 'org.tulpar.wine-runtime' && offer.artifacts[0].path == 'runtime-LICENSE.txt'
 	assert !offer.source_closure_complete && offer.status == 'local-qualification-only'
 	offer.close(); offer.close()
 	escaped := text.replace('"format":1', '"forma\\u0074":1').replace('Incomplete corresponding source; local experiment only.', '調査\\u0020\\ud83d\\udd12')
@@ -41,7 +41,7 @@ fn test_local_source_offer_scope_types_bounds_and_owned_fields() {
 		text.replace('"source_closure_complete":false', '"source_closure_complete":true'),
 		text.replace('"source_closure_complete":false', '"source_closure_complete":"false"'),
 		text.replace('"source_closure_complete":false', '"source_closure_complete":null'),
-		text.replace('org.vinix.wine-runtime', ''), text.replace('org.vinix.wine-runtime', '../wine'),
+		text.replace('org.tulpar.wine-runtime', ''), text.replace('org.tulpar.wine-runtime', '../wine'),
 		text.replace('9.17-r1', 'bad version'), text.replace('aarch64', 'all'),
 		text.replace('Incomplete corresponding source; local experiment only.', ''),
 		text.replace('Incomplete corresponding source; local experiment only.', 'bad\\u0000scope'),
@@ -68,16 +68,16 @@ fn test_local_source_offer_scope_types_bounds_and_owned_fields() {
 	// allocator too; no generic JSON decoder or per-case warmup masks retention.
 	$if track_heap ? {
 		for value in bad {
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 1000 { assert source_refused(value) }
-			kept := C.vinix_heap_end(); assert kept == 0, kept.str()
+			kept := C.tulpar_heap_end(); assert kept == 0, kept.str()
 		}
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut decoded := decode_local_source_offer(text)!
 			decoded.close(); decoded.close()
 		}
-		kept := C.vinix_heap_end(); assert kept == 0, kept.str()
+		kept := C.tulpar_heap_end(); assert kept == 0, kept.str()
 		println('LOCAL SOURCE OFFER tracked success and ' + bad.len.str() + ' refusal paths x1000 retain zero bytes PASS')
 	}
 	println('LOCAL SOURCE OFFER local-only scope, strict schema, bounds, Unicode and independent ownership PASS')
@@ -114,14 +114,14 @@ fn test_local_source_offer_artifact_count_duplicates_and_growth() {
 	defer { unsafe { overflow.free() } }
 	assert source_refused(overflow)
 	$if track_heap ? {
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 100 {
 			mut repeated := decode_local_source_offer(maximum)!
 			repeated.close()
 			assert source_refused(overflow)
 			assert source_refused(duplicate)
 		}
-		kept := C.vinix_heap_end(); assert kept == 0, kept.str()
+		kept := C.tulpar_heap_end(); assert kept == 0, kept.str()
 	}
 	println('LOCAL SOURCE OFFER 256 unique artifacts, growth cleanup, duplicate/count refusal PASS')
 }

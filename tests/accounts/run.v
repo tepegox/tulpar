@@ -15,35 +15,35 @@ import os
 const programs = [
 	hwhost.Program{
 		source: 'tools/packages/main.v'
-		path: 'usr/bin/vinix-package'
+		path: 'usr/bin/tulpar-package'
 	},
 	hwhost.Program{
 		source: 'tools/accounts/authd.v'
-		path:   'usr/sbin/vinix-authd'
+		path:   'usr/sbin/tulpar-authd'
 	},
 	hwhost.Program{
 		source: 'tools/accounts/account.v'
-		path:   'usr/sbin/vinix-account'
+		path:   'usr/sbin/tulpar-account'
 	},
 	hwhost.Program{
 		source: 'tools/accounts/session.v'
-		path:   'usr/sbin/vinix-session'
+		path:   'usr/sbin/tulpar-session'
 	},
 	hwhost.Program{
 		source: 'tools/accounts/system.v'
-		path:   'usr/sbin/vinix-system'
+		path:   'usr/sbin/tulpar-system'
 	},
 	hwhost.Program{
 		source: 'tools/accounts/auth.v'
-		path:   'usr/bin/vinix-auth'
+		path:   'usr/bin/tulpar-auth'
 	},
 	hwhost.Program{
 		source: 'tools/security-events/events.v'
-		path:   'usr/sbin/vinix-security-events'
+		path:   'usr/sbin/tulpar-security-events'
 	},
 	hwhost.Program{
 		source: 'tools/keyring/keyring.v'
-		path:   'usr/bin/vinix-keyring'
+		path:   'usr/bin/tulpar-keyring'
 	},
 ]
 
@@ -56,9 +56,9 @@ const test_actions = {
 
 fn scenario(name string, about string) hwhost.Scenario {
 	// Under emulation one password check takes seconds, and a scenario makes
-	// dozens. VINIX_ACCOUNTS_TIMEOUT shortens the wait while a hang is looked
+	// dozens. TULPAR_ACCOUNTS_TIMEOUT shortens the wait while a hang is looked
 	// into.
-	asked := os.getenv('VINIX_ACCOUNTS_TIMEOUT').int()
+	asked := os.getenv('TULPAR_ACCOUNTS_TIMEOUT').int()
 	timeout := if asked > 0 { asked } else { 420 }
 	return hwhost.Scenario{
 		name:     name
@@ -86,24 +86,24 @@ fn main() {
 	// Password records at the least cost the tools accept: an emulated
 	// processor takes most of a minute for one at the default.
 	files << hwhost.RootFile{
-		path: 'etc/vinix/auth.conf'
+		path: 'etc/tulpar/auth.conf'
 		text: '# for the tests only
 scrypt_ln = 10
 '
 	}
 	for name in os.ls(actions) or { []string{} } {
 		files << hwhost.RootFile{
-			path: 'usr/share/vinix/actions/${name}'
+			path: 'usr/share/tulpar/actions/${name}'
 			text: os.read_file(os.join_path(actions, name)) or { '' }
 		}
 	}
 	for name, text in test_actions {
 		files << hwhost.RootFile{
-			path: 'usr/share/vinix/actions/${name}'
+			path: 'usr/share/tulpar/actions/${name}'
 			text: text
 		}
 	}
-	if os.getenv('VINIX_ACCOUNTS_ECHO') != '' {
+	if os.getenv('TULPAR_ACCOUNTS_ECHO') != '' {
 		// The guest then repeats on the serial port what the programs it runs
 		// print.
 		files << hwhost.RootFile{
@@ -118,7 +118,7 @@ scrypt_ln = 10
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
 		programs:    programs
 		files:       files
-		directories: ['run', 'home', 'var/log', 'usr/share/vinix/actions', 'tmp:1777']
+		directories: ['run', 'home', 'var/log', 'usr/share/tulpar/actions', 'tmp:1777']
 		scenarios:   [
 			scenario('accounts', 'the account database, homes nobody else can read, and sessions that are not root'),
 			scenario('packages', 'signed application installation and an isolated account handoff from the root package frontend'),
@@ -134,7 +134,7 @@ scrypt_ln = 10
 					hwhost.Disk{
 						name:      'disk.raw'
 						size_mib:  8
-						header:    'vinix account test disk: not blank'
+						header:    'tulpar account test disk: not blank'
 						untouched: true
 					},
 				]

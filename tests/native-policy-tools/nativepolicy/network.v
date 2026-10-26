@@ -5,7 +5,7 @@ import hosttest
 import os
 
 pub fn network_core(destination string) ! {
-	work := private_work('vinix-netcore-')!
+	work := private_work('tulpar-netcore-')!
 	defer { retire(work) }
 	write(work + '/core.v', read(root() + '/kernel/netcore/core.v')!
 		.replace('fn C.printf_panic(&char, ...) i32\n', '').replace('C.printf_panic(', 'C.printf('))!
@@ -26,7 +26,7 @@ fn c_sources(path string) ![]string {
 }
 
 fn network(suite string, fixture string) ! {
-	work := private_work('vinix-' + suite + '-')!
+	work := private_work('tulpar-' + suite + '-')!
 	defer { retire(work) }
 	os.mkdir(work + '/arch')!
 	mut options := read(root() + '/kernel/c/lwipopts.h')!
@@ -42,7 +42,7 @@ fn network(suite string, fixture string) ! {
 	flags := ['-O2', '-g', '-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-Wno-macro-redefined',
 		'-I' + work, '-I' + lwip + '/include']
 	run(concat([cc], flags, ['-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
-		'-ffreestanding', '-fno-builtin', '-fno-strict-aliasing', '-DVINIX_V_RUNTIME',
+		'-ffreestanding', '-fno-builtin', '-fno-strict-aliasing', '-DTULPAR_V_RUNTIME',
 		'-I' + root() + '/kernel/c', '-c', generated, '-o', obj]))!
 	imports := output(['nm', '-u', obj])!
 	if allocator_imports(imports, ['malloc', 'calloc', 'realloc', 'memdup'], ['new_array', 'array_new']) {

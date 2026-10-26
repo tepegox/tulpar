@@ -3,8 +3,8 @@ module sessioncore
 
 $if track_heap ? {
 	#include "heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 // Exercise the registration scope's successful and early-return cleanup with
@@ -22,17 +22,17 @@ fn graphical_arguments_scope(desktop string, fallback string, refuse bool) bool 
 }
 
 fn test_graphical_command_storage_preserves_borrowed_strings() {
-	desktop := '/usr/bin/vinix-desktop'.clone()
-	fallback := '/usr/bin/vinix-desktop-software'.clone()
+	desktop := '/usr/bin/tulpar-desktop'.clone()
+	fallback := '/usr/bin/tulpar-desktop-software'.clone()
 	defer { unsafe { desktop.free(); fallback.free() } }
 	for _ in 0 .. 1000 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		assert graphical_arguments_scope(desktop, '', false)
 		assert !graphical_arguments_scope(desktop, '', true)
 		assert graphical_arguments_scope(desktop, fallback, false)
 		assert !graphical_arguments_scope(desktop, fallback, true)
-		assert desktop == '/usr/bin/vinix-desktop'
-		assert fallback == '/usr/bin/vinix-desktop-software'
-		$if track_heap ? { assert C.vinix_heap_end() == 0 }
+		assert desktop == '/usr/bin/tulpar-desktop'
+		assert fallback == '/usr/bin/tulpar-desktop-software'
+		$if track_heap ? { assert C.tulpar_heap_end() == 0 }
 	}
 }

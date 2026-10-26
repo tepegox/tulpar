@@ -27,7 +27,7 @@ pivot occurs after their root/cwd are established and before their observations.
 | `pa-1` | Another process's root uses the old-root attachment and moves to the new root; its cwd uses the alias and stays. |
 | `pa-2` | Another process's root uses the alias and stays; its cwd uses the old-root attachment and moves. |
 | `pa-3` | The caller's root moves while its cwd through the read-only alias stays. |
-| `pa-4` | A sibling thread remains alive while the caller unshares `CLONE_FS`, ensuring Vinix creates private thread filesystem state. Both the caller's private view and the sibling's shared view get the new root while retaining the alias cwd. |
+| `pa-4` | A sibling thread remains alive while the caller unshares `CLONE_FS`, ensuring Tulpar creates private thread filesystem state. Both the caller's private view and the sibling's shared view get the new root while retaining the alias cwd. |
 
 After the pivot, each holder repeats 200 root/cwd identity and writable-open
 checks. Relative and absolute writable opens must follow their respective
@@ -49,7 +49,7 @@ remounting its sibling inode alias read-only. An existing inode-based creation
 check returned `EROFS` before the pivot. The corrected fixture completes setup
 before remounting the alias. The `before-b` controls and `linux-a` runs preserve
 the intermediate fixture, whose last case did not keep a sibling thread alive;
-a single-thread `CLONE_FS` unshare does not create private ThreadFS on Vinix.
+a single-thread `CLONE_FS` unshare does not create private ThreadFS on Tulpar.
 Only the final `before-c`, `all-after-a` and `linux-b` runs qualify that path.
 These earlier attempts remain available as separate evidence.
 

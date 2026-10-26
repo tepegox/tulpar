@@ -9,7 +9,7 @@ fn test_output_policy_preserves_source_and_small_reports() {
 		'tests/example/results/change.patch', 'tests/example/results/README.md'] {
 		assert reason(path, 100, '#include <stdlib.h>') == '', path
 	}
-	for path in ['tests/example/results/kernel/bin/vinix', 'tests/example/results/receipt.json',
+	for path in ['tests/example/results/kernel/bin/tulpar', 'tests/example/results/receipt.json',
 		'tests/example/results/efivars.fd', 'tests/example/results/network.pcap',
 		'tests/example/results/objects/abcd', 'tests/example/results/generated/blob.c'] {
 		assert reason(path, 100, '') != '', path
@@ -22,7 +22,7 @@ fn test_output_policy_preserves_source_and_small_reports() {
 
 fn test_audit_checks_deleted_versions_duplicate_blobs_and_merge_history() ! {
 	original := os.getwd()
-	tmp := os.join_path(os.temp_dir(), 'vinix-git-policy-test-' + rand.uuid_v4())
+	tmp := os.join_path(os.temp_dir(), 'tulpar-git-policy-test-' + rand.uuid_v4())
 	os.mkdir(tmp)!
 	os.chdir(tmp)!
 	defer {
@@ -71,7 +71,7 @@ fn test_audit_checks_deleted_versions_duplicate_blobs_and_merge_history() ! {
 fn test_real_pre_push_hook_blocks_artifacts_before_local_remote_changes() ! {
 	original := os.getwd()
 	source_root := os.real_path(os.dir(@FILE) + '/../..')
-	tmp := os.join_path(os.temp_dir(), 'vinix-pre-push-test-' + rand.uuid_v4())
+	tmp := os.join_path(os.temp_dir(), 'tulpar-pre-push-test-' + rand.uuid_v4())
 	os.mkdir_all(tmp + '/work')!
 	os.chdir(tmp + '/work')!
 	defer {

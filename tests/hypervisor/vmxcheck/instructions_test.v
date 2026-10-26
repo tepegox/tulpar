@@ -8,7 +8,7 @@ fn instruction_fixture() (string, string) {
 	mut text := ''
 	for pair in [['on', 'vmxon'], ['off', 'vmxoff'], ['clear', 'vmclear'], ['load', 'vmptrld'],
 		['write', 'vmwriteq'], ['read', 'vmreadq'], ['invept', 'invept']] {
-		assembly += '<vinix_vmx_${pair[0]}>:\n  0:\t${pair[1]} %rax\n  3:\tsetbe %al\n\n'
+		assembly += '<tulpar_vmx_${pair[0]}>:\n  0:\t${pair[1]} %rax\n  3:\tsetbe %al\n\n'
 		opcode := if pair[0] == 'write' {
 			'vmwrite %[value], %[field]'
 		} else if pair[0] == 'read' {
@@ -44,9 +44,9 @@ fn test_cf_zf_immediacy_operand_order_clobbers_and_ept_invalidation() {
 		refused(assembly, text.replace(field, '"other"'), 'VMX flags/memory clobbers changed')
 	}
 	refused(assembly, text + '__asm__ volatile ("vmxon" : : : "cc", "memory");', 'VMX flags/memory clobbers changed')
-	refused(assembly.replace('<vinix_vmx_on>:', '<other>:'), text, 'list index out of range')
+	refused(assembly.replace('<tulpar_vmx_on>:', '<other>:'), text, 'list index out of range')
 	refused(assembly.replace('vmxon %rax', 'nop'), text, '')
-	refused('<vinix_vmx_on>:\n  0:\tvmxon %rax', text, 'list index out of range')
+	refused('<tulpar_vmx_on>:\n  0:\tvmxon %rax', text, 'list index out of range')
 }
 
 fn test_allocator_boundaries_unicode_lines_and_objdump_search() {
@@ -67,7 +67,7 @@ fn test_allocator_boundaries_unicode_lines_and_objdump_search() {
 		}
 	}
 	assert c.objdump_path() == '/opt/homebrew/opt/llvm/bin/llvm-objdump'
-	work := os.getenv('VINIX_VMX_OBJDUMP_TEST_DIR')
+	work := os.getenv('TULPAR_VMX_OBJDUMP_TEST_DIR')
 	if work != '' {
 		executable := join(work, 'llvm-objdump')
 		os.write_file(executable, '')!

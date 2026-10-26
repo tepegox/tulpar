@@ -79,7 +79,7 @@ fn backup_fault_call(kind int, source string, full string, delta string, output 
 }
 
 fn test_file_backup_real_io_failures_short_transfers_balanced_owners_and_reused_temp_name() {
-	work := os.join_path(os.temp_dir(), 'vinix-backup-io-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-backup-io-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	source := work + '/source'; full := work + '/full'; delta := work + '/delta'; output := work + '/output'
 	original := []u8{len: 65553, init: u8(index)}; os.write_file_array(source, original)!; assert backup_file(source.str, unsafe { nil }, full.str) == 0
 	mut changed := original.clone(); changed[0] ^= 1; os.write_file_array(source, changed)!; assert backup_file(source.str, full.str, delta.str) == 0
@@ -91,7 +91,7 @@ fn test_file_backup_real_io_failures_short_transfers_balanced_owners_and_reused_
 			// complete published destination. It never replaces a prior file.
 			if operation != 7 || at == 1 { assert result2 == 1 }
 			if os.exists(output) { assert os.read_bytes(output)! == expected; os.rm(output)! }
-			assert os.ls(work)!.all(!it.starts_with('.vinix-backup-'))
+			assert os.ls(work)!.all(!it.starts_with('.tulpar-backup-'))
 		} }
 		result3, _ := backup_fault_call(kind, source, full, delta, output, -1, 0, true, false); assert result3 == 0 && os.read_bytes(output)! == expected; os.rm(output)!
 		result4, _ := backup_fault_call(kind, source, full, delta, output, -1, 0, false, true); assert result4 == 0

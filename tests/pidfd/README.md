@@ -1,6 +1,6 @@
 # Stable process descriptors
 
-Vinix implements `pidfd_open` (434) and `pidfd_send_signal` (424) on its native
+Tulpar implements `pidfd_open` (434) and `pidfd_send_signal` (424) on its native
 AArch64 and x86-64 Linux syscall tables. `pidfd_open` accepts flags zero or
 `PIDFD_NONBLOCK` (`O_NONBLOCK`), sets `FD_CLOEXEC`, and resolves a process-group
 leader in the caller's PID namespace. Linux's signed 32-bit PID, descriptor and
@@ -19,7 +19,7 @@ consumable, allowing an already-delivered edge to sleep again.
 Signal zero checks existence and authorization without delivering a signal.
 In the same user namespace, real/effective sender IDs must match the target's real/saved ID, or the sender
 must hold `CAP_KILL` in the target's governing user namespace. Initial-user
-capabilities govern descendant namespaces under Vinix's current flat native
+capabilities govern descendant namespaces under Tulpar's current flat native
 namespace model. `SIGCONT` also permits members of the same session. A pidfd
 checks mandatory security domains before these identity, capability
 and session exceptions. An inherited descriptor uses the target's current
@@ -82,7 +82,7 @@ not add `waitid(P_PIDFD)`, `CLONE_PIDFD` descriptor creation, `pidfd_getfd`,
 pidfd namespace ioctls, pidfs fdinfo or PIDFD_SELF pseudo-descriptors. In
 particular, callers obtain a descriptor with `pidfd_open`. Nonblocking
 status is stored on the open description; nonblocking `P_PIDFD` waits are
-outside this checkpoint. PID/user namespaces still use Vinix's existing flat
+outside this checkpoint. PID/user namespaces still use Tulpar's existing flat
 model, without Linux's full namespace hierarchy or UID-map semantics.
 
 ## Verification

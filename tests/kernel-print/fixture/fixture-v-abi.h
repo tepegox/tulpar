@@ -1,5 +1,5 @@
-#ifndef VINIX_PRINT_FIXTURE_NATIVE_ABI_H
-#define VINIX_PRINT_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_PRINT_FIXTURE_NATIVE_ABI_H
+#define TULPAR_PRINT_FIXTURE_NATIVE_ABI_H
 #include <assert.h>
 #include <stdint.h>
 #include <stddef.h>
@@ -8,9 +8,9 @@ typedef unsigned long long vprint_ull;
 typedef long long vprint_ll;
 _Static_assert(sizeof(vprint_ull) == 8 && sizeof(vprint_ll) == 8, "original native varargs width");
 #ifdef PROD
-#define VINIX_PRINT_FIXTURE_PROD 1
+#define TULPAR_PRINT_FIXTURE_PROD 1
 #else
-#define VINIX_PRINT_FIXTURE_PROD 0
+#define TULPAR_PRINT_FIXTURE_PROD 0
 #endif
 int fixture_printf(const char *, ...);
 int fixture_panic(char *, ...);

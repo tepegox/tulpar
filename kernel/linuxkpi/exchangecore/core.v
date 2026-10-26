@@ -25,7 +25,7 @@ fn C.vhx_compare64(&u64, &u64, u64, bool, i32, i32) bool
 
 // All input and result records retain the caller's exact native object width.
 // No pointer or signed integer is narrowed through a numeric conversion.
-@[export: 'vinix_arch_exchange_bits']
+@[export: 'tulpar_arch_exchange_bits']
 pub fn exchange(storage voidptr, value voidptr, result voidptr, width uint) {
 	unsafe {
 		match width {
@@ -58,7 +58,7 @@ pub fn exchange(storage voidptr, value voidptr, result voidptr, width uint) {
 	}
 }
 
-@[export: 'vinix_arch_compare_exchange_bits']
+@[export: 'tulpar_arch_compare_exchange_bits']
 pub fn compare_exchange(storage voidptr, expected voidptr, value voidptr, result voidptr, width uint) {
 	unsafe {
 		match width {

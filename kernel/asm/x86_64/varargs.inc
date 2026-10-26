@@ -5,7 +5,7 @@
 #else
 #define ABI_SYMBOL(name) name
 #endif
-.macro VINIX_VARIADIC name, target, named
+.macro TULPAR_VARIADIC name, target, named
     .global \name
 #ifndef __APPLE__
     .type \name, @function

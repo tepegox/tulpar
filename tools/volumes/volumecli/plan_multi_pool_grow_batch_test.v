@@ -104,7 +104,7 @@ fn test_multi_pool_growth_interleaved_same_pool_rows_preserve_order_modes_and_mi
 }
 
 fn test_maximum_multi_pool_growth_195_cli_arguments_64_pools_near_u64_and_full_v2() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-growth-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-growth-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut baseline := PlanSet{}
 	for disk in 0 .. 64 {
 		sector := if disk & 1 == 0 { u64(512) } else { u64(4096) }; end := u64(-1) & ~(sector - 1)
@@ -118,7 +118,7 @@ fn test_maximum_multi_pool_growth_195_cli_arguments_64_pools_near_u64_and_full_v
 	assert publish_bundle(path.str, &baseline); original := os.read_bytes(path)!; mut expected := baseline
 	unsafe {
 		mut args := [196]&char{}; mut pools := [64][4]char{}; mut slots := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'pool-preview-grow-set-batch'); args[2] = path.str
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'pool-preview-grow-set-batch'); args[2] = path.str
 		for i in 0 .. 64 {
 			disk := 63 - i; C.snprintf(&pools[i][0], 4, c'%u', u32(disk)); C.snprintf(&slots[i][0], 4, c'%u', u32(i))
 			args[3 + i * 3] = &pools[i][0]; args[4 + i * 3] = &slots[i][0]; args[5 + i * 3] = &char(c'8192'); expected.plans[disk].rows[0].length = 8192
@@ -131,7 +131,7 @@ fn test_maximum_multi_pool_growth_195_cli_arguments_64_pools_near_u64_and_full_v
 }
 
 fn test_multi_pool_growth_source_rejections_writer_lock_and_complete_cli_tokens() {
-	work := os.join_path(os.temp_dir(), 'vinix-multi-growth-input-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-multi-growth-input-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}; multi_growth_fixture(mut set, 0, 0, 1); assert publish_bundle(path.str, &set)
 	original := os.read_bytes(path)!; mut batch := MultiPoolGrowthBatch{count: 2}; batch.pools[0] = 7; batch.pools[1] = 8; batch.slots[0] = 0; batch.slots[1] = 1; batch.lengths[0] = 1024; batch.lengths[1] = 8192
 	mut edit := PlanEdit{}; assert open_plan_edit(path.str, mut edit, true)
@@ -143,7 +143,7 @@ fn test_multi_pool_growth_source_rejections_writer_lock_and_complete_cli_tokens(
 	mut broken := grown.clone(); broken[24] ^= 1; os.write_file_array(path, broken)!
 	for preview in [false, true] { assert grow_multi_pool_batch_plan(path.str, &batch, preview) == 1 && os.read_bytes(path)! == broken }
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-grow-set-batch'), &char(c'/unused'), &char(c'7'), &char(c'0'), &char(c'1024'), &char(c'8'), &char(c'1'), &char(c'8192'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-grow-set-batch'), &char(c'/unused'), &char(c'7'), &char(c'0'), &char(c'1024'), &char(c'8'), &char(c'1'), &char(c'8192'), &char(nil)]!
 		for command in [c'pool-grow-set-batch', c'pool-preview-grow-set-batch'] {
 			args[1] = &char(command); for count in [2, 3, 4, 5, 7, 8, 196, 198] { assert run(count, &args[0]) == 2 }
 			for at in [3, 4, 5, 6, 7, 8] { old := args[at]; for bad in [c'', c'-1', c'1x', c'18446744073709551616'] { args[at] = &char(bad); assert run(9, &args[0]) == 2 }; args[at] = old }

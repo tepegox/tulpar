@@ -8,17 +8,17 @@ __global (
 	config_transport_lock = klock.Lock{}
 )
 
-@[export: 'vinix_pci_config_lock']
+@[export: 'tulpar_pci_config_lock']
 fn config_lock() {
 	config_transport_lock.acquire()
 }
 
-@[export: 'vinix_pci_config_unlock']
+@[export: 'tulpar_pci_config_unlock']
 fn config_unlock() {
 	config_transport_lock.release()
 }
 
-@[export: 'vinix_pci_config_limit']
+@[export: 'tulpar_pci_config_limit']
 fn config_limit(bus u32) u32 {
 	return 256 // Conventional CF8/CFC only; extended ECAM is not configured.
 }
@@ -30,7 +30,7 @@ fn config_select(bus u32, slot u32, function u32, offset u32) {
 	kio.port_out[u32](0xcf8, address)
 }
 
-@[export: 'vinix_pci_config_read_raw']
+@[export: 'tulpar_pci_config_read_raw']
 fn config_read_raw(bus u32, slot u32, function u32, offset u32, width u32) u32 {
 	config_select(bus, slot, function, offset)
 	port := u16(0xcfc + (offset & 3))
@@ -41,7 +41,7 @@ fn config_read_raw(bus u32, slot u32, function u32, offset u32, width u32) u32 {
 	}
 }
 
-@[export: 'vinix_pci_config_write_raw']
+@[export: 'tulpar_pci_config_write_raw']
 fn config_write_raw(bus u32, slot u32, function u32, offset u32, width u32, value u32) {
 	config_select(bus, slot, function, offset)
 	port := u16(0xcfc + (offset & 3))

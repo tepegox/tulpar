@@ -33,7 +33,7 @@ fn native_artifact(role string, path string) !NativeArtifact {
 	return NativeArtifact{ role: role, bytes: bytes, sha256: digest.hex() }
 }
 
-const installed_image_id = 'vinix-packages-installed-sdk-1'
+const installed_image_id = 'tulpar-packages-installed-sdk-1'
 fn release_audit_markers() []string {
 	return [
 	'SOFTWARE RELEASE audit initial-empty installed=absent exact-baseline unchanged-state ordinary-read PASS',
@@ -54,19 +54,19 @@ fn native_suite(sandbox string, image bool, software bool) hwhost.Suite {
 	files := [
 		hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 		hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-		hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
+		hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
 	]
-	binaries := [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
+	binaries := [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
 	mut programs := if software {
-		[hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/vinix-authd' }]
+		[hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/tulpar-authd' }]
 	} else if image {
-		[hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
+		[hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/image_configuration_test.v', path: 'usr/share/package-fixtures/image-configuration' }]
 	} else {
-		[hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' }]
+		[hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' }]
 	}
 	if image { programs << [hwhost.Program{ source: 'tools/packages/pkgcore/image_repositories_test.v', path: 'usr/share/package-fixtures/image-repositories' },
 		hwhost.Program{ source: 'tools/packages/pkgcore/catalog_export_test.v', path: 'usr/share/package-fixtures/catalog-exports' }] }
@@ -105,7 +105,7 @@ fn persistent_software_suite(sandbox string, disk string) hwhost.Suite {
 	return hwhost.Suite{ ...base, name: 'package-software-persistence', scenarios: [hwhost.Scenario{
 		name: 'packages-software-persistence', arches: ['aarch64', 'x86_64'],
 		about: 'four cold boots with ordinary Software, ext2 package/account state and native app data',
-		cmdline: 'vinix.qemu_persist=1', timeout: 600, ending: .poweroff,
+		cmdline: 'tulpar.qemu_persist=1', timeout: 600, ending: .poweroff,
 		disks: [hwhost.Disk{ name: 'packages.ext2', size_mib: 128, image: disk }],
 		qemu_aarch64: ['-drive', 'if=none,id=packages,format=raw,cache=writeback,file={state}/packages.ext2', '-device', 'virtio-blk-device,drive=packages'],
 		qemu_x86_64: ['-drive', 'if=ide,format=raw,cache=writeback,file={state}/packages.ext2'],
@@ -125,12 +125,12 @@ fn installed_software_suite(sandbox string, disk string) hwhost.Suite {
 	base := persistent_software_suite(sandbox, disk)
 	scenario := base.scenarios[0]
 	mut files := base.files.clone()
-	files << hwhost.RootFile{ path: '.vinix-image-id', text: installed_image_id + '\n' }
+	files << hwhost.RootFile{ path: '.tulpar-image-id', text: installed_image_id + '\n' }
 	mut forbidden := scenario.forbidden.clone()
 	forbidden << ['sysdisk: updating the system on', 'sysdisk: running from memory']
 	selected := hwhost.Scenario{ name: 'packages-software-installed', arches: scenario.arches,
 			about: 'install a complete system on a blank disk, then maintain native applications across four installed-root boots',
-			cmdline: 'vinix.disk=auto', timeout: 900,
+			cmdline: 'tulpar.disk=auto', timeout: 900,
 			ending: scenario.ending, reboots: scenario.reboots,
 			qemu_aarch64: scenario.qemu_aarch64.map(it.replace('packages.ext2', 'system.vjfs')),
 			qemu_x86_64: scenario.qemu_x86_64.map(it.replace('packages.ext2', 'system.vjfs')),
@@ -150,9 +150,9 @@ fn installed_software_suite(sandbox string, disk string) hwhost.Suite {
 
 fn stage_installed_proof(root string, guest string) !NativeArtifact {
 	mut files := [native_artifact('/sbin/init', guest)!]
-	for path in ['/usr/bin/vinix-package', '/usr/bin/vinix-sandbox', '/usr/sbin/vinix-account', '/usr/sbin/vinix-authd',
-		'/usr/sbin/vinix-session', '/usr/share/package-fixtures/software-image',
-		'/usr/share/vinix/actions/packages-change', '/usr/share/vinix/actions/packages-launch', pkgprotocol.image_applications_path]! {
+	for path in ['/usr/bin/tulpar-package', '/usr/bin/tulpar-sandbox', '/usr/sbin/tulpar-account', '/usr/sbin/tulpar-authd',
+		'/usr/sbin/tulpar-session', '/usr/share/package-fixtures/software-image',
+		'/usr/share/tulpar/actions/packages-change', '/usr/share/tulpar/actions/packages-launch', pkgprotocol.image_applications_path]! {
 		files << native_artifact(path, root + path)!
 	}
 	path := '/usr/share/package-fixtures/installed-image.json'
@@ -162,8 +162,8 @@ fn stage_installed_proof(root string, guest string) !NativeArtifact {
 }
 
 fn stage_software_image(host hwhost.Host, root string, work string) !NativeArtifact {
-	modules := os.getenv_opt('VINIX_PACKAGE_TEST_UI2') or { host.root + '/build/vmodules' }
-	if !os.is_file(modules + '/ui2/v.mod') { return error('provide VINIX_PACKAGE_TEST_UI2 with a headless ui2 module') }
+	modules := os.getenv_opt('TULPAR_PACKAGE_TEST_UI2') or { host.root + '/build/vmodules' }
+	if !os.is_file(modules + '/ui2/v.mod') { return error('provide TULPAR_PACKAGE_TEST_UI2 with a headless ui2 module') }
 	source := work + '/software-source'; os.mkdir(source)!
 	for name in os.ls(host.root + '/desktop')! {
 		if name.starts_with('software_') && name.ends_with('.v') { os.cp(host.root + '/desktop/' + name, source + '/' + name)! }
@@ -237,7 +237,7 @@ fn stage_native_image(host hwhost.Host, inputs string, root string, work string)
 	stage := work + '/package-stage'
 	applications := publisher + '/image-applications.json'
 	os.write_file(applications, json2.encode(NativeImageApplications{ architecture: host.arch,
-		packages: ['org.vinix.counter', 'org.vinix.memo', 'org.vinix.package-hello'] }) + '\n')!
+		packages: ['org.tulpar.counter', 'org.tulpar.memo', 'org.tulpar.package-hello'] }) + '\n')!
 	hwhost.run_tool([host.v, '-nocache', '-no-skip-unused', '-path', '@vlib|@vmodules|' + host.root + '|' + host.root + '/tools/accounts',
 		'-o', stage, host.root + '/tools/packages/stage.v'], {}, work + '/stage-build.log', 300)!
 	mut arguments := [stage, '--arch', host.arch, '--staging', root, '--config', configuration, '--repositories', publisher + '/bundle', '--applications', applications]
@@ -245,9 +245,9 @@ fn stage_native_image(host hwhost.Host, inputs string, root string, work string)
 	if compiler != '' { arguments << ['--cc', compiler] }
 	hwhost.run_tool(arguments, { 'V': host.v, 'VFLAGS': '-nocache' }, work + '/stage.log', 300)!
 	artifacts << native_artifact('image' + pkgprotocol.image_applications_path, root + pkgprotocol.image_applications_path)!
-	for path in ['etc/vinix-packages/config.json', 'usr/bin/vinix-package', 'usr/sbin/vinix-session',
-		'usr/libexec/vinix/vinix-linux-runner', 'usr/share/vinix/actions/packages-change', 'usr/share/vinix/actions/packages-launch',
-		'usr/share/licenses/vinix-packages/ed25519-MIT.txt', 'usr/share/licenses/vinix-packages/application-sdk-MIT.txt']! {
+	for path in ['etc/tulpar-packages/config.json', 'usr/bin/tulpar-package', 'usr/sbin/tulpar-session',
+		'usr/libexec/tulpar/tulpar-linux-runner', 'usr/share/tulpar/actions/packages-change', 'usr/share/tulpar/actions/packages-launch',
+		'usr/share/licenses/tulpar-packages/ed25519-MIT.txt', 'usr/share/licenses/tulpar-packages/application-sdk-MIT.txt']! {
 		artifacts << native_artifact('image/' + path, root + '/' + path)!
 	}
 	for path in os.walk_ext(root + '/usr/share/native-catalog/releases', '') {
@@ -272,11 +272,11 @@ fn check() !int {
 	options := hwhost.parse_options(arguments)!
 	if options.help || options.list { return hwhost.run_suite(if installed { installed_software_suite('', '') }
 		else if persistent { persistent_software_suite('', '') } else { native_suite('', image, software) }, arguments, @FILE) }
-	inputs := os.getenv('VINIX_NATIVE_CATALOG_INPUTS')
-	sandbox := os.getenv('VINIX_NATIVE_CATALOG_SANDBOX')
-	if os.getenv('VINIX_HWTEST_TCG') != '1' || !os.is_file(options.kernel) || !os.is_dir(inputs)
+	inputs := os.getenv('TULPAR_NATIVE_CATALOG_INPUTS')
+	sandbox := os.getenv('TULPAR_NATIVE_CATALOG_SANDBOX')
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' || !os.is_file(options.kernel) || !os.is_dir(inputs)
 		|| !os.is_file(sandbox) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) {
-		return error('provide VINIX_HWTEST_TCG=1, VINIX_NATIVE_CATALOG_INPUTS, target VINIX_NATIVE_CATALOG_SANDBOX, --kernel and a new --state-dir')
+		return error('provide TULPAR_HWTEST_TCG=1, TULPAR_NATIVE_CATALOG_INPUTS, target TULPAR_NATIVE_CATALOG_SANDBOX, --kernel and a new --state-dir')
 	}
 	repository := hwhost.find_root(@FILE)!
 	base := if installed { installed_software_suite(sandbox, '') }
@@ -297,7 +297,7 @@ fn check() !int {
 	if persistent {
 		os.write_file(disk, '')!; os.truncate(disk, u64(if installed { 4096 } else { 128 }) << 20)!
 		if !installed {
-			formatter := os.getenv_opt('VINIX_MKE2FS') or { os.find_abs_path_of_executable('mke2fs') or { '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs' } }
+			formatter := os.getenv_opt('TULPAR_MKE2FS') or { os.find_abs_path_of_executable('mke2fs') or { '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs' } }
 			hwhost.run_tool([formatter, '-q', '-F', '-t', 'ext2', '-b', '4096', '-I', '128', '-m', '0', '-O',
 				'none,filetype,sparse_super,large_file', disk], {}, work + '/format.log', 60)!
 		}
@@ -309,10 +309,10 @@ fn check() !int {
 	if persistent { artifacts << native_artifact(if installed { 'initial-blank-system-disk' } else { 'initial-ext2' }, disk)! }
 	for file in definition.files { artifacts << native_artifact(file.path, root + '/' + file.path)! }
 	if profiles {
-		archive := os.getenv('VINIX_PROFILE_EXPORT_SOURCE')
+		archive := os.getenv('TULPAR_PROFILE_EXPORT_SOURCE')
 		if !os.is_file(archive) || os.file_size(archive) != pkgcore.ffmpeg_source_bytes
 			|| native_artifact('source', archive)!.sha256 != pkgcore.ffmpeg_source_digest {
-			return error('provide VINIX_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive')
+			return error('provide TULPAR_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive')
 		}
 		path := root + '/usr/share/package-fixtures/ffmpeg.tar.xz'
 		os.cp(archive, path)!; os.chmod(path, 0o644)!
@@ -322,10 +322,10 @@ fn check() !int {
 	artifacts << if image { stage_native_image(host, inputs, root, work)! } else { stage_native_inputs(inputs, root)! }
 	if software {
 		artifacts << stage_software_image(host, root, work)!
-		artifacts << native_artifact('image/usr/sbin/vinix-authd', root + '/usr/sbin/vinix-authd')!
+		artifacts << native_artifact('image/usr/sbin/tulpar-authd', root + '/usr/sbin/tulpar-authd')!
 	}
 	if installed { artifacts << stage_installed_proof(root, guest)! }
-	for path in ['usr/bin/vinix-package', 'usr/bin/vinix-sandbox', 'usr/sbin/vinix-account', 'usr/sbin/vinix-session'] {
+	for path in ['usr/bin/tulpar-package', 'usr/bin/tulpar-sandbox', 'usr/sbin/tulpar-account', 'usr/sbin/tulpar-session'] {
 		artifacts << native_artifact(path, root + '/' + path)!
 	}
 	scenario := if installed { installed_software_suite(sandbox, disk).scenarios[0] }

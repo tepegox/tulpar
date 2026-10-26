@@ -56,13 +56,13 @@ fn admit_first_run_serial(transcript string, boot int, arch string) ! {
 	review := json2.decode[json2.Any](proposals[0].all_after('SOFTWARE FIRST RUN PROPOSAL '))!.as_map()
 	if review['operation']!.str() != 'deploy' || review['architecture']!.str() != arch ||
 		review['generation']!.f64() != 0 || review['fingerprint']!.str().len != 64 ||
-		review['names']!.as_array().map(it.str()) != ['org.vinix.counter'] ||
-		review['requested']!.as_array().map(it.str()) != ['org.vinix.counter'] ||
+		review['names']!.as_array().map(it.str()) != ['org.tulpar.counter'] ||
+		review['requested']!.as_array().map(it.str()) != ['org.tulpar.counter'] ||
 		review['rows']!.as_array().len != 1 {
 		return error('first-run proposal differs from the complete declared Counter set')
 	}
 	row := review['rows']!.as_array()[0].as_map()
-	if row['id']!.str() != 'org.vinix.counter' || row['version']!.str() != '1.0.0' ||
+	if row['id']!.str() != 'org.tulpar.counter' || row['version']!.str() != '1.0.0' ||
 		row['installed_version']!.str() != '' || row['architecture']!.str() != arch ||
 		row['kind']!.str() != 'native' || row['repository']!.str() != 'native' ||
 		row['license']!.str() != 'MIT' || row['public_key']!.str().len != 64 ||
@@ -175,11 +175,11 @@ fn retain() ! {
 	}
 	mut paths := {
 		'controller': os.abs_path(os.args[4])
-		'desktop': build + '/vinix-desktop'
+		'desktop': build + '/tulpar-desktop'
 		'desktop-build': run + '/desktop-build.json'
 		'desktop-build-original': build + '/desktop-build.json'
 		'kernel': os.abs_path(os.args[3])
-		'config': run + '/rootfs/etc/vinix-packages/config.json'
+		'config': run + '/rootfs/etc/tulpar-packages/config.json'
 		'initramfs': run + '/initramfs.tar'
 		'serial': run + '/serial.log'
 		'guest': run + '/guest-build/init'
@@ -205,15 +205,15 @@ fn retain() ! {
 		paths['installed-declaration'] = run + '/rootfs/usr/share/software-graphical-installed.json'
 	}
 	if first_run {
-		paths['release-declaration'] = run + '/rootfs/usr/share/vinix-packages/applications.json'
+		paths['release-declaration'] = run + '/rootfs/usr/share/tulpar-packages/applications.json'
 		declaration := json2.decode[json2.Any](os.read_file(paths['release-declaration'])!)!.as_map()
 		if declaration.len != 3 || declaration['format']! != json2.Any(f64(1)) ||
 			declaration['architecture']!.str() != arch ||
-			declaration['packages']!.as_array().map(it.str()) != ['org.vinix.counter'] {
+			declaration['packages']!.as_array().map(it.str()) != ['org.tulpar.counter'] {
 			return error('first-run declaration differs from the complete architecture-matched Counter set')
 		}
 	}
-	repository := run + '/rootfs/usr/share/vinix-packages/repositories/native'
+	repository := run + '/rootfs/usr/share/tulpar-packages/repositories/native'
 	for path in os.walk_ext(repository, '') {
 		if os.is_file(path) { paths['repository/' + path[repository.len + 1..]] = path }
 	}
@@ -255,7 +255,7 @@ fn retain() ! {
 		return error('original desktop build manifest differs from run copy')
 	}
 	manifest := json2.decode[map[string]string](os.read_file(build + '/desktop-build.json')!)!
-	if manifest['vinix-desktop'] != receipt.artifacts['desktop'] {
+	if manifest['tulpar-desktop'] != receipt.artifacts['desktop'] {
 		return error('desktop receipt does not bind the qualified executable')
 	}
 	mut source_names := ['main.v', 'terminal.v', 'platform.c.v', 'registration.v', 'registration_store.v', 'gpucore/core.v',

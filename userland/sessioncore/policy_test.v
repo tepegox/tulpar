@@ -10,7 +10,7 @@ fn test_policy_validation_and_roundtrip() {
 	if _ := p.bind('\x1b[110;9u', 'help') {
 		assert false
 	}
-	if _ := decode_policy('vinix-shell-policy\t1\t1\t1\t1\t1\t9999\n') {
+	if _ := decode_policy('tulpar-shell-policy\t1\t1\t1\t1\t1\t9999\n') {
 		assert false
 	}
 }

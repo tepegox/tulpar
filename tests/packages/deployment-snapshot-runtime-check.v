@@ -26,7 +26,7 @@ fn artifact(role string, path string) !Artifact {
 fn suite() hwhost.Suite {
 	return hwhost.Suite{ name: 'package-deployment-snapshot', guest: 'tests/packages/deployment-snapshot-guest',
 		module_paths: ['.', 'tools/accounts'], directories: ['tmp:1777'], programs: [
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/deployment_snapshot_test.v', path: 'usr/share/package-fixtures/snapshot-core' },
 			hwhost.Program{ source: 'tests/packages/deployment-snapshot-check.v', path: 'usr/share/package-fixtures/snapshot-probe' },
 		], scenarios: [hwhost.Scenario{ name: 'packages-deployment-snapshot', arches: ['aarch64', 'x86_64'],
@@ -46,7 +46,7 @@ fn check() !int {
 	args := os.args[1..]; options := hwhost.parse_options(args)!
 	if options.help || options.list { return hwhost.run_suite(suite(), args, @FILE) }
 	if !os.is_file(options.kernel) { return error('--kernel is not a file') }
-	work := os.temp_dir() + '/vinix-deployment-snapshot-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-deployment-snapshot-' + os.getpid().str()
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	os.cp(options.kernel, work + '/kernel')!
@@ -56,7 +56,7 @@ fn check() !int {
 		base := options.state_dir
 		root := base + '/guest/root/usr/share/package-fixtures/'
 		receipt := Receipt{ architecture: options.arch, completed_at: time.now().unix(), artifacts: [kernel,
-			artifact('guest-init', base + '/guest/init')!, artifact('package-cli', base + '/guest/root/usr/bin/vinix-package')!, artifact('snapshot-core', root + 'snapshot-core')!,
+			artifact('guest-init', base + '/guest/init')!, artifact('package-cli', base + '/guest/root/usr/bin/tulpar-package')!, artifact('snapshot-core', root + 'snapshot-core')!,
 			artifact('snapshot-probe', root + 'snapshot-probe')!,
 			artifact('serial-log', base + '/packages-deployment-snapshot/serial.log')!] }
 		os.write_file(base + '/qualification.json', json2.encode(receipt) + '\n')!

@@ -5,10 +5,10 @@ module compatcore
 
 import abiargs
 
-fn C.vinix_linuxkpi_log_write(&char, uint)
-fn C.vinix_linuxkpi_log_key(&u64) bool
-fn C.vinix_linuxkpi_host_logger_enter()
-fn C.vinix_linuxkpi_host_logger_leave()
+fn C.tulpar_linuxkpi_log_write(&char, uint)
+fn C.tulpar_linuxkpi_log_key(&u64) bool
+fn C.tulpar_linuxkpi_host_logger_enter()
+fn C.tulpar_linuxkpi_host_logger_leave()
 @[c: 'pthread_exit']
 fn C.vkr_native_thread_exit(voidptr)
 fn C._printk(&char, ...voidptr) i32
@@ -65,9 +65,9 @@ pub fn vkr_log_join() i32 { unsafe { return C.vkwq_pthread_join(vkr_native_log_t
 @[export: 'vkr_log_exit']
 pub fn vkr_log_exit() { C.vkr_native_thread_exit(unsafe { nil }) }
 @[export: 'vkr_log_host_enter']
-pub fn vkr_log_host_enter() { if C.VINIX_LINUXKPI_LOG_HOST == 1 { C.vinix_linuxkpi_host_logger_enter() } }
+pub fn vkr_log_host_enter() { if C.TULPAR_LINUXKPI_LOG_HOST == 1 { C.tulpar_linuxkpi_host_logger_enter() } }
 @[export: 'vkr_log_host_leave']
-pub fn vkr_log_host_leave() { if C.VINIX_LINUXKPI_LOG_HOST == 1 { C.vinix_linuxkpi_host_logger_leave() } }
+pub fn vkr_log_host_leave() { if C.TULPAR_LINUXKPI_LOG_HOST == 1 { C.tulpar_linuxkpi_host_logger_leave() } }
 @[export: 'vkr_log_suppress']
 pub fn vkr_log_suppress() i32 { unsafe { return C.vkp_load_signed(&vkr_native_suppress, 0) } }
 @[export: 'vkr_log_console']
@@ -77,9 +77,9 @@ pub fn vkr_log_call_sink(sink voidptr, record voidptr, arg voidptr) {
  unsafe { call := LogSinkABI(sink); call(&C.vkr_const_printk_record(record), arg) }
 }
 @[export: 'vkr_log_write']
-pub fn vkr_log_write(text voidptr, size uint) { unsafe { C.vinix_linuxkpi_log_write(&char(text), size) } }
+pub fn vkr_log_write(text voidptr, size uint) { unsafe { C.tulpar_linuxkpi_log_write(&char(text), size) } }
 @[export: 'vkr_log_key']
-pub fn vkr_log_key(key voidptr) bool { unsafe { return C.vinix_linuxkpi_log_key(&u64(key)) } }
+pub fn vkr_log_key(key voidptr) bool { unsafe { return C.tulpar_linuxkpi_log_key(&u64(key)) } }
 
 @[export: 'vprintk_emit']
 pub fn native_vprintk_emit(facility i32, level i32, dev voidptr, fmt &char, args voidptr) i32 {
@@ -89,11 +89,11 @@ pub fn native_vprintk_emit(facility i32, level i32, dev voidptr, fmt &char, args
 @[export: 'vprintk']
 pub fn native_vprintk(fmt &char, args voidptr) i32 { return native_vprintk_emit(0, -1, unsafe { nil }, fmt, args) }
 
-@[export: 'vinix_linuxkpi_printk_entry']
+@[export: 'tulpar_linuxkpi_printk_entry']
 pub fn native_printk(fmt &char, args voidptr) i32 { return vkr_log_emit(0, -1, unsafe { nil }, fmt, args) }
-@[export: 'vinix_linuxkpi_printk_deferred_entry']
+@[export: 'tulpar_linuxkpi_printk_deferred_entry']
 pub fn native_printk_deferred(fmt &char, args voidptr) i32 { return vkr_log_emit(0, -2, unsafe { nil }, fmt, args) }
-@[export: 'vinix_linuxkpi_warn_entry']
+@[export: 'tulpar_linuxkpi_warn_entry']
 pub fn native_warn(file &char, line i32, fmt &char, args voidptr) {
  add_taint(9, 0)
  unsafe {

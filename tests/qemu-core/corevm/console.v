@@ -10,7 +10,7 @@ import time
 #include "abi.h"
 #include <fcntl.h>
 @[typedef]
-struct C.vinix_core_child_info {
+struct C.tulpar_core_child_info {
 	si_pid    i32
 	si_code   i32
 	si_status i32
@@ -24,7 +24,7 @@ mut:
 }
 
 fn C.forkpty(&i32, &char, voidptr, voidptr) i32
-fn C.waitid(i32, u32, &C.vinix_core_child_info, i32) i32
+fn C.waitid(i32, u32, &C.tulpar_core_child_info, i32) i32
 fn C.waitpid(i32, &i32, i32) i32
 fn C.killpg(i32, i32) i32
 fn C.poll(&C.pollfd, usize, i32) i32
@@ -106,7 +106,7 @@ fn start(command []string, env map[string]string, cwd string) !Child {
 
 // Observe without reaping so the leader reserves its identity through cleanup.
 fn (child Child) observe() !(bool, int) {
-	mut info := C.vinix_core_child_info{}
+	mut info := C.tulpar_core_child_info{}
 	for {
 		if C.waitid(C.P_PID, u32(child.pid), &info, C.WEXITED | C.WNOHANG | C.WNOWAIT) == 0 {
 			break

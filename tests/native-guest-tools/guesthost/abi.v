@@ -46,7 +46,7 @@ fn abi_compiler(build AbiBuild) !([]string, []string) {
 	} else {
 		root()
 	}
-	sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/sysroot' }
+	sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/sysroot' }
 	mut compiler := hosttest.shell_split(os.getenv_opt('CC') or { 'clang' })!
 	compiler << ['--target=aarch64-linux-musl', '--sysroot=' + sdk]
 	if build.family == 'procfs-mount' {
@@ -199,7 +199,7 @@ pub fn build_abi_guest(state string, build AbiBuild) !string {
 
 fn abi_launch(init string, state string, kernel string, runner_root string, build AbiBuild) !Launch {
 	if build.family == 'procfs-mount' {
-		cache := os.getenv_opt('VINIX_LIMINE_CACHE') or { runner_root + '/build-amd64-iso/limine' }
+		cache := os.getenv_opt('TULPAR_LIMINE_CACHE') or { runner_root + '/build-amd64-iso/limine' }
 		if build.arch != 'aarch64' && os.is_dir(cache) {
 			os.mkdir_all(state + '/iso-build')!
 			os.cp_all(cache, state + '/iso-build/limine', false)!
@@ -210,19 +210,19 @@ fn abi_launch(init string, state string, kernel string, runner_root string, buil
 	command[command.index('-m') + 1] = if build.arch == 'aarch64' { '2048' } else { '1024' }
 	if build.family == 'terminal-jobs' { command[command.index('-smp') + 1] = '4' }
 	if build.arch == 'x86_64' {
-		command[command.index('-accel') + 1] = os.getenv_opt('VINIX_QEMU_ACCEL') or { 'tcg' }
-		firmware := os.getenv_opt('VINIX_OVMF_CODE_AMD64') or {
+		command[command.index('-accel') + 1] = os.getenv_opt('TULPAR_QEMU_ACCEL') or { 'tcg' }
+		firmware := os.getenv_opt('TULPAR_OVMF_CODE_AMD64') or {
 			os.dir(os.dir(command[0])) + '/share/qemu/edk2-x86_64-code.fd'
 		}
 		command[command.index('-drive') + 1] = 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware
 		command[command.index('-serial') + 1] = 'stdio'
 		command << ['-netdev', 'user,id=net0', '-device', 'e1000,netdev=net0,mac=52:54:00:12:34:56',
-			'-object', 'filter-dump,id=vinixdump,netdev=net0,file=' + state +
+			'-object', 'filter-dump,id=tulpardump,netdev=net0,file=' + state +
 				if build.family == 'network-options' { '/network.pcap' } else { '/unused.pcap' }]
 	}
 	if build.arch == 'aarch64' {
-		if os.getenv('VINIX_QEMU_EXTRA') != '' {
-			command.insert(1, hosttest.shell_split(os.getenv('VINIX_QEMU_EXTRA'))!)
+		if os.getenv('TULPAR_QEMU_EXTRA') != '' {
+			command.insert(1, hosttest.shell_split(os.getenv('TULPAR_QEMU_EXTRA'))!)
 		}
 		// The imported ARM runner always supplied a private 64 MiB ext2
 		// /root. Keep that filesystem and its command line for these tests.
@@ -303,9 +303,9 @@ fn abi_checked(arguments []string, family string) !int {
 	default_timeout := strconv.atoi(if parsed.has('--timeout') {
 		'300'
 	} else {
-		os.getenv_opt('VINIX_QEMU_TIMEOUT') or { '300' }
+		os.getenv_opt('TULPAR_QEMU_TIMEOUT') or { '300' }
 	}) or {
-		return error_with_code('invalid VINIX_QEMU_TIMEOUT', 2)
+		return error_with_code('invalid TULPAR_QEMU_TIMEOUT', 2)
 	}
 	timeout := parsed.integer('--timeout', default_timeout) or { return error_with_code('invalid --timeout', 2) }
 	if timeout <= 0 { return error_with_code('timeout must be positive', 2) }
@@ -314,7 +314,7 @@ fn abi_checked(arguments []string, family string) !int {
 		return error_with_code('--source must name an existing C control', 2)
 	}
 	arch := if parsed.value('--arch', 'aarch64') == 'aarch64' { 'aarch64' } else { 'x86_64' }
-	runner_root := resolve(os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() })!
+	runner_root := resolve(os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() })!
 	build := AbiBuild{
 		family:          family
 		arch:            arch
@@ -333,15 +333,15 @@ fn abi_checked(arguments []string, family string) !int {
 	mut kernel := ''
 	if !parsed.has('--build-only') {
 		kernel = if parsed.has('--kernel-dir') {
-			path_option(parsed, '--kernel-dir', '')! + '/bin/vinix'
+			path_option(parsed, '--kernel-dir', '')! + '/bin/tulpar'
 		} else if arch == 'aarch64' {
-			resolve(os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' })! + '/bin/vinix'
+			resolve(os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' })! + '/bin/tulpar'
 		} else {
-			resolve(os.getenv_opt('VINIX_AMD64_KERNEL') or {
+			resolve(os.getenv_opt('TULPAR_AMD64_KERNEL') or {
 				root() + if family == 'procfs-mount' {
-					'/build-amd64-kernel/bin/vinix'
+					'/build-amd64-kernel/bin/tulpar'
 				} else {
-					'/kernel/bin/vinix'
+					'/kernel/bin/tulpar'
 				}
 			})!
 		}
@@ -351,7 +351,7 @@ fn abi_checked(arguments []string, family string) !int {
 		}
 	}
 	state_arg := parsed.value('--state-dir', parsed.value('--work', ''))
-	state := hosttest.work_dir(state_arg, 'vinix-' + family + '-vm-')!
+	state := hosttest.work_dir(state_arg, 'tulpar-' + family + '-vm-')!
 	defer { if state_arg == '' { hosttest.remove_work_dir(state) or { eprintln(err.msg()) } } }
 	build_abi_guest(state, build)!
 	if parsed.has('--build-only') {
@@ -365,7 +365,7 @@ pub fn run_abi_guest(state string, source_kernel string, build AbiBuild, inherit
 	spec := abi_spec(build.family)!
 	abi_validate_elf(source_kernel, build.arch)!
 	os.mkdir_all(state + '/kernel/bin')!
-	kernel := state + '/kernel/bin/vinix'
+	kernel := state + '/kernel/bin/tulpar'
 	os.cp(source_kernel, kernel)!
 	runner_root := if build.runner_root != '' { build.runner_root } else { root() }
 	configured := abi_launch(state + '/init', state, kernel, runner_root, build)!
@@ -377,7 +377,7 @@ pub fn run_abi_guest(state string, source_kernel string, build AbiBuild, inherit
 	}] = json2.Any(digest(kernel)!)
 	receipt['command'] = json2.Any(configured.command.map(json2.Any(it)))
 	receipt['iso_sha256'] = json2.Any(digest(state + '/test.iso')!)
-	receipt['kernel_command_line'] = json2.Any(os.getenv('VINIX_CMDLINE'))
+	receipt['kernel_command_line'] = json2.Any(os.getenv('TULPAR_CMDLINE'))
 	if build.arch == 'aarch64' {
 		receipt['initial_ext2_sha256'] = json2.Any(digest(state + '/root.ext2')!)
 	}

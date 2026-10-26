@@ -48,7 +48,7 @@ fn check_compiler_barriers(work string, generated string, include string) !json2
 			tag := target.all_before('-') + '-' + optimization
 			flags := [hosttest.env_default('CC', 'clang'), '--target=' + target,
 				'-std=gnu99', '-' + optimization, '-ffreestanding', '-nostdinc', '-fno-builtin',
-				'-fwrapv', '-DVINIX_V_RUNTIME', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
+				'-fwrapv', '-DTULPAR_V_RUNTIME', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
 				'-isystem', os.join_path(root, 'kernel/freestnd-c-hdrs'), '-I' + include,
 				'-I' + os.join_path(root, 'kernel/c')]
 			ir := os.join_path(work, tag + '.ll')
@@ -106,7 +106,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	root := hosttest.root()
 	arch := $if arm64 { 'arm64' } $else $if amd64 { 'amd64' } $else { '' }
 	if arch == '' { return error('Unsupported host architecture') }
-	work := hosttest.work_dir(keep, 'vinix-pagefault-host-')!
+	work := hosttest.work_dir(keep, 'tulpar-pagefault-host-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	core := os.join_path(work, 'compatcore')
 	os.mkdir(core)!
@@ -148,7 +148,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	for standard in ['gnu99', 'gnu11'] {
 		mut flags := common.clone(); flags << '-std=' + standard
 		production := os.join_path(work, standard + '-core.o')
-		mut argv := flags.clone(); argv << ['-DVINIX_V_RUNTIME', '-I' + os.join_path(root, 'kernel/c'), '-c', generated, '-o', production]
+		mut argv := flags.clone(); argv << ['-DTULPAR_V_RUNTIME', '-I' + os.join_path(root, 'kernel/c'), '-c', generated, '-o', production]
 		command(argv)!
 		imports := command(['nm', '-u', production])!.stdout
 		os.write_file(os.join_path(work, standard + '-imports.txt'), imports)!
@@ -248,34 +248,34 @@ static uint32_t fatal_depth, fatal_preempt;
     } \\
 } while (0)
 
-uint32_t *vinix_linuxkpi_fault_depth(void) {
+uint32_t *tulpar_linuxkpi_fault_depth(void) {
     current.borrows++;
     if (current.mutation) CHECK(!(current.flags & IRQ_ENABLED));
     return current.task ? &current.task->depth : NULL;
 }
 
-uint64_t vinix_linuxkpi_irq_save(void) {
+uint64_t tulpar_linuxkpi_irq_save(void) {
     current.saves++;
     uint64_t flags = current.flags;
     current.flags &= ~(uint64_t)IRQ_ENABLED;
     return flags;
 }
 
-void vinix_linuxkpi_irq_restore(uint64_t flags) {
+void tulpar_linuxkpi_irq_restore(uint64_t flags) {
     current.restores++;
     current.flags = flags;
 }
 
-uint32_t vinix_linuxkpi_preempt_count(void) {
+uint32_t tulpar_linuxkpi_preempt_count(void) {
     current.preempt_queries++;
     return current.preempt;
 }
 
-uint32_t vinix_linuxkpi_maskable_irq_depth(void) {
+uint32_t tulpar_linuxkpi_maskable_irq_depth(void) {
     return current.maskable;
 }
 
-void vinix_linuxkpi_bug(const char *message, int line) {
+void tulpar_linuxkpi_bug(const char *message, int line) {
     (void)line;
     if (!expect_fatal || current.flags != fatal_flags ||
         current.preempt != fatal_preempt || current.borrows != 1 ||

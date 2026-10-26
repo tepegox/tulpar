@@ -41,17 +41,17 @@ fn mitigation_policy(segments bool) OptinPolicy {
 }
 
 fn environment_timeout(fallback int) !int {
-	value := strconv.atoi(os.getenv_opt('VINIX_QEMU_TIMEOUT') or { fallback.str() }) or {
-		return error_with_code('VINIX_QEMU_TIMEOUT must be an integer', 2)
+	value := strconv.atoi(os.getenv_opt('TULPAR_QEMU_TIMEOUT') or { fallback.str() }) or {
+		return error_with_code('TULPAR_QEMU_TIMEOUT must be an integer', 2)
 	}
-	if value <= 0 { return error_with_code('VINIX_QEMU_TIMEOUT must be positive', 2) }
+	if value <= 0 { return error_with_code('TULPAR_QEMU_TIMEOUT must be positive', 2) }
 	return value
 }
 
 fn snapshot_kernel_input(work string, source string, arch string) !string {
 	input := resolve(source)!
 	if !os.is_file(input) { return snapshot_kernel(work, input, arch)! }
-	target := work + '/kernel/bin/vinix'
+	target := work + '/kernel/bin/tulpar'
 	os.mkdir_all(os.dir(target))!
 	hosttest.module_copy_file_preserving_stat(input, target)!
 	elf_arch(target, arch)!
@@ -65,14 +65,14 @@ fn optin_launch(command []string, arch string, work string, cpu string, topology
 	for index, value in argv {
 		if value == '-m' && arch == 'aarch64' { argv[index + 1] = '2048' }
 		if arch == 'x86_64' {
-			if value == '-accel' { argv[index + 1] = os.getenv_opt('VINIX_QEMU_ACCEL') or { 'tcg' } }
+			if value == '-accel' { argv[index + 1] = os.getenv_opt('TULPAR_QEMU_ACCEL') or { 'tcg' } }
 			if value == '-cpu' { argv[index + 1] = cpu }
 			if value == '-smp' { argv[index + 1] = topology }
 			if value == '-serial' { argv[index + 1] = 'stdio' }
 			if value == '-drive' {
 				if firmware := os.getenv_opt(firmware_name) {
 					argv[index + 1] = 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware
-				} else if firmware_name != 'VINIX_OVMF_CODE' {
+				} else if firmware_name != 'TULPAR_OVMF_CODE' {
 					argv[index + 1] = 'if=pflash,format=raw,unit=0,readonly=on,file=' + os.dir(os.dir(argv[0])) + '/share/qemu/edk2-x86_64-code.fd'
 				}
 			}
@@ -80,7 +80,7 @@ fn optin_launch(command []string, arch string, work string, cpu string, topology
 	}
 	if arch == 'x86_64' {
 		argv << ['-netdev', 'user,id=net0', '-device', 'e1000,netdev=net0,mac=52:54:00:12:34:56',
-			'-object', 'filter-dump,id=vinixdump,netdev=net0,file=' + work + '/unused.pcap']
+			'-object', 'filter-dump,id=tulpardump,netdev=net0,file=' + work + '/unused.pcap']
 	}
 	return argv
 }
@@ -106,11 +106,11 @@ fn optin_guest_command(args []string, family string) !int {
 	arch := if arch_arg == 'amd64' { 'x86_64' } else { 'aarch64' }
 	timeout := environment_timeout(300)!
 	smp := if guards { 2 } else { positive_option(parsed, '--smp', 2)! }
-	repo := resolve(if guards { parsed.options['--repo'] or { root() } } else { os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() } })!
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-' + family + '-')!
+	repo := resolve(if guards { parsed.options['--repo'] or { root() } } else { os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() } })!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-' + family + '-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	private_kernel := snapshot_kernel_input(work, if guards { parsed.options['--kernel'] } else {
-		os.getenv_opt('VINIX_AMD64_KERNEL') or { root() + '/kernel/bin/vinix' }
+		os.getenv_opt('TULPAR_AMD64_KERNEL') or { root() + '/kernel/bin/tulpar' }
 	}, arch)!
 	source := root() + '/tests/' + family + '/' + if !guards && '--segments' in parsed.options { 'segments.c' } else { 'guest.c' }
 	init := work + '/init'
@@ -143,13 +143,13 @@ fn optin_guest_command(args []string, family string) !int {
 	policy := if guards { stack_guard_policy(arch, '--runtime-only' in parsed.options, '--expect-overflow' in parsed.options) } else { mitigation_policy('--segments' in parsed.options) }
 	mut receipt := { 'arch': json2.Any(arch), 'family': json2.Any(family), 'timeout': json2.Any(timeout),
 		'compile_command': json2.Any(hosttest.strings(compile)), 'source_sha256': json2.Any(hosttest.sha(source)!),
-		'init_sha256': json2.Any(hosttest.sha(init)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!),
+		'init_sha256': json2.Any(hosttest.sha(init)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!),
 		'expected': json2.Any(hosttest.strings(policy.expected)), 'failures': json2.Any(hosttest.strings(policy.failures)) }
 	if !guards { receipt['probe_sha256'] = hosttest.sha(root() + '/tests/cpu-mitigations/probe.S')! }
 	hosttest.write_json(work + '/inputs.json', receipt)!
 	if '--build-only' in parsed.options { return 0 }
 	configured := guesthost.launch_from(init, archive, work, private_kernel, arch, false, repo)!
-	base_argv := optin_launch(configured.command, arch, work, parsed.options['--cpu'] or { 'max' }, smp.str(), 'VINIX_OVMF_CODE_AMD64')
+	base_argv := optin_launch(configured.command, arch, work, parsed.options['--cpu'] or { 'max' }, smp.str(), 'TULPAR_OVMF_CODE_AMD64')
 	argv := if arch == 'aarch64' { guesthost.arm_home_launch(base_argv, work, repo)! } else { base_argv }
 	receipt['command'] = hosttest.strings(argv)
 	hosttest.write_json(work + '/inputs.json', receipt)!

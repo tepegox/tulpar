@@ -12,7 +12,7 @@ import pagecache
 import stat
 
 // A machine booted from an installer image (the release ISOs pass
-// vinix.disk=auto) keeps its system on a disk, as a QEMU machine started by
+// tulpar.disk=auto) keeps its system on a disk, as a QEMU machine started by
 // scripts/run-desktop-aarch64.sh does: the whole filesystem survives a restart. Given a
 // disk, the first boot installs the image onto it and runs from there; later
 // boots find it and skip unpacking the image into memory; a newer image is
@@ -36,8 +36,8 @@ const min_disk_bytes = u64(4) << 30
 // The image's id, on the disk. It reads `pending` while an install or an
 // update is being written, so a boot interrupted halfway is finished by the
 // next one rather than trusted.
-const id_file = '/.vinix-image-id'
-const id_name = '.vinix-image-id'
+const id_file = '/.tulpar-image-id'
+const id_name = '.tulpar-image-id'
 const pending_id = 'pending'
 
 pub fn requested() bool {
@@ -45,7 +45,7 @@ pub fn requested() bool {
 	if kernel_file == unsafe { nil } || kernel_file.cmdline == unsafe { nil } {
 		return false
 	}
-	return unsafe { cstring_to_vstring(kernel_file.cmdline) }.contains('vinix.disk=auto')
+	return unsafe { cstring_to_vstring(kernel_file.cmdline) }.contains('tulpar.disk=auto')
 }
 
 pub fn mount_or_install() Outcome {
@@ -96,7 +96,7 @@ pub fn mount_or_install() Outcome {
 			continue
 		}
 		report('sysdisk: installing onto', disk, '')
-		if !ext2.format(disk, 'vinix') {
+		if !ext2.format(disk, 'tulpar') {
 			report('sysdisk: could not format', disk, '')
 			continue
 		}

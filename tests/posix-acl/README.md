@@ -1,6 +1,6 @@
 # POSIX ACL checks
 
-Vinix exposes Linux version-2 `system.posix_acl_access` and
+Tulpar exposes Linux version-2 `system.posix_acl_access` and
 `system.posix_acl_default` attributes on tmpfs and ext2 regular files and
 directories. ext2 converts them to its version-1 format: named entries occupy
 eight bytes, object/mask entries four. ACL namespace entries use an empty
@@ -53,7 +53,7 @@ actual reboot checks:
 ```sh
 VEXE=/Users/alex/code/v/v make -C kernel -j4 CC=clang V=/Users/alex/code/v/v ARCH=aarch64 LIMINE_MP=1
 VEXE=/Users/alex/code/v/v V=/Users/alex/code/v/v python3 tests/ext2-xattr/run.py \
-  --source tests/posix-acl/test.c --acl-fixture --state-dir /tmp/vinix-acl-fresh
+  --source tests/posix-acl/test.c --acl-fixture --state-dir /tmp/tulpar-acl-fresh
 ```
 
 For named allocation sites, rebuild with `ALLOC_TRACK=1`, run the same native

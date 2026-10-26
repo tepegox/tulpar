@@ -9,7 +9,7 @@ import sourcecommand
 fn C.mkfifo(&char, u32) i32
 
 fn test_fifo_credentials_and_schedule_files_refuse_without_waiting_for_a_writer() {
-	root := os.real_path(sourcecommand.temporary('vinix-jobs-fifo')!)
+	root := os.real_path(sourcecommand.temporary('tulpar-jobs-fifo')!)
 	defer { os.rmdir_all(root) or {} }
 	compiled := sourcecommand.capture([@VEXE, '-enable-globals', '-gc', 'none', '-cc', 'cc',
 		'-o', root + '/jobs', os.dir(os.dir(@FILE)) + '/jobs.v'],

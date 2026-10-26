@@ -20,7 +20,7 @@ fn plan_grow_volume_seal(device &char, config &char, password &char, length u64,
 	erase_key(&work.wrapping[0], 64)
 	if length < work.request.data.length { return plan_error(c'encrypted configuration growth cannot shrink the extent') }
 	fd := C.open(device, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open encrypted growth parent'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open encrypted growth parent'); return 1 }; defer { C.close(fd) }
 	if !probe_disk(fd, mut work.after, mut work.status)
 		|| !volume_seal_growth(&work.disk, &work.after, &work.request.data, length) {
 		return plan_error(c'encrypted growth requires the same physical identity/sectors, nondecreasing capacity and a valid extent')

@@ -7,7 +7,7 @@ fn C.memcpy(voidptr, voidptr, uint) voidptr
 fn C.__atomic_exchange_n(&u128, u128, i32) u128
 fn C.__atomic_compare_exchange_n(&u128, &u128, u128, bool, i32, i32) bool
 
-@[export: 'vinix_arch_exchange_128']
+@[export: 'tulpar_arch_exchange_128']
 pub fn exchange(storage voidptr, value voidptr, result voidptr) {
 	unsafe {
 		mut next := u128(0)
@@ -17,7 +17,7 @@ pub fn exchange(storage voidptr, value voidptr, result voidptr) {
 	}
 }
 
-@[export: 'vinix_arch_compare_exchange_128']
+@[export: 'tulpar_arch_compare_exchange_128']
 pub fn compare_exchange(storage voidptr, expected voidptr, value voidptr, result voidptr) {
 	unsafe {
 		mut old := u128(0)

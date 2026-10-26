@@ -53,7 +53,7 @@ fn vm_guest_state(root string, enabled bool) ! {
 }
 
 fn test_vm_guest_queries_use_private_enabled_transport_and_leave_images_unchanged() {
-	root := '/tmp/vinix-vm-guest-${os.getpid()}'
+	root := '/tmp/tulpar-vm-guest-${os.getpid()}'
 	vm_guest_state(root, true)!
 	defer { os.rmdir_all(root) or {} }
 	mut listener := unix.listen_stream(root + '/agent.sock')!
@@ -80,7 +80,7 @@ fn test_vm_guest_queries_use_private_enabled_transport_and_leave_images_unchange
 	}
 	// Exercise the actual CLI, including a competing process holding the
 	// agent lease. A record lock held in this process cannot test that race.
-	cli := root + '/vinix-vm'
+	cli := root + '/tulpar-vm'
 	build := sourcecommand.capture([@VEXE, '-enable-globals', '-gc', 'none', '-cc', 'cc', '-o', cli,
 		os.dir(os.dir(@FILE)) + '/vm.v'], os.environ(), 120, 65536, unsafe { nil })!
 	assert build.status == 0, build.stderr
@@ -98,7 +98,7 @@ fn test_vm_guest_queries_use_private_enabled_transport_and_leave_images_unchange
 }
 
 fn test_vm_guest_query_refuses_disabled_transport_nonprivate_state_and_unsafe_endpoints() {
-	root := '/tmp/vinix-vm-guest-refuse-${os.getpid()}'
+	root := '/tmp/tulpar-vm-guest-refuse-${os.getpid()}'
 	vm_guest_state(root, false)!
 	defer { os.rmdir_all(root) or {} }
 	mut refused := false

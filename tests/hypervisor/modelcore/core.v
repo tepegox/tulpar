@@ -4,10 +4,10 @@ module modelcore
 
 #include <hypervisor-guest-native-abi.h>
 #include <stdlib.h>
-struct C.vinix_hv_create { memory_size u64 }
-struct C.vinix_hv_registers { rax u64 rdx u64 }
-struct C.vinix_hv_entry { rip u64 rsp u64 rflags u64 }
-struct C.vinix_hv_exit { reason u32 instruction_length u32 qualification u64 }
+struct C.tulpar_hv_create { memory_size u64 }
+struct C.tulpar_hv_registers { rax u64 rdx u64 }
+struct C.tulpar_hv_entry { rip u64 rsp u64 rflags u64 }
+struct C.tulpar_hv_exit { reason u32 instruction_length u32 qualification u64 }
 fn C.getenv(&char) &char
 fn C.atoi(&char) i32
 fn C.strcmp(&char, &char) i32
@@ -27,7 +27,7 @@ __global (
 	hv_initialized bool
 	hv_proc_read bool
 	hv_proc_closed bool
-	hv_registers C.vinix_hv_registers
+	hv_registers C.tulpar_hv_registers
 )
 
 fn require(condition bool) {
@@ -80,35 +80,35 @@ pub fn ioctl(fd i32, request usize, data voidptr) i32 {
 	unsafe {
 		require(fd == 10 + hv_opens)
 		match request {
-			usize(C.VINIX_HV_GET_API_VERSION) {
+			usize(C.TULPAR_HV_GET_API_VERSION) {
 				require(hv_phase == 0 && data == nil)
 				hv_phase = 1
-				return if hv_case == 4 { i32(0) } else { i32(C.VINIX_HV_API_VERSION) }
+				return if hv_case == 4 { i32(0) } else { i32(C.TULPAR_HV_API_VERSION) }
 			}
-			usize(C.VINIX_HV_CREATE_VM) {
-				require(hv_phase == 1 && (&C.vinix_hv_create(data)).memory_size == 0x10000)
+			usize(C.TULPAR_HV_CREATE_VM) {
+				require(hv_phase == 1 && (&C.tulpar_hv_create(data)).memory_size == 0x10000)
 				hv_phase = 2
 				return if hv_case == 11 { i32(-1) } else { i32(0) }
 			}
-			usize(C.VINIX_HV_SET_REGISTERS) {
+			usize(C.TULPAR_HV_SET_REGISTERS) {
 				require(hv_phase == 3)
 				mut seed := [15]u64{}
 				for i in 0 .. 15 { seed[i] = u64(0x1234567800000000) | u64(i + hv_opens - 1) }
-				require(C.memcmp(data, &seed[0], sizeof(C.vinix_hv_registers)) == 0)
-				C.memcpy(&hv_registers, data, sizeof(C.vinix_hv_registers))
+				require(C.memcmp(data, &seed[0], sizeof(C.tulpar_hv_registers)) == 0)
+				C.memcpy(&hv_registers, data, sizeof(C.tulpar_hv_registers))
 				hv_phase = 4
 				return if hv_case == 12 { i32(-1) } else { i32(0) }
 			}
-			usize(C.VINIX_HV_SET_ENTRY) {
-				entry := &C.vinix_hv_entry(data)
+			usize(C.TULPAR_HV_SET_ENTRY) {
+				entry := &C.tulpar_hv_entry(data)
 				require(hv_phase == 4 && entry.rip == 0x1000 && entry.rsp == 0x8000 && entry.rflags == 2)
 				hv_phase = 5
 				return if hv_case == 10 { i32(-1) } else { i32(0) }
 			}
-			usize(C.VINIX_HV_RUN) {
-				mut exit := &C.vinix_hv_exit(data)
+			usize(C.TULPAR_HV_RUN) {
+				mut exit := &C.tulpar_hv_exit(data)
 				if hv_phase == 5 {
-					exit.reason = if hv_case == 3 { u32(C.VINIX_HV_EXIT_HLT) } else { u32(C.VINIX_HV_EXIT_IO) }
+					exit.reason = if hv_case == 3 { u32(C.TULPAR_HV_EXIT_HLT) } else { u32(C.TULPAR_HV_EXIT_IO) }
 					exit.instruction_length = 1
 					exit.qualification = u64(if hv_case == 9 { 0xea } else { 0xe9 }) << 16
 					hv_registers.rax = (hv_registers.rax & ~u64(0xff)) | 0x56
@@ -117,18 +117,18 @@ pub fn ioctl(fd i32, request usize, data voidptr) i32 {
 					return if hv_case == 14 { i32(-1) } else { i32(0) }
 				}
 				require(hv_phase == 8)
-				exit.reason = u32(C.VINIX_HV_EXIT_HLT)
+				exit.reason = u32(C.TULPAR_HV_EXIT_HLT)
 				hv_phase = 9
 				return if hv_case == 15 { i32(-1) } else { i32(0) }
 			}
-			usize(C.VINIX_HV_GET_REGISTERS) {
+			usize(C.TULPAR_HV_GET_REGISTERS) {
 				require(hv_phase == 6)
 				if hv_case == 2 { hv_registers.rax ^= 0x100 }
-				C.memcpy(data, &hv_registers, sizeof(C.vinix_hv_registers))
+				C.memcpy(data, &hv_registers, sizeof(C.tulpar_hv_registers))
 				hv_phase = 7
 				return if hv_case == 13 { i32(-1) } else { i32(0) }
 			}
-			usize(C.VINIX_HV_ADVANCE_RIP) {
+			usize(C.TULPAR_HV_ADVANCE_RIP) {
 				require(hv_phase == 7 && *&u32(data) == 1)
 				hv_phase = 8
 				return if hv_case == 8 { i32(-1) } else { i32(0) }

@@ -63,7 +63,7 @@ pub fn git(args []string) !string {
 // File-backed stdin avoids pipe deadlocks when a batch produces more output
 // than fits in a pipe before it has finished consuming its input.
 pub fn git_input(args []string, input string) !string {
-	tmp := os.join_path(os.temp_dir(), 'vinix-git-policy-' + rand.uuid_v4())
+	tmp := os.join_path(os.temp_dir(), 'tulpar-git-policy-' + rand.uuid_v4())
 	os.mkdir(tmp)!
 	defer { os.rmdir_all(tmp) or {} }
 	path := os.join_path(tmp, 'stdin')

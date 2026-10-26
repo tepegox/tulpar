@@ -246,7 +246,7 @@ fn main_workflow(args string, work string) ! {
 		target := global('command')!
 		cmd(target, [lit('openssl')!, lit('req')!, lit('-new')!, lit('-x509')!, lit('-newkey')!,
 			lit('rsa:2048')!, lit('-nodes')!, lit('-sha256')!, lit('-subj')!,
-			lit('/CN=Vinix temporary verified root test')!, lit('-days')!, lit('1')!, lit('-addext')!,
+			lit('/CN=Tulpar temporary verified root test')!, lit('-days')!, lit('1')!, lit('-addext')!,
 			lit('extendedKeyUsage=codeSigning')!, lit('-keyout')!, attr(args, 'key')!, lit('-out')!,
 			attr(args, 'certificate')!], {
 			'stdout': devnull()!
@@ -354,7 +354,7 @@ fn main_workflow(args string, work string) ! {
 		'initramfs':          o(list([tarpath])!)
 		'output':             o(bundle)
 		'cmdline':            v(ah.Value(if compare('eq', attr(args, 'arch')!, lit('aarch64')!)! {
-			'vinix.qemu_platform=1'
+			'tulpar.qemu_platform=1'
 		} else {
 			''
 		}))
@@ -454,8 +454,8 @@ fn negative(args string, work string, bundle string, attached string, image stri
 	guest(global('run_guest')!, args, work, bundle, attached, lit('wrong-root')!, lit('verity: root integrity or filesystem check failed')!, none)!
 	token := state.save('token', call('verity.command_line', o(device), o(global('BLOCKS')!), o(root))!)!
 	// Keep the original tuple construction and replacement evaluation order.
-	replacements := [lit(text(token)! + ' ' + text(token)!)!, lit('vinix.disk=auto ' + text(token)!)!,
-		method(token, 'replace', [v(ah.Value('vinix.verity=1,')), v(ah.Value('vinix.verity=2,'))], {})!]
+	replacements := [lit(text(token)! + ' ' + text(token)!)!, lit('tulpar.disk=auto ' + text(token)!)!,
+		method(token, 'replace', [v(ah.Value('tulpar.verity=1,')), v(ah.Value('tulpar.verity=2,'))], {})!]
 	mut policies := []string{}
 	for index, scenario in ['duplicate-policy', 'conflicting-policy', 'malformed-policy'] {
 		policies << collection('tuple', [lit(scenario)!, replacements[index]])!

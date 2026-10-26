@@ -28,15 +28,15 @@ pub:
 }
 
 fn audit_source_list(tools Tools, source string, make string) ![]string {
-	work := sourcecommand.temporary('vinix-i915-kbuild-')!
+	work := sourcecommand.temporary('tulpar-i915-kbuild-')!
 	defer { gamehost.remove(work) or {} }
 	driver := source + '/drivers/gpu/drm/i915'
 	script := work + '/Makefile'
 	os.write_file(script, ['src := ' + driver, 'srctree := ' + source, 'CONFIG_X86 := y',
 		'CONFIG_ACPI := y', 'CONFIG_DRM_I915 := y', 'CONFIG_DRM_FBDEV_EMULATION := y',
-		'include ' + driver + '/Makefile', '.PHONY: vinix-source-list', 'vinix-source-list:',
+		'include ' + driver + '/Makefile', '.PHONY: tulpar-source-list', 'tulpar-source-list:',
 		"\t@printf '%s\\n' $(i915-y)", ''].join('\n'))!
-	result := tools.command([make, '-s', '-f', script, 'vinix-source-list'], os.environ())!
+	result := tools.command([make, '-s', '-f', script, 'tulpar-source-list'], os.environ())!
 	if result.status != 0 { return error('Kbuild expansion failed: ' + result.stderr) }
 	mut sources := []string{}
 	for object in result.stdout.fields() {
@@ -91,7 +91,7 @@ pub fn execute_audit(tools Tools, options AuditOptions, hooks AuditHooks) !int {
 		audit_source_list(tools, root, options.make)!
 	}
 	if sources.len == 0 { return error('upstream Kbuild returned no i915 sources') }
-	private := sourcecommand.temporary('vinix-i915-audit-')!
+	private := sourcecommand.temporary('tulpar-i915-audit-')!
 	defer { gamehost.remove(private) or {} }
 	generated := private + '/include'
 	here := if options.schema_directory == '' {
@@ -107,9 +107,9 @@ pub fn execute_audit(tools Tools, options AuditOptions, hooks AuditHooks) !int {
 		if schema == 'overflow' && !os.is_file(path) { continue }
 		if hooks.observe != unsafe { nil } {
 			hooks.observe([tools.root + '/kernel/linuxkpi/generate-abi', path,
-				generated + '/vinix/' + header + '.h'], hooks.context)!
+				generated + '/tulpar/' + header + '.h'], hooks.context)!
 		}
-		hosttest.generate_abi(path, tools.root + '/kernel/linuxkpi', generated + '/vinix/' + header + '.h')!
+		hosttest.generate_abi(path, tools.root + '/kernel/linuxkpi', generated + '/tulpar/' + header + '.h')!
 	}
 	flags := audit_flags(tools, root, generated)
 	bounds_path := generated + '/generated/bounds.h'
@@ -193,7 +193,7 @@ struct AuditBlocker {
 
 pub fn audit_cli(tools Tools, argv []string) !int {
 	args := cachecli.arguments(argv, ['--source-dir', '--cc', '--archive', '--make', '--jobs',
-		'--output'], [], [], 0, 0, 'Compile the original upstream Kbuild i915 units against native Vinix headers.\nUsage: audit [--source-dir DIR --cc COMPILER --archive FILE --make MAKE --jobs 4 --output FILE]') or { return error_with_code(err.msg(), 2) }
+		'--output'], [], [], 0, 0, 'Compile the original upstream Kbuild i915 units against native Tulpar headers.\nUsage: audit [--source-dir DIR --cc COMPILER --archive FILE --make MAKE --jobs 4 --output FILE]') or { return error_with_code(err.msg(), 2) }
 	pin := hosttest.upstream_pin()!
 	source := hosttest.module_resolve(args.value('--source-dir', tools.root + '/third_party/linux-i915/linux-' + pin['version']!.str()))!
 	jobs := strconv.atoi(args.value('--jobs', '4')) or { return error_with_code(err.msg(), 2) }

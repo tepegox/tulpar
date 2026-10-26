@@ -70,7 +70,7 @@ fn build() ! {
 	header := os.read_file(output + '/source/sqlite3.h')!
 	notice_end := header.index('\n*************************************************************************') or { return error('SQLite copyright header unavailable') }
 	for architecture in ['aarch64', 'x86_64'] {
-		cc := os.find_abs_path_of_executable(os.getenv_opt('VINIX_MUSL_CC_' + architecture.to_upper()) or { architecture + '-linux-musl-gcc' })!
+		cc := os.find_abs_path_of_executable(os.getenv_opt('TULPAR_MUSL_CC_' + architecture.to_upper()) or { architecture + '-linux-musl-gcc' })!
 		loader := run([cc, '-print-file-name=libc.so'])!
 		for variant in ['base', 'math'] {
 			root := output + '/' + variant + '/' + architecture
@@ -93,16 +93,16 @@ fn build() ! {
 				generate := [v, '-os', 'linux', '-arch', if architecture == 'aarch64' { 'arm64' } else { 'amd64' },
 					'-gc', 'none', '-d', 'no_backtrace', '-d', 'no_segfault_handler', '-o', generated, repository + '/tools/packages/linux-runner.v']
 				compile := [cc, '-static', '-O2', '-std=gnu11', '-D_GNU_SOURCE', generated,
-					'-o', root + '/bin/vinix-linux-runner', '-lm', '-lpthread']
+					'-o', root + '/bin/tulpar-linux-runner', '-lm', '-lpthread']
 				commands << generate
 				run(generate)!
 				commands << compile
 				run(compile)!
-			} else { os.cp(output + '/base/' + architecture + '/bin/vinix-linux-runner', root + '/bin/vinix-linux-runner')! }
-			for path in ['bin/sqlite3', 'bin/vinix-linux-runner', 'lib/libc.so', 'lib/libsqlite3.so.0'] { os.chmod(root + '/' + path, 0o755)! }
+			} else { os.cp(output + '/base/' + architecture + '/bin/tulpar-linux-runner', root + '/bin/tulpar-linux-runner')! }
+			for path in ['bin/sqlite3', 'bin/tulpar-linux-runner', 'lib/libc.so', 'lib/libsqlite3.so.0'] { os.chmod(root + '/' + path, 0o755)! }
 			os.write_file(root + '/licenses/sqlite-COPYRIGHT', header[..notice_end] + '\n*/\n')!
 			os.cp(repository + '/build-support/musl/COPYRIGHT', root + '/licenses/musl-COPYRIGHT')!
-			os.cp(repository + '/LICENSE', root + '/licenses/vinix-COPYING')!
+			os.cp(repository + '/LICENSE', root + '/licenses/tulpar-COPYING')!
 			for path in os.walk_ext(root, '').filter(os.is_file(it)) {
 				artifacts << Artifact{ path: path, bytes: os.file_size(path), sha256: pkgcore.hash_file(path)! }
 			}

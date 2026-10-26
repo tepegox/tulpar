@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Declaration-only boundary for the system libarchive library. */
-#ifndef VINIX_HOSTTEST_ARCHIVE_ABI_H
-#define VINIX_HOSTTEST_ARCHIVE_ABI_H
+#ifndef TULPAR_HOSTTEST_ARCHIVE_ABI_H
+#define TULPAR_HOSTTEST_ARCHIVE_ABI_H
 #include <stddef.h>
 #include <stdint.h>
 #include <sys/types.h>

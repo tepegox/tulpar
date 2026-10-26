@@ -190,10 +190,10 @@ Saved volume plans have a native V controller with no Python dependency:
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host --work /tmp/volume-plan-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --work /tmp/volume-plan-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --work /tmp/volume-plan-x86
 ```
 
@@ -487,17 +487,17 @@ runtime dependencies.
 
 Guest runs need target musl compilers, Clang/LLD, QEMU, `mke2fs`/`debugfs`, and
 the cached Limine and firmware files from the image builders. ARM also needs
-mtools; AMD64 needs `xorriso`. `VINIX_OVMF_CODE` and `VINIX_OVMF_CODE_AMD64`
+mtools; AMD64 needs `xorriso`. `TULPAR_OVMF_CODE` and `TULPAR_OVMF_CODE_AMD64`
 override firmware paths.
 AMD64 uses the cached Alpine BusyBox and musl loader from
-`build-amd64-userland/staging`; `VINIX_AMD64_USERLAND_ROOT` overrides that root.
+`build-amd64-userland/staging`; `TULPAR_AMD64_USERLAND_ROOT` overrides that root.
 On AMD64 a V console adapter redirects init's output to serial and execs the
 unchanged packaged desktop init as PID 1.
 The controller boots QEMU directly with disposable disk files, drains serial
 output into retained logs, limits each boot to 1800 seconds by default and
-terminates only its own process. `VINIX_STORAGE_BOOT_TIMEOUT` optionally selects
+terminates only its own process. `TULPAR_STORAGE_BOOT_TIMEOUT` optionally selects
 a per-boot budget of 60..7200 decimal seconds; for slower TCG hosts,
-`VINIX_STORAGE_BOOT_TIMEOUT=2700` allows 45 minutes without changing workload
+`TULPAR_STORAGE_BOOT_TIMEOUT=2700` allows 45 minutes without changing workload
 counts or assertions. The allowance includes 16400 utility processes across 200 warmup
 and 200 measured forty-one-command cycles, with pool membership, query, batch
 allocation/growth/expansion batch previews/publications,
@@ -591,7 +591,7 @@ unsupported VirtIO on ARM; invalid pointers and descriptor/resource rejection;
 the packaged `health` command; and 200 additional health queries within the
 retention measurement. See [the health tests](../storage-health/README.md).
 
-It also executes `vinix-volume monitor` with two samples on the physical disk,
+It also executes `tulpar-volume monitor` with two samples on the physical disk,
 checks unavailable health on a logical volume and rejects a regular file.
 The first boot must emit the monitor qualification marker. Host fault, reset,
 warning/recovery and 200-sample coverage is in
@@ -604,7 +604,7 @@ host allocation/I/O boundaries:
 
 ```sh
 V=/path/to/v tests/storage-volumes/host
-VINIX_HOST_SANITIZE=1 V=/path/to/v tests/storage-volumes/host
+TULPAR_HOST_SANITIZE=1 V=/path/to/v tests/storage-volumes/host
 V=/path/to/v python3 tests/block-storage/run.py
 V=/path/to/v tests/mounted-disk-policy/host
 ```
@@ -613,24 +613,24 @@ Build ordinary kernels in isolated worktrees and then run both disposable guest
 fixtures. No qualification ioctl or fault-enabled kernel is required:
 
 ```sh
-VINIX_KERNEL_DIR=/path/to/arm-worktree/kernel V=/path/to/v \
+TULPAR_KERNEL_DIR=/path/to/arm-worktree/kernel V=/path/to/v \
   tests/storage-volumes/run --arch aarch64
-VINIX_AMD64_KERNEL=/path/to/x86-worktree/kernel/bin/vinix V=/path/to/v \
+TULPAR_AMD64_KERNEL=/path/to/x86-worktree/kernel/bin/tulpar V=/path/to/v \
   tests/storage-volumes/run --arch amd64
 ```
 
-The ARM runner uses the existing musl SDK; set `VINIX_AARCH64_SYSROOT` for the
+The ARM runner uses the existing musl SDK; set `TULPAR_AARCH64_SYSROOT` for the
 static compiler. Both architectures snapshot the requested kernel and directly
 own QEMU with private ISO, firmware variables and serial log.
 AMD64 needs `x86_64-linux-musl-gcc`, QEMU and Limine/OVMF. `--state-dir` requires
 a fresh directory and preserves the generated initramfs and 16 MiB disk.
-`VINIX_QEMU_TIMEOUT` defaults to 300 seconds. The runner never selects a host
+`TULPAR_QEMU_TIMEOUT` defaults to 300 seconds. The runner never selects a host
 physical device; it creates and attaches only its disposable disk.
 `--kernel-dir` selects either architecture's kernel directory; `--build-only`
 produces the fixture, utility, archive and disk without booting. The native
 supervisor kills QEMU with SIGKILL before checking sentinels, preserving the
 power-cut contract. The host command retains artifacts in a fresh directory
-selected by `VINIX_VOLUME_HOST_DIR`. Its original volume assertions remain
+selected by `TULPAR_VOLUME_HOST_DIR`. Its original volume assertions remain
 unchanged, and the production health dispatcher now receives an independent
 host device and access/output-fault tests.
 

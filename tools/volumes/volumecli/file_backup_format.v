@@ -46,7 +46,7 @@ fn file_backup_hash(bytes &u8, size uint, output &[32]u8) bool {
 @[direct_array_access]
 fn encode_file_version(version &FileVersion, output &u8) bool {
 	if !file_version_valid(version) { return false }
-	unsafe { C.memset(output, 0, file_backup_header); C.memcpy(output, c'VINIXBK1', 8) }
+	unsafe { C.memset(output, 0, file_backup_header); C.memcpy(output, c'TULPARBK1', 8) }
 	put_le(output, 8, 4, 1); put_le(output, 12, 4, u64(version.delta)); put_le(output, 16, 4, file_backup_chunk)
 	put_le(output, 24, 8, version.size); put_le(output, 32, 4, version.mode); put_le(output, 36, 4, version.uid); put_le(output, 40, 4, version.gid)
 	put_le(output, 48, 8, u64(version.seconds)); put_le(output, 56, 8, u64(version.nanoseconds)); put_le(output, 128, 8, version.records)
@@ -57,7 +57,7 @@ fn encode_file_version(version &FileVersion, output &u8) bool {
 
 @[direct_array_access]
 fn decode_file_version(bytes &u8, mut output FileVersion) bool {
-	if C.memcmp(bytes, c'VINIXBK1', 8) != 0 || get_le(bytes, 8, 4) != 1 || get_le(bytes, 12, 4) > 1 || get_le(bytes, 16, 4) != file_backup_chunk { return false }
+	if C.memcmp(bytes, c'TULPARBK1', 8) != 0 || get_le(bytes, 8, 4) != 1 || get_le(bytes, 12, 4) > 1 || get_le(bytes, 16, 4) != file_backup_chunk { return false }
 	for at in 20 .. 24 { if unsafe { bytes[at] } != 0 { return false } }
 	for at in 44 .. 48 { if unsafe { bytes[at] } != 0 { return false } }
 	for at in 168 .. 224 { if unsafe { bytes[at] } != 0 { return false } }
@@ -73,6 +73,6 @@ fn decode_file_version(bytes &u8, mut output FileVersion) bool {
 fn file_backup_report(version &FileVersion, restoring bool) i32 {
 	mut digest := [65]char{}
 	if !scrub_digest_text(&version.content, &digest[0]) { return 1 }
-	return finish_bundle_report(C.printf(c'format=VINIXBK1 operation=%s kind=%s bytes=%lu chunks=%lu stored_chunks=%lu mode=%03o uid=%u gid=%u mtime_seconds=%ld mtime_nanoseconds=%ld content_sha256=%s\n',
+	return finish_bundle_report(C.printf(c'format=TULPARBK1 operation=%s kind=%s bytes=%lu chunks=%lu stored_chunks=%lu mode=%03o uid=%u gid=%u mtime_seconds=%ld mtime_nanoseconds=%ld content_sha256=%s\n',
 		if restoring { &char(c'restored-file') } else { &char(c'backed-up-file') }, if version.delta { &char(c'delta') } else { &char(c'full') }, version.size, file_backup_chunks(version.size), version.records, version.mode, version.uid, version.gid, version.seconds, version.nanoseconds, &digest[0]) >= 0)
 }

@@ -109,19 +109,19 @@ fn scenario_seat(mut t Test) {
 	t.check(!stray.contains(' ok'), 'a process without a login and without root opened a device of the seat: ${stray}')
 
 	// A login session that is not at the machine.
-	away := run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'seat-try'],
+	away := run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'seat-try'],
 		'', none, none).output
 	t.check(!away.contains(' ok') && away.contains('try /dev/fb0 errno 13'), 'a session that does not hold the seat opened its devices: ${away.trim_space().replace('\n', ', ')}')
-	ids := run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'ids'],
+	ids := run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'ids'],
 		'', none, none).output
 	first := ids.all_after(' login=').trim_space()
 	t.check(first.starts_with('${sam.uid}/') && first != '${sam.uid}/0', 'a session\'s login is ${first}')
-	again := run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'ids'],
+	again := run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'ids'],
 		'', none, none).output.all_after(' login=').trim_space()
 	t.check(again.starts_with('${sam.uid}/') && again != first, 'two logins have the same session: ${first} and ${again}')
 	// It cannot make itself another login, or give itself the seat.
 	for path in ['/proc/self/loginuid', '/proc/sys/kernel/seat_session'] {
-		got := run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'write', path],
+		got := run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'write', path],
 			'', none, none).output.trim_space()
 		t.check(got == 'errno 13' || got == 'errno 1', 'sam writing ${path}: ${got}')
 	}
@@ -154,7 +154,7 @@ fn scenario_seat(mut t Test) {
 	// Sam at the machine, holding the display open.
 	holder := C.fork()
 	if holder == 0 {
-		result := run(['/usr/sbin/vinix-session', 'run', '--seat', 'sam', '/sbin/init', 'probe',
+		result := run(['/usr/sbin/tulpar-session', 'run', '--seat', 'sam', '/sbin/init', 'probe',
 			'seat-hold'], '', none, none)
 		os.write_file('/tmp/seat-sam.out', result.output) or {}
 		C._exit(0)
@@ -162,11 +162,11 @@ fn scenario_seat(mut t Test) {
 	wait_for_file('/tmp/seat-ready-1')
 	sam_session := seat_now()
 	t.check(sam_session != '0', 'sam\'s session at the machine does not hold the seat')
-	t.check(read_text('/run/vinix/session/active').trim_space() == sam.uid.str(), 'the person at the machine is "${read_text('/run/vinix/session/active').trim_space()}"')
+	t.check(read_text('/run/tulpar/session/active').trim_space() == sam.uid.str(), 'the person at the machine is "${read_text('/run/tulpar/session/active').trim_space()}"')
 
 	// Alex sits down. Alex's session has the devices; when it ends, nobody
 	// does.
-	alex_at := run(['/usr/sbin/vinix-session', 'run', '--seat', 'alex', '/sbin/init', 'probe',
+	alex_at := run(['/usr/sbin/tulpar-session', 'run', '--seat', 'alex', '/sbin/init', 'probe',
 		'seat-try'], '', none, none).output
 	// The console's node is root's by its mode, seat or no seat: a session
 	// reaches the keyboard through the descriptors it was started with.

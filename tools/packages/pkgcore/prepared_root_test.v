@@ -12,7 +12,7 @@ fn C.setrlimit(int, voidptr) int
 struct PreparedRootLimit { current u64 maximum u64 }
 
 fn prepared_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-prepared-root-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-prepared-root-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }

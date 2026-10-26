@@ -102,11 +102,11 @@ fn test_expected_bytes_are_text_or_zeros_on_a_disk_the_scenario_has() {
 		disk: 'image.raw'
 	}, DiskBytes{
 		disk:  'image.raw'
-		text:  'VINIXHIB'
+		text:  'TULPARHIB'
 		zeros: 8
 	}, DiskBytes{
 		disk: 'other.raw'
-		text: 'VINIXHIB'
+		text: 'TULPARHIB'
 	}] {
 		scenario := Scenario{
 			...rebooted()
@@ -121,7 +121,7 @@ fn test_expected_bytes_are_text_or_zeros_on_a_disk_the_scenario_has() {
 			...rebooted()
 			disk_bytes: [DiskBytes{
 				disk: 'image.raw'
-				text: 'VINIXHIB'
+				text: 'TULPARHIB'
 			}, DiskBytes{
 				disk:   'image.raw'
 				offset: 24
@@ -165,7 +165,7 @@ fn test_damage_overwrites_the_bytes_it_names_and_no_others() {
 	disk := Disk{
 		name:     'image.raw'
 		size_mib: 1
-		header:   'VINIXHIB and the rest of a header'
+		header:   'TULPARHIB and the rest of a header'
 	}
 	create_disk(disk, state)!
 	apply_damage(DiskDamage{
@@ -176,7 +176,7 @@ fn test_damage_overwrites_the_bytes_it_names_and_no_others() {
 	}, state)!
 	found := os.read_bytes(os.join_path(state, 'image.raw'))!
 	assert found.len == 1 << 20
-	assert found[..8].bytestr() == 'VINIXHIB'
+	assert found[..8].bytestr() == 'TULPARHIB'
 	assert found[8..12] == [u8(0xa5), 0xa5, 0xa5, 0xa5]
 	assert found[12..16].bytestr() == ' the'
 	apply_damage(DiskDamage{
@@ -238,11 +238,11 @@ fn test_bytes_expected_on_a_disk_at_the_end() {
 	create_disk(Disk{
 		name:     'image.raw'
 		size_mib: 1
-		header:   'VINIXHIB'
+		header:   'TULPARHIB'
 	}, state)!
 	check_disk_bytes(DiskBytes{
 		disk: 'image.raw'
-		text: 'VINIXHIB'
+		text: 'TULPARHIB'
 	}, state)!
 	check_disk_bytes(DiskBytes{
 		disk:   'image.raw'
@@ -251,7 +251,7 @@ fn test_bytes_expected_on_a_disk_at_the_end() {
 	}, state)!
 	check_disk_bytes(DiskBytes{
 		disk: 'image.raw'
-		text: 'VINIXHIX'
+		text: 'TULPARHIX'
 	}, state) or {
 		assert err.msg().contains('byte 7')
 		check_disk_bytes(DiskBytes{
@@ -270,14 +270,14 @@ fn test_what_the_suspend_to_disk_scenarios_ask_of_the_controller() {
 	// again; one that must find no way to has both disks compared with
 	// what they were made as.
 	hibernate := find_scenario(scenarios, 'hibernate') or { panic('no hibernate') }
-	assert hibernate.cmdline.contains('vinix.hibernate=sd1')
+	assert hibernate.cmdline.contains('tulpar.hibernate=sd1')
 	assert hibernate.boots() == 3
 	unnamed := find_scenario(scenarios, 'hibernate-unnamed') or { panic('no hibernate-unnamed') }
-	assert !unnamed.cmdline.contains('vinix.hibernate')
+	assert !unnamed.cmdline.contains('tulpar.hibernate')
 	assert unnamed.boots() == 1
 	assert unnamed.disks.len == 2 && unnamed.disks.all(it.untouched)
 	foreign := find_scenario(scenarios, 'hibernate-foreign') or { panic('no hibernate-foreign') }
-	assert foreign.cmdline.contains('vinix.hibernate=sd1')
+	assert foreign.cmdline.contains('tulpar.hibernate=sd1')
 	assert foreign.disks.len == 2 && foreign.disks.all(it.untouched)
 	// An image is damaged in the device it is on, with the machine off.
 	for name in ['hibernate-damaged-header', 'hibernate-damaged-pages'] {
@@ -292,25 +292,25 @@ fn test_what_the_suspend_to_disk_scenarios_ask_of_the_controller() {
 fn test_a_boot_can_have_a_command_line_of_its_own() {
 	scenario := Scenario{
 		...rebooted()
-		cmdline: 'vinix.hibernate=sd1'
+		cmdline: 'tulpar.hibernate=sd1'
 		reboots: [Reboot{
 			own_cmdline: true
 		}, Reboot{}, Reboot{
 			own_cmdline: true
-			cmdline:     'vinix.iommu=1'
+			cmdline:     'tulpar.iommu=1'
 		}]
 	}
-	assert scenario.boot_cmdline(0) == 'vinix.hibernate=sd1'
+	assert scenario.boot_cmdline(0) == 'tulpar.hibernate=sd1'
 	// None at all, which is not the same as the scenario's.
 	assert scenario.boot_cmdline(1) == ''
 	// For that boot alone.
-	assert scenario.boot_cmdline(2) == 'vinix.hibernate=sd1'
-	assert scenario.boot_cmdline(3) == 'vinix.iommu=1'
+	assert scenario.boot_cmdline(2) == 'tulpar.hibernate=sd1'
+	assert scenario.boot_cmdline(3) == 'tulpar.iommu=1'
 	waiting := find_scenario(scenarios, 'hibernate-waiting') or { panic('no hibernate-waiting') }
 	assert waiting.boots() == 3
-	assert waiting.boot_cmdline(0).contains('vinix.hibernate=sd1')
+	assert waiting.boot_cmdline(0).contains('tulpar.hibernate=sd1')
 	assert waiting.boot_cmdline(1) == ''
-	assert waiting.boot_cmdline(2).contains('vinix.hibernate=sd1')
+	assert waiting.boot_cmdline(2).contains('tulpar.hibernate=sd1')
 	// A system is installed onto a blank disk of four gigabytes or more.
 	root := find_scenario(scenarios, 'hibernate-root') or { panic('no hibernate-root') }
 	assert root.disks.any(it.name == 'system.raw' && it.size_mib >= 4096 && it.header == '' && it.bulky)

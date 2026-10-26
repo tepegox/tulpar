@@ -24,7 +24,7 @@ mut:
 
 pub fn discard_resource(mut device Resource, offset u64, bytes u64) ? {
 	if mut device is DiscardResource {
-		mut call := unsafe { &DiscardCall(C.vinix_stack_alloc(sizeof(DiscardCall))) }
+		mut call := unsafe { &DiscardCall(C.tulpar_stack_alloc(sizeof(DiscardCall))) }
 		unsafe { call.device = DiscardResource(device) }
 		call.device.discard(offset, bytes)?
 		return

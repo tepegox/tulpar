@@ -16,7 +16,7 @@ fn C.vkr_rcu_poll(u64) bool
 fn C.vkr_rcu_cond(u64)
 fn C.vkr_rcu_gp_worker(voidptr) voidptr
 fn C.vkr_rcu_callback_worker(voidptr) voidptr
-fn C.vinix_linuxkpi_test_thread_reap_ready(voidptr) bool
+fn C.tulpar_linuxkpi_test_thread_reap_ready(voidptr) bool
 fn C.vkr_rcu_host_worker_enter()
 fn C.vkr_rcu_host_worker_leave()
 fn C.vkr_rcu_host_create_error() i32
@@ -80,6 +80,6 @@ pub fn rcu_task_retired(task voidptr) bool {
 	unsafe {
 		retained := &C.task_struct(task)
 		return C.__atomic_load_n(&retained.__state, 2) == C.TASK_DEAD
-			&& C.vinix_linuxkpi_test_thread_reap_ready(retained.vinix_thread)
+			&& C.tulpar_linuxkpi_test_thread_reap_ready(retained.tulpar_thread)
 	}
 }

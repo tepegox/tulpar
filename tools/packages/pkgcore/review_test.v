@@ -9,15 +9,15 @@ import tools.packages.pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn review_fixture(label string) !(string, Config) {
 	return review_fixture_arch(label, 'aarch64')
 }
 
 fn review_fixture_arch(label string, architecture string) !(string, Config) {
-	work := os.temp_dir() + '/vinix-review-' + label + '-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-review-' + label + '-' + os.getpid().str()
 	os.mkdir_all(work + '/source/bin')!
 	os.write_file(work + '/source/bin/runner', 'signed fixture runner\n')!
 	os.chmod(work + '/source/bin/runner', 0o755)!
@@ -98,7 +98,7 @@ fn test_review_permission_rows_retire_independently_owned_sets() {
 		before := Installed{package: Package{id: 'editor', name: 'Editor', version: '1.0.0', permissions: ['files']}, repository: 'trusted', public_key: 'a'.repeat(64)}
 		after := Installed{...before, package: Package{...before.package, version: '2.0.0', permissions: ['display', 'network']}}
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				row := review_row_previous(after, before, true, 'update')
 				assert row.installed_permissions.len == 1 && row.installed_permissions[0] == 'files'
@@ -109,7 +109,7 @@ fn test_review_permission_rows_retire_independently_owned_sets() {
 				mut reply := pkgprotocol.Review{rows: rows}; reply.close(); reply.close()
 			}
 		}
-		kept := C.vinix_heap_end(); assert kept == 0, 'review rows retained ' + kept.str()
+		kept := C.tulpar_heap_end(); assert kept == 0, 'review rows retained ' + kept.str()
 		println('REVIEW PERMISSIONS 1000 independently owned before/target row creation and retirement cycles retain zero tracked bytes PASS')
 	}
 }

@@ -11,7 +11,7 @@ fn C.waitpid(int, &int, int) int
 fn C._exit(int)
 
 fn new_metadata_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-new-metadata-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-new-metadata-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }

@@ -25,13 +25,13 @@ fn main() {
 	mut objects := []string{}
 	for i, source in sources {
 		object := work + '/part${i}.o'
-		checked(['cc', '-O2', '-Wno-macro-redefined', '-DVINIX_V_RUNTIME', '-I' + work,
+		checked(['cc', '-O2', '-Wno-macro-redefined', '-DTULPAR_V_RUNTIME', '-I' + work,
 			'-I' + lwip + '/include', '-c', source, '-o', object])
 		objects << object
 	}
 	checked(['ar', 'rcs', work + '/lwip.a', ...objects])
 	checked([@VEXE, '-enable-globals', '-nocache', '-cc', 'cc', '-cflags',
-		'-O2 -DVINIX_V_RUNTIME -Wno-macro-redefined -I' + work + ' -I' + lwip + '/include', '-ldflags',
+		'-O2 -DTULPAR_V_RUNTIME -Wno-macro-redefined -I' + work + ' -I' + lwip + '/include', '-ldflags',
 		work + '/lwip.a', '-o', work + '/fixture', repo + '/tests/network-arp/fixture.v'])
 	checked([work + '/fixture'])
 	println('Network ARP regression passed')

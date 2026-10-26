@@ -18,7 +18,7 @@
 //       where nothing answers: the kernel must give it up, carry on, and
 //       answer a read in /sys at once.
 //   acpi-ec-off
-//       The same table with vinix.ec=off: the driver must stay away.
+//       The same table with tulpar.ec=off: the driver must stay away.
 @[has_globals]
 module main
 
@@ -186,7 +186,7 @@ fn scenario_acpi_ec_selftest(mut t Test) {
 	boot_transactions := ec_count('transactions')
 	t.check(boot_transactions >= 20, 'only ${boot_transactions} exchanges by the time init runs')
 	t.check(ec_count('timeouts') == 0, 'timeouts while booting: ${ec_count('timeouts')}')
-	// With vinix.ec=clear the controller is asked once at start whatever its
+	// With tulpar.ec=clear the controller is asked once at start whatever its
 	// event bit says, and names nothing; without, it is not asked at all.
 	t.check(ec_sim_count('empty_queries') == if early { 0 } else { 1 }, '${ec_sim_count('empty_queries')} queries named nothing while booting')
 	t.info('boot: init ${booted} ms after the clock started, ${boot_transactions} exchanges, source ${read_word(ec +
@@ -656,8 +656,8 @@ fn scenario_acpi_ec_absent(mut t Test) {
 
 fn scenario_acpi_ec_off(mut t Test) {
 	booted := ec_milliseconds()
-	t.check(!os.exists(ec_device), 'the controller is a device although vinix.ec=off')
-	t.check(!os.exists('/sys/bus/acpi/drivers/ec'), 'there is an ec driver although vinix.ec=off')
+	t.check(!os.exists(ec_device), 'the controller is a device although tulpar.ec=off')
+	t.check(!os.exists('/sys/bus/acpi/drivers/ec'), 'there is an ec driver although tulpar.ec=off')
 	// No _REG ran, so the battery never showed itself.
 	t.check(!os.exists(ec_battery), 'BAT0 is in /sys/class/power_supply')
 	ec_check_word(mut t, ec_lid + 'state', 'unknown')

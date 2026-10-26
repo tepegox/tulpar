@@ -33,7 +33,7 @@ After building the kernel for the selected architecture, run:
 ```sh
 tests/kernel-gaps/run-native \
   --source tests/process-inspection/test.c --kernel-dir kernel \
-  --arch aarch64 --expect 'VINIX PROCESS INSPECTION: PASS'
+  --arch aarch64 --expect 'TULPAR PROCESS INSPECTION: PASS'
 ```
 
 Repeat with `--arch x86_64` after an x86-64 build. The runner compiles the test

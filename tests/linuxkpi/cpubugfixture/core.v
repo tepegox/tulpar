@@ -63,7 +63,7 @@ fn C.cpubug_configure(i64, u32)
 fn C.cpubug_initialize()
 fn C.cpubug_state(int) u32
 fn C.cpubug_seed_ready(u32)
-fn C.vinix_linuxkpi_boot_cpu_has_bug(u32) bool
+fn C.tulpar_linuxkpi_boot_cpu_has_bug(u32) bool
 fn C.boot_cpu_has_bug(...) bool
 
 @[c_extern]
@@ -402,7 +402,7 @@ fn failure(kind int, bit u32, text &char) {
 	if C.cbh_setjmp(unsafe { &target }) == 0 {
 		match kind {
 			0 { C.cpubug_initialize() }
-			1 { C.vinix_linuxkpi_boot_cpu_has_bug(bit) }
+			1 { C.tulpar_linuxkpi_boot_cpu_has_bug(bit) }
 			2 { C.boot_cpu_has_bug(once(bit)) }
 			else { require(false, 14) }
 		}
@@ -437,7 +437,7 @@ fn membership_matrix() {
 				for irq in [false, true]! {
 					sampler_irq = irq
 					for _ in 0 .. 1000 {
-						require(C.vinix_linuxkpi_boot_cpu_has_bug(722) == (boot == 2), 18)
+						require(C.tulpar_linuxkpi_boot_cpu_has_bug(722) == (boot == 2), 18)
 					}
 				}
 				require(cpuid_count == before_cpuid && msr_count == before_msr && store_count == 1, 19)
@@ -496,7 +496,7 @@ fn membership_matrix() {
 
 fn query_actor(_argument voidptr) voidptr {
 	for round in 0 .. 20000 {
-		require(C.boot_cpu_has_bug(once_concurrent()) && C.vinix_linuxkpi_boot_cpu_has_bug(722), 21)
+		require(C.boot_cpu_has_bug(once_concurrent()) && C.tulpar_linuxkpi_boot_cpu_has_bug(722), 21)
 		if round % 1024 == 0 { C.sched_yield() }
 	}
 	return unsafe { nil }

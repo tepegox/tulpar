@@ -11,7 +11,7 @@ import proc
 // the retained reference makes reap_thread defer rather than free the Thread.
 // This observer consumes no reference and must never be called after last put.
 // It does not claim that a later last put waits for another CPU's final free.
-@[export: 'vinix_linuxkpi_test_thread_reap_ready']
+@[export: 'tulpar_linuxkpi_test_thread_reap_ready']
 fn linuxkpi_test_thread_reap_ready(owner voidptr) bool {
 	$if linuxkpi ? {
 		if owner == unsafe { nil } {
@@ -34,7 +34,7 @@ fn linuxkpi_test_thread_reap_ready(owner voidptr) bool {
 // time. A CPU may already own an unlinked ready list: count it through its
 // actual free, rather than interpreting an empty public list as completion.
 // This observes the deferred path only, not all kernel allocation activity.
-@[export: 'vinix_linuxkpi_test_reap_quiescent']
+@[export: 'tulpar_linuxkpi_test_reap_quiescent']
 fn linuxkpi_test_reap_quiescent() bool {
 	$if linuxkpi ? {
 		reap_deferred_lock.acquire()

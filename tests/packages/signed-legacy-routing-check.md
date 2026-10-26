@@ -1,12 +1,12 @@
 # Signed release routing for legacy Neovim acquisition
 
 An explicit `org.neovim.editor` root in the target architecture's format-2
-`/usr/share/vinix-packages/applications.json` replaces legacy `neovim`
+`/usr/share/tulpar-packages/applications.json` replaces legacy `neovim`
 acquisition with Software's existing read-only release review. The service
 still validates the exact signed closure and repository policy; deployment
 still requires the existing confirmation and administrator approval.
 
-This guard covers `vinix-desktop --install-setup-app neovim` and pending legacy
+This guard covers `tulpar-desktop --install-setup-app neovim` and pending legacy
 setup requests claimed by Terminal. Neovim always passes through the explicit
 installer again at execution, so publishing or replacing a declaration after
 claiming a request cannot restore its old `pkg install` path. The broker action
@@ -33,7 +33,7 @@ V=/absolute/path/to/v /absolute/path/to/v -backend c -path '@vlib|@vmodules|.|de
 
 The runner binds child builds to that compiler's adjacent vlib, disables
 fallback and automatic compiler reports, and uses the C backend for the real
-session broker. `VINIX_SETUP_KEEP=1` retains the stage, broker C/executable and
+session broker. `TULPAR_SETUP_KEEP=1` retains the stage, broker C/executable and
 migration-test C/executable. The default run covers seven suites and 52 test
 functions. The four migration tests use an actual recording `pkg` executable
 and the actual session broker, including same-account kernel PID provenance

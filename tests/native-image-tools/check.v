@@ -17,8 +17,8 @@ fn native(argv []string, environment map[string]string) !sourcecommand.Output {
 fn mocked() !bool {
 	name := os.file_name(os.args[0])
 	if name !in ['mformat', 'mmd', 'mcopy'] { return false }
-	mode := os.getenv('VINIX_IMAGE_CASE')
-	work := os.getenv('VINIX_IMAGE_WORK')
+	mode := os.getenv('TULPAR_IMAGE_CASE')
+	work := os.getenv('TULPAR_IMAGE_WORK')
 	if name == 'mformat' && mode == 'failure' { exit(23) }
 	if name == 'mcopy' && mode == 'race' && os.args.last() == '::/boot/initramfs.tar' {
 		os.write_file(work + '/image', 'concurrent owner')!
@@ -88,7 +88,7 @@ fn image_cases(work string) ! {
 	os.mkdir(work + '/tmp')!
 	os.setenv('TMPDIR', work + '/tmp', true)
 	root := work + '/project'
-	kernel := root + '/kernel/bin/vinix'
+	kernel := root + '/kernel/bin/tulpar'
 	limine := root + '/boot-image/limine-bin/BOOTAA64.EFI'
 	initramfs := work + '/initramfs'
 	os.write_file(kernel, '\x7fELFnative kernel')!
@@ -104,7 +104,7 @@ fn image_cases(work string) ! {
 	boot := native(['mtype', '-i', image, '::/boot/limine.conf'], os.environ())!
 	assert boot.stdout == imagehost.limine_config
 	for path, member in {
-		kernel:    '::/boot/vinix'
+		kernel:    '::/boot/tulpar'
 		limine:    '::/EFI/BOOT/BOOTAA64.EFI'
 		initramfs: '::/boot/initramfs.tar'
 	} {
@@ -128,8 +128,8 @@ fn image_cases(work string) ! {
 		os.mkdir(case)!
 		mut environment := os.environ()
 		environment['PATH'] = if mode == 'missing-tools' { case } else { work + '/sdk' }
-		environment['VINIX_IMAGE_CASE'] = mode
-		environment['VINIX_IMAGE_WORK'] = case
+		environment['TULPAR_IMAGE_CASE'] = mode
+		environment['TULPAR_IMAGE_WORK'] = case
 		if mode == 'broken-output-link' { os.symlink(case + '/missing', case + '/image')! }
 		guard := cachecli.own_commands()
 		if mode == 'interrupt' {

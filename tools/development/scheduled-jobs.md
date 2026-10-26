@@ -1,26 +1,26 @@
 # Per-account scheduled jobs
 
-`vinix-jobs` runs interval jobs as the account that owns the schedule. It pins
+`tulpar-jobs` runs interval jobs as the account that owns the schedule. It pins
 each executable, passes an argument array and a selected environment, bounds
 execution time, and records completion times and exit status. It does not change
 UIDs, capabilities, mount policy or resource-group membership. Existing kernel
 permissions and inherited resource limits apply to every child.
 
 ```
-v -enable-globals -gc none -cc gcc -o vinix-jobs tools/development/jobs.v
+v -enable-globals -gc none -cc gcc -o tulpar-jobs tools/development/jobs.v
 ./vinix-jobs init jobs.json /home/developer/job-state
 ./vinix-jobs watch /home/developer/job-state
 ```
 
 Use `run-due STATE` for a single scheduling tick or `status STATE` to inspect its
 receipt. `watch` polls once per second and replaces its own process after each
-tick to reclaim the tick's allocations under Vinix's `gc none` runtime. Jobs run
+tick to reclaim the tick's allocations under Tulpar's `gc none` runtime. Jobs run
 serially. The next run is scheduled one interval after the last completion;
 missed intervals are coalesced. There is no backlog or overlapping replay.
 SIGINT/SIGTERM retire an active owned child group before the runner exits.
 Retirement allows up to eight seconds for cooperating development commands
 to stop their own child groups, then applies the owned group's SIGKILL fallback.
-`vinix-build` relays interruption through its active qualifier or compiler;
+`tulpar-build` relays interruption through its active qualifier or compiler;
 the qualifier has a one-second child shutdown window and the build runner
 has five seconds. Each leader remains unreaped until its group is retired.
 
@@ -53,7 +53,7 @@ A job left in flight after abrupt runner loss retains its owner acknowledgement
 requirement across service restarts.
 
 For repeatable CI builds, set `expand_attempt: true` on the job and put
-`{attempt}` in its output argument. For example, pin `vinix-build` as the
+`{attempt}` in its output argument. For example, pin `tulpar-build` as the
 executable and use arguments
 `["build", "/home/developer/project-build.json", "/home/developer/ci-{attempt}"]`.
 Each dispatch then gets a new numbered output directory. Expansion applies
@@ -86,7 +86,7 @@ Counter exhaustion refuses execution instead of wrapping back to an old path.
 ```
 
 Set `uid` to the actual owning account and obtain the executable hash with
-`vinix-build hash`. Configuration is executable code chosen by that account.
+`tulpar-build hash`. Configuration is executable code chosen by that account.
 The private state directory must be new, owned by the account and mode 0700.
 Configuration and state are written atomically with file and directory fsync.
 A lock rejects concurrent runners. The copied plan's hash prevents silent plan
@@ -117,7 +117,7 @@ production SSH/server/CI qualification remain separate acceptance work.
 
 `v -enable-globals -cc cc test tools/development/jobcore` checks real job
 execution, credential handling, interval coalescing, interrupted-run refusal,
-executable pins and deadline retirement. These are host tests; Vinix guest
+executable pins and deadline retirement. These are host tests; Tulpar guest
 qualification is recorded separately by the
 [native workflow controller](../../tests/development/README.md). Its x86_64
 and AArch64 fixtures run the public scheduler as UID/GID 1000, check private
@@ -168,7 +168,7 @@ FIFO inodes, failed-attempt accounting, absence of job output and successful
 execution after rotating back to a private regular credential. All three host
 scheduler test files passed with V `be2eb40`. Static Linux ELF64 builds also
 passed for ARM64 and x86-64, with checked machine IDs and source/compiler/binary
-pins in `/tmp/vinix-jobs-fifo-8042`. Those host results are complemented by the
+pins in `/tmp/tulpar-jobs-fifo-8042`. Those host results are complemented by the
 native qualification below.
 
 The maintained native fixture now runs the FIFO cases and credential rotation

@@ -82,7 +82,7 @@ V=/path/to/reviewed/v /tmp/import-workspace-check --resume /build/new-workspace-
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/import-workspace-runtime tests/packages/import-workspace-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/import-workspace-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-workspace-arm
 ```
@@ -140,7 +140,7 @@ The corrected run uses an isolated [V media adapter](results/2026-10-18/import-w
 that admits only the exact pinned kernel digest and boots the unchanged plain
 USTAR archive with the previously used Limine files. The
 [launch wrapper](results/2026-10-18/import-workspace-guest-launch.v) places that
-adapter in an isolated `VINIX_ROOT`; the production image builder stays unchanged.
+adapter in an isolated `TULPAR_ROOT`; the production image builder stays unchanged.
 The initial AArch64 run passed the source, depth and pack regressions, then
 refused because the native-profile fixture's example manifests were absent.
 The controller now stages those six files using the canonical source path.

@@ -59,7 +59,7 @@ fn shrink_exec_scratch(bytes u64) {
 // A bounded script header, including EOF without a newline. Every returned
 // string owns its storage; no builder can grow past the kernel's exec budget.
 pub fn parse_shebang(mut res resource.Resource) ?(string, string) {
-	buf := unsafe { &u8(C.vinix_stack_alloc(256)) }
+	buf := unsafe { &u8(C.tulpar_stack_alloc(256)) }
 	count := res.read(unsafe { nil }, buf, 0, 256)?
 	if count <= 2 {
 		errno.set(errno.enoexec)

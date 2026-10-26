@@ -34,7 +34,7 @@ fn next_step(plan string, counter string) string {
 }
 
 fn whoami() string {
-	return 'login=${read_text('/proc/self/loginuid').trim_space()}/${read_text('/proc/self/sessionid').trim_space()} seat=${seat_now()} fb=${try_device('/dev/fb0')} active=${read_text('/run/vinix/session/active').trim_space()}'
+	return 'login=${read_text('/proc/self/loginuid').trim_space()}/${read_text('/proc/self/sessionid').trim_space()} seat=${seat_now()} fb=${try_device('/dev/fb0')} active=${read_text('/run/tulpar/session/active').trim_space()}'
 }
 
 fn ask_manager(code u16, fields ...string) string {
@@ -169,7 +169,7 @@ fn scenario_sessions(mut t Test) {
 
 	manager := C.fork()
 	if manager == 0 {
-		argv := ['/usr/sbin/vinix-session', 'manager', '--greeter', '/sbin/init', 'probe', 'greeter',
+		argv := ['/usr/sbin/tulpar-session', 'manager', '--greeter', '/sbin/init', 'probe', 'greeter',
 			'--desktop', '/sbin/init', 'probe', 'desktop']
 		mut c_argv := []&char{}
 		for argument in argv {
@@ -215,7 +215,7 @@ fn scenario_sessions(mut t Test) {
 	t.check(process_state(sam_pid) == 'T', 'sam\'s desktop, in the background, is in state ${process_state(sam_pid)}')
 	t.check(process_state(stray_pid) == 'T', 'what sam\'s session left running is in state ${process_state(stray_pid)}')
 	t.check(seat_now() == alex_login.all_after('/'), 'the seat is ${seat_now()} while alex is at the machine')
-	t.check(read_text('/run/vinix/session/active').trim_space() == alex.uid.str(), 'the person at the machine is "${read_text('/run/vinix/session/active').trim_space()}"')
+	t.check(read_text('/run/tulpar/session/active').trim_space() == alex.uid.str(), 'the person at the machine is "${read_text('/run/tulpar/session/active').trim_space()}"')
 
 	// Alex logs out; Sam logs in again and is where Sam was.
 	os.write_file('/tmp/alex-go', '') or {}
@@ -247,7 +247,7 @@ fn scenario_sessions(mut t Test) {
 	}
 	t.check(process_state(stray_pid) in ended, 'what sam\'s session left running is still there: ${process_state(stray_pid)}')
 	t.check(process_state(sam_pid) in ended, 'sam\'s desktop is still there: ${process_state(sam_pid)}')
-	t.check(!os.exists('/run/vinix/session/active'), 'someone is still marked as at the machine')
+	t.check(!os.exists('/run/tulpar/session/active'), 'someone is still marked as at the machine')
 	greeters := read_text(session_log).split_into_lines().filter(it.starts_with('greeter: uid='))
 	t.check(greeters.len == 4, 'the login screen was shown ${greeters.len} times, not 4: ${read_text(session_log).replace('\n', ' | ')}')
 	if greeters.len > 0 {

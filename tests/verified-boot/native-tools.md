@@ -113,7 +113,7 @@ Retained original bytes, cold-build logs, full host-suite output, controlled
 observer receipts and final loader-build output are under
 `/Users/alex/.cache/vinix-python-zero-process-20261011`, which resolves to the
 private scratch volume. Actual guest logs, signed bundles and fixture
-manifests are under `/Volumes/VinixPythonDotaScratch/verified-runtime-arm`,
+manifests are under `/Volumes/TulparPythonDotaScratch/verified-runtime-arm`,
 `verified-runtime-x86-secure-3`, `verified-root-runtime-arm` and
 `verified-root-runtime-x86-secure`. Their raw serial/QEMU logs are actual
 guest evidence. Directories prefixed `verified-model-` or

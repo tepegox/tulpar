@@ -5,7 +5,7 @@ directory:
 
 ```sh
 build-support/run-v-tool.sh tests/linuxkpi/dma_fence_containers.v \
-  --keep-directory /tmp/vinix-fence-container-host
+  --keep-directory /tmp/tulpar-fence-container-host
 ```
 
 The V controller verifies the unchanged pinned Linux import, generates the actual

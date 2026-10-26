@@ -6,7 +6,7 @@ import hosttest
 import json2
 import os
 
-const greeting = 'Hello world\nHello from Alpine GCC on Vinix!\nHello from Alpine GCC on Vinix/amd64!\nUSERLAND DEMO V PASS\n'
+const greeting = 'Hello world\nHello from Alpine GCC on Tulpar!\nHello from Alpine GCC on Tulpar/amd64!\nUSERLAND DEMO V PASS\n'
 
 fn demo_command(args []string) !int {
 	parsed := hosttest.parse_arguments(args, [hosttest.Option{ name: '--arch', value: true, choices: ['aarch64', 'x86_64'] },
@@ -15,7 +15,7 @@ fn demo_command(args []string) !int {
 		'Usage: run --arch aarch64|x86_64 --kernel-dir DIR --state-dir FRESH-DIR [--build-only]',
 		'Check exact greetings from production V bodies under host sanitizers and in a native guest.') or { return error_with_code(err.msg(), 2) }
 	needed(parsed, ['--arch', '--kernel-dir', '--state-dir'])!
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-userland-demo-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-userland-demo-')!
 	module_path := work + '/fixture'
 	os.mkdir(module_path)!
 	hosttest.module_copy_file_preserving_stat(root() + '/tests/userland-demo/fixture/core.v', module_path + '/core.v')!
@@ -49,7 +49,7 @@ fn demo_command(args []string) !int {
 	private_kernel := snapshot_kernel(work, parsed.options['--kernel-dir'], arch)!
 	hosttest.write_json(work + '/inputs.json', { 'arch': json2.Any(arch), 'expected_stdout': json2.Any(greeting),
 		'sources': json2.Any(hosttest.string_map(hashes)), 'fixture_sha256': json2.Any(hosttest.sha(work + '/init')!),
-		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!), 'compile_command': json2.Any(hosttest.strings(command)),
+		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!), 'compile_command': json2.Any(hosttest.strings(command)),
 		'host_sanitizers': json2.Any(hosttest.strings(['address', 'undefined'])) })!
 	if '--build-only' in parsed.options { return 0 }
 	archive := guesthost.image(work + '/init', work + '/guest')!
@@ -66,7 +66,7 @@ fn uname_command(args []string) !int {
 		hosttest.Option{ name: '--state-dir', value: true }, hosttest.Option{ name: '--build-only' }], 0,
 		'Usage: run [--sysroot DIR] [--timeout SECONDS] [--kernel-dir DIR] [--state-dir FRESH-DIR] [--build-only]',
 		'Check uname output and option behavior without overwriting BusyBox.') or { return error_with_code(err.msg(), 2) }
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-uname-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-uname-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	sdk := resolve(parsed.options['--sysroot'] or { root() + '/build-aarch64-userland/staging' })!
 	rootfs := work + '/rootfs'
@@ -81,10 +81,10 @@ fn uname_command(args []string) !int {
 	}
 	hosttest.module_copy_file_preserving_stat(root() + '/tests/uname/guest-init.sh', rootfs + '/sbin/init')!
 	archive := native_archive(work)!
-	private_kernel := snapshot_kernel(work, parsed.options['--kernel-dir'] or { os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' } }, 'aarch64')!
+	private_kernel := snapshot_kernel(work, parsed.options['--kernel-dir'] or { os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' } }, 'aarch64')!
 	timeout := positive_option(parsed, '--timeout', 120)!
 	hosttest.write_json(work + '/inputs.json', { 'busybox_sha256': json2.Any(busybox),
-		'archive_sha256': json2.Any(hosttest.sha(archive)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!) })!
+		'archive_sha256': json2.Any(hosttest.sha(archive)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!) })!
 	if '--build-only' in parsed.options { return 0 }
 	configured := guesthost.launch(rootfs + '/sbin/init', archive, work, private_kernel, 'aarch64', true)!
 	argv := configure_process_launch(configured.command, 'aarch64', 512, 4, '')

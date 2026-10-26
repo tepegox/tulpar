@@ -304,7 +304,7 @@ __global (
 
 // What AT_HWCAP and AT_HWCAP2 tell a program about the CPU, as Linux tells it
 // on x86-64: CPUID leaf 1's EDX, and none of the HWCAP2 bits, which name
-// FSGSBASE and ring-3 MWAIT, neither of which Vinix turns on.
+// FSGSBASE and ring-3 MWAIT, neither of which Tulpar turns on.
 pub fn user_hwcaps() (u64, u64) {
 	ok, _, _, _, edx := cpuid(1, 0)
 	if !ok {

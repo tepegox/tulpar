@@ -1,4 +1,4 @@
-# HTTPS acquisition inside Vinix
+# HTTPS acquisition inside Tulpar
 
 The [V controller](https-runtime-check.v) boots both architectures with real
 target curl at the production `/usr/bin/curl` path and its complete shared-library

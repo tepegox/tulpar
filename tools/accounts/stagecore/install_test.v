@@ -4,7 +4,7 @@ module stagecore
 import os
 
 fn fixture() !string {
-	base := os.join_path(os.temp_dir(), 'vinix-account-stage-${os.getpid()}')
+	base := os.join_path(os.temp_dir(), 'tulpar-account-stage-${os.getpid()}')
 	os.rmdir_all(base) or {}
 	os.mkdir_all(base + '/image/usr/sbin')!
 	// The installer deliberately rejects group-writable image directories.
@@ -14,10 +14,10 @@ fn fixture() !string {
 	}
 	os.mkdir(base + '/outside')!
 	os.write_file(base + '/source', 'new account executable')!
-	os.write_file(base + '/image/usr/sbin/vinix-authd', 'old account executable')!
-	os.chmod(base + '/image/usr/sbin/vinix-authd', 0o755)!
+	os.write_file(base + '/image/usr/sbin/tulpar-authd', 'old account executable')!
+	os.chmod(base + '/image/usr/sbin/tulpar-authd', 0o755)!
 	os.write_file(base + '/outside/marker', 'outside preserved')!
-	os.setenv('VINIX_ACCOUNT_STAGE_FIXTURE', base, true)
+	os.setenv('TULPAR_ACCOUNT_STAGE_FIXTURE', base, true)
 	return base
 }
 
@@ -58,9 +58,9 @@ fn refuse(installer &Installer, source string, relative string) {
 
 fn replace(phase string) ! {
 	if phase != 'written' { return }
-	base := os.getenv('VINIX_ACCOUNT_STAGE_FIXTURE')
+	base := os.getenv('TULPAR_ACCOUNT_STAGE_FIXTURE')
 	defer { unsafe { base.free() } }
-	kind := os.getenv('VINIX_ACCOUNT_STAGE_REPLACE')
+	kind := os.getenv('TULPAR_ACCOUNT_STAGE_REPLACE')
 	defer { unsafe { kind.free() } }
 	match kind {
 		'root' {
@@ -71,7 +71,7 @@ fn replace(phase string) ! {
 			os.rename(base + '/image/usr/sbin', base + '/retained')!
 			os.symlink(base + '/outside', base + '/image/usr/sbin')!
 		}
-		'leaf' { os.rm(base + '/image/usr/sbin/vinix-authd')!; os.symlink(base + '/outside/marker', base + '/image/usr/sbin/vinix-authd')! }
+		'leaf' { os.rm(base + '/image/usr/sbin/tulpar-authd')!; os.symlink(base + '/outside/marker', base + '/image/usr/sbin/tulpar-authd')! }
 		'temporary' {
 			for name in os.ls(base + '/image/usr/sbin')! {
 				if !name.starts_with('.account-tool-') { continue }
@@ -107,8 +107,8 @@ fn test_account_staging_captures_parents_and_preserves_outside_aliases() {
 		match kind {
 			'usr' { os.rename(base + '/image/usr', base + '/retained')!; os.symlink(base + '/outside', base + '/image/usr')! }
 			'parent' { os.rename(base + '/image/usr/sbin', base + '/retained')!; os.symlink(base + '/outside', base + '/image/usr/sbin')! }
-			'leaf' { os.rm(base + '/image/usr/sbin/vinix-authd')!; os.symlink(base + '/outside/marker', base + '/image/usr/sbin/vinix-authd')! }
-			'hardlink' { os.rm(base + '/image/usr/sbin/vinix-authd')!; assert C.link((base + '/outside/marker').str, (base + '/image/usr/sbin/vinix-authd').str) == 0 }
+			'leaf' { os.rm(base + '/image/usr/sbin/tulpar-authd')!; os.symlink(base + '/outside/marker', base + '/image/usr/sbin/tulpar-authd')! }
+			'hardlink' { os.rm(base + '/image/usr/sbin/tulpar-authd')!; assert C.link((base + '/outside/marker').str, (base + '/image/usr/sbin/tulpar-authd').str) == 0 }
 			'writable' { os.chmod(base + '/image/usr/sbin', 0o777)! }
 			else {}
 		}
@@ -116,7 +116,7 @@ fn test_account_staging_captures_parents_and_preserves_outside_aliases() {
 			for relative in ['/usr/sbin/auth', '../outside/auth', 'usr/../auth', 'usr//auth', 'usr/sbin/auth\x00tail'] {
 				refuse(&installer, base + '/source', relative)
 			}
-		} else { refuse(&installer, base + '/source', 'usr/sbin/vinix-authd') }
+		} else { refuse(&installer, base + '/source', 'usr/sbin/tulpar-authd') }
 		assert os.read_file(base + '/outside/marker')! == 'outside preserved'
 		assert os.ls(base + '/outside')!.len == 1
 	}
@@ -126,17 +126,17 @@ fn test_account_staging_refuses_replaced_paths_before_publication() {
 	for kind in ['root', 'parent', 'leaf', 'temporary'] {
 		base := fixture()!
 		defer { os.rmdir_all(base) or {}; unsafe { base.free() } }
-		os.setenv('VINIX_ACCOUNT_STAGE_REPLACE', kind, true)
+		os.setenv('TULPAR_ACCOUNT_STAGE_REPLACE', kind, true)
 		mut installer := open(base + '/image')!
 		defer { installer.close() }
-		if _ := installer.put_with(base + '/source', 'usr/sbin/vinix-authd', 0o755, InstallOptions{ checkpoint: replace }) {
+		if _ := installer.put_with(base + '/source', 'usr/sbin/tulpar-authd', 0o755, InstallOptions{ checkpoint: replace }) {
 			assert false
 		} else { dispose(err) }
 		assert os.read_file(base + '/outside/marker')! == 'outside preserved'
 		assert os.ls(base + '/outside')!.len == 1
 		retained := if kind == 'root' { base + '/retained/usr/sbin' } else if kind == 'parent' { base + '/retained' } else { base + '/image/usr/sbin' }
 		assert os.ls(retained)!.len == 1
-		if kind != 'leaf' { assert os.read_file(retained + '/vinix-authd')! == 'old account executable' }
+		if kind != 'leaf' { assert os.read_file(retained + '/tulpar-authd')! == 'old account executable' }
 	}
 }
 
@@ -154,15 +154,15 @@ fn test_account_staging_atomic_output_short_writes_and_failures() {
 			else { InstallOptions{} }
 		}
 		if kind.ends_with('failure') {
-			if _ := installer.put_with(base + '/source', 'usr/sbin/vinix-authd', 0o755, options) { assert false } else { dispose(err) }
-			assert os.read_file(base + '/image/usr/sbin/vinix-authd')! == if kind == 'directory-flush-failure' { 'new account executable' } else { 'old account executable' }
+			if _ := installer.put_with(base + '/source', 'usr/sbin/tulpar-authd', 0o755, options) { assert false } else { dispose(err) }
+			assert os.read_file(base + '/image/usr/sbin/tulpar-authd')! == if kind == 'directory-flush-failure' { 'new account executable' } else { 'old account executable' }
 		} else {
-			installer.put_with(base + '/source', 'usr/sbin/vinix-authd', 0o755, options)!
-			assert os.read_file(base + '/image/usr/sbin/vinix-authd')! == 'new account executable'
-			assert os.lstat(base + '/image/usr/sbin/vinix-authd')!.mode & 0o777 == 0o755
-			installer.put(base + '/source', 'usr/share/vinix/actions/packages-launch', 0o644)!
-			assert os.read_file(base + '/image/usr/share/vinix/actions/packages-launch')! == 'new account executable'
-			assert os.lstat(base + '/image/usr/share/vinix/actions/packages-launch')!.mode & 0o777 == 0o644
+			installer.put_with(base + '/source', 'usr/sbin/tulpar-authd', 0o755, options)!
+			assert os.read_file(base + '/image/usr/sbin/tulpar-authd')! == 'new account executable'
+			assert os.lstat(base + '/image/usr/sbin/tulpar-authd')!.mode & 0o777 == 0o755
+			installer.put(base + '/source', 'usr/share/tulpar/actions/packages-launch', 0o644)!
+			assert os.read_file(base + '/image/usr/share/tulpar/actions/packages-launch')! == 'new account executable'
+			assert os.lstat(base + '/image/usr/share/tulpar/actions/packages-launch')!.mode & 0o777 == 0o644
 		}
 		assert os.ls(base + '/image/usr/sbin')!.len == 1
 		installer.close()

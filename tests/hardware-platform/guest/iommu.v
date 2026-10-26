@@ -4,7 +4,7 @@
 // iommu-intel, iommu-amd and iommu-off: devices doing their work from behind
 // an IOMMU, each held to its own memory.
 //
-// With the unit switched on (vinix.iommu=1) every device the kernel drives
+// With the unit switched on (tulpar.iommu=1) every device the kernel drives
 // must still work, which for the network card and the disk controller means
 // every address they were given was mapped for them, and their `dma` file
 // must say they are isolated: a domain of their own with only their rings,
@@ -53,7 +53,7 @@ fn check_iommu(mut t Test, unit string, quiet_file string, quiet_text string) {
 	expected := if unit == '' { 'domain: direct' } else { 'domain: ${unit} isolated' }
 	if unit == '' {
 		units := list_dir('/sys/class/iommu') or { []string{} }
-		t.check(units.len == 0, 'units are listed without vinix.iommu=1: ${units}')
+		t.check(units.len == 0, 'units are listed without tulpar.iommu=1: ${units}')
 	} else {
 		state := read_text('/sys/class/iommu/${unit}/${if unit.starts_with('dmar') { 'state' } else { 'unit' }}') or {
 			''

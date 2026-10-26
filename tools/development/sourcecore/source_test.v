@@ -5,7 +5,7 @@ import os
 fn selected(path string) bool { return path.ends_with('.v') || path.ends_with('.py') }
 
 fn test_export_uses_committed_files_and_excludes_untracked_and_python() {
-	base := os.join_path(os.temp_dir(), 'vinix-source-export-' + os.getpid().str())
+	base := os.join_path(os.temp_dir(), 'tulpar-source-export-' + os.getpid().str())
 	os.mkdir(base)!
 	defer { os.rmdir_all(base) or {} }
 	os.mkdir(base + '/src')!
@@ -15,7 +15,7 @@ fn test_export_uses_committed_files_and_excludes_untracked_and_python() {
 	git(base, ['init', '-q'], 1024)!
 	git(base, ['add', 'src'], 1024)!
 	git(base, ['-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', '-c',
-		'user.name=Vinix test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m',
+		'user.name=Tulpar test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m',
 		'source fixture'], 1024)!
 	commit := revision(base)!
 	os.write_file(base + '/src/main.v', 'uncommitted change\n')!
@@ -27,7 +27,7 @@ fn test_export_uses_committed_files_and_excludes_untracked_and_python() {
 	assert !os.is_link(base + '/out/src/excluded.py')
 	git(base, ['add', 'src/main.v'], 1024)!
 	git(base, ['-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', '-c',
-		'user.name=Vinix test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m',
+		'user.name=Tulpar test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m',
 		'replacement tree'], 1024)!
 	git(base, ['replace', commit, revision(base)!], 1024)!
 	os.mkdir(base + '/replaced')!
@@ -36,7 +36,7 @@ fn test_export_uses_committed_files_and_excludes_untracked_and_python() {
 	os.symlink('main.v', base + '/src/alias.v')!
 	git(base, ['add', 'src/alias.v'], 1024)!
 	git(base, ['-c', 'commit.gpgsign=false', '-c', 'core.hooksPath=/dev/null', '-c',
-		'user.name=Vinix test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m',
+		'user.name=Tulpar test', '-c', 'user.email=test@example.invalid', 'commit', '-q', '-m',
 		'source link'], 1024)!
 	os.mkdir(base + '/links')!
 	if _ := export(base, revision(base)!, ['src'], base + '/links', selected) {

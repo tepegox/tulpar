@@ -38,7 +38,7 @@ mut:
 // Dispatch through a caller-stack slot; no pointer survives this call.
 pub fn block_identity(mut res Resource) BlockIdentity {
 	if res is BlockIdentityResource {
-		mut call := unsafe { &BlockIdentityCall(C.vinix_stack_alloc(sizeof(BlockIdentityCall))) }
+		mut call := unsafe { &BlockIdentityCall(C.tulpar_stack_alloc(sizeof(BlockIdentityCall))) }
 		unsafe { call.device = BlockIdentityResource(res) }
 		return call.device.block_identity()
 	}

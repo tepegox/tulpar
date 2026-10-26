@@ -15,7 +15,7 @@ fn test_recovery_chacha_rfc8439_block_and_openssl_oracle() {
 	expected := hex.decode('10f1e7e4d13b5915500fdd1fa32071c4c7d1f4c733c068030422aa9ac3d46c4e' +
 		'd2826446079faa0914c2d705d98b02a2b5129cd1de164eb9cbd083e8a2503c4e')!
 	for i in 0 .. 64 { assert block[i] == expected[i] }
-	work := os.join_path(os.temp_dir(), 'vinix-recovery-oracle-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-recovery-oracle-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	for variant in 0 .. 16 {
 		mut data := []u8{len: 64}; mut iv := []u8{len: 16}; iv[0] = 1
@@ -114,7 +114,7 @@ fn test_recovery_envelope_all_corruption_and_wrong_key_preserve_output() {
 }
 
 fn test_recovery_commands_private_files_fresh_nonce_and_no_overwrite() {
-	work := os.join_path(os.temp_dir(), 'vinix-recovery-files-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-recovery-files-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	key := []u8{len: 64, init: u8(index * 13 + 7)}
 	recovery := []u8{len: 64, init: u8(index * 29 + 41)}
@@ -164,12 +164,12 @@ fn test_recovery_commands_private_files_fresh_nonce_and_no_overwrite() {
 	assert recovery_key_file(envelope.str, recoverypath.str, (work + '/absent').str, false) == 1
 	os.chmod(work, 0o700)!
 	assert os.read_bytes(keypath)! == key && os.read_bytes(recoverypath)! == recovery && os.read_bytes(restored)! == key
-	assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 }
 
 fn test_recovery_cli_syntax_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'backup-key'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'backup-key'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 		for command in [c'backup-key', c'recover-key'] {
 			args[1] = command
 			assert run(4, &args[0]) == 2 && run(6, &args[0]) == 2

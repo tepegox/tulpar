@@ -5,7 +5,7 @@
 #include <stdarg.h>
 static unsigned depth,stencil,draws,allocs,frees,finished;
 static unsigned char pixels[800*600*4];
-#ifdef VINIX_GLUT_TRIANGLE
+#ifdef TULPAR_GLUT_TRIANGLE
 static void (*display_callback)(void);
 static void (*reshape_callback)(int,int);
 #endif
@@ -25,7 +25,7 @@ int test_ioctl(int fd,unsigned long request,...) {
 }
 void *test_mmap(void *p,size_t size,int protection,int flags,int fd,off_t offset) { (void)p;(void)protection;(void)flags;assert(fd==100&&offset==0&&size<=sizeof(framebuffer));return framebuffer; }
 int test_munmap(void *p,size_t size) { assert(p==framebuffer&&size<=sizeof(framebuffer));uint32_t packed=0;for(unsigned i=0;i<bpp/8;i++)packed|=(uint32_t)framebuffer[i]<<(8*i);assert(packed==(bpp==16?0x52ccu:bpp==24?0x505a64u:0xff645a50u));return 0; }
-#ifndef VINIX_GLUT_TRIANGLE
+#ifndef TULPAR_GLUT_TRIANGLE
 static EGLDisplay platform_display(EGLenum platform,void *native,const EGLint *attributes) { assert(platform==0x31dd&&!native&&!attributes);return (void *)1; }
 __eglMustCastToProperFunctionPointerType eglGetProcAddress(const char *name) { assert(!strcmp(name,"eglGetPlatformDisplayEXT"));return (__eglMustCastToProperFunctionPointerType)platform_display; }
 EGLDisplay eglGetDisplay(EGLNativeDisplayType p) { (void)p;return (void *)1; }
@@ -86,14 +86,14 @@ void glBegin(GLenum m) { assert(m==GL_TRIANGLES);draws++; }
 void glEnd(void) {}
 void glColor3f(GLfloat a,GLfloat b,GLfloat c) {
     assert(a>=0&&b>=0&&c>=0);
-#ifdef VINIX_LEGACY_TRIANGLE
+#ifdef TULPAR_LEGACY_TRIANGLE
     static unsigned at;static const float colors[3][3]={{1.0f,0.2f,0.2f},{0.2f,1.0f,0.2f},{0.2f,0.4f,1.0f}};
     assert(a==colors[at%3][0]&&b==colors[at%3][1]&&c==colors[at%3][2]);at++;
 #endif
 }
 void glVertex2f(GLfloat a,GLfloat b) {
     assert(a>=-1&&a<=1&&b>=-1&&b<=1);
-#ifdef VINIX_LEGACY_TRIANGLE
+#ifdef TULPAR_LEGACY_TRIANGLE
     static unsigned at;static const float vertices[3][2]={{-0.65f,-0.45f},{0.65f,-0.45f},{0.0f,0.65f}};
     assert(a==vertices[at%3][0]&&b==vertices[at%3][1]);at++;
 #endif
@@ -102,11 +102,11 @@ void glutSwapBuffers(void) {}
 void glutInit(int *argc,char **argv) { assert(*argc==1&&argv[0]); }
 void glutInitDisplayMode(unsigned int flags) { assert(flags==2); }
 void glutInitWindowSize(int w,int h) { assert(w==800&&h==600); }
-int glutCreateWindow(const char *name) { assert(!strcmp(name,"Vinix OpenGL Triangle"));return 1; }
+int glutCreateWindow(const char *name) { assert(!strcmp(name,"Tulpar OpenGL Triangle"));return 1; }
 void glutDisplayFunc(void (*f)(void)) { display_callback=f; }
 void glutReshapeFunc(void (*f)(int,int)) { reshape_callback=f; }
 void glutMainLoop(void) {
-#ifdef VINIX_LEGACY_TRIANGLE
+#ifdef TULPAR_LEGACY_TRIANGLE
     assert(display_callback&&!reshape_callback);
 #else
     assert(display_callback&&reshape_callback);reshape_callback(800,600);
@@ -114,10 +114,10 @@ void glutMainLoop(void) {
     display_callback();display_callback();
 }
 #endif
-const GLubyte *glGetString(GLenum key) { if(key==GL_VENDOR)return (const GLubyte *)"fixture";if(key==GL_VERSION)return (const GLubyte *)"2.0";assert(key==GL_RENDERER);return (const GLubyte *)(mode==1?"llvmpipe":mode==2?"Apple M1":"Vinix Fake G17C (M5 Max ABI)"); }
+const GLubyte *glGetString(GLenum key) { if(key==GL_VENDOR)return (const GLubyte *)"fixture";if(key==GL_VERSION)return (const GLubyte *)"2.0";assert(key==GL_RENDERER);return (const GLubyte *)(mode==1?"llvmpipe":mode==2?"Apple M1":"Tulpar Fake G17C (M5 Max ABI)"); }
 void glViewport(GLint x,GLint y,GLsizei w,GLsizei h) { assert(!x&&!y&&w==800&&h==600); }
 void glClearColor(GLfloat r,GLfloat g,GLfloat b,GLfloat a) {
-#ifdef VINIX_LEGACY_TRIANGLE
+#ifdef TULPAR_LEGACY_TRIANGLE
     assert(r==0.08f&&g==0.08f&&b==0.10f&&a==1.0f);
 #else
     assert(r==0.035f&&g==0.045f&&b==0.075f&&a==1.0f);
@@ -129,7 +129,7 @@ int main(int argc,char **argv) {
     if(getenv("TRIANGLE_FB_BPP"))bpp=(unsigned)atoi(getenv("TRIANGLE_FB_BPP"));if(getenv("TRIANGLE_SOFTWARE"))mode=1;if(getenv("TRIANGLE_APPLE"))mode=2;
     int rc=test_program_main(argc,argv);
     if(mode==1)assert(rc==2&&!draws);else {
-#ifdef VINIX_LEGACY_TRIANGLE
+#ifdef TULPAR_LEGACY_TRIANGLE
         assert(!rc&&draws==2&&!finished&&!allocs&&!frees);
 #else
         assert(!rc&&draws&&finished);if(allocs)assert(allocs==1&&frees==1);

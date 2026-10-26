@@ -120,7 +120,7 @@ fn test_maximum_disk_slot_and_format_bounds_survive_empty_removal_and_reenrollme
 }
 
 fn test_membership_file_edits_preserve_sources_and_fail_without_replacing_the_bundle() {
-	work := os.join_path(os.temp_dir(), 'vinix-disk-plan-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-disk-plan-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -162,7 +162,7 @@ fn test_membership_file_edits_preserve_sources_and_fail_without_replacing_the_bu
 
 fn test_membership_cli_rejects_argument_counts_and_bad_indices_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-enroll'), &char(c'/unused'),
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-enroll'), &char(c'/unused'),
 			&char(c'/missing'), &char(nil)]!
 		assert run(3, &args[0]) == 2 && run(5, &args[0]) == 2
 		args[1] = &char(c'plan-forget')

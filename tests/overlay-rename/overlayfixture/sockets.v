@@ -3,7 +3,7 @@ module overlayfixture
 
 fn C.listen(int, int) int
 struct C.sockaddr {}
-fn C.vinix_overlay_connect(int, voidptr, u32) int
+fn C.tulpar_overlay_connect(int, voidptr, u32) int
 fn C.accept(int, &C.sockaddr, &u32) int
 
 fn socket_address(path &char, address &C.sockaddr_un) {
@@ -73,7 +73,7 @@ fn persistent_socket_cycle(base &char, backing &char, hold bool) {
 			&& *keepalive == 0 && C.chmod(&target[0], 0o777) == 0, 473)
 		socket_path_opens(&target[0])
 		check(C.chmod(&target[0], 0o200) == 0 && client >= 0
-			&& C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0
+			&& C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0
 			&& C.chmod(&target[0], 0o777) == 0, 407)
 		pending_metadata := C.open(&target[0], C.O_PATH)
 		check(pending_metadata >= 0, 465)

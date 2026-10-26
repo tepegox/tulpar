@@ -19,14 +19,14 @@ Policy follows the resolved attachment rather than blindly reading the
 directory FD's flags. A relative symlink retains its route; an absolute
 symlink resets lookup to the caller's root and observes that namespace's
 mount. A script's interpreter is checked separately through its pathname.
-Explicit `VINIX_ALLOW_WX=1`, ordinary inode permissions, MAC, pledge/unveil,
+Explicit `TULPAR_ALLOW_WX=1`, ordinary inode permissions, MAC, pledge/unveil,
 the privileged W^X override and default W^X retain their checks.
 
 [Linux v6.12 path initialization](https://github.com/torvalds/linux/blob/v6.12/fs/namei.c)
 starts a relative descriptor lookup from the file's saved path.
 Its [executable opener](https://github.com/torvalds/linux/blob/v6.12/fs/exec.c)
 checks `noexec` on the opened file's resulting path. `wxallowed` remains
-Vinix-specific and is excluded from the Linux reference suite.
+Tulpar-specific and is excluded from the Linux reference suite.
 
 Use `--case descexec` (`de-0` through `de-9`) and native `--case descwx`
 (`dw-0` through `dw-9`). Each group retains its previous eight cases and
@@ -89,7 +89,7 @@ the V Clang wrapper refer to the previous qualification area; copied input
 manifests retain their pins. Shared dependencies are not private copies
 frozen before these builds. Host V generates the x86 sampler from the
 baseline generator and builds probes/controllers. These are host inputs,
-not native Vinix toolchain qualification.
+not native Tulpar toolchain qualification.
 
 Native ARM uses HVF/four CPUs and x86 TCG/two, each with 1024 MiB. Linux
 uses HVF/TCG, two CPUs and 512 MiB. Networking is disabled and runtime

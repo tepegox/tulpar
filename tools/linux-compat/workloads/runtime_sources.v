@@ -22,7 +22,7 @@ fn native_runtime_fixture(language string, path string, source string) !string {
 		'"amd64".equals(System.getProperty("os.arch"))'
 	})
 	if language == 'go' {
-		result = result.replace('VINIX ARM64 GO SMOKE', 'VINIX AMD64 GO SMOKE')
+		result = result.replace('TULPAR ARM64 GO SMOKE', 'TULPAR AMD64 GO SMOKE')
 			.replace('AArch64 Go runtime', 'x86-64 Go runtime')
 	}
 	return result

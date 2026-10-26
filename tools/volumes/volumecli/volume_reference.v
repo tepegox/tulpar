@@ -31,11 +31,11 @@ fn show_volume_reference(before &u8, after &u8, disk &DiskKey, row &Request, cha
 			|| C.snprintf(&new_fingerprint[i * 2], uint(65 - i * 2), c'%02x', u32(new_hash[i])) != 2) { return false }
 	} }
 	if after == unsafe { nil } {
-		return C.printf(c'format=VINIXCH1 operation=show-ciphertext-reference mappings=1 algorithm=sha256 reference_sha256=%s\n', &old_fingerprint[0]) >= 0
+		return C.printf(c'format=TULPARCH1 operation=show-ciphertext-reference mappings=1 algorithm=sha256 reference_sha256=%s\n', &old_fingerprint[0]) >= 0
 			&& C.printf(c'disk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu sha256=%s\n',
 				disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags, &old_digest[0]) >= 0
 	}
-	return C.printf(c'format=VINIXCH1 operation=compared-ciphertext-references mappings=1 stable=%lu changed=%lu algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\n', u64(!changed), u64(changed), &old_fingerprint[0], &new_fingerprint[0]) >= 0
+	return C.printf(c'format=TULPARCH1 operation=compared-ciphertext-references mappings=1 stable=%lu changed=%lu algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\n', u64(!changed), u64(changed), &old_fingerprint[0], &new_fingerprint[0]) >= 0
 		&& C.printf(c'disk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s before_sha256=%s after_sha256=%s\n',
 			disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags,
 			if changed { &char(c'changed') } else { &char(c'stable') }, &old_digest[0], &new_digest[0]) >= 0

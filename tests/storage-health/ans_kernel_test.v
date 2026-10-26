@@ -8,7 +8,7 @@ import memory
 import resource
 import stat
 
-fn C.vinix_stack_alloc(u64) voidptr
+fn C.tulpar_stack_alloc(u64) voidptr
 
 fn health_fixture_require(condition bool) {
 	if !condition { panic('ANS health kernel oracle failed') }
@@ -53,8 +53,8 @@ fn status_fixture_run() {
 	anscore.set_namespace_id(0, 91)
 	anscore.set_namespace_id(1, 92)
 	anscore.model_enable_writes()
-	mut whole := unsafe { &AnsBlock(C.vinix_stack_alloc(sizeof(AnsBlock))) }
-	mut part := unsafe { &AnsBlock(C.vinix_stack_alloc(sizeof(AnsBlock))) }
+	mut whole := unsafe { &AnsBlock(C.tulpar_stack_alloc(sizeof(AnsBlock))) }
+	mut part := unsafe { &AnsBlock(C.tulpar_stack_alloc(sizeof(AnsBlock))) }
 	unsafe {
 		*whole = AnsBlock{
 			stat:     stat.Stat{

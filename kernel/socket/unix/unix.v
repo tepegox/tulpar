@@ -765,7 +765,7 @@ pub fn (mut this UnixSocket) write_with_fds(_handle voidptr, buf voidptr, _count
 		this.status &= ~file.pollout
 	}
 	if fds.len != 0 {
-		mut group := unsafe { &PendingFdGroup(C.vinix_stack_alloc(sizeof(PendingFdGroup))) }
+		mut group := unsafe { &PendingFdGroup(C.tulpar_stack_alloc(sizeof(PendingFdGroup))) }
 		unsafe {
 			*group = PendingFdGroup{
 				offset: fd_offset
@@ -847,7 +847,7 @@ pub fn (mut this UnixSocket) send_datagram(mut target UnixSocket, _handle voidpt
 	target.ensure_queue_capacity(target.packet_lengths.len + 1, target.pending_fd_groups.len + if fds.len != 0 { 1 } else { 0 })?
 
 	if fds.len != 0 {
-		mut group := unsafe { &PendingFdGroup(C.vinix_stack_alloc(sizeof(PendingFdGroup))) }
+		mut group := unsafe { &PendingFdGroup(C.tulpar_stack_alloc(sizeof(PendingFdGroup))) }
 		unsafe {
 			*group = PendingFdGroup{
 				offset: target.used

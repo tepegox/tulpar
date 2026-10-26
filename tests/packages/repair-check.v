@@ -12,10 +12,10 @@ struct Roots { format int = 1 architecture string packages []string }
 
 fn repair_progress(event pkgprotocol.Progress) {
 	if event.phase != 'resolve' { return }
-	path := os.getenv('VINIX_REPAIR_RESTORE')
+	path := os.getenv('TULPAR_REPAIR_RESTORE')
 	if path == '' { return }
-	os.unsetenv('VINIX_REPAIR_RESTORE')
-	os.write_file(path, os.read_file(os.getenv('VINIX_REPAIR_SOURCE')) or { panic(err) }) or { panic(err) }
+	os.unsetenv('TULPAR_REPAIR_RESTORE')
+	os.write_file(path, os.read_file(os.getenv('TULPAR_REPAIR_SOURCE')) or { panic(err) }) or { panic(err) }
 	os.chmod(path, 0o755) or { panic(err) }
 }
 
@@ -58,12 +58,12 @@ fn (client Client) apply(review pkgprotocol.Review) !pkgcore.State {
 
 fn check_case(work string, mode string, binary string, before bool) ! {
 	root := work + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	key := pkgcore.keygen(work + '/seed')!
 	config := pkgcore.Config{ architecture: architecture, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }
-	configuration := root + '/etc/vinix-packages/config.json'
+	configuration := root + '/etc/tulpar-packages/config.json'
 	os.write_file(configuration, json2.encode(config))!
 	for id in ['app', 'runtime', 'assets'] {
 		source := work + '/source-' + id
@@ -144,9 +144,9 @@ fn check_case(work string, mode string, binary string, before bool) ! {
 	}
 	os.write_file(configuration, json2.encode(config))!
 	if binary == '' && mode == 'install' {
-		os.setenv('VINIX_REPAIR_RESTORE', app, true); os.setenv('VINIX_REPAIR_SOURCE', work + '/source-app/bin/app', true)
+		os.setenv('TULPAR_REPAIR_RESTORE', app, true); os.setenv('TULPAR_REPAIR_SOURCE', work + '/source-app/bin/app', true)
 		if _ := client.apply(review) { assert false } else { assert err.msg().contains('stale') }
-		os.unsetenv('VINIX_REPAIR_RESTORE'); os.unsetenv('VINIX_REPAIR_SOURCE')
+		os.unsetenv('TULPAR_REPAIR_RESTORE'); os.unsetenv('TULPAR_REPAIR_SOURCE')
 		assert os.is_dir(sentinel) && os.read_file(store + '/current/state.json')! == state
 		os.rm(app)!
 	}
@@ -168,7 +168,7 @@ fn check_case(work string, mode string, binary string, before bool) ! {
 	assert repaired.generation > initial.generation && repaired.previous == initial.generation
 	assert repaired.packages == initial.packages && repaired.requested == initial.requested
 	assert client.state(true)!.generation == repaired.generation
-	assert os.is_file(store + '/current/share/applications/vinix-app.desktop') && !os.is_link(app)
+	assert os.is_file(store + '/current/share/applications/tulpar-app.desktop') && !os.is_link(app)
 	assert os.read_file(store + '/catalog.json')! == catalog && os.read_file(store + '/trust-history.json')! == history
 	mut unchanged := client.review()!; defer { unchanged.close() }
 	assert unchanged.rows.all(it.action == 'keep') && unchanged.disk_needed == 0

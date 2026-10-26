@@ -9,7 +9,7 @@
 // that passes a CPUID bit through without the register behind it gets no
 // zone rather than a broken one.
 //
-// vinix.thermal_sensors=0 on the command line leaves all three alone.
+// tulpar.thermal_sensors=0 on the command line leaves all three alone.
 //
 // /sys/class/thermal/x86_probe says what was looked for and what was found,
 // for the machine on which nothing shows up. Its first lines read, each time
@@ -212,7 +212,7 @@ fn probe_package_msr(index u32) ?u64 {
 fn platform_start() {
 	x86_identify()
 	cross_cpu_start()
-	if devcore.boot_flag('vinix.thermal_sensors=', true) {
+	if devcore.boot_flag('tulpar.thermal_sensors=', true) {
 		// The counters first: registering a zone starts the polling thread,
 		// which reads them, and they are then all in place.
 		rapl_start()

@@ -1,6 +1,6 @@
 #!/bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
-# Build vinix-security-events as a static program for a Vinix machine.
+# Build tulpar-security-events as a static program for a Tulpar machine.
 #
 #   tools/security-events/build aarch64|x86_64 ROOT
 #
@@ -17,14 +17,14 @@ root=$2
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 . "$repo/build-support/find-v.sh"
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-security-events.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-security-events.XXXXXX")
 trap 'rm -rf "$work"' 0
 mkdir -p "$root/usr/sbin"
-output="$root/usr/sbin/vinix-security-events"
+output="$root/usr/sbin/tulpar-security-events"
 
 case "$arch" in
     aarch64)
-        sysroot=${VINIX_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
+        sysroot=${TULPAR_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
         "$V" -os linux -arch arm64 -gc none -d no_backtrace -o "$work/program.c" \
             "$repo/tools/security-events/events.v"
         "${CC:-clang}" --target=aarch64-linux-musl --sysroot="$sysroot" -static -O1 -w \

@@ -5,9 +5,9 @@ import encoding.hex
 import tools.packages.signing
 
 #include "@VMODROOT/../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn main() {
 	$if !track_heap ? { panic('compile with -d track_heap -gc none -manualfree') }
@@ -33,11 +33,11 @@ fn main() {
 	for encoded, expected in cases {
 		key := hex.decode(encoded)!
 		for _ in 0 .. 16 {
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			accepted := signing.publisher_key_valid(signing.PublicKey(key))
-			live := C.vinix_heap_end()
+			live := C.tulpar_heap_end()
 			assert accepted == expected, encoded
-			assert live == 0 && C.vinix_heap_count() == 0, '${encoded}: ${live} retained bytes'
+			assert live == 0 && C.tulpar_heap_count() == 0, '${encoded}: ${live} retained bytes'
 		}
 		unsafe { key.free() }
 	}

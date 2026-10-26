@@ -18,7 +18,7 @@ fn C.setrlimit(int, voidptr) int
 struct MetadataLimit { current u64 maximum u64 }
 
 fn metadata_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-metadata-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-metadata-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }

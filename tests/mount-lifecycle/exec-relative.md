@@ -91,7 +91,7 @@ V Clang wrapper refer to that previous qualification area; the copied compiler,
 SDK, dependency and tool manifests retain their pins. Shared dependencies
 are not private source copies frozen before these builds. Host V generates
 the x86 sampler from the baseline generator and builds probes/controllers.
-These remain host inputs, not native Vinix toolchain qualification.
+These remain host inputs, not native Tulpar toolchain qualification.
 
 Native ARM uses HVF/four CPUs; x86 uses TCG/two, each with 1024 MiB.
 Linux uses HVF/TCG, two CPUs and 512 MiB. Networking is disabled; runtime

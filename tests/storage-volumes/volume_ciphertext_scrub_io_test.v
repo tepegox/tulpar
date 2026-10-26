@@ -25,7 +25,7 @@ fn volume_scrub_expected(reference []u8, sector u64, kind u32, flags u64, mode i
 	if mode == 6 { data[0] ^= 1 }; if mode == 7 { data[65536] ^= 1 }
 	digest := sha256.sum(data); changed := mode in [6, 7]
 	identity := if kind == 1 { 'mbr:00000001' } else { 'gpt:00000001-0000-0000-0000-000000000083' }
-	return 'format=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference)[..])
+	return 'format=TULPARCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference)[..])
 		+ '\ndisk_bytes=16777216 sector=${sector} identity=${identity} slot=63 offset=8192 bytes=73728 readonly=${flags} result=${if changed { 'changed' } else { 'match' }} expected_sha256=' + hex.encode(reference[80..112]) + ' actual_sha256=' + hex.encode(digest[..]) + '\n'
 }
 
@@ -37,9 +37,9 @@ fn volume_scrub_check(input string, credential string, reference string, report 
 	saved := C.dup(1); fd := C.open(output.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	unsafe {
-		if offline { args := [&char(c'vinix-volume'), &char(c'show-volume-scrub'), report.str, &char(nil)]!; assert run(3, &args[0]) == expected }
+		if offline { args := [&char(c'tulpar-volume'), &char(c'show-volume-scrub'), report.str, &char(nil)]!; assert run(3, &args[0]) == expected }
 		else {
-			args := [&char(c'vinix-volume'), if recovery { &char(c'scrub-recovery-volume') } else { &char(c'scrub-volume') }, &char(c'/recovery-growth-parent'), input.str, credential.str, reference.str, report.str, &char(nil)]!
+			args := [&char(c'tulpar-volume'), if recovery { &char(c'scrub-recovery-volume') } else { &char(c'scrub-volume') }, &char(c'/recovery-growth-parent'), input.str, credential.str, reference.str, report.str, &char(nil)]!
 			assert run(7, &args[0]) == expected
 		}
 	}
@@ -55,7 +55,7 @@ fn volume_scrub_check(input string, credential string, reference string, report 
 fn test_ciphertext_scrub_complete_clean_changed_reports_operational_precedence_and_offline_private_view() {
 	volume_scrub_model = true; ciphertext_model = true; recovery_growth_model = true
 	defer { volume_scrub_model = false; volume_scrub_offline = false; ciphertext_model = false; recovery_growth_model = false }
-	work := os.join_path(os.temp_dir(), 'vinix-ciphertext-scrub-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-ciphertext-scrub-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	input := work + '/input'; credential := work + '/credential'; reference := work + '/reference'; report := work + '/report'
 	wrapping := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}
 	data := []u8{len: 73728, init: ciphertext_pattern(u64(index) + 8192)}; digest := sha256.sum(data)
@@ -90,7 +90,7 @@ fn test_ciphertext_scrub_complete_clean_changed_reports_operational_precedence_a
 				if fault <= 1 { if changed { 2 } else { 0 } } else { 1 })
 			assert os.exists(report) == (fault <= 1 || fault in [19, 20, 21, 32, 33])
 			if os.exists(report) { assert volume_scrub_check(input, credential, reference, report, recovery, true, 0, 0, 0, sector, kind, 0) == volume_scrub_expected(saved[..], sector, kind, flags, if changed { 6 } else { 0 }); os.rm(report)! }
-			assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+			assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 		} }
 		for path in [input, credential, reference] {
 			os.chmod(path, 0o644)!; volume_scrub_check(input, credential, reference, report, recovery, false, 0, 0, 0, sector, kind, 1); assert recovery_growth_io.parent_opens == 0; os.chmod(path, 0o600)!

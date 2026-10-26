@@ -34,7 +34,7 @@ fn main() {
 		'x86_64',
 		'i386',
 	] || (os.args[1] == 'i386' && !runtime) {
-		eprintln('Usage: build/main.v aarch64|x86_64|i386 FRESH-OUTPUT-DIR [--runtime-probe] [--libc=glibc]; glibc requires a runtime probe and VINIX_GLIBC_SYSROOT')
+		eprintln('Usage: build/main.v aarch64|x86_64|i386 FRESH-OUTPUT-DIR [--runtime-probe] [--libc=glibc]; glibc requires a runtime probe and TULPAR_GLIBC_SYSROOT')
 		exit(2)
 	}
 	arch := os.args[1]
@@ -44,7 +44,7 @@ fn main() {
 		exit(2)
 	}
 	root := os.real_path(os.dir(@FILE) + '/../../..')
-	mut compiler := os.getenv_opt('VINIX_V_COMPILER') or { os.find_abs_path_of_executable('v') or {
+	mut compiler := os.getenv_opt('TULPAR_V_COMPILER') or { os.find_abs_path_of_executable('v') or {
 		eprintln('V compiler is missing')
 		exit(2)
 	} }
@@ -74,11 +74,11 @@ fn main() {
 	}
 	if glibc { generate << ['-d', 'glibc'] }
 	mut compile := []string{}
-	i386_sdk := if arch == 'i386' { os.getenv('VINIX_I386_SYSROOT') } else { '' }
+	i386_sdk := if arch == 'i386' { os.getenv('TULPAR_I386_SYSROOT') } else { '' }
 	mut link_inputs := map[string]string{}
 	if glibc {
-		sdk := os.getenv_opt('VINIX_GLIBC_SYSROOT') or {
-			eprintln('VINIX_GLIBC_SYSROOT must name the matching pinned Debian SDK')
+		sdk := os.getenv_opt('TULPAR_GLIBC_SYSROOT') or {
+			eprintln('TULPAR_GLIBC_SYSROOT must name the matching pinned Debian SDK')
 			exit(2)
 		}
 		triplet := match arch {
@@ -112,16 +112,16 @@ fn main() {
 		compile << ['-pthread', '-w', '-nostdlib', '-no-pie', link_inputs['crt1'],
 			link_inputs['crti'], work + '/workloads.c', link_inputs['libc'], link_inputs['libm'],
 			link_inputs['libgcc'], link_inputs['crtn'], '-Wl,--dynamic-linker=' + interpreter,
-			'-Wl,-rpath,/usr/libexec/vinix-glibc/' + arch + '/lib', '-o',
+			'-Wl,-rpath,/usr/libexec/tulpar-glibc/' + arch + '/lib', '-o',
 			work + '/linux-compat-workloads']
 	} else if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/sysroot' }
 		compile = [os.getenv_opt('CC_AARCH64') or { 'clang' }, '--target=aarch64-linux-musl',
 			'--sysroot=' + sdk, '-fuse-ld=lld', '-L' + sdk + '/lib']
 	} else if arch == 'i386' {
 		if i386_sdk != '' {
-			builtins := os.getenv_opt('VINIX_I386_BUILTINS') or {
-				eprintln('VINIX_I386_BUILTINS must name the matching compiler-rt archive')
+			builtins := os.getenv_opt('TULPAR_I386_BUILTINS') or {
+				eprintln('TULPAR_I386_BUILTINS must name the matching compiler-rt archive')
 				exit(2)
 			}
 			compile = [os.getenv_opt('CC_I386') or { 'clang' }, '--target=i686-linux-musl',
@@ -186,7 +186,7 @@ fn main() {
 	for source in if runtime {
 		['tests/linux-compat/runtimefixture/core.v']
 	} else {
-		['tools/linux-compat/workloads/main.v', 'tools/linux-compat/workloads/diagnostics.v', 'tools/linux-compat/workloads/debugger.v', 'tools/linux-compat/workloads/packages.v', 'tools/linux-compat/workloads/games.v', 'tools/linux-compat/workloads/service_units.v', 'tools/linux-compat/workloads/browsers.v', 'tools/linux-compat/workloads/jit.v', 'tools/linux-compat/workloads/runtime_sources.v', 'tests/go/smoke.go', 'tests/java/VinixJavaSmoke.java']
+		['tools/linux-compat/workloads/main.v', 'tools/linux-compat/workloads/diagnostics.v', 'tools/linux-compat/workloads/debugger.v', 'tools/linux-compat/workloads/packages.v', 'tools/linux-compat/workloads/games.v', 'tools/linux-compat/workloads/service_units.v', 'tools/linux-compat/workloads/browsers.v', 'tools/linux-compat/workloads/jit.v', 'tools/linux-compat/workloads/runtime_sources.v', 'tests/go/smoke.go', 'tests/java/TulparJavaSmoke.java']
 	} {
 		inputs[source] = sha256.sum(os.read_bytes(root + '/' + source) or {
 			eprintln(err.msg())

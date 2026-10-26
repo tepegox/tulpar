@@ -3,9 +3,9 @@ module pkgcore
 
 $if track_heap ? {
 #include "@VMODROOT/../../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 }
 
 fn canonical_owner_attempt(index Index, refused bool) {
@@ -34,9 +34,9 @@ fn test_canonical_index_retires_sorted_borrowed_buffers_and_partial_refusals() {
 			canonical_owner_attempt(index, mode != 'complete')
 			mut maximum := u64(0); mut records := u32(0)
 			for _ in 0 .. 64 {
-				$if track_heap ? { C.vinix_heap_begin() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				canonical_owner_attempt(index, mode != 'complete')
-				$if track_heap ? { kept := C.vinix_heap_end(); count_kept := C.vinix_heap_count(); if kept > maximum { maximum = kept }; if count_kept > records { records = count_kept } }
+				$if track_heap ? { kept := C.tulpar_heap_end(); count_kept := C.tulpar_heap_count(); if kept > maximum { maximum = kept }; if count_kept > records { records = count_kept } }
 			}
 			$if track_heap ? { println('CANONICAL INDEX count=' + count.str() + ' case=' + mode + ' retained=' + maximum.str() + ' allocations=' + records.str()); assert maximum == 0 && records == 0 }
 			for p in input { assert p.files[0].path == 'z' && p.permissions[0] == 'network' && p.associations[0] == 'text/plain' }

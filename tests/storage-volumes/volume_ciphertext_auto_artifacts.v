@@ -23,8 +23,8 @@ fn main() {
 	work := os.abs_path(os.args[1]); output := os.abs_path(os.args[2]); assert !os.exists(output)
 	os.mkdir(output)!; os.chmod(output, 0o700)!
 	for marker in ['first-boot.log', 'second-boot.log'] { assert os.read_file(work + '/' + marker)!.contains('PLAN DONE') }
-	debugfs := os.getenv_opt('VINIX_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
-	openssl := os.getenv_opt('VINIX_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
+	debugfs := os.getenv_opt('TULPAR_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
+	openssl := os.getenv_opt('TULPAR_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
 	mut physical := os.open(work + '/volume.raw')!; physical.seek(15728640, .start)!
 	mut bytes := []u8{len: 4096}; assert physical.read(mut bytes)! == 4096; physical.close()
 	assert sha256.hexhash(bytes[..512].bytestr()) == '58d4a23c8dc7380e7069da904b7be35a5a844a9d6d1c744d531c960258cbbd22'
@@ -34,7 +34,7 @@ fn main() {
 	digest := os.read_bytes(output + '/ciphertext.sha256')!; assert digest.len == 32 && digest == sha256.sum(bytes)[..]
 	mut evidence := ''
 	for readonly in [false, true] {
-		mut expected := []u8{len: 128}; copy(mut expected, 'VINIXCH1'.bytes())
+		mut expected := []u8{len: 128}; copy(mut expected, 'TULPARCH1'.bytes())
 		for field in [[8, 4, 1], [12, 4, 128], [16, 8, 16777216], [24, 8, 512], [32, 4, 1], [36, 4, 60], [40, 8, 15728640], [48, 8, 4096], [64, 4, 0x12345678]] {
 			ciphertext_auto_put(mut expected, field[0], field[1], u64(field[2]))
 		}
@@ -45,7 +45,7 @@ fn main() {
 				name := prefix + domain + if readonly { '-ro.vchash' } else { '.vchash' }
 				extracted := os.exec([debugfs, '-R', 'dump /root/' + name + ' ' + output + '/' + name, work + '/config.ext2']); assert extracted.exit_code == 0, extracted.output
 				assert os.read_bytes(output + '/' + name)! == expected
-				evidence += name + ': exact independent VINIXCH1 geometry/reserved bytes/CRC and full physical extent OpenSSL SHA-256 verified\n'
+				evidence += name + ': exact independent TULPARCH1 geometry/reserved bytes/CRC and full physical extent OpenSSL SHA-256 verified\n'
 			}
 		}
 	}

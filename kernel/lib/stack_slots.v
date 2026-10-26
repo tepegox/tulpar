@@ -5,4 +5,4 @@ module lib
 
 // Compiler builtin, expanded in the caller. Never retain its result outside
 // that function's synchronous call chain.
-fn C.vinix_stack_alloc(bytes u64) voidptr
+fn C.tulpar_stack_alloc(bytes u64) voidptr

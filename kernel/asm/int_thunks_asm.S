@@ -54,15 +54,15 @@ interrupt_thunk_\num:
 
     testb $3, 152(%rsp)
     jz 6f
-    VINIX_RSB_FILL
-    VINIX_SPEC_ENTER
+    TULPAR_RSB_FILL
+    TULPAR_SPEC_ENTER
 6:
     // Resolve both user-CS and capability gates before entering C.
     lfence
 .if \num >= 32
     mov $\num, %edi
     mov 152(%rsp), %rsi
-    call vinix_x86_maskable_irq_enter
+    call tulpar_x86_maskable_irq_enter
 .endif
     mov %rsp, %rdi
     call interrupt_enter
@@ -79,12 +79,12 @@ interrupt_thunk_\num:
     // task-context return work. IRET restores the interrupted flags.
     cli
     mov $\num, %edi
-    call vinix_x86_maskable_irq_exit
-#ifdef VINIX_LINUXKPI
+    call tulpar_x86_maskable_irq_exit
+#ifdef TULPAR_LINUXKPI
     // Original RFLAGS, after DS/ES and fifteen saved GPRs plus error/RIP/CS.
     // An IF-off interrupted task and an outer IRQ/pinned scope are readers.
     mov 160(%rsp), %rdi
-    call vinix_linuxkpi_rcu_native_irq_exit
+    call tulpar_linuxkpi_rcu_native_irq_exit
 #endif
 .endif
     jmp interrupt_thunk_exit
@@ -141,7 +141,7 @@ interrupt_exit_load_es:
     movq $0, 120(%rsp)
     testb $3, 136(%rsp)
     jz 7f
-    VINIX_SPEC_RETURN gs0, 120
+    TULPAR_SPEC_RETURN gs0, 120
 7:
     pop %rax
     pop %rbx
@@ -158,7 +158,7 @@ interrupt_exit_load_es:
     pop %r13
     pop %r14
     pop %r15
-    VINIX_SPEC_CLEAR
+    TULPAR_SPEC_CLEAR
     add $8, %rsp
 
     testb $3, 8(%rsp) // if user

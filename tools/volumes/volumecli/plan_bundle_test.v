@@ -36,7 +36,7 @@ fn test_bundle_roundtrip_truncation_corruption_and_decode_rollback() {
 	bundle_sample(mut set)
 	mut bytes := [6208]u8{}
 	size := encode_bundle(&set, &bytes[0])
-	assert size == 288 && bytes[..8].bytestr() == 'VINIXVS1'
+	assert size == 288 && bytes[..8].bytestr() == 'TULPARVS1'
 	mut decoded := PlanSet{}
 	assert decode_bundle(&bytes[0], size, mut decoded)
 	assert decoded.count == 2 && decoded.slots == set.slots
@@ -160,7 +160,7 @@ fn host_bundle(path string, mut set PlanSet, trusted bool) bool {
 }
 
 fn test_bundle_publication_replacement_failure_cleanup_type_and_trust() {
-	work := os.join_path(os.temp_dir(), 'vinix-bundle-test-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-bundle-test-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -196,7 +196,7 @@ fn test_bundle_publication_replacement_failure_cleanup_type_and_trust() {
 	decoded = PlanSet{}
 	assert host_bundle(path, mut decoded, false) && decoded.plans[1].rows[0].length == 8192
 	// A destination matching the first temporary candidate must survive cleanup.
-	collision := work + '/.vinix-volume-${os.getpid()}-0'
+	collision := work + '/.tulpar-volume-${os.getpid()}-0'
 	assert publish_bundle(collision.str, &set)
 	decoded = PlanSet{}
 	assert host_bundle(collision, mut decoded, false) && decoded.count == 2

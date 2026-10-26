@@ -4,7 +4,7 @@ module fixturehost
 import hosttest
 
 fn test_public_receipt_preserves_original_json_formatting() {
-	work := hosttest.work_dir("", "vinix-receipt-test-") or { panic(err) }
+	work := hosttest.work_dir("", "tulpar-receipt-test-") or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	path := work + "/receipt.json"
 	write_receipt(path, hosttest.decode_json("{}") or { panic(err) }) or { panic(err) }

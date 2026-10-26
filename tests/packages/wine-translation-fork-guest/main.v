@@ -49,7 +49,7 @@ fn main() {
 		if C.setpgid(0, 0) != 0 { C._exit(121) }
 		if C.setgroups(0, unsafe { nil }) != 0 || C.setresgid(1000, 1000, 1000) != 0
 			|| C.setresuid(1000, 1000, 1000) != 0 || !ordinary_identity() { C._exit(124) }
-		if C.unsetenv(c'VINIX_ALLOW_WX') != 0 || C.getenv(c'VINIX_ALLOW_WX') != unsafe { nil } { C._exit(123) }
+		if C.unsetenv(c'TULPAR_ALLOW_WX') != 0 || C.getenv(c'TULPAR_ALLOW_WX') != unsafe { nil } { C._exit(123) }
 		emit('TRANSLATOR FORK ordinary uid/gid=1000 groups=0 no-WX-exception PASS\n')
 		args := ['/qemu-x86_64', '-B', '0x100000000', '-strace', '/fork-probe']!
 		mut pointers := unsafe { [6]&char{} }

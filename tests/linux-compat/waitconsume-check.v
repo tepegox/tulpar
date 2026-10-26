@@ -83,7 +83,7 @@ fn check_c(area string,suffix string) ! {
   previous := 'userland__finish_child_change(current_process, change, false);'
   replacement := 'userland__finish_child_change(current_process, change, '+if name.ends_with('wait4') {'true);'} else {'(options & userland__wnowait) == 0);'}
   assert old.count(previous) == 2 && old != new && new == old.replace(previous,replacement),name
-  for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','vinix_stack_alloc(','pin_process(','unpin_process(','finish_child_change(','proc__lock_table(','proc__unlock_table('] {assert old.count(token) == new.count(token),token}
+  for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','tulpar_stack_alloc(','pin_process(','unpin_process(','finish_child_change(','proc__lock_table(','proc__unlock_table('] {assert old.count(token) == new.count(token),token}
   before = before.replace(old,''); after = after.replace(new,'')
  }
  assert before == after,'Whole production C differs outside the four consume arguments in wait4/waitid; no normalization'
@@ -99,7 +99,7 @@ fn initial_refusals(area string,out string) ! {
   receipt := object(state+'/receipt.json')!; rows := receipt['results']!.as_array(); assert rows.len == 1
   row := rows[0].as_map(); assert row['name']!.str() == 'waitconsume' && row['exit_code']!.int() == 1 && row['detail']!.str() == 'Command failed' && row['init_sha256']!.str() == '' && row['iso_sha256']!.str() == ''
   original := state+'/sources/waitconsumefixture/core.v'; assert digest(original) == row['source_sha256']!.str()
-  source := os.read_file(original)!; assert source.contains('if if keep {!pending} else {!cleared}') && source.replace('if if keep {!pending} else {!cleared}','if (keep && !pending) || (!keep && !cleared)') == os.read_file('/Users/alex/code/vinix/tests/linux-compat/waitconsumefixture/core.v')!
+  source := os.read_file(original)!; assert source.contains('if if keep {!pending} else {!cleared}') && source.replace('if if keep {!pending} else {!cleared}','if (keep && !pending) || (!keep && !cleared)') == os.read_file('/Users/alex/code/tulpar/tests/linux-compat/waitconsumefixture/core.v')!
   log := os.read_file(state+'.log')!; assert log.contains('the condition of an `if` should be a boolean expression') && !log.contains('LINUX WAITCONSUME CASES:') && !os.exists(state+'/waitconsume/init') && !os.exists(state+'/waitconsume/test.iso') && !os.exists(state+'/waitconsume/serial.log')
   publish(state+'.log',out+'waitconsume-initial-probe-'+suffix+'-refusal.log')!
   publish(state+'/receipt.json',out+'waitconsume-initial-probe-'+suffix+'-receipt.json')!
@@ -117,10 +117,10 @@ fn interrupted(area string,out string) ! {
  state := area+'states/p2-after-x86'
  for path in os.walk_ext(state,'') {if os.inode(path).typ == .regular {assert path in pins && digest(path) == pins[path]!.str(),path}}
  receipt_value := object(state+'/receipt.json')!; rows := receipt_value['results']!.as_array(); assert rows.len == 3
- assert receipt_value['kernel_sha256']!.str() == digest(area+'kernel-x86/kernel/bin/vinix') && digest(state+'/kernel/bin/vinix') == digest(area+'kernel-x86/kernel/bin/vinix')
+ assert receipt_value['kernel_sha256']!.str() == digest(area+'kernel-x86/kernel/bin/tulpar') && digest(state+'/kernel/bin/tulpar') == digest(area+'kernel-x86/kernel/bin/tulpar')
  for index,row in rows {
   result := row.as_map(); name := result['name']!.str(); assert name == ['waitconsume','runtime','waitusage']![index]
-  assert result['source_sha256']!.str() == digest(state+'/sources/'+name+'fixture/core.v') && result['source_sha256']!.str() == digest('/Users/alex/code/vinix/tests/linux-compat/'+name+'fixture/core.v')
+  assert result['source_sha256']!.str() == digest(state+'/sources/'+name+'fixture/core.v') && result['source_sha256']!.str() == digest('/Users/alex/code/tulpar/tests/linux-compat/'+name+'fixture/core.v')
   assert result['init_sha256']!.str() == digest(state+'/'+name+'/init') && digest(state+'/'+name+'/init') == digest(area+'states/p3-after-x86/'+name+'/init')
   if index == 0 {
    assert result['exit_code']!.int() == 0 && result['detail']!.str() == '' && result['iso_sha256']!.str() == digest(state+'/'+name+'/test.iso')
@@ -155,7 +155,7 @@ fn profile(phase string,suffix string) string {return if phase == 'after' && suf
 
 fn sdk_and_primary(area string,out string) ! {
  sdk := object(area+'sdk-inputs.json')!; assert sdk.len == 2014
- prior := object('/Users/alex/.cache/vinix-linux-compat/waitabi-20261015/sdk-inputs.json')!; assert sdk.len == prior.len
+ prior := object('/Users/alex/.cache/tulpar-linux-compat/waitabi-20261015/sdk-inputs.json')!; assert sdk.len == prior.len
  for path,hash in sdk {assert hash.str() == prior[path]!.str() && digest(area+'sdk/'+path) == hash.str(),path}
  mut found := map[string]bool{}
  for path in os.walk_ext(area+'sdk','') {assert os.inode(path).typ == .regular; local := path.all_after(area+'sdk/'); assert local in sdk && local !in found; found[local] = true}
@@ -271,7 +271,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -302,7 +302,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -327,12 +327,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/waitconsume-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/waitconsume-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/waitconsumereferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/waitconsumereferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -356,7 +356,7 @@ fn definition(source string, marker string) string {
 fn main() {
 	if '--scope-only' in os.args {
 		area := os.args[2].trim_right('/')+'/'
-		check_source(area,'/Users/alex/code/vinix/')!
+		check_source(area,'/Users/alex/code/tulpar/')!
 		for suffix in ['arm','x86'] {check_c(area,suffix)!}
 		println('Native wait copyout-consumption source/C scope: PASS')
 		return
@@ -372,7 +372,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: waitconsume-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	sdk_and_primary(area, out)!
@@ -386,7 +386,7 @@ fn main() {
 	os.write_file(area + 'scope-check.log', 'arm/x86: complete production C differs only in four fault-path consume arguments in wait4/waitid; selected events consumed despite EFAULT, waitid WNOWAIT preserved; immediate returns after finish, no added allocation/free/pin and no normalization; existing helpers, claiming, pins, copyout order and successful paths unchanged; independent lifetime review bound\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '96542f4955808cfe4492894c9b1bcf558c98734a'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -478,7 +478,7 @@ fn main() {
 			'linux_primary_pin':        digest(area + 'linux-source.sha256')
 			'private_sdk': digest(area + 'sdk-inputs.json')
 			'primary_source_note': digest(area + 'primary-source-note.txt')
-			'sdk_prior_inputs': digest('/Users/alex/.cache/vinix-linux-compat/waitabi-20261015/sdk-inputs.json')
+			'sdk_prior_inputs': digest('/Users/alex/.cache/tulpar-linux-compat/waitabi-20261015/sdk-inputs.json')
 			'arm_compiler_adapter': digest(area + 'arm-cc.v')
 			'arm_compiler_adapter_binary': digest(area + 'arm-cc')
 			'primary_reuse': digest(area + 'primary-reuse.json')
@@ -500,7 +500,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + profile(phase,suffix) + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['waitconsume']
 			} else {
@@ -520,7 +520,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + if phase == 'before' { 'initial-build-' + suffix + '-before.log' } else { 'build-' + suffix + '-after-producer.log' }
 			assert os.read_file(producer)!.trim_space() == suffix + ' ' + phase + ' production build: PASS'
 			artifacts[phase + '_build_producer'] = digest(producer)

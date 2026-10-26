@@ -13,7 +13,7 @@ struct C.vks_const_void {}
 fn C.rodata_start()
 fn C.rodata_end()
 
-@[export: 'vinix_linuxkpi_is_kernel_rodata']
+@[export: 'tulpar_linuxkpi_is_kernel_rodata']
 fn const_string_is_rodata(ptr &C.vks_const_void) bool {
 	address := uint(ptr)
 	first := uint(voidptr(C.rodata_start))

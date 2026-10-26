@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2026 Alexander Medvednikov
 //
-// vinix-system: the privileged halves of what a desktop does for the person
+// tulpar-system: the privileged halves of what a desktop does for the person
 // at it. Each is one fixed operation with at most one checked argument. The
 // authentication service runs this as root when an action allows it
 // (tools/accounts/actions); the desktop itself does not need to be root to
 // turn the machine off or put it to sleep.
 //
-//	vinix-system power off|restart|suspend
-//	vinix-system hostname NAME
+//	tulpar-system power off|restart|suspend
+//	tulpar-system hostname NAME
 module main
 
 import os
@@ -22,7 +22,7 @@ fn C.geteuid() u32
 fn C.sethostname(name &char, length uint) int
 
 fn fail(message string) {
-	eprintln('vinix-system: ${message}')
+	eprintln('tulpar-system: ${message}')
 	exit(1)
 }
 
@@ -43,7 +43,7 @@ fn valid_hostname(name string) bool {
 fn main() {
 	args := os.args[1..]
 	if C.geteuid() != 0 {
-		fail('only root may do this; ask through vinix-auth')
+		fail('only root may do this; ask through tulpar-auth')
 	}
 	if args.len == 2 && args[0] == 'power' {
 		match args[1] {
@@ -93,6 +93,6 @@ fn main() {
 		C.sync()
 		return
 	}
-	eprintln('usage: vinix-system power off|restart|suspend | hostname NAME')
+	eprintln('usage: tulpar-system power off|restart|suspend | hostname NAME')
 	exit(2)
 }

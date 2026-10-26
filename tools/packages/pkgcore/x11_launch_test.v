@@ -7,7 +7,7 @@ import tools.packages.appsdk
 import tools.packages.x11auth
 
 fn test_x11_launch_grants_only_the_authenticated_display_socket_and_authority() {
-	root := '/tmp/vinix-x11-plan-' + os.getpid().str()
+	root := '/tmp/tulpar-x11-plan-' + os.getpid().str()
 	os.mkdir(root)!
 	os.chmod(root, 0o700)!
 	defer { os.rmdir_all(root) or {} }
@@ -16,7 +16,7 @@ fn test_x11_launch_grants_only_the_authenticated_display_socket_and_authority() 
 	os.mkdir_all(account)!
 	os.chmod(account, 0o700)!
 	prefix := root + '/'
-	surface := account + '/vinix-hosted-x11/private'
+	surface := account + '/tulpar-hosted-x11/private'
 	fd := x11auth.open_surface(prefix.str, surface.str, uid, uid, true)
 	assert fd >= 0
 	defer { C.close(fd) }

@@ -27,9 +27,9 @@ fn plan_checks() ! {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	mut checks := []PlanCheck{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << plan_task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.setenv('VINIX_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true)
 	for name in ['catalog_plan', 'catalog', 'catalog_decode', 'composition', 'composition_ownership', 'native_profile', 'sqlite_profile', 'ffmpeg_profile',
 		'wine_profile', 'apple_profile', 'release', 'publisher_schema'] {
 		binary := work + '/' + name

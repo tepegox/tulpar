@@ -39,7 +39,7 @@ pub fn generate(source string, output string, arch string, shared_model bool) !h
 }
 
 pub fn generate_template(source string, output string, arch string, shared_model bool, template []json2.Any, template_error map[string]json2.Any) !hosttest.Result {
-	work := hosttest.work_dir('', 'vinix-v-host-')!
+	work := hosttest.work_dir('', 'tulpar-v-host-')!
 	result := generate_staged(work, source, output, arch, shared_model, template, template_error) or {
 		// TemporaryDirectory cleanup can replace a preparation/compiler error.
 		// Retire after the compiler has been reaped and propagate that error.

@@ -24,16 +24,16 @@ fn check() ! {
 		for snapshot in [false, true]! {
 			for mode in ['fresh', 'retained', 'reclaim', 'leased', 'unsafe-root', 'unsafe-stage',
 				'bad-number', 'object-directory', 'bad-current', 'bad-previous', 'busy-before-config']! {
-				os.setenv('VINIX_COLLECTION_CASE', architecture + (if snapshot { ' explicit ' } else { ' service ' }) + mode, true)
+				os.setenv('TULPAR_COLLECTION_CASE', architecture + (if snapshot { ' explicit ' } else { ' service ' }) + mode, true)
 				child('/usr/share/package-fixtures/request', 'COLLECTION REQUEST selected case PASS')!
 			}
 		}
 		for mode in ['bad-config', 'invalid-root']! {
-			os.setenv('VINIX_COLLECTION_CASE', architecture + ' service ' + mode, true)
+			os.setenv('TULPAR_COLLECTION_CASE', architecture + ' service ' + mode, true)
 			child('/usr/share/package-fixtures/request', 'COLLECTION REQUEST selected case PASS')!
 		}
 	}
-	os.unsetenv('VINIX_COLLECTION_CASE')
+	os.unsetenv('TULPAR_COLLECTION_CASE')
 	println('COLLECTION REQUEST 48 selected cases with 8 measured calls each PASS')
 	child('/usr/share/package-fixtures/retirement', 'COLLECTION RETIREMENT 128 successful removals')!
 	child('/usr/share/package-fixtures/limit', 'Package collection: 128 obsolete generations')!

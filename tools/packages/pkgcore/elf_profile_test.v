@@ -6,7 +6,7 @@ import time
 import tests.packages.elffixture
 
 fn elf_profile_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-elf-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-elf-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }

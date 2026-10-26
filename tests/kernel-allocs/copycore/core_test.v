@@ -5,7 +5,7 @@ import hosttest
 import os
 
 fn test_missing_imports_are_copied_without_unfiltering_existing_modules() {
-	work := hosttest.work_dir('', 'vinix-copy-source-test-')!
+	work := hosttest.work_dir('', 'tulpar-copy-source-test-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	kernel := work + '/kernel'
 	destination := work + '/scratch'
@@ -42,7 +42,7 @@ fn test_import_parser_aliases_line_endings_and_whitespace() {
 }
 
 fn test_relative_destinations_and_literal_unix_backslashes() {
-	work := hosttest.work_dir('', 'vinix-copy-relative-test-')!
+	work := hosttest.work_dir('', 'tulpar-copy-relative-test-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	previous := os.getwd()
 	os.chdir(work)!
@@ -58,7 +58,7 @@ fn test_relative_destinations_and_literal_unix_backslashes() {
 }
 
 fn test_report_requires_both_architectures_and_update_preserves_complete_baseline() {
-	work := hosttest.work_dir('', 'vinix-allocation-runner-test-')!
+	work := hosttest.work_dir('', 'tulpar-allocation-runner-test-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	tool := work + '/copy-sources'
 	hosttest.command([@VEXE, '-cc', 'cc', '-o', tool,
@@ -85,7 +85,7 @@ fn test_report_requires_both_architectures_and_update_preserves_complete_baselin
 		environment['PATH'] = commands + ':' + environment['PATH']
 		environment['V'] = commands + '/v'
 		environment['FAILED_ARCH'] = failed_arch
-		environment['VINIX_KERNEL_ALLOCS_COPY_TOOL'] = tool
+		environment['TULPAR_KERNEL_ALLOCS_COPY_TOOL'] = tool
 		mut argv := ['sh', test_path + '/run.sh']
 		if index == 3 { argv << '--update' }
 		result := hosttest.capture(argv, '', -1, environment)!

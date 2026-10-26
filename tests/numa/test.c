@@ -526,9 +526,9 @@ int main(void) {
 	check_first_touch_follows_the_cpu();
 
 	if (failures == 0) {
-		printf("VINIX QEMU NUMA: PASS\n");
+		printf("TULPAR QEMU NUMA: PASS\n");
 	} else {
-		printf("VINIX QEMU NUMA: FAIL (%d)\n", failures);
+		printf("TULPAR QEMU NUMA: FAIL (%d)\n", failures);
 	}
 	fflush(stdout);
 

@@ -1,7 +1,7 @@
 # Release catalog audits on installed systems
 
 Software's **Deployment → Check release apps** discovers the optional
-`/usr/share/vinix-packages/applications.json` declaration and invokes the existing
+`/usr/share/tulpar-packages/applications.json` declaration and invokes the existing
 read-only deployment audit. Administrator and standard accounts can compare
 recorded installed metadata with the exact image lock without approval. The
 report identifies its captured bytes by SHA-256 and shows missing, matching or

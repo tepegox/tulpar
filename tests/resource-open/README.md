@@ -47,6 +47,6 @@ and records source, kernel and program hashes in `validation.json`.
 
 Both native original/V pairs passed: each of the two measured windows retained
 zero objects in every class, zero large pages and zero written-after-free
-events. Every numerical row matched the original. This fixture requires Vinix
+events. Every numerical row matched the original. This fixture requires Tulpar
 device and `/proc` semantics, so desktop-host sanitizer execution is not a
 substitute for these native checks.

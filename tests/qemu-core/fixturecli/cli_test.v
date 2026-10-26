@@ -66,10 +66,10 @@ fn test_pending_cli_preserves_distinct_defaults_and_arguments() {
 }
 
 fn test_native_commands_reject_bad_modes_and_protected_output_without_staging() {
-	tool := os.getenv('VINIX_QEMU_FIXTURE_TOOL')
-	generator := os.getenv('VINIX_QEMU_FIXTURE_GENERATOR')
+	tool := os.getenv('TULPAR_QEMU_FIXTURE_TOOL')
+	generator := os.getenv('TULPAR_QEMU_FIXTURE_GENERATOR')
 	if tool == '' || generator == '' { return }
-	work := hosttest.work_dir('', 'vinix-fixture-cli-')!
+	work := hosttest.work_dir('', 'tulpar-fixture-cli-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for args in [['out', '--prepare-only', '--native-build', '--help'], ['out', '--native-build'],
 		['out', '--arch=bad'], ['out', '--cc', '--help'], ['out', '--', '--help'], []string{}] {

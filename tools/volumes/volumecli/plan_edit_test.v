@@ -198,7 +198,7 @@ fn test_full_slot_and_disk_boundaries_remain_encodable_after_remove_and_reuse() 
 }
 
 fn test_file_edits_are_offline_checksummed_and_preserve_previous_bytes_on_invalid_input() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-edit-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-edit-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -233,7 +233,7 @@ fn test_file_edits_are_offline_checksummed_and_preserve_previous_bytes_on_invali
 
 fn test_planning_cli_rejects_bad_numbers_modes_and_argument_counts_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-add'), &char(c'/unused'), &char(c'0'),
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-add'), &char(c'/unused'), &char(c'0'),
 			&char(c'12'), &char(c'4194304'), &char(c'4096'), &char(c'bad'), &char(nil)]!
 		assert run(8, &args[0]) == 2 && run(6, &args[0]) == 2 && run(9, &args[0]) == 2
 		args[3] = &char(c'64')

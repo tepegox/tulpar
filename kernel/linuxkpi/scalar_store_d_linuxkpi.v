@@ -7,7 +7,7 @@ import linuxkpi.compatcore
 // Ordinary put_user stores resolve missing/COW pages only when the native
 // task permits faults; disabled scopes use the resident-only policy. Values are synchronous
 // scalar arguments, with no borrowed kernel buffer or retained user pointer.
-@[export: 'vinix_linuxkpi_write_user_scalar']
+@[export: 'tulpar_linuxkpi_write_user_scalar']
 fn native_write_user_scalar(destination voidptr, size uint, value u64) i32 {
 	require_usercopy_context()
 	return if usercopy.write_scalar_user(u64(destination), u64(size), value) { 0 } else { -14 }

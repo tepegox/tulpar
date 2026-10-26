@@ -25,7 +25,7 @@ tests/linux-compat/run --arch x86_64 --kernel-dir /path/to/x86/kernel --state-di
 
 `--cases bpf,access,open,mmap,runtime,namespace,sharedmem,seccomp,futex,futexkeys,futexbits,futexop,futexerror,futexqueue,sparsefork,seccompquery,budget,mapstorage,sysrq,jit,nnp,nnpthread,keepcaps,securebits,ambient,capbset,capset,cappid,capabi,seccompthread,seccompkill,seccompinstall,seccompalloc,sysnr,pipezero,readerror,pathio,iovpin,iovimport,iovrange,iovoffset,iovposition,iovflags,iovfd` selects the tests; `--timeout` sets each guest's
 deadline. The kernel is never rebuilt implicitly. Build in separate worktrees
-and supply the ARM musl sysroot through `VINIX_AARCH64_SYSROOT` when necessary.
+and supply the ARM musl sysroot through `TULPAR_AARCH64_SYSROOT` when necessary.
 
 - `bpf` verifies ENOSYS for unavailable program operations and untouched query
   buffers; loading or attaching a policy cannot return a dummy success.
@@ -245,7 +245,7 @@ build-support/run-v-tool.sh tests/linux-compat/statx-reference.v \
 
 The reference controller generates a newc archive in V and uses an exec
 wrapper to select `--reference`. This mode runs the same semantics, omitting
-Vinix-specific allocator observations; native receipt audits still require
+Tulpar-specific allocator observations; native receipt audits still require
 them. ARM uses HVF; `--arch x86_64` uses TCG and a matching kernel/ELF.
 Reference receipts bind kernel, unchanged probe, wrapper/source/C/ELF,
 archive, QEMU binary/command and raw capture; failed outcomes remain failures.
@@ -275,7 +275,7 @@ zero uses a scratch lookup and returns zero or the real path error, leaving
 the caller's buffer untouched. Missing/empty/private/nonlink/loop paths,
 relative/absolute FD behavior and procfs links retain their errors or bytes.
 The supervisor stages the executable at `/sbin/init`; `/proc/self` retains
-Vinix's existing absolute spelling, whose Linux conformance is separate.
+Tulpar's existing absolute spelling, whose Linux conformance is separate.
 Six stable descriptors retain metadata/types/sizes, file bytes/shared cursors
 and descriptor flags. After 32 warm-ups, 200 cycles of 52 probes and a transient
 directory alias retain flat slab live objects and large pages. Original
@@ -587,7 +587,7 @@ The disk-backed mount conformance controller creates its own fresh 128 MiB ext2
 volume and owns QEMU directly. It checks exact missing/non-block/type errors,
 source symlinks, a read-only alias, data readback and unmount/remount. The kernel,
 fixture, init, ISO and before/after volume hashes accompany its serial log.
-`mke2fs` is required; `VINIX_MKE2FS` can select it. Run it with:
+`mke2fs` is required; `TULPAR_MKE2FS` can select it. Run it with:
 
 ```sh
 build-support/run-v-tool.sh tests/linux-compat/run-mount.v --arch aarch64 --kernel-dir /path/to/kernel --state-dir /path/to/fresh-mount-state
@@ -601,7 +601,7 @@ Run application workloads with:
 
 ```sh
 build-support/run-v-tool.sh tools/linux-compat/workloads/main.v --host --work=/path/to/fresh-evidence --cases=sqlite,media
-# Inside Vinix, installation can be included explicitly:
+# Inside Tulpar, installation can be included explicitly:
 linux-compat-workloads --work=/tmp/compat-evidence --install
 ```
 
@@ -625,7 +625,7 @@ and cannot turn a failing command into a pass. Host-only runs collect no proc
 diagnostics. These counters help distinguish allocation limits from physical
 memory pressure; they do not establish the cause of a failure by themselves.
 
-The `serviceunits` case requires the cross-compiled native `vinix-desktop` broker
+The `serviceunits` case requires the cross-compiled native `tulpar-desktop` broker
 and BusyBox Extras. It imports a supported Linux HTTP service unit disabled,
 starts it explicitly, checks its response and failure restart, restores its
 saved definition across broker restarts, then stops and removes it. Unauthorized
@@ -653,8 +653,8 @@ cleared between workloads; inherited environment values are not serialized.
 
 The Java case compiles the existing input and runs it from a class directory
 and a newly created JAR, with a bounded heap. HotSpot requires writable
-executable code pages: its children request VINIX_ALLOW_WX=1, which still
-requires Vinix's [privileged launch or wxallowed mount policy](../../docs/mount-execution-policy.md).
+executable code pages: its children request TULPAR_ALLOW_WX=1, which still
+requires Tulpar's [privileged launch or wxallowed mount policy](../../docs/mount-execution-policy.md).
 All Java tools come from one complete JDK. PATH takes precedence; extracted
 Alpine roots can use the actual `/usr/lib/jvm/*/bin` tools when post-install
 alternatives have not been registered. This does not qualify package scripts
@@ -667,7 +667,7 @@ For ordinary-user Firefox or Java qualification, add `--uid 1000
 The controller accepts distinct selected native Firefox/Java runtimes only;
 it records the exact mount input and the guest init prepares read-only
 `nosuid,nodev,wxallowed` self-binds before dropping credentials. The driver
-remains outside those mounts. Firefox requests VINIX_ALLOW_WX only for its
+remains outside those mounts. Firefox requests TULPAR_ALLOW_WX only for its
 children; every helper exec still receives the kernel's mount check. Reports
 retain the requested names and actual most-specific mountinfo rows, whose
 permissions are required before launching. No sandbox-disable environment
@@ -714,11 +714,11 @@ The receipt records the command deadline and hashes the exact guest options;
 increasing a deadline does not change or replace a previous failed receipt.
 
 Repeat with `x86_64` and its matching kernel/root. The ARM builder uses
-`VINIX_AARCH64_SYSROOT` and `CC_AARCH64` (default clang); x86 uses `CC_AMD64`
-(default x86_64-linux-musl-gcc). `VINIX_V_COMPILER` selects V. The
+`TULPAR_AARCH64_SYSROOT` and `CC_AARCH64` (default clang); x86 uses `CC_AMD64`
+(default x86_64-linux-musl-gcc). `TULPAR_V_COMPILER` selects V. The
 `i386 --runtime-probe` path uses `CC_I386` (default i686-linux-musl-gcc), or a
-clang-compatible compiler when `VINIX_I386_SYSROOT` names an i386 musl SDK and
-`VINIX_I386_BUILTINS` names its compiler-rt builtins archive. In the latter mode
+clang-compatible compiler when `TULPAR_I386_SYSROOT` names an i386 musl SDK and
+`TULPAR_I386_BUILTINS` names its compiler-rt builtins archive. In the latter mode
 the receipt also hashes the SDK CRT, libc and builtins; host GCC libraries are
 excluded. SSE2 intrinsics let this fixture build through V's i386 C backend.
 
@@ -756,11 +756,11 @@ Run the two phases sequentially. Both state receipts retain before/after disk
 hashes, making the volume handoff verifiable. No untrusted-package opt-in or
 placeholder installer is used. The stager only acquires inputs; guest APK
 performs dependency resolution and validates repository/package signatures.
-`packages` is restricted to native Vinix execution and an explicit disk;
+`packages` is restricted to native Tulpar execution and an explicit disk;
 `--host` rejects it. This workflow does not qualify desktop or service packaging.
 
 ```sh
-VINIX_I386_SYSROOT=/path/to/i386-sdk VINIX_I386_BUILTINS=/path/to/libclang_rt.builtins-i386.a build-support/run-v-tool.sh tools/linux-compat/build/main.v i386 /path/to/fresh-i386-probe --runtime-probe
+TULPAR_I386_SYSROOT=/path/to/i386-sdk TULPAR_I386_BUILTINS=/path/to/libclang_rt.builtins-i386.a build-support/run-v-tool.sh tools/linux-compat/build/main.v i386 /path/to/fresh-i386-probe --runtime-probe
 ```
 
 The application controller takes a prepared guest root with matching programs
@@ -775,7 +775,7 @@ dynamic applications use the normal private-loader path. A passing static probe
 does not qualify glibc loaders or all translated applications.
 
 Select `--path translated-i386` with an ELF32 probe to test 32-bit translation.
-The static probe invokes `VINIX_I386_EMULATOR` (default `/usr/bin/qemu-i386`)
+The static probe invokes `TULPAR_I386_EMULATOR` (default `/usr/bin/qemu-i386`)
 directly with the private runtime root and the launcher's W^X opt-in, because a
 static ELF cannot be passed to the wrapper's dynamic musl loader. That environment
 is confined to the child; ordinary i386 applications still use `run-x86-32`.
@@ -788,7 +788,7 @@ Unmodified GNU libc can be tested independently with the pinned Debian SDK:
 
 ```sh
 build-support/run-v-tool.sh tools/linux-compat/sdk/main.v arm64 /path/to/fresh-sdk
-VINIX_GLIBC_SYSROOT=/path/to/fresh-sdk/sysroot build-support/run-v-tool.sh tools/linux-compat/build/main.v aarch64 /path/to/fresh-gnu-probe --runtime-probe --libc=glibc
+TULPAR_GLIBC_SYSROOT=/path/to/fresh-sdk/sysroot build-support/run-v-tool.sh tools/linux-compat/build/main.v aarch64 /path/to/fresh-gnu-probe --runtime-probe --libc=glibc
 ```
 
 Use `amd64`/`x86_64` or `i386` for the other SDK/probe pairs. The SDK verifies
@@ -798,7 +798,7 @@ i386 enables _FILE_OFFSET_BITS=64 and _TIME_BITS=64. Link receipts retain the
 actual libc, loader, libm, libgcc and CRT hashes.
 
 Stage those libraries in the prepared guest's
-`/usr/libexec/vinix-glibc/ARCH/lib`. Native probes need the matching GNU
+`/usr/libexec/tulpar-glibc/ARCH/lib`. Native probes need the matching GNU
 interpreter at `/lib/ld-linux-aarch64.so.1` or
 `/lib64/ld-linux-x86-64.so.2`. For translation, each private `ARCH` root needs
 its interpreter at the normal Linux path: `/lib64/ld-linux-x86-64.so.2` or
@@ -1005,7 +1005,7 @@ v -enable-globals -nocache -gc none -cc cc run tests/linux-compat/statabi-refere
 ```
 
 Use matching `--arch x86_64` and kernel/probe inputs for x86. `--reference`
-selects the same semantic matrix while skipping Vinix-specific slab reporting;
+selects the same semantic matrix while skipping Tulpar-specific slab reporting;
 the native audit still requires the allocation cohorts. NULL is tested through
 raw syscalls because musl's fstatat wrapper requires a non-NULL pathname.
 
@@ -1026,7 +1026,7 @@ v -enable-globals -nocache -gc none -cc cc run tests/linux-compat/dupabi-referen
 Use matching x86 kernel/probe inputs and `--arch x86_64` for x86. The reference
 controller freezes the same native probe ELF and Linux kernel, builds a V
 wrapper/initramfs and retains exact hashes and serial output, including on
-failure. ARM uses macOS HVF; x86 uses TCG. `--reference` omits Vinix allocator
+failure. ARM uses macOS HVF; x86 uses TCG. `--reference` omits Tulpar allocator
 reporting while running the identical semantic matrix. The native audit
 requires the allocation cohorts and refuses reference-only qualification.
 
@@ -1072,7 +1072,7 @@ v -enable-globals -nocache -gc none -cc cc run tests/linux-compat/fcntlabi-refer
 Use matching x86 inputs and `--arch x86_64` for x86. Set `V` to the selected
 compiler for both controllers and their generated guest modules when collecting
 reproducible receipts. Reference boots run the identical frozen native ELF and
-omit only Vinix allocator reporting. See [the fcntl receipts and limits](../../docs/linux-posix-qualification.md#native-fcntl-words-and-duplicate-minima).
+omit only Tulpar allocator reporting. See [the fcntl receipts and limits](../../docs/linux-posix-qualification.md#native-fcntl-words-and-duplicate-minima).
 
 The `fcntlpath` case checks 10,812 native raw/musl calls per architecture across
 root and UID/GID1000. Six O_PATH classes cover readable/private regular files,
@@ -1089,7 +1089,7 @@ v -enable-globals -nocache -gc none -cc cc run tests/linux-compat/fcntlpath-refe
 
 Repeat with matching x86 inputs and `--arch x86_64`. Set `V` to the selected
 compiler for both controllers and guest modules. Linux boots run the frozen
-native ELF and skip only Vinix allocator reporting. See [receipts and limits](../../docs/linux-posix-qualification.md#o_path-fcntl-command-refusals).
+native ELF and skip only Tulpar allocator reporting. See [receipts and limits](../../docs/linux-posix-qualification.md#o_path-fcntl-command-refusals).
 
 The `fcntlquery` case runs 9080 F_DUPFD_QUERY controls per architecture across
 root and UID/GID1000. Eight classes each have original/ordinary/CLOEXEC aliases;
@@ -1125,7 +1125,7 @@ v -enable-globals -nocache -gc none -cc cc run tests/linux-compat/fcntlcreated-r
 
 Repeat with matching x86 inputs and `--arch x86_64`. Set `V` for both controllers
 and guest modules. Linux runs the same frozen native musl ELF and omits only
-Vinix allocator observations. See [receipts and limits](../../docs/linux-posix-qualification.md#fcntl-file-creation-queries).
+Tulpar allocator observations. See [receipts and limits](../../docs/linux-posix-qualification.md#fcntl-file-creation-queries).
 
 The `fcntlsync` case runs 3472 F_SETFL controls per architecture for root and
 UID/GID 1000. Nine regular/directory/unlinked/pipe description classes and
@@ -1216,7 +1216,7 @@ and extended updates verify zero/live self targets, ESRCH for missing targets,
 INT_MIN EINVAL, kind/pointer/descriptor precedence, shared alias state and
 raw/libc getters. Upper words, O_PATH, reduced limits, replacement and real
 file/queue/cursor state are covered. Both baselines fail 2,736 controls; patched
-Vinix and the identical native ELF on actual Linux 6.12.51 pass. Two 200-cycle
+Tulpar and the identical native ELF on actual Linux 6.12.51 pass. Two 200-cycle
 cohorts keep storage flat. Actual SIGIO and retained target identity are
 unqualified. See [receipts and limits](../../docs/linux-posix-qualification.md#native-fcntl-owner-commands-and-target-errors).
 
@@ -1231,7 +1231,7 @@ native upper words and negative raw group-number decoding. Fresh bounded
 task-directory snapshots establish observed worker removal after join;
 cached task-path invalidation and exact exit races remain unqualified.
 Two 200-cycle cohorts measure alias/update/refusal cleanup with a live worker.
-Both baselines fail 1,290 controls; candidate Vinix and actual same-ELF Linux
+Both baselines fail 1,290 controls; candidate Tulpar and actual same-ELF Linux
 6.12.51 pass. Earlier join-timing and cached-path setup failures are preserved.
 See [receipts and limits](../../docs/linux-posix-qualification.md#native-fcntl-owner-task-kinds-and-namespaces).
 
@@ -1261,7 +1261,7 @@ root handles. Live and WNOWAIT zombie children remain visible; after waitpid
 and an independent kill-zero ESRCH observation, repeated cached paths return
 ENOENT without procfs polling. Surviving children, self and static/dot entries
 remain reachable. Twenty-seven retained root/child aliases preserve metadata
-and descriptor flags. Both baselines fail 360 controls; fixed Vinix and actual
+and descriptor flags. Both baselines fail 360 controls; fixed Tulpar and actual
 same-ELF Linux 6.12.51 pass. Four 200-cycle lookup/alias cohorts keep storage
 flat; this does not measure process/mount churn or tree reclamation. PID reuse,
 concurrent reap after a positive check, inherited retired-directory lookup and
@@ -1279,7 +1279,7 @@ owners with 6,430 controls per architecture. Root/UID1000 cohorts exercise
 known/unknown lower flags, five upper-word patterns, real permissions and
 path/pointer/descriptor errors, original/dup/CLOEXEC aliases, unlinked O_PATH
 handles and retained metadata/owners/flags/data/cursors/queued AB. Baselines
-fail 3,623 controls; final Vinix and actual same-ELF Linux 6.12.51 pass. Two
+fail 3,623 controls; final Tulpar and actual same-ELF Linux 6.12.51 pass. Two
 200-cycle stable-resource/alias cohorts retain flat storage. The existing
 `access` case also checks low-word pipe owners and real/effective permission
 differences. Run `tests/linux-compat/run` with `--arch ARCH --kernel-dir DIR`
@@ -1297,7 +1297,7 @@ unaligned results, nil, inaccessible, readonly and page-crossing memory.
 Original/dup/CLOEXEC aliases check raw 64-bit F_GETFL, inode owners/identity,
 FD flags, nonblocking EAGAIN, byte transfers and EOF. Retained regular data,
 cursor, queued AB and the original 64 descriptor slots stay unchanged.
-Both baselines fail 3,904 of 4,186 native controls; fixed Vinix passes.
+Both baselines fail 3,904 of 4,186 native controls; fixed Tulpar passes.
 The same musl ELF passes 3,546 ordinary-pipe/error controls on Linux6.12.51.
 The 640 extra native controls separately verify EOPNOTSUPP for unimplemented
 packet O_DIRECT and ENOPKG for notification O_EXCL. Linux deliberately skips
@@ -1321,7 +1321,7 @@ filler restoration. Successful pairs select the two lowest holes, retain
 original/dup/CLOEXEC aliases and pass inode/owner/status/FD flags, EAGAIN,
 ABC transfers and EOF. Original regular data/cursor, nine aliases, queued AB
 and 64 descriptor slots survive. Baselines leak a reader on each one-slot
-refusal, failing 560 of 8,986 controls per architecture; corrected Vinix and
+refusal, failing 560 of 8,986 controls per architecture; corrected Tulpar and
 the identical ELF on actual Linux6.12.51 pass all rows. Two 200-cycle pressure,
 copy-fault and success/alias cohorts retain exactly flat storage.
 Run `tests/linux-compat/run` with `--arch ARCH --kernel-dir DIR --state-dir FRESH`
@@ -1338,7 +1338,7 @@ Root/UID1000 cohorts at limits 48/64 check zero through three free slots,
 four ordinary flags, five upper words and eight destinations. Exact error
 precedence, immediate descriptor state, canaries/refill, real pair transfers
 and retained bank state pass 10,266 checks per architecture on corrected
-Vinix and same-ELF Linux 6.12.51. Baselines fail 160 nil-output errno checks.
+Tulpar and same-ELF Linux 6.12.51. Baselines fail 160 nil-output errno checks.
 Two 200-cycle cohorts include nil EMFILE before slot installation and nil EFAULT
 cleanup after both slots are installed, plus successful pairs and cross-page
 faults; all slab/large-page storage remains flat. Run the suite with
@@ -1352,7 +1352,7 @@ The `pipecmd` case qualifies F_GETPIPE_SZ/F_SETPIPE_SZ nonpipe EBADF and
 real anonymous pipe/FIFO capacities. Root/UID1000 cohorts check nine source
 classes, original/dup/CLOEXEC/fixed aliases, native words, ignored arguments,
 libc, invalid descriptors, reduced limits and reuse. All 3,172 controls pass
-per architecture on corrected Vinix and the identical ELF on Linux6.12.51;
+per architecture on corrected Tulpar and the identical ELF on Linux6.12.51;
 original baselines fail 1,724 wrong-error checks. Final metadata, flags,
 regular XYZ/cursor1, queued AB/CD/GH and 80 slots remain intact. Same-capacity
 setters preserve occupied buffers. Two 200-cycle alias/query/close cohorts
@@ -1373,7 +1373,7 @@ covering real anonymous/FIFO resizing, aliases, overflow/type errors,
 upper-register arguments, low limits/reuse, metadata/flags/cursors, queued
 bytes and wrapped/full-ring data. The original kernels fail 3,144 ARM/1,404 x86
 checks, the separately committed rounding fix leaves 376 capability failures
-on each, and corrected Vinix plus the exact same ELF on Linux 6.12.51 pass.
+on each, and corrected Tulpar plus the exact same ELF on Linux 6.12.51 pass.
 Each final 200-cycle resizing cohort keeps every slab class and large-page
 count flat. Run `--cases pipesize,pipecmd,fcntlabi,keepcaps,capset,open,runtime`;
 `pipesize-reference.v --arch ARCH --kernel LINUX --init NATIVE-PROBE-ELF
@@ -1408,7 +1408,7 @@ The `schext` case qualifies Linux SCHED_EXT priority metadata separately
 from class availability. Root/UID1000 children check sixteen policies,
 both priority bounds, six raw words and actual musl wrappers: 450 controls
 per architecture. Only 28 EXT queries fail on the original kernels;
-corrected Vinix and identical probe ELFs on Linux 6.12.51 pass all rows.
+corrected Tulpar and identical probe ELFs on Linux 6.12.51 pass all rows.
 Reserved/unknown/negative/reset-flagged policies retain EINVAL, FIFO/RR
 retain 1/99 bounds, and queries retain observed policy/priority. Two warmed
 200-cycle cohorts keep every slab/large-page count flat. Run
@@ -1426,7 +1426,7 @@ The `rrabi` case qualifies native `sched_rr_get_interval` PID decoding and
 task-before-output error precedence. Root/UID1000 children make 998 controls
 per architecture: six PID targets, seven raw register-word forms, ten guarded
 output forms and genuine musl wrapper calls. Both cohorts query a real RR
-task at priority1 before returning to OTHER. Vinix retains its 5ms RR quantum
+task at priority1 before returning to OTHER. Tulpar retains its 5ms RR quantum
 and zero OTHER interval; Linux references validate normalized timespecs and
 positive RR intervals without requiring configuration-dependent durations
 to match. Original kernels fail 520 checks; corrected kernels and identical
@@ -1512,7 +1512,7 @@ and pass the retained evidence directory. [The report](../../docs/linux-posix-qu
 binds exact cohort failures, source/C/ELF/compiler pins, production builds,
 storage, executing negative controls and independent lifetime review. Eight
 cases pass across primary/completion/recovery receipts; missing initial aggregates
-and the failed x86 descriptor ISO build remain explicit. Nice remains process-wide in Vinix; pthread nice, races, complete realtime/deadline/
+and the failed x86 descriptor ISO build remain explicit. Nice remains process-wide in Tulpar; pthread nice, races, complete realtime/deadline/
 reset/clamp behavior and GNU/foreign paths remain separate. The three broad
 compatibility gates remain open.
 
@@ -1526,7 +1526,7 @@ and cross-owner peers have different limits, five real initial policy/priority
 states are set by a privileged broker, and every live call checks and restores
 actual state. Guarded inputs, negative/absent/reaped PIDs, upper syscall words,
 real errors, untouched buffers and genuine musl getpriority observations are
-included. Originals fail 1,312; corrected Vinix and identical ELFs on Linux
+included. Originals fail 1,312; corrected Tulpar and identical ELFs on Linux
 6.12.51 pass, with two flat warmed 200-cycle storage cohorts. Run
 `--cases rtadmit,runtime,schedabi,rrabi,attrquery,attrimport,attrnice,fcntlabi`
 with a fresh state directory. `rtadmit-reference.v` accepts the preceding
@@ -1543,7 +1543,7 @@ nice. Effective CAP_SYS_NICE and owner admission remain real; setparam on IDLE
 stays allowed, and RT destinations also require target RTPRIO admission.
 Root/UID1000 each perform `3780/896/3584/4244` controls (25,008 per architecture),
 with guarded inputs, upper words, peer limits, imported nice and real state.
-Originals fail 632; corrected Vinix and identical ELFs on Linux 6.12.51 pass.
+Originals fail 632; corrected Tulpar and identical ELFs on Linux 6.12.51 pass.
 Two warmed 200-cycle cohorts retain flat storage. Run
 `--cases idleexit,runtime,schedabi,rrabi,rtadmit,attrimport,attrnice,fcntlabi`
 with a fresh state directory. `idleexit-reference.v` accepts the preceding
@@ -1561,7 +1561,7 @@ retained actual nice -20/-1/0/1/19; OTHER/BATCH/IDLE report the actual nice.
 Root/UID1000 cohorts query without effective CAP_SYS_NICE, including same/cross-
 owner peers, guarded short/full/unaligned/page-tail outputs, upper argument words
 and real EINVAL/ESRCH/EFAULT behavior. Each architecture runs 24,016 controls;
-originals fail 9,248 and corrected Vinix plus identical ELFs on Linux 6.12.51 pass.
+originals fail 9,248 and corrected Tulpar plus identical ELFs on Linux 6.12.51 pass.
 Two warmed 200-cycle query cohorts retain flat slabs/pages. Run
 `--cases attrclass,runtime,schedabi,rrabi,attrquery,attrnice,rtadmit,idleexit`
 with a fresh state directory. `attrclass-reference.v` uses the preceding reference
@@ -1578,7 +1578,7 @@ selector/target/nice words and negative-target ESRCH for stable process leaders.
 Root/CAP_SYS_NICE and UID1000/no-capability zero-limit cohorts cover seven word
 forms, eight target kinds, three policies, clamped nice boundaries, genuine musl
 calls, exact errors and retained raw/musl nice and scheduling state. Each
-architecture runs 13,214 controls; originals fail 2,898, corrected Vinix and
+architecture runs 13,214 controls; originals fail 2,898, corrected Tulpar and
 identical ELFs on Linux 6.12.51 pass. Two warmed 200-cycle cohorts stay flat.
 Run `--cases niceabi,runtime,attrclass,attrnice --timeout 900` with a fresh state
 directory. `niceabi-reference.v` uses the preceding reference arguments; compile
@@ -1597,7 +1597,7 @@ and target RLIMIT_NICE admission for stable process leaders. Root and UID1000
 cohorts exercise both capability states, six target limits, opposite caller
 limits, four live target forms, three policies and raw/upper-word/genuine musl
 setters. Each architecture runs 40,196 controls; originals fail 10,692, corrected
-Vinix and identical ELFs on Linux 6.12.51 pass. Two warmed 200-cycle cohorts stay
+Tulpar and identical ELFs on Linux 6.12.51 pass. Two warmed 200-cycle cohorts stay
 flat. Run `--cases niceadmit,runtime,niceabi,attrnice --timeout 900` with a fresh
 state directory. `niceadmit-reference.v` uses the preceding reference arguments;
 compile `niceadmit-check.v` without `-prod` and supply the retained evidence area.
@@ -2189,7 +2189,7 @@ Compile `semabi-evidence.v` and run `--self-test`, then `check` on the
 hashes, build identity, baseline failures, Linux reference and native runs,
 plus the existing wait regression on the same candidate kernels. Omitted
 toolchains and boot media have explicit content pins.
-Vinix still limits each vector to 32 operations; larger vectors return E2BIG.
+Tulpar still limits each vector to 32 operations; larger vectors return E2BIG.
 These tests do not qualify SEM_UNDO, permissions/namespaces, per-index GETPID,
 GNU libc or foreign/32-bit application paths.
 

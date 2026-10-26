@@ -6,7 +6,7 @@ import rand
 import time
 
 fn gzip_test_dir() string {
-	dir := os.join_path(os.temp_dir(), 'vinix-gzip-cases-${os.getpid()}')
+	dir := os.join_path(os.temp_dir(), 'tulpar-gzip-cases-${os.getpid()}')
 	os.mkdir_all(dir) or { panic(err) }
 	return dir
 }
@@ -97,7 +97,7 @@ fn test_comment_field_is_read_without_inflating() {
 	// the ISO scripts do.
 	mut commented := plain[0..10].clone()
 	commented[3] = 0x10
-	commented << 'vinix-image-id=0123456789abcdef'.bytes()
+	commented << 'tulpar-image-id=0123456789abcdef'.bytes()
 	commented << u8(0)
 	commented << plain[10..]
 	member := gzip_member(commented.data, u64(commented.len)) or {
@@ -105,7 +105,7 @@ fn test_comment_field_is_read_without_inflating() {
 		return
 	}
 	comment := commented[int(member.comment_offset)..int(member.comment_offset + member.comment_length)].bytestr()
-	assert comment == 'vinix-image-id=0123456789abcdef'
+	assert comment == 'tulpar-image-id=0123456789abcdef'
 	inflated := gzip_test_inflate(commented) or {
 		assert false, 'commented member refused'
 		return
@@ -150,7 +150,7 @@ fn test_corruption_is_refused() {
 }
 
 fn test_sample_speed() {
-	sample := os.getenv('VINIX_GZIP_SAMPLE')
+	sample := os.getenv('TULPAR_GZIP_SAMPLE')
 	if sample == '' {
 		return
 	}

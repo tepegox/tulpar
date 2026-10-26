@@ -13,7 +13,7 @@ environments restore that original state, including absent/empty overrides.
 The three existing generator overrides and extraction/assembly interfaces are
 still available. The fixtures use the platform C compiler and an explicit
 private output path. The invoking binary selects ARM or x86 for its children.
-Set `VINIX_HOST_POLICY_SANITIZE=1` to instrument generated scheduler/TLB fixtures.
+Set `TULPAR_HOST_POLICY_SANITIZE=1` to instrument generated scheduler/TLB fixtures.
 CPU mitigation fixtures always retain their original ASan/UBSan flags.
 
 Qualification runs all original assertions on ARM and x86, instruments both
@@ -25,4 +25,4 @@ execution is established. Guest launchers remain part of the Python inventory.
 Additional V-only injection checks cover twelve compiler-failure owners, three
 generator failures, VEXE precedence and empty-override cleanup. Successful
 generator overrides also run all original assertions. The temporary
-qualification driver is `/tmp/vinix-policy-check/qualify.v`.
+qualification driver is `/tmp/tulpar-policy-check/qualify.v`.

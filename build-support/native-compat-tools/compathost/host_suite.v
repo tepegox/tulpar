@@ -150,7 +150,7 @@ fn host_v() !string {
 }
 
 fn mounted_disk_host(mut suite HostSuite) ! {
-	mut generator := os.getenv('VINIX_BLOCK_POLICY_GENERATOR')
+	mut generator := os.getenv('TULPAR_BLOCK_POLICY_GENERATOR')
 	if generator == '' {
 		generator = suite.work + '/generator'
 		suite.invoke([root() + '/build-support/run-v-tool.sh', root() + '/tests/mounted-disk-policy/host_generator.v', '--install', generator])!
@@ -228,7 +228,7 @@ fn securelevel_host(mut suite HostSuite, family string) ! {
 		first := source.index('pub struct AppendResult') or { return error('Missing production AppendResult') }
 		last := first + (source[first..].index('// Optional capabilities') or { return error('Missing production append boundary') })
 		os.mkdir(suite.work + '/errno')!
-		write(suite.work + '/v.mod', "Module { name: 'vinix_append_dispatch' }\n")!
+		write(suite.work + '/v.mod', "Module { name: 'tulpar_append_dispatch' }\n")!
 		write(suite.work + '/errno/errno.v', 'module errno\npub const efbig = 27\npub fn set(_value int) {}\n')!
 		model := suite.source('tests/securelevel-boot/hosttemplates/dispatch/main.v')!
 		write(suite.work + '/main.v', model + source[first..last])!
@@ -240,7 +240,7 @@ fn securelevel_host(mut suite HostSuite, family string) ! {
 		println('APPEND DISPATCH STACK PASS')
 	} else {
 		for name in ['ext2', 'errno', 'katomic', 'resource'] { os.mkdir(suite.work + '/' + name)! }
-		write(suite.work + '/v.mod', "Module { name: 'vinix_attributes' }\n")!
+		write(suite.work + '/v.mod', "Module { name: 'tulpar_attributes' }\n")!
 		source := suite.source('kernel/fs/ext2/ext2.v')!
 		cache_source := suite.source('kernel/fs/ext2/pagecache.v')!
 		write(suite.work + '/ext2/production.v', 'module ext2\nimport errno\nimport katomic\nimport resource as resource_mod\n'
@@ -274,7 +274,7 @@ fn host_suite_command(args []string, family string) !int {
 	previous := unsafe { C.signal(C.SIGINT, voidptr(host_suite_signal)) }
 	defer { unsafe { C.signal(C.SIGINT, previous) } }
 	keep := if '--state-dir' in parsed.options { resolve(parsed.options['--state-dir'])! } else { '' }
-	work := hosttest.work_dir(keep, 'vinix-' + family + '-')!
+	work := hosttest.work_dir(keep, 'tulpar-' + family + '-')!
 	defer { if keep == '' { retire(work) } }
 	mut suite := HostSuite{ work: work }
 	if family == 'hypervisor-host' { hypervisor_host(mut suite, parsed.options['--cc'] or { 'clang' })! }

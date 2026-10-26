@@ -10,10 +10,10 @@ device scrubs. See [the contract](../../docs/storage-volumes.md#identity-based-a
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-auto-scrub --work /tmp/auto-scrub-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --auto-scrub --work /tmp/auto-scrub-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --auto-scrub --work /tmp/auto-scrub-x86
 ```
 

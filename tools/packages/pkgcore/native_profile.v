@@ -86,13 +86,13 @@ fn (plan NativeProfilePlan) canonical() !string {
 fn native_profile_templates(architecture string, version string) []RootRecipe {
 	mut recipes := []RootRecipe{cap: 3}
 	for p in [
-		Package{ id: 'org.vinix.package-hello', version: version, architecture: architecture,
+		Package{ id: 'org.tulpar.package-hello', version: version, architecture: architecture,
 			name: 'Package Hello', description: 'A static V example of the signed package launch contract',
 			license: 'MIT', kind: 'native', entrypoint: 'bin/package-hello', permissions: ['files'], associations: ['text/plain'] },
-		Package{ id: 'org.vinix.counter', version: version, architecture: architecture,
+		Package{ id: 'org.tulpar.counter', version: version, architecture: architecture,
 			name: 'Native counter', description: 'A native SDK 1 window example with a button and retained private counter data.',
 			license: 'MIT', kind: 'native', entrypoint: 'bin/counter', permissions: ['display'], window_protocol: 1 },
-		Package{ id: 'org.vinix.memo', version: version, architecture: architecture,
+		Package{ id: 'org.tulpar.memo', version: version, architecture: architecture,
 			name: 'Native memo', description: 'A native SDK text-entry example with explicit saving to private application data.',
 			license: 'MIT', kind: 'native', entrypoint: 'bin/memo', permissions: ['display'], window_protocol: 2 },
 	]! {
@@ -152,7 +152,7 @@ fn native_catalog_with(version string, source_roots string, destination string, 
 	scratch = mirror_cost(scratch, scratch)!
 	disk_check(options.available_space(parent)!, mirror_cost(needed, scratch)!, 64 * 1024 * 1024)!
 	disk_check(options.available_space(temporary)!, scratch, 64 * 1024 * 1024)!
-	mut exporting := create_profile_stage(parent, '.vinix-native-profile', 'native SDK profile')!
+	mut exporting := create_profile_stage(parent, '.tulpar-native-profile', 'native SDK profile')!
 	defer { exporting.close() }
 	canonical := write_native_profile(version, roots, target, options, mut exporting) or { return exporting.failure(err) }
 	defer { unsafe { canonical.free() } }

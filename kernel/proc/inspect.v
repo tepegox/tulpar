@@ -6,7 +6,7 @@ import errno
 import memory
 
 // Capabilities in a new user namespace never grant inspection of its parent.
-// Vinix currently models user namespaces as identities without a parent tree.
+// Tulpar currently models user namespaces as identities without a parent tree.
 fn inspection_capable(caller &Process, target &Process) bool {
 	if !is_initial_namespace(caller.ns.user)
 		&& voidptr(caller.ns.user) != voidptr(target.ns.user) {

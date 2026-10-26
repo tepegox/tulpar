@@ -36,7 +36,7 @@ fn (mut dev NVMENamespace) block_health() ?resource.BlockHealth {
 		if !owned { memory.pmm_free(physical, 1) }
 	}
 	bounce := voidptr(u64(physical) + higher_half)
-	mut command := unsafe { &NVMECommand(C.vinix_stack_alloc(sizeof(NVMECommand))) }
+	mut command := unsafe { &NVMECommand(C.tulpar_stack_alloc(sizeof(NVMECommand))) }
 	mut report := resource.BlockHealth{protocol: resource.health_nvme, disk_id: dev.stat.rdev}
 	for index in 0 .. 2 {
 		unsafe {

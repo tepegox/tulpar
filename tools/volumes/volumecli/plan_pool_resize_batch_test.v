@@ -135,7 +135,7 @@ fn test_resize_preserves_clipped_intersections_and_resolves_saved_geometry_after
 }
 
 fn test_full_259_argument_resize_cli_preserves_full_v2_sets_and_durable_equal_bound_retries() {
-	work := os.join_path(os.temp_dir(), 'vinix-resize-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'; mut set := PlanSet{}
+	work := os.join_path(os.temp_dir(), 'tulpar-resize-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'; mut set := PlanSet{}
 	for disk in 0 .. 64 {
 		mut plan := Plan{key: resize_key(disk + 1, 1), count: 1}; plan.key.bytes = u64(-1) & ~u64(4095)
 		plan.rows[0] = Request{slot: u32(disk), offset: plan.key.bytes - 16384, length: 4096, flags: u64(disk & 1)}; assert append_plan(mut set, &plan)
@@ -149,7 +149,7 @@ fn test_full_259_argument_resize_cli_preserves_full_v2_sets_and_durable_equal_bo
 		mut identity := [41]char{}; disk_identity(&set.plans[disk].key, &identity[0]); values << unsafe { cstring_to_vstring(&identity[0]) }; values << row.pool.str(); values << (end - 24576).str(); values << end.str()
 	}
 	unsafe {
-		mut args := [260]&char{}; args[0] = &char(c'vinix-volume'); args[2] = path.str
+		mut args := [260]&char{}; args[0] = &char(c'tulpar-volume'); args[2] = path.str
 		for i in 0 .. values.len { args[3 + i] = values[i].str }
 		args[1] = &char(c'pool-preview-resize-batch'); assert run(259, &args[0]) == 0 && os.read_bytes(path)! == original
 		args[1] = &char(c'pool-resize-batch'); assert run(259, &args[0]) == 0
@@ -160,12 +160,12 @@ fn test_full_259_argument_resize_cli_preserves_full_v2_sets_and_durable_equal_bo
 }
 
 fn test_resize_sources_and_every_later_cli_token_fail_without_publication_prefixes() {
-	work := os.join_path(os.temp_dir(), 'vinix-resize-cli-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
+	work := os.join_path(os.temp_dir(), 'tulpar-resize-cli-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	mut set := PlanSet{}; resize_fixture(mut set, 0, 1); assert publish_bundle(path.str, &set); original := os.read_bytes(path)!; os.symlink(path, work + '/alias')!
 	mut batch := PoolResizeBatch{count: 1}; batch.rows[0] = PoolResizeRequest{key: set.plans[1].key, pool: 3, start: 8192, end: 24576}
 	for preview in [false, true] { for bad in [work + '/missing', work, work + '/alias'] { assert resize_batch_pool_plan(bad.str, &batch, preview) == 1 } }
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-resize-batch'), path.str, &char(c'mbr:00000001'), &char(c'4'), &char(c'24576'), &char(c'49152'), &char(c'mbr:00000001'), &char(c'3'), &char(c'8192'), &char(c'24576'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-resize-batch'), path.str, &char(c'mbr:00000001'), &char(c'4'), &char(c'24576'), &char(c'49152'), &char(c'mbr:00000001'), &char(c'3'), &char(c'8192'), &char(c'24576'), &char(nil)]!
 		for command in [c'pool-resize-batch', c'pool-preview-resize-batch'] {
 			assert publish_bundle(path.str, &set)
 			args[1] = &char(command); for count in [2, 3, 6, 8, 10, 260, 400] { assert run(count, &args[0]) == 2 }

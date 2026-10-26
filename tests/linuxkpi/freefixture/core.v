@@ -66,8 +66,8 @@ __global (
 
 fn page_lock() { unsafe { for C.rcuh_exchange32(&page_guard, 1) != 0 { C.sched_yield() } } }
 fn page_unlock() { unsafe { C.rcuh_store32(&page_guard, 0) } }
-@[export:'vinix_linuxkpi_page_size'] pub fn page_size() usize { return 4096 }
-@[export:'vinix_linuxkpi_alloc_pages'] pub fn page_allocate(pages usize, reclaim bool) voidptr {
+@[export:'tulpar_linuxkpi_page_size'] pub fn page_size() usize { return 4096 }
+@[export:'tulpar_linuxkpi_alloc_pages'] pub fn page_allocate(pages usize, reclaim bool) voidptr {
 	unsafe {
 		check(pages != 0 && (!reclaim || may_sleep()), @LINE)
 		C.rcuh_add32(&page_calls, 1)
@@ -87,7 +87,7 @@ fn page_unlock() { unsafe { C.rcuh_store32(&page_guard, 0) } }
 		return base
 	}
 }
-@[export:'vinix_linuxkpi_free_pages'] pub fn page_free(base voidptr, pages usize) {
+@[export:'tulpar_linuxkpi_free_pages'] pub fn page_free(base voidptr, pages usize) {
 	unsafe {
 		if C.rcuh_exchange32(&page_block_once,0) != 0 {
 			C.rcuh_store32(&page_free_entered,1)
@@ -104,7 +104,7 @@ fn page_unlock() { unsafe { C.rcuh_store32(&page_guard, 0) } }
 }
 @[export:'vkp_cache_ctor_warning'] pub fn cache_warning(value bool) { check(!value, @LINE) }
 
-@[export:'vinix_linuxkpi_bug'; noreturn] pub fn bug(reason C.rcuh_const_charp, line i32) {
+@[export:'tulpar_linuxkpi_bug'; noreturn] pub fn bug(reason C.rcuh_const_charp, line i32) {
 	unsafe {
 		if fatal_watch {
 			// Original head fields must stay untouched when validation fails.

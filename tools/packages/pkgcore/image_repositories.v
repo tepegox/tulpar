@@ -4,7 +4,7 @@ module pkgcore
 import os
 import time
 
-pub const image_repositories_path = '/usr/share/vinix-packages/repositories'
+pub const image_repositories_path = '/usr/share/tulpar-packages/repositories'
 
 struct ImageRepository {
 	id string
@@ -82,7 +82,7 @@ fn image_repository_copy(source string, target string, repository ImageRepositor
 }
 
 fn image_repositories_parents(root string) !string {
-	for suffix in ['/usr', '/usr/share', '/usr/share/vinix-packages']! {
+	for suffix in ['/usr', '/usr/share', '/usr/share/tulpar-packages']! {
 		path := root + suffix
 		defer { unsafe { path.free() } }
 		mut info := C.stat{}
@@ -95,13 +95,13 @@ fn image_repositories_parents(root string) !string {
 			return error('image repository parents must be ordinary controlled directories without shared write access')
 		}
 	}
-	return root + '/usr/share/vinix-packages'
+	return root + '/usr/share/tulpar-packages'
 }
 
 fn (plan &ImageRepositories) current() ! {
 	if !image_configuration_root_matches(plan.root, plan.device, plan.inode) { return error('package image root changed after repository preparation') }
 	image_configuration_parents(plan.root)!
-	path := plan.root + '/etc/vinix-packages/config.json'
+	path := plan.root + '/etc/tulpar-packages/config.json'
 	defer { unsafe { path.free() } }
 	if image_configuration_exists(path)! {
 		image_configuration_architecture(plan.root, plan.architecture)!
@@ -212,7 +212,7 @@ fn (configuration &ImageConfiguration) prepare_repositories_with(source string, 
 	}
 	scratch := if output_info.st_dev == temporary_info.st_dev { mirror_cost(needed, needed)! } else { needed }
 	disk_check(options.available_space(temporary)!, scratch, 64 * 1024 * 1024)!
-	mut capturing := create_export_stage(temporary, '.vinix-image-repositories', 'image repository capture')!
+	mut capturing := create_export_stage(temporary, '.tulpar-image-repositories', 'image repository capture')!
 	mut transferred := false
 	defer { if !transferred { capturing.close() } }
 	unsafe { &plan }.capture_from(physical, options, mut capturing) or { return capturing.failure(err) }
@@ -252,7 +252,7 @@ fn (plan &ImageRepositories) publish_with(options ImageRepositoriesOptions) !boo
 	make_package_directories(parent, 0o755)!
 	checked := image_repositories_parents(plan.root)!
 	unsafe { checked.free() }
-	mut exporting := create_export_stage(parent, '.vinix-image-repositories', 'image repositories')!
+	mut exporting := create_export_stage(parent, '.tulpar-image-repositories', 'image repositories')!
 	defer { exporting.close() }
 	plan.write_stage(target, options, mut exporting) or { return exporting.failure(err) }
 	return true

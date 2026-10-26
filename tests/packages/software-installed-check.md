@@ -5,8 +5,8 @@ staged release declaration on disk, installs it through one approved Software
 review and checks baseline drift as ordinary users through all four boots.
 
 `native-catalog-check.v --installed` starts with a blank 4 GiB disk and the
-production-staged native application image. The kernel's normal `vinix.disk=auto`
-path formats that disk as Vinix's journaled primary filesystem (VJFS), installs
+production-staged native application image. The kernel's normal `tulpar.disk=auto`
+path formats that disk as Tulpar's journaled primary filesystem (VJFS), installs
 the image and starts its userland from the disk. Three subsequent boots must
 select that same installed root. The host neither formats nor repairs the
 filesystem, copies consumer state between boots, rebuilds the image between
@@ -86,10 +86,10 @@ large-disk hashing:
 ```sh
 v -prod -path '@vlib|@vmodules|.|tests/hardware-platform|tools/accounts' \
   -o /tmp/native-catalog-check tests/packages/native-catalog-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
-  VINIX_PACKAGE_TEST_UI2=/path/to/headless/modules \
-  VINIX_NATIVE_CATALOG_INPUTS=/build/native-inputs \
-  VINIX_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/vinix-sandbox \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/headless/modules \
+  TULPAR_NATIVE_CATALOG_INPUTS=/build/native-inputs \
+  TULPAR_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/tulpar-sandbox \
   /tmp/native-catalog-check --installed --arch aarch64 \
   --kernel /build/aarch64-kernel --state-dir /build/new-installed-state
 ```

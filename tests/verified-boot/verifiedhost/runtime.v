@@ -76,7 +76,7 @@ fn secure_runtime(original Runtime, options bh.Options, root bool) !Runtime {
 	if !original.secure { return original }
 	key, cert := original.work + '/test.key', original.work + '/test.crt'
 	bh.quiet(['openssl', 'req', '-new', '-x509', '-newkey', 'rsa:2048', '-nodes', '-sha256', '-subj',
-		'/CN=Vinix temporary ' + if root { 'verified root test' } else { 'UEFI test' }, '-days',
+		'/CN=Tulpar temporary ' + if root { 'verified root test' } else { 'UEFI test' }, '-days',
 		'1', '-addext', 'extendedKeyUsage=codeSigning', '-keyout', key, '-out', cert])!
 	os.chmod(key, 0o600)!
 	vars := original.work + '/secure-vars.fd'
@@ -233,9 +233,9 @@ fn boot_fixture(work string, arch string, original string) !string {
 	} else {
 		hosttest.generate_module_with_capture(module_path, source, arch, [], module_capture)!
 		sdk := os.getenv_opt(if arch == 'aarch64' {
-			'VINIX_AARCH64_SYSROOT'
+			'TULPAR_AARCH64_SYSROOT'
 		} else {
-			'VINIX_AMD64_SYSROOT'
+			'TULPAR_AMD64_SYSROOT'
 		}) or {
 			bh.root() + '/' + if arch == 'aarch64' {
 				'build-aarch64-userland/sysroot'
@@ -292,7 +292,7 @@ fn boot_runtime(args []string) ! {
 	runtime_guest(runtime, build.output, 'valid', 'VERIFIED-BOOT: launch accepted', '', none)!
 	for scenario, filename in {
 		'config':    'boot/limine.conf'
-		'kernel':    'boot/vinix'
+		'kernel':    'boot/tulpar'
 		'initramfs': 'boot/root-0.tar'
 	} {
 		bundle := runtime.work + '/' + scenario

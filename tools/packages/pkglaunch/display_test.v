@@ -10,7 +10,7 @@ fn display_refuse(text string) {
 
 fn test_private_display_transport_preserves_literal_input_and_binds_receipt() {
 	request := Request{ format: 2, nonce: 'a'.repeat(32), arguments: ['run', 'org.editor', '/home/a; $(literal)'],
-		display: ':42', authority: '/run/user/1000/vinix-hosted-x11/app-9/Xauthority' }
+		display: ':42', authority: '/run/user/1000/tulpar-hosted-x11/app-9/Xauthority' }
 	text := request.encode()!
 	defer { unsafe { text.free() } }
 	mut first := decode(text)!
@@ -35,26 +35,26 @@ fn test_private_display_transport_preserves_literal_input_and_binds_receipt() {
 }
 
 fn test_private_display_display_refuses_ambient_paths_and_control_fields() {
-	for authority in ['', '/tmp/Xauthority', '/root/.Xauthority', '/run/user/0/vinix-hosted-x11/app/Xauthority',
-		'/run/user/01000/vinix-hosted-x11/app/Xauthority', '/run/user/4294967296/vinix-hosted-x11/app/Xauthority',
-		'/run/user/1000/vinix-hosted-x11/../Xauthority', '/run/user/1000/vinix-hosted-x11/a/b/Xauthority',
-		'/run/user/1000/vinix-hosted-x11/app/Xauthority\x00tail', '/run/user/1000/vinix-hosted-x11/app/Xauthority/'] {
+	for authority in ['', '/tmp/Xauthority', '/root/.Xauthority', '/run/user/0/tulpar-hosted-x11/app/Xauthority',
+		'/run/user/01000/tulpar-hosted-x11/app/Xauthority', '/run/user/4294967296/tulpar-hosted-x11/app/Xauthority',
+		'/run/user/1000/tulpar-hosted-x11/../Xauthority', '/run/user/1000/tulpar-hosted-x11/a/b/Xauthority',
+		'/run/user/1000/tulpar-hosted-x11/app/Xauthority\x00tail', '/run/user/1000/tulpar-hosted-x11/app/Xauthority/'] {
 		request := Request{ format: 2, nonce: 'b'.repeat(32), arguments: ['run', 'app'], display: ':42', authority: authority }
 		if value := request.encode() { unsafe { value.free() }; assert false } else { display_error(err) }
 	}
 	for display in ['', ':01', ':1.0', 'localhost:1', ':65536', ':1\n', ':1\x00tail', ':1\x00', ':1\x00x', ':0\x00'] {
 		request := Request{ format: 2, nonce: 'b'.repeat(32), arguments: ['run', 'app'], display: display,
-			authority: '/run/user/1000/vinix-hosted-x11/app/Xauthority' }
+			authority: '/run/user/1000/tulpar-hosted-x11/app/Xauthority' }
 		if value := request.encode() { unsafe { value.free() }; assert false } else { display_error(err) }
 	}
 	for display in [':1\\u0000', ':1\\u0000x', ':0\\u0000'] {
-		text := '{"format":2,"nonce":"' + 'a'.repeat(32) + '","arguments":["run","app"],"display":"' + display + '","authority":"/run/user/1000/vinix-hosted-x11/app/Xauthority"}'
+		text := '{"format":2,"nonce":"' + 'a'.repeat(32) + '","arguments":["run","app"],"display":"' + display + '","authority":"/run/user/1000/tulpar-hosted-x11/app/Xauthority"}'
 		display_refuse(text)
 		unsafe { text.free() }
 	}
 	for command in ['run-window', 'run-terminal', 'run-terminal-args'] {
 		request := Request{ format: 2, nonce: 'b'.repeat(32), arguments: if command == 'run-terminal-args' { [command, 'app', '--'] } else { [command, 'app'] },
-			display: ':42', authority: '/run/user/1000/vinix-hosted-x11/app/Xauthority' }
+			display: ':42', authority: '/run/user/1000/tulpar-hosted-x11/app/Xauthority' }
 		if value := request.encode() { unsafe { value.free() }; assert false } else { display_error(err) }
 	}
 	// A syntactically valid pair still cannot be forwarded without its private
@@ -62,7 +62,7 @@ fn test_private_display_display_refuses_ambient_paths_and_control_fields() {
 	os.setenv('DISPLAY', 'sentinel-display', true)
 	os.setenv('XAUTHORITY', 'sentinel-authority', true)
 	request := Request{ format: 2, arguments: ['run', 'app'], display: ':65535',
-		authority: '/run/user/4294967295/vinix-hosted-x11/missing/Xauthority' }
+		authority: '/run/user/4294967295/tulpar-hosted-x11/missing/Xauthority' }
 	if _ := request.forward_display(4294967295) { assert false } else { display_error(err) }
 	assert os.getenv('DISPLAY') == 'sentinel-display' && os.getenv('XAUTHORITY') == 'sentinel-authority'
 	Request{}.forward_display(1000)!

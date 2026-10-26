@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT */
-#ifndef VINIX_LINUXKPI_DMA_RESV_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_DMA_RESV_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_DMA_RESV_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_DMA_RESV_V_PRIMITIVES_H
 #include "linuxkpi_dma_fence_v_primitives.h"
 #include "linuxkpi_rcu_v_primitives.h"
 struct vdr_list {

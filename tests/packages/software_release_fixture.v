@@ -9,13 +9,13 @@ import json2
 // The same executable is the actual child service. Record only literal argv
 // admitted by the test, so a queued proposal cannot silently become an apply.
 fn software_first_run_release_service_fixture(args []string) !bool {
-	receipt := os.getenv('VINIX_SOFTWARE_FIRST_RUN_RECEIPT')
+	receipt := os.getenv('TULPAR_SOFTWARE_FIRST_RUN_RECEIPT')
 	if receipt == '' { return false }
-	path := os.getenv('VINIX_SOFTWARE_FIRST_RUN_DECLARATION')
+	path := os.getenv('TULPAR_SOFTWARE_FIRST_RUN_DECLARATION')
 	if args[1] == 'view' {
 		assert args.len == 2
 		os.write_file(receipt, (os.read_file(receipt) or { '' }) + 'view\n')!
-		if os.getenv('VINIX_SOFTWARE_FIRST_RUN_FAIL_VIEW') == '1' { eprintln('fixture: catalog unavailable'); exit(17) }
+		if os.getenv('TULPAR_SOFTWARE_FIRST_RUN_FAIL_VIEW') == '1' { eprintln('fixture: catalog unavailable'); exit(17) }
 		println(json2.encode(SoftwareView{format: 1, architecture: 'aarch64'}))
 		return true
 	}
@@ -38,7 +38,7 @@ fn software_first_run_release_service_fixture(args []string) !bool {
 }
 
 fn check_software_first_run_release() ! {
-	base := os.temp_dir() + '/vinix-software-first-run-' + os.getpid().str()
+	base := os.temp_dir() + '/tulpar-software-first-run-' + os.getpid().str()
 	os.mkdir(base)!
 	defer { os.rmdir_all(base) or {}; unsafe { base.free() } }
 	path := base + '/release apps ; $literal.json'
@@ -46,16 +46,16 @@ fn check_software_first_run_release() ! {
 	defer { unsafe { path.free(); receipt.free() } }
 	declaration := '{"format":1,"architecture":"aarch64","packages":["editor"]}\n'
 	os.write_file(path, declaration)!
-	os.setenv('VINIX_SOFTWARE_FIRST_RUN_RECEIPT', receipt, true)
-	os.setenv('VINIX_SOFTWARE_FIRST_RUN_DECLARATION', path, true)
+	os.setenv('TULPAR_SOFTWARE_FIRST_RUN_RECEIPT', receipt, true)
+	os.setenv('TULPAR_SOFTWARE_FIRST_RUN_DECLARATION', path, true)
 	defer {
-		os.unsetenv('VINIX_SOFTWARE_FIRST_RUN_RECEIPT')
-		os.unsetenv('VINIX_SOFTWARE_FIRST_RUN_DECLARATION')
-		os.unsetenv('VINIX_SOFTWARE_FIRST_RUN_FAIL_VIEW')
+		os.unsetenv('TULPAR_SOFTWARE_FIRST_RUN_RECEIPT')
+		os.unsetenv('TULPAR_SOFTWARE_FIRST_RUN_DECLARATION')
+		os.unsetenv('TULPAR_SOFTWARE_FIRST_RUN_FAIL_VIEW')
 	}
 	for catalog_fails in [false, true] {
 		os.write_file(receipt, '')!
-		os.setenv('VINIX_SOFTWARE_FIRST_RUN_FAIL_VIEW', if catalog_fails { '1' } else { '0' }, true)
+		os.setenv('TULPAR_SOFTWARE_FIRST_RUN_FAIL_VIEW', if catalog_fails { '1' } else { '0' }, true)
 		mut app := SoftwareApp{ service_path: os.executable(), release_deployment_path: path.clone(),
 			administration_required: true, output: []u8{cap: 8192} }
 		app.start(['view'], true)
@@ -88,7 +88,7 @@ fn check_software_first_run_release() ! {
 	}
 	// Search, which is available during catalog loading, wins over the handoff.
 	os.write_file(receipt, '')!
-	os.unsetenv('VINIX_SOFTWARE_FIRST_RUN_FAIL_VIEW')
+	os.unsetenv('TULPAR_SOFTWARE_FIRST_RUN_FAIL_VIEW')
 	mut interrupted := SoftwareApp{ service_path: os.executable(), release_deployment_path: path.clone(), output: []u8{cap: 8192} }
 	interrupted.start(['view'], true)
 	interrupted.handle(software_first_run_release_action)!
@@ -103,7 +103,7 @@ fn check_software_first_run_release() ! {
 
 fn check_software_release() ! {
 	check_software_first_run_release()!
-	base := os.temp_dir() + '/vinix-software-release-' + os.getpid().str()
+	base := os.temp_dir() + '/tulpar-software-release-' + os.getpid().str()
 	os.mkdir(base)!
 	defer { os.rmdir_all(base) or {}; unsafe { base.free() } }
 	path := base + '/release apps ; $literal.json'
@@ -187,7 +187,7 @@ fn check_software_release_memory() ! {
 		app.initialize_deployment_field()
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				free_window_tree(app.build(ui2.rect(0, 0, 640, 610))!)
 				free_window_tree(app.build(ui2.rect(0, 0, 320, 240))!)
@@ -199,7 +199,7 @@ fn check_software_release_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'release catalog form retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'release catalog form retained ${kept} bytes'
 		println('Software release catalog: 1000 full/compact form, discovery, missing-file refusal, navigation and retirement cycles retain zero tracked bytes PASS')
 	}
 }

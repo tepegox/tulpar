@@ -25,10 +25,10 @@ fn C.srcu_dereference(voidptr,&C.srcu_struct) voidptr
 fn C.srcu_init()
 fn C.__atomic_exchange_n(voidptr,...) voidptr
 fn C.msleep(u32)
-fn C.vinix_linuxkpi_srcu_static_quiesce_for_test(&C.srcu_struct)
-fn C.vinix_linuxkpi_srcu_bootstrap_limit_for_test(u32) i32
-fn C.vinix_linuxkpi_srcu_shutdown_for_test()
-fn C.vinix_linuxkpi_srcu_queue_for_test() &C.workqueue_struct
+fn C.tulpar_linuxkpi_srcu_static_quiesce_for_test(&C.srcu_struct)
+fn C.tulpar_linuxkpi_srcu_bootstrap_limit_for_test(u32) i32
+fn C.tulpar_linuxkpi_srcu_shutdown_for_test()
+fn C.tulpar_linuxkpi_srcu_queue_for_test() &C.workqueue_struct
 fn C.vmh_srcu_clock_thread(voidptr) voidptr
 fn C.vmh_srcu_waiter_thread(voidptr) voidptr
 fn C.vmh_srcu_callback(&C.rcu_head)
@@ -85,7 +85,7 @@ struct SrcuCallback { mut:
 }
 @[export:'vmh_srcu_callback']
 pub fn srcu_callback(head &C.rcu_head) { unsafe {
- test:=&SrcuCallback(head);C.assert(C.vmh_preempt_depth!=0 && !C.vinix_linuxkpi_may_sleep())
+ test:=&SrcuCallback(head);C.assert(C.vmh_preempt_depth!=0 && !C.tulpar_linuxkpi_may_sleep())
  call:=u32(C.__atomic_add_fetch(&test.calls,u32(1),4))
  if test.count!=nil { slot:=u32(C.__atomic_fetch_add(test.count,u32(1),4));if test.order!=nil { test.order[slot]=test.index } }
  if test.gated { C.__atomic_store_n(&test.entered,u32(1),3);for C.__atomic_load_n(&test.release,2)==0 { C.sched_yield() } }
@@ -142,9 +142,9 @@ fn srcu_callbacks(ssp &C.srcu_struct) { unsafe {
  requeue.limit=20;srcu_set_counts(requeue,nil,&count,&freed);requeue.free_self=true;C.call_srcu(ssp,&requeue.head,C.vmh_srcu_callback)
  srcu_wait(&freed,201);C.srcu_barrier(ssp);C.assert(count==220)
  mut atomic_call:=SrcuCallback{};srcu_callback_init(&atomic_call,ssp);before:=C.vmh_live_pages;C.vmh_fail_allocation=true
- flags:=C.vinix_linuxkpi_irq_save();C.call_srcu(ssp,&atomic_call.head,C.vmh_srcu_callback);C.assert(!C.vmh_interrupts)
- C.vinix_linuxkpi_irq_restore(flags);C.vmh_fail_allocation=false;srcu_wait(&atomic_call.calls,1);C.srcu_barrier(ssp)
- C.vinix_linuxkpi_srcu_static_quiesce_for_test(ssp);C.assert(C.vmh_live_pages==before)
+ flags:=C.tulpar_linuxkpi_irq_save();C.call_srcu(ssp,&atomic_call.head,C.vmh_srcu_callback);C.assert(!C.vmh_interrupts)
+ C.tulpar_linuxkpi_irq_restore(flags);C.vmh_fail_allocation=false;srcu_wait(&atomic_call.calls,1);C.srcu_barrier(ssp)
+ C.tulpar_linuxkpi_srcu_static_quiesce_for_test(ssp);C.assert(C.vmh_live_pages==before)
 } }
 const srcu_magic=usize(0xc001facedeadbeef)
 struct SrcuPayload { mut: magic usize }
@@ -202,7 +202,7 @@ fn srcu_waiting_domains() { unsafe {
 struct SrcuSystemWaiter { mut: work C.work_struct ssp &C.srcu_struct = unsafe { nil } entered &u32 = unsafe { nil } done &u32 = unsafe { nil } }
 @[export:'vmh_srcu_system_wait']
 pub fn srcu_system_wait(work &C.work_struct) { unsafe {
- waiter:=&SrcuSystemWaiter(work);C.assert(C.vinix_linuxkpi_may_sleep());C.__atomic_fetch_add(waiter.entered,u32(1),3)
+ waiter:=&SrcuSystemWaiter(work);C.assert(C.tulpar_linuxkpi_may_sleep());C.__atomic_fetch_add(waiter.entered,u32(1),3)
  C.synchronize_srcu(waiter.ssp);C.__atomic_fetch_add(waiter.done,u32(1),3)
 } }
 fn srcu_system_saturation() { unsafe {
@@ -219,21 +219,21 @@ fn srcu_system_saturation() { unsafe {
 @[export:'vmh_srcu_tests']
 pub fn srcu_tests() { unsafe {
  mut parent:=C.native_task_model{};C.vmh_sync_model_init(&parent,170);C.vmh_native_task=&parent;saved_cpu:=C.vmh_current_cpu;before:=C.vmh_live_pages
- C.assert(C.system_unbound_wq==nil && C.system_wq==nil && C.system_highpri_wq==nil);C.assert(C.vinix_linuxkpi_workqueue_bootstrap()==0)
+ C.assert(C.system_unbound_wq==nil && C.system_wq==nil && C.system_highpri_wq==nil);C.assert(C.tulpar_linuxkpi_workqueue_bootstrap()==0)
  system_pages:=C.vmh_live_pages;system_workers:=C.atomic_read(&work_workers);C.vmh_fail_allocation=true
- C.assert(C.vinix_linuxkpi_srcu_bootstrap_limit_for_test(2)==-C.ENOMEM);C.vmh_fail_allocation=false
+ C.assert(C.tulpar_linuxkpi_srcu_bootstrap_limit_for_test(2)==-C.ENOMEM);C.vmh_fail_allocation=false
  C.assert(C.vmh_live_pages==system_pages && C.atomic_read(&work_workers)==system_workers)
  mut bootstrap_failures:=u32(0);mut bootstrap_successes:=u32(0)
  for stage:=i32(0);stage<8;stage++ {
-  C.vmh_allocation_failure_after=stage;result:=C.vinix_linuxkpi_srcu_bootstrap_limit_for_test(2);C.vmh_allocation_failure_after=-1
-  if result!=0 { C.assert(result==-C.ENOMEM);bootstrap_failures++;C.assert(C.vinix_linuxkpi_srcu_bootstrap_limit_for_test(2)==0) } else { bootstrap_successes++ }
-  initialized:=C.vinix_linuxkpi_srcu_queue_for_test();C.assert(C.vinix_linuxkpi_srcu_bootstrap_limit_for_test(2)==0)
-  C.assert(usize(C.vinix_linuxkpi_srcu_queue_for_test())==usize(initialized));C.vinix_linuxkpi_srcu_shutdown_for_test()
+  C.vmh_allocation_failure_after=stage;result:=C.tulpar_linuxkpi_srcu_bootstrap_limit_for_test(2);C.vmh_allocation_failure_after=-1
+  if result!=0 { C.assert(result==-C.ENOMEM);bootstrap_failures++;C.assert(C.tulpar_linuxkpi_srcu_bootstrap_limit_for_test(2)==0) } else { bootstrap_successes++ }
+  initialized:=C.tulpar_linuxkpi_srcu_queue_for_test();C.assert(C.tulpar_linuxkpi_srcu_bootstrap_limit_for_test(2)==0)
+  C.assert(usize(C.tulpar_linuxkpi_srcu_queue_for_test())==usize(initialized));C.tulpar_linuxkpi_srcu_shutdown_for_test()
   C.assert(C.vmh_live_pages==system_pages && C.atomic_read(&work_workers)==system_workers)
  }
- C.assert(bootstrap_failures!=0 && bootstrap_successes!=0);C.assert(C.vinix_linuxkpi_srcu_bootstrap_limit_for_test(2)==0);C.srcu_init()
+ C.assert(bootstrap_failures!=0 && bootstrap_successes!=0);C.assert(C.tulpar_linuxkpi_srcu_bootstrap_limit_for_test(2)==0);C.srcu_init()
  mut clock:=SrcuClock{};C.vmh_sync_model_init(&clock.model,179);C.assert(C.pthread_create(&clock.thread,nil,C.vmh_srcu_clock_thread,&clock)==0)
- queue:=C.vinix_linuxkpi_srcu_queue_for_test();C.assert(queue!=nil && usize(queue)!=usize(C.system_unbound_wq));mut warm:=[2]WorkTest{}
+ queue:=C.tulpar_linuxkpi_srcu_queue_for_test();C.assert(queue!=nil && usize(queue)!=usize(C.system_unbound_wq));mut warm:=[2]WorkTest{}
  for i:=u32(0);i<2;i++ { work_init(&warm[i],queue);warm[i].hold=true;C.assert(C.queue_work(queue,&warm[i].work)) }
  for i:=u32(0);i<2;i++ { srcu_wait(&warm[i].entered,1) };for i:=u32(0);i<2;i++ { C.complete(&warm[i].gate) }
  for i:=u32(0);i<2;i++ { C.assert(C.flush_work(&warm[i].work) || warm[i].calls==1) }
@@ -243,8 +243,8 @@ pub fn srcu_tests() { unsafe {
  C.assert(C.__atomic_load_n(&static_waiter.done,2)==0);C.vmh_current_cpu=3;C.srcu_read_unlock(&srcu_static_domain,static_reader);srcu_waiter_join(&static_waiter)
  srcu_grace_periods(&srcu_static_domain);srcu_polling(&srcu_static_domain);srcu_late_callback(&srcu_static_domain);srcu_barrier_boundary(&srcu_static_domain)
  srcu_callbacks(&srcu_static_domain);srcu_concurrency(&srcu_static_domain);C.assert(C.vmh_live_pages==warmed)
- srcu_dynamic_lifetimes();C.assert(C.vmh_live_pages==warmed);C.vinix_linuxkpi_srcu_static_quiesce_for_test(&srcu_static_domain)
- C.vinix_linuxkpi_srcu_shutdown_for_test();C.vinix_linuxkpi_workqueue_shutdown_for_test();C.__atomic_store_n(&clock.stop,u32(1),3)
+ srcu_dynamic_lifetimes();C.assert(C.vmh_live_pages==warmed);C.tulpar_linuxkpi_srcu_static_quiesce_for_test(&srcu_static_domain)
+ C.tulpar_linuxkpi_srcu_shutdown_for_test();C.tulpar_linuxkpi_workqueue_shutdown_for_test();C.__atomic_store_n(&clock.stop,u32(1),3)
  C.assert(C.pthread_join(clock.thread,nil)==0);C.vmh_sync_model_destroy(&clock.model);C.assert(C.vmh_live_pages==before && C.atomic_read(&work_workers)==0)
  C.vmh_current_cpu=saved_cpu;C.vmh_native_task=nil;C.vmh_sync_model_destroy(&parent)
 } }

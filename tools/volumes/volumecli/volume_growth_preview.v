@@ -24,7 +24,7 @@ fn preview_volume_growth(device &char, input &char, credential &char, capacity u
 	}
 	work.disk = work.after; work.request.data.length = length
 	fd := C.open(device, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open growth preview parent'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open growth preview parent'); return 1 }; defer { C.close(fd) }
 	if !probe_disk(fd, mut work.after, mut work.status) || !key_matches(&work.disk, &work.after) {
 		return plan_error(c'growth preview disk identity, native sectors or declared capacity do not match')
 	}

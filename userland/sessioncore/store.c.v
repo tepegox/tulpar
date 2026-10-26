@@ -40,7 +40,7 @@ pub fn save(path string, record string) ! {
 	if record.len > 1024 * 1024 { return error('session file too large') }
 	directory := os.dir(path)
 	defer { unsafe { directory.free() } }
-	template_name := '${directory}/.vinix-session.XXXXXX'
+	template_name := '${directory}/.tulpar-session.XXXXXX'
 	defer { unsafe { template_name.free() } }
 	mut template := template_name.bytes()
 	unsafe { template.flags |= .noslices }
@@ -67,7 +67,7 @@ pub fn save(path string, record string) ! {
 	if parent < 0 { return error('could not open session directory') }
 	defer { C.close(parent) }
 	if C.fsync(parent) != 0 {
-		// Vinix fsync on the file also drains the backing block device.
+		// Tulpar fsync on the file also drains the backing block device.
 		if C.errno != C.EINVAL || C.fsync(fd) != 0 {
 			return error('could not sync session directory')
 		}

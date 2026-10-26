@@ -20,11 +20,11 @@ attempt accounting and successful credential rotation. The host scheduler
 checks and both static Linux architecture builds pass. The extended native
 account/job/build gate now also passes as UID/GID 1000 on ARM64 HVF and x86-64
 TCG, with 14 independently validated receipts per architecture. A controlled
-blocking-open build reproduced the FIFO hang inside ARM64 Vinix. The
+blocking-open build reproduced the FIFO hang inside ARM64 Tulpar. The
 [native workflow evidence](../tests/development/README.md) records the exact
 kernel/tool pins and the isolated kernel's typed-null compiler adaptation.
 
-`vinix-jobs service-unit STATE` exports a literal foreground watcher unit for
+`tulpar-jobs service-unit STATE` exports a literal foreground watcher unit for
 the existing Services importer. Import and Start retain its existing compositor
 authorization. Host integration checks disabled import, exact argv with quoted
 paths, two real watcher ticks and graceful stop through the supervisor model.
@@ -60,12 +60,12 @@ remain open; see the
 
 | Requirement | Available implementation | Remaining acceptance / implementation |
 | --- | --- | --- |
-| Installed-system self-hosting | [V build plans](../tools/development/README.md) pin prepared source/tool/SDK inputs, build in a private copy, enforce deadlines and record output hashes. Native kernel, utility, init and package-CLI recipes are documented. [Guest runner checks](../tests/development/README.md) qualify UID 1000 source/link copying, epoch/environment control, matching artifacts and changed-input refusal on both architectures. AArch64 rebuilds the V C-backend compiler in two fresh workspaces, then uses each rebuilt compiler for the four `util-vinix` utilities, `init` and the package CLI from immutable committed sources. It executes the tools, packs the compiled `lscpu` and signs a consumer release. Generated-C/compiler/executable/payload/manifest/index/signature hashes match; the controller independently verifies the signature and payload metadata with full SDK/V/runtime pins. | Complete native kernel/desktop/dependency recipes, init boot/login qualification and the remaining userland/package workflows; rebuild all four requested layers inside an installed system on both architectures. Basic runner checks use a prebuilt V payload; AArch64 compiler/utility/init/package checks use native compilation. No full self-hosted rebuild was run here. |
+| Installed-system self-hosting | [V build plans](../tools/development/README.md) pin prepared source/tool/SDK inputs, build in a private copy, enforce deadlines and record output hashes. Native kernel, utility, init and package-CLI recipes are documented. [Guest runner checks](../tests/development/README.md) qualify UID 1000 source/link copying, epoch/environment control, matching artifacts and changed-input refusal on both architectures. AArch64 rebuilds the V C-backend compiler in two fresh workspaces, then uses each rebuilt compiler for the four `util-tulpar` utilities, `init` and the package CLI from immutable committed sources. It executes the tools, packs the compiled `lscpu` and signs a consumer release. Generated-C/compiler/executable/payload/manifest/index/signature hashes match; the controller independently verifies the signature and payload metadata with full SDK/V/runtime pins. | Complete native kernel/desktop/dependency recipes, init boot/login qualification and the remaining userland/package workflows; rebuild all four requested layers inside an installed system on both architectures. Basic runner checks use a prebuilt V payload; AArch64 compiler/utility/init/package checks use native compilation. No full self-hosted rebuild was run here. |
 | Toolchains and developer applications | [Project qualification](../tools/development/qualification.md) covers C/C++/V, Node/TypeScript, Rust/Cargo, Go, Java, make/CMake/Ninja, npm, GDB and SQLite. A [V compiler stager](../tools/development/stage-v.v) exports committed compiler/library sources, records portable-source adaptations and prepares matching static ELF installations for both architectures. [Native guest checks](../tests/development/README.md) passed C/C++ thread/file projects and the V file project as UID/GID 1000 on AArch64 with GCC/G++ 11.2.1 and V 0.5.2 `f6358ec`. AArch64 also rebuilt the V C-backend compiler twice and used both matching compilers to build reproducible projects and signed packages. Both architectures passed prepared V version/help and bounded diagnostic-log gates; AArch64 verified actual assertion failures with relative source paths. Missing tools and failed workflows remain failing gates. | Qualify the remaining V backends, reference profiles and native x86 compiler projects with exact package versions and retained receipts; qualify IDE workflows and broader package ecosystems. Python/Meson execution is excluded by the repository's no-Python rule, so their acceptance stays open. |
 | Debugging and diagnostics | Dumpability and authorized `process_vm_readv/writev` already exist. The GDB profile requires a real source breakpoint, backtrace and continued execution. The existing bounded security-event ring now uses stack-backed producer records; [native checks](../tests/overlay-rename/security-events.md) cover both producers, copied labels, ring counters and live authorization of inherited report descriptors. | Native ptrace attach/register/step/events, ELF core generation and output/limit policy, profiler events, process stack sampling and authorized hang/crash reporting. No new kernel tracing interface is claimed. |
 | OCI and rootless containers | Existing mount/PID/IPC/UTS namespaces, resource-group controls and overlay copy-up provide parts of container support; see [resource groups](resource-groups.md) and [compatibility status](linux-posix-compatibility.md). | User ID mapping, user/network namespace ownership, network isolation, complete delegation and OCI security semantics; mainstream-runtime and rootless adversarial qualification. Existing refusal of unsupported isolation stays intact. |
-| Practical hardware VM hosting | QEMU provides practical RAM sizes and multiple virtual CPUs. The [VM manager](../tools/development/virtual-machines.md) selects an accelerator explicitly. The native Intel backend supports page-backed RAM up to 1 GiB, with allocation rollback, shared mapping lifetimes and EPT invalidation. | Native Intel still has one vCPU and a real-mode entry API. Larger-memory VM entry requires physical/nested VT-x qualification. AMD SVM, ARM virtualization, interrupts and device integration remain open. QEMU TCG inside Vinix does not satisfy hardware acceleration acceptance. |
-| VM integration and lifecycle | Private per-VM qcow2 disks/firmware variables, QMP lifecycle, offline paired snapshots with exact-name restoration and backend identity binding, guarded recovery of interrupted restores/deletions and identified creations, explicit user networking/loopback SSH forwarding, read-only 9p shares and bounded read-only guest-agent health/OS/network queries. | Qualify guest OS workflows inside Vinix, provide Vinix guest tools/drivers, qualify shared folders and network behavior, and implement running-state snapshots and crash-atomic snapshot transactions if required. |
+| Practical hardware VM hosting | QEMU provides practical RAM sizes and multiple virtual CPUs. The [VM manager](../tools/development/virtual-machines.md) selects an accelerator explicitly. The native Intel backend supports page-backed RAM up to 1 GiB, with allocation rollback, shared mapping lifetimes and EPT invalidation. | Native Intel still has one vCPU and a real-mode entry API. Larger-memory VM entry requires physical/nested VT-x qualification. AMD SVM, ARM virtualization, interrupts and device integration remain open. QEMU TCG inside Tulpar does not satisfy hardware acceleration acceptance. |
+| VM integration and lifecycle | Private per-VM qcow2 disks/firmware variables, QMP lifecycle, offline paired snapshots with exact-name restoration and backend identity binding, guarded recovery of interrupted restores/deletions and identified creations, explicit user networking/loopback SSH forwarding, read-only 9p shares and bounded read-only guest-agent health/OS/network queries. | Qualify guest OS workflows inside Tulpar, provide Tulpar guest tools/drivers, qualify shared folders and network behavior, and implement running-state snapshots and crash-atomic snapshot transactions if required. |
 | Server/SSH/CI and automation | Native SQLite transaction/rollback/reopen/integrity and authenticated HTTP/CGI projects on both architectures. AArch64 also passes two scheduled native Go CI builds with matching artifacts, isolated credentials and refusal of an existing output. [Per-account interval jobs](../tools/development/scheduled-jobs.md) use pinned executables, selected environment, protected credential files and durably reserved attempts for fresh outputs. [Native x86_64/AArch64 job checks](../tests/development/README.md) qualify ordinary-account execution, private receipts, credential/output isolation, unsafe-file refusal, deadlines, INT/TERM group retirement, watcher ticks with one PID, concurrent-owner refusal and killed-owner retry/acknowledgement. Both architectures also qualify real native Services broker import/start/stop, active-job retirement, enabled restoration and removal across broker restart, plus cold boots with the home and broker socket on ext2. Ordinary ext2 unmount refuses pending orphan allocations; the native gate also qualifies immediate attempts with bounded busy retries. The [VFS rename regression](../tests/vfs-rename/README.md) covers the reproduced watcher-state publication race. | Graphical service control, complete installed boot/login, comprehensive unmount busy accounting, wider database/server/TLS/load qualification, authenticated SSH development, native x86 CI and broader CI/deployment workflows. A retained x86 HTTP connection-aborted run still needs investigation. |
 
 Validation on 12 October 2026 used the Darwin ARM host, V 0.5.2 `f6358ec`,
@@ -84,13 +84,13 @@ packing/install/resolution and SQLite commit/rollback/reopen checks. The VM suit
 ran real QEMU with two vCPUs and checked lifecycle, concurrent-owner refusal,
 disk writes/snapshot restoration and independent firmware state. The job suite
 checked actual execution, protected credentials, deadlines, interrupted state and
-repeated watcher execs. These are host results, not installed-Vinix receipts.
+repeated watcher execs. These are host results, not installed-Tulpar receipts.
 
 The V [stager](../tools/development/stage.v) built all four commands as static
 little-endian ELF64 for AArch64 and x86_64 and checked each ELF machine ID. Local
 staging receipts and binaries are retained in
-`/tmp/vinix-dev-aarch64-20261012-c` and `/tmp/vinix-dev-x86_64-20261012-c`;
-the host project receipt is in `/tmp/vinix-development-qualification-20261012-a`.
+`/tmp/tulpar-dev-aarch64-20261012-c` and `/tmp/tulpar-dev-x86_64-20261012-c`;
+the host project receipt is in `/tmp/tulpar-development-qualification-20261012-a`.
 These paths are local evidence, not dependencies of the maintained commands.
 
 The [snapshot identity checks](../tools/development/virtual-machines.md) passed
@@ -98,7 +98,7 @@ on 15 October 2026 with host QEMU 11.1.1 and V `be2eb40`. Restore now resolves
 the requested name to its unique qcow2 ID before preparing the paired firmware
 variables. Real disk/variable checks cover colliding numeric names, missing or
 duplicate names, and failed inventory commands; the full host VM lifecycle
-suite also passes. These checks do not establish Vinix-hosted QEMU or guest OS
+suite also passes. These checks do not establish Tulpar-hosted QEMU or guest OS
 qualification, and crash-atomic snapshot transactions remain open.
 
 The following snapshot-binding checks on the same host pass duplicate-name
@@ -121,7 +121,7 @@ remain blocked for manual inspection. Host fault-injection checks exercise
 real qcow2 operations before and after command failure, repeated recovery,
 numeric-name disk/firmware pairing and partial publication/cleanup. This
 process-interruption recovery does not establish power-loss atomicity,
-corrupt-image repair or Vinix-hosted QEMU acceptance.
+corrupt-image repair or Tulpar-hosted QEMU acceptance.
 
 The subsequent monitor guard refuses restart and offline snapshots whenever
 the existing socket accepts connections, without depending on a working QMP
@@ -131,7 +131,7 @@ acceptance, check descriptor retirement over repeated probes, and kill a real
 QEMU manager while preserving control of its surviving VM. Replacement and
 snapshot attempts leave the original monitor inode and disk/firmware hashes
 unchanged after the manager's record lock is released. This does not add a
-force-stop mechanism or qualify installed-Vinix VM hosting.
+force-stop mechanism or qualify installed-Tulpar VM hosting.
 
 The manager now exposes four read-only guest-agent queries under the existing
 private-state authorization and an independent query lock. It synchronizes
@@ -141,7 +141,7 @@ fixtures and the public CLI check stale data, error/timeout handling, query
 serialization, disabled transports and unchanged images; the real QEMU fixture
 also enables and checks its agent socket. The manager does not grant guest
 permissions or expose mutation RPCs. Packaged-agent guest qualification and
-Vinix's own guest driver/agent implementation remain open.
+Tulpar's own guest driver/agent implementation remain open.
 
 Startup now shares the query lease until QMP and the configured agent channel
 are ready, and offline checks inspect both endpoint paths. A missing QMP path
@@ -164,7 +164,7 @@ lifetimes received an independent source and generated-C review.
 
 The V [memory controller](../tests/hypervisor/README.md#guest-memory-and-session-lifetime)
 retains kernel, fixture and ISO SHA-256s, QEMU arguments and a passing receipt
-at `/tmp/vinix-hv-memory-guest-20261012-i/receipt.json`, with the serial transcript
+at `/tmp/tulpar-hv-memory-guest-20261012-i/receipt.json`, with the serial transcript
 beside it. Production kernels built and booted on x86_64 and AArch64 with the
 test tags disabled. The ABI/VMX ASan/UBSan and optimized assembly checks passed,
 including INVEPT operand order and immediate status capture; the four checker
@@ -175,8 +175,8 @@ The AArch64 desktop harness passed `idle,apps,drag` and `ops,churn,cache` using
 the isolated production kernel. All 36 cohorts of 200 system calls reported
 zero retained bytes per operation; all four programs run 300 times each
 reported zero retained bytes. The cache scenario retained 16 MiB of cache
-after writing 32 MiB. Results are in `/tmp/vinix-hv-memory-desktop-full.json`
-and `/tmp/vinix-hv-memory-retention.json`. These broad AArch64 regressions
+after writing 32 MiB. Results are in `/tmp/tulpar-hv-memory-desktop-full.json`
+and `/tmp/tulpar-hv-memory-retention.json`. These broad AArch64 regressions
 complement the x86 hypervisor memory fixture.
 
 `tests/kernel-allocs/run.sh` still fails its existing allocation-site allowlist
@@ -190,7 +190,7 @@ from `776b9f0d3`, the development commands in
 `build/development17-20261013/tools-arm-budget`, GCC/G++ 11.2.1 (20211120),
 BusyBox 1.36.1 and V compiler sources at
 `f6358ecff9cffbf2d8b03e6a09269aac7707e26c`. Both architecture compiler stages
-completed with musl GCC 14.2.0 and `VINIX_V_COPT=-O0`. The source adaptations
+completed with musl GCC 14.2.0 and `TULPAR_V_COPT=-O0`. The source adaptations
 are recorded in their receipts, including relative assertion diagnostics for
 reproducible builds. The native failure project still exits 1 and reports its
 file, line, expression and panic; no assertion-disable flag is used.
@@ -218,7 +218,7 @@ independently validated records in
 `build/development17-20261013/guest-arm-selfhost-v-m`. The ordinary account
 rebuilt V's C-backend compiler, checked its pinned revision and used that exact
 executable for all subsequent V project builds. Those builds disable caches
-and select the separately pinned `/usr/lib/vlang` installation with `VINIX_V_ROOT`.
+and select the separately pinned `/usr/lib/vlang` installation with `TULPAR_V_ROOT`.
 The generated C and rebuilt compiler matched across workspaces, as did every
 project binary and signed package artifact. Selected hashes and complete tool
 versions are recorded in [the guest qualification evidence](../tests/development/README.md).
@@ -304,7 +304,7 @@ stamping; no permission override was needed. All 17 native receipt records and
 the account/job/build gates passed in
 `build/development17-20261013/guest-arm-reference-go-d`.
 The SDK/runtime/tool and matching artifact hashes are recorded in the guest
-documentation. This qualifies the pure-Go reference project through Vinix's
+documentation. This qualifies the pure-Go reference project through Tulpar's
 Linux ABI. Native x86 Go, cgo, wider module/network/server projects and the
 remaining section 17 gates stay open. Completed image, firmware and redundant
 SDK imports may be pruned; qualification receipts and serial logs remain.
@@ -355,7 +355,7 @@ Full source, SDK, runtime and executable pins are recorded in
 TLS, production load, service boot integration and SSH/CI remain open.
 
 The scheduled native Go CI reference gate passed on AArch64 HVF on
-13 October 2026. A pinned `vinix-jobs` schedule dispatched `vinix-build` twice
+13 October 2026. A pinned `tulpar-jobs` schedule dispatched `tulpar-build` twice
 as UID/GID 1000, compiling and executing the Go 1.23.9 goroutine/channel/file
 project in distinct reserved-attempt workspaces. Program/data/account-proof
 artifacts matched. The private CI credential reached only the selected
@@ -537,7 +537,7 @@ Duplication and fork preserve the original attachment across namespace copies;
 bind aliases and lazy replacement mounts remain independent. Closing the final
 descriptor or completing process teardown releases this busy state. The writer
 fixture's former native-only stale-route case now qualifies retained-descriptor
-refusal on both Vinix and Linux. Publication admission and description lifetime
+refusal on both Tulpar and Linux. Publication admission and description lifetime
 accounting below also cover references outside descriptor tables.
 The [descriptor publication checks](../tests/mount-lifecycle/unmount-publication.md)
 close ordinary-unmount admission before scanning existing descriptors. Both
@@ -736,7 +736,7 @@ covered for linked/unlinked native ELFs, ordinary owners, root without
 `CAP_SYS_ADMIN` and scripts. Successful images check actual RWX `mmap` and
 `mprotect` policy, also after fork. The explicit environment request, default
 W^X and initial-namespace privileged override remain enforced. This policy is
-Vinix-specific and excluded from the portable Linux suite. Broader runtime,
+Tulpar-specific and excluded from the portable Linux suite. Broader runtime,
 backend and concurrent-remount qualification remains open.
 The [execveat validation checks](../tests/mount-lifecycle/exec-flags.md) reject
 unsupported flag bits with `EINVAL` and report `ELOOP` for final symlinks left
@@ -859,6 +859,6 @@ qualification remain open. Full pins and native CI
 instructions are recorded in [the guest evidence](../tests/development/README.md).
 Boot services, remote CI, deployment, broader projects and SSH remain open.
 
-Do not check off section 17 until an installed Vinix system builds, debugs,
+Do not check off section 17 until an installed Tulpar system builds, debugs,
 tests and packages a real project, runs a container with the requested isolation,
 and hosts a practical hardware-accelerated guest OS under supported authorization.

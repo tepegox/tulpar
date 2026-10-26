@@ -1,6 +1,6 @@
 /* Native syscall-model declarations and aliases; implementation is V. */
-#ifndef VINIX_BIG_IO_MODEL_ABI_H
-#define VINIX_BIG_IO_MODEL_ABI_H
+#ifndef TULPAR_BIG_IO_MODEL_ABI_H
+#define TULPAR_BIG_IO_MODEL_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

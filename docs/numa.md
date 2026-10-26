@@ -2,7 +2,7 @@
 
 A board with more than one memory controller answers a load from another
 socket's RAM more slowly than one from its own, so *where* a page comes from
-matters as much as how many pages are free. Vinix reads the machine's layout
+matters as much as how many pages are free. Tulpar reads the machine's layout
 from firmware and acts on it in the physical allocator, in the scheduler's
 thread placement, and through the Linux memory-policy syscalls.
 
@@ -97,7 +97,7 @@ NUMA topology nowhere else — libnuma, hwloc, numactl and glibc's
 /sys/devices/system/node/nodeN/{cpumap,cpulist,distance,meminfo,numastat}
 ```
 
-Same file names, same formats. `numastat` reports zeroes: Vinix does not count
+Same file names, same formats. `numastat` reports zeroes: Tulpar does not count
 the faults that missed their preferred node, and a kernel which never migrates
 a page after the fact has nothing else to say there.
 

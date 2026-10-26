@@ -1,13 +1,13 @@
 #!/bin/sh
-# Docker engine smoke test. Runs inside the aarch64 Vinix userland: starts
+# Docker engine smoke test. Runs inside the aarch64 Tulpar userland: starts
 # dockerd, loads the offline busybox image and runs containers from it.
 set -eu
 
 export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 export HOME=/root
 
-image=vinix/busybox:latest
-rootfs=/usr/share/vinix-docker/busybox-rootfs.tar
+image=tulpar/busybox:latest
+rootfs=/usr/share/tulpar-docker/busybox-rootfs.tar
 
 fail() {
 	echo "DOCKER SMOKE FAIL: $*"
@@ -23,7 +23,7 @@ pass() {
 	echo "DOCKER SMOKE PASS: $*"
 }
 
-vinix-dockerd start || fail "dockerd did not start"
+tulpar-dockerd start || fail "dockerd did not start"
 docker version || fail "docker version"
 pass "daemon answers the API"
 

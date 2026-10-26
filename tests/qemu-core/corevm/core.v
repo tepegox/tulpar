@@ -84,17 +84,17 @@ pub fn available_port() !string {
 
 pub fn arm_environment(options Options, original map[string]string, system string) !map[string]string {
 	mut env := original.clone()
-	env['VINIX_INITRAMFS'] = options.initramfs
-	env['VINIX_BOOT_DISK'] = options.state_dir + '/boot.img'
-	env['VINIX_EFIVARS'] = options.state_dir + '/efivars.fd'
-	env['VINIX_QEMU_PACKAGE_STORE'] = options.state_dir + '/packages.tar'
-	env['VINIX_QEMU_PERSIST_DISK'] = options.state_dir + '/root.ext2'
-	env['VINIX_QEMU_PERSIST_SIZE_MB'] = '64'
-	env.delete('VINIX_QEMU_PERSIST')
-	env['VINIX_KEEP_TEMP_BOOT_DISK'] = '1'
+	env['TULPAR_INITRAMFS'] = options.initramfs
+	env['TULPAR_BOOT_DISK'] = options.state_dir + '/boot.img'
+	env['TULPAR_EFIVARS'] = options.state_dir + '/efivars.fd'
+	env['TULPAR_QEMU_PACKAGE_STORE'] = options.state_dir + '/packages.tar'
+	env['TULPAR_QEMU_PERSIST_DISK'] = options.state_dir + '/root.ext2'
+	env['TULPAR_QEMU_PERSIST_SIZE_MB'] = '64'
+	env.delete('TULPAR_QEMU_PERSIST')
+	env['TULPAR_KEEP_TEMP_BOOT_DISK'] = '1'
 	// The original setdefault evaluates the allocator even if the key exists.
 	port := available_port()!
-	if 'VINIX_QEMU_PACKAGE_STORE_PORT' !in env { env['VINIX_QEMU_PACKAGE_STORE_PORT'] = port }
+	if 'TULPAR_QEMU_PACKAGE_STORE_PORT' !in env { env['TULPAR_QEMU_PACKAGE_STORE_PORT'] = port }
 	if system != 'Darwin' && 'USE_TCG' !in env { env['USE_TCG'] = '1' }
 	return env
 }
@@ -108,7 +108,7 @@ pub fn arm_command(options Options, verification bool, no_build string) []string
 
 pub fn amd64_command(options Options, original map[string]string) []string {
 	return [options.qemu, '-machine', 'q35,smm=off', '-accel',
-		original['VINIX_QEMU_ACCEL'] or { 'tcg' }, '-cpu', options.cpu, '-m', '2048', '-smp',
+		original['TULPAR_QEMU_ACCEL'] or { 'tcg' }, '-cpu', options.cpu, '-m', '2048', '-smp',
 		options.cpus.str(), '-drive',
 		'if=pflash,format=raw,unit=0,readonly=on,file=' + options.firmware, '-cdrom', options.iso,
 		'-display', 'none', '-monitor', 'none', '-serial', 'stdio', '-no-reboot']
@@ -127,7 +127,7 @@ pub fn phase(options Options, verification bool) !int {
 	flush_stdout()
 	system := $if darwin { 'Darwin' } $else { 'Linux' }
 	env := arm_environment(options, os.environ(), system)!
-	command := arm_command(options, verification, os.getenv('VINIX_QEMU_CORE_NO_BUILD'))
+	command := arm_command(options, verification, os.getenv('TULPAR_QEMU_CORE_NO_BUILD'))
 	run := capture(command, env, options.root, options.timeout, verification, false, true)!
 	status := verdict(run, verification, false)
 	if status == 0 { println('==> AArch64 QEMU ' + label + ' boot passed') }

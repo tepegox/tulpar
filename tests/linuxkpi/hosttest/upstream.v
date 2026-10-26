@@ -53,7 +53,7 @@ pub fn file_digest(path string) !string {
 }
 
 pub fn verify_upstream(source_root string, pin map[string]json2.Any) ! {
-	manifest_path := os.join_path(source_root, '.vinix-upstream.json')
+	manifest_path := os.join_path(source_root, '.tulpar-upstream.json')
 	if expected := pin['manifest_sha256'] {
 		if file_digest(manifest_path)! != expected.str() {
 			return error('source manifest differs from the pinned manifest')
@@ -67,7 +67,7 @@ pub fn verify_upstream(source_root string, pin map[string]json2.Any) ! {
 	expected := (manifest['files'] or { return error('files') }).as_map()
 	mut actual := map[string]bool{}
 	for path in os.walk_ext(source_root, '', hidden: true) {
-		if os.file_name(path) != '.vinix-upstream.json' && os.is_file(path) {
+		if os.file_name(path) != '.tulpar-upstream.json' && os.is_file(path) {
 			actual[os.path_rel(source_root, path)!] = true
 		}
 	}

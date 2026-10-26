@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_IRQ_WORK_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_IRQ_WORK_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_IRQ_WORK_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_IRQ_WORK_V_PRIMITIVES_H
 #include "linuxkpi_v_primitives.h"
 struct irq_work;
 typedef void (*vkiw_callback_fn)(struct irq_work *);
@@ -24,21 +24,21 @@ void vkiw_sync(void *);
 void vkiw_raise(void);
 uint32_t vkiw_running_count(void *);
 uint64_t vkiw_sync_wait_count(void);
-void vinix_linuxkpi_irqwork_send_ipi(uint32_t);
+void tulpar_linuxkpi_irqwork_send_ipi(uint32_t);
 bool vkm_cpu_masks_ready(void);
 uint32_t vkm_cpu_ids(void);
 uint32_t vkm_online_count(void);
 bool vks_smp_ready(void);
 bool vkr_rcu_ready(void);
-bool vinix_linuxkpi_smp_boot_context(void);
-bool vinix_linuxkpi_smp_task_present(void);
-uint32_t vinix_linuxkpi_cpu_id(void);
-uint32_t vinix_linuxkpi_maskable_irq_depth(void);
-uint32_t vinix_linuxkpi_preempt_count(void);
-void vinix_linuxkpi_preempt_disable(void);
-void vinix_linuxkpi_preempt_enable(void);
-unsigned long vinix_linuxkpi_irq_flags(void);
-void vinix_linuxkpi_spin_wait(void);
+bool tulpar_linuxkpi_smp_boot_context(void);
+bool tulpar_linuxkpi_smp_task_present(void);
+uint32_t tulpar_linuxkpi_cpu_id(void);
+uint32_t tulpar_linuxkpi_maskable_irq_depth(void);
+uint32_t tulpar_linuxkpi_preempt_count(void);
+void tulpar_linuxkpi_preempt_disable(void);
+void tulpar_linuxkpi_preempt_enable(void);
+unsigned long tulpar_linuxkpi_irq_flags(void);
+void tulpar_linuxkpi_spin_wait(void);
 /* Compiler primitives only. All queue ownership and dispatch stay in V. */
 #define vkiw_load32(p, order) __atomic_load_n((p), (order))
 #define vkiw_store32(p, value, order) __atomic_store_n((p), (value), (order))

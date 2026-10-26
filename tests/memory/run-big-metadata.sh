@@ -3,7 +3,7 @@
 set -eu
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 . "$repo/build-support/find-v.sh"
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-big-metadata.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-big-metadata.XXXXXX")
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 for size in 4096 16384; do
 	mkdir -p "$work/$size/memory"

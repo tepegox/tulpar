@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_TYPES_H
-#define VINIX_LINUX_TYPES_H
+#ifndef TULPAR_LINUX_TYPES_H
+#define TULPAR_LINUX_TYPES_H
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#ifdef VINIX_LINUXKPI_HOST_TEST
+#ifdef TULPAR_LINUXKPI_HOST_TEST
 /* Read libc types before Linux redefines compiler inline annotations. */
 #include <sys/types.h>
 #endif
@@ -26,7 +26,7 @@ typedef u64 dma_addr_t;
 typedef u64 resource_size_t;
 typedef unsigned long irq_hw_number_t;
 typedef long ssize_t;
-#if defined(VINIX_LINUXKPI_HOST_TEST) && defined(__linux__)
+#if defined(TULPAR_LINUXKPI_HOST_TEST) && defined(__linux__)
 /* libc uses a different C spelling for this ABI-identical host test type. */
 #include <sys/types.h>
 #else
@@ -37,7 +37,7 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 #define DECLARE_BITMAP(name, bits) unsigned long name[BITS_TO_LONGS(bits)]
 #include <asm/posix_types.h>
-#ifndef VINIX_LINUXKPI_HOST_TEST
+#ifndef TULPAR_LINUXKPI_HOST_TEST
 typedef __kernel_pid_t pid_t;
 typedef __kernel_clockid_t clockid_t;
 typedef __kernel_clock_t clock_t;

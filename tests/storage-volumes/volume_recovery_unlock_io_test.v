@@ -6,7 +6,7 @@ import os
 fn recovery_unlock_check(backup string, key string, directory string, sector u64, flags u64, force bool, mode int, expected i32) {
 	volume_discovery_io = VolumeDiscoveryIO{recovery: true, directory: directory, sector: sector, flags: flags | u64(force), mode: mode, goal_derives: 0}
 	unsafe {
-		args := [&char(c'vinix-volume'), &char(c'open-recovery-volume-auto'), backup.str, key.str, &char(c'ro'), &char(nil)]!
+		args := [&char(c'tulpar-volume'), &char(c'open-recovery-volume-auto'), backup.str, key.str, &char(c'ro'), &char(nil)]!
 		assert run(if force { 5 } else { 4 }, &args[0]) == expected
 	}
 	assert volume_discovery_io.derives == 0 && volume_discovery_io.wipes == 1
@@ -15,7 +15,7 @@ fn recovery_unlock_check(backup string, key string, directory string, sector u64
 }
 
 fn test_recovery_unlock_authenticates_before_discovery_erases_credentials_and_preserves_modes() {
-	work := os.join_path(os.temp_dir(), 'vinix-recovery-unlock-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-recovery-unlock-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; os.mkdir(work + '/dev')!; defer { os.rmdir_all(work) or {} }
 	backup := work + '/backup'; key := work + '/key'; directory := work + '/dev'
 	mut recovery := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}

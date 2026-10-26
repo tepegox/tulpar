@@ -154,7 +154,7 @@ fn reap_tx() {
 
 // Called by the C IP shim's Ethernet output callback.  Return zero when the
 // frame was accepted and a negative value when the ring is temporarily full.
-@[export: 'vinix_virtio_net_send']
+@[export: 'tulpar_virtio_net_send']
 pub fn send(frame voidptr, length u64) int {
 	if !virtio_net_ready || frame == unsafe { nil } || length > buffer_size - net_header_size {
 		return -1

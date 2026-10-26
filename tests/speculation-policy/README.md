@@ -25,7 +25,7 @@ IA32_ARCH_CAPABILITIES.BHI_NO (bit 20) makes setting this control unnecessary;
 capability data without CPUID ARCH_CAPABILITIES is ignored. BHI control alone
 enumerates IA32_SPEC_CTRL support, independently of IBRS, STIBP and SSBD. All
 existing firmware MSR bits are preserved, including BHI_DIS_S. CPU output
-reports the control selected by Vinix and the BHI_NO enumeration separately.
+reports the control selected by Tulpar and the BHI_NO enumeration separately.
 This closes the supported hardware BHI-control gap; it supplies no software
 branch-history clearing for older CPUs or intra-mode BHI mitigation.
 

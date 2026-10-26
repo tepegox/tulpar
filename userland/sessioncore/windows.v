@@ -252,7 +252,7 @@ pub fn (mut s Windows) arrange(workspace int) {
 
 pub fn (s &Windows) encode() string {
 	mut w := Writer{}
-	w.add('vinix-session\t1\t')
+	w.add('tulpar-session\t1\t')
 	w.number(s.workspace_count)
 	w.add('\t')
 	w.number(s.active)
@@ -307,7 +307,7 @@ pub fn decode_windows(record string) !Windows {
 		f := fields(unsafe { tos(&record.str[start], end - start) })!
 		start = end + 1
 		if !header {
-			if f.count != 6 || f.values[0] != 'vinix-session' || f.values[1] != '1' {
+			if f.count != 6 || f.values[0] != 'tulpar-session' || f.values[1] != '1' {
 				return error('invalid session header')
 			}
 			s.workspace_count = int(number(f.values[2], 1, max_workspaces)!)

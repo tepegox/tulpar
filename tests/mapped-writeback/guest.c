@@ -14,8 +14,8 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#ifndef VINIX_TEST_MEMORY_MIB
-#define VINIX_TEST_MEMORY_MIB 1024
+#ifndef TULPAR_TEST_MEMORY_MIB
+#define TULPAR_TEST_MEMORY_MIB 1024
 #endif
 #define SIZE 65536
 #define CHECK(x) do { if (!(x)) { printf("MAPPED WRITEBACK FAIL line=%d errno=%d FAIL END\n", __LINE__, errno); for (;;) pause(); } } while (0)
@@ -350,7 +350,7 @@ static void file_pressure(void)
     // within the bounded compression pool without requiring a swap disk.
     size_t extent = ((size_t)free_kib() + (size_t)meminfo_kib("Cached:")) * 1024 + 24 * 1024 * 1024;
     extent = extent / page * page;
-    printf("FILE PRESSURE allocation=%zu MiB ram=%d MiB\n", extent / (1024 * 1024), VINIX_TEST_MEMORY_MIB);
+    printf("FILE PRESSURE allocation=%zu MiB ram=%d MiB\n", extent / (1024 * 1024), TULPAR_TEST_MEMORY_MIB);
     volatile unsigned char *anonymous = mmap(NULL, extent, PROT_READ | PROT_WRITE,
                                            MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
     CHECK(anonymous != MAP_FAILED);

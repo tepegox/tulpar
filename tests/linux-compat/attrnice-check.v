@@ -229,7 +229,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool, aggregate bool, build_failure bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -252,7 +252,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 				artifacts[name + '_' + label] = digest(path)
 			}
 			assert artifacts[name + '_source'] == entry['source_sha256']!.str() && artifacts[name + '_init'] == entry['init_sha256']!.str()
-			assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+			assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 			assert os.read_file(state + '.log')!.contains('No space left on device')
 			continue
 		}
@@ -277,7 +277,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -302,12 +302,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/attrnice-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/attrnice-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/attrnicereferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/attrnicereferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -412,7 +412,7 @@ fn check_c(area string, suffix string) ! {
 
 fn scope(area string) {
 	clean := area.trim_right('/')
-	check_source(clean, '/Users/alex/code/vinix') or { panic(err) }
+	check_source(clean, '/Users/alex/code/tulpar') or { panic(err) }
 	for suffix in ['arm', 'x86'] { check_c(clean, suffix) or { panic(err) } }
 	os.write_file(area + 'scope-check.log', 'arm/x86: complete generated C differs only in sched_setattr, may_set_sched_params, default_rlimits, scalar locked nice helper/prototype and exactly three existing proc loop identifier uses per architecture; other code unchanged\n') or { panic(err) }
 }
@@ -429,7 +429,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: attrnice-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-14/'
 	os.write_file(area + 'assertion-control.log', control(['--negative-control'], 'attrnice assertions must execute'))!
 	os.write_file(area + 'passing-log-control.log', control(['--negative-pass-control',
@@ -437,7 +437,7 @@ fn main() {
 	scope(area)
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '4fd5c605d87b05208b73cf725ba93b59699b4f1c'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	compiler := compiler_root + 'compiler/v'
 	mut pins := map[string]string{}
 	for path, value in object(compiler_root + 'compiler-inputs.json')! { pins[path] = value.str() }
@@ -551,7 +551,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + 'p1-' + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['attrnice']
 			} else {
@@ -571,7 +571,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			artifacts[phase + '_kernel'] = digest(kernel)
 			artifacts[phase + '_kernel_c'] = digest(area + phase + '-' + suffix + '.c')
 			for label, path in {
@@ -589,7 +589,7 @@ fn main() {
 			}
 		}
 		completion := states + 'p3-after-' + suffix
-		completed := receipt(completion, arch, digest(area + 'kernel-' + suffix + '/kernel/bin/vinix'), [
+		completed := receipt(completion, arch, digest(area + 'kernel-' + suffix + '/kernel/bin/tulpar'), [
 			'attrimport',
 			'affabi',
 			'fcntlabi',
@@ -603,7 +603,7 @@ fn main() {
 		}
 		if arch == 'x86_64' {
 			recovery := states + 'p4-after-x86'
-			recovered := receipt(recovery, arch, digest(area + 'kernel-x86/kernel/bin/vinix'), ['fcntlabi'], false, true, false)!
+			recovered := receipt(recovery, arch, digest(area + 'kernel-x86/kernel/bin/tulpar'), ['fcntlabi'], false, true, false)!
 			for key in ['fcntlabi_source', 'fcntlabi_init', 'fcntlabi_c'] {
 				assert recovered[key] == completed[key]
 			}

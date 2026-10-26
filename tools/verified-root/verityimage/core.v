@@ -18,7 +18,7 @@ pub const digest_size = 32
 pub const hashes_per_block = 128
 pub const max_bytes = u64(0x7fffffffffffffff)
 pub const format = 'dm-verity-v1-sha256-4096-no-salt-no-superblock'
-pub const token_prefix = 'vinix.verity='
+pub const token_prefix = 'tulpar.verity='
 
 pub struct InvalidImage {
 pub:
@@ -260,10 +260,10 @@ fn copy_file(mut incoming os.File, mut outgoing os.File) !u64 {
 }
 
 fn private_dir(parent string) !string {
-	mut pattern := (os.join_path(parent, '.vinix-verity-XXXXXX') + '\x00').bytes()
+	mut pattern := (os.join_path(parent, '.tulpar-verity-XXXXXX') + '\x00').bytes()
 	path := C.mkdtemp(&char(pattern.data))
 	if path == unsafe { nil } {
-		return file_error(os.join_path(parent, '.vinix-verity-XXXXXX'), '')
+		return file_error(os.join_path(parent, '.tulpar-verity-XXXXXX'), '')
 	}
 	return unsafe { path.vstring().clone() }
 }

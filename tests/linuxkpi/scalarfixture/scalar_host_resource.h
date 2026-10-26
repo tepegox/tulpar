@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Give libc's resource ABI its own names before parsing the original UAPI. */
-#ifndef VINIX_SCALAR_HOST_RESOURCE_H
-#define VINIX_SCALAR_HOST_RESOURCE_H
+#ifndef TULPAR_SCALAR_HOST_RESOURCE_H
+#define TULPAR_SCALAR_HOST_RESOURCE_H
 #define rlimit vsh_host_rlimit
 #define rlimit64 vsh_host_rlimit64
 #define rusage vsh_host_rusage

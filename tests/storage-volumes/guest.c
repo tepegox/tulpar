@@ -18,20 +18,20 @@
 #define DISCARD 0x1277UL
 #define CHECK(x) do { if (!(x)) { printf("VOLUME FAIL line=%d errno=%d FAIL END\n", __LINE__, errno); for (;;) pause(); } } while (0)
 #define BAD(x, e) do { errno = 0; long result = (x); int actual = errno; if (result != -1 || actual != (e)) printf("VOLUME BAD %s result=%ld errno=%d expected=%d\n", #x, result, actual, (e)); CHECK(result == -1 && actual == (e)); } while (0)
-static const char *node = "/dev/mapper/vinix0";
+static const char *node = "/dev/mapper/tulpar0";
 static unsigned char data[131072], got[131072];
 static int disk;
-static struct vinix_block_status status(int fd) {
-    struct vinix_block_status s = {0}; CHECK(ioctl(fd, STATUS, &s) == 0 && s.version == 1 && s.reserved == 0); return s;
+static struct tulpar_block_status status(int fd) {
+    struct tulpar_block_status s = {0}; CHECK(ioctl(fd, STATUS, &s) == 0 && s.version == 1 && s.reserved == 0); return s;
 }
 static void create(unsigned slot, uint64_t offset, uint64_t length, unsigned flags) {
-    struct vinix_volume_request r = {1, slot, offset, length, flags}; CHECK(ioctl(disk, CREATE, &r) == 0);
+    struct tulpar_volume_request r = {1, slot, offset, length, flags}; CHECK(ioctl(disk, CREATE, &r) == 0);
 }
 static void remove_volume(int fd) { CHECK(ioctl(fd, REMOVE, 0) == 0); }
 static int open_volume(int flags) { int fd = open(node, flags); CHECK(fd >= 0); return fd; }
 static void tool_exit(int expected, const char *command, const char *device, const char *a, const char *b, const char *c) {
     pid_t p = fork(); CHECK(p >= 0);
-    if (!p) { execl("/usr/sbin/vinix-volume", "vinix-volume", command, device, a, b, c, (char *)0); _exit(127); }
+    if (!p) { execl("/usr/sbin/tulpar-volume", "tulpar-volume", command, device, a, b, c, (char *)0); _exit(127); }
     int code; CHECK(waitpid(p, &code, 0) == p && WIFEXITED(code) && WEXITSTATUS(code) == expected);
 }
 struct heap { long size[32], live[32], large; int count; };
@@ -52,7 +52,7 @@ static void cycles(unsigned first, unsigned count) {
         int fd = open_volume(O_RDWR);
         CHECK(pwrite(fd, data, 512, 0) == 512);
         uint64_t trim[2] = {0, 512}; CHECK(ioctl(fd, DISCARD, trim) == 0);
-        struct vinix_volume_request r = {1, 0, 0, 1024, 0}; CHECK(ioctl(fd, GROW, &r) == 0);
+        struct tulpar_volume_request r = {1, 0, 0, 1024, 0}; CHECK(ioctl(fd, GROW, &r) == 0);
         remove_volume(fd); CHECK(close(fd) == 0);
     }
     sleep(7); /* Namespace/object grace and writeback worker reaping. */
@@ -78,11 +78,11 @@ int main(void) {
 #endif
     puts("VOLUME START");
     disk = open(parent, O_RDWR); CHECK(disk >= 0);
-    struct vinix_block_status physical = status(disk); CHECK(physical.bytes == 16 * 1024 * 1024 && physical.sector == 512 && (physical.flags & 4) && (physical.flags & 32));
+    struct tulpar_block_status physical = status(disk); CHECK(physical.bytes == 16 * 1024 * 1024 && physical.sector == 512 && (physical.flags & 4) && (physical.flags & 32));
     uint64_t geometry = 0; int sector = 0, ro = -1;
     CHECK(ioctl(disk, 0x80081272UL, &geometry) == 0 && geometry == physical.bytes);
     CHECK(ioctl(disk, 0x1268, &sector) == 0 && sector == 512 && ioctl(disk, 0x125e, &ro) == 0 && ro == 0);
-    struct vinix_volume_request r = {1, 0, 1024 * 1024, sizeof(data), 0};
+    struct tulpar_volume_request r = {1, 0, 1024 * 1024, sizeof(data), 0};
     BAD(ioctl(disk, CREATE, NULL), EFAULT);
     void *inaccessible = mmap(NULL, 4096, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0); CHECK(inaccessible != MAP_FAILED);
     BAD(ioctl(disk, CREATE, inaccessible), EFAULT); BAD(ioctl(disk, STATUS, inaccessible), EFAULT);
@@ -94,7 +94,7 @@ int main(void) {
     int occupied = open(node, O_CREAT | O_RDWR, 0600); CHECK(occupied >= 0); close(occupied);
     BAD(ioctl(disk, CREATE, &r), EEXIST); CHECK(unlink(node) == 0);
     CHECK(ioctl(disk, CREATE, &r) == 0); int fd = open_volume(O_RDWR);
-    struct vinix_block_status before = status(fd); CHECK(before.bytes == sizeof(data) && before.start == r.offset && before.slot == 0 && before.disk_id == physical.disk_id && (before.flags & 8));
+    struct tulpar_block_status before = status(fd); CHECK(before.bytes == sizeof(data) && before.start == r.offset && before.slot == 0 && before.disk_id == physical.disk_id && (before.flags & 8));
     BAD(ioctl(disk, CREATE, &r), EEXIST); r.slot = 1; BAD(ioctl(disk, CREATE, &r), EBUSY); r.slot = 0;
     int bindtarget = open("/tmp/volume-bind", O_CREAT | O_RDWR, 0600); CHECK(bindtarget >= 0); close(bindtarget);
     BAD(mount(node, "/tmp/volume-bind", NULL, MS_BIND, NULL), EBUSY);
@@ -110,15 +110,15 @@ int main(void) {
     r.offset = 0; r.length = sizeof(data) / 2; BAD(ioctl(fd, GROW, &r), EINVAL);
     r.length = sizeof(data) * 2; CHECK(ioctl(fd, GROW, &r) == 0);
     CHECK(status(fd).bytes == sizeof(data) * 2 && pwrite(fd, data, 512, sizeof(data)) == 512 && fsync(fd) == 0);
-    struct vinix_block_status after = status(fd); CHECK(after.reads >= 2 && after.writes >= 3 && after.flushes >= 1 && after.errors == 0);
+    struct tulpar_block_status after = status(fd); CHECK(after.reads >= 2 && after.writes >= 3 && after.flushes >= 1 && after.errors == 0);
     CHECK(status(disk).writes > physical.writes && status(disk).flushes > physical.flushes);
     /* A retained mknod alias opens the actual managed resource and sees growth. */
     struct stat st; CHECK(fstat(fd, &st) == 0 && mknod("/dev/volume-alias", S_IFBLK | 0600, st.st_rdev) == 0);
     BAD(mount("/dev/volume-alias", "/tmp/volume-bind", NULL, MS_BIND, NULL), EBUSY);
     int alias = open("/dev/volume-alias", O_RDWR); CHECK(alias >= 0 && status(alias).bytes == after.bytes);
     create(1, 1536 * 1024, 4096, 1);
-    BAD(open("/dev/mapper/vinix1", O_RDWR), EROFS);
-    int readonly = open("/dev/mapper/vinix1", O_RDONLY); CHECK(readonly >= 0 && (status(readonly).flags & 1));
+    BAD(open("/dev/mapper/tulpar1", O_RDWR), EROFS);
+    int readonly = open("/dev/mapper/tulpar1", O_RDONLY); CHECK(readonly >= 0 && (status(readonly).flags & 1));
     remove_volume(readonly); CHECK(close(readonly) == 0);
     pid_t child = fork(); CHECK(child >= 0);
     if (child == 0) { CHECK(setuid(1000) == 0); errno = 0; _exit(ioctl(fd, REMOVE, 0) == -1 && errno == EPERM ? 0 : 1); }
@@ -132,7 +132,7 @@ int main(void) {
     tool_exit(2, "create", parent, "64", "0", "512"); tool_exit(2, "create", parent, "0", "18446744073709551616", "512");
     tool_exit(0, "create", parent, "0", "1048576", "4096"); tool_exit(0, "grow", node, "8192", NULL, NULL); tool_exit(0, "status", node, NULL, NULL, NULL); tool_exit(0, "remove", node, NULL, NULL, NULL);
     create(3, 4 * 1024 * 1024, 12288, 0);
-    int trimfd = open("/dev/mapper/vinix3", O_RDWR); CHECK(trimfd >= 0);
+    int trimfd = open("/dev/mapper/tulpar3", O_RDWR); CHECK(trimfd >= 0);
     memset(data, 0x95, 12288); CHECK(pwrite(trimfd, data, 12288, 0) == 12288);
     uint64_t trim[2] = {4096, 4096};
     CHECK(ioctl(trimfd, DISCARD, trim) == 0 && fsync(trimfd) == 0);
@@ -142,9 +142,9 @@ int main(void) {
     trim[0] = 1; BAD(ioctl(trimfd, DISCARD, trim), EINVAL); trim[0] = 4096;
     trim[1] = 0; BAD(ioctl(trimfd, DISCARD, trim), EINVAL); trim[1] = 4096;
     BAD(ioctl(trimfd, DISCARD, inaccessible), EFAULT);
-    int trimro = open("/dev/mapper/vinix3", O_RDONLY); CHECK(trimro >= 0); BAD(ioctl(trimro, DISCARD, trim), EBADF); close(trimro);
-    tool_exit(2, "discard", "/dev/mapper/vinix3", "-1", "4096", NULL);
-    tool_exit(0, "discard", "/dev/mapper/vinix3", "4096", "4096", NULL);
+    int trimro = open("/dev/mapper/tulpar3", O_RDONLY); CHECK(trimro >= 0); BAD(ioctl(trimro, DISCARD, trim), EBADF); close(trimro);
+    tool_exit(2, "discard", "/dev/mapper/tulpar3", "-1", "4096", NULL);
+    tool_exit(0, "discard", "/dev/mapper/tulpar3", "4096", "4096", NULL);
     CHECK(fstat(disk, &st) == 0 && mknod("/dev/disk-alias", S_IFBLK | 0600, st.st_rdev) == 0);
     int diskalias = open("/dev/disk-alias", O_RDWR); CHECK(diskalias >= 0 && (status(diskalias).flags & 32));
     trim[0] = 4 * 1024 * 1024 + 4096; CHECK(ioctl(diskalias, DISCARD, trim) == 0); close(diskalias);
@@ -159,16 +159,16 @@ int main(void) {
     trim[0] = 1024 * 1024; BAD(ioctl(partfd, DISCARD, trim), EINVAL); close(partfd);
 #endif
     create(2, 8 * 1024 * 1024, 4 * 1024 * 1024, 0);
-    int swapfd = open("/dev/mapper/vinix2", O_RDWR); CHECK(swapfd >= 0);
+    int swapfd = open("/dev/mapper/tulpar2", O_RDWR); CHECK(swapfd >= 0);
     unsigned char header[4096] = {0}; uint32_t one = 1, last = 1023;
     memcpy(header + 1024, &one, 4); memcpy(header + 1028, &last, 4); memcpy(header + 4086, "SWAPSPACE2", 10);
     CHECK(pwrite(swapfd, header, sizeof(header), 0) == sizeof(header));
-    for (int i = 0; swapon("/dev/mapper/vinix2", 0) != 0; i++) { CHECK(errno == EAGAIN && i < 40); sleep(1); }
-    CHECK(close(swapfd) == 0); swapfd = open("/dev/mapper/vinix2", O_RDONLY); CHECK(swapfd >= 0);
+    for (int i = 0; swapon("/dev/mapper/tulpar2", 0) != 0; i++) { CHECK(errno == EAGAIN && i < 40); sleep(1); }
+    CHECK(close(swapfd) == 0); swapfd = open("/dev/mapper/tulpar2", O_RDONLY); CHECK(swapfd >= 0);
     r.length = 5 * 1024 * 1024; BAD(ioctl(swapfd, GROW, &r), EBUSY); BAD(ioctl(swapfd, REMOVE, 0), EBUSY);
     BAD(pwrite(disk, data, 512, 8 * 1024 * 1024), EBUSY);
     trim[0] = 8 * 1024 * 1024; trim[1] = 4096; BAD(ioctl(disk, DISCARD, trim), EBUSY);
-    CHECK(swapoff("/dev/mapper/vinix2") == 0); remove_volume(swapfd); CHECK(close(swapfd) == 0);
+    CHECK(swapoff("/dev/mapper/tulpar2") == 0); remove_volume(swapfd); CHECK(close(swapfd) == 0);
     memset(data, 0x73, sizeof(data));
     pthread_t worker; CHECK(pthread_create(&worker, NULL, opener, NULL) == 0); cycles(0, 100); CHECK(pthread_join(worker, NULL) == 0);
     /* Warm the policy/retirement arrays, then measure distinct extents. */

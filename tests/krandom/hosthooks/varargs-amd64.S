@@ -33,7 +33,7 @@ KRANDOM_SYMBOL(kprintf):
     movq %r10, 184(%rsp)
     movq %rsp, 192(%rsp)
     leaq 176(%rsp), %rsi
-    call KRANDOM_SYMBOL(vinix_krandom_host_vprintf)
+    call KRANDOM_SYMBOL(tulpar_krandom_host_vprintf)
     leave
     ret
 #ifndef __APPLE__

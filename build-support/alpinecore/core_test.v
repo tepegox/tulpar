@@ -96,9 +96,9 @@ fn test_large_closure_unicode_sort_and_empty_package_name() {
 }
 
 fn test_native_cli_manifest_arguments_and_errors() {
-	tool := os.getenv('VINIX_ALPINE_TOOL')
+	tool := os.getenv('TULPAR_ALPINE_TOOL')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-alpine-')!
+	work := hosttest.work_dir('', 'tulpar-alpine-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	first := work + '/first index'
 	second := work + '/second index'
@@ -139,7 +139,7 @@ fn test_native_cli_manifest_arguments_and_errors() {
 }
 
 fn test_cached_production_manifests_when_available() {
-	root := os.getenv('VINIX_ALPINE_REPO')
+	root := os.getenv('TULPAR_ALPINE_REPO')
 	if root == '' { return }
 	for name, requests in {
 		'java':        ['openjdk25-jdk', 'ca-certificates-bundle']

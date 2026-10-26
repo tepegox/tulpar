@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_SMP_CALL_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_SMP_CALL_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_SMP_CALL_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_SMP_CALL_V_PRIMITIVES_H
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -41,18 +41,18 @@ void vks_smp_many(vks_smp_const_void mask, vks_smp_call_fn, void *info,
 
 /* Native transport is a real maskable IPI. It must not poll or drain any
  * callback on the producer, nor consult the already-published CSD. */
-void vinix_linuxkpi_smp_send_ipi(uint32_t cpu);
-bool vinix_linuxkpi_smp_boot_context(void);
-bool vinix_linuxkpi_smp_task_present(void);
-uint32_t vinix_linuxkpi_maskable_irq_depth(void);
-uint32_t vinix_linuxkpi_cpu_id(void);
-uint32_t vinix_linuxkpi_preempt_count(void);
-void vinix_linuxkpi_preempt_disable(void);
-void vinix_linuxkpi_preempt_enable(void);
-unsigned long vinix_linuxkpi_irq_save(void);
-unsigned long vinix_linuxkpi_irq_flags(void);
-void vinix_linuxkpi_irq_restore(unsigned long);
-void vinix_linuxkpi_spin_wait(void);
+void tulpar_linuxkpi_smp_send_ipi(uint32_t cpu);
+bool tulpar_linuxkpi_smp_boot_context(void);
+bool tulpar_linuxkpi_smp_task_present(void);
+uint32_t tulpar_linuxkpi_maskable_irq_depth(void);
+uint32_t tulpar_linuxkpi_cpu_id(void);
+uint32_t tulpar_linuxkpi_preempt_count(void);
+void tulpar_linuxkpi_preempt_disable(void);
+void tulpar_linuxkpi_preempt_enable(void);
+unsigned long tulpar_linuxkpi_irq_save(void);
+unsigned long tulpar_linuxkpi_irq_flags(void);
+void tulpar_linuxkpi_irq_restore(unsigned long);
+void tulpar_linuxkpi_spin_wait(void);
 
 /* Compiler atomics only; all queue, dispatch and ownership algorithms are V. */
 #define vks_smp_load32(p, order) __atomic_load_n((p), (order))

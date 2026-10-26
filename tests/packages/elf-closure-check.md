@@ -73,11 +73,11 @@ V=/path/to/reviewed/v
 OUT=/new/qualification/tools
 mkdir -p "$OUT"
 "$V" -cc /usr/bin/cc -nocache -no-skip-unused -gc none -manualfree \
-  -path '@vlib|@vmodules|.|tools/accounts' -o "$OUT/vinix-package" tools/packages
+  -path '@vlib|@vmodules|.|tools/accounts' -o "$OUT/tulpar-package" tools/packages
 "$V" -cc /usr/bin/cc -nocache -no-skip-unused -gc none -manualfree \
   -path '@vlib|@vmodules|.|tools/accounts' -o "$OUT/elf-closure-check" \
   tests/packages/elf-closure-check.v
-"$OUT/elf-closure-check" "$OUT/vinix-package" /new/qualification/real \
+"$OUT/elf-closure-check" "$OUT/tulpar-package" /new/qualification/real \
   /reviewed/sqlite-roots /reviewed/sqlite-catalog.json \
   /reviewed/ffmpeg-roots /reviewed/ffmpeg-catalog.json
 ```
@@ -90,7 +90,7 @@ exist. The generated C programs are test payloads built by the V driver.
 Build `tools/packages/pkgcore/elf_closure_test.v` and both
 `{sqlite,ffmpeg}_builder_ownership_test.v` with the same options plus
 `-d track_heap`. Run each binary directly. FFmpeg's suite also requires
-`VINIX_PROFILE_EXPORT_SOURCE` pointing to the reviewed FFmpeg 8.0.1 source
+`TULPAR_PROFILE_EXPORT_SOURCE` pointing to the reviewed FFmpeg 8.0.1 source
 archive. Add `-cflags '-fsanitize=address,undefined -fno-omit-frame-pointer'` and
 `-ldflags '-fsanitize=address,undefined'` for the sanitizer build; run with
 `ASAN_OPTIONS=detect_leaks=0` because allocation retention is measured explicitly

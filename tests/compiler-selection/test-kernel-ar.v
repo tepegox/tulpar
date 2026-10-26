@@ -26,7 +26,7 @@ fn check() ! {
 	root := hosttest.root()
 	llvm_ar := hosttest.tool('llvm-ar')
 	clang := hosttest.tool('clang')
-	work := hosttest.work_dir('', 'vinix-kernel-ar-')!
+	work := hosttest.work_dir('', 'tulpar-kernel-ar-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	kernel := work + '/kernel'
 	for name in ['asm/aarch64', 'freestnd-c-hdrs', 'cc-runtime', 'c/flanterm', 'c/lwip/include/lwip'] {
@@ -50,15 +50,15 @@ fn check() ! {
 	os.symlink(llvm_ar, commands + '/llvm-ar')!
 	os.symlink(os.executable(), commands + '/uname')!
 	mut environment := os.environ()
-	for name in ['AR', 'VINIX_LLVM_AR', 'MAKEFLAGS', 'MFLAGS'] { environment.delete(name) }
+	for name in ['AR', 'TULPAR_LLVM_AR', 'MAKEFLAGS', 'MFLAGS'] { environment.delete(name) }
 	environment['PATH'] = commands + os.path_delimiter + environment['PATH']
-	environment['VINIX_ARCHIVER_TEST_UNAME'] = 'Darwin'
+	environment['TULPAR_ARCHIVER_TEST_UNAME'] = 'Darwin'
 	make := ['make', '-s', '-C', kernel]
 	require(selected(make, inspect, []string{}, environment)! == commands + '/llvm-ar', 'macOS did not discover the fixture LLVM archiver')!
-	environment['VINIX_LLVM_AR'] = 'configured-ar'
+	environment['TULPAR_LLVM_AR'] = 'configured-ar'
 	require(selected(make, inspect, []string{}, environment)! == 'configured-ar', 'configured macOS archiver was ignored')!
 	require(selected(make, inspect, ['AR=explicit-ar'], environment)! == 'explicit-ar', 'explicit archiver did not take precedence')!
-	environment.delete('VINIX_LLVM_AR')
+	environment.delete('TULPAR_LLVM_AR')
 	mut build := make.clone()
 	build << ['ARCH=aarch64', 'CC=' + clang, 'cc-runtime-aarch64/cc-runtime.a']
 	checked(build, environment)!
@@ -73,15 +73,15 @@ fn check() ! {
 	missing_command << 'AR='
 	missing := hosttest.capture(missing_command, '', 60, environment)!
 	require(missing.code != 0 && missing.stderr.contains('LLVM llvm-ar is required'), 'missing LLVM archiver was not rejected')!
-	environment['VINIX_ARCHIVER_TEST_UNAME'] = 'Linux'
-	environment['VINIX_LLVM_AR'] = 'configured-ar'
+	environment['TULPAR_ARCHIVER_TEST_UNAME'] = 'Linux'
+	environment['TULPAR_LLVM_AR'] = 'configured-ar'
 	require(selected(make, inspect, []string{}, environment)! == 'ar', 'Linux did not select its ordinary archiver')!
 	println('Kernel archiver tests passed.')
 }
 
 fn main() {
 	if os.file_name(os.args[0]) == 'uname' {
-		println(os.getenv('VINIX_ARCHIVER_TEST_UNAME'))
+		println(os.getenv('TULPAR_ARCHIVER_TEST_UNAME'))
 		return
 	}
 	check() or {

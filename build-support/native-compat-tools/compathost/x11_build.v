@@ -20,8 +20,8 @@ fn x11_build(arguments []string) !int {
 	arch := if selected == 'amd64' { 'x86_64' } else { selected }
 	x11 := os.abs_path(if positional.len > 1 { positional[1] } else { root()+'/build-'+selected+'-x11/staging' })
 	userland := os.abs_path(if positional.len > 2 { positional[2] } else { root()+'/build-'+selected+'-userland/staging' })
-	sysroot := os.getenv_opt('VINIX_X11_SYSROOT') or { os.dir(x11)+'/sysroot' }
-	binary := if destination != '' { os.abs_path(destination) } else { x11+'/usr/bin/vinix-wine-host' }
+	sysroot := os.getenv_opt('TULPAR_X11_SYSROOT') or { os.dir(x11)+'/sysroot' }
+	binary := if destination != '' { os.abs_path(destination) } else { x11+'/usr/bin/tulpar-wine-host' }
 	mut inputs := [root()+'/build-support/xorg-server/wine-host-v-abi.h',
 		root()+'/build-support/xorg-server/compile-v-host', root()+'/build-support/xorg-server/build-wine-host.sh',
 		root()+'/build-support/native-compat-tools/main.v']
@@ -41,7 +41,7 @@ fn x11_build(arguments []string) !int {
 	clang := if os.is_executable(llvm+'/clang') { llvm+'/clang' } else { 'clang' }
 	os.mkdir_all(os.dir(binary))!
 	// Keep the unpublished binary on the destination filesystem for atomic rename.
-	mut template := (os.dir(binary)+'/.vinix-wine-host-XXXXXX').bytes()
+	mut template := (os.dir(binary)+'/.tulpar-wine-host-XXXXXX').bytes()
 	template << u8(0)
 	created := C.mkdtemp(&char(template.data))
 	if created == unsafe { nil } { return error('cannot create private X11 build directory') }

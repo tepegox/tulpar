@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_SW_FENCE_FIXTURE_V_CONTRACT_H
-#define VINIX_LINUXKPI_SW_FENCE_FIXTURE_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_SW_FENCE_FIXTURE_V_CONTRACT_H
+#define TULPAR_LINUXKPI_SW_FENCE_FIXTURE_V_CONTRACT_H
 #include "linuxkpi_dma_resv_v_contract.h"
 #define u64 vkh_linux_u64
 #include <linux/irq_work.h>
@@ -20,13 +20,13 @@ struct i915_sw_dma_fence_cb_timer {
 #define vswf_timed_fence(p) READ_ONCE((p)->base.fence)
 #define vswf_timed_flags(p) atomic_read(&(p)->work.node.a_flags)
 _Static_assert(sizeof(struct i915_sw_fence) == 40 && _Alignof(struct i915_sw_fence) == 8 &&
-    sizeof(struct vinix_swfence_fixture) == 40 && _Alignof(struct vinix_swfence_fixture) == 8 &&
+    sizeof(struct tulpar_swfence_fixture) == 40 && _Alignof(struct tulpar_swfence_fixture) == 8 &&
     offsetof(struct i915_sw_fence, wait) == 0 && offsetof(struct i915_sw_fence, fn) == 24 &&
     offsetof(struct i915_sw_fence, pending) == 32 && offsetof(struct i915_sw_fence, error) == 36,
     "original SW-fence storage");
-_Static_assert(sizeof(wait_queue_entry_t) == sizeof(struct vinix_swfence_wait_fixture) &&
-    _Alignof(wait_queue_entry_t) == _Alignof(struct vinix_swfence_wait_fixture) &&
-    sizeof(struct i915_sw_dma_fence_cb) == sizeof(struct vinix_swfence_dma_fixture) &&
+_Static_assert(sizeof(wait_queue_entry_t) == sizeof(struct tulpar_swfence_wait_fixture) &&
+    _Alignof(wait_queue_entry_t) == _Alignof(struct tulpar_swfence_wait_fixture) &&
+    sizeof(struct i915_sw_dma_fence_cb) == sizeof(struct tulpar_swfence_dma_fixture) &&
     offsetof(struct i915_sw_dma_fence_cb, fence) == 24, "original dependency records");
 _Static_assert(sizeof(struct i915_sw_dma_fence_cb_timer) == 128 &&
     offsetof(struct i915_sw_dma_fence_cb_timer, dma) == 32 &&

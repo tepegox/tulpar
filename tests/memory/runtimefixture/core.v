@@ -9,11 +9,11 @@ struct C.FILE {}
 __global C.stderr &C.FILE
 __global memory_runtime_cases usize
 
-fn C.vinix_memcpy(voidptr, voidptr, usize) voidptr
-fn C.vinix_memset(voidptr, i32, usize) voidptr
-fn C.vinix_memmove(voidptr, voidptr, usize) voidptr
-fn C.vinix_memcmp(voidptr, voidptr, usize) i32
-fn C.vinix_atoi(&char) i32
+fn C.tulpar_memcpy(voidptr, voidptr, usize) voidptr
+fn C.tulpar_memset(voidptr, i32, usize) voidptr
+fn C.tulpar_memmove(voidptr, voidptr, usize) voidptr
+fn C.tulpar_memcmp(voidptr, voidptr, usize) i32
+fn C.tulpar_atoi(&char) i32
 fn C.memcmp(voidptr, voidptr, usize) i32
 fn C.fprintf(&C.FILE, &char, ...) i32
 fn C.printf(&char, ...) i32
@@ -31,7 +31,7 @@ fn pattern(i usize) u8 { return u8(i * 131 + (i >> 4) * 17 + 23) }
 fn copy_case(dst &u8, src &u8, whole usize, d usize, s usize, n usize) {
 	unsafe {
 		for i := usize(0); i < whole; i++ { dst[i] = 0xa5 }
-		check(C.vinix_memcpy(dst + d, src + s, n) == dst + d, c'memcpy return', n, d, s)
+		check(C.tulpar_memcpy(dst + d, src + s, n) == dst + d, c'memcpy return', n, d, s)
 		for i := usize(0); i < whole; i++ {
 			check(dst[i] == if i >= d && i - d < n { src[s + i - d] } else { u8(0xa5) }, c'memcpy content/bounds', n, d, s)
 		}
@@ -41,7 +41,7 @@ fn copy_case(dst &u8, src &u8, whole usize, d usize, s usize, n usize) {
 fn set_case(dst &u8, whole usize, d usize, n usize, value i32) {
 	unsafe {
 		for i := usize(0); i < whole; i++ { dst[i] = 0xa5 }
-		check(C.vinix_memset(dst + d, value, n) == dst + d, c'memset return', n, d, usize(value))
+		check(C.tulpar_memset(dst + d, value, n) == dst + d, c'memset return', n, d, usize(value))
 		for i := usize(0); i < whole; i++ {
 			check(dst[i] == if i >= d && i - d < n { u8(value) } else { u8(0xa5) }, c'memset content/bounds', n, d, usize(value))
 		}
@@ -51,7 +51,7 @@ fn set_case(dst &u8, whole usize, d usize, n usize, value i32) {
 fn move_case(dst &u8, whole usize, d usize, s usize, n usize) {
 	unsafe {
 		for i := usize(0); i < whole; i++ { dst[i] = pattern(i) }
-		check(C.vinix_memmove(dst + d, dst + s, n) == dst + d, c'memmove return', n, d, s)
+		check(C.tulpar_memmove(dst + d, dst + s, n) == dst + d, c'memmove return', n, d, s)
 		for i := usize(0); i < whole; i++ {
 			check(dst[i] == pattern(if i >= d && i - d < n { s + i - d } else { i }), c'memmove content/bounds', n, d, s)
 		}
@@ -61,7 +61,7 @@ fn move_case(dst &u8, whole usize, d usize, s usize, n usize) {
 fn sign(value i32) i32 { return if value > 0 { i32(1) } else if value < 0 { i32(-1) } else { i32(0) } }
 fn compare_case(a &u8, b &u8, n usize) {
 	expected := C.memcmp(a, b, n)
-	actual := C.vinix_memcmp(a, b, n)
+	actual := C.tulpar_memcmp(a, b, n)
 	check(sign(actual) == sign(expected), c'memcmp sign', n, 0, 0)
 	memory_runtime_cases++
 }
@@ -71,7 +71,7 @@ fn atoi_cases() {
 			c' \t\n\r\f\v-123rest', c'+ 42', c'2147483647', c'-2147483648']!
 		expected := [i32(0), 0, 0, 0, 0, 0, 42, -42, 42, -123, 0, 2147483647, -2147483647 - 1]!
 		for i := usize(0); i < values.len; i++ {
-			check(C.vinix_atoi(values[i]) == expected[i], c'atoi', i, 0, 0)
+			check(C.tulpar_atoi(values[i]) == expected[i], c'atoi', i, 0, 0)
 			memory_runtime_cases++
 		}
 	}
@@ -109,10 +109,10 @@ pub fn run() i32 {
 			}
 			n++
 		}
-		check(C.vinix_memcpy(dm, sm, 0) == dm, c'zero memcpy', 0, 0, 0)
-		check(C.vinix_memset(dm, 0, 0) == dm, c'zero memset', 0, 0, 0)
-		check(C.vinix_memmove(dm, sm, 0) == dm, c'zero memmove', 0, 0, 0)
-		check(C.vinix_memcmp(dm, sm, 0) == 0, c'zero memcmp', 0, 0, 0)
+		check(C.tulpar_memcpy(dm, sm, 0) == dm, c'zero memcpy', 0, 0, 0)
+		check(C.tulpar_memset(dm, 0, 0) == dm, c'zero memset', 0, 0, 0)
+		check(C.tulpar_memmove(dm, sm, 0) == dm, c'zero memmove', 0, 0, 0)
+		check(C.tulpar_memcmp(dm, sm, 0) == 0, c'zero memcmp', 0, 0, 0)
 		atoi_cases()
 		check(C.munmap(sm, page * 3) == 0 && C.munmap(dm, page * 3) == 0, c'munmap', 0, 0, 0)
 		C.printf(c'KERNEL MEMORY CHECK: PASS cases=%zu page=%zu\n', memory_runtime_cases, page)

@@ -40,7 +40,7 @@ V_MACOS_V3_NO_FALLBACK=1 /path/to/v -nocache -no-skip-unused -gc none -manualfre
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -nocache \
   -path '@vlib|@vmodules|tests/hardware-platform' \
   -o /tmp/stored-state-guest tests/packages/state-schema-check.v
-V=/path/to/v VFLAGS=-nocache V_MACOS_V3_NO_FALLBACK=1 VINIX_HWTEST_TCG=1 \
+V=/path/to/v VFLAGS=-nocache V_MACOS_V3_NO_FALLBACK=1 TULPAR_HWTEST_TCG=1 \
   /tmp/stored-state-guest --arch aarch64 --kernel /path/to/kernel \
   --state-dir /tmp/stored-state-arm --scenario packages-state-schema --timeout 240
 ```

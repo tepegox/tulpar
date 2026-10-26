@@ -84,7 +84,7 @@ fn C.vkr_page_allocation_size(voidptr) uint
 @[c_extern]
 __global C.jiffies uint
 
-@[export: 'vinix_linuxkpi_swf_bytes']
+@[export: 'tulpar_linuxkpi_swf_bytes']
 pub fn bytes(kind u32) u32 {
 	return if kind == 0 {
 		u32(sizeof(C.i915_sw_fence))
@@ -97,50 +97,50 @@ pub fn bytes(kind u32) u32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_init']
+@[export: 'tulpar_linuxkpi_swf_init']
 pub fn init(storage voidptr, notify Notify) {
 	C.BUG_ON(uint(voidptr(notify)) < 4096)
 	unsafe { C.__i915_sw_fence_init(&C.i915_sw_fence(storage), notify, nil, nil) }
 }
 
-@[export: 'vinix_linuxkpi_swf_fini']
+@[export: 'tulpar_linuxkpi_swf_fini']
 pub fn fini(storage voidptr) {
 	unsafe { C.i915_sw_fence_fini(&C.i915_sw_fence(storage)) }
 }
 
-@[export: 'vinix_linuxkpi_swf_reinit']
+@[export: 'tulpar_linuxkpi_swf_reinit']
 pub fn reinit(storage voidptr) {
 	unsafe { C.i915_sw_fence_reinit(&C.i915_sw_fence(storage)) }
 }
 
-@[export: 'vinix_linuxkpi_swf_await']
+@[export: 'tulpar_linuxkpi_swf_await']
 pub fn acquire(storage voidptr) bool {
 	unsafe {
 		return C.i915_sw_fence_await(&C.i915_sw_fence(storage))
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_complete']
+@[export: 'tulpar_linuxkpi_swf_complete']
 pub fn complete(storage voidptr) {
 	unsafe { C.i915_sw_fence_complete(&C.i915_sw_fence(storage)) }
 }
 
-@[export: 'vinix_linuxkpi_swf_commit']
+@[export: 'tulpar_linuxkpi_swf_commit']
 pub fn commit(storage voidptr) {
 	unsafe { C.i915_sw_fence_commit(&C.i915_sw_fence(storage)) }
 }
 
-@[export: 'vinix_linuxkpi_swf_wait']
+@[export: 'tulpar_linuxkpi_swf_wait']
 pub fn wait(storage voidptr) {
 	unsafe { C.i915_sw_fence_wait(&C.i915_sw_fence(storage)) }
 }
 
-@[export: 'vinix_linuxkpi_swf_error']
+@[export: 'tulpar_linuxkpi_swf_error']
 pub fn error(storage voidptr, value i32) {
 	unsafe { C.i915_sw_fence_set_error_once(&C.i915_sw_fence(storage), value) }
 }
 
-@[export: 'vinix_linuxkpi_swf_state']
+@[export: 'tulpar_linuxkpi_swf_state']
 pub fn state(storage voidptr, kind u32) i32 {
 	unsafe {
 		fence := &C.i915_sw_fence(storage)
@@ -154,7 +154,7 @@ pub fn state(storage voidptr, kind u32) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_waiters']
+@[export: 'tulpar_linuxkpi_swf_waiters']
 pub fn waiters(storage voidptr) u32 {
 	unsafe {
 		fence := &C.i915_sw_fence(storage)
@@ -168,7 +168,7 @@ pub fn waiters(storage voidptr) u32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_sw']
+@[export: 'tulpar_linuxkpi_swf_sw']
 pub fn sw(storage voidptr, signaler voidptr, entry voidptr, gfp u32) i32 {
 	unsafe {
 		target := &C.i915_sw_fence(storage)
@@ -181,7 +181,7 @@ pub fn sw(storage voidptr, signaler voidptr, entry voidptr, gfp u32) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_dma']
+@[export: 'tulpar_linuxkpi_swf_dma']
 pub fn dma(storage voidptr, producer voidptr, callback voidptr, timeout u64, gfp u32) i32 {
 	unsafe {
 		target := &C.i915_sw_fence(storage)
@@ -194,14 +194,14 @@ pub fn dma(storage voidptr, producer voidptr, callback voidptr, timeout u64, gfp
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_resv']
+@[export: 'tulpar_linuxkpi_swf_resv']
 pub fn resv(storage voidptr, reservation voidptr, write bool, timeout u64, gfp u32) i32 {
 	unsafe {
 		return C.i915_sw_fence_await_reservation(&C.i915_sw_fence(storage), &C.dma_resv(reservation), write, uint(timeout), gfp)
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_timed']
+@[export: 'tulpar_linuxkpi_swf_timed']
 pub fn timed(producer voidptr, target voidptr) voidptr {
 	// Native test only: a dedicated producer has exactly one dynamically
 	// allocated timed SW callback. Call before signal and retain remote RCU
@@ -227,7 +227,7 @@ pub fn timed(producer voidptr, target voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_timed_value']
+@[export: 'tulpar_linuxkpi_swf_timed_value']
 pub fn timed_value(storage voidptr, kind u32) u64 {
 	unsafe {
 		owner := &C.i915_sw_dma_fence_cb_timer(storage)
@@ -238,10 +238,10 @@ pub fn timed_value(storage voidptr, kind u32) u64 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_swf_timed_sync']
+@[export: 'tulpar_linuxkpi_swf_timed_sync']
 pub fn timed_sync(storage voidptr) {
 	unsafe { C.irq_work_sync(&(&C.i915_sw_dma_fence_cb_timer(storage)).work) }
 }
 
-@[export: 'vinix_linuxkpi_swf_now']
+@[export: 'tulpar_linuxkpi_swf_now']
 pub fn now() u64 { return u64(C.jiffies) }

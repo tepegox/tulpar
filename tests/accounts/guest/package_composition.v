@@ -12,10 +12,10 @@ fn composed_probe(path string, grant bool) Ran {
 }
 
 fn composed_media() !string {
-	encoded := run(['/usr/bin/vinix-package', 'run-args', pkgcore.ffmpeg_application_id, '--data-cwd', '--',
+	encoded := run(['/usr/bin/tulpar-package', 'run-args', pkgcore.ffmpeg_application_id, '--data-cwd', '--',
 		'-v', 'error', '-f', 'lavfi', '-i', 'sine=frequency=440:duration=0.1', '-c:a', 'pcm_s16le', '-y', 'combined catalog; $literal.wav'], '', none, none)
 	assert encoded.status == 0, encoded.output
-	path := '/home/alex/.local/share/vinix-apps/' + pkgcore.ffmpeg_application_id + '/combined catalog; $literal.wav'
+	path := '/home/alex/.local/share/tulpar-apps/' + pkgcore.ffmpeg_application_id + '/combined catalog; $literal.wav'
 	assert os.file_size(path) > 0 && os.stat(path)!.uid == 1000
 	probe := composed_probe(path, true)
 	assert probe.status == 0 && probe.output.contains('pcm_s16le'), probe.output
@@ -60,20 +60,20 @@ fn qualify_package_composition(mut t Test) ! {
 		assert released.public_key == key && released.package_count == 10
 	}
 	t.say('PACKAGE COMPOSITION canonical-order scoped-roots pinned-two-target-catalog single-signed-publisher PASS')
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
 		launch_user: 'alex', policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['--offline', 'repo-enroll', 'composed-fixture', 'file:///tmp/composed-release-base', key])!
 	package_success(['--offline', 'update'])!
 	apps := [pkgcore.sqlite_application_id, pkgcore.ffmpeg_application_id, pkgcore.ffprobe_application_id]
 	reviewed_package_operation('install', apps)!
-	initial := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
+	initial := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
 	assert initial.packages.len == 5 && initial.requested.len == 3
 	assert initial.packages.all(it.repository == 'composed-fixture' && it.public_key == key && it.package.architecture == architecture)
 	sql := sqlite_run_sql('PRAGMA journal_mode=WAL; CREATE TABLE saved(v INTEGER); INSERT INTO saved VALUES(42); SELECT sum(v) FROM saved; PRAGMA integrity_check;')
 	assert sql.status == 0 && sql.output.contains('wal\n42\nok'), sql.output
-	database := '/home/alex/.local/share/vinix-apps/' + pkgcore.sqlite_application_id + '/database.sqlite3'
+	database := '/home/alex/.local/share/tulpar-apps/' + pkgcore.sqlite_application_id + '/database.sqlite3'
 	assert os.stat(database)!.uid == 1000
 	media := composed_media()!
 	assert sqlite_run_sql('SELECT ceil(1.25);').status != 0
@@ -83,7 +83,7 @@ fn qualify_package_composition(mut t Test) ! {
 	view := json2.decode[pkgcore.SoftwareView](package_success(['view'])!)!
 	assert view.rows.filter(it.updatable).map(it.id) == [pkgcore.sqlite_runtime_id]
 	reviewed_package_operation('upgrade', [])!
-	updated := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
+	updated := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
 	assert updated.packages.len == 5
 	for item in initial.packages {
 		if item.package.id == pkgcore.sqlite_runtime_id { continue }
@@ -98,16 +98,16 @@ fn qualify_package_composition(mut t Test) ! {
 	assert composed_probe(media, true).status == 0
 	reviewed_package_operation('upgrade', [])!
 	reviewed_package_operation('remove', apps)!
-	assert pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 0
+	assert pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 0
 	assert os.is_file(database) && os.is_file(media)
 	os.rename('/tmp/composed-release-math', '/tmp/composed-release-hidden')!
 	reviewed_package_operation('install', apps)!
-	assert pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 5
+	assert pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 5
 	reinstalled := sqlite_run_sql('SELECT ceil(1.25); SELECT sum(v) FROM saved;')
 	assert reinstalled.status == 0 && reinstalled.output.contains('2.0\n42'), reinstalled.output
 	assert composed_probe(media, true).status == 0
 	reviewed_package_operation('remove', apps)!
-	assert pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 0
+	assert pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 0
 	assert os.stat(database)!.uid == 1000 && os.stat(media)!.uid == 1000
 	t.say('PACKAGE COMPOSITION reviewed-runtime-only-upgrade unchanged-media rollback offline-cache-reinstall clean-uninstall retained-data PASS')
 }

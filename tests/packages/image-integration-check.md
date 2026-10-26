@@ -67,8 +67,8 @@ for QEMU TCG, firmware, kernel and cross-compiler prerequisites.
 ```sh
 v -nocache -path '@vlib|@vmodules|tests/hardware-platform' \
   -o /tmp/image-integration-runtime tests/packages/image-integration-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
-  VINIX_IMAGE_INTEGRATION_STAGE="$PWD/build/new-integration-host/stage" \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+  TULPAR_IMAGE_INTEGRATION_STAGE="$PWD/build/new-integration-host/stage" \
   /tmp/image-integration-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-integration-arm
 ```

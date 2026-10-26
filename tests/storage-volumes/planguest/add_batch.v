@@ -24,7 +24,7 @@ fn mapping_additions(path &char, first &char, slot &char, offset &char, length &
 	second &char, next_slot &char, next_offset &char, next_length &char, next_mode &char,
 	preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'plan-preview-add-batch') } else { &char(c'plan-add-batch') }, path,
 			first, slot, offset, length, mode, second, next_slot, next_offset, next_length, next_mode, &char(nil)]!
 		run_additions(&args[0], expected, output)
@@ -38,8 +38,8 @@ fn planned_addition_batch(parent &char, other &char) {
 		mut original := [8768]u8{}
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'addition baseline')
-		first := status(c'/dev/mapper/vinix12').generation; second := status(c'/dev/mapper/vinix9').generation
-		held := C.open(c'/dev/mapper/vinix12', C.O_RDONLY); check(held >= 0, c'hold view across additions')
+		first := status(c'/dev/mapper/tulpar12').generation; second := status(c'/dev/mapper/tulpar9').generation
+		held := C.open(c'/dev/mapper/tulpar12', C.O_RDONLY); check(held >= 0, c'hold view across additions')
 		mut output := [4096]char{}
 		for preview in [false, true]! {
 			mapping_additions(c'/root/saved.vset', c'mbr:12345678', c'19', c'8388608', c'4096', c'rw',
@@ -74,29 +74,29 @@ fn planned_addition_batch(parent &char, other &char) {
 			c'mbr:12345678', c'19', c'8388608', c'4096', c'rw', false, 0, &output[0])
 		check(contains(&output[0], c'slot=20 action=keep') && contains(&output[0], c'slot=19 action=keep'), c'durable exact addition retry')
 		bundle_unchanged(c'/root/saved.vset', &desired[0], size + 64)
-		missing(c'/dev/mapper/vinix19'); missing(c'/dev/mapper/vinix20')
+		missing(c'/dev/mapper/tulpar19'); missing(c'/dev/mapper/tulpar20')
 		tool(c'create', other, c'20', c'10485760', c'4096', 0)
 		preview(c'check-bundle', false, 1, &output[0]); check(!contains(&output[0], c'action='), c'later live conflict blocks all explicit additions')
-		simple(c'restore-bundle', c'/root/saved.vset', nil, 1); missing(c'/dev/mapper/vinix19')
-		simple(c'remove', c'/dev/mapper/vinix20', nil, 0)
+		simple(c'restore-bundle', c'/root/saved.vset', nil, 1); missing(c'/dev/mapper/tulpar19')
+		simple(c'remove', c'/dev/mapper/tulpar20', nil, 0)
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
-		for index, slot in [&char(c'/dev/mapper/vinix19'), &char(c'/dev/mapper/vinix20')]! {
+		for index, slot in [&char(c'/dev/mapper/tulpar19'), &char(c'/dev/mapper/tulpar20')]! {
 			input := C.open(slot, C.O_RDONLY); mut bytes := [4096]u8{}
 			check(input >= 0 && C.pread(input, &bytes[0], 4096, 0) == 4096 && C.close(input) == 0, c'read explicitly added mapping')
 			expected_byte := if index == 0 { u8(0xd9) } else { u8(0xda) }
 			for byte in bytes { check(byte == expected_byte, c'explicit addition preserves raw extent data') }
 		}
-		check(C.open(c'/dev/mapper/vinix20', C.O_RDWR) < 0 && C.errno == C.EROFS, c'explicit read-only mapping refuses writes')
-		view := C.open(c'/dev/mapper/vinix19', C.O_RDONLY); generation := status(c'/dev/mapper/vinix19').generation
+		check(C.open(c'/dev/mapper/tulpar20', C.O_RDWR) < 0 && C.errno == C.EROFS, c'explicit read-only mapping refuses writes')
+		view := C.open(c'/dev/mapper/tulpar19', C.O_RDONLY); generation := status(c'/dev/mapper/tulpar19').generation
 		mapping_removals(c'/root/saved.vset', c'20', c'19', nil, false, 0, nil)
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
 		mut bytes := [4096]u8{}
 		check(view >= 0 && C.pread(view, &bytes[0], 4096, 0) == 4096 && C.close(view) == 0
-			&& status(c'/dev/mapper/vinix19').generation == generation, c'held added view survives desired omission')
+			&& status(c'/dev/mapper/tulpar19').generation == generation, c'held added view survives desired omission')
 		for byte in bytes { check(byte == 0xd9, c'held added data survives') }
-		simple(c'remove', c'/dev/mapper/vinix19', nil, 0); simple(c'remove', c'/dev/mapper/vinix20', nil, 0)
-		check(status(c'/dev/mapper/vinix12').generation == first && status(c'/dev/mapper/vinix9').generation == second, c'additions preserve existing generations')
+		simple(c'remove', c'/dev/mapper/tulpar19', nil, 0); simple(c'remove', c'/dev/mapper/tulpar20', nil, 0)
+		check(status(c'/dev/mapper/tulpar12').generation == first && status(c'/dev/mapper/tulpar9').generation == second, c'additions preserve existing generations')
 		check(C.pread(held, &bytes[0], 4096, 0) == 4096 && C.close(held) == 0, c'held original view readable')
 		for byte in bytes { check(byte == 0xe7, c'original read-only data survives additions') }
 		C.printf(c'PLAN ADDITION BATCH PASSED: identity placement, mixed previews/retries, rollback, explicit live preflight and retained views\n')
@@ -105,7 +105,7 @@ fn planned_addition_batch(parent &char, other &char) {
 
 fn addition_boot_rows(path &char, preview bool, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), if preview { &char(c'plan-preview-add-batch') } else { &char(c'plan-add-batch') }, path,
+		args := [&char(c'/usr/sbin/tulpar-volume'), if preview { &char(c'plan-preview-add-batch') } else { &char(c'plan-add-batch') }, path,
 			&char(c'mbr:12345679'), &char(c'9'), &char(c'1048576'), &char(c'8192'), &char(c'rw'),
 			&char(c'mbr:12345678'), &char(c'2'), &char(c'1048576'), &char(c'8192'), &char(c'rw'),
 			&char(c'mbr:12345678'), &char(c'5'), &char(c'2097152'), &char(c'12288'), &char(c'ro'),
@@ -122,27 +122,27 @@ fn addition_boot_prepare() {
 		fd := C.open(c'/root/saved.vset', C.O_RDONLY); mut original := [8768]u8{}
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 536 && C.close(fd) == 0, c'boot addition baseline')
-		first := status(c'/dev/mapper/vinix12').generation; second := status(c'/dev/mapper/vinix9').generation
-		removals := [&char(c'/usr/sbin/vinix-volume'), &char(c'plan-remove-batch'), &char(c'/root/saved.vset'),
+		first := status(c'/dev/mapper/tulpar12').generation; second := status(c'/dev/mapper/tulpar9').generation
+		removals := [&char(c'/usr/sbin/tulpar-volume'), &char(c'plan-remove-batch'), &char(c'/root/saved.vset'),
 			&char(c'2'), &char(c'5'), &char(c'12'), &char(c'14'), &char(c'18'), &char(c'9'), &char(c'13'), &char(nil)]!
 		run_utility(&removals[0], 0)
 		addition_boot_rows(c'/root/saved.vset', true, nil); addition_boot_rows(c'/root/saved.vset', false, nil)
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
-		check(status(c'/dev/mapper/vinix12').generation == first && status(c'/dev/mapper/vinix9').generation == second, c'boot desired additions retain generations')
+		check(status(c'/dev/mapper/tulpar12').generation == first && status(c'/dev/mapper/tulpar9').generation == second, c'boot desired additions retain generations')
 		C.printf(c'PLAN ADDITION BATCH SAVED: seven explicit desired mappings restored in original row/pool order before replay\n')
 	}
 }
 
 fn addition_boot_check() {
-	fd := C.open(c'/etc/vinix/volumes.vset', C.O_RDONLY); mut original := [8768]u8{}
+	fd := C.open(c'/etc/tulpar/volumes.vset', C.O_RDONLY); mut original := [8768]u8{}
 	size := C.read(fd, &original[0], 8768)
 	check(fd >= 0 && size == 536 && C.close(fd) == 0, c'persistent addition bundle')
 	mut output := [4096]char{}
-	addition_boot_rows(c'/etc/vinix/volumes.vset', true, &output[0])
+	addition_boot_rows(c'/etc/tulpar/volumes.vset', true, &output[0])
 	check(contains(&output[0], c'requests=7 operation=preview-addition')
 		&& contains(&output[0], c'request=0 disk=1 slot=9 action=keep')
 		&& contains(&output[0], c'request=6 disk=0 slot=18 action=keep') && !contains(&output[0], c'action=add'), c'exact identity retries survive boot')
-	addition_boot_rows(c'/etc/vinix/volumes.vset', false, unsafe { nil })
-	bundle_unchanged(c'/etc/vinix/volumes.vset', &original[0], size)
+	addition_boot_rows(c'/etc/tulpar/volumes.vset', false, unsafe { nil })
+	bundle_unchanged(c'/etc/tulpar/volumes.vset', &original[0], size)
 	C.printf(c'PLAN ADDITION BATCH BOOT PRESERVED\n')
 }

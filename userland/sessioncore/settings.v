@@ -31,7 +31,7 @@ pub fn (mut s SettingsStatus) control(action string, label string, enabled bool,
 
 pub fn (s &SettingsStatus) encode() string {
 	mut w := Writer{}
-	w.add('vinix-settings-status\t1\n')
+	w.add('tulpar-settings-status\t1\n')
 	for i in 0 .. s.count {
 		w.add('line\t')
 		w.field(s.lines[i].str())
@@ -65,7 +65,7 @@ pub fn decode_settings_status(record string) !SettingsStatus {
 		f := fields(unsafe { tos(&record.str[start], end - start) })!
 		start = end + 1
 		if !header {
-			if f.count != 2 || f.values[0] != 'vinix-settings-status' || f.values[1] != '1' {
+			if f.count != 2 || f.values[0] != 'tulpar-settings-status' || f.values[1] != '1' {
 				return error('invalid settings status')
 			}
 			header = true

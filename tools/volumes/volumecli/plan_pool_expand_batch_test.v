@@ -149,7 +149,7 @@ fn test_maximum_expansion_batch_near_u64_keeps_full_region_table_and_all_64_cli_
 	assert encode_bundle(&set, &bytes[0]) == 8768
 	mut decoded := PlanSet{}
 	assert decode_bundle(&bytes[0], 8768, mut decoded) && decoded == set
-	work := os.join_path(os.temp_dir(), 'vinix-expand-batch-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-expand-batch-full-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/full.vset'
@@ -157,7 +157,7 @@ fn test_maximum_expansion_batch_near_u64_keeps_full_region_table_and_all_64_cli_
 	unsafe {
 		mut args := [133]&char{}
 		mut disks := [64][4]char{}; mut ends := [64][21]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'pool-expand-batch'); args[2] = path.str; args[3] = &char(c'63')
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'pool-expand-batch'); args[2] = path.str; args[3] = &char(c'63')
 		for i in 0 .. 64 {
 			C.snprintf(&disks[i][0], 4, c'%u', batch.disks[i]); C.snprintf(&ends[i][0], 21, c'%lu', batch.ends[i])
 			args[4 + i * 2] = &disks[i][0]; args[5 + i * 2] = &ends[i][0]
@@ -167,7 +167,7 @@ fn test_maximum_expansion_batch_near_u64_keeps_full_region_table_and_all_64_cli_
 }
 
 fn test_expansion_batch_files_lock_writers_allow_preview_and_validate_inputs_and_cli() {
-	work := os.join_path(os.temp_dir(), 'vinix-expand-batch-file-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-expand-batch-file-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -193,7 +193,7 @@ fn test_expansion_batch_files_lock_writers_allow_preview_and_validate_inputs_and
 	os.write_file_array(path, broken)!
 	for preview in [false, true] { assert expand_batch_pool_plan(path.str, 3, &batch, preview) == 1 && os.read_bytes(path)! == broken }
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-expand-batch'), &char(c'/unused'), &char(c'3'), &char(c'0'), &char(c'16384'), &char(c'1'), &char(c'12288'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-expand-batch'), &char(c'/unused'), &char(c'3'), &char(c'0'), &char(c'16384'), &char(c'1'), &char(c'12288'), &char(nil)]!
 		for command in [c'pool-expand-batch', c'pool-preview-expand-batch'] {
 			args[1] = &char(command)
 			for count in [4, 5, 7, 134] { assert run(count, &args[0]) == 2 }

@@ -39,8 +39,8 @@ fn planned_lock(parent &char, other &char) {
 		simple(c'show-bundle', c'/root/locked.vset', nil, 0)
 		// Lexical aliases must lock the same inode; another directory is free.
 		pool_growth(c'/root/../root/locked.vset', c'pool-expand', c'3', c'0', c'6299648', 1)
-		tool(c'save-set', c'/etc/vinix/lock-independent.vset', parent, other, nil, 0)
-		check(C.unlink(c'/etc/vinix/lock-independent.vset') == 0, c'clean independent destination')
+		tool(c'save-set', c'/etc/tulpar/lock-independent.vset', parent, other, nil, 0)
+		check(C.unlink(c'/etc/tulpar/lock-independent.vset') == 0, c'clean independent destination')
 		bundle_unchanged(c'/root/locked.vset', &baseline[0], size)
 		missing(c'/root/locked.vmap')
 		check(C.close(directory) == 0, c'release directory lock')
@@ -52,7 +52,7 @@ fn planned_lock(parent &char, other &char) {
 		tool(c'pool-remove', c'/root/locked.vset', c'3', c'1', nil, 0)
 		pool_members(c'/root/locked.vset')
 		bundle_unchanged(c'/root/locked.vset', &baseline[0], size)
-		missing(c'/dev/mapper/vinix20')
+		missing(c'/dev/mapper/tulpar20')
 		// A killed lock owner requires no stale lock-file cleanup.
 		mut ready := [2]i32{}
 		mut release := [2]i32{}

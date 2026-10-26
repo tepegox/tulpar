@@ -36,7 +36,7 @@ pub fn register_sync_hook(hook SyncHook) bool {
 }
 
 // Filesystems register long-lived shared caches once their backing store has
-// been validated. Cache objects are mount-lifetime allocations in Vinix, so a
+// been validated. Cache objects are mount-lifetime allocations in Tulpar, so a
 // registry entry cannot outlive its target.
 //
 // The writeback callback and its context are recorded here as well. Without

@@ -315,7 +315,7 @@ pub fn poll() {
 	}
 }
 
-@[export: 'vinix_ath10k_send']
+@[export: 'tulpar_ath10k_send']
 pub fn send(frame voidptr, length u64) i32 {
 	card_tx_lock.acquire()
 	defer { card_tx_lock.release() }

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUXKPI_WORKQUEUE_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_WORKQUEUE_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_WORKQUEUE_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_WORKQUEUE_V_PRIMITIVES_H
 #include "linuxkpi_srcu_v_primitives.h"
 extern struct vkw_list vkwq_running, vkwq_canceling, vkwq_all;
 void *vkwq_worker_callback(void);
@@ -21,32 +21,32 @@ void vkwq_warn_queue_cpu(bool);
 void vkwq_warn_delayed_cpu(bool);
 void vkwq_warn_mod_cpu(bool);
 void vkwq_warn_limit(void);
-int vinix_linuxkpi_worker_set_nice(int);
-int vinix_linuxkpi_worker_bind(unsigned int);
-int vinix_linuxkpi_cond_resched(void);
-unsigned int vinix_linuxkpi_cpu_id(void);
-unsigned long vinix_linuxkpi_irq_flags(void);
-unsigned int vinix_linuxkpi_maskable_irq_depth(void);
-void vinix_linuxkpi_spin_wait(void);
-bool vinix_linuxkpi_workqueue_draining_for_test(void *);
-#ifdef VINIX_V_RUNTIME
+int tulpar_linuxkpi_worker_set_nice(int);
+int tulpar_linuxkpi_worker_bind(unsigned int);
+int tulpar_linuxkpi_cond_resched(void);
+unsigned int tulpar_linuxkpi_cpu_id(void);
+unsigned long tulpar_linuxkpi_irq_flags(void);
+unsigned int tulpar_linuxkpi_maskable_irq_depth(void);
+void tulpar_linuxkpi_spin_wait(void);
+bool tulpar_linuxkpi_workqueue_draining_for_test(void *);
+#ifdef TULPAR_V_RUNTIME
 extern void *system_wq, *system_highpri_wq, *system_unbound_wq;
-void *vinix_linuxkpi_workqueue_allocate(unsigned int, int);
-char *vinix_linuxkpi_workqueue_name(void *);
-void *vinix_linuxkpi_workqueue_start(void *);
-void *vinix_linuxkpi_work_worker(void *);
-void *vinix_linuxkpi_pool_manager(void *);
-void vinix_linuxkpi_work_barrier(struct work_struct *);
+void *tulpar_linuxkpi_workqueue_allocate(unsigned int, int);
+char *tulpar_linuxkpi_workqueue_name(void *);
+void *tulpar_linuxkpi_workqueue_start(void *);
+void *tulpar_linuxkpi_work_worker(void *);
+void *tulpar_linuxkpi_pool_manager(void *);
+void tulpar_linuxkpi_work_barrier(struct work_struct *);
 bool queue_work_on(int, void *, void *);
 bool queue_delayed_work_on(int, void *, void *, uint64_t);
 bool mod_delayed_work_on(int, void *, void *, uint64_t);
 bool cancel_delayed_work(void *);
 void delayed_work_timer_fn(struct timer_list *);
-void vinix_linuxkpi_workqueue_task_sleep(void *);
-void vinix_linuxkpi_workqueue_task_resume(void *);
-int vinix_linuxkpi_workqueue_bootstrap(void);
-bool vinix_linuxkpi_host_workqueue_stopped(void *);
-void vinix_linuxkpi_workqueue_shutdown_for_test(void);
+void tulpar_linuxkpi_workqueue_task_sleep(void *);
+void tulpar_linuxkpi_workqueue_task_resume(void *);
+int tulpar_linuxkpi_workqueue_bootstrap(void);
+bool tulpar_linuxkpi_host_workqueue_stopped(void *);
+void tulpar_linuxkpi_workqueue_shutdown_for_test(void);
 bool cancel_work(void *);
 bool flush_delayed_work(void *);
 void __flush_workqueue(void *);

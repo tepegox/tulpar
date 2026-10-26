@@ -10,7 +10,7 @@ import time
 fn C.umask(u32) u32
 
 fn fixture_dir(label string) string {
-	path := os.temp_dir() + '/vinix-distribution-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	path := os.temp_dir() + '/tulpar-distribution-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(path) or { panic(err) }
 	return path
 }
@@ -211,20 +211,20 @@ fn test_policy_runtime_and_literal_launch_arguments() {
 	}
 	plan := resolve(Catalog{ packages: [fixture_candidate(runtime), fixture_candidate(windows)] }, config, State{}, ['app'], true) or { panic(err) }
 	state := State{ generation: 1, architecture: 'x86_64', requested: plan.requested, packages: plan.packages }
-	launch := launch_plan(config, '/var/lib/vinix-packages', state, 'app', '/home/user/data', 1000, 1000, []) or { panic(err) }
-	assert launch.program == '/usr/bin/vinix-sandbox'
+	launch := launch_plan(config, '/var/lib/tulpar-packages', state, 'app', '/home/user/data', 1000, 1000, []) or { panic(err) }
+	assert launch.program == '/usr/bin/tulpar-sandbox'
 	promises := launch.arguments[launch.arguments.index('--promises') + 1].split(' ')
 	assert 'flock' in promises && 'inet' !in promises && 'proc' !in promises
 	assert 'tty' !in promises && 'TERM=linux' !in launch.arguments
-	terminal := terminal_launch_plan(config, '/var/lib/vinix-packages', state, 'app', '/home/user/data', 1000, 1000, [])!
+	terminal := terminal_launch_plan(config, '/var/lib/tulpar-packages', state, 'app', '/home/user/data', 1000, 1000, [])!
 	assert 'tty' in terminal.arguments[terminal.arguments.index('--promises') + 1].split(' ')
 	assert 'TERM=linux' in terminal.arguments
 	assert terminal.arguments.filter(it == '/home/user' || it == '/dev' || it == '/dev/pts').len == 0
 	assert '/home/user/data' in launch.arguments && '/home/user' !in launch.arguments
 	assert launch.arguments.last() == 'literal;$(do-not-run)'
-	assert '/var/lib/vinix-packages/generations/1/apps/wine/bin/app' in launch.arguments
-	assert 'LD_LIBRARY_PATH=/var/lib/vinix-packages/generations/1/apps/app/lib:/var/lib/vinix-packages/generations/1/apps/app/usr/lib:/var/lib/vinix-packages/generations/1/apps/wine/lib:/var/lib/vinix-packages/generations/1/apps/wine/usr/lib' in launch.arguments
-	if _ := launch_plan(config, '/var/lib/vinix-packages', state, 'app', '/home/user/data', 0, 0, []) {
+	assert '/var/lib/tulpar-packages/generations/1/apps/wine/bin/app' in launch.arguments
+	assert 'LD_LIBRARY_PATH=/var/lib/tulpar-packages/generations/1/apps/app/lib:/var/lib/tulpar-packages/generations/1/apps/app/usr/lib:/var/lib/tulpar-packages/generations/1/apps/wine/lib:/var/lib/tulpar-packages/generations/1/apps/wine/usr/lib' in launch.arguments
+	if _ := launch_plan(config, '/var/lib/tulpar-packages', state, 'app', '/home/user/data', 0, 0, []) {
 		assert false
 	}
 	bad := Package{ ...windows, entrypoint: 'bin/missing' }
@@ -250,7 +250,7 @@ fn test_transaction_lifecycle_recovery_and_offline_cache() {
 	first := transact(config, directory, 'install', ['app'], TransactionOptions{}) or { panic(err) }
 	assert first.generation == 1
 	assert read_state(directory, 'aarch64')!.packages[0].package.version == '1.0.0'
-	assert os.is_file(directory + '/current/share/applications/vinix-app.desktop')
+	assert os.is_file(directory + '/current/share/applications/tulpar-app.desktop')
 	assert verified_file(directory + '/objects/' + v1.files[0].sha256, v1.files[0])
 	write_fixture_index(repository, [v1, v2], private_key, 2) or { panic(err) }
 	refresh(config, directory) or { panic(err) }
@@ -274,7 +274,7 @@ fn test_transaction_lifecycle_recovery_and_offline_cache() {
 	assert transact(config, directory, 'upgrade', [], TransactionOptions{})!.packages[0].package.version == '2.0.0'
 	removed := transact(config, directory, 'remove', ['app'], TransactionOptions{}) or { panic(err) }
 	assert removed.packages.len == 0
-	assert !os.exists(directory + '/current/share/applications/vinix-app.desktop')
+	assert !os.exists(directory + '/current/share/applications/tulpar-app.desktop')
 	assert rollback(config, directory)!.packages[0].package.id == 'app'
 	collect(config, directory) or { panic(err) }
 	assert os.is_dir(directory + '/generations/' + read_state(directory, 'aarch64')!.generation.str())

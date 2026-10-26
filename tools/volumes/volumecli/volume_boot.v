@@ -17,7 +17,7 @@ fn load_named_boot_volume(etc i32, directory i32, name &char, credential &char, 
 	config := C.openat(directory, name, C.O_RDONLY | C.O_NOFOLLOW | C.O_NONBLOCK | C.O_CLOEXEC)
 	if config < 0 {
 		if unsafe { C.errno == C.ENOENT } { return 0 }
-		C.perror(c'vinix-volume: boot encrypted configuration'); return -1
+		C.perror(c'tulpar-volume: boot encrypted configuration'); return -1
 	}
 	defer { C.close(config) }
 	if C.geteuid() != 0 { plan_error(c'boot encrypted unlock requires root'); return -1 }
@@ -25,7 +25,7 @@ fn load_named_boot_volume(etc i32, directory i32, name &char, credential &char, 
 	if read_private_key_fd(config, &work.envelope[0], volume_seal_bytes, volume_seal_bytes) != volume_seal_bytes
 		|| !volume_seal_header(&work.envelope[0], volume_seal_bytes) { plan_error(c'invalid boot encrypted configuration'); return -1 }
 	password := C.openat(directory, credential, C.O_RDONLY | C.O_NOFOLLOW | C.O_NONBLOCK | C.O_CLOEXEC)
-	if password < 0 { C.perror(c'vinix-volume: boot encrypted credential'); return -1 }
+	if password < 0 { C.perror(c'tulpar-volume: boot encrypted credential'); return -1 }
 	defer { C.close(password) }
 	size := read_private_key_fd(password, &work.password[0], 1, 1024)
 	if size == 0 || !sealed_derive(&work.password[0], size, &work.envelope[40], &work.wrapping[0])
@@ -62,10 +62,10 @@ fn boot_volume_plain_compatible(set &PlanSet, disk &DiskKey, data &Request) bool
 // Automatic unlock alone uses the same opt-in files as boot-restore.
 fn boot_unlock_volume() i32 {
 	etc := C.open(c'/etc', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
-	if etc < 0 { if unsafe { C.errno == C.ENOENT } { return 0 }; C.perror(c'vinix-volume: boot configuration directory'); return 1 }
+	if etc < 0 { if unsafe { C.errno == C.ENOENT } { return 0 }; C.perror(c'tulpar-volume: boot configuration directory'); return 1 }
 	defer { C.close(etc) }
-	directory := C.openat(etc, c'vinix', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
-	if directory < 0 { if unsafe { C.errno == C.ENOENT } { return 0 }; C.perror(c'vinix-volume: boot encrypted directory'); return 1 }
+	directory := C.openat(etc, c'tulpar', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
+	if directory < 0 { if unsafe { C.errno == C.ENOENT } { return 0 }; C.perror(c'tulpar-volume: boot encrypted directory'); return 1 }
 	defer { C.close(directory) }
 	mut work := unsafe { &VolumeSealFiles(C.alloca(sizeof(VolumeSealFiles))) }
 	unsafe { *work = VolumeSealFiles{} }

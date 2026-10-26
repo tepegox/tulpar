@@ -1,18 +1,18 @@
 .section .text
 .arch armv8-a+fp+simd
 
-.global vinix_aarch64_fpu_enable
-.type vinix_aarch64_fpu_enable, %function
-vinix_aarch64_fpu_enable:
+.global tulpar_aarch64_fpu_enable
+.type tulpar_aarch64_fpu_enable, %function
+tulpar_aarch64_fpu_enable:
     mrs x0, cpacr_el1
     orr x0, x0, #0x300000
     msr cpacr_el1, x0
     isb
     ret
 
-.global vinix_aarch64_fpu_save
-.type vinix_aarch64_fpu_save, %function
-vinix_aarch64_fpu_save:
+.global tulpar_aarch64_fpu_save
+.type tulpar_aarch64_fpu_save, %function
+tulpar_aarch64_fpu_save:
     stp q0,  q1,  [x0, #0]
     stp q2,  q3,  [x0, #32]
     stp q4,  q5,  [x0, #64]
@@ -35,9 +35,9 @@ vinix_aarch64_fpu_save:
     str w1, [x0, #516]
     ret
 
-.global vinix_aarch64_fpu_restore
-.type vinix_aarch64_fpu_restore, %function
-vinix_aarch64_fpu_restore:
+.global tulpar_aarch64_fpu_restore
+.type tulpar_aarch64_fpu_restore, %function
+tulpar_aarch64_fpu_restore:
     ldp q0,  q1,  [x0, #0]
     ldp q2,  q3,  [x0, #32]
     ldp q4,  q5,  [x0, #64]

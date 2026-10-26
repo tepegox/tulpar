@@ -6,10 +6,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-BUILD_DIR="${VINIX_AMD64_ISO_BUILD_DIR:-$SCRIPT_DIR/build-amd64-iso}"
-KERNEL="${VINIX_AMD64_KERNEL:-$SCRIPT_DIR/build-amd64-kernel/bin/vinix}"
-INITRAMFS="${VINIX_AMD64_INITRAMFS:-$SCRIPT_DIR/build-amd64-userland/initramfs.tar}"
-OUTPUT_ISO="${VINIX_AMD64_ISO:-$SCRIPT_DIR/vinix.iso}"
+BUILD_DIR="${TULPAR_AMD64_ISO_BUILD_DIR:-$SCRIPT_DIR/build-amd64-iso}"
+KERNEL="${TULPAR_AMD64_KERNEL:-$SCRIPT_DIR/build-amd64-kernel/bin/tulpar}"
+INITRAMFS="${TULPAR_AMD64_INITRAMFS:-$SCRIPT_DIR/build-amd64-userland/initramfs.tar}"
+OUTPUT_ISO="${TULPAR_AMD64_ISO:-$SCRIPT_DIR/tulpar.iso}"
 . "$SCRIPT_DIR/build-support/limine-binary.sh"
 
 case "$BUILD_DIR" in
@@ -62,7 +62,7 @@ if [ ! -x "$LIMINE_TOOL" ]; then
 fi
 
 mkdir -p "$ISO_ROOT/boot" "$ISO_ROOT/EFI/BOOT"
-install -m644 "$KERNEL" "$ISO_ROOT/boot/vinix"
+install -m644 "$KERNEL" "$ISO_ROOT/boot/tulpar"
 install -m644 "$INITRAMFS" "$ISO_ROOT/boot/initramfs.tar"
 # The image goes in compressed (below); Limine loads it as it is.
 sed 's#^\(    module_path: boot():/boot/initramfs\.tar\)$#\1.gz#' \
@@ -73,15 +73,15 @@ grep -q 'module_path: boot():/boot/initramfs\.tar\.gz$' "$ISO_ROOT/boot/limine.c
 }
 # A machine booted from the ISO keeps its system on a blank disk if it has
 # one, installing it there on the first boot (kernel/sysdisk). The entry is the
-# file's last, so the option goes at the end. VINIX_CMDLINE adds more.
-printf '    cmdline: vinix.disk=auto%s\n' "${VINIX_CMDLINE:+ $VINIX_CMDLINE}" >> "$ISO_ROOT/boot/limine.conf"
+# file's last, so the option goes at the end. TULPAR_CMDLINE adds more.
+printf '    cmdline: tulpar.disk=auto%s\n' "${TULPAR_CMDLINE:+ $TULPAR_CMDLINE}" >> "$ISO_ROOT/boot/limine.conf"
 # The image's identity, which a system installed from it keeps in
-# /.vinix-image-id: an ISO with a different image updates that system. Taken
+# /.tulpar-image-id: an ISO with a different image updates that system. Taken
 # from the image's contents, so an unchanged image rebuilt is no update.
 mkdir -p "$IMAGE_ID_DIR"
-sha256_file "$INITRAMFS" | cut -c1-16 > "$IMAGE_ID_DIR/.vinix-image-id"
+sha256_file "$INITRAMFS" | cut -c1-16 > "$IMAGE_ID_DIR/.tulpar-image-id"
 COPYFILE_DISABLE=1 tar --format=ustar -rf "$ISO_ROOT/boot/initramfs.tar" \
-    -C "$IMAGE_ID_DIR" ./.vinix-image-id
+    -C "$IMAGE_ID_DIR" ./.tulpar-image-id
 # Ship the image gzip-compressed, as Ubuntu, Debian and Arch ship their
 # initramfs compressed: the bootloader reads about a third of the bytes and the
 # kernel inflates them (kernel/initramfs/gzip.v). The header's comment field
@@ -96,7 +96,7 @@ fi
 {
     # ID1 ID2, deflate, FCOMMENT, no mtime, maximum compression, Unix.
     printf '\037\213\010\020\000\000\000\000\002\003'
-    printf 'vinix-image-id=%s\000' "$(cat "$IMAGE_ID_DIR/.vinix-image-id")"
+    printf 'tulpar-image-id=%s\000' "$(cat "$IMAGE_ID_DIR/.tulpar-image-id")"
     tail -c +11 "$ISO_ROOT/boot/initramfs.plain.gz"
 } > "$ISO_ROOT/boot/initramfs.tar.gz"
 rm -f "$ISO_ROOT/boot/initramfs.tar" "$ISO_ROOT/boot/initramfs.plain.gz"
@@ -106,7 +106,7 @@ install -m644 "$LIMINE_DIR/limine-bios.sys" "$ISO_ROOT/boot/limine-bios.sys"
 install -m644 "$LIMINE_DIR/BOOTX64.EFI" "$ISO_ROOT/EFI/BOOT/BOOTX64.EFI"
 
 mkdir -p "$(dirname "$OUTPUT_ISO")"
-OUTPUT_ISO_TMP="$(mktemp "$(dirname "$OUTPUT_ISO")/.vinix-amd64.iso.XXXXXX")"
+OUTPUT_ISO_TMP="$(mktemp "$(dirname "$OUTPUT_ISO")/.tulpar-amd64.iso.XXXXXX")"
 echo "==> Assembling $OUTPUT_ISO..."
 # ISO level 3 lets the initramfs grow past 4 GiB.
 xorriso -as mkisofs -iso-level 3 -R -r -J \

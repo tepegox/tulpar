@@ -10,7 +10,7 @@ pub fn set_process_group(pid int, pgid int) (u64, u64) {
 	if pgid < 0 || (pid < 0 && pgid == 0) { return errno.err, errno.einval }
 	if pid < 0 { return errno.err, errno.esrch }
 	caller := current_thread().process
-	mut orphan_change := unsafe { &OrphanChange(C.vinix_stack_alloc(sizeof(OrphanChange))) }
+	mut orphan_change := unsafe { &OrphanChange(C.tulpar_stack_alloc(sizeof(OrphanChange))) }
 	unsafe { *orphan_change = OrphanChange{} }
 	defer { dispatch_job_orphan_change(mut orphan_change) }
 	lock_table()
@@ -61,7 +61,7 @@ pub fn get_process_group(pid int) (u64, u64) {
 
 pub fn create_session() (u64, u64) {
 	mut caller := current_thread().process
-	mut orphan_change := unsafe { &OrphanChange(C.vinix_stack_alloc(sizeof(OrphanChange))) }
+	mut orphan_change := unsafe { &OrphanChange(C.tulpar_stack_alloc(sizeof(OrphanChange))) }
 	unsafe { *orphan_change = OrphanChange{} }
 	defer { dispatch_job_orphan_change(mut orphan_change) }
 	lock_table()

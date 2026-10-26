@@ -1,6 +1,6 @@
 # Mount lifecycle qualification
 
-The V controller boots an owned Vinix QEMU guest with private tmpfs mounts and
+The V controller boots an owned Tulpar QEMU guest with private tmpfs mounts and
 networking disabled. Fresh output directories retain the kernel, copied V
 fixture, generated C, probe ELF, boot image, serial log and hash receipt.
 
@@ -120,7 +120,7 @@ through `de-9` select individual cases. Native `all` and Linux
 `move-reference` include them.
 `--case descwx` selects inherited-descriptor W^X approval; `dw-0` through
 `dw-9` select individual cases. Native `all` includes them. Linux
-`move-reference` excludes the Vinix-specific `wxallowed` policy.
+`move-reference` excludes the Tulpar-specific `wxallowed` policy.
 `--case execflags` selects `execveat` flag and final-symlink validation;
 `ef-0` through `ef-9` select individual cases. Native `all` and Linux
 `move-reference` include them.
@@ -297,11 +297,11 @@ receive `EPERM` before mode validation. A final symlink refuses unmount with
 `UMOUNT_NOFOLLOW`; ordinary symlink-following unmount succeeds after descriptors
 close. Lazy unmount with no-follow preserves an already open file description.
 
-This explicitly refuses modes that Vinix does not implement. Linux's expiry
+This explicitly refuses modes that Tulpar does not implement. Linux's expiry
 protocol checks usage and marks a mount before a subsequent expiry request can
 detach it; its force path can call backend cancellation. See
 [Linux v6.12 namespace implementation](https://github.com/torvalds/linux/blob/v6.12/fs/namespace.c).
-The Vinix-specific `ENOTSUP` checks do not claim Linux force/expiry acceptance.
+The Tulpar-specific `ENOTSUP` checks do not claim Linux force/expiry acceptance.
 
 `move` repeats direct-descendant, nested-descendant and self moves 200 times in
 both the original and a copied mount namespace. Each returns `ELOOP`, preserves
@@ -317,7 +317,7 @@ the nested destination out of that tree must then allow the previously refused
 move, despite the holder's saved route. The check follows each mount's current
 namespace parent by stable ID, under the existing mount-move writer lock.
 
-Vinix also mounts 63 nested tmpfs roots beneath its boot root. Moving another
+Tulpar also mounts 63 nested tmpfs roots beneath its boot root. Moving another
 mount onto the resulting 64-step destination must return `ELOOP` before changing
 either attachment: the moved mount needs one remaining cursor step. Moving the
 whole nested tree onto a shallow mounted destination must also refuse a
@@ -339,7 +339,7 @@ all ten access-query cases, all ten filesystem-statistics cases, all eight
 inherited-descriptor metadata cases, all eight descriptor timestamp cases,
 all eight descriptor extended-attribute cases, all six descriptor mapping
 cases, all eight descriptor access cases and all eight descriptor exec cases.
-Vinix's cursor limit and unsupported unmount modes are excluded. Supply a matching Linux kernel and
+Tulpar's cursor limit and unsupported unmount modes are excluded. Supply a matching Linux kernel and
 the ELF preserved by a native run:
 
 ```sh
@@ -351,7 +351,7 @@ V_C_ERROR_BUG_REPORT_DISABLED=1 build-support/run-v-tool.sh \
 The reference defaults to a 180-second timeout. Use `--timeout 600` for the full
 suite on slower emulated hosts; the receipt records the chosen timeout.
 The hard-link group enables and reads back `fs.protected_hardlinks=1` inside
-the owned Linux VM, matching Vinix's existing protection of foreign files.
+the owned Linux VM, matching Tulpar's existing protection of foreign files.
 
 Use `--arch x86_64` and matching artifacts for x86. The reference receipt pins
 the shared ELF, Linux kernel, launcher source/C/ELF, archive, QEMU and serial log.

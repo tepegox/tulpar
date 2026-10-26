@@ -1,6 +1,6 @@
 /* Native declarations and the platform's assertion entry point. */
-#ifndef VINIX_SPECULATION_FIXTURE_NATIVE_ABI_H
-#define VINIX_SPECULATION_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_SPECULATION_FIXTURE_NATIVE_ABI_H
+#define TULPAR_SPECULATION_FIXTURE_NATIVE_ABI_H
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>

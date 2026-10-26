@@ -8,7 +8,7 @@ and wipes the credential on submission/cancellation/retirement. An owned copy of
 the mask keeps previous UI trees valid after the credential buffer retires.
 Cancelling a following repository refresh reports that trust was already saved.
 
-`vinix-package admin [--progress] [--offline] COMMAND ...` sends a canonical
+`tulpar-package admin [--progress] [--offline] COMMAND ...` sends a canonical
 format-1, 4,096-byte request with a fresh 128-bit nonce. Only catalog refresh and
 reviewed apply/repository/deployment/policy/offline-export operations are admitted.
 The service repeats the exact fingerprint and current trust/policy/state checks.
@@ -87,9 +87,9 @@ Reproduce host checks with the reviewed V compiler and headless UI module:
 ```sh
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
-V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/vinix/desktop \
-  VINIX_PACKAGE_TEST_WORK=/path/to/private/work \
-  VINIX_PACKAGE_TEST_UI2=/path/to/headless/modules \
+V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/tulpar/desktop \
+  TULPAR_PACKAGE_TEST_WORK=/path/to/private/work \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/headless/modules \
   /tmp/distribution-check --direct-tests --cross
 ```
 
@@ -97,8 +97,8 @@ Build [the guest controller](admin-check.v) with the repository and
 `tests/hardware-platform` on the module path, then use a new state directory:
 
 ```sh
-VINIX_HWTEST_TCG=1 V=/path/to/v \
-  VINIX_AMD64_LIMINE_DIR=/path/to/retained/limine \
+TULPAR_HWTEST_TCG=1 V=/path/to/v \
+  TULPAR_AMD64_LIMINE_DIR=/path/to/retained/limine \
   /tmp/admin-check --arch=x86_64 --kernel=/path/to/x86_64/kernel \
   --scenario=packages-admin --state-dir=/tmp/new-admin-state
 ```

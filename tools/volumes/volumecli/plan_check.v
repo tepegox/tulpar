@@ -5,7 +5,7 @@ fn C.ferror(voidptr) i32
 
 fn finish_bundle_report(printed bool) i32 {
 	if !printed || C.fflush(C.stdout) != 0 || C.ferror(C.stdout) != 0 {
-		C.perror(c'vinix-volume: bundle output')
+		C.perror(c'tulpar-volume: bundle output')
 		return 1
 	}
 	return 0
@@ -16,7 +16,7 @@ fn finish_bundle_report(printed bool) i32 {
 fn inspect_bundle(path &char, online bool, grow bool) i32 {
 	fd := C.open(path, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
 	if fd < 0 {
-		C.perror(c'vinix-volume: open bundle')
+		C.perror(c'tulpar-volume: open bundle')
 		return 1
 	}
 	defer { C.close(fd) }

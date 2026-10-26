@@ -12,24 +12,24 @@ module katomic
 // support `$if sizeof(T) == n`); a width with no routine is a build error
 // rather than a silent 64-bit access.
 
-fn C.vinix_ldar8(addr voidptr) u8
-fn C.vinix_ldar16(addr voidptr) u16
-fn C.vinix_ldar32(addr voidptr) u32
-fn C.vinix_ldar64(addr voidptr) u64
-fn C.vinix_stlr8(addr voidptr, value u8)
-fn C.vinix_stlr16(addr voidptr, value u16)
-fn C.vinix_stlr32(addr voidptr, value u32)
-fn C.vinix_stlr64(addr voidptr, value u64)
-fn C.vinix_ldadd32(addr voidptr, value u32) u32
-fn C.vinix_ldadd64(addr voidptr, value u64) u64
-fn C.vinix_ldset32(addr voidptr, value u32) u32
-fn C.vinix_ldset64(addr voidptr, value u64) u64
-fn C.vinix_ldclr32(addr voidptr, value u32) u32
-fn C.vinix_ldclr64(addr voidptr, value u64) u64
-fn C.vinix_cas32(addr voidptr, expected u32, desired u32) u32
-fn C.vinix_cas64(addr voidptr, expected u64, desired u64) u64
-fn C.vinix_casa32(addr voidptr, expected u32, desired u32) u32
-fn C.vinix_casa64(addr voidptr, expected u64, desired u64) u64
+fn C.tulpar_ldar8(addr voidptr) u8
+fn C.tulpar_ldar16(addr voidptr) u16
+fn C.tulpar_ldar32(addr voidptr) u32
+fn C.tulpar_ldar64(addr voidptr) u64
+fn C.tulpar_stlr8(addr voidptr, value u8)
+fn C.tulpar_stlr16(addr voidptr, value u16)
+fn C.tulpar_stlr32(addr voidptr, value u32)
+fn C.tulpar_stlr64(addr voidptr, value u64)
+fn C.tulpar_ldadd32(addr voidptr, value u32) u32
+fn C.tulpar_ldadd64(addr voidptr, value u64) u64
+fn C.tulpar_ldset32(addr voidptr, value u32) u32
+fn C.tulpar_ldset64(addr voidptr, value u64) u64
+fn C.tulpar_ldclr32(addr voidptr, value u32) u32
+fn C.tulpar_ldclr64(addr voidptr, value u64) u64
+fn C.tulpar_cas32(addr voidptr, expected u32, desired u32) u32
+fn C.tulpar_cas64(addr voidptr, expected u64, desired u64) u64
+fn C.tulpar_casa32(addr voidptr, expected u32, desired u32) u32
+fn C.tulpar_casa64(addr voidptr, expected u64, desired u64) u64
 
 // Full-system publication barrier for memory shared with devices or firmware.
 // Acquire/release atomics order CPU accesses, while an AP/ASC ring handoff
@@ -44,10 +44,10 @@ pub fn sync() {
 pub fn bts[T](mut var T, bit u8) bool {
 	mask := unsafe { T(1) << bit }
 	$if T is u32 || T is i32 || T is int {
-		old := C.vinix_ldset32(voidptr(var), u32(mask))
+		old := C.tulpar_ldset32(voidptr(var), u32(mask))
 		return old & u32(mask) != 0
 	} $else $if T is u64 || T is i64 || T is uint || T is int || T is voidptr {
-		old := C.vinix_ldset64(voidptr(var), u64(mask))
+		old := C.tulpar_ldset64(voidptr(var), u64(mask))
 		return old & u64(mask) != 0
 	} $else {
 		$compile_error('katomic.bts: unsupported operand width')
@@ -60,10 +60,10 @@ pub fn btr[T](mut var T, bit u8) bool {
 	// be the bit(s) to clear (mask), NOT its complement.
 	mask := unsafe { T(1) << bit }
 	$if T is u32 || T is i32 || T is int {
-		old := C.vinix_ldclr32(voidptr(var), u32(mask))
+		old := C.tulpar_ldclr32(voidptr(var), u32(mask))
 		return old & u32(mask) != 0
 	} $else $if T is u64 || T is i64 || T is uint || T is int || T is voidptr {
-		old := C.vinix_ldclr64(voidptr(var), u64(mask))
+		old := C.tulpar_ldclr64(voidptr(var), u64(mask))
 		return old & u64(mask) != 0
 	} $else {
 		$compile_error('katomic.btr: unsupported operand width')
@@ -88,7 +88,7 @@ pub fn cas[T](mut here T, _ifthis T, writethis T) bool {
 			C.memcpy(&expected, &_ifthis, 4)
 			C.memcpy(&desired, &writethis, 4)
 		}
-		return C.vinix_cas32(voidptr(here), expected, desired) == expected
+		return C.tulpar_cas32(voidptr(here), expected, desired) == expected
 	}
 	if sizeof(T) == 8 {
 		mut expected := u64(0)
@@ -97,7 +97,7 @@ pub fn cas[T](mut here T, _ifthis T, writethis T) bool {
 			C.memcpy(&expected, &_ifthis, 8)
 			C.memcpy(&desired, &writethis, 8)
 		}
-		return C.vinix_cas64(voidptr(here), expected, desired) == expected
+		return C.tulpar_cas64(voidptr(here), expected, desired) == expected
 	}
 	panic('katomic.cas: unsupported operand width')
 }
@@ -113,7 +113,7 @@ pub fn cas_acquire[T](mut here T, _ifthis T, writethis T) bool {
 			C.memcpy(&expected, &_ifthis, 4)
 			C.memcpy(&desired, &writethis, 4)
 		}
-		return C.vinix_casa32(voidptr(here), expected, desired) == expected
+		return C.tulpar_casa32(voidptr(here), expected, desired) == expected
 	}
 	if sizeof(T) == 8 {
 		mut expected := u64(0)
@@ -122,7 +122,7 @@ pub fn cas_acquire[T](mut here T, _ifthis T, writethis T) bool {
 			C.memcpy(&expected, &_ifthis, 8)
 			C.memcpy(&desired, &writethis, 8)
 		}
-		return C.vinix_casa64(voidptr(here), expected, desired) == expected
+		return C.tulpar_casa64(voidptr(here), expected, desired) == expected
 	}
 	panic('katomic.cas_acquire: unsupported operand width')
 }
@@ -130,9 +130,9 @@ pub fn cas_acquire[T](mut here T, _ifthis T, writethis T) bool {
 // Returns the value before the increment.
 pub fn inc[T](mut var T) T {
 	$if T is u32 || T is i32 || T is int {
-		return T(C.vinix_ldadd32(voidptr(var), u32(1)))
+		return T(C.tulpar_ldadd32(voidptr(var), u32(1)))
 	} $else $if T is u64 || T is i64 || T is uint || T is int || T is voidptr {
-		return T(C.vinix_ldadd64(voidptr(var), u64(1)))
+		return T(C.tulpar_ldadd64(voidptr(var), u64(1)))
 	} $else {
 		$compile_error('katomic.inc: unsupported operand width')
 	}
@@ -142,10 +142,10 @@ pub fn inc[T](mut var T) T {
 // Decrements and reports whether the result is non-zero.
 pub fn dec[T](mut var T) bool {
 	$if T is u32 || T is i32 || T is int {
-		old := C.vinix_ldadd32(voidptr(var), u32(0xffffffff))
+		old := C.tulpar_ldadd32(voidptr(var), u32(0xffffffff))
 		return old - u32(1) != 0
 	} $else $if T is u64 || T is i64 || T is uint || T is int || T is voidptr {
-		old := C.vinix_ldadd64(voidptr(var), u64(0xffffffffffffffff))
+		old := C.tulpar_ldadd64(voidptr(var), u64(0xffffffffffffffff))
 		return old - u64(1) != 0
 	} $else {
 		$compile_error('katomic.dec: unsupported operand width')
@@ -157,15 +157,15 @@ pub fn store[T](mut var T, value T) {
 	// bool gets its own arm: V refuses to cast one to u8, and there is no
 	// numeric conversion to lean on in either direction.
 	$if T is bool {
-		C.vinix_stlr8(voidptr(var), if value { u8(1) } else { u8(0) })
+		C.tulpar_stlr8(voidptr(var), if value { u8(1) } else { u8(0) })
 	} $else $if T is u8 || T is i8 {
-		C.vinix_stlr8(voidptr(var), u8(value))
+		C.tulpar_stlr8(voidptr(var), u8(value))
 	} $else $if T is u16 || T is i16 {
-		C.vinix_stlr16(voidptr(var), u16(value))
+		C.tulpar_stlr16(voidptr(var), u16(value))
 	} $else $if T is u32 || T is i32 || T is int {
-		C.vinix_stlr32(voidptr(var), u32(value))
+		C.tulpar_stlr32(voidptr(var), u32(value))
 	} $else $if T is u64 || T is i64 || T is uint || T is int || T is voidptr {
-		C.vinix_stlr64(voidptr(var), u64(value))
+		C.tulpar_stlr64(voidptr(var), u64(value))
 	} $else {
 		$compile_error('katomic.store: unsupported operand width')
 	}
@@ -173,15 +173,15 @@ pub fn store[T](mut var T, value T) {
 
 pub fn load[T](var &T) T {
 	$if T is bool {
-		return C.vinix_ldar8(voidptr(var)) != 0
+		return C.tulpar_ldar8(voidptr(var)) != 0
 	} $else $if T is u8 || T is i8 {
-		return T(C.vinix_ldar8(voidptr(var)))
+		return T(C.tulpar_ldar8(voidptr(var)))
 	} $else $if T is u16 || T is i16 {
-		return T(C.vinix_ldar16(voidptr(var)))
+		return T(C.tulpar_ldar16(voidptr(var)))
 	} $else $if T is u32 || T is i32 || T is int {
-		return T(C.vinix_ldar32(voidptr(var)))
+		return T(C.tulpar_ldar32(voidptr(var)))
 	} $else $if T is u64 || T is i64 || T is uint || T is int || T is voidptr {
-		return T(C.vinix_ldar64(voidptr(var)))
+		return T(C.tulpar_ldar64(voidptr(var)))
 	} $else {
 		$compile_error('katomic.load: unsupported operand width')
 	}

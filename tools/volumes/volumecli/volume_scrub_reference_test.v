@@ -7,7 +7,7 @@ import encoding.hex
 fn cipher_binding_expected(reference []u8, report []u8, disk DiskKey, row Request) string {
 	changed := report[16] != 0
 	identity := if disk.kind == 1 { 'mbr:00000001' } else { 'gpt:00000001-0000-0000-0000-000000000083' }
-	return 'format=VINIXCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference)) + ' report_sha256=' + hex.encode(sha256.sum(report)) + '\n' +
+	return 'format=TULPARCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference)) + ' report_sha256=' + hex.encode(sha256.sum(report)) + '\n' +
 		'disk_bytes=${disk.bytes} sector=${disk.sector} identity=${identity} slot=${row.slot} offset=${row.offset} bytes=${row.length} readonly=${row.flags} result=${if changed { 'changed' } else { 'match' }} expected_sha256=' + hex.encode(reference[80..112]) + ' actual_sha256=' + hex.encode(report[160..192]) + '\n'
 }
 
@@ -58,5 +58,5 @@ fn test_cipher_binding_native_sector_changes_high_signed_offsets_and_cli_syntax(
 	disk.bytes = u64(-1) & ~u64(4095); high := Request{slot: 63, offset: (u64(0x7fffffffffffffff) & ~u64(4095)) - 4096, length: 4096, flags: 1}
 	assert encode_volume_ciphertext(&disk, &high, &digest[0], &reference[0]) && encode_volume_ciphertext_scrub(&reference[0], &digest[0], &report[0])
 	mut text := [2048]char{}; size := encode_volume_scrub_reference(&reference[0], &report[0], &text[0]); assert size > 0 && unsafe { tos(&u8(&text[0]), size) } == cipher_binding_expected(reference[..], report[..], disk, high)
-	unsafe { mut args := [&char(c'vinix-volume'), &char(c'verify-volume-scrub-reference'), &char(c'/missing-reference'), &char(c'/missing-report'), &char(c'extra'), &char(nil)]!; for count in [2, 3, 5, 6] { assert run(count, &args[0]) == 2 }; for i in [2, 3] { saved := args[i]; args[i] = &char(c''); assert run(4, &args[0]) == 2; args[i] = saved }; assert run(4, &args[0]) == 1 }
+	unsafe { mut args := [&char(c'tulpar-volume'), &char(c'verify-volume-scrub-reference'), &char(c'/missing-reference'), &char(c'/missing-report'), &char(c'extra'), &char(nil)]!; for count in [2, 3, 5, 6] { assert run(count, &args[0]) == 2 }; for i in [2, 3] { saved := args[i]; args[i] = &char(c''); assert run(4, &args[0]) == 2; args[i] = saved }; assert run(4, &args[0]) == 1 }
 }

@@ -4,15 +4,15 @@
 @[has_globals]
 module hostwork
 #include "hostwork_v_contract.h"
-fn C.vinix_linuxkpi_workqueue_shutdown_for_test()
-fn C.vinix_linuxkpi_workqueue_bootstrap() i32
-fn C.vinix_linuxkpi_host_workqueue_stopped(&C.workqueue_struct) bool
+fn C.tulpar_linuxkpi_workqueue_shutdown_for_test()
+fn C.tulpar_linuxkpi_workqueue_bootstrap() i32
+fn C.tulpar_linuxkpi_host_workqueue_stopped(&C.workqueue_struct) bool
 fn C.vmh_unbound_nested_callback(&C.work_struct)
 @[c_extern] __global C.system_unbound_wq &C.workqueue_struct
 @[c_extern] __global C.ENOMEM i32
 struct PublishGate { mut: wq &C.workqueue_struct = unsafe { nil } cpu u32 entered u32 release u32 }
 __global publish_gate &PublishGate = unsafe { nil }
-@[export:'vinix_linuxkpi_host_pool_publish_gate']
+@[export:'tulpar_linuxkpi_host_pool_publish_gate']
 pub fn pool_publish_gate(wq &C.workqueue_struct,cpu u32) { unsafe {
  gate:=&PublishGate(C.__atomic_load_n(&publish_gate,2))
  if gate==nil || usize(gate.wq)!=usize(wq) || gate.cpu!=cpu { return }
@@ -27,7 +27,7 @@ fn unbound_publish_destroy() { unsafe {
  C.assert(C.queue_work(wq,&extra.work));await_counter(&gate.entered);await_counter(&extra.calls)
  for C.work_busy(&extra.work)!=0 { C.sched_yield() }
  mut destroy:=WorkOperation{};operation_start(&destroy,.queue_destroy,wq,nil);C.complete(&held.gate)
- for !C.vinix_linuxkpi_host_workqueue_stopped(wq) { C.sched_yield() };C.assert(destroy.done==0)
+ for !C.tulpar_linuxkpi_host_workqueue_stopped(wq) { C.sched_yield() };C.assert(destroy.done==0)
  C.__atomic_store_n(&gate.release,u32(1),3);operation_join(&destroy)
  C.__atomic_store_n(&publish_gate,voidptr(nil),3)
  C.assert(extra.calls==1 && held.calls==1 && C.atomic_read(&work_workers)==0)
@@ -105,11 +105,11 @@ pub fn unbound_work_tests() { unsafe {
  for i:=u32(0);i<200;i++ { test:=&WorkTest(C.kzalloc(sizeof(WorkTest),C.GFP_KERNEL));C.assert(test!=nil);work_init(test,wq);test.free_self=true;set_count(test,&freed);C.assert(C.queue_work(wq,&test.work)) }
  C.flush_workqueue(wq);C.assert(freed==200);C.destroy_workqueue(wq);C.destroy_workqueue(other)
  C.assert(C.vmh_live_pages==before && C.atomic_read(&work_workers)==0)
- C.vmh_fail_allocation=true;C.assert(C.vinix_linuxkpi_workqueue_bootstrap()==-C.ENOMEM && C.system_unbound_wq==nil);C.vmh_fail_allocation=false
- C.assert(C.vinix_linuxkpi_workqueue_bootstrap()==0 && C.system_unbound_wq!=nil);system:=C.system_unbound_wq
- C.assert(C.vinix_linuxkpi_workqueue_bootstrap()==0 && usize(C.system_unbound_wq)==usize(system));unbound_flush(system)
+ C.vmh_fail_allocation=true;C.assert(C.tulpar_linuxkpi_workqueue_bootstrap()==-C.ENOMEM && C.system_unbound_wq==nil);C.vmh_fail_allocation=false
+ C.assert(C.tulpar_linuxkpi_workqueue_bootstrap()==0 && C.system_unbound_wq!=nil);system:=C.system_unbound_wq
+ C.assert(C.tulpar_linuxkpi_workqueue_bootstrap()==0 && usize(C.system_unbound_wq)==usize(system));unbound_flush(system)
  mut delayed:=DelayedTest{};delayed_init(&delayed,system);C.assert(C.queue_delayed_work(system,&delayed.work,10000))
  C.assert(C.flush_delayed_work(&delayed.work) && delayed.calls==1);C.assert(!C.cancel_delayed_work_sync(&delayed.work))
- C.vinix_linuxkpi_workqueue_shutdown_for_test();C.assert(C.system_unbound_wq==nil && C.vmh_live_pages==before && C.atomic_read(&work_workers)==0)
+ C.tulpar_linuxkpi_workqueue_shutdown_for_test();C.assert(C.system_unbound_wq==nil && C.vmh_live_pages==before && C.atomic_read(&work_workers)==0)
  C.vmh_native_task=nil;C.vmh_sync_model_destroy(&parent)
 } }

@@ -13,15 +13,15 @@ fn C.lstat(&char, &C.stat) int
 fn directory_for(uid u32, base string, overridden bool) string {
 	text := uid.str()
 	defer { unsafe { text.free() } }
-	if overridden { return base + '/vinix-session.' + text }
-	if uid == 0 { return '/run/vinix-session.' + text }
-	return '/run/user/' + text + '/vinix-session.' + text
+	if overridden { return base + '/tulpar-session.' + text }
+	if uid == 0 { return '/run/tulpar-session.' + text }
+	return '/run/user/' + text + '/tulpar-session.' + text
 }
 
 // XDG_RUNTIME_DIR is application input. Session paths instead use the same
 // numeric identity checked by the local socket peer policy.
 pub fn directory() string {
-	if base := os.getenv_opt('VINIX_SESSION_RUNTIME') {
+	if base := os.getenv_opt('TULPAR_SESSION_RUNTIME') {
 		defer { unsafe { base.free() } }
 		return directory_for(u32(C.getuid()), base, true)
 	}

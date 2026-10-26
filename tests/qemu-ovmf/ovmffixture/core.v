@@ -7,7 +7,7 @@ import json2
 import os
 
 fn repository() string {
-	return os.getenv_opt('VINIX_OVMF_ROOT') or { os.real_path(os.dir(@FILE) + '/../../..') }
+	return os.getenv_opt('TULPAR_OVMF_ROOT') or { os.real_path(os.dir(@FILE) + '/../../..') }
 }
 
 fn mkdirs(path string) ! {
@@ -35,15 +35,15 @@ mut:
 }
 
 pub fn context(name string) !Context {
-	root := if parent := os.getenv_opt('VINIX_OVMF_WORK') {
+	root := if parent := os.getenv_opt('TULPAR_OVMF_WORK') {
 		path := parent + '/' + name
 		os.mkdir(path)!
 		path
-	} else { hosttest.work_dir('', 'vinix-ovmf-patch.')! }
+	} else { hosttest.work_dir('', 'tulpar-ovmf-patch.')! }
 	mut transferred := false
 	defer { if !transferred { hosttest.remove_work_dir(root) or { panic(err) } } }
 	os.chmod(root, 0o700)!
-	checkout := root + '/vinix'
+	checkout := root + '/tulpar'
 	for path in [checkout + '/scripts', checkout + '/patches/edk2'] { mkdirs(path)! }
 	hosttest.module_copy_file(repository() + '/scripts/build-qemu-ovmf-aarch64.sh', checkout + '/scripts/build-qemu-ovmf-aarch64.sh')!
 	hosttest.module_copy_file(repository() + '/' + patch_path, checkout + '/' + patch_path)!
@@ -65,7 +65,7 @@ pub fn context(name string) !Context {
 	mut environment := os.environ()
 	environment['PATH'] = commands + ':' + (environment['PATH'] or { '' })
 	environment['CLANGDWARF_BIN'] = commands + '/'
-	environment['VINIX_EDK2_SOURCE'] = source
+	environment['TULPAR_EDK2_SOURCE'] = source
 	environment['GIT_CONFIG_GLOBAL'] = '/dev/null'
 	environment['GIT_CONFIG_NOSYSTEM'] = '1'
 	environment['GIT_AUTHOR_NAME'] = 'Firmware Test'
@@ -195,7 +195,7 @@ fn toolchain(r hosttest.Result, compiler string, linker string) ! {
 }
 
 pub fn (c Context) save_observations(name string) ! {
-	if directory := os.getenv_opt('VINIX_OVMF_OBSERVATIONS') {
+	if directory := os.getenv_opt('TULPAR_OVMF_OBSERVATIONS') {
 		fixturehost.write(directory + '/' + name + '.json', json2.encode(c.observations))!
 	}
 }

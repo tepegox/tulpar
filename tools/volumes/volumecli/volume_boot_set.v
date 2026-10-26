@@ -88,19 +88,19 @@ fn load_boot_volumes(etc i32, directory i32, mut volumes BootVolumeSet, mut work
 	volumes.directory = C.openat(directory, c'boot-volumes.d', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
 	if volumes.directory < 0 {
 		if unsafe { C.errno == C.ENOENT } { return true }
-		C.perror(c'vinix-volume: boot encrypted set directory'); return false
+		C.perror(c'tulpar-volume: boot encrypted set directory'); return false
 	}
 	copy := C.fcntl(volumes.directory, C.F_DUPFD_CLOEXEC, 0)
-	if copy < 0 { C.perror(c'vinix-volume: duplicate encrypted set directory'); return false }
+	if copy < 0 { C.perror(c'tulpar-volume: duplicate encrypted set directory'); return false }
 	stream := C.fdopendir(copy)
-	if stream == unsafe { nil } { C.close(copy); C.perror(c'vinix-volume: enumerate encrypted set'); return false }
+	if stream == unsafe { nil } { C.close(copy); C.perror(c'tulpar-volume: enumerate encrypted set'); return false }
 	defer { C.closedir(stream) }
 	mut names := [64][256]char{}
 	mut count := 0; mut entries := 0
 	for {
 		unsafe { C.errno = 0 }
 		entry := C.readdir(stream)
-		if entry == unsafe { nil } { if unsafe { C.errno != 0 } { C.perror(c'vinix-volume: encrypted set enumeration'); return false }; break }
+		if entry == unsafe { nil } { if unsafe { C.errno != 0 } { C.perror(c'tulpar-volume: encrypted set enumeration'); return false }; break }
 		name := unsafe { &entry.d_name[0] }
 		if C.strcmp(name, c'.') == 0 || C.strcmp(name, c'..') == 0 { continue }
 		entries++; if entries > 4096 { plan_error(c'encrypted set directory exceeds enumeration limit'); return false }
@@ -149,9 +149,9 @@ fn apply_boot_volumes(etc i32, directory i32, volumes &BootVolumeSet, mut work V
 		row := &volumes.rows[i]
 		work.disk = row.disk; work.request = row.request; work.status = row.status
 		if !volume_seal_recheck(row.fd, mut work) || !volume_seal_recheck(row.fd, mut work) { return 1 }
-		if C.ioctl(row.fd, u64(0x56560006), &work.request) != 0 { C.perror(c'vinix-volume: import encrypted boot mapping'); return 1 }
+		if C.ioctl(row.fd, u64(0x56560006), &work.request) != 0 { C.perror(c'tulpar-volume: import encrypted boot mapping'); return 1 }
 		erase_key(&work.request.key[0], 64)
-		if finish_bundle_report(C.printf(c'/dev/mapper/vinix%u\n', row.request.data.slot) >= 0) != 0 { return 1 }
+		if finish_bundle_report(C.printf(c'/dev/mapper/tulpar%u\n', row.request.data.slot) >= 0) != 0 { return 1 }
 	}
 	return 0
 }

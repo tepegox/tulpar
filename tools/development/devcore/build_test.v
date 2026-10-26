@@ -9,18 +9,18 @@ import sourcecommand
 fn C.lchmod(&char, u32) int
 
 fn test_build_compiles_and_runs_a_real_project_and_records_artifacts() {
-	root := sourcecommand.temporary('vinix-build-test')!
+	root := sourcecommand.temporary('tulpar-build-test')!
 	defer { os.rmdir_all(root) or {} }
 	source := root + '/source'
 	os.mkdir(source)!
 	os.write_file(source + '/main.v', 'module main\nimport os\nfn main() {\n' +
-		'    if os.getenv("VINIX_BUILD_PARENT_SECRET") != "" { exit(1) }\n' +
+		'    if os.getenv("TULPAR_BUILD_PARENT_SECRET") != "" { exit(1) }\n' +
 		'    if os.getenv("SOURCE_DATE_EPOCH") != "1700000000" { exit(2) }\n' +
 		'    os.write_file(os.getenv("HOME") + "/compiler-state", "private home")!\n' +
 		'    os.write_file(os.getenv("TMPDIR") + "/compiler-state", "private temporary")!\n' +
 		'    println("native-build-ok")\n}\n')!
-	os.setenv('VINIX_BUILD_PARENT_SECRET', 'must-not-reach-build', true)
-	defer { os.unsetenv('VINIX_BUILD_PARENT_SECRET') }
+	os.setenv('TULPAR_BUILD_PARENT_SECRET', 'must-not-reach-build', true)
+	defer { os.unsetenv('TULPAR_BUILD_PARENT_SECRET') }
 	v := os.real_path(@VEXE)
 	cc := os.real_path(os.find_abs_path_of_executable('cc')!)
 	plan := BuildPlan{
@@ -60,7 +60,7 @@ fn test_build_compiles_and_runs_a_real_project_and_records_artifacts() {
 }
 
 fn test_bad_hash_is_rejected_before_creating_output() {
-	root := sourcecommand.temporary('vinix-build-pin')!
+	root := sourcecommand.temporary('tulpar-build-pin')!
 	defer { os.rmdir_all(root) or {} }
 	os.mkdir(root + '/source')!
 	plan := BuildPlan{ source: Pin{root + '/source', '0'.repeat(64)}, steps: [BuildStep{ name: 'bad', argv: ['false'] }] }
@@ -73,7 +73,7 @@ fn test_bad_hash_is_rejected_before_creating_output() {
 }
 
 fn test_tree_hash_preserves_internal_symlinks_modes_and_refuses_escape() {
-	root := sourcecommand.temporary('vinix-build-tree')!
+	root := sourcecommand.temporary('tulpar-build-tree')!
 	defer { os.rmdir_all(root) or {} }
 	os.mkdir(root + '/source')!
 	os.mkdir(root + '/source/sub')!
@@ -81,7 +81,7 @@ fn test_tree_hash_preserves_internal_symlinks_modes_and_refuses_escape() {
 	os.chmod(root + '/source/file', 0o755)!
 	os.symlink('../file', root + '/source/sub/link')!
 	$if macos {
-		// The copy gets Darwin's default link mode; Vinix reports 0777.
+		// The copy gets Darwin's default link mode; Tulpar reports 0777.
 		// Neither changes permissions on the linked executable.
 		assert C.lchmod(unsafe { &char((root + '/source/sub/link').str) }, 0o777) == 0
 	}
@@ -104,7 +104,7 @@ fn test_tree_hash_preserves_internal_symlinks_modes_and_refuses_escape() {
 }
 
 fn test_failed_command_retains_a_failed_receipt_and_short_circuits() {
-	root := sourcecommand.temporary('vinix-build-failure')!
+	root := sourcecommand.temporary('tulpar-build-failure')!
 	defer { os.rmdir_all(root) or {} }
 	os.mkdir(root + '/source')!
 	tool := os.real_path(os.find_abs_path_of_executable('false')!)
@@ -127,7 +127,7 @@ fn test_failed_command_retains_a_failed_receipt_and_short_circuits() {
 }
 
 fn test_deadline_stops_a_command() {
-	root := sourcecommand.temporary('vinix-build-deadline')!
+	root := sourcecommand.temporary('tulpar-build-deadline')!
 	defer { os.rmdir_all(root) or {} }
 	sleep := os.find_abs_path_of_executable('sleep')!
 	run([sleep, '30'], root, environment(0), 1, root + '/log') or {
@@ -138,7 +138,7 @@ fn test_deadline_stops_a_command() {
 }
 
 fn test_gc_none_hashing_keeps_stream_buffers_bounded() {
-	root := sourcecommand.temporary('vinix-hash-memory')!
+	root := sourcecommand.temporary('tulpar-hash-memory')!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/input', 'x'.repeat(65536))!
 	repository := os.dir(os.dir(os.dir(os.dir(@FILE))))

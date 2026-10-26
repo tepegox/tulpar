@@ -318,7 +318,7 @@ fn wake_queue(mut queue Queue) {
 }
 
 fn wait_on_queue(mut queue Queue, generation u64) bool {
-	mut waiter := unsafe { &Waiter(C.vinix_stack_alloc(sizeof(Waiter))) }
+	mut waiter := unsafe { &Waiter(C.tulpar_stack_alloc(sizeof(Waiter))) }
 	unsafe { *waiter = Waiter{} }
 	queues_lock.acquire()
 	if queue.removed || queue.generation != generation {
@@ -526,7 +526,7 @@ pub fn syscall_msgctl(_ voidptr, id int, command int, address u64) (u64, u64) {
 	who := identity() or { return errno.err, errno.eidrm }
 	defer { release_identity(who) }
 	if cmd == ipc_info || cmd == msg_info {
-		mut info := unsafe { &MsgInfo(C.vinix_stack_alloc(sizeof(MsgInfo))) }
+		mut info := unsafe { &MsgInfo(C.tulpar_stack_alloc(sizeof(MsgInfo))) }
 		unsafe { *info = MsgInfo{
 			pool: i32(max_buffer_bytes / 1024)
 			map_count: i32(max_total_messages)
@@ -557,7 +557,7 @@ pub fn syscall_msgctl(_ voidptr, id int, command int, address u64) (u64, u64) {
 	if cmd != ipc_rmid && cmd != ipc_set && cmd != ipc_stat && cmd != msg_stat && cmd != msg_stat_any {
 		return errno.err, errno.einval
 	}
-	mut incoming := unsafe { &QueueInfo(C.vinix_stack_alloc(sizeof(QueueInfo))) }
+	mut incoming := unsafe { &QueueInfo(C.tulpar_stack_alloc(sizeof(QueueInfo))) }
 	unsafe { *incoming = QueueInfo{} }
 	if cmd == ipc_set && !usercopy.copy_from_user(incoming, address, sizeof(QueueInfo)) { return errno.err, errno.efault }
 	queues_lock.acquire()
@@ -569,7 +569,7 @@ pub fn syscall_msgctl(_ voidptr, id int, command int, address u64) (u64, u64) {
 	}
 	if cmd == ipc_stat || cmd == msg_stat || cmd == msg_stat_any {
 		if cmd != msg_stat_any && !may_use(who, queue, 4) { queues_lock.release(); return errno.err, errno.eacces }
-		mut info := unsafe { &QueueInfo(C.vinix_stack_alloc(sizeof(QueueInfo))) }
+		mut info := unsafe { &QueueInfo(C.tulpar_stack_alloc(sizeof(QueueInfo))) }
 		unsafe { *info = queue.info }
 		info.lspid = visible_pid(who, queue.sender_pid, queue.info.lspid, queue.sender_namespace)
 		info.lrpid = visible_pid(who, queue.receiver_pid, queue.info.lrpid, queue.receiver_namespace)

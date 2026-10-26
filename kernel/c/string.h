@@ -11,7 +11,7 @@
 
 // Keep const-correct declarations for handwritten C and third-party callers.
 // Only the generated V translation unit needs the unqualified definitions.
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 void *memcpy(void *restrict dest, void *restrict src, size_t n);
 void *memmove(void *dest, void *src, size_t n);
 int memcmp(void *s1, void *s2, size_t n);
@@ -21,7 +21,7 @@ void *memmove(void *dest, const void *src, size_t n);
 int memcmp(const void *s1, const void *s2, size_t n);
 #endif
 void *memset(void *s, int c, size_t n);
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 char *strcpy(char *dest, char *src);
 int strcmp(char *s1, char *s2);
 int strncmp(char *s1, char *s2, size_t n);

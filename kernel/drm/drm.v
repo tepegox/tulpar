@@ -1,7 +1,7 @@
 @[has_globals]
 module drm
 
-// Minimal DRM (Direct Rendering Manager) subsystem for Vinix
+// Minimal DRM (Direct Rendering Manager) subsystem for Tulpar
 // Implements only what Asahi GPU and DCP display drivers need.
 // Skips legacy mode setting, DRM leases, writeback connectors.
 import klock
@@ -713,7 +713,7 @@ fn ioctl_get_cap(dev &DrmDevice, data voidptr) int {
 			return 0
 		}
 		ioctl.drm_cap_syncobj_timeline {
-			// Vinix currently exposes binary syncobjs only.
+			// Tulpar currently exposes binary syncobjs only.
 			cap.value = 0
 			return 0
 		}

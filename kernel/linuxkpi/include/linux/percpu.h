@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_PERCPU_H
-#define VINIX_LINUX_PERCPU_H
+#ifndef TULPAR_LINUX_PERCPU_H
+#define TULPAR_LINUX_PERCPU_H
 #include <asm/percpu.h>
 #include <linux/gfp_types.h>
 void *__alloc_percpu_gfp(size_t size, size_t align, gfp_t flags);

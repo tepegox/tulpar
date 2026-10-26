@@ -19,5 +19,5 @@ pipe/pollfd records remain on the stack through the original reap/close order;
 the generated object has no allocator imports. `--build-only` emits the static
 executable, and `--original-reference /path/to/frozen/test.c` builds an immutable
 original control with the same SDK and warning policy. Both native C/V controls
-passed. This fixture uses x86 `SYS_poll` and Vinix-specific event limits; it adds
+passed. This fixture uses x86 `SYS_poll` and Tulpar-specific event limits; it adds
 no ARM, host sanitizer or new production-kernel claim.

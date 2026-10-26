@@ -8,7 +8,7 @@ fn reference_name(output &char, readonly bool, changed bool) {
 @[direct_array_access]
 fn reference_tool(before &char, after &char, readonly bool, old_changed bool, new_changed bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), if after == nil { &char(c'show-volume-reference') } else { &char(c'compare-volume-references') }, before, after, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), if after == nil { &char(c'show-volume-reference') } else { &char(c'compare-volume-references') }, before, after, &char(nil)]!
 		capture := C.open(c'/root/reference.out', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(capture >= 0, c'open reference capture')
 		child := C.fork(); check(child >= 0, c'fork reference tool')
 		if child == 0 { if C.dup2(capture, 1) != 1 || C.close(capture) != 0 { C._exit(126) }; C.execv(args[0], &args[0]); C._exit(127) }
@@ -20,10 +20,10 @@ fn reference_tool(before &char, after &char, readonly bool, old_changed bool, ne
 		if expected == 1 { check(C.strstr(&text[0], c'operation=') == nil, c'invalid reference emits no finding'); return }
 		mut wanted := [2048]char{}
 		if after == nil {
-			C.snprintf(&wanted[0], 2048, c'format=VINIXCH1 operation=show-ciphertext-reference mappings=1 algorithm=sha256 reference_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu sha256=%s\n', reference_hash(readonly, old_changed), u64(readonly), reference_digest(old_changed))
+			C.snprintf(&wanted[0], 2048, c'format=TULPARCH1 operation=show-ciphertext-reference mappings=1 algorithm=sha256 reference_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu sha256=%s\n', reference_hash(readonly, old_changed), u64(readonly), reference_digest(old_changed))
 		} else {
 			changed := old_changed != new_changed
-			C.snprintf(&wanted[0], 2048, c'format=VINIXCH1 operation=compared-ciphertext-references mappings=1 stable=%lu changed=%lu algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu result=%s before_sha256=%s after_sha256=%s\n', u64(!changed), u64(changed), reference_hash(readonly, old_changed), reference_hash(readonly, new_changed), u64(readonly), if changed { &char(c'changed') } else { &char(c'stable') }, reference_digest(old_changed), reference_digest(new_changed))
+			C.snprintf(&wanted[0], 2048, c'format=TULPARCH1 operation=compared-ciphertext-references mappings=1 stable=%lu changed=%lu algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu result=%s before_sha256=%s after_sha256=%s\n', u64(!changed), u64(changed), reference_hash(readonly, old_changed), reference_hash(readonly, new_changed), u64(readonly), if changed { &char(c'changed') } else { &char(c'stable') }, reference_digest(old_changed), reference_digest(new_changed))
 		}
 		check(C.strcmp(&text[0], &wanted[0]) == 0, c'exact independent reference output')
 	}
@@ -58,7 +58,7 @@ fn reference_matrix() {
 	check(C.chmod(c'/root/volume.vchash', 0o644) == 0, c'change reference privacy')
 	reference_tool(c'/root/volume.vchash', unsafe { nil }, false, false, false, 1)
 	reference_tool(c'/root/auto-volume.vchash', c'/root/volume.vchash', false, false, false, 1)
-	check(C.chmod(c'/root/volume.vchash', 0o600) == 0, c'restore reference privacy'); missing(c'/dev/mapper/vinix60')
+	check(C.chmod(c'/root/volume.vchash', 0o600) == 0, c'restore reference privacy'); missing(c'/dev/mapper/tulpar60')
 }
 
 fn reference_cycles(count int) {
@@ -93,16 +93,16 @@ fn reference_entry() i32 {
 		check(raw >= 0 && C.pread(raw, &original[0], 512, 15728640) == 512, c'pin reference corruption'); changed = original; changed[0] ^= 1
 		check(C.pwrite(raw, &changed[0], 512, 15728640) == 512 && C.fsync(raw) == 0, c'persist reference corruption')
 		unsafe { for readonly in [false, true]! {
-			args := [&char(c'/usr/sbin/vinix-volume'), &char(c'hash-volume'), parent, if readonly { &char(c'/root/volume-ro.sealed') } else { &char(c'/root/volume.sealed') }, &char(c'/root/crypt.pass'), if readonly { &char(c'/root/changed-volume-ro.vchash') } else { &char(c'/root/changed-volume.vchash') }, &char(nil)]!
+			args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'hash-volume'), parent, if readonly { &char(c'/root/volume-ro.sealed') } else { &char(c'/root/volume.sealed') }, &char(c'/root/crypt.pass'), if readonly { &char(c'/root/changed-volume-ro.vchash') } else { &char(c'/root/changed-volume.vchash') }, &char(nil)]!
 			run_utility(&args[0], 0)
 		} }
 		check(C.pwrite(raw, &original[0], 512, 15728640) == 512 && C.fsync(raw) == 0 && C.close(raw) == 0, c'restore reference ciphertext')
 		reference_matrix(); recovery_unlock_tool(c'/root/volume-ro.vrecover', c'/root/recovery.key', false, 0)
-		before := status(c'/dev/mapper/vinix60'); held := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); check(held >= 0, c'hold reference mapping')
+		before := status(c'/dev/mapper/tulpar60'); held := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); check(held >= 0, c'hold reference mapping')
 		reference_tool(c'/root/volume.vchash', unsafe { nil }, false, false, false, 0)
 		reference_tool(c'/root/volume.vchash', c'/root/changed-volume.vchash', false, false, true, 2)
-		check(before == status(c'/dev/mapper/vinix60'), c'reference queries preserve complete live status'); crypt_data(held, 0, 0x73)
-		check(C.close(held) == 0, c'close reference mapping'); simple(c'remove', c'/dev/mapper/vinix60', unsafe { nil }, 0)
+		check(before == status(c'/dev/mapper/tulpar60'), c'reference queries preserve complete live status'); crypt_data(held, 0, 0x73)
+		check(C.close(held) == 0, c'close reference mapping'); simple(c'remove', c'/dev/mapper/tulpar60', unsafe { nil }, 0)
 		reference_retention(); check(C.unlink(c'/root/ciphertext.out') == 0, c'reclaim reference source capture')
 		root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(root >= 0 && C.fsync(root) == 0 && C.close(root) == 0, c'persist offline references')
 		C.printf(c'PLAN REFERENCE PASSED: complete private references, exact metadata/digests/fingerprints, offline results and bounded lifetimes\n')

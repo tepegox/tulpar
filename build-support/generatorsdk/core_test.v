@@ -7,7 +7,7 @@ import os
 fn C.mkdtemp(&u8) &char
 
 fn fixture() string {
-	mut pattern := '/private/tmp/vinix-generator-sdk.XXXXXX\x00'.bytes()
+	mut pattern := '/private/tmp/tulpar-generator-sdk.XXXXXX\x00'.bytes()
 	assert C.mkdtemp(pattern.data) != unsafe { nil }
 	return pattern.bytestr().all_before('\x00')
 }

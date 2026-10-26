@@ -30,7 +30,7 @@
 module hibernate
 
 pub const block_bytes = u64(4096)
-// "VINIXHIB", first byte lowest.
+// "TULPARHIB", first byte lowest.
 pub const image_magic = u64(0x4249485849_4e4956)
 pub const format_version = u64(1)
 

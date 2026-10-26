@@ -7,12 +7,12 @@ import time
 import tools.packages.pkgprotocol
 
 fn test_configuration_listing_survives_damaged_metadata_without_hiding_maintenance_failures() {
-	root := os.real_path(os.temp_dir()) + '/vinix-repository-config-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.real_path(os.temp_dir()) + '/tulpar-repository-config-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	defer { os.rmdir_all(root) or {} }
 	repository := Repository{ id: 'legacy', url: 'file:///missing/offline-repository', public_key: '01' + '00'.repeat(31) }
 	config := Config{ architecture: 'aarch64', policy: Policy{ offline: true }, repositories: [repository] }
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	os.write_file(path, json2.encode(config))!
 	os.chmod(path, 0o644)!
 	configuration := repository_configuration(root)!

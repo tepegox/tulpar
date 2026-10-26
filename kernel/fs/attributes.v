@@ -55,7 +55,7 @@ fn file_flags_ioctl(mut node VFSNode, request u64, argp voidptr, identity &lib.M
 		return none
 	}
 	new_bits := u32(wanted) & resource.attributes_kept
-	// Flags Vinix does not keep must be given as they are, as on Linux.
+	// Flags Tulpar does not keep must be given as they are, as on Linux.
 	if u32(wanted) & ~resource.attributes_kept != 0 {
 		errno.set(errno.eopnotsupp)
 		return none

@@ -34,8 +34,8 @@ fn C.vks_smp_original_online_mask() C.vks_smp_const_void
 fn C.vks_smp_single(u32, i32, HeaderSmpCallFn, voidptr, voidptr) i32
 fn C.vks_smp_async(i32, voidptr) i32
 fn C.vks_smp_many(C.vks_smp_const_void, HeaderSmpCallFn, voidptr, bool, bool, HeaderSmpCondFn)
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
 
 @[export: 'vks_smp_csd_flags']
 pub fn smp_csd_flags(csd voidptr) &u32 {
@@ -92,13 +92,13 @@ pub fn smp_call_function_many(mask C.vks_smp_const_cpumask, callback HeaderSmpCa
 }
 @[export: 'smp_call_function']
 pub fn smp_call_function(callback HeaderSmpCallFn, info voidptr, wait i32) {
-	C.vinix_linuxkpi_preempt_disable()
+	C.tulpar_linuxkpi_preempt_disable()
 	C.vks_smp_many(smp_online_mask(), callback, info, wait != 0, false, unsafe { nil })
-	C.vinix_linuxkpi_preempt_enable()
+	C.tulpar_linuxkpi_preempt_enable()
 }
 @[export: 'on_each_cpu_cond_mask']
 pub fn on_each_cpu_cond_mask(condition HeaderSmpCondFn, callback HeaderSmpCallFn, info voidptr, wait bool, mask C.vks_smp_const_cpumask) {
-	C.vinix_linuxkpi_preempt_disable()
+	C.tulpar_linuxkpi_preempt_disable()
 	C.vks_smp_many(C.vks_smp_borrow_mask(mask), callback, info, wait, true, condition)
-	C.vinix_linuxkpi_preempt_enable()
+	C.tulpar_linuxkpi_preempt_enable()
 }

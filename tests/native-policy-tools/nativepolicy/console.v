@@ -25,14 +25,14 @@ pub fn generate_console(work string, output string, selected string, prod bool) 
 }
 
 fn console() ! {
-	work := private_work('vinix-print-')!
+	work := private_work('tulpar-print-')!
 	defer { retire(work) }
 	prepare_console(work)!
 	for prod in [false, true] {
 		generated := work + '/policy.c'
 		generate_project(work, generated, arch(), prod, []string{})!
 		flags := concat(['clang'], clang_arch(arch()), ['-std=gnu11', '-O2', '-g', '-ffreestanding', '-fno-builtin',
-			'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-DVINIX_V_RUNTIME',
+			'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-DTULPAR_V_RUNTIME',
 			'-I' + work, '-I' + root() + '/kernel/c', '-Wno-unused-function'])
 		obj := work + '/policy.o'
 		run(concat(flags, ['-c', generated, '-o', obj]))!
@@ -79,8 +79,8 @@ pub fn console_darwin_abi(source string) string {
 	}
 	mut text := lines.join('\n')
 	for name in ['printf', 'printf_panic', 'kprintf', 'printf_benchmark', 'fprintf',
-		'vinix_printf_entry', 'vinix_panic_entry', 'vinix_kprintf_entry', 'vinix_benchmark_entry',
-		'vinix_fprintf_entry', 'vp_format', 'vp_snprintf', 'npf_vpprintf', 'npf_vsnprintf', 'stderr'] {
+		'tulpar_printf_entry', 'tulpar_panic_entry', 'tulpar_kprintf_entry', 'tulpar_benchmark_entry',
+		'tulpar_fprintf_entry', 'vp_format', 'vp_snprintf', 'npf_vpprintf', 'npf_vsnprintf', 'stderr'] {
 		text = replace_word(text, name, 'ABI_SYMBOL(' + name + ')')
 	}
 	return text

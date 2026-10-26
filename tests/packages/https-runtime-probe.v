@@ -11,14 +11,14 @@ $if track_heap ? {
 	#include "@VMODROOT/../../tests/support/heap_tracker.h"
 }
 
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn event(progress pkgprotocol.Progress) { progress.validate() or { panic(err) } }
 
 fn reaped() {
 	mut status := i32(0)
-	assert C.vinix_package_waitpid(-1, unsafe { &status }, C.WNOHANG) == -1 && C.errno == C.ECHILD
+	assert C.tulpar_package_waitpid(-1, unsafe { &status }, C.WNOHANG) == -1 && C.errno == C.ECHILD
 }
 
 fn check(f tlsruntime.Fixture, mode string) ! {
@@ -57,18 +57,18 @@ fn check(f tlsruntime.Fixture, mode string) ! {
 	service := pkgcore.Service{ root: root, progress: event }
 	mut history := ''
 	if !mode.starts_with('fetch-') {
-		os.mkdir_all(root + '/etc/vinix-packages')!
+		os.mkdir_all(root + '/etc/tulpar-packages')!
 		config := pkgcore.Config{
 			architecture: f.architecture
 			repositories: [pkgcore.Repository{ id: 'tls-runtime', public_key: f.key, url: f.base + '/' + mode + '/setup' }]
 			policy:       pkgcore.Policy{ reserve_bytes: 0 }
 		}
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 		mut catalog := service.refresh()!
 		catalog.close()
 		history = os.read_file(store + '/trust-history.json')!
 		repository := pkgcore.Repository{ ...config.repositories[0], url: url }
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ ...config, repositories: [repository] }))!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ ...config, repositories: [repository] }))!
 		os.write_file(store + '/catalog.json', json2.encode([pkgcore.Snapshot{ repository: repository, text: f.index, signature: f.signature }]))!
 	}
 	cache := if mode.starts_with('refresh-') { os.read_file(store + '/catalog.json')! } else { '' }
@@ -94,7 +94,7 @@ fn check(f tlsruntime.Fixture, mode string) ! {
 				}
 			}
 			$if track_heap ? {
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 			}
 			mut refused := false
 			mut message := ''
@@ -159,7 +159,7 @@ fn check(f tlsruntime.Fixture, mode string) ! {
 			}
 			unsafe { message.free() }
 			$if track_heap ? {
-				bytes := C.vinix_heap_end()
+				bytes := C.tulpar_heap_end()
 				if pass == 1 { retained += bytes }
 			}
 			if mode.starts_with('refresh-') && refused {
@@ -191,7 +191,7 @@ fn check(f tlsruntime.Fixture, mode string) ! {
 			reaped()
 			if mode.ends_with('-truncated') {
 				$if track_heap ? {
-					C.vinix_heap_begin()
+					C.tulpar_heap_begin()
 				}
 				if mode.starts_with('fetch-') {
 					endpoint := url + '/payload'
@@ -204,7 +204,7 @@ fn check(f tlsruntime.Fixture, mode string) ! {
 					result.close()
 				}
 				$if track_heap ? {
-					bytes := C.vinix_heap_end()
+					bytes := C.tulpar_heap_end()
 					if pass == 1 { retained += bytes }
 				}
 				if mode.starts_with('fetch-') {

@@ -1,6 +1,6 @@
-# Vinix mandatory filesystem domains
+# Tulpar mandatory filesystem domains
 
-`vinix-mac` installs a bounded filesystem access matrix, gives inodes type labels,
+`tulpar-mac` installs a bounded filesystem access matrix, gives inodes type labels,
 seals that configuration for the boot and launches a process in a domain. A
 confined process remains subject to the matrix as UID 0 with full capabilities.
 The feature is separate from pledge/unveil and ordinary Unix mode bits; all
@@ -8,10 +8,10 @@ applicable checks must allow an operation.
 
 The native V implementation is staged by
 `build-support/security-tools/stage` with the target musl compiler.
-The private Vinix ABI is
+The private Tulpar ABI is
 `prctl(0x56584d41, command, domain, type, permissions)`; it is not Linux's LSM ABI.
 Domains are 1–15; domain 0 is trusted administration. Types 0–28 are canonical
-decimal `security.vinix` xattrs on tmpfs/ext2. Type 0 means an absent label. Type
+decimal `security.tulpar` xattrs on tmpfs/ext2. Type 0 means an absent label. Type
 29 describes anonymous pipes/sockets, 30 devices, and 31 other kernel resources.
 Unsupported inode backends receive type 31 rather than an unrestricted label.
 Raw block devices and mutation of kernel control resources are always denied to
@@ -21,14 +21,14 @@ profiles must grant it only when the program needs and trusts those interfaces.
 For example, before starting the application:
 
 ```sh
-vinix-mac label 1 /srv/example
-vinix-mac rule 1 0 inspect,read,execute,search
-vinix-mac rule 1 1 inspect,read,write,execute,search,create,remove,metadata,ioctl
-vinix-mac rule 1 29 inspect,read,write,ioctl
-vinix-mac rule 1 30 inspect,read,write,ioctl
-vinix-mac rule 1 31 inspect,read,search
-vinix-mac seal
-vinix-mac run 1 /usr/bin/example
+tulpar-mac label 1 /srv/example
+tulpar-mac rule 1 0 inspect,read,execute,search
+tulpar-mac rule 1 1 inspect,read,write,execute,search,create,remove,metadata,ioctl
+tulpar-mac rule 1 29 inspect,read,write,ioctl
+tulpar-mac rule 1 30 inspect,read,write,ioctl
+tulpar-mac rule 1 31 inspect,read,search
+tulpar-mac seal
+tulpar-mac run 1 /usr/bin/example
 ```
 
 Label existing children individually before sealing: labeling a directory does

@@ -10,17 +10,17 @@ fn C.mkfifo(&char, u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn configuration_observation_fixture() !(string, Service) {
-	root := os.temp_dir() + '/vinix-config-observation-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.temp_dir() + '/tulpar-config-observation-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	config := Config{ architecture: 'aarch64', launch_user: 'alex', repositories: [Repository{ id: 'publisher', url: 'file:///offline/repository', public_key: '01' + '00'.repeat(31) }],
 		policy: Policy{ offline: true, allowed: ['utility', 'app'], pins: [Dependency{ id: 'app', minimum: '1.0.0', before: '2.0.0' }],
 			permissions: ['files'], licenses: ['Vendor é🚀'], allow_firmware: true, reserve_bytes: 7 } }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	return root, Service{ root: root }
 }
 
@@ -32,12 +32,12 @@ fn retire_configuration_observation(mut document RepositoryConfiguration) {
 fn test_configuration_observations_retire_results_and_reader_scratch() {
 	$if track_heap ? {
 		root, service := configuration_observation_fixture()!; defer { os.rmdir_all(root) or {} }
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { mut document := repository_configuration(root)!; retire_configuration_observation(mut document) }
-		repository_bytes := C.vinix_heap_end()
-		C.vinix_heap_begin()
+		repository_bytes := C.tulpar_heap_end()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { mut document := service.policy()!; document.close(); document.close() }
-		policy_bytes := C.vinix_heap_end()
+		policy_bytes := C.tulpar_heap_end()
 		println('CONFIGURATION OBSERVATION 1000 repository reads/retirements retained ${repository_bytes} bytes; 1000 policy reads/retirements retained ${policy_bytes} bytes')
 		assert repository_bytes == 0 && policy_bytes == 0
 	}
@@ -46,7 +46,7 @@ fn test_configuration_observations_retire_results_and_reader_scratch() {
 fn test_configuration_observations_own_fields_preserve_protocols_and_stored_policy() {
 	for architecture in ['aarch64', 'x86_64']! {
 		root, service := configuration_observation_fixture()!; defer { os.rmdir_all(root) or {} }
-		path := root + '/etc/vinix-packages/config.json'
+		path := root + '/etc/tulpar-packages/config.json'
 		text := os.read_file(path)!.replace('aarch64', architecture)
 		os.write_file(path, text)!
 		mut first := repository_configuration(root)!; mut second := repository_configuration(root)!
@@ -74,7 +74,7 @@ fn test_configuration_observations_own_fields_preserve_protocols_and_stored_poli
 
 fn test_configuration_observations_bound_growth_and_retire_legacy_defaults() {
 	root, service := configuration_observation_fixture()!; defer { os.rmdir_all(root) or {} }
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	defaults := Policy{}; expected_default := canonical_policy(defaults)!
 	defer { close_owned_policy(defaults); close_owned_policy(expected_default) }
 	for count in [0, 64, 4096]! {
@@ -91,7 +91,7 @@ fn test_configuration_observations_bound_growth_and_retire_legacy_defaults() {
 		// The maximum valid result legitimately exceeds the tracker's live-record
 		// table while both source configuration and canonical policy coexist.
 		tracked := count != 4096
-		$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+		$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 		for _ in 0 .. if tracked { 1000 } else { 1 } {
 			mut configuration := repository_configuration(root)!; assert configuration.repositories.len == count
 			retire_configuration_observation(mut configuration)
@@ -100,7 +100,7 @@ fn test_configuration_observations_bound_growth_and_retire_legacy_defaults() {
 			else { assert policy.policy.allowed[0] == 'app-0' && policy.policy.pins[0].id == 'app-0' }
 			policy.close(); policy.close()
 		}
-		$if track_heap ? { if tracked { kept := C.vinix_heap_end(); assert kept == 0, 'legacy/growing reader scratch retained ' + kept.str() } }
+		$if track_heap ? { if tracked { kept := C.tulpar_heap_end(); assert kept == 0, 'legacy/growing reader scratch retained ' + kept.str() } }
 		assert os.read_file(path)! == text && !os.exists(state_directory(root))
 	}
 	println('CONFIGURATION OBSERVATION 1000 legacy/default and growing 64-record cycles retire scratch; full 4096 repository/pin observations preserve source configuration PASS')
@@ -115,7 +115,7 @@ fn configuration_observation_refusal(root string, service Service, expected stri
 
 fn test_configuration_observations_ignore_maintenance_metadata_and_retire_refusal_scratch() {
 	root, service := configuration_observation_fixture()!; defer { os.rmdir_all(root) or {} }
-	path := root + '/etc/vinix-packages/config.json'; text := os.read_file(path)!
+	path := root + '/etc/tulpar-packages/config.json'; text := os.read_file(path)!
 	directory := state_directory(root); guard := acquire(directory)!; guard.release()
 	assert C.mkfifo((directory + '/catalog.json').str, 0o600) == 0
 	assert C.mkfifo((directory + '/trust-history.json').str, 0o600) == 0
@@ -132,9 +132,9 @@ fn test_configuration_observations_ignore_maintenance_metadata_and_retire_refusa
 			'busy' { writer = acquire(directory)!; os.write_file(path, '{must not be read')! }
 			else {}
 		}
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 { configuration_observation_refusal(root, service, if failure == 'busy' { 'another package transaction' } else { '' }) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, failure + ' retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, failure + ' retained ' + kept.str() }
 		if failure == 'busy' { writer.release() }
 		if failure in ['alias', 'fifo']! { os.rm(path)! }
 		if failure == 'lock' { os.rm(directory + '/lock')!; os.write_file(directory + '/lock', '')!; os.chmod(directory + '/lock', 0o644)! }

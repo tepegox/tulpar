@@ -4,7 +4,7 @@
 @[translated]
 module compatcore
 
-@[export: 'vinix_linuxkpi_task_in_iowait']
+@[export: 'tulpar_linuxkpi_task_in_iowait']
 pub fn task_in_iowait(storage voidptr) bool {
 	unsafe {
 		return C.vkp_load32(&u32(C.vkp_iowait_field(storage)), 2) != 0
@@ -49,7 +49,7 @@ pub fn io_schedule_timeout(timeout i64) i64 {
 pub fn nr_iowait_cpu(cpu i32) u32 {
 	unsafe {
 		require(cpu >= 0 && u32(cpu) < percpu_count())
-		return C.vinix_linuxkpi_iowait_count(u32(cpu))
+		return C.tulpar_linuxkpi_iowait_count(u32(cpu))
 	}
 }
 
@@ -58,7 +58,7 @@ pub fn nr_iowait() u32 {
 	unsafe {
 		mut result := u32(0)
 		for cpu := u32(0); cpu < percpu_count(); cpu++ {
-			blocked := C.vinix_linuxkpi_iowait_count(cpu)
+			blocked := C.tulpar_linuxkpi_iowait_count(cpu)
 			require(blocked <= u32(-1) - result)
 			result += blocked
 		}

@@ -28,7 +28,7 @@ pub fn leave_cpu(cpu_number u64) bool {
 	if cpu_number >= vmx_regions.len || vmx_regions[cpu_number] == 0 {
 		return false
 	}
-	C.vinix_vmx_off()
+	C.tulpar_vmx_off()
 	return true
 }
 
@@ -62,7 +62,7 @@ pub fn enter_cpu(cpu_number u64) bool {
 		}
 		cpu.write_cr0(cr0)
 		cpu.write_cr4(cr4)
-		if C.vinix_vmx_on(region) == 0 {
+		if C.tulpar_vmx_on(region) == 0 {
 			return true
 		}
 		cpu.write_cr0(old_cr0)

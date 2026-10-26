@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native data symbols: two names address one cacheline-aligned tick word. */
-#ifdef VINIX_LINUXKPI
+#ifdef TULPAR_LINUXKPI
 #ifdef __APPLE__
 .section __DATA,__data
 .globl _jiffies

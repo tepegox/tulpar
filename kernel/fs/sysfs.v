@@ -9,7 +9,7 @@
 // /sys/devices/system/{cpu,node}, so a kernel that knows its topology and does
 // not export it here has told userspace nothing. These are the same file names
 // and the same formats, so a program that already knows how to read them needs
-// no special case for Vinix.
+// no special case for Tulpar.
 //
 // The CPU and node trees are decided at boot and never change afterwards, apart
 // from the per-node free-memory figures, which are generated when they are
@@ -31,7 +31,7 @@ import resource
 import event.eventstruct
 import lib
 
-// Vinix's scheduler carries 64-bit affinity masks, so this is the largest CPU
+// Tulpar's scheduler carries 64-bit affinity masks, so this is the largest CPU
 // number any of these files can name.
 const sysfs_max_cpus = 64
 
@@ -238,7 +238,7 @@ fn build_cpu_tree(mut system VFSNode) {
 	count := numa.cpu_count()
 	present := if count > 0 { all_cpus_mask(count) } else { u64(0) }
 	// glibc reads `online` for sysconf(_SC_NPROCESSORS_ONLN), and every CPU
-	// Vinix starts stays started, so the three lists are the same list.
+	// Tulpar starts stays started, so the three lists are the same list.
 	add_sysfs_text(mut cpus, 'possible', sysfs_list_line(present))
 	add_sysfs_text(mut cpus, 'present', sysfs_list_line(present))
 	add_sysfs_text(mut cpus, 'online', sysfs_list_line(present))
@@ -249,7 +249,7 @@ fn build_cpu_tree(mut system VFSNode) {
 		mut entry := add_sysfs_directory(mut cpus, sysfs_numbered('cpu', i))
 		add_sysfs_text(mut entry, 'cpu_capacity', sysfs_decimal_line(i64(sched.cpu_capacity(u64(i)))))
 		mut topology := add_sysfs_directory(mut entry, 'topology')
-		// A logical CPU is its own core and its own package here: Vinix does not
+		// A logical CPU is its own core and its own package here: Tulpar does not
 		// read the sibling maps that would say otherwise, and inventing them
 		// would mislead a program that schedules by them.
 		add_sysfs_text(mut topology, 'core_id', sysfs_decimal_line(i64(i)))
@@ -368,7 +368,7 @@ fn (this &SysFSResource) contents() string {
 			return text.str()
 		}
 		.node_numastat {
-			// Vinix does not count the faults that missed their preferred node,
+			// Tulpar does not count the faults that missed their preferred node,
 			// so the only honest figures here are the two that are definitional
 			// for a kernel which never migrates a page after the fact.
 			return 'numa_hit 0\nnuma_miss 0\nnuma_foreign 0\ninterleave_hit 0\nlocal_node 0\nother_node 0\n'

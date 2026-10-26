@@ -29,7 +29,7 @@ fn C.__SPIN_LOCK_UNLOCKED(C.spinlock_t) C.spinlock_t
 fn C.spin_lock_irqsave(&C.spinlock_t,usize)
 fn C.spin_lock_irqsave_nested(&C.spinlock_t,usize,i32)
 fn C.spin_is_locked(&C.spinlock_t) bool
-fn C.vinix_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_irq_flags() usize
 fn C.spin_unlock_irqrestore(&C.spinlock_t,usize)
 fn C.spin_lock_init(&C.spinlock_t)
 fn C.spin_trylock(&C.spinlock_t) bool
@@ -104,7 +104,7 @@ fn nested_spin_subclass(vns_effect_storage &u32) i32 {
 fn nested_spin_guard(vns_guard &C.spinlock_t, vns_flags &usize, vns_irq usize, vns_depth u32,
 	vns_calls &u32) &C.spinlock_t {
 	unsafe {
-		C.assert(*vns_flags == usize(0xf1a6) && C.vinix_linuxkpi_irq_flags() == vns_irq
+		C.assert(*vns_flags == usize(0xf1a6) && C.tulpar_linuxkpi_irq_flags() == vns_irq
 			&& u32(C.preempt_count()) == vns_depth)
 		(*vns_calls)++
 		return vns_guard
@@ -114,7 +114,7 @@ fn nested_spin_guard(vns_guard &C.spinlock_t, vns_flags &usize, vns_irq usize, v
 fn nested_raw_spin_guard(vns_guard &C.raw_spinlock_t, vns_flags &usize, vns_irq usize,
 	vns_depth u32, vns_calls &u32) &C.raw_spinlock_t {
 	unsafe {
-		C.assert(*vns_flags == usize(0xf1a6) && C.vinix_linuxkpi_irq_flags() == vns_irq
+		C.assert(*vns_flags == usize(0xf1a6) && C.tulpar_linuxkpi_irq_flags() == vns_irq
 			&& u32(C.preempt_count()) == vns_depth)
 		(*vns_calls)++
 		return vns_guard
@@ -123,7 +123,7 @@ fn nested_raw_spin_guard(vns_guard &C.raw_spinlock_t, vns_flags &usize, vns_irq 
 
 fn nested_lock_tests() {
 	unsafe {
-		entry_irq := C.vinix_linuxkpi_irq_flags()
+		entry_irq := C.tulpar_linuxkpi_irq_flags()
 		entry_depth := u32(C.preempt_count())
 		for pinned in [false, true]! {
 			if pinned { C.preempt_disable() }
@@ -131,7 +131,7 @@ fn nested_lock_tests() {
 			for disabled in [false, true]! {
 				mut saved_entry := usize(0)
 				if disabled { C.local_irq_save(saved_entry) }
-				incoming := C.vinix_linuxkpi_irq_flags()
+				incoming := C.tulpar_linuxkpi_irq_flags()
 				for raw_first in [false, true]! {
 					mut normal := C.spinlock_t{}
 					mut raw := C.raw_spinlock_t{}
@@ -166,14 +166,14 @@ fn nested_lock_tests() {
 					} else {
 						C.spin_unlock_irqrestore(&normal, first_flags)
 					}
-					C.assert(C.vinix_linuxkpi_irq_flags() == incoming && u32(C.preempt_count()) == base
+					C.assert(C.tulpar_linuxkpi_irq_flags() == incoming && u32(C.preempt_count()) == base
 						&& vns_effects == 0 && !C.spin_is_locked(&normal) && !C.raw_spin_is_locked(&raw))
 				}
 				if disabled { C.local_irq_restore(saved_entry) }
 			}
 			if pinned { C.preempt_enable_no_resched() }
 		}
-		C.assert(C.vinix_linuxkpi_irq_flags() == entry_irq && u32(C.preempt_count()) == entry_depth)
+		C.assert(C.tulpar_linuxkpi_irq_flags() == entry_irq && u32(C.preempt_count()) == entry_depth)
 	}
 }
 

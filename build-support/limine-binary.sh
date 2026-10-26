@@ -2,7 +2,7 @@
 # Sourced by the image scripts: Limine's prebuilt loaders, from one pinned
 # release archive checked against its SHA-256 before anything is taken from
 # it. The arm64 loader the images boot is built from the same release's
-# source with Vinix's base revision patch (scripts/build-limine-aarch64.sh);
+# source with Tulpar's base revision patch (scripts/build-limine-aarch64.sh);
 # keep the two versions together.
 LIMINE_BINARY_VERSION=12.9.3
 LIMINE_BINARY_SHA256=9f42fe9ea2e84d71056529969b1d5c24ba9a2287ffcc01bcce58b0ef8aa98b1d

@@ -44,7 +44,7 @@ fn encode_scrub_report(manifest &DataManifest, observed &DataDigests, output &ch
 	if !data_sha_update(mut context, &bytes[0], uint(size)) || !data_sha_finish(context, unsafe { &digest })
 		|| !scrub_digest_text(unsafe { &digest }, &fingerprint[0]) { return 0 }
 	mut length := int(C.snprintf(output, uint(scrub_report_max),
-		c'format=VINIXSR1 operation=scrubbed-data disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s\n',
+		c'format=TULPARSR1 operation=scrubbed-data disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s\n',
 		manifest.set.count, observed.count, observed.count - summary.changed, summary.changed, &fingerprint[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut record := 0; mut expected := [65]char{}; mut actual := [65]char{}

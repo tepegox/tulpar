@@ -19,7 +19,7 @@ fn child(name string, arguments []string) ! {
 }
 
 fn check() ! {
-	os.setenv('VINIX_PROFILE_EXPORT_SOURCE', '/usr/share/package-fixtures/ffmpeg.tar.xz', true)
+	os.setenv('TULPAR_PROFILE_EXPORT_SOURCE', '/usr/share/package-fixtures/ffmpeg.tar.xz', true)
 	child('metadata', [])!; child('profile', [])!
 	for mode in ['complete', 'packed-3', 'packed-6', 'import-elf', 'import-source', 'changed-lock', 'flush', 'cleanup']! {
 		before := os.read_file('/proc/kernel-resources')!; println('FFMPEG OWNER resources before grace ' + mode + ':\n' + before)

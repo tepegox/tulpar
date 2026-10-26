@@ -71,7 +71,7 @@ import lib
 // ALL CPU caches and depots as well as the core. This is deliberately a
 // correctness-first serialization policy, not XNU's scalable locking scheme.
 // Metadata remains in the same writable backing page. Large allocations still
-// use Vinix's page-aligned malloc interface and contiguous physical allocation.
+// use Tulpar's page-aligned malloc interface and contiguous physical allocation.
 const xnu_heap_magic = u64(0x584e555a4f4e4531)
 const xnu_heap_max_cpus = 64
 
@@ -234,7 +234,7 @@ fn xnu_heap_alloc_inner(size u64, panic_oom bool) voidptr {
 		if !panic_oom {
 			return unsafe { nil }
 		}
-		// Preserve Vinix's existing infallible small malloc OOM behavior.
+		// Preserve Tulpar's existing infallible small malloc OOM behavior.
 		lib.kpanic(unsafe { nil }, c'XNU zone heap exhausted')
 		return unsafe { nil }
 	}

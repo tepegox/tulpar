@@ -71,7 +71,7 @@ fn machine(mut r Report) {
 	r.add('| | |')
 	r.add('| --- | --- |')
 	r.add('| kernel | ${one_line('/proc/version')} |')
-	release := word('/etc/vinix-release')
+	release := word('/etc/tulpar-release')
 	if release != '' {
 		r.add('| release | ${release} |')
 	}
@@ -125,7 +125,7 @@ fn devices(mut r Report) {
 	r.add('${bound} of ${total} devices have a driver.')
 	units := listing(sys + '/class/iommu')
 	if units.len == 0 {
-		r.add('No IOMMU is switched on (see `vinix.iommu=1`).')
+		r.add('No IOMMU is switched on (see `tulpar.iommu=1`).')
 	} else {
 		r.add('IOMMU units on: ${units.join(', ')}.')
 	}

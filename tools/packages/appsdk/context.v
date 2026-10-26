@@ -169,11 +169,11 @@ pub fn decode(fields Fields) !Context {
 
 // This reads the launch snapshot, without consulting a newer active generation.
 pub fn load() !Context {
-	fields := Fields{ sdk: os.getenv('VINIX_APP_SDK'), id: os.getenv('VINIX_APP_ID'), version: os.getenv('VINIX_APP_VERSION'),
-		architecture: os.getenv('VINIX_APP_ARCHITECTURE'), kind: os.getenv('VINIX_APP_KIND'), generation: os.getenv('VINIX_APP_GENERATION'),
-		repository: os.getenv('VINIX_APP_REPOSITORY'), public_key: os.getenv('VINIX_APP_PUBLIC_KEY'), sequence: os.getenv('VINIX_APP_SEQUENCE'),
-		app_directory: os.getenv('VINIX_APP_DIR'), data_directory: os.getenv('VINIX_APP_DATA'), runtime_id: os.getenv('VINIX_APP_RUNTIME_ID'),
-		runtime_version: os.getenv('VINIX_APP_RUNTIME_VERSION'), runtime_directory: os.getenv('VINIX_APP_RUNTIME_DIR'), permissions: os.getenv('VINIX_APP_PERMISSIONS') }
+	fields := Fields{ sdk: os.getenv('TULPAR_APP_SDK'), id: os.getenv('TULPAR_APP_ID'), version: os.getenv('TULPAR_APP_VERSION'),
+		architecture: os.getenv('TULPAR_APP_ARCHITECTURE'), kind: os.getenv('TULPAR_APP_KIND'), generation: os.getenv('TULPAR_APP_GENERATION'),
+		repository: os.getenv('TULPAR_APP_REPOSITORY'), public_key: os.getenv('TULPAR_APP_PUBLIC_KEY'), sequence: os.getenv('TULPAR_APP_SEQUENCE'),
+		app_directory: os.getenv('TULPAR_APP_DIR'), data_directory: os.getenv('TULPAR_APP_DATA'), runtime_id: os.getenv('TULPAR_APP_RUNTIME_ID'),
+		runtime_version: os.getenv('TULPAR_APP_RUNTIME_VERSION'), runtime_directory: os.getenv('TULPAR_APP_RUNTIME_DIR'), permissions: os.getenv('TULPAR_APP_PERMISSIONS') }
 	defer { unsafe {
 		fields.sdk.free(); fields.id.free(); fields.version.free(); fields.architecture.free(); fields.kind.free(); fields.generation.free()
 		fields.repository.free(); fields.public_key.free(); fields.sequence.free(); fields.app_directory.free(); fields.data_directory.free()
@@ -204,20 +204,20 @@ pub fn (context &Context) environment() ![]string {
 	}
 	mut values := []string{cap: 15}
 	unsafe { values.flags |= .noslices }
-	values << 'VINIX_APP_SDK=1'.clone()
-	values << 'VINIX_APP_ID=' + context.id
-	values << 'VINIX_APP_VERSION=' + context.version
-	values << 'VINIX_APP_ARCHITECTURE=' + context.architecture
-	values << 'VINIX_APP_KIND=' + context.kind
-	values << 'VINIX_APP_GENERATION=' + generation
-	values << 'VINIX_APP_REPOSITORY=' + context.repository
-	values << 'VINIX_APP_PUBLIC_KEY=' + context.public_key
-	values << 'VINIX_APP_SEQUENCE=' + sequence
-	values << 'VINIX_APP_DIR=' + context.app_directory
-	values << 'VINIX_APP_DATA=' + context.data_directory
-	values << 'VINIX_APP_RUNTIME_ID=' + context.runtime_id
-	values << 'VINIX_APP_RUNTIME_VERSION=' + context.runtime_version
-	values << 'VINIX_APP_RUNTIME_DIR=' + context.runtime_directory
-	values << 'VINIX_APP_PERMISSIONS=' + unsafe { tos(permission_text.data, permission_text.len) }
+	values << 'TULPAR_APP_SDK=1'.clone()
+	values << 'TULPAR_APP_ID=' + context.id
+	values << 'TULPAR_APP_VERSION=' + context.version
+	values << 'TULPAR_APP_ARCHITECTURE=' + context.architecture
+	values << 'TULPAR_APP_KIND=' + context.kind
+	values << 'TULPAR_APP_GENERATION=' + generation
+	values << 'TULPAR_APP_REPOSITORY=' + context.repository
+	values << 'TULPAR_APP_PUBLIC_KEY=' + context.public_key
+	values << 'TULPAR_APP_SEQUENCE=' + sequence
+	values << 'TULPAR_APP_DIR=' + context.app_directory
+	values << 'TULPAR_APP_DATA=' + context.data_directory
+	values << 'TULPAR_APP_RUNTIME_ID=' + context.runtime_id
+	values << 'TULPAR_APP_RUNTIME_VERSION=' + context.runtime_version
+	values << 'TULPAR_APP_RUNTIME_DIR=' + context.runtime_directory
+	values << 'TULPAR_APP_PERMISSIONS=' + unsafe { tos(permission_text.data, permission_text.len) }
 	return values
 }

@@ -86,7 +86,7 @@ pub fn memory_info(out &C.vqc_sysinfo) i32 {
 pub fn memory_open(path &char, flags i32, mode i32) i32 {
 	unsafe {
 		record_memory_event(2, u64(u32(flags)))
-		chosen := if C.strcmp(path, c'/dev/shm/vinix-qemu-core-sparse') == 0 {
+		chosen := if C.strcmp(path, c'/dev/shm/tulpar-qemu-core-sparse') == 0 {
 			&memory_path[0]
 		} else { path }
 		if (flags & C.O_CREAT) != 0 {
@@ -101,7 +101,7 @@ pub fn memory_open(path &char, flags i32, mode i32) i32 {
 pub fn memory_unlink(path &char) i32 {
 	unsafe {
 		record_memory_event(4, 0)
-		return C.unlink(if C.strcmp(path, c'/dev/shm/vinix-qemu-core-sparse') == 0 {
+		return C.unlink(if C.strcmp(path, c'/dev/shm/tulpar-qemu-core-sparse') == 0 {
 			&memory_path[0]
 		} else { path })
 	}
@@ -181,7 +181,7 @@ fn memory_attempt(which i32, original bool, failure i32) [5]u64 {
 
 fn run_memory() {
 	unsafe {
-		C.strcpy(&memory_path[0], c'/tmp/vinix-qemu-memory-XXXXXX')
+		C.strcpy(&memory_path[0], c'/tmp/tulpar-qemu-memory-XXXXXX')
 		fd := C.mkstemp(&memory_path[0])
 		C.assert(fd >= 0 && C.close(fd) == 0 && C.unlink(&memory_path[0]) == 0)
 		for which, calls in [i32(4), 4, 2, 2, 2]! {

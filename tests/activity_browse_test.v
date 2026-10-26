@@ -22,7 +22,7 @@ fn test_activity_search_filters_names_paths_and_pid_without_losing_selection() {
 	mut app := ActivityApp{}
 	defer { app.close_app() }
 	mut records := [browse_record(900001, 1, '/bin/Worker[900001]', 0),
-		browse_record(900002, 900001, '/usr/bin/vinix-files[900002]', 0),
+		browse_record(900002, 900001, '/usr/bin/tulpar-files[900002]', 0),
 		browse_record(900003, 1, '/bin/background[900003]', 0)]
 	defer { unsafe { records.free() } }
 	browse_snapshot(mut app, records, 1_000_000_000)

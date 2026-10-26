@@ -32,12 +32,12 @@ fn C.flush_work(&C.work_struct) bool
 fn C.flush_workqueue(&C.workqueue_struct)
 fn C.drain_workqueue(&C.workqueue_struct)
 fn C.destroy_workqueue(&C.workqueue_struct)
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
-fn C.vinix_linuxkpi_maskable_irq_depth() u32
-fn C.vinix_linuxkpi_workqueue_draining_for_test(voidptr) bool
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_maskable_irq_depth() u32
+fn C.tulpar_linuxkpi_workqueue_draining_for_test(voidptr) bool
 fn C.vmh_work_static_callback(&C.work_struct)
 fn C.vmh_work_callback(&C.work_struct)
 fn C.vmh_work_operation_thread(voidptr) voidptr
@@ -57,7 +57,7 @@ pub fn work_workers_pointer() &C.atomic_t { unsafe { return &work_workers } }
  static_calls u32
  static_work C.work_struct = C.__WORK_INITIALIZER(static_work,C.vmh_work_static_callback)
 )
-@[export:'vinix_linuxkpi_host_worker_enter']
+@[export:'tulpar_linuxkpi_host_worker_enter']
 pub fn worker_enter() { unsafe {
  model:=&C.native_task_model(C.calloc(1,sizeof(C.native_task_model)))
  C.assert(model!=nil)
@@ -65,11 +65,11 @@ pub fn worker_enter() { unsafe {
  C.vmh_sync_model_init(model,index);model.heap_owned=true
  C.vmh_native_task=model;C.vmh_current_cpu=index%4
 } }
-@[export:'vinix_linuxkpi_host_worker_leave']
+@[export:'tulpar_linuxkpi_host_worker_leave']
 pub fn worker_leave() { unsafe {
  model:=C.vmh_native_task
- C.assert(model.pins==1 && C.vinix_linuxkpi_may_sleep())
- C.__atomic_store_n(&model.dead,true,3);C.vinix_linuxkpi_task_dead(&model.storage[0])
+ C.assert(model.pins==1 && C.tulpar_linuxkpi_may_sleep())
+ C.__atomic_store_n(&model.dead,true,3);C.tulpar_linuxkpi_task_dead(&model.storage[0])
  C.atomic_dec(&work_workers);C.vmh_native_task=nil
 } }
 struct WorkTest { mut:
@@ -92,12 +92,12 @@ struct WorkTest { mut:
 }
 @[export:'vmh_work_static_callback']
 pub fn static_callback(work &C.work_struct) { unsafe {
- C.assert(usize(C.current_work())==usize(work) && C.vinix_linuxkpi_may_sleep());static_calls++
+ C.assert(usize(C.current_work())==usize(work) && C.tulpar_linuxkpi_may_sleep());static_calls++
 } }
 @[export:'vmh_work_callback']
 pub fn callback(work &C.work_struct) { unsafe {
  test:=&WorkTest(work)
- C.assert(C.vinix_linuxkpi_may_sleep() && usize(C.current_work())==usize(work))
+ C.assert(C.tulpar_linuxkpi_may_sleep() && usize(C.current_work())==usize(work))
  C.assert(C.__atomic_fetch_add(&test.active,u32(1),4)==0)
  calls:=u32(C.__atomic_add_fetch(&test.calls,u32(1),4))
  if test.count!=nil {
@@ -109,23 +109,23 @@ pub fn callback(work &C.work_struct) { unsafe {
   C.__atomic_store_n(&test.entered,u32(1),3);C.wait_for_completion(&test.gate)
  }
  if test.irq_context_test {
-  C.assert(C.vinix_linuxkpi_workqueue_draining_for_test(test.wq))
+  C.assert(C.tulpar_linuxkpi_workqueue_draining_for_test(test.wq))
   C.assert(test.candidate!=nil && C.work_busy(&test.candidate.work)==0)
-  C.vinix_linuxkpi_preempt_disable()
-  flags:=C.vinix_linuxkpi_irq_save()
+  C.tulpar_linuxkpi_preempt_disable()
+  flags:=C.tulpar_linuxkpi_irq_save()
   C.assert(usize(C.current_work())==usize(work))
   C.vmh_native_task.maskable_irq_depth=1
-  C.assert(C.vinix_linuxkpi_maskable_irq_depth()==1 && C.current_work()==nil)
+  C.assert(C.tulpar_linuxkpi_maskable_irq_depth()==1 && C.current_work()==nil)
   C.assert(!C.queue_work(test.wq,&test.candidate.work) && C.work_busy(&test.candidate.work)==0)
-  C.vinix_linuxkpi_irq_restore(flags)
-  C.assert(C.current_work()==nil && !C.vinix_linuxkpi_may_sleep())
+  C.tulpar_linuxkpi_irq_restore(flags)
+  C.assert(C.current_work()==nil && !C.tulpar_linuxkpi_may_sleep())
   C.vmh_native_task.maskable_irq_depth=0
-  flags2:=C.vinix_linuxkpi_irq_save()
+  flags2:=C.tulpar_linuxkpi_irq_save()
   C.assert(usize(C.current_work())==usize(work))
   C.assert(C.queue_work(test.wq,&test.candidate.work))
-  C.vinix_linuxkpi_irq_restore(flags2)
-  C.vinix_linuxkpi_preempt_enable()
-  C.assert(usize(C.current_work())==usize(work) && C.vinix_linuxkpi_may_sleep())
+  C.tulpar_linuxkpi_irq_restore(flags2)
+  C.tulpar_linuxkpi_preempt_enable()
+  C.assert(usize(C.current_work())==usize(work) && C.tulpar_linuxkpi_may_sleep())
  }
  if calls<test.limit && !(test.requeue_first && calls==1) { C.queue_work(test.wq,work) }
  C.sched_yield();C.assert(C.__atomic_fetch_sub(&test.active,u32(1),4)==1)
@@ -171,7 +171,7 @@ fn irq_identity_tests(wq &C.workqueue_struct) { unsafe {
   held.hold=true;held.irq_context_test=true;held.candidate=&candidate
   C.assert(C.queue_work(wq,&held.work));await_counter(&held.entered)
   mut drain:=WorkOperation{};operation_start(&drain,.queue_drain,wq,nil)
-  C.assert(C.vinix_linuxkpi_workqueue_draining_for_test(wq))
+  C.assert(C.tulpar_linuxkpi_workqueue_draining_for_test(wq))
   C.complete(&held.gate);operation_join(&drain)
   C.assert(held.calls==1 && candidate.calls==1 && C.work_busy(&candidate.work)==0)
  }
@@ -253,8 +253,8 @@ pub fn workqueue_tests() { unsafe {
  warnings:=C.atomic_read(&C.vmh_time_warnings)
  C.assert(!C.queue_work_on(4,a,&static_work) && !C.work_pending(&static_work))
  C.assert(C.atomic_read(&C.vmh_time_warnings)==warnings+1)
- irq_flags:=C.vinix_linuxkpi_irq_save();C.assert(C.queue_work(a,&static_work) && !C.vmh_interrupts && C.vmh_preempt_depth==0)
- C.vinix_linuxkpi_irq_restore(irq_flags);C.flush_workqueue(a)
+ irq_flags:=C.tulpar_linuxkpi_irq_save();C.assert(C.queue_work(a,&static_work) && !C.vmh_interrupts && C.vmh_preempt_depth==0)
+ C.tulpar_linuxkpi_irq_restore(irq_flags);C.flush_workqueue(a)
  C.assert(static_calls==1 && C.work_busy(&static_work)==0)
  order_tests(a);flush_tests(a);cancel_tests(a);irq_identity_tests(a)
  for destroy:=u32(0);destroy<2;destroy++ {

@@ -131,9 +131,9 @@ fn test_input_and_policy_validation() {
 	}
 	assert device_name('/dev/' + 'a'.repeat(63))! == '/dev/' + 'a'.repeat(63)
 	expect_invalid(fn () ! { device_name('/dev/' + 'a'.repeat(64))! })
-	for token in ['vinix.verity=2,/dev/vda,2,' + '0'.repeat(64),
-		'vinix.verity=1,/dev/vda,02,' + '0'.repeat(64), 'vinix.verity=1,/dev/vda,2,' + 'A'.repeat(64),
-		'x=vinix.verity=1,/dev/vda,2,' + '0'.repeat(64)] {
+	for token in ['tulpar.verity=2,/dev/vda,2,' + '0'.repeat(64),
+		'tulpar.verity=1,/dev/vda,02,' + '0'.repeat(64), 'tulpar.verity=1,/dev/vda,2,' + 'A'.repeat(64),
+		'x=tulpar.verity=1,/dev/vda,2,' + '0'.repeat(64)] {
 		expect_invalid(fn [token] () ! { parse_command_line(token)! })
 	}
 	work := private_dir(os.temp_dir())!

@@ -77,7 +77,7 @@ fn qualify() ! {
 	}
 	flags := ['-nocache', '-gc', 'none', '-manualfree', '-cflags', '-O1', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	mut checks := []WorkspaceCheck{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	cli_record := work + '/cli.json'
 	if resume && os.is_file(cli_record) {
 		check := json2.decode[WorkspaceCheck](os.read_file(cli_record)!)!
@@ -87,7 +87,7 @@ fn qualify() ! {
 		check := workspace_task('cli-compile', [compiler, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work, cli)!
 		os.write_file(cli_record, json2.encode(check) + '\n')!; checks << check
 	}
-	os.setenv('VINIX_PACKAGE_PACK_CLI', cli, true); os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_PACK_CLI', cli, true); os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true)
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	mut pending := []WorkspaceJob{}
 	for job in jobs {

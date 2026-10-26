@@ -47,10 +47,10 @@ fn test_original_retention_rows_counts_progress_and_unbounded_integers() {
 			assert report_rejected(regression, 'proc-map-lookup', arch)
 		}
 	}
-	text := 'proc thread lock: 100 snapshots, 10 process CPU clocks\nPASS: process inspection completes during sibling thread churn\nVINIX PROC THREAD LOCK: PASS\n'
+	text := 'proc thread lock: 100 snapshots, 10 process CPU clocks\nPASS: process inspection completes during sibling thread churn\nTULPAR PROC THREAD LOCK: PASS\n'
 	inspection_report(text, 'proc-thread-lock', 'aarch64') or { panic(err) }
 	for regression in [text.replace('100 snapshots', '99 snapshots'), text.replace('10 process', '9 process'),
-		text + 'VINIX PROC THREAD LOCK: PASS', text + 'proc thread lock: 100 snapshots, 10 process CPU clocks',
+		text + 'TULPAR PROC THREAD LOCK: PASS', text + 'proc thread lock: 100 snapshots, 10 process CPU clocks',
 		text.replace('PASS: process inspection completes during sibling thread churn', '')] {
 		assert report_rejected(regression, 'proc-thread-lock', 'aarch64')
 	}

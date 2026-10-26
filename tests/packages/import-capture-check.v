@@ -27,10 +27,10 @@ fn capture_checks() ! {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	mut checks := []CaptureCheck{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << capture_task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.unsetenv('VINIX_IMPORT_LIMITS_BEFORE')
-	os.setenv('VINIX_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true)
+	os.unsetenv('TULPAR_IMPORT_LIMITS_BEFORE')
+	os.setenv('TULPAR_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true)
 	for name in ['import_capture', 'import_limits', 'import', 'pack_source', 'prepared_root', 'root_recipe_decode', 'catalog', 'catalog_plan', 'composition',
 		'release', 'native_profile', 'sqlite_profile', 'ffmpeg_profile', 'wine_profile', 'apple_profile', 'profile_inventory', 'publisher_schema'] {
 		binary := work + '/' + name

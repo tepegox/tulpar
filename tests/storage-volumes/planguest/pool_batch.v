@@ -6,7 +6,7 @@ module planguest
 fn pool_batch(path &char, pool &char, first &char, first_length &char, first_mode &char,
 	second &char, second_length &char, second_mode &char, preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'pool-preview-batch') } else { &char(c'pool-allocate-batch') },
 			path, pool, first, first_length, first_mode, second, second_length, second_mode, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
@@ -48,9 +48,9 @@ fn planned_pool_batch(parent &char, other &char) {
 			&& contains(&output[0], c'request=0 disk=0 slot=14 action=allocate offset=6291456 bytes=4096 readonly=1')
 			&& contains(&output[0], c'request=1 disk=1 slot=15 action=allocate offset=6291456 bytes=8192 readonly=0'), c'complete cross-disk batch preview')
 		bundle_unchanged(c'/root/saved.vset', &baseline[0], size)
-		missing(c'/dev/mapper/vinix14'); missing(c'/dev/mapper/vinix15')
+		missing(c'/dev/mapper/tulpar14'); missing(c'/dev/mapper/tulpar15')
 		pool_batch(c'/root/saved.vset', c'3', c'14', c'4096', c'ro', c'15', c'8192', c'rw', false, 0, nil)
-		missing(c'/dev/mapper/vinix14'); missing(c'/dev/mapper/vinix15')
+		missing(c'/dev/mapper/tulpar14'); missing(c'/dev/mapper/tulpar15')
 		planned := C.open(c'/root/saved.vset', C.O_RDONLY)
 		mut complete := [8768]u8{}
 		complete_size := C.read(planned, &complete[0], 8768)
@@ -59,14 +59,14 @@ fn planned_pool_batch(parent &char, other &char) {
 		preview(c'check-bundle', false, 1, &output[0])
 		check(!contains(&output[0], c'action='), c'later member live conflict rejects complete batch preflight')
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 1)
-		missing(c'/dev/mapper/vinix14'); missing(c'/dev/mapper/vinix15')
-		simple(c'remove', c'/dev/mapper/vinix16', nil, 0)
+		missing(c'/dev/mapper/tulpar14'); missing(c'/dev/mapper/tulpar15')
+		simple(c'remove', c'/dev/mapper/tulpar16', nil, 0)
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
-		first := status(c'/dev/mapper/vinix14')
-		second := status(c'/dev/mapper/vinix15')
+		first := status(c'/dev/mapper/tulpar14')
+		second := status(c'/dev/mapper/tulpar15')
 		check(first.disk_id == status(parent).disk_id && first.bytes == 4096 && first.flags & 1 == 1
 			&& second.disk_id == status(other).disk_id && second.bytes == 8192 && second.flags & 1 == 0, c'batch restores both disk identities and modes')
-		held := C.open(c'/dev/mapper/vinix14', C.O_RDONLY)
+		held := C.open(c'/dev/mapper/tulpar14', C.O_RDONLY)
 		check(held >= 0, c'hold batch mapping across retry')
 		pool_batch(c'/root/saved.vset', c'3', c'14', c'4096', c'ro', c'15', c'8192', c'rw', false, 0, &output[0])
 		check(contains(&output[0], c'slot=14 action=keep') && contains(&output[0], c'slot=15 action=keep'), c'batch retry keeps both saved placements')
@@ -75,25 +75,25 @@ fn planned_pool_batch(parent &char, other &char) {
 		bundle_unchanged(c'/root/saved.vset', &complete[0], complete_size)
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
 		mut data := [4096]u8{}
-		check(status(c'/dev/mapper/vinix14').generation == first.generation
-			&& status(c'/dev/mapper/vinix15').generation == second.generation
+		check(status(c'/dev/mapper/tulpar14').generation == first.generation
+			&& status(c'/dev/mapper/tulpar15').generation == second.generation
 			&& C.pread(held, &data[0], 4096, 0) == 4096 && C.close(held) == 0, c'batch retry retains generations and descriptor')
 		for byte in data { check(byte == 0xba, c'batch mapping retains first disk data') }
 		for slot in [&char(c'14'), &char(c'15')]! { simple(c'plan-remove', c'/root/saved.vset', slot, 0) }
-		simple(c'remove', c'/dev/mapper/vinix14', nil, 0)
-		simple(c'remove', c'/dev/mapper/vinix15', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar14', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar15', nil, 0)
 		bundle_unchanged(c'/root/saved.vset', &baseline[0], size)
-		copy_plan(c'/root/saved.vset', c'/etc/vinix/volumes.vset')
+		copy_plan(c'/root/saved.vset', c'/etc/tulpar/volumes.vset')
 		C.printf(c'PLAN POOL BATCH PASSED: complete cross-disk preview/publication, rollback, conflict preflight and stable retries\n')
 	}
 }
 
 fn pool_batch_boot_check(parent &char) {
 	unsafe {
-		info := status(c'/dev/mapper/vinix18')
+		info := status(c'/dev/mapper/tulpar18')
 		check(info.disk_id == status(parent).disk_id && info.start == 16785408 && info.bytes == 8192
 			&& info.flags & 1 == 1, c'additional batch mapping survives boot with readonly mode')
-		fd := C.open(c'/dev/mapper/vinix18', C.O_RDONLY)
+		fd := C.open(c'/dev/mapper/tulpar18', C.O_RDONLY)
 		mut data := [4096]u8{}
 		check(fd >= 0 && C.pread(fd, &data[0], 4096, 0) == 4096, c'read persisted batch tail data')
 		for byte in data { check(byte == 0xcc, c'batch tail data survives reboot') }

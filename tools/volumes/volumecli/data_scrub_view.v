@@ -59,7 +59,7 @@ fn scrub_report_valid(data &u8, size int) bool {
 	if size <= 0 || size >= scrub_report_max { return false }
 	mut cursor := unsafe { &ScrubReportCursor(C.alloca(sizeof(ScrubReportCursor))) }
 	unsafe { *cursor = ScrubReportCursor{data: data, size: size} }
-	if !scrub_report_literal(mut cursor, c'format=VINIXSR1 operation=scrubbed-data disks=') { return false }
+	if !scrub_report_literal(mut cursor, c'format=TULPARSR1 operation=scrubbed-data disks=') { return false }
 	disks := scrub_report_number(mut cursor) or { return false }
 	if disks == 0 || disks > 64 || !scrub_report_literal(mut cursor, c' mappings=') { return false }
 	count := scrub_report_number(mut cursor) or { return false }

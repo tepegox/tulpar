@@ -37,7 +37,7 @@ mut:
 fn check_filesystem_unmount(mut filesystem FileSystem) ? {
 	if filesystem is UnmountCheck {
 		// Borrow the mount-lifetime filesystem box; do not allocate another box.
-		mut call := unsafe { &UnmountCall(C.vinix_stack_alloc(sizeof(UnmountCall))) }
+		mut call := unsafe { &UnmountCall(C.tulpar_stack_alloc(sizeof(UnmountCall))) }
 		unsafe { call.backend = UnmountCheck(filesystem) }
 		call.backend.check_unmount()?
 	}

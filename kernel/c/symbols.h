@@ -16,7 +16,7 @@ extern void sched_switch_context(void *gpr_state, unsigned long kernel_stack);
 extern void yield_dispatch(void *handler_fn_ptr);
 
 /* Borrowed native callback, exact ARM stack read and bounded UART trace. */
-void vinix_call_void_fn(void *);
+void tulpar_call_void_fn(void *);
 unsigned long read_current_sp(void);
 void trace_syscall_nr(unsigned long);
 

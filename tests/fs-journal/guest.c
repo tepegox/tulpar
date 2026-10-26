@@ -170,7 +170,7 @@ int main(void)
 #endif
     puts("JOURNAL START");
     int control = open("/root/control", O_RDONLY); CHECK(control >= 0);
-#ifdef VINIX_JOURNAL_PRODUCTION
+#ifdef TULPAR_JOURNAL_PRODUCTION
     int mode = access("/root/right/file", F_OK) == 0 ? 2 : 1;
 #else
     int mode = ioctl(control, MODE, 0); CHECK(mode > 0);

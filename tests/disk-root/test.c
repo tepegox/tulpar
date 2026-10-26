@@ -23,18 +23,18 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-static const char *marker = "/etc/vinix-disk-root";
-static const char *scratch_marker = "/tmp/vinix-disk-root";
-static const char *package_marker = "/etc/vinix-package-overlay";
-static const char *host_symlink = "/usr/share/vinix-large-link";
-static const char *installed = "/.vinix-image-id";
-static const char payload[] = "vinix-disk-root-v1";
+static const char *marker = "/etc/tulpar-disk-root";
+static const char *scratch_marker = "/tmp/tulpar-disk-root";
+static const char *package_marker = "/etc/tulpar-package-overlay";
+static const char *host_symlink = "/usr/share/tulpar-large-link";
+static const char *installed = "/.tulpar-image-id";
+static const char payload[] = "tulpar-disk-root-v1";
 /* A file the host put on the volume, big enough to need indirect blocks. Its
  * bytes are a function of their offset, so a read that goes wrong reports
  * exactly where rather than only that it did. Executables and shared libraries
  * are how this would otherwise surface: the first pages are right, the loader
  * gets its headers, and the symbol table further in is zeroes. */
-static const char *large = "/usr/share/vinix-large";
+static const char *large = "/usr/share/tulpar-large";
 static const unsigned long large_bytes = 3u * 1024u * 1024u;
 
 static unsigned char large_byte(unsigned long offset)
@@ -62,24 +62,24 @@ static int booted_from_disk(void)
 static int replace_host_symlink(void)
 {
 	static const char replacement[] = "replaced-fast-symlink";
-	static const char *temporary = "/usr/share/vinix-large-link.new";
+	static const char *temporary = "/usr/share/tulpar-large-link.new";
 	int fd = open(temporary, O_CREAT | O_EXCL | O_WRONLY, 0644);
 	if (fd < 0) {
-		printf("VINIX DISK ROOT: FAIL create symlink replacement errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL create symlink replacement errno=%d\n", errno);
 		return 1;
 	}
 	if (write(fd, replacement, sizeof(replacement) - 1) !=
 	    (ssize_t)(sizeof(replacement) - 1)) {
-		printf("VINIX DISK ROOT: FAIL prepare symlink replacement errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL prepare symlink replacement errno=%d\n", errno);
 		close(fd);
 		return 1;
 	}
 	if (close(fd) != 0) {
-		printf("VINIX DISK ROOT: FAIL close symlink replacement errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL close symlink replacement errno=%d\n", errno);
 		return 1;
 	}
 	if (rename(temporary, host_symlink) != 0) {
-		printf("VINIX DISK ROOT: FAIL rename over fast symlink errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL rename over fast symlink errno=%d\n", errno);
 		return 1;
 	}
 	return 0;
@@ -89,15 +89,15 @@ static int write_marker(const char *path)
 {
 	int fd = open(path, O_CREAT | O_EXCL | O_WRONLY, 0644);
 	if (fd < 0) {
-		printf("VINIX DISK ROOT: FAIL create errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL create errno=%d\n", errno);
 		return 1;
 	}
 	if (write(fd, payload, sizeof(payload) - 1) != (ssize_t)(sizeof(payload) - 1)) {
-		printf("VINIX DISK ROOT: FAIL write errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL write errno=%d\n", errno);
 		return 1;
 	}
 	if (close(fd) != 0) {
-		printf("VINIX DISK ROOT: FAIL close errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL close errno=%d\n", errno);
 		return 1;
 	}
 	return 0;
@@ -124,14 +124,14 @@ static int verify_large(void)
 	static unsigned char buffer[65536];
 	int fd = open(large, O_RDONLY);
 	if (fd < 0) {
-		printf("VINIX DISK ROOT: FAIL large open errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL large open errno=%d\n", errno);
 		return 1;
 	}
 	unsigned long offset = 0;
 	for (;;) {
 		ssize_t got = read(fd, buffer, sizeof(buffer));
 		if (got < 0) {
-			printf("VINIX DISK ROOT: FAIL large read errno=%d\n", errno);
+			printf("TULPAR DISK ROOT: FAIL large read errno=%d\n", errno);
 			close(fd);
 			return 1;
 		}
@@ -139,7 +139,7 @@ static int verify_large(void)
 			break;
 		for (ssize_t i = 0; i < got; ++i) {
 			if (buffer[i] != large_byte(offset + (unsigned long)i)) {
-				printf("VINIX DISK ROOT: FAIL large read differs at %lu\n",
+				printf("TULPAR DISK ROOT: FAIL large read differs at %lu\n",
 				    offset + (unsigned long)i);
 				close(fd);
 				return 1;
@@ -148,7 +148,7 @@ static int verify_large(void)
 		offset += (unsigned long)got;
 	}
 	if (offset != large_bytes) {
-		printf("VINIX DISK ROOT: FAIL large is %lu bytes, not %lu\n",
+		printf("TULPAR DISK ROOT: FAIL large is %lu bytes, not %lu\n",
 		    offset, large_bytes);
 		close(fd);
 		return 1;
@@ -157,12 +157,12 @@ static int verify_large(void)
 	unsigned char *mapped = mmap(NULL, large_bytes, PROT_READ, MAP_PRIVATE, fd, 0);
 	close(fd);
 	if (mapped == MAP_FAILED) {
-		printf("VINIX DISK ROOT: FAIL large mmap errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL large mmap errno=%d\n", errno);
 		return 1;
 	}
 	for (unsigned long i = 0; i < large_bytes; ++i) {
 		if (mapped[i] != large_byte(i)) {
-			printf("VINIX DISK ROOT: FAIL large mmap differs at %lu\n", i);
+			printf("TULPAR DISK ROOT: FAIL large mmap differs at %lu\n", i);
 			munmap(mapped, large_bytes);
 			return 1;
 		}
@@ -176,25 +176,25 @@ static int verify_large(void)
 	 * then could not resolve a single symbol. */
 	fd = open(large, O_RDONLY);
 	if (fd < 0) {
-		printf("VINIX DISK ROOT: FAIL large reopen errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL large reopen errno=%d\n", errno);
 		return 1;
 	}
 	unsigned long past = large_bytes + 128 * 1024;
 	mapped = mmap(NULL, past, PROT_READ | PROT_EXEC, MAP_PRIVATE, fd, 0);
 	close(fd);
 	if (mapped == MAP_FAILED) {
-		printf("VINIX DISK ROOT: FAIL mmap past the end errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL mmap past the end errno=%d\n", errno);
 		return 1;
 	}
 	for (unsigned long i = 0; i < large_bytes; ++i) {
 		if (mapped[i] != large_byte(i)) {
-			printf("VINIX DISK ROOT: FAIL over-long mmap differs at %lu\n", i);
+			printf("TULPAR DISK ROOT: FAIL over-long mmap differs at %lu\n", i);
 			munmap(mapped, past);
 			return 1;
 		}
 	}
 	munmap(mapped, past);
-	say("VINIX DISK ROOT: LARGE FILE OK\n");
+	say("TULPAR DISK ROOT: LARGE FILE OK\n");
 	return 0;
 }
 
@@ -208,16 +208,16 @@ int main(void)
 		if (console > STDERR_FILENO)
 			close(console);
 	}
-	say("VINIX DISK ROOT: START\n");
+	say("TULPAR DISK ROOT: START\n");
 
 	if (!booted_from_disk()) {
-		say("VINIX DISK ROOT: FAIL booted from the initramfs, not the volume\n");
+		say("TULPAR DISK ROOT: FAIL booted from the initramfs, not the volume\n");
 		return 1;
 	}
-	say("VINIX DISK ROOT: ON VOLUME\n");
+	say("TULPAR DISK ROOT: ON VOLUME\n");
 	int package = open(package_marker, O_RDONLY);
 	if (package < 0) {
-		say("VINIX DISK ROOT: FAIL saved package overlay was not installed on the volume\n");
+		say("TULPAR DISK ROOT: FAIL saved package overlay was not installed on the volume\n");
 		return 1;
 	}
 	close(package);
@@ -227,7 +227,7 @@ int main(void)
 	struct stat scratch;
 	if (stat("/tmp", &scratch) != 0 || !S_ISDIR(scratch.st_mode) ||
 	    stat("/run", &scratch) != 0 || !S_ISDIR(scratch.st_mode)) {
-		say("VINIX DISK ROOT: FAIL /tmp or /run is not a directory\n");
+		say("TULPAR DISK ROOT: FAIL /tmp or /run is not a directory\n");
 		return 1;
 	}
 	if (verify_large() != 0)
@@ -236,19 +236,19 @@ int main(void)
 	int found = read_marker(marker);
 	if (found == 0) {
 		if (read_marker(scratch_marker) != 0) {
-			say("VINIX DISK ROOT: FAIL /tmp did not persist\n");
+			say("TULPAR DISK ROOT: FAIL /tmp did not persist\n");
 			return 1;
 		}
-		say("VINIX DISK ROOT: PASS\n");
+		say("TULPAR DISK ROOT: PASS\n");
 		unlink(marker);
 		unlink(scratch_marker);
 		sync();
 		reboot(RB_POWER_OFF);
-		say("VINIX DISK ROOT: FAIL power off refused\n");
+		say("TULPAR DISK ROOT: FAIL power off refused\n");
 		return 1;
 	}
 	if (errno != ENOENT && errno != 0) {
-		printf("VINIX DISK ROOT: FAIL marker unreadable errno=%d\n", errno);
+		printf("TULPAR DISK ROOT: FAIL marker unreadable errno=%d\n", errno);
 		return 1;
 	}
 	if (write_marker(marker) != 0)
@@ -258,8 +258,8 @@ int main(void)
 	if (replace_host_symlink() != 0)
 		return 1;
 	/* No fsync and no O_SYNC: the restart is what has to get this out. */
-	say("VINIX DISK ROOT: WROTE /etc MARKER, REBOOTING\n");
+	say("TULPAR DISK ROOT: WROTE /etc MARKER, REBOOTING\n");
 	reboot(RB_AUTOBOOT);
-	printf("VINIX DISK ROOT: FAIL reboot returned errno=%d\n", errno);
+	printf("TULPAR DISK ROOT: FAIL reboot returned errno=%d\n", errno);
 	return 1;
 }

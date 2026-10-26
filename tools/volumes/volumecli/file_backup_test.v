@@ -10,7 +10,7 @@ fn backup_test_time(path string, mode u32) {
 	assert C.fchmod(fd, mode) == 0 && C.futimens(fd, &times[0]) == 0 && C.close(fd) == 0
 }
 fn backup_test_bytes(size int) []u8 { return []u8{len: size, init: u8(index * 17 + index / 65536)} }
-fn backup_test_clean(work string) { assert os.ls(work)!.all(!it.starts_with('.vinix-backup-')) }
+fn backup_test_clean(work string) { assert os.ls(work)!.all(!it.starts_with('.tulpar-backup-')) }
 fn backup_test_put(mut bytes []u8, at int, width int, value u64) { for i in 0 .. width { bytes[at + i] = u8(value >> (i * 8)) } }
 fn backup_test_checksum(mut bytes []u8) { sum := sha256.sum(bytes[..224]); for i in 0 .. 32 { bytes[224 + i] = sum[i] } }
 
@@ -23,7 +23,7 @@ fn backup_test_expected(data []u8, metadata &FileVersion, base []u8, old []u8) [
 		if base.len != 0 && n == old_n && data[at..at + n] == old[at..at + n] { continue }
 		mut record := []u8{len: 16}; backup_test_put(mut record, 0, 8, u64(at / 65536)); backup_test_put(mut record, 8, 4, u64(n)); body << record; body << data[at..at + n]; count++
 	}
-	mut header := []u8{len: 256}; copy(mut header, 'VINIXBK1'.bytes())
+	mut header := []u8{len: 256}; copy(mut header, 'TULPARBK1'.bytes())
 	for field in [[8, 4, u64(1)], [12, 4, u64(base.len != 0)], [16, 4, u64(65536)], [24, 8, u64(data.len)], [32, 4, u64(metadata.mode)], [36, 4, u64(metadata.uid)], [40, 4, u64(metadata.gid)], [48, 8, u64(metadata.seconds)], [56, 8, u64(metadata.nanoseconds)], [128, 8, u64(count)]] { backup_test_put(mut header, int(field[0]), int(field[1]), u64(field[2])) }
 	content := sha256.sum(data); digest := sha256.sum(body); for i in 0 .. 32 { header[64 + i] = content[i]; header[136 + i] = digest[i] }
 	if base.len != 0 { sum := sha256.sum(base); for i in 0 .. 32 { header[96 + i] = sum[i] } }
@@ -36,7 +36,7 @@ fn backup_test_metadata(path string) FileVersion {
 }
 
 fn test_file_backup_full_delta_restore_independent_bytes_boundary_growth_shrink_and_metadata() {
-	work := os.join_path(os.temp_dir(), 'vinix-file-backup-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-file-backup-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	source := work + '/source'; full := work + '/full'; delta := work + '/delta'; restored := work + '/restored'
 	for size in [0, 1, 65535, 65536, 65537, 131072, 131089] {
 		original := backup_test_bytes(size); os.write_file_array(source, original)!; backup_test_time(source, 0o751); metadata := backup_test_metadata(source)
@@ -65,7 +65,7 @@ fn test_file_backup_full_delta_restore_independent_bytes_boundary_growth_shrink_
 }
 
 fn test_file_backup_malformed_archives_base_binding_input_kinds_and_no_overwrite() {
-	work := os.join_path(os.temp_dir(), 'vinix-file-backup-invalid-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-file-backup-invalid-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	source := work + '/source'; full := work + '/full'; bad := work + '/bad'; out := work + '/out'; delta := work + '/delta'
 	os.write_file(source, 'a complete file version')!; backup_test_time(source, 0o600); assert backup_file(source.str, unsafe { nil }, full.str) == 0; bytes := os.read_bytes(full)!
 	for at in 0 .. bytes.len { mut damaged := bytes.clone(); damaged[at] ^= 1; os.write_file_array(bad, damaged)!; assert restore_file(bad.str, unsafe { nil }, out.str) == 1 && !os.exists(out); backup_test_clean(work) }
@@ -92,7 +92,7 @@ fn test_file_backup_malformed_archives_base_binding_input_kinds_and_no_overwrite
 fn test_file_backup_decoder_preserves_caller_on_invalid_header_and_cli_bounds() {
 	mut version := FileVersion{size: 1, records: 1, mode: 0o600, uid: 1, gid: 1}; mut header := [256]u8{}; assert encode_file_version(&version, &header[0]); saved := version
 	for at in 0 .. 256 { mut bad := header; bad[at] ^= 1; assert !decode_file_version(&bad[0], mut version) && version == saved }
-	unsafe { mut args := [&char(c'vinix-volume'), &char(c'backup-file'), &char(c'/missing'), &char(c'/unused'), &char(c'extra'), &char(nil)]!
+	unsafe { mut args := [&char(c'tulpar-volume'), &char(c'backup-file'), &char(c'/missing'), &char(c'/unused'), &char(c'extra'), &char(nil)]!
 		for command in [&char(c'backup-file'), &char(c'restore-file')]! { args[1] = command; for count in [2, 3, 5] { assert run(count, &args[0]) == 2 } }
 		for command in [&char(c'backup-file-delta'), &char(c'restore-file-delta')]! { args[1] = command; for count in [2, 3, 4, 6] { assert run(count, &args[0]) == 2 } }
 	}

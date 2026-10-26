@@ -74,7 +74,7 @@ fn test_data_reference_pool_order_maximum_report_and_empty_mapping_sets() {
 
 fn test_data_reference_cli_exact_arity_and_nonempty_paths() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'compare-data-references'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'compare-data-references'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 		for count in [2, 3, 5] { assert run(count, &args[0]) == 2 }
 		for at in [2, 3] { args[at] = &char(c''); assert run(4, &args[0]) == 2; args[at] = &char(c'/unused') }
 	}

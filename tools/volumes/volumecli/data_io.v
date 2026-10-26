@@ -58,7 +58,7 @@ fn open_data_pins(set &PlanSet, devices &DataDevices, mut pins DataPins) bool {
 	mut key := DiskKey{}
 	for i in 0 .. devices.count {
 		fd := C.open(devices.paths[i], C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-		if fd < 0 { C.perror(c'vinix-volume: open checksum disk'); return false }
+		if fd < 0 { C.perror(c'tulpar-volume: open checksum disk'); return false }
 		pins.descriptors[i] = fd; pins.disks[i] = devices.disks[i]; pins.count++
 		mut status := Status{}
 		if !probe_disk(fd, mut key, mut status) || !key_matches(unsafe { &set.plans[devices.disks[i]].key }, unsafe { &key }) {

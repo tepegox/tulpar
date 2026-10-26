@@ -206,7 +206,7 @@ fn package_navigation_review(operation string, names []string) pkgprotocol.Revie
 }
 
 fn software_package_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if mode.starts_with('review-') && args[1] == 'review' {
 		assert args[2] in package_navigation_operations
@@ -224,7 +224,7 @@ fn software_package_navigation_service_fixture(args []string) !bool {
 		flush_stdout()
 		mut release := u8(0); assert C.read(0, &release, 1) == 1 && release == `!`
 		if mode == 'apply-failed' { eprintln('Package operation was not activated: disk space changed. Review again.'); exit(23) }
-		os.write_file(os.getenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION_RECEIPT'), json2.encode(args[2..]))!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION_RECEIPT'), json2.encode(args[2..]))!
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete', current: 1, total: 1 }))
 		return true
 	}
@@ -286,16 +286,16 @@ fn check_package_navigation_paste_guard(mut app SoftwareApp) {
 
 fn check_software_package_navigation() ! {
 	check_package_plan_boundaries()!
-	receipt := os.temp_dir() + '/vinix-package-navigation-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION_RECEIPT', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION_RECEIPT'); os.unsetenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION') }
+	receipt := os.temp_dir() + '/tulpar-package-navigation-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION_RECEIPT', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION_RECEIPT'); os.unsetenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION') }
 	mut app := SoftwareApp{ service_path: os.executable(), output: []u8{cap: 8192}, query: 'Editor'.bytes(), filter: 1 }
 	seed_package_navigation_catalog(mut app)
 	defer { app.close_app() }
 	for operation in package_navigation_operations {
 		for mode in ['review-partial', 'review-complete']! {
 			for action in ['software.review.stop', 'software.cancel', 'escape']! {
-				os.setenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION', mode, true)
+				os.setenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION', mode, true)
 				app.handle('software.' + operation)!; pid := app.worker.pid
 				wait_for_package_navigation_output(mut app, false)
 				assert app.package_review_running() && app.prepare_close() && !app.review_ready && !app.admin_prompt
@@ -317,7 +317,7 @@ fn check_software_package_navigation() ! {
 				assert app.review == '' && app.review_names.len == 0 && app.review_snapshot.fingerprint == '' && app.output.len == 0 && !app.output_truncated && !app.poll()
 				assert app.selected == 0 && app.filter == 1 && app.scroll == 0 && app.query.bytestr() == 'Editor' && app.status.contains('review stopped')
 				// Retry must obtain a new complete review after the old worker is gone.
-				os.unsetenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION')
+				os.unsetenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION')
 				app.handle('software.' + operation)!; wait_for_software(mut app)
 				assert app.review_ready && app.review_snapshot.operation == operation
 				check_package_navigation_paste_guard(mut app)
@@ -342,7 +342,7 @@ fn check_software_package_navigation() ! {
 			assert app.review_ready
 			// Confirmation owns the service's reviewed intent, not current selection.
 			app.selected = -1
-			os.setenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION', mode, true)
+			os.setenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION', mode, true)
 			app.handle('software.confirm')!
 			wait_for_package_navigation_output(mut app, true); check_package_navigation_writer(mut app)!
 			release := u8(`!`); assert C.write(app.worker.stdio_fd[0], &release, 1) == 1
@@ -360,17 +360,17 @@ fn check_software_package_navigation() ! {
 				assert app.rows.len == 0, 'successful transaction did not reload the catalog'
 				os.rm(receipt)!
 			}
-			os.unsetenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION'); app.clear_failure()
+			os.unsetenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION'); app.clear_failure()
 		}
 		seed_package_navigation_catalog(mut app)
 	}
 	// A catalog refresh is a writer, not a read-only package proposal.
-	os.setenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION', 'refresh', true)
+	os.setenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION', 'refresh', true)
 	app.handle('software.search')!; assert app.focus
 	app.handle('software.refresh')!; wait_for_package_navigation_output(mut app, true)
 	check_package_navigation_writer(mut app)!
 	release := u8(`!`); assert C.write(app.worker.stdio_fd[0], &release, 1) == 1
-	wait_for_software(mut app); os.unsetenv('VINIX_SOFTWARE_PACKAGE_NAVIGATION')
+	wait_for_software(mut app); os.unsetenv('TULPAR_SOFTWARE_PACKAGE_NAVIGATION')
 	seed_package_navigation_catalog(mut app)
 	app.handle('software.details')!; assert app.details_mode
 	details := app.build(ui2.rect(0, 0, 320, 240))!
@@ -403,7 +403,7 @@ fn check_software_package_navigation_memory() ! {
 		seed_package_navigation_catalog(mut app)
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				free_window_tree(app.build(ui2.rect(0, 0, 640, 610))!); free_window_tree(app.build(ui2.rect(0, 0, 320, 240))!)
 				for index, text in texts {
@@ -422,7 +422,7 @@ fn check_software_package_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'package navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'package navigation retained ${kept} bytes'
 		println('Software package navigation: 1000 catalog and five-operation full/compact/review/details/failure/cancel/retirement cycles retain zero tracked bytes')
 		println('Software package plan reader: 1000 five-operation/decode/read/item/page/render/resize/ignored-confirm/Back/cancel/cache-retirement cycles retain zero tracked bytes')
 	}

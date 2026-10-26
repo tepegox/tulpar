@@ -81,7 +81,7 @@ fn test_the_first_forbidden_marker_is_kept() {
 	watch.line('fine')
 	assert !watch.failed()
 	watch.line('HWTEST FAIL a: state after unbind is "bound"')
-	watch.line('  *** Vinix KERNEL PANIC on CPU 0 ***')
+	watch.line('  *** Tulpar KERNEL PANIC on CPU 0 ***')
 	assert watch.failed()
 	assert watch.forbidden_marker == 'HWTEST FAIL'
 	assert watch.forbidden_line == 'HWTEST FAIL a: state after unbind is "bound"'

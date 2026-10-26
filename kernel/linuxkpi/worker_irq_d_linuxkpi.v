@@ -222,7 +222,7 @@ fn worker_irq_batch() bool {
 		if worker_irq_clock.nanoseconds() - started >= worker_irq_timeout_ns { return false }
 		sequence++
 		mut observation := WorkerIrqObservation{ sequence: sequence }
-		if C.vinix_linuxkpi_smp_fixture_single(1, worker_irq_callback, unsafe { &observation }, 1) != 0
+		if C.tulpar_linuxkpi_smp_fixture_single(1, worker_irq_callback, unsafe { &observation }, 1) != 0
 			|| !worker_irq_wait(sequence, false) || observation.failures != 0 { return false }
 		if observation.eligible { completed++ }
 	}

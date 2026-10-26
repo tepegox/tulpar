@@ -5,7 +5,7 @@
 module overflowdomain
 
 #include <linux/overflow.h>
-#include "vinix/integer_policy.h"
+#include "tulpar/integer_policy.h"
 @[typedef]
 struct C.vop_domain_t {}
 fn C.memcpy(voidptr, voidptr, usize) voidptr

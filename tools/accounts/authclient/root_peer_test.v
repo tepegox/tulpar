@@ -7,7 +7,7 @@ import tools.packages.pkgadmin
 
 fn test_root_guard_sends_no_secret_to_an_ordinary_listener() {
 	if os.geteuid() == 0 { return }
-	directory := os.temp_dir() + '/vinix-auth-root-peer-' + os.getpid().str()
+	directory := os.temp_dir() + '/tulpar-auth-root-peer-' + os.getpid().str()
 	os.mkdir(directory, mode: 0o700)!
 	defer { os.rmdir_all(directory) or {} }
 	mut listener := pkgadmin.listen_private(directory, u32(os.geteuid()), 'a'.repeat(32))!

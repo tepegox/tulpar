@@ -2,9 +2,9 @@
  * Copyright (c) 2026 Alexander Medvednikov */
 /* Preserve the VMCS host stack and all guest GPRs across VM entry/exit. */
 .text
-.global vinix_vmx_enter
-.type vinix_vmx_enter, @function
-vinix_vmx_enter:
+.global tulpar_vmx_enter
+.type tulpar_vmx_enter, @function
+tulpar_vmx_enter:
 pushq %rbp
 pushq %rbx
 pushq %r12
@@ -14,11 +14,11 @@ pushq %r15
 pushq %rdi
 movq $0x6c14, %rax
 vmwrite %rsp, %rax
-jna .Lvinix_vmx_failure
-leaq .Lvinix_vmx_exit(%rip), %r10
+jna .Ltulpar_vmx_failure
+leaq .Ltulpar_vmx_exit(%rip), %r10
 movq $0x6c16, %rax
 vmwrite %r10, %rax
-jna .Lvinix_vmx_failure
+jna .Ltulpar_vmx_failure
 movq (%rsp), %rax
 movq 8(%rax), %rbx
 movq 16(%rax), %rcx
@@ -36,10 +36,10 @@ movq 112(%rax), %r15
 movq 40(%rax), %rdi
 movq (%rax), %rax
 vmlaunch
-.Lvinix_vmx_failure:
+.Ltulpar_vmx_failure:
 movl $-1, %eax
-jmp .Lvinix_vmx_return
-.Lvinix_vmx_exit:
+jmp .Ltulpar_vmx_return
+.Ltulpar_vmx_exit:
 cld
 pushq %rax
 pushq %r10
@@ -63,7 +63,7 @@ movq 8(%rsp), %r10
 movq %r10, (%rax)
 addq $16, %rsp
 xorl %eax, %eax
-.Lvinix_vmx_return:
+.Ltulpar_vmx_return:
 addq $8, %rsp
 popq %r15
 popq %r14
@@ -72,4 +72,4 @@ popq %r12
 popq %rbx
 popq %rbp
 ret
-.size vinix_vmx_enter, .-vinix_vmx_enter
+.size tulpar_vmx_enter, .-tulpar_vmx_enter

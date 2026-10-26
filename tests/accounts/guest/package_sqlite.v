@@ -8,7 +8,7 @@ import tools.packages.pkgcore
 import userland.ptycore
 
 fn sqlite_run_sql(statement string) Ran {
-	return run(['/usr/bin/vinix-package', 'run', pkgcore.sqlite_application_id], '.bail on\n' + statement + '\n', none, none)
+	return run(['/usr/bin/tulpar-package', 'run', pkgcore.sqlite_application_id], '.bail on\n' + statement + '\n', none, none)
 }
 
 fn sqlite_terminal_read(fd int, marker string) !string {
@@ -30,11 +30,11 @@ fn sqlite_terminal_read(fd int, marker string) !string {
 }
 
 fn qualify_sqlite_terminal(mut t Test, architecture string) ! {
-	denied := run(['/usr/bin/vinix-package', 'run-terminal', pkgcore.sqlite_application_id], '', none, none)
+	denied := run(['/usr/bin/tulpar-package', 'run-terminal', pkgcore.sqlite_application_id], '', none, none)
 	assert denied.status != 0 && denied.output.contains('terminal standard input and output')
-	state := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
-	leased := '/var/lib/vinix-packages/generations/' + state.generation.str()
-	child := ptycore.spawn(['/usr/bin/vinix-package', 'run-terminal', pkgcore.sqlite_application_id],
+	state := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
+	leased := '/var/lib/tulpar-packages/generations/' + state.generation.str()
+	child := ptycore.spawn(['/usr/bin/tulpar-package', 'run-terminal', pkgcore.sqlite_application_id],
 		['PATH=/usr/bin:/usr/sbin', 'HOME=/root', 'TERM=linux'], '/', 24, 80, 640, 384)!
 	defer { C.close(child.terminal) }
 	prompt := sqlite_terminal_read(child.terminal, 'sqlite> ')!
@@ -86,20 +86,20 @@ fn qualify_package_sqlite(mut t Test) ! {
 			'sqlite-fixture', '/tmp/package-publisher/sqlite-seed', (i + 1).str(), expires.str(), '/tmp/sqlite-release-' + variant])!)!
 		assert pub_result.public_key == key && pub_result.package_count == 4
 	}
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{
 		architecture: architecture, launch_user: 'alex', policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 }
 	}))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['--offline', 'repo-enroll', 'sqlite-fixture', 'file:///tmp/sqlite-release-base', key])!
 	package_success(['--offline', 'update'])!
 	package_success(['--offline', 'install', pkgcore.sqlite_application_id])!
-	initial := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
+	initial := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
 	assert initial.packages.len == 2 && initial.packages.all(it.package.permissions.len == 0)
 	application := initial.packages.filter(it.package.id == pkgcore.sqlite_application_id)[0].package
 	created := sqlite_run_sql("SELECT sqlite_version(); PRAGMA journal_mode=WAL; CREATE TABLE saved(v INTEGER); INSERT INTO saved VALUES(42); SELECT sum(v) FROM saved; PRAGMA integrity_check;")
 	assert created.status == 0 && created.output.contains('3.53.4\nwal\n42\nok'), created.output
-	data := '/home/alex/.local/share/vinix-apps/' + pkgcore.sqlite_application_id + '/database.sqlite3'
+	data := '/home/alex/.local/share/tulpar-apps/' + pkgcore.sqlite_application_id + '/database.sqlite3'
 	assert os.is_file(data) && os.stat(data)!.uid == 1000
 	qualify_sqlite_terminal(mut t, architecture)!
 	reopened := sqlite_run_sql('SELECT sum(v) FROM saved; PRAGMA integrity_check;')
@@ -118,7 +118,7 @@ fn qualify_package_sqlite(mut t Test) ! {
 	view := json2.decode[pkgcore.SoftwareView](package_success(['view'])!)!
 	assert view.rows.filter(it.updatable).map(it.id) == [pkgcore.sqlite_runtime_id]
 	package_success(['--offline', 'upgrade'])!
-	upgraded := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
+	upgraded := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
 	assert upgraded.packages.filter(it.package.id == pkgcore.sqlite_application_id)[0].package == application
 	assert upgraded.packages.any(it.package.id == pkgcore.sqlite_runtime_id && it.package.version == '1.1.0')
 	math := sqlite_run_sql('SELECT ceil(1.25); SELECT sum(v) FROM saved; PRAGMA integrity_check;')
@@ -128,14 +128,14 @@ fn qualify_package_sqlite(mut t Test) ! {
 	assert sqlite_run_sql('SELECT sum(v) FROM saved;').output.contains('42')
 	package_success(['--offline', 'upgrade'])!
 	package_success(['--offline', 'remove', pkgcore.sqlite_application_id])!
-	assert pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 0
+	assert pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 0
 	assert os.is_file(data) && os.stat(data)!.uid == 1000
 	os.rename('/tmp/sqlite-release-math', '/tmp/sqlite-release-hidden')!
 	package_success(['--offline', 'install', pkgcore.sqlite_application_id])!
 	reinstalled := sqlite_run_sql('SELECT ceil(1.25); SELECT sum(v) FROM saved; PRAGMA integrity_check;')
 	assert reinstalled.status == 0 && reinstalled.output.contains('2.0\n42\nok'), reinstalled.output
 	package_success(['--offline', 'remove', pkgcore.sqlite_application_id])!
-	assert pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 0
+	assert pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 0
 	assert os.is_file(data)
 	t.say('PACKAGE SQLITE runtime-only-real-library-upgrade unchanged-cli rollback offline-cache-reinstall data-preserving-uninstall PASS')
 }

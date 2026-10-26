@@ -235,7 +235,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -266,7 +266,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -291,12 +291,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/niceadmit-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/niceadmit-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/niceadmitreferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/niceadmitreferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -368,7 +368,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: niceadmit-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	os.write_file(area + 'assertion-control.log', control(['--negative-control'], 'niceadmit assertions must execute'))!
@@ -379,7 +379,7 @@ fn main() {
 	os.write_file(area + 'scope-check.log', 'arm/x86: whole generated production C differs only in table__syscall_linux_setpriority; no compiler identifier normalization, allocation/free or pointer escape; existing locked target lookup, MAC check, error returns and nice mutation retained\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '9969135689c8ca354631d3ce46257d20b1bd3b20'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -398,17 +398,17 @@ fn main() {
 	assert os.read_file(area + 'initial-build-before-arm-detached.log')! == ''
 	assert digest(area + 'initial-before-arm.c') == digest(area + 'before-arm.c')
 	assert digest(area + 'initial-before-arm.elf') == 'f78c4fae503fe2b9035f8331dbb24af8e982eba023e8acf42452ec7cd378b8a4'
-	assert digest(area + 'initial-before-arm.elf') != digest(area + 'baseline-arm/kernel/bin/vinix')
+	assert digest(area + 'initial-before-arm.elf') != digest(area + 'baseline-arm/kernel/bin/tulpar')
 	initial_attribution := os.read_file(area + 'initial-arm-attribution.log')!
 	assert initial_attribution.contains('initial-before-arm.c bytes=10842748 sha256=' + digest(area + 'before-arm.c'))
 	assert initial_attribution.contains('initial-before-arm.elf bytes=17776640 sha256=' + digest(area + 'initial-before-arm.elf'))
-	assert initial_attribution.contains('baseline-arm/kernel/bin/vinix bytes=33207632 sha256=' + digest(area + 'baseline-arm/kernel/bin/vinix'))
+	assert initial_attribution.contains('baseline-arm/kernel/bin/tulpar bytes=33207632 sha256=' + digest(area + 'baseline-arm/kernel/bin/tulpar'))
 	assert initial_attribution.contains('common_prefix_bytes=24 equal=false initial_is_complete_prefix=false')
 	initial_boundary := os.read_file(area + 'independent-initial.log')!
-	assert initial_boundary.contains(digest(area + 'initial-before-arm.elf')) && initial_boundary.contains(digest(area + 'baseline-arm/kernel/bin/vinix'))
+	assert initial_boundary.contains(digest(area + 'initial-before-arm.elf')) && initial_boundary.contains(digest(area + 'baseline-arm/kernel/bin/tulpar'))
 	assert initial_boundary.contains('initial-before-arm.elf bytes=17776640 machine=183 entry=ffffffff8013d624 phoff=64 phnum=3 shoff=33206288 shnum=21 header_tables_complete=false')
 	assert initial_boundary.contains('program 2 type=1 offset=3244032 filesz=16244552 memsz=16244552 complete=false')
-	assert initial_boundary.contains('vinix bytes=33207632 machine=183 entry=ffffffff801c696c phoff=64 phnum=3 shoff=33206288 shnum=21 header_tables_complete=true')
+	assert initial_boundary.contains('tulpar bytes=33207632 machine=183 entry=ffffffff801c696c phoff=64 phnum=3 shoff=33206288 shnum=21 header_tables_complete=true')
 	assert initial_boundary.contains('all segment payloads complete=true all non-NOBITS sections complete=true')
 	initial_incomplete := os.read_file(area + 'independent-initial-incomplete.log')!
 	assert initial_incomplete.contains('header_tables_complete=false') && initial_incomplete.contains('FAIL: fn main.elf: assert table_complete')
@@ -521,7 +521,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + 'p1-' + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['niceadmit']
 			} else {
@@ -541,7 +541,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + if phase == 'before' && suffix == 'x86' {
 				'build-before-x86-detached.log'
 			} else {

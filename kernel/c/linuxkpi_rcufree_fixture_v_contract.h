@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_RCUFREE_FIXTURE_V_CONTRACT_H
-#define VINIX_LINUXKPI_RCUFREE_FIXTURE_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_RCUFREE_FIXTURE_V_CONTRACT_H
+#define TULPAR_LINUXKPI_RCUFREE_FIXTURE_V_CONTRACT_H
 #include "linuxkpi_rcu_fixture_v_contract.h"
 #include "linuxkpi_rcufree_fixture_v_primitives.h"
 #include <linux/slab.h>

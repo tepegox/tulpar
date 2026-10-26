@@ -120,7 +120,7 @@ fn test_capacity_adoption_handles_full_bundle_and_last_aligned_u64_capacity() {
 
 fn test_capacity_cli_rejects_malformed_arguments_before_opening_files() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-capacity'), &char(c'/unused'), &char(c'0'),
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-capacity'), &char(c'/unused'), &char(c'0'),
 			&char(c'/unused-device'), &char(c'25165824'), &char(nil)]!
 		for count in [2, 3, 4, 5, 7] {
 			assert run(count, &args[0]) == 2

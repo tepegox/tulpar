@@ -8,7 +8,7 @@ import hosttest
 
 const scope = 'Run the unchanged V 1/2/4/8-byte exchange/CAS backend through original Linux xchg/cmpxchg, natural records/unions, pmd_t/pte_t and volatile storage. Observe bit patterns, single evaluation and pthread token/CAS ownership; reject unsupported compiler types. This supplies no MM service or new 128-bit guarantee.'
 const production_names = ['exchangecore__exchange', 'exchangecore__compare_exchange',
-	'vinix_arch_exchange_bits', 'vinix_arch_compare_exchange_bits']
+	'tulpar_arch_exchange_bits', 'tulpar_arch_compare_exchange_bits']
 
 fn require(valid bool, message string) ! {
 	if !valid { return error(message) }
@@ -163,8 +163,8 @@ fn controls(work string, flags []string, env map[string]string, compiler_v strin
 				require(compiled.code == 0, 'Previous scalar16 dispatch was rejected: ' + diagnostic)!
 				imports := hosttest.command(['nm', '-u', object], object + '.imports.log', 30, env)!.stdout
 				unresolved = imports
-				require(imports.contains('vinix_arch_exchange_128') && imports.contains('vinix_arch_compare_exchange_128')
-					&& !imports.contains('vinix_arch_exchange_bits') && !hosttest.allocation_symbols(imports),
+				require(imports.contains('tulpar_arch_exchange_128') && imports.contains('tulpar_arch_compare_exchange_128')
+					&& !imports.contains('tulpar_arch_exchange_bits') && !hosttest.allocation_symbols(imports),
 					'Scalar16 did not retain its separate prior dispatch')!
 			} else {
 				require(compiled.code != 0 && !os.exists(object), 'Unsupported control compiled: ' + name)!
@@ -210,7 +210,7 @@ fn run(keep string, header string) ! {
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	pin := hosttest.upstream_pin()!
 	hosttest.verify_upstream(linux, pin)!
-	work := hosttest.work_dir(keep, 'vinix-aggregate-exchange-v-')!
+	work := hosttest.work_dir(keep, 'tulpar-aggregate-exchange-v-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut inputs := [@FILE, root + '/kernel/linuxkpi/exchangecore/core.v',
 		root + '/kernel/linuxkpi/exchange128core/core.v',
@@ -254,14 +254,14 @@ fn run(keep string, header string) ! {
 		body_hashes[name] = hosttest.text_sha(body)
 	}
 	hosttest.audit_headers(work + '/abi')!
-	if header != '' { os.cp(header, work + '/abi/vinix/atomic_exchange.h')! }
+	if header != '' { os.cp(header, work + '/abi/tulpar/atomic_exchange.h')! }
 	mut flags := [compiler, '-O1', '-g', '-ffreestanding', '-fno-builtin', '-fwrapv',
 		'-fno-strict-aliasing', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function',
 		'-Wno-unused-parameter', '-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-pthread']
 	$if macos {
 		flags << ['-arch', 'x86_64']
 	}
-	flags << ['-D__KERNEL__', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-include',
+	flags << ['-D__KERNEL__', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-include',
 		root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h', '-include',
 		linux + '/include/linux/compiler_types.h']
 	for directory in [root + '/tests/linuxkpi/aggregatefixture', work + '/abi',
@@ -284,8 +284,8 @@ fn run(keep string, header string) ! {
 		hosttest.command(compile, object + '.compile.log', 120, env)!
 		require(dependency_hashes == hosttest.hashes(dependencies)!, 'Actual profile compiler inputs changed')!
 		imports := hosttest.command(['nm', '-u', object], object + '.imports.log', 30, env)!.stdout
-		require(!hosttest.allocation_symbols(imports) && !imports.contains('vinix_arch_exchange_128')
-			&& !imports.contains('vinix_arch_compare_exchange_128'), 'Small aggregate fixture gained allocator or wide imports')!
+		require(!hosttest.allocation_symbols(imports) && !imports.contains('tulpar_arch_exchange_128')
+			&& !imports.contains('tulpar_arch_compare_exchange_128'), 'Small aggregate fixture gained allocator or wide imports')!
 		executable := work + '/' + standard
 		mut link := [compiler, '-fsanitize=address,undefined', '-pthread']
 		$if macos {
@@ -319,7 +319,7 @@ fn run(keep string, header string) ! {
 		'selected_sha256':         hosttest.sha(source)!
 		'reference_sha256':        hosttest.sha(reference_c)!
 		'production_body_sha256':  hosttest.string_map(body_hashes)
-		'atomic_header_sha256':    hosttest.sha(work + '/abi/vinix/atomic_exchange.h')!
+		'atomic_header_sha256':    hosttest.sha(work + '/abi/tulpar/atomic_exchange.h')!
 		'private_header_override': header != ''
 		'profiles':                profiles
 		'compiler_controls':       control_results

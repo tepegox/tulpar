@@ -16,7 +16,7 @@ fn history_fixture(code int, mut report DataScrubReport) {
 
 fn history_input(report &DataScrubReport) string {
 	mut changed := 0; for i in 0 .. report.count { if report.expected[i] != report.actual[i] { changed++ } }
-	mut text := 'format=VINIXSR1 operation=scrubbed-data disks=${report.disks} mappings=${report.count} matched=${report.count - changed} changed=${changed} algorithm=sha256 reference_sha256=' + hex.encode(report.reference[..]) + '\n'
+	mut text := 'format=TULPARSR1 operation=scrubbed-data disks=${report.disks} mappings=${report.count} matched=${report.count - changed} changed=${changed} algorithm=sha256 reference_sha256=' + hex.encode(report.reference[..]) + '\n'
 	for i in 0 .. report.count {
 		row := report.rows[i]
 		text += 'disk=${report.indices[i]} slot=${row.slot} offset=${row.offset} bytes=${row.length} readonly=${row.flags} result=${if report.expected[i] == report.actual[i] { 'match' } else { 'changed' }} expected_sha256=' + hex.encode(report.expected[i][..]) + ' actual_sha256=' + hex.encode(report.actual[i][..]) + '\n'
@@ -30,7 +30,7 @@ fn history_expected(before &DataScrubReport, after &DataScrubReport) string {
 		category := if before.actual[i] == after.actual[i] { 0 } else if after.actual[i] == after.expected[i] { 2 } else if before.actual[i] == before.expected[i] { 1 } else { 3 }
 		counts[category]++; results << ['stable', 'new-change', 'restored', 'changed-again'][category]
 	}
-	mut text := 'format=VINIXSR1 operation=compared-data-scrubs disks=${before.disks} mappings=${before.count} stable=${counts[0]} changed=${before.count - counts[0]} new_changes=${counts[1]} restored=${counts[2]} changed_again=${counts[3]} algorithm=sha256 reference_sha256=' + hex.encode(before.reference[..]) + ' before_report_sha256=' + sha256.hexhash(history_input(before)) + ' after_report_sha256=' + sha256.hexhash(history_input(after)) + '\n'
+	mut text := 'format=TULPARSR1 operation=compared-data-scrubs disks=${before.disks} mappings=${before.count} stable=${counts[0]} changed=${before.count - counts[0]} new_changes=${counts[1]} restored=${counts[2]} changed_again=${counts[3]} algorithm=sha256 reference_sha256=' + hex.encode(before.reference[..]) + ' before_report_sha256=' + sha256.hexhash(history_input(before)) + ' after_report_sha256=' + sha256.hexhash(history_input(after)) + '\n'
 	for i in 0 .. before.count {
 		row := before.rows[i]
 		text += 'disk=${before.indices[i]} slot=${row.slot} offset=${row.offset} bytes=${row.length} readonly=${row.flags} before=${if before.actual[i] == before.expected[i] { 'match' } else { 'changed' }} after=${if after.actual[i] == after.expected[i] { 'match' } else { 'changed' }} result=${results[i]} expected_sha256=' + hex.encode(before.expected[i][..]) + ' before_sha256=' + hex.encode(before.actual[i][..]) + ' after_sha256=' + hex.encode(after.actual[i][..]) + '\n'
@@ -114,7 +114,7 @@ fn test_scrub_history_full_width_64_rows_empty_sets_and_cli_syntax() {
 	mut output := [32768]char{}; size := encode_data_scrub_comparison(&before, &after, &output[0]); assert size > 20000 && size < 32768 && unsafe { tos(&u8(&output[0]), size) } == history_expected(&before, &after)
 	for disks in 1 .. 65 { before = DataScrubReport{disks: disks}; after = before; text := history_input(&before); mut decoded := DataScrubReport{}; assert decode_data_scrub_report(text.str, text.len, mut decoded) && decoded == before; assert compare_data_scrubs(&before, &after, mut history) && history == DataScrubHistory{}; assert encode_data_scrub_comparison(&before, &after, &output[0]) > 0 }
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'compare-data-scrubs'), &char(c'/missing-first'), &char(c'/missing-second'), &char(c'extra'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'compare-data-scrubs'), &char(c'/missing-first'), &char(c'/missing-second'), &char(c'extra'), &char(nil)]!
 		for count in [2, 3, 5, 6] { assert run(count, &args[0]) == 2 }
 		for i in [2, 3] { saved := args[i]; args[i] = &char(c''); assert run(4, &args[0]) == 2; args[i] = saved }
 		assert run(4, &args[0]) == 1

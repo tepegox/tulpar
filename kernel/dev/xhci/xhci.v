@@ -569,8 +569,8 @@ fn controller_resume(mut core devcore.Device) bool {
 // Register with the device core, which hands over an xHCI controller if the
 // machine has one. Returns whether the driver ended up with one working.
 pub fn initialise() bool {
-	// vinix.usb=off leaves the controller to firmware.
-	if !devcore.boot_flag('vinix.usb=', true) {
+	// tulpar.usb=off leaves the controller to firmware.
+	if !devcore.boot_flag('tulpar.usb=', true) {
 		return false
 	}
 	driver := devcore.register_driver(devcore.Driver{

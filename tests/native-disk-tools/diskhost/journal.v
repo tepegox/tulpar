@@ -24,13 +24,13 @@ fn (job JournalRun) fresh() ! {
 }
 
 fn (job JournalRun) boot(mode int, stage int) ! {
-	prior := os.getenv_opt('VINIX_CMDLINE')
-	os.setenv('VINIX_CMDLINE', if job.format { 'vinix.disk=auto ' } else { '' } + 'vinix.journal_mode=' + mode.str(), true)
+	prior := os.getenv_opt('TULPAR_CMDLINE')
+	os.setenv('TULPAR_CMDLINE', if job.format { 'tulpar.disk=auto ' } else { '' } + 'tulpar.journal_mode=' + mode.str(), true)
 	defer {
 		if value := prior {
-			os.setenv('VINIX_CMDLINE', value, true)
+			os.setenv('TULPAR_CMDLINE', value, true)
 		} else {
-			os.unsetenv('VINIX_CMDLINE')
+			os.unsetenv('TULPAR_CMDLINE')
 		}
 	}
 	configured := launch_mode(job.work + '/init', job.work + '/initramfs.tar', job.work, job.kernel_dir,
@@ -81,10 +81,10 @@ fn journal(args []string) !int {
 	arch := options.value('--arch', 'aarch64')
 	seconds := timeout()!
 	executable := tool()!
-	work := work_dir(options, 'vinix-journal-')!
+	work := work_dir(options, 'tulpar-journal-')!
 	defer { remove_private(work, options) }
 	kernel_dir := kernel(work, options.value('--kernel-dir', ''), arch)!
-	extra := if options.has('--production') { ['-DVINIX_JOURNAL_PRODUCTION'] } else { []string{} }
+	extra := if options.has('--production') { ['-DTULPAR_JOURNAL_PRODUCTION'] } else { []string{} }
 	run([...flags(arch), ...extra, root() + '/tests/fs-journal/guest.c', '-o', work + '/init'])!
 	seed := work + '/seed'
 	for name in ['dev', 'proc', 'tmp', 'run', 'sbin', 'root'] { mkdir(seed + '/' + name)! }
@@ -97,7 +97,7 @@ fn journal(args []string) !int {
 	} {
 		os.write_file(seed + '/root/' + name, data)!
 	}
-	if os.exists(seed + '/.vinix-image-id') { os.rm(seed + '/.vinix-image-id')! }
+	if os.exists(seed + '/.tulpar-image-id') { os.rm(seed + '/.tulpar-image-id')! }
 	guesthost.archive_tree(seed, work + '/initramfs.tar')!
 	seed_identity(seed, work + '/initramfs.tar')!
 	job := JournalRun{arch, work, kernel_dir, executable, seconds, options.has('--format')}

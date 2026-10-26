@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2026 Alexander Medvednikov
 //
-// vinix-session: where sessions come from. Run by root -- by init, or by
+// tulpar-session: where sessions come from. Run by root -- by init, or by
 // something init started -- it is the only place a process stops being
 // root and becomes a person's.
 //
-//	vinix-session run [--seat|--isolated] USER COMMAND [ARGUMENT...]
+//	tulpar-session run [--seat|--isolated] USER COMMAND [ARGUMENT...]
 //	    become USER and run COMMAND, in a login session of its own. With
 //	    --seat the session is the one at the machine: it is given the
 //	    display and the input devices, and is who the authentication
 //	    service takes for the person at the machine, until COMMAND exits.
 //	    Without, it is for services and scripts that must not be root.
-//	vinix-session console
+//	tulpar-session console
 //	    ask for a name and a password on the terminal, run that person's
 //	    shell as them until it exits, and ask again
-//	vinix-session manager [--greeter COMMAND...] [--desktop COMMAND...]
+//	tulpar-session manager [--greeter COMMAND...] [--desktop COMMAND...]
 //	    show the login screen, run the session of whoever logs in, and
 //	    come back to the login screen when it ends or steps aside
 //	    (sessioncore/manager.v); COMMAND runs to the next option
@@ -47,7 +47,7 @@ mut:
 }
 
 fn fail(message string) {
-	eprintln('vinix-session: ${message}')
+	eprintln('tulpar-session: ${message}')
 	exit(1)
 }
 
@@ -71,12 +71,12 @@ fn load() accountcore.Database {
 fn run_as(db accountcore.Database, user accountcore.User, argv []string, at_seat bool, isolated bool) int {
 	started := if isolated {
 		sessioncore.start_isolated(db, user, argv) or {
-			eprintln('vinix-session: ${err.msg()}')
+			eprintln('tulpar-session: ${err.msg()}')
 			return 126
 		}
 	} else {
 		sessioncore.start(db, user, argv, at_seat, -1, sessioncore.Unlock{}) or {
-			eprintln('vinix-session: ${err.msg()}')
+			eprintln('tulpar-session: ${err.msg()}')
 			return 126
 		}
 	}
@@ -135,7 +135,7 @@ fn console() {
 		}
 		print('Password: ')
 		password := read_line(false) or { return }
-		reply := sessioncore.verify_login('/run/vinix/auth.sock', name,
+		reply := sessioncore.verify_login('/run/tulpar/auth.sock', name,
 			password) or {
 			println('Login is not possible: ${err.msg()}.')
 			C.sleep(2)
@@ -167,12 +167,12 @@ fn main() {
 		fail('must be started by root')
 	}
 	if args == ['package-launch'] {
-		exit(package_launch() or { eprintln('vinix-session: ${err}'); 126 })
+		exit(package_launch() or { eprintln('tulpar-session: ${err}'); 126 })
 	}
 	if args.len > 0 && args[0] == 'graphical' {
 		if (args.len != 3 && args.len != 5) || args[1] != '--desktop'
 			|| (args.len == 5 && args[3] != '--fallback-desktop') {
-			fail('usage: vinix-session graphical --desktop /usr/bin/vinix-desktop [--fallback-desktop /usr/bin/vinix-desktop]')
+			fail('usage: tulpar-session graphical --desktop /usr/bin/tulpar-desktop [--fallback-desktop /usr/bin/tulpar-desktop]')
 		}
 		sessioncore.graphical(args[2], if args.len == 5 { args[4] } else { '' }) or { fail(err.msg()) }
 		return
@@ -182,8 +182,8 @@ fn main() {
 		return
 	}
 	if args.len >= 1 && args[0] == 'manager' {
-		mut greeter := ['/usr/bin/vinix-desktop', '--greeter']
-		mut desktop := ['/usr/bin/vinix-desktop']
+		mut greeter := ['/usr/bin/tulpar-desktop', '--greeter']
+		mut desktop := ['/usr/bin/tulpar-desktop']
 		mut target := 0
 		for argument in args[1..] {
 			if argument == '--greeter' {
@@ -217,7 +217,7 @@ fn main() {
 		rest.delete(1)
 	}
 	if rest.len < 3 || rest[0] != 'run' || rest[1].starts_with('--') {
-		eprintln('usage: vinix-session run [--seat|--isolated] USER COMMAND [ARGUMENT...] | console | manager [--greeter COMMAND...] [--desktop COMMAND...]')
+		eprintln('usage: tulpar-session run [--seat|--isolated] USER COMMAND [ARGUMENT...] | console | manager [--greeter COMMAND...] [--desktop COMMAND...]')
 		exit(2)
 	}
 	db := load()
@@ -231,7 +231,7 @@ fn main() {
 // Called only by the fixed account action. The kernel-authenticated caller
 // chooses an installed package, never the executable or identity to run.
 fn package_launch() !int {
-	identity := os.getenv('VINIX_AUTH_UID')
+	identity := os.getenv('TULPAR_AUTH_UID')
 	if identity.len == 0 || identity.len > 10 || identity[0] == `0` || !identity.bytes().all(it >= `0` && it <= `9`) || identity.u64() > 0xffffffff {
 		return error('the account service supplied no ordinary launch identity')
 	}
@@ -248,9 +248,9 @@ fn package_launch() !int {
 	db.validate()!
 	user := db.user_by_uid(uid) or { return error('the launch account no longer exists') }
 	if !accountcore.is_person(user) || user.gid == 0 { return error('isolated launch requires an ordinary account and group') }
-	for path in ['/usr', '/usr/bin', '/usr/bin/vinix-package'] {
+	for path in ['/usr', '/usr/bin', '/usr/bin/tulpar-package'] {
 		info := os.lstat(path)!
-		if info.uid != 0 || info.mode & 0o022 != 0 || (if path == '/usr/bin/vinix-package' { info.mode & 0o170000 != 0o100000 || info.mode & 0o111 == 0 } else { info.get_filetype() != .directory }) {
+		if info.uid != 0 || info.mode & 0o022 != 0 || (if path == '/usr/bin/tulpar-package' { info.mode & 0o170000 != 0o100000 || info.mode & 0o111 == 0 } else { info.get_filetype() != .directory }) {
 			return error('the installed package service is not root-owned and protected')
 		}
 	}
@@ -298,7 +298,7 @@ fn package_launch_worker(fd int, nonce string, db accountcore.Database, user acc
 	// exec_as closes everything except the caller's three existing streams.
 	for descriptor in 3 .. 1024 { if descriptor != fd { C.close(descriptor) } }
 	request.forward_display(user.uid)!
-	started := sessioncore.start_isolated(db, user, ['/usr/bin/vinix-package', ...request.arguments])!
+	started := sessioncore.start_isolated(db, user, ['/usr/bin/tulpar-package', ...request.arguments])!
 	// The supervisor also sheds root and account memberships before waiting.
 	// Its cached socket peer credentials still prove who made the connection.
 	sessioncore.become_isolated(user)!

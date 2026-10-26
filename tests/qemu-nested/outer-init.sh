@@ -3,12 +3,12 @@ set -eu
 
 export PATH=/usr/bin:/bin:/usr/sbin:/sbin
 export HOME=/root
-export VINIX_QEMU_STATE_DIR=/root
-export VINIX_QEMU_GUEST_MEM=512
+export TULPAR_QEMU_STATE_DIR=/root
+export TULPAR_QEMU_GUEST_MEM=512
 
-echo 'VINIX NESTED QEMU: START'
-if ! vinix-qemu /root/vinix-inner.img; then
-    echo 'VINIX NESTED QEMU: FAIL'
+echo 'TULPAR NESTED QEMU: START'
+if ! tulpar-qemu /root/tulpar-inner.img; then
+    echo 'TULPAR NESTED QEMU: FAIL'
 fi
 
 sync

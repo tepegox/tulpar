@@ -1,5 +1,5 @@
-#ifndef VINIX_IPV6_GUEST_ABI_H
-#define VINIX_IPV6_GUEST_ABI_H
+#ifndef TULPAR_IPV6_GUEST_ABI_H
+#define TULPAR_IPV6_GUEST_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
 #endif

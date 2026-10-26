@@ -101,7 +101,7 @@ V -new-compiler -w -nocache -prod \
   -o /build/software-maintenance-controls tests/packages/software-maintenance-evidence-check.v
 /build/software-maintenance-check --arch=aarch64 \
   --rootfs=/build/native-arm/guest/root --publisher=/build/native-arm/publisher \
-  --desktop=/build/frozen-desktop-arm/vinix-desktop --kernel=/build/arm-kernel \
+  --desktop=/build/frozen-desktop-arm/tulpar-desktop --kernel=/build/arm-kernel \
   --out=/build/new-maintenance-arm
 /build/software-maintenance-retain /build/new-maintenance-arm /build/frozen-desktop-arm \
   /build/arm-kernel /build/software-maintenance-check /build/retained aarch64

@@ -3,7 +3,7 @@ module planguest
 
 fn mapping_removals(path &char, first &char, second &char, third &char, preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'plan-preview-remove-batch') } else { &char(c'plan-remove-batch') },
 			path, first, second, third, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
@@ -31,9 +31,9 @@ fn planned_mapping_removals(parent &char, other &char) {
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'removal baseline')
 		copy_plan(c'/root/saved.vset', c'/root/removal-baseline.vset')
-		first := status(c'/dev/mapper/vinix12'); second := status(c'/dev/mapper/vinix13')
+		first := status(c'/dev/mapper/tulpar12'); second := status(c'/dev/mapper/tulpar13')
 		check(first.disk_id == status(parent).disk_id && second.disk_id == status(other).disk_id, c'removal selects both physical disks')
-		held := C.open(c'/dev/mapper/vinix12', C.O_RDONLY)
+		held := C.open(c'/dev/mapper/tulpar12', C.O_RDONLY)
 		check(held >= 0, c'hold view across batch removal')
 		mut output := [4096]char{}
 		for preview in [false, true]! {
@@ -63,7 +63,7 @@ fn planned_mapping_removals(parent &char, other &char) {
 		check(contains(&output[0], c'checked disks=2 create=0 keep=3 grow=0') && !contains(&output[0], c'slot=12 action=')
 			&& !contains(&output[0], c'slot=13 action='), c'removed desired rows are omitted from replay')
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
-		check(status(c'/dev/mapper/vinix12').generation == first.generation && status(c'/dev/mapper/vinix13').generation == second.generation,
+		check(status(c'/dev/mapper/tulpar12').generation == first.generation && status(c'/dev/mapper/tulpar13').generation == second.generation,
 			c'cross-disk desired removals preserve live generations')
 		mut bytes := [4096]u8{}
 		check(C.pread(held, &bytes[0], 4096, 0) == 4096 && C.close(held) == 0, c'held removed desired view readable')
@@ -74,8 +74,8 @@ fn planned_mapping_removals(parent &char, other &char) {
 		preview(c'check-bundle', false, 1, &output[0])
 		check(!contains(&output[0], c'action='), c'live slot reuse conflict has no prefix actions')
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 1)
-		missing(c'/dev/mapper/vinix14')
-		check(status(c'/dev/mapper/vinix12').generation == first.generation && status(c'/dev/mapper/vinix13').generation == second.generation,
+		missing(c'/dev/mapper/tulpar14')
+		check(status(c'/dev/mapper/tulpar12').generation == first.generation && status(c'/dev/mapper/tulpar13').generation == second.generation,
 			c'failed reused-slot application preserves live generations')
 		copy_plan(c'/root/removal-baseline.vset', c'/root/saved.vset')
 		check(C.unlink(c'/root/removal-baseline.vset') == 0, c'removal baseline cleanup')
@@ -96,20 +96,20 @@ fn removal_boot_prepare() {
 	mapping_removals(c'/root/saved.vset', c'20', c'19', unsafe { nil }, true, 0, unsafe { nil })
 	mapping_removals(c'/root/saved.vset', c'20', c'19', unsafe { nil }, false, 0, unsafe { nil })
 	bundle_unchanged(c'/root/saved.vset', &original[0], size)
-	missing(c'/dev/mapper/vinix19'); missing(c'/dev/mapper/vinix20')
+	missing(c'/dev/mapper/tulpar19'); missing(c'/dev/mapper/tulpar20')
 	C.printf(c'PLAN REMOVAL BATCH SAVED: both desired rows removed before persistent boot replay\n')
 }
 
 fn removal_boot_check() {
-	fd := C.open(c'/etc/vinix/volumes.vset', C.O_RDONLY)
+	fd := C.open(c'/etc/tulpar/volumes.vset', C.O_RDONLY)
 	mut original := [8768]u8{}
 	size := C.read(fd, &original[0], 8768)
 	check(fd >= 0 && size == 536 && C.close(fd) == 0, c'persistent removal bundle')
-	missing(c'/dev/mapper/vinix19'); missing(c'/dev/mapper/vinix20')
+	missing(c'/dev/mapper/tulpar19'); missing(c'/dev/mapper/tulpar20')
 	mut output := [4096]char{}
-	mapping_removals(c'/etc/vinix/volumes.vset', c'20', c'19', unsafe { nil }, true, 0, &output[0])
+	mapping_removals(c'/etc/tulpar/volumes.vset', c'20', c'19', unsafe { nil }, true, 0, &output[0])
 	check(contains(&output[0], c'request=0 slot=20 action=keep') && contains(&output[0], c'request=1 slot=19 action=keep'), c'removal absence survives boot')
-	mapping_removals(c'/etc/vinix/volumes.vset', c'20', c'19', unsafe { nil }, false, 0, unsafe { nil })
-	bundle_unchanged(c'/etc/vinix/volumes.vset', &original[0], size)
+	mapping_removals(c'/etc/tulpar/volumes.vset', c'20', c'19', unsafe { nil }, false, 0, unsafe { nil })
+	bundle_unchanged(c'/etc/tulpar/volumes.vset', &original[0], size)
 	C.printf(c'PLAN REMOVAL BATCH BOOT PRESERVED\n')
 }

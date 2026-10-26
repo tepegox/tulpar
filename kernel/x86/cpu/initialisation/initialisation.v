@@ -17,7 +17,7 @@ import x86.hypervisor
 
 // asm/x86_64/syscall_entry.S
 fn C.syscall_entry()
-fn C.vinix_x86_mitigations_initialise(number u64) bool
+fn C.tulpar_x86_mitigations_initialise(number u64) bool
 
 // asm/x86_64/segment.S
 fn C.syscall32_entry()
@@ -120,7 +120,7 @@ fn program(mut cpu_local cpulocal.Local, first bool) {
 	cpu_local.tss.iopb = u16(sizeof(cpulocal.TSS))
 	gdt.load_tss(&cpu_local.gdt[0], voidptr(&cpu_local.tss))
 
-	// EFER is per-CPU. APs must enable NXE before switching to Vinix page
+	// EFER is per-CPU. APs must enable NXE before switching to Tulpar page
 	// tables, just as the BSP does during vmm_init().
 	memory.enable_nx()
 	kernel_pagemap.switch_to()
@@ -293,7 +293,7 @@ fn program(mut cpu_local cpulocal.Local, first bool) {
 
 	// Program this logical CPU before it can run any user instruction.
 	if first {
-		if !C.vinix_x86_mitigations_initialise(cpu_number) {
+		if !C.tulpar_x86_mitigations_initialise(cpu_number) {
 			panic('CPU speculation controls did not take effect')
 		}
 	} else if !mitigation_restore(cpu_number) {
@@ -301,7 +301,7 @@ fn program(mut cpu_local cpulocal.Local, first bool) {
 	}
 
 	// VMXON is local to each logical CPU. Failure is deliberately non-fatal:
-	// Vinix must still boot when firmware disables VT-x or a host does not
+	// Tulpar must still boot when firmware disables VT-x or a host does not
 	// expose nested virtualisation.
 	if first {
 		hypervisor.initialise_cpu(cpu_number)

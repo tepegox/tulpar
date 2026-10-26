@@ -351,7 +351,7 @@ fn overlay_staging_name(mut ofs OverlayFS, work &VFSNode) ?string {
   if ofs.staging_serial == ~u64(0) { errno.set(errno.eoverflow); return none }
   ofs.staging_serial++
   mut text := lib.new_text(40)
-  text.add('.vinix-stage-')
+  text.add('.tulpar-stage-')
   text.add_unsigned(ofs.staging_serial)
   name := lib.finish_text(text)
   if name !in work.children { return name }

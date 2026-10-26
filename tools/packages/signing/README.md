@@ -5,7 +5,7 @@ This is the MIT-licensed V Ed25519 implementation from standard-library commit
 [provenance.json](provenance.json) records immutable Git blob IDs and before/after
 SHA-256 hashes; [LICENSE](LICENSE) retains the upstream copyright and license.
 Package staging retains this notice at
-`/usr/share/licenses/vinix-packages/ed25519-MIT.txt` in binary releases.
+`/usr/share/licenses/tulpar-packages/ed25519-MIT.txt` in binary releases.
 
 One operational adaptation replaces the private variadic point-initialization
 check with one value check per point, preserving its order and predicate. The

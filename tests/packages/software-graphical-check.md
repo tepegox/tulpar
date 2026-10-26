@@ -3,7 +3,7 @@
 `software-graphical-check.v --ordinary=true --installed=true` drives the real
 framebuffer compositor with QMP pointer and keyboard input (virtio on ARM, USB
 HID through xHCI on x86). PID 1 starts
-`vinix-session run --seat alex ... --open=Software`; the compositor must have all
+`tulpar-session run --seat alex ... --open=Software`; the compositor must have all
 four reported UIDs equal to 1000 before the host sends input. The fixture removes
 two empty account-created folders before launch and requires the compositor to
 recreate them, with the account-owned XDG folder configuration, in `/home/alex`.
@@ -12,7 +12,7 @@ Readiness must come from the account-owned marker inside its private runtime
 directory. On the second boot the fixture holds the old marker open and observes
 a new inode, so a retained marker cannot admit pointer input before startup.
 
-The first boot uses the normal `vinix.disk=auto` installer with a blank 4 GiB
+The first boot uses the normal `tulpar.disk=auto` installer with a blank 4 GiB
 VJFS disk. The guest requires the installed root device, image identity, ordinary
 root-owned tool files and exact staged tool/configuration digests. The host does
 not format, repair or copy consumer state between boots. The kernel and fallback
@@ -106,7 +106,7 @@ v -prod -path '@vlib|@vmodules|.|tools|tests/hardware-platform|build-support|too
   -o /build/software-graphical-check tests/packages/software-graphical-check.v
 /build/software-graphical-check --ordinary=true --installed=true --arch=aarch64 \
   --rootfs=/build/native-arm/guest/root --publisher=/build/native-arm/publisher \
-  --desktop=/build/frozen-desktop-arm/vinix-desktop --kernel=/build/arm-kernel \
+  --desktop=/build/frozen-desktop-arm/tulpar-desktop --kernel=/build/arm-kernel \
   --out=/build/new-graphical-arm
 v -prod -o /build/software-graphical-retain tests/packages/software-graphical-retain.v
 /build/software-graphical-retain /build/new-graphical-arm /build/frozen-desktop-arm \

@@ -1,6 +1,6 @@
 # AArch64 real-time scheduling regression
 
-This test boots a freshly built Vinix kernel on a four-CPU QEMU machine and
+This test boots a freshly built Tulpar kernel on a four-CPU QEMU machine and
 checks that a scheduling policy is something the scheduler acts on, not
 something the syscalls merely remember.
 
@@ -44,8 +44,8 @@ Build the AArch64 userland once to provide the musl test sysroot, then run:
 tests/realtime/run.sh
 ```
 
-Set `VINIX_QEMU_RT_NO_BUILD=1` to reuse `kernel/bin/vinix`, or
-`VINIX_QEMU_TIMEOUT` to change the default 300-second deadline. The boot and
+Set `TULPAR_QEMU_RT_NO_BUILD=1` to reuse `kernel/bin/tulpar`, or
+`TULPAR_QEMU_TIMEOUT` to change the default 300-second deadline. The boot and
 EXT2 images are isolated in temporary directories and removed after the run.
 
 The lap counts are printed whether or not the check passes, along with the CPU

@@ -48,11 +48,11 @@ fn check() ! {
 	work := os.abs_path(os.args[2])
 	require(os.is_file(cli) && !os.exists(work) && !os.is_link(work), 'provide a CLI and new private directory')!
 	root := work + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages', mode: 0o755)!
-	os.write_file(root + '/etc/vinix-packages/config.json', '{"format":1,"architecture":"aarch64","repositories":[],"policy":{"offline":true,"reserve_bytes":0}}\n')!
-	os.mkdir_all(root + '/var/lib/vinix-packages/generations', mode: 0o755)!
-	os.mkdir(root + '/var/lib/vinix-packages/objects', mode: 0o755)!
-	os.write_file(root + '/var/lib/vinix-packages/lock', '')!
+	os.mkdir_all(root + '/etc/tulpar-packages', mode: 0o755)!
+	os.write_file(root + '/etc/tulpar-packages/config.json', '{"format":1,"architecture":"aarch64","repositories":[],"policy":{"offline":true,"reserve_bytes":0}}\n')!
+	os.mkdir_all(root + '/var/lib/tulpar-packages/generations', mode: 0o755)!
+	os.mkdir(root + '/var/lib/tulpar-packages/objects', mode: 0o755)!
+	os.write_file(root + '/var/lib/tulpar-packages/lock', '')!
 	os.write_file(root + '/sentinel', 'preserve unrelated data\n')!
 	// These arrays are caller-owned buffers borrowing literal strings.
 	mut allowed := ['org.example.z', 'org.example.a']

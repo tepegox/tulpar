@@ -73,7 +73,7 @@ V=/path/to/reviewed/v /tmp/image-applications-check /build/new-image-application
 
 v -path '@vlib|@vmodules|.|tests/hardware-platform' \
   -o /tmp/image-applications-runtime-check tests/packages/image-applications-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/image-applications-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-image-applications-arm
 ```

@@ -22,7 +22,7 @@ mut:
 fn accept_data_monitor_sample(manifest &DataManifest, data &u8, size int, prefix int, mut history DataMonitorHistory) bool {
 	if prefix <= 0 || prefix >= 256 || prefix >= size || size >= data_monitor_report_max || history.samples == u64(-1) || history.changed_samples > history.samples { return false }
 	mut cursor := unsafe { &ScrubReportCursor(C.alloca(sizeof(ScrubReportCursor))) }; unsafe { *cursor = ScrubReportCursor{data: data, size: prefix} }
-	if !scrub_report_literal(mut cursor, c'format=VINIXDM1 operation=monitored-data sample=') { return false }
+	if !scrub_report_literal(mut cursor, c'format=TULPARDM1 operation=monitored-data sample=') { return false }
 	sample := scrub_report_number(mut cursor) or { return false }
 	if sample != history.samples + 1 || !scrub_report_literal(mut cursor, c' changed_samples=') { return false }
 	changed_samples := scrub_report_number(mut cursor) or { return false }
@@ -123,7 +123,7 @@ fn encode_data_monitor_history(manifest &DataManifest, history &DataMonitorHisto
 	}
 	mut reference := [65]char{}; mut transcript := [65]char{}
 	if !data_reference_fingerprint(manifest, &reference[0]) || !scrub_digest_text(digest, &transcript[0]) { return 0 }
-	mut length := int(C.snprintf(output, uint(data_monitor_history_max), c'format=VINIXDM1 operation=verified-data-monitor disks=%d mappings=%d samples=%lu changed_samples=%lu session_changed=%lu final_changed=%d algorithm=sha256 reference_sha256=%s transcript_sha256=%s\n', manifest.set.count, manifest.digests.count, history.samples, history.changed_samples, u64(history.changed_samples != 0), final_changed, &reference[0], &transcript[0]))
+	mut length := int(C.snprintf(output, uint(data_monitor_history_max), c'format=TULPARDM1 operation=verified-data-monitor disks=%d mappings=%d samples=%lu changed_samples=%lu session_changed=%lu final_changed=%d algorithm=sha256 reference_sha256=%s transcript_sha256=%s\n', manifest.set.count, manifest.digests.count, history.samples, history.changed_samples, u64(history.changed_samples != 0), final_changed, &reference[0], &transcript[0]))
 	if length <= 0 || length >= data_monitor_history_max { return 0 }
 	mut identity := [41]char{}; mut expected := [65]char{}; mut actual := [65]char{}; mut record := 0
 	for disk in 0 .. manifest.set.count {

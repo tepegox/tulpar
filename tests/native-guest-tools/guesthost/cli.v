@@ -139,7 +139,7 @@ fn command_checked(arguments []string, family string) !int {
 				expected, ['HYPERVISOR FAIL:'], false, false, timeout)!
 		}
 		'resources' {
-			work := hosttest.work_dir(state, 'vinix-resource-fixture-')!
+			work := hosttest.work_dir(state, 'tulpar-resource-fixture-')!
 			init := compile_init(root() + '/tests/kernel-resources/guest.c', work, arch, true)!
 			return guest('', init, work + '/guest', kernel_dir, arch, ['KRES PASS'], ['KRES FAIL'], false, true, timeout)!
 		}

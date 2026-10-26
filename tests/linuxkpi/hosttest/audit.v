@@ -18,7 +18,7 @@ pub fn audit_headers_from_source(directory string, linux string) ! {
 	}
 	for index, schema in schemas {
 		generate_abi(os.join_path(upstream_here(), 'abi', schema), upstream_here(),
-			os.join_path(directory, 'vinix', headers[index]))!
+			os.join_path(directory, 'tulpar', headers[index]))!
 	}
 	generate_sched_mm(os.join_path(linux, 'include/linux/sched/mm.h'),
 		os.join_path(directory, 'linux/sched/mm.h'))!

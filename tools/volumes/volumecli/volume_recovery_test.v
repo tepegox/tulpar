@@ -7,7 +7,7 @@ import crypto.hmac
 import crypto.sha256
 
 fn test_volume_recovery_independent_crypto_exact_metadata_and_format_domains() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-recovery-oracle-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-recovery-oracle-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	for sector in [u64(512), u64(4096)] {
 		for kind in [u32(1), u32(2)] {

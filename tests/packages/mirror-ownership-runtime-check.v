@@ -49,10 +49,10 @@ fn suite() hwhost.Suite {
 fn check() !int {
 	args := os.args[1..]; options := hwhost.parse_options(args)!
 	if options.help || options.list { return hwhost.run_suite(suite(), args, @FILE) }
-	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('VINIX_HWTEST_TCG') != '1' {
-		return error('provide VINIX_HWTEST_TCG=1, --kernel and a new --state-dir')
+	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('TULPAR_HWTEST_TCG') != '1' {
+		return error('provide TULPAR_HWTEST_TCG=1, --kernel and a new --state-dir')
 	}
-	work := os.temp_dir() + '/vinix-mirror-ownership-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-mirror-ownership-' + os.getpid().str()
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	os.cp(options.kernel, work + '/kernel')!

@@ -9,7 +9,7 @@ _kprintf:
     add x9, sp, #32
     str x9, [sp, #16]
     add x1, sp, #16
-    bl _vinix_krandom_host_vprintf
+    bl _tulpar_krandom_host_vprintf
     ldp x29, x30, [sp], #32
     ret
 #else
@@ -38,7 +38,7 @@ kprintf:
     mov w9, #-128
     str w9, [sp, #236]
     add x1, sp, #208
-    bl vinix_krandom_host_vprintf
+    bl tulpar_krandom_host_vprintf
     ldp x29, x30, [sp], #240
     ret
 .size kprintf, .-kprintf

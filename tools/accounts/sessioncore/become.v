@@ -56,8 +56,8 @@ pub const runtime_base = '/run/user'
 // fixed, minus everything that names root's identity or places, plus the
 // account's.
 const dropped_variables = ['HOME', 'USER', 'LOGNAME', 'SHELL', 'MAIL', 'XDG_RUNTIME_DIR',
-	'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME', 'VINIX_SYSTEM_SESSION',
-	'VINIX_SESSION_FD', 'PS1', 'ENV', 'BASH_ENV', 'LD_PRELOAD', 'LD_AUDIT']
+	'XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME', 'TULPAR_SYSTEM_SESSION',
+	'TULPAR_SESSION_FD', 'PS1', 'ENV', 'BASH_ENV', 'LD_PRELOAD', 'LD_AUDIT']
 
 pub fn session_environment(user accountcore.User, inherited []string) []string {
 	mut environment := []string{cap: inherited.len + 8}
@@ -252,7 +252,7 @@ pub fn exec_as(user accountcore.User, argv []string, environment []string, keep_
 pub fn exec_as_fallback(user accountcore.User, argv []string, fallback []string, environment []string, keep_control bool) {
 	exec_as(user, argv, environment, keep_control)
 	if fallback.len > 0 {
-		eprintln('vinix-session: compositor exec failed; trying the software desktop')
+		eprintln('tulpar-session: compositor exec failed; trying the software desktop')
 		exec_as(user, fallback, environment, keep_control)
 	}
 }

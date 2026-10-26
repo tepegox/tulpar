@@ -51,14 +51,14 @@ fn read_qmp(mut connection unix.StreamConn) !map[string]json2.Any {
 
 fn mocked() !bool {
 	if os.file_name(os.args[0]) == 'build-amd64-iso.sh' {
-		assert os.is_file(os.getenv('VINIX_AMD64_KERNEL')) && os.is_file(os.getenv('VINIX_AMD64_INITRAMFS'))
-		os.write_file(os.getenv('VINIX_AMD64_ISO'), 'controlled ISO SDK output')!
+		assert os.is_file(os.getenv('TULPAR_AMD64_KERNEL')) && os.is_file(os.getenv('TULPAR_AMD64_INITRAMFS'))
+		os.write_file(os.getenv('TULPAR_AMD64_ISO'), 'controlled ISO SDK output')!
 		return true
 	}
 	if os.args.len < 2 || os.args[1] !in ['--no-build', '-machine'] { return false }
-	state := os.dir(os.getenv('VINIX_QEMU_PERSIST_DISK'))
-	mode := os.getenv('VINIX_EXT2_TEST_MODE')
-	arch := os.getenv('VINIX_EXT2_TEST_ARCH')
+	state := os.dir(os.getenv('TULPAR_QEMU_PERSIST_DISK'))
+	mode := os.getenv('TULPAR_EXT2_TEST_MODE')
+	arch := os.getenv('TULPAR_EXT2_TEST_ARCH')
 	os.write_file(state + '/child.pid', os.getpid().str())!
 	init := os.read_bytes(state + '/init')!
 	assert init[..4] == [u8(127), `E`, `L`, `F`] && binary.little_endian_u16_at(init, 18) == if arch == 'aarch64' {
@@ -66,7 +66,7 @@ fn mocked() !bool {
 	} else {
 		u16(62)
 	}
-	mut archive := tarstream.open_plain(os.getenv('VINIX_INITRAMFS'))!
+	mut archive := tarstream.open_plain(os.getenv('TULPAR_INITRAMFS'))!
 	mut saw_init := false
 	for {
 		member := archive.next() or {
@@ -99,7 +99,7 @@ fn mocked() !bool {
 	marker := if arch == 'aarch64' { '/xattr-marker' } else { '/root/xattr-marker' }
 	os.write_file(state + '/marker', 'native marker')!
 	xtcontroller.command([debugfs, '-w', '-R', 'write ' + state + '/marker ' + marker, disk], os.environ())!
-	if os.getenv('VINIX_EXT2_TEST_ACL') == '1' {
+	if os.getenv('TULPAR_EXT2_TEST_ACL') == '1' {
 		prefix := if arch == 'aarch64' { '' } else { '/root' }
 		for name in ['/acl-corrupt', '/acl-corrupt-dir'] {
 			// Verify and restore the seeded version in the controlled guest.
@@ -178,7 +178,7 @@ fn cases(work string) ! {
 	}
 	os.setenv('CC', '/opt/homebrew/opt/llvm/bin/clang', true)
 	os.setenv('CC_AMD64', project + '/tools/musl-cc', true)
-	os.setenv('VINIX_QEMU_X86_64', project + '/tools/qemu-system-x86_64', true)
+	os.setenv('TULPAR_QEMU_X86_64', project + '/tools/qemu-system-x86_64', true)
 	os.setenv('E2FSCK', '/opt/homebrew/opt/e2fsprogs/sbin/e2fsck', true)
 	os.setenv('DEBUGFS', '/opt/homebrew/opt/e2fsprogs/sbin/debugfs', true)
 	os.setenv('V', os.args[2], true)
@@ -202,10 +202,10 @@ fn cases(work string) ! {
 		} else {
 			u16(62)
 		})
-		os.write_file_array(project + '/kernel/bin/vinix', header)!
-		os.setenv('VINIX_EXT2_TEST_MODE', mode, true)
-		os.setenv('VINIX_EXT2_TEST_ARCH', arch, true)
-		os.setenv('VINIX_EXT2_TEST_ACL', if acl { '1' } else { '0' }, true)
+		os.write_file_array(project + '/kernel/bin/tulpar', header)!
+		os.setenv('TULPAR_EXT2_TEST_MODE', mode, true)
+		os.setenv('TULPAR_EXT2_TEST_ARCH', arch, true)
+		os.setenv('TULPAR_EXT2_TEST_ACL', if acl { '1' } else { '0' }, true)
 		guard := cachecli.own_commands()
 		sender := spawn signal_after_start(state, mode)
 		mut failed := false
@@ -244,7 +244,7 @@ fn cases(work string) ! {
 		}
 		if !failed {
 			evidence := json2.decode[map[string]json2.Any](os.read_file(state + '/evidence.json')!)!
-			assert evidence['arch']!.str() == arch && evidence['kernel_sha256']!.str() == gamehost.digest(state + '/kernel/bin/vinix')! && evidence['fixture_elf_sha256']!.str() == gamehost.digest(state + '/init')!
+			assert evidence['arch']!.str() == arch && evidence['kernel_sha256']!.str() == gamehost.digest(state + '/kernel/bin/tulpar')! && evidence['fixture_elf_sha256']!.str() == gamehost.digest(state + '/init')!
 			assert os.read_file(state + '/generated.c')! == 'unchanged generated kernel snapshot'
 			assert os.read_file(state + '/monitor-quit')! == 'PASS\n'
 		}

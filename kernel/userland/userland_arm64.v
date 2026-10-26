@@ -20,7 +20,7 @@ import resource
 import usercopy
 import stat
 
-const gpu_desktop_executable = '/usr/bin/vinix-desktop-gpu'
+const gpu_desktop_executable = '/usr/bin/tulpar-desktop-gpu'
 
 // V's print path reaches both the UART and framebuffer console in production
 // kernels. C.printf is intentionally compiled to a no-op in PROD, so it must
@@ -56,7 +56,7 @@ pub fn syscall_sigentry(_ voidptr, sigentry u64) (u64, u64) {
 	return 0, 0
 }
 
-// A Linux signal frame begins with a header of Vinix's own that only
+// A Linux signal frame begins with a header of Tulpar's own that only
 // rt_sigreturn reads: the mask to restore, the address of the public
 // ucontext, the registers, and the cookie that signs the frame (see
 // proc/sigcookie.v). siginfo_t and the ucontext follow.
@@ -115,7 +115,7 @@ pub fn syscall_sigreturn(gpr_state_ptr voidptr, context_arg voidptr, old_mask_ar
 	mut restored_mask := u64(0)
 
 	if t.sigentry != 0 {
-		// Vinix/mlibc mode: context and mask passed as args (user x0, x1)
+		// Tulpar/mlibc mode: context and mask passed as args (user x0, x1)
 		if u64(context_arg) & 0xf != 0 {
 			return errno.err, errno.einval
 		}
@@ -198,9 +198,9 @@ pub fn syscall_sigreturn(gpr_state_ptr voidptr, context_arg voidptr, old_mask_ar
 	return t.gpr_state.x0, 0
 }
 
-fn C.vinix_aarch64_fpu_save(state voidptr)
+fn C.tulpar_aarch64_fpu_save(state voidptr)
 
-fn C.vinix_aarch64_fpu_restore(state voidptr)
+fn C.tulpar_aarch64_fpu_restore(state voidptr)
 
 // Linux's struct fpsimd_context: a record header, FPSR, FPCR and the 32
 // vector registers. The kernel's own save area is the registers, then FPSR
@@ -236,7 +236,7 @@ fn restore_fpsimd(records u64) bool {
 				*&u32(&state[512]) = *&u32(&record[8])
 				*&u32(&state[516]) = *&u32(&record[12])
 			}
-			C.vinix_aarch64_fpu_restore(voidptr(&state[0]))
+			C.tulpar_aarch64_fpu_restore(voidptr(&state[0]))
 			return true
 		}
 		offset += size
@@ -463,7 +463,7 @@ fn dispatch_a_signal_with_fault(context &cpulocal.GPRState, synchronous bool, fa
 	}
 
 	t.masked_signals |= sigaction.sa_mask
-	// Check SA_NODEFER: Vinix value (0x40) OR Linux value (0x40000000)
+	// Check SA_NODEFER: Tulpar value (0x40) OR Linux value (0x40000000)
 	if sigaction.sa_flags & sa_nodefer == 0 && sigaction.sa_flags & int(0x40000000) == 0 {
 		t.masked_signals |= u64(1) << (which - 1)
 	}
@@ -477,7 +477,7 @@ fn dispatch_a_signal_with_fault(context &cpulocal.GPRState, synchronous bool, fa
 	}
 
 	if t.sigentry != 0 {
-		// ── Vinix/mlibc mode: dispatch via sigentry trampoline ──
+		// ── Tulpar/mlibc mode: dispatch via sigentry trampoline ──
 		// ARM64 has no redzone. Use the live user SP from the kernel stack
 		// frame (or the alternate stack), NOT t.gpr_state.sp which is stale
 		// from the last timer preemption.
@@ -557,7 +557,7 @@ fn dispatch_a_signal_with_fault(context &cpulocal.GPRState, synchronous bool, fa
 		info_base := base + info_offset
 		uc_base := base + ucontext_offset
 		mut fpsimd := [fpsimd_state_size]u8{}
-		C.vinix_aarch64_fpu_save(voidptr(&fpsimd[0]))
+		C.tulpar_aarch64_fpu_save(voidptr(&fpsimd[0]))
 		unsafe {
 			// siginfo_t: signo, errno, positive si_code, then si_addr. Linux
 			// distinguishes an unmapped page from a permission-protected one.
@@ -675,7 +675,7 @@ fn thread_on_sigaltstack(t &proc.Thread) bool {
 }
 
 fn wants_altstack(t &proc.Thread, sigaction proc.SigAction) bool {
-	// SA_ONSTACK is 1 << 1 for Vinix and 1 << 27 for Linux.
+	// SA_ONSTACK is 1 << 1 for Tulpar and 1 << 27 for Linux.
 	if sigaction.sa_flags & sa_onstack == 0 && sigaction.sa_flags & int(0x08000000) == 0 {
 		return false
 	}
@@ -747,7 +747,7 @@ pub fn start_program(execve bool, dir &fs.VFSNode, _path string, argv []string, 
 	// resolves that to this process's program, but the new process must record
 	// where the program really is: keeping the literal path would make the
 	// child's own /proc/self/exe point back at itself forever.
-	prog_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	prog_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := if execve {
 		fs.parent_and_mount_for(fs.at_fdcwd, _path, prog_mount) or { free_exec_arguments(_path, argv, envp); return none }
 	} else { unsafe { dir } }
@@ -798,7 +798,7 @@ pub fn start_program_node(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, p
 // Frees what an exec was handed when it fails, unless load_program_image()
 // has handed that on to an interpreter or translator's exec, which frees it.
 fn load_program_node(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_mount &lib.MountContext, path string, argv []string, envp []string, stdin_path string, stdout_path string, stderr_path string, description bool) ?&proc.Process {
-	handed_on := unsafe { &bool(C.vinix_stack_alloc(sizeof(bool))) }
+	handed_on := unsafe { &bool(C.tulpar_stack_alloc(sizeof(bool))) }
 	unsafe { *handed_on = false }
 	process := load_program_image(execve, dir, prog_node, prog_mount, path, argv, envp, stdin_path,
 		stdout_path, stderr_path, handed_on, description) or {
@@ -837,7 +837,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 	fs.check_access(prog_node, fs.access_exec, true)?
 	gpu_exec_trace(trace_gpu, 'validated executable permissions')
 	mut prog := prog_node.resource
-	allow_wx := envp.contains('VINIX_ALLOW_WX=1')
+	allow_wx := envp.contains('TULPAR_ALLOW_WX=1')
 	if allow_wx && !fs.wx_exec_allowed(prog_mount, description_mount) {
 		errno.set(errno.eperm)
 		return none
@@ -916,16 +916,16 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 	gpu_exec_trace(trace_gpu, 'validated ELF architecture')
 	if architecture == elf.arch_x86_64 || architecture == elf.arch_i386 {
 		mut translator := '/usr/bin/qemu-x86_64'
-		mut guest_root := '/usr/libexec/vinix-x86_64/root'
-		mut root_variable := 'VINIX_X86_64_ROOT='
+		mut guest_root := '/usr/libexec/tulpar-x86_64/root'
+		mut root_variable := 'TULPAR_X86_64_ROOT='
 		if architecture == elf.arch_i386 {
 			translator = '/usr/bin/qemu-i386'
-			guest_root = '/usr/libexec/vinix-i386/root'
-			root_variable = 'VINIX_I386_ROOT='
+			guest_root = '/usr/libexec/tulpar-i386/root'
+			root_variable = 'TULPAR_I386_ROOT='
 		}
 		// Looked up first: past it nothing can fail, and what this exec was
 		// handed is handed on or freed below.
-		translator_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+		translator_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 		translator_node := fs.get_node_and_mount(root, translator, true, translator_mount)?
 		// The environment can name another root, the way the shell launchers
 		// let it: Steam runs in a glibc tree whose loader knows where its
@@ -944,13 +944,13 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 			} else if environment_entry.starts_with('LD_LIBRARY_PATH=') {
 				has_library_path = true
 				library_path = env_value(environment_entry, 'LD_LIBRARY_PATH='.len)
-			} else if environment_entry.starts_with('VINIX_I386_PRELOAD=') {
-				i386_preload = env_value(environment_entry, 'VINIX_I386_PRELOAD='.len)
-			} else if environment_entry.starts_with('VINIX_X86_64_PRELOAD=') {
-				x86_64_preload = env_value(environment_entry, 'VINIX_X86_64_PRELOAD='.len)
+			} else if environment_entry.starts_with('TULPAR_I386_PRELOAD=') {
+				i386_preload = env_value(environment_entry, 'TULPAR_I386_PRELOAD='.len)
+			} else if environment_entry.starts_with('TULPAR_X86_64_PRELOAD=') {
+				x86_64_preload = env_value(environment_entry, 'TULPAR_X86_64_PRELOAD='.len)
 			}
 		}
-		multiarch_root := own_root && envp.contains('VINIX_X86_MULTIARCH=1')
+		multiarch_root := own_root && envp.contains('TULPAR_X86_MULTIARCH=1')
 		guest_preload := if architecture == elf.arch_i386 { i386_preload } else { x86_64_preload }
 
 		// Room for every option below, then the program's arguments. `<<`
@@ -970,12 +970,12 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 			// QEMU's -E edits the emulated process's environment without
 			// making the native AArch64 translator load x86 libraries. A
 			// multiarch root has both word sizes, so choose the right one
-			// before the application or glibc can find native Vinix libs.
+			// before the application or glibc can find native Tulpar libs.
 			mut multiarch := 'x86_64-linux-gnu'
 			if architecture == elf.arch_i386 {
 				multiarch = 'i386-linux-gnu'
 			}
-			mut library_text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut library_text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
  unsafe { *library_text = lib.new_text(256) }
 			library_text.add('LD_LIBRARY_PATH=')
 			library_text.add(guest_root)
@@ -996,7 +996,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 			// Mesa opens DRI drivers itself rather than through the ELF loader.
 			// Give the guest the driver directory of its own word size, or an
 			// inherited native path can make it dlopen an AArch64 driver.
-			mut drivers_text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut drivers_text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
  unsafe { *drivers_text = lib.new_text(128) }
 			drivers_text.add('LIBGL_DRIVERS_PATH=')
 			drivers_text.add(guest_root)
@@ -1010,7 +1010,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 			if guest_preload != '' {
 				// Each guest preload must match its word size and must never
 				// reach the native translator.
-				mut preload_text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+				mut preload_text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
  unsafe { *preload_text = lib.new_text(guest_preload.len + 16) }
 				preload_text.add('LD_PRELOAD=')
 				preload_text.add(guest_preload)
@@ -1040,7 +1040,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 			translated_envp << environment_entry
 		}
 		if !own_root && !has_library_path {
-			mut library_text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut library_text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
  unsafe { *library_text = lib.new_text(2 * guest_root.len + 32) }
 			library_text.add('LD_LIBRARY_PATH=')
 			library_text.add(guest_root)
@@ -1092,8 +1092,8 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 	mut omit_foreign_preload := false
 	if foreign_preload != '' {
 		for entry in envp {
-			if env_entry_is(entry, 'VINIX_I386_PRELOAD=', foreign_preload)
-				|| env_entry_is(entry, 'VINIX_X86_64_PRELOAD=', foreign_preload) {
+			if env_entry_is(entry, 'TULPAR_I386_PRELOAD=', foreign_preload)
+				|| env_entry_is(entry, 'TULPAR_X86_64_PRELOAD=', foreign_preload) {
 				omit_foreign_preload = true
 				break
 			}
@@ -1146,7 +1146,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 		gpu_exec_trace(trace_gpu, 'using program entry point (no interpreter)')
 	} else {
 		gpu_exec_trace(trace_gpu, 'opening ELF interpreter')
-		ld_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+		ld_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 		ld_node := fs.get_node_and_mount(root, ld_path, true, ld_mount) or {
 			failure := errno.get()
 
@@ -1360,7 +1360,7 @@ fn load_program_image(execve bool, dir &fs.VFSNode, prog_node &fs.VFSNode, prog_
 		gpu_exec_trace(trace_gpu, 'switching CPU to kernel page map')
 		kernel_pagemap.switch_to()
 		gpu_exec_trace(trace_gpu, 'switched CPU to kernel page map')
-		// Exec retains the calling task's accounting even though Vinix builds
+		// Exec retains the calling task's accounting even though Tulpar builds
 		// a replacement Thread. Finish its old-process CPU turn before detach.
 		proc.charge_cpu_time(mut t, proc.cpu_time_now_ns())
 		inherited_usage := t.usage
@@ -1494,7 +1494,7 @@ pub fn syscall_execveat(_ voidptr, dirfd int, _path charptr, _argv &charptr, _en
 	mut target := path
 
 	mut direct_node := &fs.VFSNode(unsafe { nil })
-	direct_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	direct_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	lib.copy_mount_context(direct_mount, unsafe { nil })
 	if path.len == 0 {
 		// The descriptor's name below takes the empty path's place.
@@ -1515,7 +1515,7 @@ pub fn syscall_execveat(_ voidptr, dirfd int, _path charptr, _argv &charptr, _en
 		} else {
 			unsafe { &fs.VFSNode(proc.current_directory_of(process)) }
 		}
-		mut name := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+		mut name := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
   unsafe { *name = lib.new_text(32) }
 		name.add('/proc/self/fd/')
 		name.add_decimal(i64(call_dirfd))

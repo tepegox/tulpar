@@ -2,7 +2,7 @@
 
 `scrub-volume` and `scrub-recovery-volume` authenticate VC1/VR1 geometry, erase
 secrets and read the complete ciphertext extent before privately publishing a
-fixed `VINIXCS1` report. Clean/changed returns 0/2; operational errors override
+fixed `TULPARCS1` report. Clean/changed returns 0/2; operational errors override
 the finding and return 1. `show-volume-scrub` validates complete historical
 reports offline and returns 0 for either valid finding. Trusted references and
 quiescent writes remain required; this is neither snapshot nor plaintext
@@ -12,10 +12,10 @@ authentication. See [the contract](../../docs/storage-volumes.md#persistent-encr
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-ciphertext-scrub --work /tmp/ciphertext-scrub-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --ciphertext-scrub --work /tmp/ciphertext-scrub-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --ciphertext-scrub --work /tmp/ciphertext-scrub-x86
 ```
 

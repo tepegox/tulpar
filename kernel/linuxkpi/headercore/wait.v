@@ -21,7 +21,7 @@ fn C.test_bit(i32, voidptr) bool
 fn C.test_bit_acquire(i32, voidptr) bool
 fn C.test_and_set_bit(i32, voidptr) bool
 fn C.wake_bit_function(&C.wait_queue_entry, u32, i32, voidptr) i32
-fn C.vinix_linuxkpi_var_wake_function(&C.wait_queue_entry, u32, i32, voidptr) i32
+fn C.tulpar_linuxkpi_var_wake_function(&C.wait_queue_entry, u32, i32, voidptr) i32
 fn C.set_current_state(u32)
 fn C.wake_up_process(&C.task_struct) i32
 fn C.wake_up_state(&C.task_struct, u32) i32
@@ -64,7 +64,7 @@ pub fn wait_test_and_set_bit(bit i32, storage voidptr) bool { return C.test_and_
 @[export: 'vkw_bit_wake_callback']
 pub fn wait_bit_wake_callback() voidptr { return voidptr(C.wake_bit_function) }
 @[export: 'vkw_var_wake_callback']
-pub fn wait_var_wake_callback() voidptr { return voidptr(C.vinix_linuxkpi_var_wake_function) }
+pub fn wait_var_wake_callback() voidptr { return voidptr(C.tulpar_linuxkpi_var_wake_function) }
 @[export: 'vkw_signal_state']
 pub fn wait_signal_state(state u32, task voidptr) bool { return unsafe { C.signal_pending_state(state, &C.task_struct(task)) != 0 } }
 @[export: 'vkw_current_state']

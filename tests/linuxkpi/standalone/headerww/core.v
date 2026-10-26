@@ -20,7 +20,7 @@ __global C.wait_die C.ww_class
 __global C.PF_VCPU u32
 __global header_task C.task_struct
 
-@[export: 'vinix_linuxkpi_current_task']
+@[export: 'tulpar_linuxkpi_current_task']
 pub fn current_task() &C.task_struct { return unsafe { &header_task } }
 
 @[export: 'main']

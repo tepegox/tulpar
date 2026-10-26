@@ -17,7 +17,7 @@ fn C.dup2(old int, new int) int
 fn C.waitpid(pid int, status &i32, options int) int
 fn C._exit(status int)
 
-pub const active_file = '/run/vinix/session/active'
+pub const active_file = '/run/tulpar/session/active'
 
 // A session that was started: its first process and the number the kernel
 // gave the login.
@@ -30,12 +30,12 @@ pub:
 // Say who is at the machine, for the authentication service's `session`
 // rule; '' when nobody is.
 pub fn mark_active(uid string) {
-	os.mkdir_all('/run/vinix/session', mode: 0o755) or { discard_manager_error(err) }
+	os.mkdir_all('/run/tulpar/session', mode: 0o755) or { discard_manager_error(err) }
 	if uid == '' {
 		os.rm(active_file) or { discard_manager_error(err) }
 		return
 	}
-	temporary := '/run/vinix/session/active.new'
+	temporary := '/run/tulpar/session/active.new'
 	text := uid + '\n'
 	defer { unsafe { text.free() } }
 	os.write_file(temporary, text) or {
@@ -159,7 +159,7 @@ fn run_unlock_helper(unlock Unlock, environment []string) {
 // Start `argv` as `user` in a login session of its own. With `at_seat` the
 // session is given the display and the input devices. `control`, when not
 // negative, is a descriptor the session's first program gets as number 3
-// (and is told of in VINIX_SESSION_FD): its line to whoever started it.
+// (and is told of in TULPAR_SESSION_FD): its line to whoever started it.
 // Returns once the child has become a login, before it has become the user.
 pub fn start(db accountcore.Database, user accountcore.User, argv []string, at_seat bool, control int, unlock Unlock) !Started {
 	return start_profile(db, user, argv, []string{}, at_seat, control, unlock, false)
@@ -188,7 +188,7 @@ fn start_profile(db accountcore.Database, user accountcore.User, argv []string, 
 	mut environment := session_environment(user, inherited)
 	defer { unsafe { environment.free() } }
 	if control >= 0 {
-		environment << 'VINIX_SESSION_FD=3'
+		environment << 'TULPAR_SESSION_FD=3'
 	}
 	mut report := [2]i32{}
 	if C.pipe(&report[0]) != 0 {
@@ -203,13 +203,13 @@ fn start_profile(db accountcore.Database, user accountcore.User, argv []string, 
 	if child == 0 {
 		C.close(report[0])
 		session := start_login(user.uid) or {
-			eprintln('vinix-session: ${err.msg()}')
+			eprintln('tulpar-session: ${err.msg()}')
 			C._exit(126)
 			return err
 		}
 		if at_seat {
 			give_seat(session) or {
-				eprintln('vinix-session: ${err.msg()}')
+				eprintln('tulpar-session: ${err.msg()}')
 				C._exit(126)
 			}
 		}
@@ -221,12 +221,12 @@ fn start_profile(db accountcore.Database, user accountcore.User, argv []string, 
 		}
 		if isolated {
 			become_isolated(user) or {
-				eprintln('vinix-session: ${err.msg()}')
+				eprintln('tulpar-session: ${err.msg()}')
 				C._exit(126)
 			}
 		} else {
 			become(db, user) or {
-				eprintln('vinix-session: ${err.msg()}')
+				eprintln('tulpar-session: ${err.msg()}')
 				C._exit(126)
 			}
 		}
@@ -235,7 +235,7 @@ fn start_profile(db accountcore.Database, user accountcore.User, argv []string, 
 		run_unlock_helper(unlock, environment)
 		retire_login_password(unlock.secret)
 		exec_as_fallback(user, argv, fallback, environment, control >= 0)
-		eprintln('vinix-session: cannot run ${argv[0]}')
+		eprintln('tulpar-session: cannot run ${argv[0]}')
 		C._exit(127)
 	}
 	C.close(report[1])

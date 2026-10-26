@@ -5,8 +5,8 @@ import json2
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn history_fixture(publisher bool) string {
@@ -100,7 +100,7 @@ fn test_history_scanners_retire_owned_keys_and_failure_objects() {
 				text.replace('"sequence":10', '"sequence":1,"sequ\\u0065nce":10'),
 				text.replace('"format":1', '"unknown":[],"format":1')]
 			for warmup in 0 .. 2 {
-				if warmup == 1 { C.vinix_heap_begin() }
+				if warmup == 1 { C.tulpar_heap_begin() }
 				for _ in 0 .. 1000 {
 					for i, input in inputs {
 						mut accepted := true
@@ -113,7 +113,7 @@ fn test_history_scanners_retire_owned_keys_and_failure_objects() {
 					}
 				}
 				if warmup == 1 {
-					kept := C.vinix_heap_end()
+					kept := C.tulpar_heap_end()
 					assert kept == 0
 					println('History scanner publisher=' + publisher.str() + ': retained ' + kept.str() + ' bytes in 1000 cycles')
 				}

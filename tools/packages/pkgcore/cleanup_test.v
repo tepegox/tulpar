@@ -15,9 +15,9 @@ fn C.setuid(u32) int
 fn C.chown(&char, i32, i32) int
 
 fn cleanup_fixture(architecture string) !string {
-	work := os.temp_dir() + '/vinix-reviewed-cleanup-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/etc/vinix-packages')!
-	os.write_file(work + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: architecture, policy: Policy{ offline: true } }))!
+	work := os.temp_dir() + '/tulpar-reviewed-cleanup-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/etc/tulpar-packages')!
+	os.write_file(work + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: architecture, policy: Policy{ offline: true } }))!
 	directory := state_directory(work)
 	guard := acquire(directory)!
 	defer { guard.release() }
@@ -34,8 +34,8 @@ fn cleanup_fixture(architecture string) !string {
 	os.write_file(directory + '/objects/' + 'b'.repeat(64) + '.part', 'resume data')!
 	os.mkdir(directory + '/generations/.stage-interrupted')!
 	os.write_file(directory + '/generations/.stage-interrupted/keep', 'recovery data')!
-	os.mkdir_all(work + '/home/user/.local/share/vinix-apps/app')!
-	os.write_file(work + '/home/user/.local/share/vinix-apps/app/data', 'personal data')!
+	os.mkdir_all(work + '/home/user/.local/share/tulpar-apps/app')!
+	os.write_file(work + '/home/user/.local/share/tulpar-apps/app/data', 'personal data')!
 	return work
 }
 
@@ -46,7 +46,7 @@ fn cleanup_preserved(work string) ! {
 	assert os.read_file(directory + '/objects/' + 'a'.repeat(64))! == 'offline cache'
 	assert os.read_file(directory + '/objects/' + 'b'.repeat(64) + '.part')! == 'resume data'
 	assert os.read_file(directory + '/generations/.stage-interrupted/keep')! == 'recovery data'
-	assert os.read_file(work + '/home/user/.local/share/vinix-apps/app/data')! == 'personal data'
+	assert os.read_file(work + '/home/user/.local/share/tulpar-apps/app/data')! == 'personal data'
 }
 
 fn test_reviewed_cleanup_retains_active_previous_live_cache_recovery_and_personal_data() {
@@ -90,7 +90,7 @@ fn test_cleanup_stale_approval_and_damaged_inventory_refuse_before_first_removal
 		if change == 'release' { assert C.flock(lease.lease, C.LOCK_SH) == 0 }
 		mut review := service.review_cleanup()!; defer { review.close() }
 		match change {
-			'config' { os.write_file(work + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: 'aarch64', policy: Policy{ reserve_bytes: 0 } }))! }
+			'config' { os.write_file(work + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: 'aarch64', policy: Policy{ reserve_bytes: 0 } }))! }
 			'activation' { os.rm(directory + '/current')!; os.symlink('generations/4', directory + '/current')! }
 			'new-generation' { os.mkdir(directory + '/generations/6')!; os.write_file(directory + '/generations/6/lease', '')! }
 			'root' {
@@ -120,10 +120,10 @@ fn test_cleanup_stale_approval_and_damaged_inventory_refuse_before_first_removal
 }
 
 fn test_cleanup_review_uses_reader_lock_and_does_not_initialize_fresh_storage() {
-	work := os.temp_dir() + '/vinix-cleanup-fresh-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-cleanup-fresh-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	defer { os.rmdir_all(work) or {} }
-	os.mkdir_all(work + '/etc/vinix-packages')!
-	os.write_file(work + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: 'aarch64' }))!
+	os.mkdir_all(work + '/etc/tulpar-packages')!
+	os.write_file(work + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: 'aarch64' }))!
 	service := Service{ root: work }
 	mut empty := service.review_cleanup()!; defer { empty.close() }
 	assert empty.generation == 0 && empty.generations.len == 0 && !os.exists(work + '/var')

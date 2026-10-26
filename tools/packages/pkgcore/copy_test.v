@@ -14,7 +14,7 @@ fn C.setrlimit(int, voidptr) int
 struct CopyLimit { current u64 maximum u64 }
 
 fn copy_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-copy-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-copy-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }
@@ -93,12 +93,12 @@ fn test_offline_fetch_resumes_or_restarts_ordinary_partials_after_source_admissi
 
 fn copy_interfere(event pkgprotocol.Progress) {
 	event.validate() or { panic(err) }
-	work := os.getenv('VINIX_COPY_WORK')
+	work := os.getenv('TULPAR_COPY_WORK')
 	mut log := os.open_append(work + '/events') or { panic(err) }
 	log.writeln(json2.encode(event)) or { panic(err) }; log.close()
 	if event.current != 0 || os.exists(work + '/interfered') { return }
 	os.write_file(work + '/interfered', 'once') or { panic(err) }
-	mode := os.getenv('VINIX_COPY_MODE')
+	mode := os.getenv('TULPAR_COPY_MODE')
 	path := work + if mode.starts_with('source-') { '/source' } else { '/target' }
 	match mode {
 		'source-fifo', 'target-fifo', 'source-alias', 'target-alias' {
@@ -122,8 +122,8 @@ fn test_copy_uses_captured_descriptors_and_refuses_size_or_destination_identity_
 		os.write_file(work + '/outside', 'preserved')!
 		os.chmod(work + '/outside', 0o600)!
 		os.write_file(work + '/events', '')!
-		os.setenv('VINIX_COPY_WORK', work, true); os.setenv('VINIX_COPY_MODE', mode, true)
-		defer { os.unsetenv('VINIX_COPY_WORK'); os.unsetenv('VINIX_COPY_MODE') }
+		os.setenv('TULPAR_COPY_WORK', work, true); os.setenv('TULPAR_COPY_MODE', mode, true)
+		defer { os.unsetenv('TULPAR_COPY_WORK'); os.unsetenv('TULPAR_COPY_MODE') }
 		mut refused := false
 		copy_file_progress(work + '/source', work + '/target', 0, 7,
 			pkgprotocol.Progress{ phase: 'copy', package: 'app', path: 'bin/app', total: 7 }, copy_interfere) or {

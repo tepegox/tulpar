@@ -11,7 +11,7 @@ import accountcore
 import os
 
 fn auth(what []string, input string, db accountcore.Database, user accountcore.User) Ran {
-	mut argv := ['/usr/bin/vinix-auth']
+	mut argv := ['/usr/bin/tulpar-auth']
 	argv << what
 	return run(argv, input, db, user)
 }
@@ -21,7 +21,7 @@ fn scenario_elevation(mut t Test) {
 	alex := must_user(db, 'alex')
 	sam := must_user(db, 'sam')
 	t.start_authd()
-	t.check(mode_of('/run/vinix/auth.sock') & 0o777 == 0o666, 'the socket is mode ${mode_of('/run/vinix/auth.sock'):o}')
+	t.check(mode_of('/run/tulpar/auth.sock') & 0o777 == 0o666, 'the socket is mode ${mode_of('/run/tulpar/auth.sock'):o}')
 
 	// Who the service takes a caller for is not the caller's to say.
 	info_sam := auth(['info'], '', db, sam)
@@ -36,7 +36,7 @@ fn scenario_elevation(mut t Test) {
 	t.check(auth(['verify'], 'not it at all\n', db, sam).status == 1, 'a wrong password was accepted')
 	t.check(auth(['verify', 'alex'], alex_password + '\n', db, sam).status == 1, 'sam could check alex\'s password')
 	t.check(auth(['verify', 'sam'], sam_password + '\n', db, alex).status == 1, 'an administrator could check sam\'s password')
-	t.check(run(['/usr/bin/vinix-auth', 'verify', 'sam'], sam_password + '\n', none, none).status == 0, 'root could not check a password')
+	t.check(run(['/usr/bin/tulpar-auth', 'verify', 'sam'], sam_password + '\n', none, none).status == 0, 'root could not check a password')
 
 	// An action for administrators.
 	before := os.hostname() or { '' }
@@ -64,16 +64,16 @@ fn scenario_elevation(mut t Test) {
 	// anyone else needs to be an administrator.
 	away := auth(['run', 'test-session', 'hello'], '', db, sam)
 	t.check(away.status == 1 && !away.output.contains('hello as'), 'sam, not at the machine, ran a session action: ${away.output}')
-	os.mkdir_all('/run/vinix/session') or {}
-	os.write_file('/run/vinix/session/active', '${sam.uid}\n') or {}
-	os.chmod('/run/vinix/session/active', 0o644) or {}
+	os.mkdir_all('/run/tulpar/session') or {}
+	os.write_file('/run/tulpar/session/active', '${sam.uid}\n') or {}
+	os.chmod('/run/tulpar/session/active', 0o644) or {}
 	here := auth(['run', 'test-session', 'hello'], '', db, sam)
 	t.check(here.status == 0 && here.output.contains('hello as uid=0'), 'sam, at the machine, could not run a session action: ${here.status} ${here.output}')
 	// The file says who is; a file Sam could have written says nothing.
-	os.chmod('/run/vinix/session/active', 0o666) or {}
+	os.chmod('/run/tulpar/session/active', 0o666) or {}
 	t.check(auth(['run', 'test-session', 'hello'], '', db, sam).status == 1, 'a session file anyone can write was believed')
-	os.rm('/run/vinix/session/active') or {}
-	planted := probe(['write', '/run/vinix/session/active'], db, sam)
+	os.rm('/run/tulpar/session/active') or {}
+	planted := probe(['write', '/run/tulpar/session/active'], db, sam)
 	t.check(planted.output.starts_with('errno'), 'sam could write the session file: ${planted.output}')
 
 	// Accounts, through the service.
@@ -111,15 +111,15 @@ fn scenario_elevation(mut t Test) {
 	t.check(auth(['verify'], 'kim picked this one\n', db, kim).status == 0, 'the wait did not end')
 
 	// What the service keeps is root's.
-	for path in ['/var/log/vinix/auth.log', '/etc/shadow'] {
+	for path in ['/var/log/tulpar/auth.log', '/etc/shadow'] {
 		got := probe(['read', path], db, sam).output.trim_space()
 		t.check(got == 'errno 13', 'sam reading ${path}: ${got}')
 	}
-	listing := probe(['list', '/run/vinix/auth/failures'], db, sam).output.trim_space()
+	listing := probe(['list', '/run/tulpar/auth/failures'], db, sam).output.trim_space()
 	t.check(listing == 'errno 13', 'sam listing the failure counts: ${listing}')
-	log := read_text('/var/log/vinix/auth.log')
+	log := read_text('/var/log/tulpar/auth.log')
 	t.check(log.contains('uid=${alex.uid} run hostname-set as alex: exit 0'), 'the log does not say alex changed the host name')
-	// vinix-auth asks first whether an action is open to the caller, so Sam's
+	// tulpar-auth asks first whether an action is open to the caller, so Sam's
 	// attempts never became requests to run anything.
 	t.check(!log.contains('run hostname-set as sam') && !log.contains('run account-add as sam'), 'the log says an action for administrators ran for sam')
 	t.check(log.contains('uid=${sam.uid} verify alex: denied: not the caller\'s account'), 'the log does not say sam asked about alex')
@@ -159,13 +159,13 @@ fn scenario_elevation(mut t Test) {
 	}
 	accountcore.Store{}.save(with_shell) or { t.check(false, 'cannot set sam\'s shell: ${err.msg()}') }
 	held.release()
-	login := run(['/usr/sbin/vinix-session', 'console'], 'sam\nnot it at all\nsam\nsam chose a new one\n',
+	login := run(['/usr/sbin/tulpar-session', 'console'], 'sam\nnot it at all\nsam\nsam chose a new one\n',
 		none, none)
 	t.check(login.output.contains('Login incorrect.'), 'a wrong password at the console: ${login.output}')
 	t.check(login.output.contains('uid=${sam.uid} euid=${sam.uid} ') && login.output.contains(' caps=0000000000000000 ')
 		&& login.output.contains(' user=sam cwd=/home/sam active=${sam.uid}'), 'a login at the console: ${login.output}')
-	t.check(!os.exists('/run/vinix/session/active'), 'the session file outlived the session')
-	root_login := run(['/usr/sbin/vinix-session', 'console'], 'root\n\nroot\nroot\n', none,
+	t.check(!os.exists('/run/tulpar/session/active'), 'the session file outlived the session')
+	root_login := run(['/usr/sbin/tulpar-session', 'console'], 'root\n\nroot\nroot\n', none,
 		none)
 	t.check(!root_login.output.contains('uid=0'), 'root logged in at the console: ${root_login.output}')
 }

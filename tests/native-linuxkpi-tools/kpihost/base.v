@@ -102,7 +102,7 @@ fn private_work(argv []string, help string) !(cachecli.Arguments, string, bool) 
 	args := cachecli.arguments(argv, ['--work'], [], [], 0, 0, help) or { return error_with_code(err.msg(), 2) }
 	temporary := '--work' !in args.options
 	work := if temporary {
-		sourcecommand.temporary('vinix-linuxkpi-')!
+		sourcecommand.temporary('tulpar-linuxkpi-')!
 	} else {
 		args.required('--work')!
 	}

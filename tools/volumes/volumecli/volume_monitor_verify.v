@@ -22,7 +22,7 @@ mut:
 fn accept_ciphertext_monitor(reference &u8, data &u8, size int, prefix int, mut history CipherMonitorHistory) bool {
 	if prefix <= 0 || prefix >= 256 || prefix >= size || size >= 2048 || size < 79 || history.samples == u64(-1) || history.changed_samples > history.samples { return false }
 	mut cursor := unsafe { &ScrubReportCursor(C.alloca(sizeof(ScrubReportCursor))) }; unsafe { *cursor = ScrubReportCursor{data: data, size: prefix} }
-	if !scrub_report_literal(mut cursor, c'format=VINIXCM1 operation=monitored-ciphertext source=') { return false }
+	if !scrub_report_literal(mut cursor, c'format=TULPARCM1 operation=monitored-ciphertext source=') { return false }
 	recovery := unsafe { cursor.at < cursor.size && data[cursor.at] == `r` }
 	if !scrub_report_literal(mut cursor, if recovery { c'recovery' } else { c'volume' }) || (history.samples != 0 && recovery != history.recovery) || !scrub_report_literal(mut cursor, c' sample=') { return false }
 	sample := scrub_report_number(mut cursor) or { return false }
@@ -79,7 +79,7 @@ fn encode_ciphertext_monitor_history(reference &u8, history &CipherMonitorHistor
 	unsafe { for i in 0 .. 32 { recorded[i] = reference[80 + i] } }
 	disk_identity(&disk, &identity[0])
 	if !scrub_digest_text(&recorded, &expected[0]) || !scrub_digest_text(&history.actual, &actual[0]) || !scrub_digest_text(&fingerprint, &saved[0]) || !scrub_digest_text(digest, &transcript[0]) { return 0 }
-	n := int(C.snprintf(output, 2048, c'format=VINIXCM1 operation=verified-ciphertext-monitor source=%s mappings=1 samples=%lu changed_samples=%lu session_changed=%lu final_changed=%lu stable=%lu new_changes=%lu restored=%lu changed_again=%lu algorithm=sha256 reference_sha256=%s transcript_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s final_sha256=%s\n',
+	n := int(C.snprintf(output, 2048, c'format=TULPARCM1 operation=verified-ciphertext-monitor source=%s mappings=1 samples=%lu changed_samples=%lu session_changed=%lu final_changed=%lu stable=%lu new_changes=%lu restored=%lu changed_again=%lu algorithm=sha256 reference_sha256=%s transcript_sha256=%s\ndisk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s final_sha256=%s\n',
 		if history.recovery { &char(c'recovery') } else { &char(c'volume') }, history.samples, history.changed_samples, u64(history.changed_samples != 0), u64(changed), history.stable, history.new_changes, history.restored, history.changed_again, &saved[0], &transcript[0], disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags, if changed { &char(c'changed') } else { &char(c'match') }, &expected[0], &actual[0]))
 	return if n > 0 && n < 2048 { n } else { 0 }
 }

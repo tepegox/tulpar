@@ -54,7 +54,7 @@ pub fn enumerate_virtio_mmio(hhdm u64) {
 			continue
 		}
 		// Linux's name for it: the address, then what it is.
-		mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+		mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 		unsafe { *text = lib.new_text(24) }
 		text.add_radix(physical, 16, 0)
 		text.add('.virtio_mmio')

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_CPU_BUG_FIXTURE_V_CONTRACT_H
-#define VINIX_LINUXKPI_CPU_BUG_FIXTURE_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_CPU_BUG_FIXTURE_V_CONTRACT_H
+#define TULPAR_LINUXKPI_CPU_BUG_FIXTURE_V_CONTRACT_H
 /* Preserve the original ULL type independently of V's LP64 alias. */
 #undef va_arg
 #define u64 vcb_linux_u64

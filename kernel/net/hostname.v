@@ -42,7 +42,7 @@ pub fn hostname_text() string {
 		return ns.hostname
 	}
 	if hostname[0] == 0 {
-		return 'vinix'
+		return 'tulpar'
 	}
 	return unsafe { cstring_to_vstring(charptr(&hostname[0])) }
 }

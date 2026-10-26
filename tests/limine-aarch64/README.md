@@ -12,13 +12,13 @@ download fails the fixture. No source is downloaded and no real UEFI loader is
 compiled or deployed. Private fixture trees are removed on success and ordinary
 errors. The copied builder retains its existing configure/make log locations.
 
-`VINIX_LIMINE_FIXTURE` can select a prebuilt `commandfixture` binary for host
-qualification. `VINIX_LIMINE_FAIL=configure` or `make` forces a command failure
+`TULPAR_LIMINE_FIXTURE` can select a prebuilt `commandfixture` binary for host
+qualification. `TULPAR_LIMINE_FAIL=configure` or `make` forces a command failure
 to check the builder's error path and scratch cleanup.
 
 ARM, Rosetta x86 and ARM ASan/UBSan builds pass all three patch scenarios,
 both forced command failures, help and argument status checks. Qualification
-logs are `/tmp/vinix-limine-{arm,x86,asan}-final.log`.
+logs are `/tmp/tulpar-limine-{arm,x86,asan}-final.log`.
 The cold launcher builds fresh native fixtures from an unrelated working
 directory and leaves no private temporary files after success or a forced make
-failure. Its log is `/tmp/vinix-limine-cold-final.log`. No Python was run.
+failure. Its log is `/tmp/tulpar-limine-cold-final.log`. No Python was run.

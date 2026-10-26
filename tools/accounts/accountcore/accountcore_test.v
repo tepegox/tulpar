@@ -322,7 +322,7 @@ fn test_lock_and_unlock() ! {
 }
 
 fn test_store_round_trip() ! {
-	dir := os.join_path(os.temp_dir(), 'vinix-accountcore-${os.getpid()}')
+	dir := os.join_path(os.temp_dir(), 'tulpar-accountcore-${os.getpid()}')
 	os.rmdir_all(dir) or {}
 	os.mkdir_all(dir)!
 	defer { os.rmdir_all(dir) or {} }
@@ -385,7 +385,7 @@ fn test_throttle_schedule() ! {
 }
 
 fn test_throttle_files() ! {
-	dir := os.join_path(os.temp_dir(), 'vinix-throttle-${os.getpid()}')
+	dir := os.join_path(os.temp_dir(), 'tulpar-throttle-${os.getpid()}')
 	os.rmdir_all(dir) or {}
 	defer { os.rmdir_all(dir) or {} }
 	throttle := Throttle{
@@ -441,7 +441,7 @@ fn gone_shadow(db Database, name string) bool {
 }
 
 fn test_configured_cost() ! {
-	dir := os.join_path(os.temp_dir(), 'vinix-cost-${os.getpid()}')
+	dir := os.join_path(os.temp_dir(), 'tulpar-cost-${os.getpid()}')
 	os.rmdir_all(dir) or {}
 	os.mkdir_all(dir)!
 	defer { os.rmdir_all(dir) or {} }

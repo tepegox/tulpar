@@ -1,6 +1,6 @@
 # Installed health progress and cancellation
 
-`vinix-package --progress health` sends flushed format-1 `verify` package frames
+`tulpar-package --progress health` sends flushed format-1 `verify` package frames
 and a final `complete` frame to stderr. Stdout remains the complete human report.
 `--json --progress health` retains the same JSON stdout response as `--json health`.
 Integrity issues are rows in a successful complete report; fatal configuration,

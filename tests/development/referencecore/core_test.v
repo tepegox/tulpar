@@ -20,7 +20,7 @@ fn sdk_fixture(root string) ! {
 
 fn test_reference_options_reject_incomplete_duplicate_and_unknown_selections() {
 	assert options('', '', 'aarch64')!.root == ''
-	root := sourcecommand.temporary('vinix-reference-options')!
+	root := sourcecommand.temporary('tulpar-reference-options')!
 	defer { os.rmdir_all(root) or {} }
 	sdk_fixture(root)!
 	assert options(root, 'sqlite', 'aarch64')!.tools['sqlite3'].sha256.len == 64
@@ -34,7 +34,7 @@ fn test_reference_options_reject_incomplete_duplicate_and_unknown_selections() {
 }
 
 fn test_reference_tools_cannot_escape_the_sdk_or_gain_set_id_privileges() {
-	root := sourcecommand.temporary('vinix-reference-links')!
+	root := sourcecommand.temporary('tulpar-reference-links')!
 	defer { os.rmdir_all(root) or {} }
 	sdk_fixture(root)!
 	os.chmod(root + '/bin/sqlite3', 0o4755)!
@@ -54,8 +54,8 @@ fn test_a_version_command_or_forged_executable_pin_cannot_qualify_a_project() {
 	qualifier := 'a'.repeat(64)
 	tool_hash := 'b'.repeat(64)
 	tools := { 'node': devcore.Pin{'/opt/reference/bin/node', tool_hash} }
-	mut report := Report{schema: 1, kernel: 'Vinix', architecture: 'aarch64', uid: 1000,
-		context: 'vinix-native', runner_sha256: qualifier, requested: ['node'],
+	mut report := Report{schema: 1, kernel: 'Tulpar', architecture: 'aarch64', uid: 1000,
+		context: 'tulpar-native', runner_sha256: qualifier, requested: ['node'],
 		command_timeout_seconds: 600, complete: true, all_selected_passed: true,
 		results: [Verdict{profile: 'node', status: 'passed', commands: [Command{
 			argv: ['/opt/reference/bin/node', '--version'], executable_sha256: tool_hash,
@@ -83,8 +83,8 @@ fn test_go_receipts_require_the_trimmed_build_and_execution_of_its_exact_artifac
 	tool_hash := 'b'.repeat(64)
 	artifact := 'c'.repeat(64)
 	tools := { 'go': devcore.Pin{'/opt/reference/bin/go', tool_hash} }
-	report := Report{schema: 1, kernel: 'Vinix', architecture: 'aarch64', uid: 1000,
-		context: 'vinix-native', runner_sha256: qualifier, requested: ['go'],
+	report := Report{schema: 1, kernel: 'Tulpar', architecture: 'aarch64', uid: 1000,
+		context: 'tulpar-native', runner_sha256: qualifier, requested: ['go'],
 		command_timeout_seconds: 600, complete: true, all_selected_passed: true,
 		results: [Verdict{profile: 'go', status: 'passed', commands: [
 			Command{argv: ['/opt/reference/bin/go', 'build', '-trimpath', '-buildvcs=false', '-o', 'project', 'main.go'],
@@ -116,8 +116,8 @@ fn test_java_receipts_require_compilation_deterministic_packing_and_jar_executio
 		[tools['java'].path, '-jar', 'project.jar']]
 	mut executed := []Command{}
 	for i, args in argv { executed << Command{argv: args, executable_sha256: 'b'.repeat(64), log: project + '/command-' + i.str() + '.log'} }
-	report := Report{schema: 1, kernel: 'Vinix', architecture: 'aarch64', uid: 1000,
-		context: 'vinix-native', runner_sha256: qualifier, requested: ['java'],
+	report := Report{schema: 1, kernel: 'Tulpar', architecture: 'aarch64', uid: 1000,
+		context: 'tulpar-native', runner_sha256: qualifier, requested: ['java'],
 		command_timeout_seconds: 600, complete: true, all_selected_passed: true,
 		results: [Verdict{profile: 'java', status: 'passed', commands: executed}]}
 	outputs := {'qualification/java/Project.class': 'c'.repeat(64), 'qualification/java/project.jar': 'd'.repeat(64),
@@ -142,7 +142,7 @@ fn test_java_receipts_require_compilation_deterministic_packing_and_jar_executio
 		assert false, 'changed JVM pin accepted'
 	}
 	mut requested := executed.clone()
-	for i in 0 .. requested.len { requested[i] = Command{...requested[i], environment_overrides: {'VINIX_ALLOW_WX': '1'}} }
+	for i in 0 .. requested.len { requested[i] = Command{...requested[i], environment_overrides: {'TULPAR_ALLOW_WX': '1'}} }
 	approved := Report{...report, jit_requested: true, results: [Verdict{...report.results[0], commands: requested}]}
 	verify_report_jit(json2.encode(approved), 'aarch64', ['java'], qualifier, tools, work, outputs, true)!
 	if _ := verify_report(json2.encode(approved), 'aarch64', ['java'], qualifier, tools, work, outputs) {

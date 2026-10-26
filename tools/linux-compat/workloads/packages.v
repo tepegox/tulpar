@@ -27,7 +27,7 @@ fn mount_package_store(device string, directory string) ! {
   if unsafe { C.mount(device.str, directory.str, c'ext2', 0, nil) } != 0 {
    return error('package-store ext2 mount failed: ' + os.last_error().msg())
   }
- } $else { return error('unsupported: package transactions require a Vinix guest disk') }
+ } $else { return error('unsupported: package transactions require a Tulpar guest disk') }
 }
 
 fn unmount_package_store(directory string) ! {
@@ -36,7 +36,7 @@ fn unmount_package_store(directory string) ! {
   if unsafe { C.umount(directory.str) } != 0 {
    return error('package-store unmount failed: ' + os.last_error().msg())
   }
- } $else { return error('unsupported: package transactions require a Vinix guest disk') }
+ } $else { return error('unsupported: package transactions require a Tulpar guest disk') }
 }
 
 fn (mut suite Suite) package_lifecycle() ! {
@@ -55,15 +55,15 @@ fn (mut suite Suite) package_lifecycle() ! {
   }
  }
  suite.execute('busybox', ['--install', '-s', '/bin'])!
- suite.environment['VINIX_PKG_ROOT'] = root
- suite.environment['VINIX_PKG_NETWORK_RETRIES'] = '1'
- suite.environment['VINIX_PKG_NETWORK_WAIT_SECONDS'] = '0'
- suite.environment['VINIX_PKG_NETWORK_RETRY_DELAY'] = '0'
+ suite.environment['TULPAR_PKG_ROOT'] = root
+ suite.environment['TULPAR_PKG_NETWORK_RETRIES'] = '1'
+ suite.environment['TULPAR_PKG_NETWORK_WAIT_SECONDS'] = '0'
+ suite.environment['TULPAR_PKG_NETWORK_RETRY_DELAY'] = '0'
  repos := '/usr/share/linux-compat-repos/'
  marker := store + '/installed.version'
  if !os.exists(marker) {
   result = PackageResult{phase: 'install', device: suite.data_device, root: root}
-  for directory in ['etc/apk/keys', 'etc/vinix-pkg', 'var/cache/apk', 'var/lib/vinix-pkg', 'data'] {
+  for directory in ['etc/apk/keys', 'etc/tulpar-pkg', 'var/cache/apk', 'var/lib/tulpar-pkg', 'data'] {
    os.mkdir_all(root + '/' + directory)!
   }
   expect(!os.exists(root + '/usr/bin/sqlite3'), 'installation needs a target without SQLite')!
@@ -80,7 +80,7 @@ fn (mut suite Suite) package_lifecycle() ! {
    if os.is_file('/etc/apk/keys/' + name) { os.cp('/etc/apk/keys/' + name, root + '/etc/apk/keys/' + name)! }
   }
   os.write_file(root + '/etc/apk/repositories', repos + 'v3.20\n')!
-  os.write_file(root + '/etc/vinix-pkg/base-world', 'musl\n')!
+  os.write_file(root + '/etc/tulpar-pkg/base-world', 'musl\n')!
   // The selected repository is local/offline. The existing frontend checks
   // for a configured resolver before transactions; it never contacts this one.
   os.write_file(root + '/etc/resolv.conf', 'nameserver 127.0.0.1\n')!

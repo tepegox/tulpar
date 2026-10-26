@@ -68,7 +68,7 @@ fn qemu_entropy_requested() bool {
 	if kernel_file == unsafe { nil } || kernel_file.cmdline == unsafe { nil } {
 		return false
 	}
-	return unsafe { cstring_to_vstring(kernel_file.cmdline) }.contains('vinix.qemu_platform=1')
+	return unsafe { cstring_to_vstring(kernel_file.cmdline) }.contains('tulpar.qemu_platform=1')
 }
 
 fn virtio_r32(address u64) u32 {
@@ -188,7 +188,7 @@ fn architecture_seed(mut output [64]u8) bool {
 	if seed.len < 32 || seed.len > 4096 {
 		return false
 	}
-	domain := 'Vinix kernel CSPRNG v1'
+	domain := 'Tulpar kernel CSPRNG v1'
 	mut input := []u8{len: domain.len + int(seed.len) + 1} @[freed]
 	unsafe {
 		C.memcpy(input.data, domain.str, domain.len)

@@ -20,15 +20,15 @@ fn (c Config) check(original string) ! {
 	source := c.output('privileged.c')
 	mut text := hosttest.module_read_text(source)!
 	text += '\n_Static_assert(sizeof(lib__VmxFxState) == 512, "FXSAVE area");\n'
-	text += '_Static_assert(sizeof(struct vinix_vmx_descriptor) == 10, "GDTR/IDTR area");\n'
+	text += '_Static_assert(sizeof(struct tulpar_vmx_descriptor) == 10, "GDTR/IDTR area");\n'
 	hosttest.module_write_text(source, text)!
 	c.instructions(text)!
 	println('VMX INSTRUCTION PASS: optimized x86 ports, CF/ZF capture, operands and barriers')
 	c.inherited(combine(c.cross(), ['-c', c.path('kernel/asm/x86_64/vmx.S'), '-o', c.output('entry.o')]))!
 	if original != '' {
 		c.inherited(combine(c.cross(), ['-c', original, '-o', c.output('original.o')]))!
-		old := symbol_bytes(c.output('original.o'), 'vinix_vmx_enter')!
-		new := symbol_bytes(c.output('entry.o'), 'vinix_vmx_enter')!
+		old := symbol_bytes(c.output('original.o'), 'tulpar_vmx_enter')!
+		new := symbol_bytes(c.output('entry.o'), 'tulpar_vmx_enter')!
 		if old.len == 0 || old != new { return CheckError{ message: 'VM entry bytes changed' } }
 		println('VMX ENTRY PASS: all ${new.len} instruction bytes match original C assembly')
 	}
@@ -68,7 +68,7 @@ pub fn run(arguments []string) int {
 		eprintln(failure_message(err))
 		return 1
 	}
-	work := hosttest.work_dir('', 'vinix-vmx-') or {
+	work := hosttest.work_dir('', 'tulpar-vmx-') or {
 		eprintln(err.msg())
 		return 1
 	}

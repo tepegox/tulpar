@@ -5,8 +5,8 @@ import json2
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn configuration_fixture() string {
@@ -111,7 +111,7 @@ fn test_configuration_schema_scanning_retires_owned_keys() {
 			text.replace('"policy":', '"polciy":'),
 			text.replace('"offline":true', '"offline":true,"off\\u006cine":false')]
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for i, input in inputs {
 					mut accepted := true
@@ -123,7 +123,7 @@ fn test_configuration_schema_scanning_retires_owned_keys() {
 				}
 			}
 			if warmup == 1 {
-				kept := C.vinix_heap_end()
+				kept := C.tulpar_heap_end()
 				println('Configuration schema: retained ' + kept.str() + ' tracked bytes in 1000 cycles')
 				assert kept == 0
 			}

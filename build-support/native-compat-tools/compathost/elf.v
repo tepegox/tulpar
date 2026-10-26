@@ -16,17 +16,17 @@ fn elf_guest_command(args []string) !int {
 	arch := parsed.options['--arch']
 	if '--source' in parsed.options && !os.is_file(parsed.options['--source']) { return error_with_code('--source must name an existing C control', 2) }
 	// Like the original mkdtemp runner, default evidence remains available.
-	work := if '--state-dir' in parsed.options { resolve(parsed.options['--state-dir'])! } else { hosttest.work_dir('', 'vinix-elf-text-vm-')! }
+	work := if '--state-dir' in parsed.options { resolve(parsed.options['--state-dir'])! } else { hosttest.work_dir('', 'tulpar-elf-text-vm-')! }
 	rootfs := work + '/rootfs'
 	for name in ['sbin', 'lib', 'tmp', 'dev', 'proc', 'sys', 'root'] { os.mkdir_all(rootfs + '/' + name)! }
-	repo := resolve(os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() })!
+	repo := resolve(os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() })!
 	mut cc := []string{}
 	mut sdk := ''
 	mut loader := ''
 	loader_name := if arch == 'aarch64' { 'ld-musl-aarch64.so.1' } else { 'ld-musl-x86_64.so.1' }
 	if arch == 'aarch64' {
-		sdk = os.getenv_opt('VINIX_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/sysroot' }
-		loader = os.getenv_opt('VINIX_AARCH64_LOADER') or { repo + '/build-aarch64-userland/staging/lib/' + loader_name }
+		sdk = os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/sysroot' }
+		loader = os.getenv_opt('TULPAR_AARCH64_LOADER') or { repo + '/build-aarch64-userland/staging/lib/' + loader_name }
 		cc = [...compiler_prefix('CC', 'clang')!, '--target=aarch64-linux-musl', '--sysroot=' + sdk, '-fuse-ld=lld', '-fno-stack-protector']
 	} else { cc = compiler_prefix('CC_AMD64', 'x86_64-linux-musl-gcc')! }
 	flags := [...cc, '-O2', '-Wall', '-Wextra', '-Werror']
@@ -56,12 +56,12 @@ fn elf_guest_command(args []string) !int {
 	hosttest.write_json(work + '/inputs.json', { 'arch': json2.Any(arch),
 		'commands': string_rows([static_recipe, pie_recipe]), 'loader_sha256': json2.Any(hosttest.sha(loader)!),
 		'init_sha256': json2.Any(hosttest.sha(rootfs + '/sbin/init')!), 'pie_sha256': json2.Any(hosttest.sha(rootfs + '/elf-pie')!),
-		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!), 'archive_sha256': json2.Any(hosttest.sha(archive)!) })!
+		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!), 'archive_sha256': json2.Any(hosttest.sha(archive)!) })!
 	if '--build-only' in parsed.options { return 0 }
 	// ISO builders consume this command line before QEMU starts.
-	previous_cmdline := os.getenv_opt('VINIX_CMDLINE')
-	os.setenv('VINIX_CMDLINE', 'vinix.user_access=strict', true)
-	defer { if previous := previous_cmdline { os.setenv('VINIX_CMDLINE', previous, true) } else { os.unsetenv('VINIX_CMDLINE') } }
+	previous_cmdline := os.getenv_opt('TULPAR_CMDLINE')
+	os.setenv('TULPAR_CMDLINE', 'tulpar.user_access=strict', true)
+	defer { if previous := previous_cmdline { os.setenv('TULPAR_CMDLINE', previous, true) } else { os.unsetenv('TULPAR_CMDLINE') } }
 	configured := guesthost.launch_from(rootfs + '/sbin/init', archive, work, private_kernel, arch, true, repo)!
 	return guesthost.boot(configured.command, configured.env, work,
 		['ELF TEXT PASS: ordinary and both textrel encodings', 'ELF TEXT PASS: PIE and interpreter boot'],

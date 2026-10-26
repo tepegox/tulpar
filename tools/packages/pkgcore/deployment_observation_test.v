@@ -7,8 +7,8 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn observation_fixture(count int) Plan {
@@ -30,7 +30,7 @@ fn test_deployment_observations_retire_owned_documents_and_audit_scratch() {
 		mut expected := owned_deployment_lock('aarch64', plan)!
 		defer { expected.close() }
 		digest := 'c'.repeat(64)
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut document := owned_deployment_lock('aarch64', plan)!
 			text := encode_deployment_lock(document, true)!
@@ -38,13 +38,13 @@ fn test_deployment_observations_retire_owned_documents_and_audit_scratch() {
 			unsafe { text.free(); encoded_digest.free() }
 			document.close()
 		}
-		owned_bytes := C.vinix_heap_end()
-		C.vinix_heap_begin()
+		owned_bytes := C.tulpar_heap_end()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut audit := compare_deployment(expected, expected, 7, digest)!
 			audit.close()
 		}
-		audit_bytes := C.vinix_heap_end()
+		audit_bytes := C.tulpar_heap_end()
 		println('Deployment observation: 1000 16-package export/encode/hash cycles retained ${owned_bytes} bytes; 1000 comparisons retained ${audit_bytes} bytes')
 		assert owned_bytes == 0 && audit_bytes == 0
 	}
@@ -68,14 +68,14 @@ fn test_deployment_encoding_preserves_exact_json_owned_fields_and_inclusive_file
 	base := encode_deployment_lock(DeploymentLock{}, false)!
 	padding := 'x'.repeat(max_metadata - base.len)
 	boundary := DeploymentLock{ architecture: padding }
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	full := encode_deployment_lock(boundary, false)!
 	assert full.len == max_metadata
 	unsafe { full.free() }
 	if _ := encode_deployment_lock(boundary, true) { assert false } else {
 		message := err.msg(); assert message.contains('metadata limit'); unsafe { message.free(); err.free() }
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	unsafe { base.free(); padding.free() }
 	assert plan.packages[0].package.id == 'app-0' && plan.packages[0].package.files[0].path == 'data/file'
 	println('Deployment observation: exact SDK JSON and optional LF; inclusive metadata bound and overflow refusal release growth buffers PASS')
@@ -106,7 +106,7 @@ fn test_installed_deployment_plan_borrows_manifests_and_retires_selection_scratc
 	state := State{ requested: plan.requested, packages: plan.packages }
 	names := ['app-0', 'app-15']
 	missing := ['app-0', 'not-installed']
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		selected := installed_deployment_plan(state, names)!
 		assert selected.requested == names && selected.packages.len == 2
@@ -120,18 +120,18 @@ fn test_installed_deployment_plan_borrows_manifests_and_retires_selection_scratc
 			message := err.msg(); assert message.contains('not installed'); unsafe { message.free(); err.free() }
 		}
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); println('Deployment observation: 1000 borrowed selections, owned snapshots and missing-root refusals retained ${kept} bytes'); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); println('Deployment observation: 1000 borrowed selections, owned snapshots and missing-root refusals retained ${kept} bytes'); assert kept == 0 }
 	assert state.packages[15].package.id == 'app-15' && state.packages[0].package.files[0].path == 'data/file'
 	println('Deployment observation: selected manifests borrow source state; exported records survive selection-buffer retirement PASS')
 }
 
 fn test_public_snapshot_save_and_audit_observations_preserve_owned_results_and_store() {
-	work := os.real_path(os.temp_dir()) + '/vinix-observation-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-observation-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	defer { os.rmdir_all(work) or {} }
-	os.mkdir_all(work + '/etc/vinix-packages')!
+	os.mkdir_all(work + '/etc/tulpar-packages')!
 	config := Config{ architecture: 'aarch64', policy: Policy{ offline: true, allowed: ['other'], permissions: [], reserve_bytes: 0 } }
 	config_text := json2.encode(config)
-	os.write_file(work + '/etc/vinix-packages/config.json', config_text)!
+	os.write_file(work + '/etc/tulpar-packages/config.json', config_text)!
 	store := state_directory(work)
 	guard := acquire(store)!; guard.release()
 	plan := observation_fixture(4)
@@ -145,7 +145,7 @@ fn test_public_snapshot_save_and_audit_observations_preserve_owned_results_and_s
 	service := Service{ root: work }
 	path := work + '/saved é; $literal.json'
 	mut warmup := service.snapshot_deployment([])!; warmup.close()
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 100 {
 		mut document := service.snapshot_deployment([])!
 		assert document.packages.len == 4 && document.locked.len == 4
@@ -161,9 +161,9 @@ fn test_public_snapshot_save_and_audit_observations_preserve_owned_results_and_s
 		}
 		os.rm(path)!
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); println('Deployment observation: 100 public snapshot/save/audit and existing-file refusal cycles retained ${kept} bytes'); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); println('Deployment observation: 100 public snapshot/save/audit and existing-file refusal cycles retained ${kept} bytes'); assert kept == 0 }
 	assert os.read_file(store + '/current/state.json')! == state_text && os.readlink(store + '/current')! == 'generations/7'
-	assert os.read_file(work + '/etc/vinix-packages/config.json')! == config_text
+	assert os.read_file(work + '/etc/tulpar-packages/config.json')! == config_text
 	assert os.read_file(store + '/catalog.json')! == '{unavailable catalog' && os.read_file(store + '/trust-history.json')! == '{unavailable history'
 	assert os.ls(store + '/objects')!.len == 0 && os.ls(store + '/generations')! == ['7']
 	assert os.ls(work)!.all(!it.starts_with('.package-'))

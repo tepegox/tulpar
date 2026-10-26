@@ -10,7 +10,7 @@ fn C.mkfifo(&char, u32) int
 fn C.link(&char, &char) int
 
 fn image_apps_fixture() !(string, string) {
-	work := os.real_path(os.temp_dir()) + '/vinix-image-apps-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-image-apps-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work, mode: 0o700)!
 	key := keygen(work + '/seed')!
 	os.mkdir_all(work + '/payload/bin')!
@@ -160,14 +160,14 @@ fn test_image_catalog_refuses_existing_and_late_substituted_destinations() {
 }
 
 fn image_catalog_checkpoint(phase string, temporary string) ! {
-	kind := os.getenv('VINIX_IMAGE_CATALOG_FAULT')
+	kind := os.getenv('TULPAR_IMAGE_CATALOG_FAULT')
 	defer { unsafe { kind.free() } }
 	if kind == 'race' && phase == 'flushed' { os.write_file(os.dir(temporary) + '/applications.json', 'concurrent owner bytes')! }
 	if kind == phase { return error('injected image catalog failure') }
 }
 
 fn test_image_catalog_failure_cleanup_and_changed_dependencies_refuse_before_publication() {
-	work, key := image_apps_fixture()!; defer { os.rmdir_all(work) or {}; os.unsetenv('VINIX_IMAGE_CATALOG_FAULT') }
+	work, key := image_apps_fixture()!; defer { os.rmdir_all(work) or {}; os.unsetenv('TULPAR_IMAGE_CATALOG_FAULT') }
 	root := work + '/image'; os.mkdir(root)!
 	source := image_apps_config(work, 'x86_64', key, Policy{})!
 	mut configuration := prepare_image_configuration(root, 'x86_64', source)!; defer { configuration.close() }
@@ -175,7 +175,7 @@ fn test_image_catalog_failure_cleanup_and_changed_dependencies_refuse_before_pub
 	mut applications := unsafe { &configuration }.prepare_applications(unsafe { &repositories }, ['editor'])!; defer { applications.close() }
 	assert unsafe { &repositories }.publish()! && unsafe { &configuration }.publish()!
 	path := root + pkgprotocol.image_applications_path
-	config_path := root + '/etc/vinix-packages/config.json'; config := os.read_file(config_path)!
+	config_path := root + '/etc/tulpar-packages/config.json'; config := os.read_file(config_path)!
 	os.write_file(config_path, config + ' ')!
 	if _ := unsafe { &applications }.publish(unsafe { &repositories }) { assert false } else {}
 	os.write_file(config_path, config)!
@@ -187,12 +187,12 @@ fn test_image_catalog_failure_cleanup_and_changed_dependencies_refuse_before_pub
 	os.rename(root, work + '/saved-image')!; os.mkdir(root)!
 	if _ := unsafe { &applications }.publish(unsafe { &repositories }) { assert false } else {}
 	os.rmdir(root)!; os.rename(work + '/saved-image', root)!
-	os.chmod(root + '/usr/share/vinix-packages', 0o777)!
+	os.chmod(root + '/usr/share/tulpar-packages', 0o777)!
 	if _ := unsafe { &applications }.publish(unsafe { &repositories }) { assert false } else {}
-	os.chmod(root + '/usr/share/vinix-packages', 0o755)!
+	os.chmod(root + '/usr/share/tulpar-packages', 0o755)!
 	assert !os.exists(path)
 	for kind in ['created', 'written', 'flushed', 'published', 'space', 'directory-flush', 'race']! {
-		os.setenv('VINIX_IMAGE_CATALOG_FAULT', kind, true)
+		os.setenv('TULPAR_IMAGE_CATALOG_FAULT', kind, true)
 		options := AtomicWriteOptions{ checkpoint: image_catalog_checkpoint,
 			write: if kind == 'space' { image_export_no_space } else { atomic_write_bytes },
 			flush: if kind == 'directory-flush' { image_export_directory_flush_failure } else { atomic_flush } }
@@ -315,7 +315,7 @@ fn test_image_application_catalog_lock_works_with_normal_reviewed_offline_deploy
 		assert !os.exists(root + '/var')
 		assert unsafe { &repositories }.publish()! && unsafe { &configuration }.publish()!
 		repositories.close(); configuration.close()
-		retained := os.read_file(root + '/etc/vinix-packages/config.json')!
+		retained := os.read_file(root + '/etc/tulpar-packages/config.json')!
 		mut existing := prepare_image_configuration(root, architecture, work + '/ignored-missing-release-config')!
 		mut same := unsafe { &existing }.prepare_repositories(root + image_repositories_path)!
 		preserved := json2.decode[ImageInputCheck](unsafe { &existing }.check_applications(unsafe { &same }, ['modern', 'editor'])!)!
@@ -324,8 +324,8 @@ fn test_image_application_catalog_lock_works_with_normal_reviewed_offline_deploy
 		same.close(); existing.close()
 		// Host/alternate-root file URLs point at the published image. On a
 		// booted image its staged absolute file URLs already name this bundle.
-		consumer := work + '/consumer'; os.mkdir_all(consumer + '/etc/vinix-packages')!
-		os.write_file(consumer + '/etc/vinix-packages/config.json', publisher_json(Config{ architecture: architecture,
+		consumer := work + '/consumer'; os.mkdir_all(consumer + '/etc/tulpar-packages')!
+		os.write_file(consumer + '/etc/tulpar-packages/config.json', publisher_json(Config{ architecture: architecture,
 			policy: Policy{ offline: true, reserve_bytes: 0 }, repositories: [Repository{ id: 'native', public_key: key,
 				url: 'file://' + root + image_repositories_path + '/native' }] }))!
 		assert os.read_file(path)! == publisher_json(report.application_deployment)
@@ -343,7 +343,7 @@ fn test_image_application_catalog_lock_works_with_normal_reviewed_offline_deploy
 			assert candidate.repository == pin.repository && candidate.public_key == pin.public_key
 			assert package_metadata_digest(candidate.package)! == pin.metadata_sha256
 		}
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == retained && !os.exists(root + '/var')
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == retained && !os.exists(root + '/var')
 	}
 	println('IMAGE APPLICATIONS exported format-2 locks drive ordinary reviewed offline install and integrity verification for both hosts; staged trust and consumer state remain separate PASS')
 }
@@ -355,7 +355,7 @@ fn image_apps_cli(binary string, args []string) (int, string) {
 }
 
 fn test_image_application_catalog_real_staging_cli_gates_normal_and_check_paths_before_compilers() {
-	binary := os.getenv('VINIX_PACKAGE_STAGE_CHECK_CLI'); if binary == '' { return }
+	binary := os.getenv('TULPAR_PACKAGE_STAGE_CHECK_CLI'); if binary == '' { return }
 	work, key := image_apps_fixture()!; defer { os.rmdir_all(work) or {} }
 	root := work + '/image ; $literal'; os.mkdir(root)!
 	source := image_apps_config(work, 'x86_64', key, Policy{})!
@@ -458,9 +458,9 @@ fn test_image_requirements_file_refuses_unpinned_lock_downgrades_bad_documents_a
 }
 
 fn test_image_requirements_file_cli_explicit_and_environment_inputs_preserve_precedence_and_gate_staging() {
-	binary := os.getenv('VINIX_PACKAGE_STAGE_CHECK_CLI'); if binary == '' { return }
-	previous := os.getenv_opt('VINIX_PACKAGE_IMAGE_APPLICATIONS')
-	defer { if value := previous { os.setenv('VINIX_PACKAGE_IMAGE_APPLICATIONS', value, true) } else { os.unsetenv('VINIX_PACKAGE_IMAGE_APPLICATIONS') } }
+	binary := os.getenv('TULPAR_PACKAGE_STAGE_CHECK_CLI'); if binary == '' { return }
+	previous := os.getenv_opt('TULPAR_PACKAGE_IMAGE_APPLICATIONS')
+	defer { if value := previous { os.setenv('TULPAR_PACKAGE_IMAGE_APPLICATIONS', value, true) } else { os.unsetenv('TULPAR_PACKAGE_IMAGE_APPLICATIONS') } }
 	for architecture in ['aarch64', 'x86_64']! {
 		work, key := image_apps_fixture()!; defer { os.rmdir_all(work) or {} }
 		root := work + '/image'; os.mkdir(root)!
@@ -468,7 +468,7 @@ fn test_image_requirements_file_cli_explicit_and_environment_inputs_preserve_pre
 		path := work + '/reviewed ; $literal.json'
 		os.write_file(path, '{"format":1,"architecture":"' + architecture + '","packages":["modern","editor"]}\n')!
 		base := ['--arch', architecture, '--staging', root, '--config', source, '--repositories', work + '/bundle', '--cc', work + '/missing-compiler']
-		os.setenv('VINIX_PACKAGE_IMAGE_APPLICATIONS', work + '/invalid-environment-file', true)
+		os.setenv('TULPAR_PACKAGE_IMAGE_APPLICATIONS', work + '/invalid-environment-file', true)
 		explicit_code, explicit := image_apps_cli(binary, ['--applications', path, ...base, '--check'])
 		assert explicit_code == 0, explicit
 		report := json2.decode[ImageInputCheck](explicit)!
@@ -477,7 +477,7 @@ fn test_image_requirements_file_cli_explicit_and_environment_inputs_preserve_pre
 		assert ids_code == 0, ids
 		assert json2.decode[ImageInputCheck](ids)!.application_requirements_sha256 == ''
 		assert json2.decode[ImageInputCheck](ids)!.application_deployment == report.application_deployment
-		os.setenv('VINIX_PACKAGE_IMAGE_APPLICATIONS', path, true)
+		os.setenv('TULPAR_PACKAGE_IMAGE_APPLICATIONS', path, true)
 		env_code, environment := image_apps_cli(binary, ['--check', ...base])
 		assert env_code == 0 && environment == explicit, environment
 		for check in [true, false]! {
@@ -618,7 +618,7 @@ fn test_image_deployment_export_failure_cleanup_saved_diagnostics_and_retry_pres
 }
 
 fn test_image_deployment_export_cli_requires_explicit_context_and_saves_a_reviewable_file_without_compilers() {
-	binary := os.getenv('VINIX_PACKAGE_STAGE_CHECK_CLI'); if binary == '' { return }
+	binary := os.getenv('TULPAR_PACKAGE_STAGE_CHECK_CLI'); if binary == '' { return }
 	for architecture in ['aarch64', 'x86_64']! {
 		work, key := image_apps_fixture()!; defer { os.rmdir_all(work) or {} }
 		root := work + '/image'; os.mkdir(root)!

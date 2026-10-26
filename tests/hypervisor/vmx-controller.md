@@ -10,7 +10,7 @@ unchanged.
 The command checks all 7,680 host control ABI cases, ARM no-op behavior,
 immediate CF/ZF capture, VMWRITE/VMREAD operand order, flags and memory clobbers,
 and allocator imports. `--original PRE_PORT_VMX_C` compiles the original C and
-compares every `vinix_vmx_enter` instruction byte using the native ELF reader.
+compares every `tulpar_vmx_enter` instruction byte using the native ELF reader.
 Malformed ELF ranges, strides, indexes and symbol addresses return bounded
 errors. Ordinary valid ELF files retain the original extraction behavior.
 
@@ -26,8 +26,8 @@ and instruction reports if a later phase fails.
 The native tests cover malformed ELF files, full-width addresses, Unicode
 names, instruction/ownership regressions, compiler search, all 27 standard
 descriptor states, repeated capture, decoding-error precedence, command
-failures and descriptor retirement. Set `VINIX_VMX_TOOL` and
-`VINIX_VMX_PROBE` to binaries built from `check-vmx.v` and `probefixture` to
+failures and descriptor retirement. Set `TULPAR_VMX_TOOL` and
+`TULPAR_VMX_PROBE` to binaries built from `check-vmx.v` and `probefixture` to
 include real compilation, pre-port entry comparison, changed-entry rejection,
 CLI status/streams and scratch cleanup. These host checks do not establish
 privileged VMX execution, nested VT-x, a kernel boot or QEMU coverage.
@@ -36,5 +36,5 @@ ARM, Rosetta x86 and ARM ASan/UBSan builds pass all four native test files,
 including real Clang sanitizer fixtures and pre-port entry-byte comparison.
 The cold launcher passes from an unrelated working directory, emits the exact
 fixture reports and removes its scratch files after success or a missing
-compiler. Logs are `/tmp/vinix-vmx-{arm,x86,asan}-final.log` and
-`/tmp/vinix-vmx-cold-final.log`. No Python was run during qualification.
+compiler. Logs are `/tmp/tulpar-vmx-{arm,x86,asan}-final.log` and
+`/tmp/tulpar-vmx-cold-final.log`. No Python was run during qualification.

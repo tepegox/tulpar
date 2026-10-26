@@ -30,9 +30,9 @@ fn test_optin_x86_verdict_status_and_finish_contract() {
 
 fn test_optin_launch_topology_and_acpi_recipe() {
 	base := ['/usr/bin/qemu', '-m', '1024', '-smp', '2', '-cpu', 'max', '-serial', 'mon:stdio']
-	argv := optin_launch(base, 'x86_64', '/state', 'qemu64', '4,sockets=1,cores=2,threads=2', 'VINIX_OVMF_CODE')
+	argv := optin_launch(base, 'x86_64', '/state', 'qemu64', '4,sockets=1,cores=2,threads=2', 'TULPAR_OVMF_CODE')
 	assert argv[..base.len] == ['/usr/bin/qemu', '-m', '1024', '-smp', '4,sockets=1,cores=2,threads=2', '-cpu', 'qemu64', '-serial', 'stdio']
-	assert argv[base.len..] == ['-netdev', 'user,id=net0', '-device', 'e1000,netdev=net0,mac=52:54:00:12:34:56', '-object', 'filter-dump,id=vinixdump,netdev=net0,file=/state/unused.pcap']
+	assert argv[base.len..] == ['-netdev', 'user,id=net0', '-device', 'e1000,netdev=net0,mac=52:54:00:12:34:56', '-object', 'filter-dump,id=tulpardump,netdev=net0,file=/state/unused.pcap']
 	assert base[4] == '2'
 	assert acpi_build_command('/kernel', '/v', 'aarch64', '/ld', '/ar') == ['make', '-C', '/kernel', '-j4', 'CC=clang', 'V=/v', 'ARCH=aarch64', 'ACPI_SYNC_TEST=1', 'STACK_GUARD_TEST=0', 'AR=/ar', 'LIMINE_MP=1', 'LD_AARCH64=/ld']
 	assert acpi_build_command('/kernel', '/v', 'x86_64', '/ld', '').last() == 'LD_X86_64=/ld'

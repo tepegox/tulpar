@@ -8,7 +8,7 @@ module compatcore
 pub fn refcount_warn_saturate(r &i32, kind i32) {
 	unsafe {
 		C.vkp_store_signed(r, -1073741824, 0)
-		vinix_linuxkpi_refcount_warning(kind)
+		tulpar_linuxkpi_refcount_warning(kind)
 	}
 }
 

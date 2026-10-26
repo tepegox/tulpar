@@ -1,7 +1,7 @@
 # Authenticated key recovery qualification
 
 The `backup-key` and `recover-key` commands implement the exact 160-byte version-1
-`VINIXKR1` format documented in [storage volumes](../../docs/storage-volumes.md#authenticated-volume-key-recovery).
+`TULPARKR1` format documented in [storage volumes](../../docs/storage-volumes.md#authenticated-volume-key-recovery).
 Production cryptography, file validation and publication use V with fixed stack
 workspaces. The existing kernel encrypted mapper and disk format are unchanged.
 

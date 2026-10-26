@@ -11,35 +11,35 @@ pub fn root_verdict(text string, family string) ! {
 	failures := root_failures(family)
 	if failures.any(text.contains(it)) { return error('guest reported a failure') }
 	if family == 'disk-writeback' {
-		if !text.contains('VINIX WRITEBACK: START') {
+		if !text.contains('TULPAR WRITEBACK: START') {
 			return error('the guest never started the test')
 		}
-		if !text.contains('VINIX WRITEBACK: PASS') {
+		if !text.contains('TULPAR WRITEBACK: PASS') {
 			return error('the guest did not finish; a wait that never ended looks like this')
 		}
 		return
 	}
 	for marker, explanation in {
-		'VINIX DISK ROOT: START':         'the guest did not come back up after reboot(2)'
-		'VINIX DISK ROOT: ON VOLUME':     'the guest did not boot from the volume both times'
-		'VINIX DISK ROOT: LARGE FILE OK': 'a host-written file past the direct blocks did not read back'
+		'TULPAR DISK ROOT: START':         'the guest did not come back up after reboot(2)'
+		'TULPAR DISK ROOT: ON VOLUME':     'the guest did not boot from the volume both times'
+		'TULPAR DISK ROOT: LARGE FILE OK': 'a host-written file past the direct blocks did not read back'
 	} {
 		if text.count(marker) < 2 { return error(explanation) }
 	}
-	if !text.contains('VINIX DISK ROOT: WROTE /etc MARKER, REBOOTING') {
+	if !text.contains('TULPAR DISK ROOT: WROTE /etc MARKER, REBOOTING') {
 		return error('the guest never wrote the marker')
 	}
 	if text.contains('Loading saved package overlay') {
 		return error('the package overlay was loaded as a boot module')
 	}
-	if !text.contains('VINIX DISK ROOT: PASS') {
+	if !text.contains('TULPAR DISK ROOT: PASS') {
 		return error('the file written outside /root did not survive the restart')
 	}
 }
 
 fn root_failures(family string) []string {
 	return [
-		if family == 'disk-root' { 'VINIX DISK ROOT: FAIL' } else { 'VINIX WRITEBACK: FAIL' },
+		if family == 'disk-root' { 'TULPAR DISK ROOT: FAIL' } else { 'TULPAR WRITEBACK: FAIL' },
 		'does not carry a bootable system',
 		'using the initramfs root',
 		'FATAL EXCEPTION',
@@ -67,11 +67,11 @@ fn install_root(image string, state string, requested int) ! {
 		} else {
 			capacity
 		}
-		found := capture([executable, '-R', 'cat /.vinix-image-id', disk])!
+		found := capture([executable, '-R', 'cat /.tulpar-image-id', disk])!
 		installed := found.stdout.replace('\r', '').all_before('\n')
 		if installed == identity { return }
 		if installed == '' {
-			return error('Persistent disk is not a Vinix system volume; use a fresh state directory')
+			return error('Persistent disk is not a Tulpar system volume; use a fresh state directory')
 		}
 		carried = state + '/carried-home'
 		if os.exists(carried) { hosttest.remove_work_dir(carried)! }
@@ -93,18 +93,18 @@ fn install_root(image string, state string, requested int) ! {
 	}
 	if carried != '' {
 		home := carried + '/root'
-		if (os.is_dir(home + '/desktop') || os.is_dir(home + '/vmodules')) && !os.is_file(home + '/.vinix-desktop-dev-version') {
-			if os.exists(seed + '/root/.vinix-desktop-dev-version') {
-				os.rm(seed + '/root/.vinix-desktop-dev-version')!
+		if (os.is_dir(home + '/desktop') || os.is_dir(home + '/vmodules')) && !os.is_file(home + '/.tulpar-desktop-dev-version') {
+			if os.exists(seed + '/root/.tulpar-desktop-dev-version') {
+				os.rm(seed + '/root/.tulpar-desktop-dev-version')!
 			}
 		}
 		run(['cp', '-a', home + '/.', seed + '/root/'])!
 	}
-	os.write_file(seed + '/.vinix-image-id', identity + '\n')!
+	os.write_file(seed + '/.tulpar-image-id', identity + '\n')!
 	temporary := state + '/replacement.ext2'
 	diskhost.format_ext2(executable, temporary, seed, capacity * 1024 * 1024)!
 	run([
-		os.getenv_opt('VINIX_EXT2_ROOT_OWNER_TOOL') or { root() + '/build-support/ext2-set-root-owner' },
+		os.getenv_opt('TULPAR_EXT2_ROOT_OWNER_TOOL') or { root() + '/build-support/ext2-set-root-owner' },
 		temporary,
 	])!
 	os.mv(temporary, disk)!
@@ -118,10 +118,10 @@ fn root_fixture(state string, family string) !string {
 	os.cp(init, state + '/system/sbin/init')!
 	os.chmod(state + '/system/sbin/init', 0o755)!
 	if family == 'disk-root' {
-		run([root() + '/tests/disk-root/make-large-file', state + '/system/usr/share/vinix-large'])!
-		os.symlink('vinix-large', state + '/system/usr/share/vinix-large-link')!
+		run([root() + '/tests/disk-root/make-large-file', state + '/system/usr/share/tulpar-large'])!
+		os.symlink('tulpar-large', state + '/system/usr/share/tulpar-large-link')!
 		diskhost.mkdir(state + '/package-overlay/etc')!
-		os.write_file(state + '/package-overlay/etc/vinix-package-overlay', 'disk-overlay\n')!
+		os.write_file(state + '/package-overlay/etc/tulpar-package-overlay', 'disk-overlay\n')!
 		guesthost.archive_tree(state + '/package-overlay', state + '/packages.tar')!
 	}
 	return guesthost.archive_tree(state + '/system', state + '/system.tar')!
@@ -143,7 +143,7 @@ fn root_command(family string, args []string) !int {
 	} else {
 		positive(options, '--timeout', 240)!
 	}
-	state := state_dir(options, 'vinix-' + family + '-')!
+	state := state_dir(options, 'tulpar-' + family + '-')!
 	defer { private_cleanup(state, options) }
 	image := if options.has('--build-fixture') {
 		root_fixture(state, family)!
@@ -151,21 +151,21 @@ fn root_command(family string, args []string) !int {
 		resolve(options.value('--image', ''))!
 	}
 	kernel := snapshot(state, kernel_source(options, 'aarch64'), 'aarch64')!
-	requested := strconv.atoi(os.getenv_opt('VINIX_QEMU_PERSIST_SIZE_MB') or { if family == 'disk-root' {
+	requested := strconv.atoi(os.getenv_opt('TULPAR_QEMU_PERSIST_SIZE_MB') or { if family == 'disk-root' {
 		'64'
 	} else {
 		'8192'
 	} })!
 	if requested <= 0 { return argument('persistent capacity must be positive') }
 	install_root(image, state, requested)!
-	runner := resolve(os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() })!
+	runner := resolve(os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() })!
 	base := guesthost.launch_from('', image, state, kernel, 'aarch64', false, runner)!
-	arm_config(state, runner, 'vinix.qemu_platform=1 vinix.qemu_persist=1 vinix.qemu_root=1 ' + os.getenv('VINIX_CMDLINE'))!
+	arm_config(state, runner, 'tulpar.qemu_platform=1 tulpar.qemu_persist=1 tulpar.qemu_root=1 ' + os.getenv('TULPAR_CMDLINE'))!
 	mut argv := base.command.clone()
 	argv[argv.index('-m') + 1] = '2048'
 	argv.delete(argv.index('-no-reboot'))
-	if os.getenv('VINIX_QEMU_EXTRA') != '' {
-		argv.insert(1, hosttest.shell_split(os.getenv('VINIX_QEMU_EXTRA'))!)
+	if os.getenv('TULPAR_QEMU_EXTRA') != '' {
+		argv.insert(1, hosttest.shell_split(os.getenv('TULPAR_QEMU_EXTRA'))!)
 	}
 	argv << ['-drive',
 		'if=none,format=raw,file=' + state + '/root.ext2,id=system-root,cache=writeback', '-device',
@@ -183,9 +183,9 @@ fn root_command(family string, args []string) !int {
 	})
 	result := guesthost.boot_session(argv, base.env, state, guesthost.SessionPolicy{
 		pass:     if family == 'disk-root' {
-			'VINIX DISK ROOT: PASS'
+			'TULPAR DISK ROOT: PASS'
 		} else {
-			'VINIX WRITEBACK: PASS'
+			'TULPAR WRITEBACK: PASS'
 		}
 		failures: root_failures(family)
 		lookback: 8192

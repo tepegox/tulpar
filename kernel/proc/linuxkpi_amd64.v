@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module proc
 
-fn C.vinix_linuxkpi_task_init(voidptr, voidptr, i32, i32, voidptr, u64)
-fn C.vinix_linuxkpi_task_inherit(voidptr, voidptr, i32, i32, voidptr)
-fn C.vinix_linuxkpi_task_view(voidptr, voidptr, i32, i32, voidptr, u64, bool) voidptr
-fn C.vinix_linuxkpi_task_dead(voidptr)
+fn C.tulpar_linuxkpi_task_init(voidptr, voidptr, i32, i32, voidptr, u64)
+fn C.tulpar_linuxkpi_task_inherit(voidptr, voidptr, i32, i32, voidptr)
+fn C.tulpar_linuxkpi_task_view(voidptr, voidptr, i32, i32, voidptr, u64, bool) voidptr
+fn C.tulpar_linuxkpi_task_dead(voidptr)
 
 pub fn linuxkpi_mark_task_dead(mut t Thread) {
 	$if linuxkpi ? {
-		C.vinix_linuxkpi_task_dead(voidptr(&t.linuxkpi_task[0]))
+		C.tulpar_linuxkpi_task_dead(voidptr(&t.linuxkpi_task[0]))
 	}
 }
 
@@ -24,17 +24,17 @@ pub fn linuxkpi_init_task(mut t Thread, source &Thread) {
 		if source != unsafe { nil } {
 			mut parent := unsafe { source }
 			name := parent.comm
-			view := C.vinix_linuxkpi_task_view(voidptr(&parent.linuxkpi_task[0]), voidptr(parent),
+			view := C.tulpar_linuxkpi_task_view(voidptr(&parent.linuxkpi_task[0]), voidptr(parent),
 				i32(parent.tid), i32(parent.process.pid), name.str, u64(name.len), false)
-			C.vinix_linuxkpi_task_inherit(storage, voidptr(t), i32(t.tid), i32(t.process.pid), view)
+			C.tulpar_linuxkpi_task_inherit(storage, voidptr(t), i32(t.tid), i32(t.process.pid), view)
 		} else {
 			name := t.process.name
 			start, end := command_name_bounds(name)
 			if end > start {
-				C.vinix_linuxkpi_task_init(storage, voidptr(t), i32(t.tid), i32(t.process.pid),
+				C.tulpar_linuxkpi_task_init(storage, voidptr(t), i32(t.tid), i32(t.process.pid),
 					unsafe { name.str + start }, u64(end - start))
 			} else {
-				C.vinix_linuxkpi_task_init(storage, voidptr(t), i32(t.tid), i32(t.process.pid), c'vinix',
+				C.tulpar_linuxkpi_task_init(storage, voidptr(t), i32(t.tid), i32(t.process.pid), c'tulpar',
 					5)
 			}
 		}

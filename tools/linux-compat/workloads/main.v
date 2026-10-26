@@ -94,11 +94,11 @@ fn (suite Suite) command(program string, arguments []string) ![]string {
 	if suite.path in ['translated-x86_64', 'translated-i386'] {
 		if program == suite.runtime && suite.runtime_libc == 'glibc' {
 			arch := if suite.path == 'translated-x86_64' { 'x86_64' } else { 'i386' }
-			emulator := os.getenv_opt(if arch == 'x86_64' { 'VINIX_X86_64_EMULATOR' } else { 'VINIX_I386_EMULATOR' }) or { '/usr/bin/qemu-' + arch }
+			emulator := os.getenv_opt(if arch == 'x86_64' { 'TULPAR_X86_64_EMULATOR' } else { 'TULPAR_I386_EMULATOR' }) or { '/usr/bin/qemu-' + arch }
 			if !os.is_executable(emulator) { return error('unsupported: translator is missing: ' + emulator) }
-			root := '/usr/libexec/vinix-glibc/' + arch
+			root := '/usr/libexec/tulpar-glibc/' + arch
 			mut argv := [emulator]
-			if arch == 'x86_64' { argv << ['-B', os.getenv_opt('VINIX_X86_64_GUEST_BASE') or { '0x100000000' }] }
+			if arch == 'x86_64' { argv << ['-B', os.getenv_opt('TULPAR_X86_64_GUEST_BASE') or { '0x100000000' }] }
 			argv << ['-L', root, '-0', program, program, ...arguments]
 			return argv
 		}
@@ -116,11 +116,11 @@ fn (suite Suite) command(program string, arguments []string) ![]string {
 		if suite.path == 'translated-i386' && program == suite.runtime {
 			// The static probe has no PT_DYNAMIC for the wrapper's musl loader.
 			// Ordinary applications still use the existing private-loader path.
-			emulator := os.getenv_opt('VINIX_I386_EMULATOR') or { '/usr/bin/qemu-i386' }
+			emulator := os.getenv_opt('TULPAR_I386_EMULATOR') or { '/usr/bin/qemu-i386' }
 			if !os.is_executable(emulator) {
 				return error('unsupported: translator is missing: ' + emulator)
 			}
-			runtime := os.getenv_opt('VINIX_I386_ROOT') or { '/usr/libexec/vinix-i386/root' }
+			runtime := os.getenv_opt('TULPAR_I386_ROOT') or { '/usr/libexec/tulpar-i386/root' }
 			return [emulator, '-L', runtime, '-0', program, program, ...arguments]
 		}
 		return [wrapper, program, ...arguments]
@@ -146,7 +146,7 @@ fn (mut suite Suite) execute(program string, arguments []string) !string {
 		&& (suite.path == 'translated-i386' || suite.runtime_libc == 'glibc') {
 		// Match the translator launcher's opt-in without changing the parent
 		// environment or leaking a foreign library path to native descendants.
-		overrides['VINIX_ALLOW_WX'] = '1'
+		overrides['TULPAR_ALLOW_WX'] = '1'
 		unset = ['LD_LIBRARY_PATH', 'QEMU_LD_PREFIX', 'QEMU_SET_ENV']
 	}
 	if overrides.len > 0 || unset.len > 0 {
@@ -301,23 +301,23 @@ fn (mut suite Suite) run(name string) ! {
 			expect(output.contains('GO SMOKE PASS'), 'Go application did not pass')!
 		}
 		'java' {
-			source := native_runtime_fixture('java', suite.path, $embed_file('../../../tests/java/VinixJavaSmoke.java').to_string())!
+			source := native_runtime_fixture('java', suite.path, $embed_file('../../../tests/java/TulparJavaSmoke.java').to_string())!
 			suite.package('openjdk21-jdk')!
 			jdk := native_java_bin()!
 			if 'java' in suite.jit_runtimes { suite.require_jit_mount('java', jdk + '/java')! }
 			// HotSpot needs writable executable code pages. Request the existing
 			// compatibility exception only for these children; exec still
 			// requires a privileged launcher or an administrator's wxallowed mount.
-			suite.environment['VINIX_ALLOW_WX'] = '1'
+			suite.environment['TULPAR_ALLOW_WX'] = '1'
 			suite.execute(jdk + '/java', ['-version'])!
-			os.write_file(suite.work + '/VinixJavaSmoke.java', source)!
-			suite.execute(jdk + '/javac', [suite.work + '/VinixJavaSmoke.java'])!
-			output := suite.execute(jdk + '/java', ['-Xms16m', '-Xmx128m', '-cp', suite.work, 'VinixJavaSmoke'])!
-			expect(output.contains('on Vinix: PASS'), 'Java application did not pass')!
-			archive := suite.work + '/vinix-java-smoke.jar'
-			suite.execute(jdk + '/jar', ['--create', '--file', archive, '-C', suite.work, 'VinixJavaSmoke.class'])!
-			archived := suite.execute(jdk + '/java', ['-Xms16m', '-Xmx128m', '-cp', archive, 'VinixJavaSmoke'])!
-			expect(archived.contains('on Vinix: PASS'), 'Java JAR application did not pass')!
+			os.write_file(suite.work + '/TulparJavaSmoke.java', source)!
+			suite.execute(jdk + '/javac', [suite.work + '/TulparJavaSmoke.java'])!
+			output := suite.execute(jdk + '/java', ['-Xms16m', '-Xmx128m', '-cp', suite.work, 'TulparJavaSmoke'])!
+			expect(output.contains('on Tulpar: PASS'), 'Java application did not pass')!
+			archive := suite.work + '/tulpar-java-smoke.jar'
+			suite.execute(jdk + '/jar', ['--create', '--file', archive, '-C', suite.work, 'TulparJavaSmoke.class'])!
+			archived := suite.execute(jdk + '/java', ['-Xms16m', '-Xmx128m', '-cp', archive, 'TulparJavaSmoke'])!
+			expect(archived.contains('on Tulpar: PASS'), 'Java JAR application did not pass')!
 		}
 		'v' {
 			suite.execute('v', ['version'])!
@@ -368,7 +368,7 @@ fn (mut suite Suite) server() ! {
 		}
 	}
 	os.mkdir(suite.work + '/www')!
-	content := 'vinix-server-42-' + sha256.sum(suite.work.bytes()).hex()
+	content := 'tulpar-server-42-' + sha256.sum(suite.work.bytes()).hex()
 	os.write_file(suite.work + '/www/index.html', content)!
 	command := suite.command(server, ['httpd', '-f', '-p', '127.0.0.1:19015', '-h',
 		suite.work + '/www'])!
@@ -469,16 +469,16 @@ fn main() {
 		exit(2)
 	}
 	if host && jit_runtimes.len > 0 {
-		eprintln('JIT mount qualification is permitted only inside Vinix')
+		eprintln('JIT mount qualification is permitted only inside Tulpar')
 		exit(2)
 	}
 	if host && ('--install' in values || 'packages' in cases) {
-		eprintln('installation is permitted only inside Vinix')
+		eprintln('installation is permitted only inside Tulpar')
 		exit(2)
 	}
 	version := os.read_file('/proc/version') or { os.uname().sysname }
-	if !host && !version.to_lower().contains('vinix') {
-		eprintln('run inside Vinix, or use --host for explicitly host-only evidence')
+	if !host && !version.to_lower().contains('tulpar') {
+		eprintln('run inside Tulpar, or use --host for explicitly host-only evidence')
 		exit(2)
 	}
 	if os.exists(work) {
@@ -506,7 +506,7 @@ fn main() {
 	} else {
 		''
 	}
-	report := Report{if host { 'host' } else { 'vinix-guest' }, path, version, sha256.sum(os.read_bytes(os.executable()) or { []u8{} }).hex(), runtime_hash, runtime_libc, int(C.getuid()), int(C.getgid()), jit_runtimes, suite.jit_mounts, false, verdicts, suite.commands, suite.services, suite.debuggers, suite.packages, suite.games, suite.service_units, suite.browsers}
+	report := Report{if host { 'host' } else { 'tulpar-guest' }, path, version, sha256.sum(os.read_bytes(os.executable()) or { []u8{} }).hex(), runtime_hash, runtime_libc, int(C.getuid()), int(C.getgid()), jit_runtimes, suite.jit_mounts, false, verdicts, suite.commands, suite.services, suite.debuggers, suite.packages, suite.games, suite.service_units, suite.browsers}
 	os.write_file(suite.work + '/report.json', json2.encode(report, prettify: true) + '\n') or {
 		eprintln(err.msg())
 		exit(1)

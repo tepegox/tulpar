@@ -13,7 +13,7 @@ fn parse_futex_number(macros string) !string {
 }
 
 fn futex_number(output string, arch string) !string {
-	sysroot := hosttest.env_default('VINIX_AARCH64_SYSROOT', hosttest.root() + '/build-aarch64-userland/sysroot')
+	sysroot := hosttest.env_default('TULPAR_AARCH64_SYSROOT', hosttest.root() + '/build-aarch64-userland/sysroot')
 	cc := if arch == 'arm64' {
 		[hosttest.env_default('CC', 'clang'), '--target=aarch64-linux-musl', '--sysroot=' + sysroot]
 	} else {

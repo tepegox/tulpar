@@ -24,7 +24,7 @@ fn software_view_fixture() SoftwareView {
 
 fn software_view_service_fixture(args []string) bool {
 	if args[1] != 'view' { return false }
-	mode := os.getenv('VINIX_SOFTWARE_VIEW_FIXTURE')
+	mode := os.getenv('TULPAR_SOFTWARE_VIEW_FIXTURE')
 	defer { unsafe { mode.free() } }
 	if mode == '' { return false }
 	text := json2.encode(software_view_fixture())
@@ -64,7 +64,7 @@ fn check_software_view_reader() ! {
 	check_software_search_paste()
 	check_software_catalog_browser()!
 	mut app := SoftwareApp{ service_path: os.executable(), administration_required: true, query: []u8{cap: 256}, output: []u8{cap: 8192} }
-	defer { os.unsetenv('VINIX_SOFTWARE_VIEW_FIXTURE'); app.close_app() }
+	defer { os.unsetenv('TULPAR_SOFTWARE_VIEW_FIXTURE'); app.close_app() }
 	text := json2.encode(software_view_fixture())
 	metadata_fixture_output(mut app, text); app.load_view()
 	assert app.rows.len == 32 && app.rows[31].firmware && app.rows[31].proprietary && app.rows[31].updatable
@@ -81,7 +81,7 @@ fn check_software_view_reader() ! {
 	app.key_input('\x01'); app.key_input('APP-31'); assert app.matching == [31]
 	app.key_input('\x01'); app.key_input('\x7f'); assert app.matching.len == 32
 	// Searching stays available while an ordinary catalog read waits to exit.
-	os.setenv('VINIX_SOFTWARE_VIEW_FIXTURE', 'held', true)
+	os.setenv('TULPAR_SOFTWARE_VIEW_FIXTURE', 'held', true)
 	app.start(['view'], true); pid := app.worker.pid
 	wait_for_package_navigation_output(mut app, false)
 	app.handle('software.catalog.browse')!; assert !app.catalog_browser_mode && app.worker.pid == pid
@@ -93,7 +93,7 @@ fn check_software_view_reader() ! {
 	app.key_input('\x01'); app.key_input('\x7f')
 	app.selected = 31
 	for mode in ['missing', 'duplicate', 'partial', 'coherence', 'provenance-partial', 'provenance-invalid', 'dependencies-partial', 'dependencies-invalid', 'payload-partial', 'payload-invalid'] {
-		os.setenv('VINIX_SOFTWARE_VIEW_FIXTURE', mode, true)
+		os.setenv('TULPAR_SOFTWARE_VIEW_FIXTURE', mode, true)
 		app.start(['view'], true); wait_for_software(mut app)
 		assert app.status.starts_with('Invalid response from the package service:') && !app.admin_prompt && app.worker == unsafe { nil }
 		assert app.rows.len == 32 && app.selected == 31 && app.rows[31].updatable && app.rows[31].firmware
@@ -126,7 +126,7 @@ fn check_software_view_memory() ! {
 		for warmup in 0 .. 2 {
 			mut app := SoftwareApp{ query: []u8{cap: 256}, output: []u8{cap: 8192} }
 			unsafe { app.rows.flags |= .noslices; app.matching.flags |= .noslices; app.output.flags |= .noslices }
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				metadata_fixture_output(mut app, text); app.load_view(); assert app.rows.len == 32
 				software_search_paste_cycle(mut app)
@@ -148,7 +148,7 @@ fn check_software_view_memory() ! {
 			}
 			app.close_app()
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'Software catalog reloads retained ${kept} bytes'
 		println('Software catalog reader: 1000 wide/partial-invalid/legacy reload, display/details and retirement cycles retain zero tracked bytes')
 		println('Software search paste: 1000 literal/rejected/selected/empty input and catalog retirement cycles retain zero tracked bytes')

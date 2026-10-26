@@ -16,7 +16,7 @@ allocation or free is added.
 
 [Linux v6.12 `fs/ioctl.c`](https://github.com/torvalds/linux/blob/v6.12/fs/ioctl.c)
 uses the saved file mount for setter write admission. These tests preserve
-Vinix's existing capability-before-mount error ordering. They do not qualify
+Tulpar's existing capability-before-mount error ordering. They do not qualify
 Linux flag payloads or error precedence.
 
 Use `--case descflags` or `df-0` through `df-5`. Native `all` includes the group;

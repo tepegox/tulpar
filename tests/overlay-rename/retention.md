@@ -97,7 +97,7 @@ cached. Idle, application launch and drag pass their process-count and duration
 checks. `retention-desktop-perf-c.json`, `retention-desktop-shots-c`,
 `retention-desktop-serial.log` and `retention-perf-evidence-checked.log` retain
 the report, screenshots, capture and validation. Kernel selection for this
-full run is inferred from the stable `VINIX_KERNEL_DIR` invocation and inspected
+full run is inferred from the stable `TULPAR_KERNEL_DIR` invocation and inspected
 runner, which copies that directory's binary. The current harness removes its
 boot disk on completion, so an independent extraction is unavailable. The
 native-controller runs retain their kernel inputs and verify the hashes above.

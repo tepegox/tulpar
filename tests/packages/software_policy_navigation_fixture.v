@@ -8,11 +8,11 @@ import ui2
 import tools.packages.pkgprotocol
 
 fn software_policy_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_POLICY_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_POLICY_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if (mode.starts_with('list-') && args[1] == 'policy') || (mode.starts_with('review-') && args[1] == 'policy-review') {
 		text := if args[1] == 'policy' {
-			path := os.getenv('VINIX_SOFTWARE_POLICY_FIXTURE')
+			path := os.getenv('TULPAR_SOFTWARE_POLICY_FIXTURE')
 			if os.is_file(path) { os.read_file(path)! } else { json2.encode(fixture_policy_document()) }
 		} else {
 			assert args == [args[0], 'policy-review', policy_fixture_path]
@@ -37,12 +37,12 @@ fn software_policy_navigation_service_fixture(args []string) !bool {
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'activate' }))
 		flush_stdout()
 		// Approval closes stdin. Use a separate explicit barrier after submission.
-		release := os.getenv('VINIX_SOFTWARE_POLICY_NAVIGATION_RELEASE')
+		release := os.getenv('TULPAR_SOFTWARE_POLICY_NAVIGATION_RELEASE')
 		for _ in 0 .. 20000 { if os.is_file(release) { break }; time.sleep(time.millisecond) }
 		assert os.read_file(release)! == 'release'
 		if mode == 'write-failed' { eprintln('Policy review is stale: current configuration changed. Reload and review again.'); exit(23) }
 		document := pkgprotocol.PolicyDocument{ format: 1, architecture: 'aarch64', policy: fixture_policy_review().proposed }
-		os.write_file(os.getenv('VINIX_SOFTWARE_POLICY_FIXTURE'), json2.encode(document))!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_POLICY_FIXTURE'), json2.encode(document))!
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete', current: 1, total: 1 }))
 		return true
 	}
@@ -75,14 +75,14 @@ fn check_policy_empty_paste(mut app SoftwareApp) {
 }
 
 fn check_software_policy_navigation() ! {
-	receipt := os.temp_dir() + '/vinix-policy-navigation-' + os.getpid().str()
+	receipt := os.temp_dir() + '/tulpar-policy-navigation-' + os.getpid().str()
 	release := receipt + '.release'
-	os.setenv('VINIX_SOFTWARE_POLICY_FIXTURE', receipt, true)
-	os.setenv('VINIX_SOFTWARE_POLICY_NAVIGATION_RELEASE', release, true)
+	os.setenv('TULPAR_SOFTWARE_POLICY_FIXTURE', receipt, true)
+	os.setenv('TULPAR_SOFTWARE_POLICY_NAVIGATION_RELEASE', release, true)
 	defer {
 		os.rm(receipt) or {}; os.rm(release) or {}; os.rm(release + '.pending') or {}
-		os.unsetenv('VINIX_SOFTWARE_POLICY_FIXTURE'); os.unsetenv('VINIX_SOFTWARE_POLICY_NAVIGATION')
-		os.unsetenv('VINIX_SOFTWARE_POLICY_NAVIGATION_RELEASE')
+		os.unsetenv('TULPAR_SOFTWARE_POLICY_FIXTURE'); os.unsetenv('TULPAR_SOFTWARE_POLICY_NAVIGATION')
+		os.unsetenv('TULPAR_SOFTWARE_POLICY_NAVIGATION_RELEASE')
 	}
 	mut app := SoftwareApp{ administration_required: true, service_path: os.executable(), output: []u8{cap: 8192}, query: 'kept query'.bytes(), filter: 1 }
 	defer { app.close_app() }
@@ -93,7 +93,7 @@ fn check_software_policy_navigation() ! {
 	for kind in ['list', 'review']! {
 		for ending in ['partial', 'complete']! {
 			for action in ['software.policy.stop', 'software.policy.cancel', 'escape']! {
-				os.setenv('VINIX_SOFTWARE_POLICY_NAVIGATION', kind + '-' + ending, true)
+				os.setenv('TULPAR_SOFTWARE_POLICY_NAVIGATION', kind + '-' + ending, true)
 				app.handle(if kind == 'list' { 'software.policy.reload' } else { 'software.policy.review' })!
 				pid := app.worker.pid
 				wait_for_policy_navigation_output(mut app, false)
@@ -112,7 +112,7 @@ fn check_software_policy_navigation() ! {
 				assert !app.policy_review_ready && app.policy_pending == '' && app.policy_snapshot.fingerprint == ''
 				assert app.output.len == 0 && !app.output_truncated && !app.poll() && app.status.contains('stopped')
 				assert editor_bytes_text(app.policy_path) == policy_fixture_path && app.policy_mode && !os.exists(receipt)
-				os.unsetenv('VINIX_SOFTWARE_POLICY_NAVIGATION')
+				os.unsetenv('TULPAR_SOFTWARE_POLICY_NAVIGATION')
 				if kind == 'list' {
 					assert !app.policy_ready && app.policy_pages.len == 0
 					app.handle('software.policy.review')!; assert app.worker == unsafe { nil } && !app.policy_review_ready
@@ -145,7 +145,7 @@ fn check_software_policy_navigation() ! {
 	for mode in ['write-complete', 'write-failed']! {
 		app.handle('software.policy.review')!; wait_for_software(mut app)
 		assert app.policy_review_ready
-		os.setenv('VINIX_SOFTWARE_POLICY_NAVIGATION', mode, true)
+		os.setenv('TULPAR_SOFTWARE_POLICY_NAVIGATION', mode, true)
 		app.handle('software.policy.confirm')!
 		assert app.admin_prompt && app.worker.args == ['admin', 'policy-apply', 'c'.repeat(64), policy_fixture_path]
 		app.key_input('fixture secret é'); app.handle('software.admin.approve')!
@@ -161,7 +161,7 @@ fn check_software_policy_navigation() ! {
 		app.handle('software.policy.read')!; assert !app.policy_reader_mode
 		app.key_input('\x1b'); app.stop_policy_read(); app.paste_input('/must-not-edit')
 		assert app.worker.pid == pid && C.kill(pid, 0) == 0 && !os.exists(receipt) && app.policy_mode
-		if mode == 'write-complete' { os.setenv('VINIX_SOFTWARE_POLICY_NAVIGATION', 'list-complete', true) }
+		if mode == 'write-complete' { os.setenv('TULPAR_SOFTWARE_POLICY_NAVIGATION', 'list-complete', true) }
 		// Publish a complete marker: existence must never expose an empty file
 		// while the parent is still writing the release bytes.
 		os.write_file(release + '.pending', 'release')!
@@ -174,7 +174,7 @@ fn check_software_policy_navigation() ! {
 			app.handle('software.policy.stop')!
 			assert !app.policy_ready && app.policy_pages.len == 0 && app.policy_result.contains('policy saved')
 			app.handle('software.policy.review')!; assert app.worker == unsafe { nil }
-			os.unsetenv('VINIX_SOFTWARE_POLICY_NAVIGATION'); app.handle('software.policy.reload')!
+			os.unsetenv('TULPAR_SOFTWARE_POLICY_NAVIGATION'); app.handle('software.policy.reload')!
 		}
 		wait_for_software(mut app)
 		assert !app.policy_review_ready && app.policy_pending == '' && app.prepare_close()
@@ -188,9 +188,9 @@ fn check_software_policy_navigation() ! {
 			free_window_tree(compact)
 			app.handle('software.failure')!; assert app.failure_mode
 			app.handle('software.failure.back')!; assert !app.failure_mode && app.policy_mode
-			os.unsetenv('VINIX_SOFTWARE_POLICY_NAVIGATION'); app.handle('software.policy.reload')!; wait_for_software(mut app)
+			os.unsetenv('TULPAR_SOFTWARE_POLICY_NAVIGATION'); app.handle('software.policy.reload')!; wait_for_software(mut app)
 		}
-		os.rm(release)!; os.unsetenv('VINIX_SOFTWARE_POLICY_NAVIGATION')
+		os.rm(release)!; os.unsetenv('TULPAR_SOFTWARE_POLICY_NAVIGATION')
 	}
 	app.handle('software.policy.path')!; app.key_input('\x01'); app.key_input('\x1b')
 	assert app.policy_mode && !app.focus && !app.select_all
@@ -210,7 +210,7 @@ fn check_software_policy_navigation_memory() ! {
 		mut app := SoftwareApp{ policy_mode: true, output: []u8{cap: 8192} }
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.initialize_policy_path(); software_repository_text(mut app.policy_path, policy_fixture_path)
 				app.output.clear(); for byte in document_text { app.output << byte }; app.load_policy_document()
@@ -231,7 +231,7 @@ fn check_software_policy_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'policy navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'policy navigation retained ${kept} bytes'
 		println('Software policy navigation: 1000 document/review/section/page/full/compact/cancel/failure/retirement cycles retain zero tracked bytes')
 		println('Software policy reader: 1000 current/review/cache/compact/full/keys/back/cancel/retirement cycles retain zero tracked bytes')
 	}

@@ -179,7 +179,7 @@ pub fn (mut n Notifications) withdraw(owner string, key string) bool {
 pub fn (n &Notifications) encode() string {
 	mut w := &Writer{}
 	defer { unsafe { free(w) } }
-	w.add('vinix-notifications\t1\t')
+	w.add('tulpar-notifications\t1\t')
 	w.number(n.next_id)
 	w.add('\t')
 	w.number(int(n.mode))
@@ -240,7 +240,7 @@ pub fn decode_notifications(record string) !Notifications {
 		f := fields(unsafe { tos(record.str + start, end - start) })!
 		start = end + 1
 		if !header {
-			if f.count != 6 || f.values[0] != 'vinix-notifications' || f.values[1] != '1' {
+			if f.count != 6 || f.values[0] != 'tulpar-notifications' || f.values[1] != '1' {
 				return error('invalid notification header')
 			}
 			n.next_id = number(f.values[2], 1, 9223372036854775806)!

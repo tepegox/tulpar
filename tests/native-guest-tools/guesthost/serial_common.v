@@ -54,7 +54,7 @@ pub fn serial_arm_launch_disk(init string, archive string, state string, kernel_
 	runner_root string, memory int, module_iso string, disk string) !Launch {
 	mkdir_literal(state)!
 	abi_validate_elf(init, 'aarch64')!
-	abi_validate_elf(kernel_dir + '/bin/vinix', 'aarch64')!
+	abi_validate_elf(kernel_dir + '/bin/tulpar', 'aarch64')!
 	rootfs := state + '/init-overlay'
 	for name in ['root', 'sbin', 'proc', 'sys', 'dev', 'tmp'] {
 		mkdir_literal(rootfs + '/' + name)!
@@ -91,9 +91,9 @@ pub fn serial_arm_launch_disk(init string, archive string, state string, kernel_
 		if !replaced { return error('Limine base module entry missing') }
 		text = lines.join('\n') + '\n'
 		command << ['-drive',
-			'if=none,id=vinix-module,media=cdrom,format=raw,readonly=on,file=' + module_iso, '-device',
-			'virtio-scsi-device,id=vinix-module-scsi', '-device',
-			'scsi-cd,bus=vinix-module-scsi.0,drive=vinix-module']
+			'if=none,id=tulpar-module,media=cdrom,format=raw,readonly=on,file=' + module_iso, '-device',
+			'virtio-scsi-device,id=tulpar-module-scsi', '-device',
+			'scsi-cd,bus=tulpar-module-scsi.0,drive=tulpar-module']
 	}
 	os.write_file(config, text + '    module_path: boot():/boot/test-init.tar\n')!
 	patched := state + '/test-overlay.iso'
@@ -104,10 +104,10 @@ pub fn serial_arm_launch_disk(init string, archive string, state string, kernel_
 }
 
 fn serial_x86_command(iso string, qemu string, firmware string, capture string) []string {
-	return [qemu, '-machine', 'q35,smm=off', '-accel', os.getenv_opt('VINIX_QEMU_ACCEL') or { 'tcg' },
+	return [qemu, '-machine', 'q35,smm=off', '-accel', os.getenv_opt('TULPAR_QEMU_ACCEL') or { 'tcg' },
 		'-cpu', 'max', '-m', '1024', '-smp', '2', '-drive',
 		'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware, '-cdrom', iso, '-display',
 		'none', '-monitor', 'none', '-serial', 'stdio', '-no-reboot', '-netdev', 'user,id=net0',
 		'-device', 'e1000,netdev=net0,mac=52:54:00:12:34:56', '-object',
-		'filter-dump,id=vinixdump,netdev=net0,file=' + capture]
+		'filter-dump,id=tulpardump,netdev=net0,file=' + capture]
 }

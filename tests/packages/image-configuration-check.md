@@ -6,7 +6,7 @@ The receipts below retain the configuration-only staging scope of this run.
 
 `tools/packages/stage.v` can initialize a fresh image from an explicitly reviewed
 format-1 package configuration using `--config FILE` or
-`VINIX_PACKAGE_IMAGE_CONFIG`. The option takes precedence. With neither input,
+`TULPAR_PACKAGE_IMAGE_CONFIG`. The option takes precedence. With neither input,
 the existing unenrolled default is retained. No demonstration publisher key,
 proprietary-license acceptance or firmware permission is supplied automatically.
 
@@ -91,9 +91,9 @@ Repeat with the existing native builder's inputs, a target sandbox and kernel:
 ```sh
 v -path '@vlib|@vmodules|.|tests/hardware-platform|tools/accounts' \
   -o /tmp/native-catalog-check tests/packages/native-catalog-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
-  VINIX_NATIVE_CATALOG_INPUTS=/build/native-inputs \
-  VINIX_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/vinix-sandbox \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+  TULPAR_NATIVE_CATALOG_INPUTS=/build/native-inputs \
+  TULPAR_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/tulpar-sandbox \
   /tmp/native-catalog-check --image --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-short-state
 ```

@@ -1,10 +1,10 @@
 #include "varargs.inc"
 .text
-VINIX_VARIADIC printf, vinix_printf_entry, 1
-VINIX_VARIADIC printf_panic, vinix_panic_entry, 1
-VINIX_VARIADIC kprintf, vinix_kprintf_entry, 1
-VINIX_VARIADIC printf_benchmark, vinix_benchmark_entry, 1
-VINIX_VARIADIC fprintf, vinix_fprintf_entry, 2
+TULPAR_VARIADIC printf, tulpar_printf_entry, 1
+TULPAR_VARIADIC printf_panic, tulpar_panic_entry, 1
+TULPAR_VARIADIC kprintf, tulpar_kprintf_entry, 1
+TULPAR_VARIADIC printf_benchmark, tulpar_benchmark_entry, 1
+TULPAR_VARIADIC fprintf, tulpar_fprintf_entry, 2
 .global vp_format
 .type vp_format, @function
 vp_format:

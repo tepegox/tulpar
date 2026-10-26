@@ -26,7 +26,7 @@ fn deployment_form_select(mut app SoftwareApp, id string) ! {
 }
 
 fn check_software_deployment_form() ! {
-	base := os.temp_dir() + '/vinix-deployment-form-' + os.getpid().str()
+	base := os.temp_dir() + '/tulpar-deployment-form-' + os.getpid().str()
 	os.mkdir(base)!
 	defer { os.rmdir_all(base) or {}; unsafe { base.free() } }
 	path := base + '/release 部署; $literal.json'
@@ -127,7 +127,7 @@ fn check_software_deployment_form_memory() ! {
 		app.initialize_deployment_field()
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for index in 0 .. 7 {
 					app.deployment_action = index
@@ -142,7 +142,7 @@ fn check_software_deployment_form_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'compact deployment form retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'compact deployment form retained ${kept} bytes'
 		println('Software compact deployment: 1000 seven-action render/edit/rejected-paste/keyboard/full/compact/tiny/retirement cycles retain zero tracked bytes PASS')
 	}
 }

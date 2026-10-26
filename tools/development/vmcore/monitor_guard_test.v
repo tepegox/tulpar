@@ -7,7 +7,7 @@ import net.unix
 import os
 
 fn test_offline_guard_refuses_a_listener_that_never_sends_a_qmp_greeting() {
-	root := '/tmp/vinix-vm-monitor-guard-${os.getpid()}'
+	root := '/tmp/tulpar-vm-monitor-guard-${os.getpid()}'
 	devcore.fresh_directory(root)!
 	defer { os.rmdir_all(root) or {} }
 	mut listener := unix.listen_stream(root + '/qmp.sock')!
@@ -22,7 +22,7 @@ fn test_offline_guard_refuses_a_listener_that_never_sends_a_qmp_greeting() {
 }
 
 fn test_offline_guard_preserves_reachable_agent_when_the_qmp_path_is_absent() {
-	root := '/tmp/vinix-vm-agent-guard-${os.getpid()}'
+	root := '/tmp/tulpar-vm-agent-guard-${os.getpid()}'
 	devcore.fresh_directory(root)!
 	defer { os.rmdir_all(root) or {} }
 	mut listener := unix.listen_stream(root + '/agent.sock')!
@@ -46,7 +46,7 @@ fn guarded_operation(action string, state string) ! {
 }
 
 fn test_all_offline_operations_preserve_an_occupied_monitor_and_existing_state() {
-	root := '/tmp/vinix-vm-monitor-state-${os.getpid()}'
+	root := '/tmp/tulpar-vm-monitor-state-${os.getpid()}'
 	devcore.fresh_directory(root)!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/run.lock', '')!
@@ -90,7 +90,7 @@ fn test_all_offline_operations_preserve_an_occupied_monitor_and_existing_state()
 }
 
 fn test_offline_guard_accepts_only_absent_or_refused_sockets_and_preserves_other_files() {
-	root := '/tmp/vinix-vm-monitor-path-${os.getpid()}'
+	root := '/tmp/tulpar-vm-monitor-path-${os.getpid()}'
 	devcore.fresh_directory(root)!
 	defer { os.rmdir_all(root) or {} }
 	ensure_stopped(root)!

@@ -31,7 +31,7 @@ fn stop_child(mut child os.Process, name string) ! {
 }
 
 fn stop_desktop(mut child os.Process, compositor int) ! {
-	// vinix-session supervises the compositor. End the real application first
+	// tulpar-session supervises the compositor. End the real application first
 	// so its supervisor can release the seat and reap it through the normal path.
 	if compositor > 0 && compositor != child.pid && child.is_alive() {
 		if C.kill(compositor, C.SIGKILL) != 0 { return error('cannot stop the ordinary compositor') }
@@ -50,8 +50,8 @@ fn counter_child_present() !bool {
 		defer { unsafe { path.free() } }
 		line := os.read_file(path) or { continue }
 		defer { unsafe { line.free() } }
-		if line.starts_with('/usr/bin/vinix-package\x00') &&
-			line.contains('\x00run-window\x00org.vinix.counter\x00') {
+		if line.starts_with('/usr/bin/tulpar-package\x00') &&
+			line.contains('\x00run-window\x00org.tulpar.counter\x00') {
 			return true
 		}
 		program := line.all_before('\x00')
@@ -88,7 +88,7 @@ fn command(arguments []string, input string) ! {
 fn check_compositor_identity(ready bool, first_run bool) !int {
 	for pid in os.ls('/proc')! {
 		line := os.read_file('/proc/' + pid + '/cmdline') or { continue }
-		if !line.starts_with('/usr/bin/vinix-desktop\x00') ||
+		if !line.starts_with('/usr/bin/tulpar-desktop\x00') ||
 			(first_run && line.contains('--open=')) || (!first_run && !line.contains('--open=Software')) {
 			continue
 		}
@@ -117,11 +117,11 @@ fn check_compositor_identity(ready bool, first_run bool) !int {
 			!folders.contains('XDG_DOCUMENTS_DIR="/home/alex/Documents"') {
 			return error('compositor prepared folders outside the account home')
 		}
-		if os.exists('/root/.vinix-user') || os.exists('/home/alex/.vinix-user') {
+		if os.exists('/root/.tulpar-user') || os.exists('/home/alex/.tulpar-user') {
 			return error('ordinary compositor created a legacy registration record')
 		}
 		if ready {
-			marker := os.lstat('/run/user/1000/vinix-desktop-ready')!
+			marker := os.lstat('/run/user/1000/tulpar-desktop-ready')!
 			if marker.uid != 1000 || marker.mode & 0o170000 != 0o100000 || marker.mode & 0o022 != 0 {
 				return error('ordinary compositor did not publish an account-owned ready marker')
 			}
@@ -143,7 +143,7 @@ fn run() ! {
 	os.chmod('/tmp', 0o1777)!
 	os.setenv('PATH', '/usr/sbin:/usr/bin:/sbin:/bin', true)
 	os.setenv('HOME', '/root', true)
-	os.setenv('VINIX_SYSTEM_SESSION', '1', true)
+	os.setenv('TULPAR_SYSTEM_SESSION', '1', true)
 	installed := os.exists('/etc/software-graphical-installed')
 	first_run := os.exists('/etc/software-graphical-first-run')
 	fresh := if installed { installed_root()! } else { true }
@@ -151,12 +151,12 @@ fn run() ! {
 	if fresh {
 		if installed { require_uninstalled()! }
 		println('SOFTWARE GRAPHICAL preparing ordinary administrator account')
-		command(['/usr/sbin/vinix-account', 'init'], '')!
-		command(['/usr/sbin/vinix-account', 'add', 'alex', 'Alex Example', 'admin'], 'graphical acceptance password\n')!
+		command(['/usr/sbin/tulpar-account', 'init'], '')!
+		command(['/usr/sbin/tulpar-account', 'add', 'alex', 'Alex Example', 'admin'], 'graphical acceptance password\n')!
 		println('SOFTWARE GRAPHICAL ordinary administrator account prepared')
-		command(['/usr/bin/vinix-package', 'update'], '')!
+		command(['/usr/bin/tulpar-package', 'update'], '')!
 		if !installed {
-			command(['/usr/bin/vinix-package', 'install', 'org.vinix.counter', 'org.vinix.memo'], '')!
+			command(['/usr/bin/tulpar-package', 'install', 'org.tulpar.counter', 'org.tulpar.memo'], '')!
 		} else { require_uninstalled()! }
 	}
 	ordinary := (os.read_file('/etc/software-graphical-mode') or { '' }) == 'ordinary\n'
@@ -174,16 +174,16 @@ fn run() ! {
 	// Root compositor mode retains the legacy registration format. An ordinary
 	// seat must start from its account home without a registration record.
 	if !ordinary {
-		os.write_file('/root/.vinix-user', 'version=1\nname=47726170686963616c2054657374\nkdf=scrypt\nn=16384\nr=8\np=1\nsalt=00112233445566778899aabbccddeeff\nhash=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n')!
-		os.chmod('/root/.vinix-user', 0o600)!
+		os.write_file('/root/.tulpar-user', 'version=1\nname=47726170686963616c2054657374\nkdf=scrypt\nn=16384\nr=8\np=1\nsalt=00112233445566778899aabbccddeeff\nhash=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n')!
+		os.chmod('/root/.tulpar-user', 0o600)!
 	}
-	mut authentication := os.new_process('/usr/sbin/vinix-authd')
+	mut authentication := os.new_process('/usr/sbin/tulpar-authd')
 	defer {
 		stop_child(mut authentication, 'authentication service') or { eprintln('SOFTWARE GRAPHICAL FAIL: ' + err.msg()) }
 	}
 	authentication.set_args(['--foreground'])
 	authentication.run()
-	for !os.exists('/run/vinix/auth.sock') {
+	for !os.exists('/run/tulpar/auth.sock') {
 		if !authentication.is_alive() { return error('authentication service exited') }
 		time.sleep(50 * time.millisecond)
 	}
@@ -191,29 +191,29 @@ fn run() ! {
 	// Holding its inode open prevents unlink/recreate from reusing that inode.
 	mut previous_marker := os.File{}
 	mut previous_inode := u64(0)
-	if ordinary && os.exists('/run/user/1000/vinix-desktop-ready') {
-		previous_marker = os.open('/run/user/1000/vinix-desktop-ready')!
-		previous_inode = (os.lstat('/run/user/1000/vinix-desktop-ready')!).inode
+	if ordinary && os.exists('/run/user/1000/tulpar-desktop-ready') {
+		previous_marker = os.open('/run/user/1000/tulpar-desktop-ready')!
+		previous_inode = (os.lstat('/run/user/1000/tulpar-desktop-ready')!).inode
 	}
 	defer { if previous_marker.is_opened { previous_marker.close() } }
 	mut desktop := os.new_process(if ordinary {
-		'/usr/sbin/vinix-session'
+		'/usr/sbin/tulpar-session'
 	} else {
-		'/usr/bin/vinix-desktop'
+		'/usr/bin/tulpar-desktop'
 	})
 	mut compositor_pid := 0
 	defer {
 		stop_desktop(mut desktop, compositor_pid) or { eprintln('SOFTWARE GRAPHICAL FAIL: ' + err.msg()) }
 	}
 	desktop.set_args(if ordinary {
-		if first_run { ['run', '--seat', 'alex', '/usr/bin/vinix-desktop'] }
-		else { ['run', '--seat', 'alex', '/usr/bin/vinix-desktop', '--open=Software'] }
+		if first_run { ['run', '--seat', 'alex', '/usr/bin/tulpar-desktop'] }
+		else { ['run', '--seat', 'alex', '/usr/bin/tulpar-desktop', '--open=Software'] }
 	} else {
 		['--open=Software']
 	})
 	desktop.run()
 	println('SOFTWARE GRAPHICAL waiting for real Counter pointer input')
-	path := '/home/alex/.local/share/vinix-apps/org.vinix.counter/counter.txt'
+	path := '/home/alex/.local/share/tulpar-apps/org.tulpar.counter/counter.txt'
 	deadline := time.sys_mono_now() + 1200 * time.second
 	mut ready := !ordinary
 	mut saved := false
@@ -232,10 +232,10 @@ fn run() ! {
 			before_choice = true
 		}
 		marker_inode := if !ready {
-			(os.lstat('/run/user/1000/vinix-desktop-ready') or { os.Stat{} }).inode
+			(os.lstat('/run/user/1000/tulpar-desktop-ready') or { os.Stat{} }).inode
 		} else { u64(0) }
 		if !ready && marker_inode != 0 && marker_inode != previous_inode &&
-			(os.read_file('/run/user/1000/vinix-desktop-ready') or { '' }) == 'ready\n' {
+			(os.read_file('/run/user/1000/tulpar-desktop-ready') or { '' }) == 'ready\n' {
 			compositor_pid = check_compositor_identity(true, first_run)!
 			if first_run {
 				check_first_run_decision()!
@@ -245,7 +245,7 @@ fn run() ! {
 				}
 			}
 			if previous_marker.is_opened { previous_marker.close() }
-			println('vinix-desktop: ready')
+			println('tulpar-desktop: ready')
 			ready = true
 			ready_at = time.sys_mono_now()
 		}
@@ -254,8 +254,8 @@ fn run() ! {
 			println('SOFTWARE FIRST RUN review handed to Software without activation or approval PASS')
 			reviewed = true
 		}
-		if installed && fresh && !acquired && os.exists('/var/lib/vinix-packages/current/state.json') &&
-			(os.read_file('/var/log/vinix/auth.log') or { '' }).contains('uid=1000 run packages-change as alex: exit 0') {
+		if installed && fresh && !acquired && os.exists('/var/lib/tulpar-packages/current/state.json') &&
+			(os.read_file('/var/log/tulpar/auth.log') or { '' }).contains('uid=1000 run packages-change as alex: exit 0') {
 			verify_graphical_install()!
 			acquired = true
 		}

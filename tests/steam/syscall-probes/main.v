@@ -284,7 +284,7 @@ fn run(arguments []string) ! {
 					println('STEAM SDK PASS: ' + name)
 				}
 				require(os.ls('/proc/self/fd')!.len == before, 'SDK descriptor retention')!
-				require(!os.exists('/dev/shm/vinix-steam-shm-probe'), 'SDK mapping file retention')!
+				require(!os.exists('/dev/shm/tulpar-steam-shm-probe'), 'SDK mapping file retention')!
 				mut status := i32(0)
 				require(C.waitpid(-1, &status, 1) < 0, 'SDK unreaped semaphore child')!
 			}
@@ -316,7 +316,7 @@ fn run(arguments []string) ! {
 			shared_mapping(if arguments.len == 2 {
 				arguments[1]
 			} else {
-				'/dev/shm/vinix-steam-shm-probe'
+				'/dev/shm/tulpar-steam-shm-probe'
 			})!
 		}
 		else { return error('unknown Steam syscall probe') }

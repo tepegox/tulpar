@@ -22,7 +22,7 @@ __global (
 	smp_call_vector_ready u32
 )
 
-@[export: 'vinix_linuxkpi_smp_task_present']
+@[export: 'tulpar_linuxkpi_smp_task_present']
 fn smp_task_present() bool {
 	ints := cpu.interrupt_toggle(false)
 	present := proc.current_thread() != unsafe { nil }
@@ -33,7 +33,7 @@ fn smp_task_present() bool {
 // Constructor allocation requires a real ordinary running task. Checking
 // current_thread directly avoids materializing a Linux task view in an IRQ or
 // before the native scheduler has installed its current thread.
-@[export: 'vinix_linuxkpi_smp_boot_context']
+@[export: 'tulpar_linuxkpi_smp_boot_context']
 fn smp_boot_context() bool {
 	ints := cpu.interrupt_toggle(false)
 	local := cpulocal.current()
@@ -57,7 +57,7 @@ fn smp_call_interrupt(vector u32, _frame &cpulocal.GPRState) {
 	C.vks_smp_drain(u32(cpulocal.current().cpu_number))
 }
 
-@[export: 'vinix_linuxkpi_smp_send_ipi']
+@[export: 'tulpar_linuxkpi_smp_send_ipi']
 fn smp_send_ipi(target u32) {
 	if katomic.load(&smp_call_vector_ready) == 0 || !C.vks_smp_ready()
 		|| target >= u32(cpu_locals.len) || katomic.load(&cpu_locals[target].online) == 0 {

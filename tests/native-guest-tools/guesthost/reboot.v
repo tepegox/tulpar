@@ -3,11 +3,11 @@ module guesthost
 
 import os
 
-const reboot_start = 'VINIX REBOOT PERSISTENCE: START'
-const reboot_wrote = 'VINIX REBOOT PERSISTENCE: WROTE MARKER, REBOOTING'
-const reboot_sync = 'VINIX REBOOT PERSISTENCE: SYNCING'
-const reboot_pass = 'VINIX REBOOT PERSISTENCE: PASS'
-const reboot_failures = ['VINIX REBOOT PERSISTENCE: FAIL', 'FATAL EXCEPTION', 'KERNEL PANIC']
+const reboot_start = 'TULPAR REBOOT PERSISTENCE: START'
+const reboot_wrote = 'TULPAR REBOOT PERSISTENCE: WROTE MARKER, REBOOTING'
+const reboot_sync = 'TULPAR REBOOT PERSISTENCE: SYNCING'
+const reboot_pass = 'TULPAR REBOOT PERSISTENCE: PASS'
+const reboot_failures = ['TULPAR REBOOT PERSISTENCE: FAIL', 'FATAL EXCEPTION', 'KERNEL PANIC']
 
 pub fn reboot_verdict(text string) int {
 	return if reboot_failures.any(text.contains(it)) || text.count(reboot_start) < 2

@@ -43,8 +43,8 @@ fn capture_suite() hwhost.Suite {
 fn capture_guest() !int {
 	options := hwhost.parse_options(os.args[1..])!
 	if options.help || options.list { return hwhost.run_suite(capture_suite(), os.args[1..], @FILE) }
-	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('VINIX_HWTEST_TCG') != '1' {
-		return error('provide VINIX_HWTEST_TCG=1, --kernel and a new --state-dir')
+	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('TULPAR_HWTEST_TCG') != '1' {
+		return error('provide TULPAR_HWTEST_TCG=1, --kernel and a new --state-dir')
 	}
 	repository := hwhost.find_root(@FILE)!
 	host := hwhost.find_host(repository, options.arch, options.qemu)!

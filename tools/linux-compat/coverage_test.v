@@ -42,7 +42,7 @@ fn test_real_tables_keep_architecture_numbers_and_private_extension() {
 fn test_semantic_source_changes_invalidate_fingerprints_without_qualifying_dispatch() {
 	root := os.real_path(os.dir(@FILE) + '/../..')
 	original := coverage(root)!
-	work := os.join_path(os.temp_dir(), 'vinix-coverage-inputs-' + os.getpid().str())
+	work := os.join_path(os.temp_dir(), 'tulpar-coverage-inputs-' + os.getpid().str())
 	assert !os.exists(work)
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or { panic(err) } }

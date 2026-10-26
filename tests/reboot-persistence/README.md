@@ -15,20 +15,20 @@ tests/reboot-persistence/run.sh
 ```
 
 The default architecture is ARM. To reuse an existing private kernel, set
-`VINIX_KERNEL_DIR`. The native runner always snapshots an already-built kernel.
+`TULPAR_KERNEL_DIR`. The native runner always snapshots an already-built kernel.
 The x86 runner
 uses an existing kernel, the musl cross compiler, QEMU, Limine, and e2fsprogs:
 
 ```sh
-VINIX_REBOOT_PERSISTENCE_ARCH=x86_64 \
-VINIX_AMD64_KERNEL=/absolute/path/to/x86/kernel \
+TULPAR_REBOOT_PERSISTENCE_ARCH=x86_64 \
+TULPAR_AMD64_KERNEL=/absolute/path/to/x86/kernel \
 tests/reboot-persistence/run.sh
 ```
 
-`VINIX_V_COMPILER` selects the V compiler; `CC` selects ARM clang and
-`CC_AMD64` selects the x86 musl GCC. Set `VINIX_REBOOT_PERSISTENCE_STATE_DIR`
+`TULPAR_V_COMPILER` selects the V compiler; `CC` selects ARM clang and
+`CC_AMD64` selects the x86 musl GCC. Set `TULPAR_REBOOT_PERSISTENCE_STATE_DIR`
 to a fresh path to retain the generated source, payload, disk and serial log.
-`VINIX_QEMU_TIMEOUT` overrides the default 240-second deadline.
+`TULPAR_QEMU_TIMEOUT` overrides the default 240-second deadline.
 
 The host command, guest compilation, archive preparation and PTY ownership are
 now native V. See [controller qualification](../native-disk-tools/README.md).

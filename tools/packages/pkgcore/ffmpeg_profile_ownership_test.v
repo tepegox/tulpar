@@ -3,9 +3,9 @@ module pkgcore
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn ffmpeg_owned_probe(version string, count int, fault string) ! {
@@ -52,10 +52,10 @@ fn test_ffmpeg_owned_templates_partial_inventories_and_canonical_refusals() {
 		ffmpeg_owned_attempt(version, count, fault)
 		mut maximum := u64(0); mut records := u32(0)
 		for _ in 0 .. 128 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			ffmpeg_owned_attempt(version, count, fault)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 			}
 		}

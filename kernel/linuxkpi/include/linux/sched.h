@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_SCHED_H
-#define VINIX_LINUX_SCHED_H
+#ifndef TULPAR_LINUX_SCHED_H
+#define TULPAR_LINUX_SCHED_H
 #include <linux/types.h>
 #include <linux/kernel.h>
 #include <linux/limits.h>
@@ -10,7 +10,7 @@
 #include <linux/preempt.h>
 #include <linux/spinlock_types_raw.h>
 #include <asm/current.h>
-#include <vinix/runtime.h>
+#include <tulpar/runtime.h>
 
 #define TASK_COMM_LEN 16
 #define PF_VCPU 0x00000001
@@ -28,21 +28,21 @@
  * that owner across exit. Linux address spaces and scheduler internals are
  * deliberately absent until their native implementations exist. */
 struct task_struct {
-    void *vinix_thread;
+    void *tulpar_thread;
     int pid, tgid;
     unsigned int flags;
     unsigned int __state;
-    raw_spinlock_t vinix_wait_lock;
+    raw_spinlock_t tulpar_wait_lock;
     char comm[TASK_COMM_LEN];
-    char vinix_initial_comm[TASK_COMM_LEN];
+    char tulpar_initial_comm[TASK_COMM_LEN];
     /* Fits the native view tail padding; nested I/O scopes restore this flag. */
     unsigned int in_iowait;
 };
-void vinix_linuxkpi_set_task_state(unsigned int state);
-#define set_current_state(state) vinix_linuxkpi_set_task_state(state)
-#define __set_current_state(state) vinix_linuxkpi_set_task_state(state)
-bool vinix_task_is_running(const struct task_struct *);
-#define task_is_running vinix_task_is_running
+void tulpar_linuxkpi_set_task_state(unsigned int state);
+#define set_current_state(state) tulpar_linuxkpi_set_task_state(state)
+#define __set_current_state(state) tulpar_linuxkpi_set_task_state(state)
+bool tulpar_task_is_running(const struct task_struct *);
+#define task_is_running tulpar_task_is_running
 void schedule(void);
 int io_schedule_prepare(void) __must_check;
 void io_schedule_finish(int token);

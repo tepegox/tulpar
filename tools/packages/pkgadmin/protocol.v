@@ -7,7 +7,7 @@ import json2
 pub const action = 'packages-change'
 pub const request_limit = 4096
 pub const password_limit = 256
-pub const result_prefix = 'VINIX-PACKAGE-ADMIN '
+pub const result_prefix = 'TULPAR-PACKAGE-ADMIN '
 
 pub struct Request {
 pub:

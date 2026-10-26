@@ -196,7 +196,7 @@ fn volume_seal_mock_erase(pointer voidptr, size usize) {
 }
 
 fn test_volume_growth_authenticates_before_readonly_parent_preserves_key_and_publishes_only_verified_growth() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-growth-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-growth-io-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	password := [u8(0), u8(10), u8(0xe2), u8(0x82), u8(0xac), u8(0xff)]
 	os.write_file_array(work + '/pass', password)!; os.chmod(work + '/pass', 0o600)!
@@ -254,7 +254,7 @@ fn test_volume_growth_authenticates_before_readonly_parent_preserves_key_and_pub
 			assert decode_volume_seal(&result[0], 320, &fresh[0], mut next_disk, mut next) && next.key == request.key && next.data.length == 8192
 			os.rm(work + '/result')!
 		}
-		assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+		assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 	}
 	os.write_file_array(work + '/pass', []u8{len: 1024, init: u8(index * 11 + 1)})!
 	volume_seal_io = VolumeSealIO{growing: true, grow_password_size: 1024}
@@ -278,7 +278,7 @@ fn test_volume_growth_authenticates_before_readonly_parent_preserves_key_and_pub
 }
 
 fn test_volume_rewrap_authenticates_before_new_input_preserves_metadata_and_erases_each_stage() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-rewrap-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-rewrap-io-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	old := []u8{len: 1024, init: u8(index * 11 + 1)}
 	next := [u8(0), u8(10), u8(0xe2), u8(0x82), u8(0xac), u8(0xff)]
@@ -341,7 +341,7 @@ fn test_volume_rewrap_authenticates_before_new_input_preserves_metadata_and_eras
 			assert decode_volume_seal(&result[0], 320, &fresh[0], mut disk, mut decoded) && decoded == request
 			os.rm(work + '/result')!
 		}
-		assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+		assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 	}
 	assert os.read_bytes(work + '/source')! == source[..] && os.read_bytes(work + '/old')! == old && os.read_bytes(work + '/next')! == next
 }
@@ -395,7 +395,7 @@ fn volume_seal_mock_fflush(stream voidptr) i32 {
 }
 
 fn test_volume_config_pinned_identity_geometry_rechecks_modes_authentication_and_publication_faults() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-seal-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-seal-io-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	key := []u8{len: 64, init: u8(index * 13 + 7)}
 	os.write_file_array(work + '/key', key)!; os.chmod(work + '/key', 0o600)!
@@ -461,7 +461,7 @@ fn test_volume_config_pinned_identity_geometry_rechecks_modes_authentication_and
 				if exporting { assert os.read_bytes(work + '/output')! == key }
 				os.rm(work + '/output')!
 			}
-			assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+			assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 		}
 	}
 	assert os.read_bytes(work + '/config')! == config && os.read_bytes(work + '/key')! == key

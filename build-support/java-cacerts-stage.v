@@ -28,7 +28,7 @@ fn stage(arch string, staging string, cc string) ! {
 		|| !macros.contains('#define __linux__ 1') || macros.contains('#define __GLIBC__ ') {
 		return error('expected a ${arch} Linux musl compiler, got ${machine}')
 	}
-	work := os.join_path(os.temp_dir(), 'vinix-java-cacerts-stage-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-java-cacerts-stage-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or { eprintln(err) } }
 	// Use the same compiler discovery as all maintained host entry points.
@@ -48,7 +48,7 @@ fn stage(arch string, staging string, cc string) ! {
 		|| int(data[18]) | (int(data[19]) << 8) != expected {
 		return error('Java trust-store utility ELF architecture mismatch')
 	}
-	directory := os.join_path(staging, 'usr/libexec/vinix-minecraft')
+	directory := os.join_path(staging, 'usr/libexec/tulpar-minecraft')
 	os.mkdir_all(directory)!
 	temporary := os.join_path(directory, '.java-cacerts-${os.getpid()}')
 	// Exclusive creation avoids following a preexisting staging link.
@@ -97,7 +97,7 @@ fn main() {
 		exit(2)
 	}
 	mut cc := options['--cc']
-	if cc == '' { cc = os.getenv('VINIX_MUSL_CC_' + arch.to_upper()) }
+	if cc == '' { cc = os.getenv('TULPAR_MUSL_CC_' + arch.to_upper()) }
 	if cc == '' { cc = arch + '-linux-musl-gcc' }
 	stage(arch, staging, cc) or {
 		eprintln(err)

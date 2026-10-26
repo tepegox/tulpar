@@ -96,13 +96,13 @@ fn socket_live_xattrs(path &char, listener int) {
 		mut address := &C.sockaddr_un(C.alloca(sizeof(C.sockaddr_un)))
 		socket_address(path, address)
 		check(client >= 0, 582)
-		refused_socket_target(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 583)
+		refused_socket_target(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 583)
 		// The owner ACL entry wins over a named entry for that same UID.
 		acl[6] = 2
 		acl[30] = 0
 		check(C.lsetxattr(path, c'system.posix_acl_access', &acl[0], 44, 0) == 0
 			&& C.lstat(path, &st) == 0 && st.st_mode & 0o777 == 0o200, 584)
-		check(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0, 585)
+		check(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0, 585)
 		accepted := C.accept(listener, nil, nil)
 		mut byte := char(0)
 		check(accepted >= 0 && C.write(client, c'X', 1) == 1 && C.read(accepted, &byte, 1) == 1

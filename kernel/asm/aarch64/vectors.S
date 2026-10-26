@@ -1,4 +1,4 @@
-// AArch64 exception vector table for Vinix kernel
+// AArch64 exception vector table for Tulpar kernel
 // Each vector entry is 128 bytes (0x80), table is 2048 bytes (0x800)
 // 4 groups: Current EL SP0, Current EL SPx, Lower EL AArch64, Lower EL AArch32
 //
@@ -44,8 +44,8 @@
     lsr x16, x16, #14
     and x17, x16, #63
     lsr x16, x16, #6
-    adrp x15, vinix_stack_guard_bitmap
-    add x15, x15, :lo12:vinix_stack_guard_bitmap
+    adrp x15, tulpar_stack_guard_bitmap
+    add x15, x15, :lo12:tulpar_stack_guard_bitmap
     ldr x16, [x15, x16, lsl #3]
     lsr x16, x16, x17
     tbnz x16, #0, .Lstack_overflow\@
@@ -61,8 +61,8 @@
     lsr x16, x16, #14
     and x17, x16, #63
     lsr x16, x16, #6
-    adrp x15, vinix_stack_guard_bitmap
-    add x15, x15, :lo12:vinix_stack_guard_bitmap
+    adrp x15, tulpar_stack_guard_bitmap
+    add x15, x15, :lo12:tulpar_stack_guard_bitmap
     ldr x16, [x15, x16, lsl #3]
     lsr x16, x16, x17
     tbz x16, #0, .Lstack_ok\@
@@ -405,7 +405,7 @@ handle_svc:
     bl syscall_trace_ret
     ldp x0, x1, [sp], #16
 
-    // Convert Vinix (result, errno) to Linux ABI: x0 = result or -errno.
+    // Convert Tulpar (result, errno) to Linux ABI: x0 = result or -errno.
     // Linux aarch64 preserves x1-x7 across syscalls. We must NOT clobber
     // x1 in the saved frame -- musl keeps live pointers in x1 across syscalls.
     cbz x1, .svc_no_err

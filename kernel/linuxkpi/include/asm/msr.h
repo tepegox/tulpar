@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_ASM_MSR_H
-#define VINIX_ASM_MSR_H
+#ifndef TULPAR_ASM_MSR_H
+#define TULPAR_ASM_MSR_H
 #include <asm/msr-index.h>
 #ifndef __ASSEMBLY__
 #include <linux/types.h>

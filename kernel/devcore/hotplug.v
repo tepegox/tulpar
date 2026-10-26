@@ -770,7 +770,7 @@ fn slot_label(number u32, index int) string {
 			same++
 		}
 	}
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(16) }
 	text.add_unsigned(u64(number))
 	if same > 0 {
@@ -784,14 +784,14 @@ fn slot_label(number u32, index int) string {
 // boot scan has been handed to the core and its worker is running. `own`
 // says whether the ports are this system's to run: false where firmware
 // keeps them, or where nothing is known about what a port's slot power
-// feeds. `vinix.pci_hotplug=1` and `=0` override it either way; the rescan,
+// feeds. `tulpar.pci_hotplug=1` and `=0` override it either way; the rescan,
 // and what firmware asks for, work regardless.
 pub fn start_pci_hotplug(own bool) {
 	if devcore_hotplug_alive {
 		return
 	}
 	devcore_hotplug_alive = true
-	if boot_flag('vinix.pci_hotplug=', own) {
+	if boot_flag('tulpar.pci_hotplug=', own) {
 		for p in scanned_devices {
 			if devcore_slot_count >= max_slots || !p.present() || p.header_type != 1 {
 				continue
@@ -889,7 +889,7 @@ fn show_slot_events(context voidptr, mut text lib.Text) {
 }
 
 fn slot_file(slot &Slot, name string, mode u32, show fs.SysfsShow, store fs.SysfsStore) {
-	mut path := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut path := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *path = lib.new_text(64) }
 	path.add('bus/pci/slots/')
 	path.add(slot.label)

@@ -5,7 +5,7 @@ import os
 
 fn main() {
 	root := os.real_path(os.join_path(os.dir(@FILE), '..', '..'))
-	work := os.join_path(os.temp_dir(), 'vinix-xhci-startup-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-xhci-startup-${os.getpid()}')
 	os.mkdir_all(work) or { panic(err) }
 	defer {
 		os.rmdir_all(work) or {}

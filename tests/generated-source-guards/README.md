@@ -37,12 +37,12 @@ of its former positional-only parser. `process-churn` retains its optional
 `--operations` checks, including abbreviated options and interspersed arguments.
 
 Run `v -nocache -cc cc test tests/generated-source-guards/guardcore`.
-Set `VINIX_GUARD_TOOLS` to a directory holding `accounting`, `pagecache` and
+Set `TULPAR_GUARD_TOOLS` to a directory holding `accounting`, `pagecache` and
 `procfs` compiled commands to exercise their argument and stream contracts.
-Set `VINIX_SCRATCH_TOOLS` to a directory with compiled `procfs-scratch`, `ipv6`,
+Set `TULPAR_SCRATCH_TOOLS` to a directory with compiled `procfs-scratch`, `ipv6`,
 `socket`, `timer` and `churn` commands from the five new entrypoints for their CLI
 checks. For example, compile `tests/socket-io/check-generated.v` with
-`v -nocache -cc cc -o "$VINIX_SCRATCH_TOOLS/socket"`; the folder must already
+`v -nocache -cc cc -o "$TULPAR_SCRATCH_TOOLS/socket"`; the folder must already
 exist. The fixtures cover all checked functions and mutation failures, Unicode
 boundaries/whitespace, multiline signatures, nested and truncated braces,
 stack placement, descriptor transfer backreferences, formatter/select/fork

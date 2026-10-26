@@ -50,7 +50,7 @@ fn clock_child(guardian int) int {
 			stat := os.read_file('/proc/${pid}/stat') or { continue }
 			end := stat.last_index(') ') or { continue }
 			fields := stat[end + 2..].split(' ')
-			if fields.len > 1 && fields[1].int() == guardian && command_line(pid).contains('vinix-timesync') {
+			if fields.len > 1 && fields[1].int() == guardian && command_line(pid).contains('tulpar-timesync') {
 				return pid
 			}
 		}
@@ -80,16 +80,16 @@ fn main() {
 	println('SERVICE CHECK: guest init started')
 	for path in ['/run', '/root/services-smoke', '/tmp'] { os.mkdir_all(path)! }
 	for legacy in [false, true] {
-		if legacy && !os.is_executable('/usr/bin/vinix-desktop') { break }
-		program := if legacy { '/usr/bin/vinix-desktop' } else { '/usr/bin/vinix-session' }
+		if legacy && !os.is_executable('/usr/bin/tulpar-desktop') { break }
+		program := if legacy { '/usr/bin/tulpar-desktop' } else { '/usr/bin/tulpar-session' }
 		broker := sessionipc.session_start_broker_at('/root/services-smoke', program) or { panic('cannot launch broker') }
 		wait_ready()
-		wait_identity(broker, 'vinix-session')
+		wait_identity(broker, 'tulpar-session')
 		assert sessionipc.session_call_ok('attach', [])
 		runner := clock_runner()
-		wait_identity(runner, 'vinix-service-runner')
+		wait_identity(runner, 'tulpar-service-runner')
 		clock := clock_child(runner)
-		wait_identity(clock, 'vinix-timesync')
+		wait_identity(clock, 'tulpar-timesync')
 		println('SERVICE CHECK: independent session, runner and timesync identities PASS (legacy=${legacy})')
 		assert sessionipc.session_call_ok('shutdown', [])
 		mut status := 0

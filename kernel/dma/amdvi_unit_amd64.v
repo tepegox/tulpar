@@ -249,7 +249,7 @@ fn amdvi_map_registers(phys u64, length u64) u64 {
 
 // "ivhd0": made once per unit and kept.
 fn amdvi_unit_name(index int) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(8) }
 	text.add('ivhd')
 	text.add_unsigned(u64(index))

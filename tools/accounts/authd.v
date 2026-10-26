@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2026 Alexander Medvednikov
 //
-// vinix-authd: the authentication service. It is the one program that
+// tulpar-authd: the authentication service. It is the one program that
 // reads the password file, and the one way from an ordinary account to
-// something done as root: there are no set-user-id programs on Vinix.
+// something done as root: there are no set-user-id programs on Tulpar.
 //
 // It listens on a Unix socket anyone may connect to. The kernel says who is
 // on the other end; the request cannot. Each connection is one request and
@@ -11,8 +11,8 @@
 // request can neither leave anything behind in the service nor take it
 // down, and a request that never finishes is ended by an alarm.
 //
-//	vinix-authd                          serve on /run/vinix/auth.sock
-//	vinix-authd --root DIR --foreground  serve DIR/run/vinix/auth.sock from
+//	tulpar-authd                          serve on /run/tulpar/auth.sock
+//	tulpar-authd --root DIR --foreground  serve DIR/run/tulpar/auth.sock from
 //	                                     the accounts and actions under DIR,
 //	                                     as whoever runs it: for tests
 module main
@@ -136,7 +136,7 @@ fn serve(env authcore.Env, connection int, peer authcore.Peer) {
 }
 
 fn fail(message string) {
-	eprintln('vinix-authd: ${message}')
+	eprintln('tulpar-authd: ${message}')
 	exit(1)
 }
 
@@ -164,9 +164,9 @@ fn main() {
 	if !testing && C.geteuid() != 0 {
 		fail('must be started as root')
 	}
-	run_dir := os.join_path(root + '/run', 'vinix')
+	run_dir := os.join_path(root + '/run', 'tulpar')
 	socket_path := os.join_path(run_dir, 'auth.sock')
-	cost := accountcore.configured_cost(root + '/etc/vinix/auth.conf', !testing) or {
+	cost := accountcore.configured_cost(root + '/etc/tulpar/auth.conf', !testing) or {
 		fail(err.msg())
 		return
 	}
@@ -178,9 +178,9 @@ fn main() {
 		throttle: accountcore.Throttle{
 			directory: os.join_path(run_dir, 'auth', 'failures')
 		}
-		actions:  root + '/usr/share/vinix/actions'
+		actions:  root + '/usr/share/tulpar/actions'
 		session:  os.join_path(run_dir, 'session', 'active')
-		log:      root + '/var/log/vinix/auth.log'
+		log:      root + '/var/log/tulpar/auth.log'
 		cost:     cost
 	}
 	// Fail now rather than at the first login if the accounts are unusable.
@@ -207,7 +207,7 @@ fn main() {
 		fail('cannot listen on ${socket_path}')
 	}
 	C.signal(C.SIGPIPE, voidptr(1))
-	println('vinix-authd: listening on ${socket_path}')
+	println('tulpar-authd: listening on ${socket_path}')
 
 	mut children := []Child{cap: max_children}
 	for {

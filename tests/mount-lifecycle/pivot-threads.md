@@ -16,7 +16,7 @@ idempotent because the saved mount identity has already changed. Private
 root/cwd updates hold the view's own lock. No new arrays, ownership objects,
 heap promotions or direct frees are introduced.
 
-This extends Vinix's traversal toward the all-task filesystem reference updates
+This extends Tulpar's traversal toward the all-task filesystem reference updates
 in [Linux v6.12 `chroot_fs_refs`](https://github.com/torvalds/linux/blob/v6.12/fs/fs_struct.c).
 Concurrent namespace switching is still outside the qualified scope.
 

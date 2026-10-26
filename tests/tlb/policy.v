@@ -154,9 +154,9 @@ fn main() {
 }
 
 fn run_native() ! {
-	work := hosttest.work_dir('', 'vinix-address-space-')!
+	work := hosttest.work_dir('', 'tulpar-address-space-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
-	generator := os.getenv('VINIX_TLB_POLICY_GENERATOR')
+	generator := os.getenv('TULPAR_TLB_POLICY_GENERATOR')
 	if generator != '' {
 		policyhost.inherited([generator, policyhost.root(), work])!
 	} else {

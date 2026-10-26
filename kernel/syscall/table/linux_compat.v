@@ -3,7 +3,7 @@
 module table
 
 // Linux compatibility calls which do not map one-for-one onto an existing
-// Vinix syscall. musl exposes these directly (notably the vectored
+// Tulpar syscall. musl exposes these directly (notably the vectored
 // positioned-I/O family), so their argument layout must follow the kernel ABI
 // rather than the C library function prototype. The layout is the same on
 // arm64 and x86-64.
@@ -74,7 +74,7 @@ fn linux_positioned_iov(fdnum int, iov_ptr u64, iovcnt int, offset i64, write bo
 	}
 	access_error := linux_iov_access_error(fd, write)
 	if access_error != 0 { return errno.err, access_error }
-	fast := C.vinix_stack_alloc(linux_iov_fast * sizeof(LinuxIOVec))
+	fast := C.tulpar_stack_alloc(linux_iov_fast * sizeof(LinuxIOVec))
 	vector := import_linux_iov(iov_ptr, iovcnt, fast) or { return errno.err, errno.get() }
 	defer { vector.release() }
 	if vector.total == 0 { return 0, 0 }
@@ -237,7 +237,7 @@ fn syscall_linux_sched_rr_get_interval(_ voidptr, raw_pid int, interval_ptr u64)
 	tid := sched_target_tid(pid) or { return errno.err, sched_target_errno(pid) }
 	params := proc.thread_sched_params(tid) or { return errno.err, errno.get() }
 
-	// Vinix reports a fixed quantum for SCHED_RR and zero for other policies.
+	// Tulpar reports a fixed quantum for SCHED_RR and zero for other policies.
 	// Interval durations depend on the scheduler implementation/configuration.
 	mut interval := time.TimeSpec{}
 	if params.policy == proc.sched_rr {

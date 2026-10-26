@@ -31,7 +31,7 @@ fn interrupt_nested_build(pid int, raw voidptr) ! {
 }
 
 fn test_build_interruptions_propagate_to_qualifier_and_compiler_groups() {
-	root := sourcecommand.temporary('vinix-ci-cancellation')!
+	root := sourcecommand.temporary('tulpar-ci-cancellation')!
 	defer { os.rmdir_all(root) or {} }
 	repository := os.dir(os.dir(os.dir(os.dir(@FILE))))
 	for tool in ['build', 'qualify'] {

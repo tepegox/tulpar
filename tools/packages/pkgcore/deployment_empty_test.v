@@ -6,8 +6,8 @@ import os
 import time
 
 fn empty_deployment_fixture(architecture string) !(string, Service, Config) {
-	work := os.temp_dir() + '/vinix-empty-deployment-' + architecture + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/root/etc/vinix-packages')!
+	work := os.temp_dir() + '/tulpar-empty-deployment-' + architecture + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/root/etc/tulpar-packages')!
 	os.mkdir_all(work + '/source/bin')!
 	os.write_file(work + '/source/bin/runner', 'signed fixture runner\n')!
 	os.chmod(work + '/source/bin/runner', 0o755)!
@@ -15,7 +15,7 @@ fn empty_deployment_fixture(architecture string) !(string, Service, Config) {
 	config := Config{ architecture: architecture,
 		repositories: [Repository{ id: 'fixture', url: 'file://' + work + '/repository', public_key: key }],
 		policy: Policy{ offline: true, reserve_bytes: 0, licenses: ['Fixture-EULA'], allow_firmware: true } }
-	os.write_file(work + '/root/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(work + '/root/etc/tulpar-packages/config.json', json2.encode(config))!
 	for p in [
 		Package{ id: 'app', version: '1.0.0', architecture: architecture, name: 'Application', description: 'Removal fixture',
 			license: 'Fixture-EULA', proprietary: true, kind: 'linux', runtime: 'runtime', entrypoint: 'bin/runner',
@@ -51,7 +51,7 @@ fn test_empty_deployment_removes_installed_closure_with_damaged_offline_catalog(
 			state_bytes := os.read_file(store + '/current/state.json')!
 			assert before.requested == ['app'] && before.packages.len == 3
 			assert os.ls(store + '/current/share/applications')!.len == 1
-			data := service.root + '/home/alex/.local/share/vinix-apps/app'
+			data := service.root + '/home/alex/.local/share/tulpar-apps/app'
 			os.mkdir_all(data)!
 			os.write_file(data + '/saved', 'retain personal application data')!
 			os.rmdir_all(work + '/repository')!
@@ -60,7 +60,7 @@ fn test_empty_deployment_removes_installed_closure_with_damaged_offline_catalog(
 				policy: Policy{ offline: true, allowed: ['other'], permissions: [], licenses: [], allow_firmware: false,
 					pins: [Dependency{ id: 'app', minimum: '9.0.0' }], reserve_bytes: 1234 } }
 			blocked_text := json2.encode(blocked)
-			os.write_file(service.root + '/etc/vinix-packages/config.json', blocked_text)!
+			os.write_file(service.root + '/etc/tulpar-packages/config.json', blocked_text)!
 			os.write_file(store + '/catalog.json', '{damaged catalog')!
 			os.write_file(store + '/trust-history.json', '{damaged history')!
 			path := work + '/empty.json'
@@ -90,7 +90,7 @@ fn test_empty_deployment_removes_installed_closure_with_damaged_offline_catalog(
 			assert os.ls(store + '/current/share/applications')!.len == 0
 			assert os.read_file(data + '/saved')! == 'retain personal application data'
 			assert os.read_file(store + '/' + active + '/state.json')! == state_bytes
-			assert os.read_file(service.root + '/etc/vinix-packages/config.json')! == blocked_text
+			assert os.read_file(service.root + '/etc/tulpar-packages/config.json')! == blocked_text
 			assert !os.exists(store + '/catalog.json') && !os.exists(store + '/trust-history.json')
 			assert os.ls(store + '/objects')!.len == 0
 			mut refused := false
@@ -105,7 +105,7 @@ fn test_empty_deployment_removes_installed_closure_with_damaged_offline_catalog(
 			refused = false
 			service.review('rollback', []) or { refused = true }
 			assert refused && service.state()! == removed
-			os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(config))!
+			os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 			os.write_file(store + '/catalog.json', catalog)!; os.write_file(store + '/trust-history.json', history)!
 			refused = false
 			service.review('rollback', []) or { refused = true }
@@ -162,11 +162,11 @@ fn test_empty_deployment_preserves_review_lock_state_and_transaction_recovery_ch
 	refused = false
 	service.transact('deploy', [], TransactionOptions{ expected_review: review.fingerprint }) or { refused = err.msg().contains('stale') }
 	assert refused
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(Config{ ...config, policy: Policy{ reserve_bytes: 1234 } }))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(Config{ ...config, policy: Policy{ reserve_bytes: 1234 } }))!
 	refused = false
 	service.apply_deployment(path, review.fingerprint) or { refused = err.msg().contains('stale') }
 	assert refused
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	// A valid empty document cannot hide an incoherent installed state.
 	os.write_file(store + '/current/state.json', '{damaged installed state')!
 	refused = false
@@ -174,7 +174,7 @@ fn test_empty_deployment_preserves_review_lock_state_and_transaction_recovery_ch
 	assert refused
 	os.write_file(store + '/current/state.json', state_bytes)!
 	guard := acquire(store)!
-	os.write_file(service.root + '/etc/vinix-packages/config.json', '{damaged config')!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', '{damaged config')!
 	refused = false
 	service.review_deployment(path) or { refused = err.msg().contains('another package transaction') }
 	assert refused
@@ -182,7 +182,7 @@ fn test_empty_deployment_preserves_review_lock_state_and_transaction_recovery_ch
 	refused = false
 	service.apply_deployment(path, review.fingerprint) or { refused = err.msg().contains('invalid package configuration') }
 	assert refused
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	assert service.state()! == before && os.read_file(sentinel + '/keep')! == 'preserve abandoned recovery evidence'
 	os.rmdir_all(sentinel)!
 	refused = false
@@ -195,12 +195,12 @@ fn test_empty_deployment_preserves_review_lock_state_and_transaction_recovery_ch
 }
 
 fn test_empty_deployment_on_fresh_store_is_noop_but_configuration_is_validated() {
-	work := os.temp_dir() + '/vinix-empty-fresh-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-empty-fresh-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	defer { os.rmdir_all(work) or {} }
-	os.mkdir_all(work + '/etc/vinix-packages')!
+	os.mkdir_all(work + '/etc/tulpar-packages')!
 	config := Config{ architecture: 'x86_64', repositories: [Repository{ id: 'absent',
 		url: 'file://' + work + '/unavailable', public_key: 'a'.repeat(64) }], policy: Policy{ offline: true } }
-	os.write_file(work + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(work + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	service := Service{ root: work }
 	path := work + '/empty.json'
 	os.write_file(path, empty_deployment_text(2, config.architecture))!

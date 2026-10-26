@@ -29,7 +29,7 @@ sources and V for the SDK runner. Implementation, orchestration and test tooling
 are V. The base shared library omits optional math functions; the second enables
 them. Extension loading is disabled in both. Each variant has the exact same
 PIE CLI and static runner bytes for its architecture. The builder retains the
-SQLite header notice, musl copyright and Vinix license, plus source pins, build
+SQLite header notice, musl copyright and Tulpar license, plus source pins, build
 commands and artifact hashes in `build.json`.
 
 ```sh
@@ -37,8 +37,8 @@ v -no-skip-unused -o /tmp/sqlite-build tests/packages/sqlite-build.v
 /tmp/sqlite-build /trusted/sqlite-amalgamation-3530400 /build/new-sqlite-inputs
 v -no-skip-unused -path '.|tests/hardware-platform|@vlib|@vmodules' \
   -o /tmp/sqlite-check tests/packages/sqlite-runtime-check.v
-VINIX_HWTEST_TCG=1 VINIX_SQLITE_INPUTS=/build/new-sqlite-inputs \
-  VINIX_SQLITE_SANDBOX=/build/target-root/usr/bin/vinix-sandbox \
+TULPAR_HWTEST_TCG=1 TULPAR_SQLITE_INPUTS=/build/new-sqlite-inputs \
+  TULPAR_SQLITE_SANDBOX=/build/target-root/usr/bin/tulpar-sandbox \
   /tmp/sqlite-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-sqlite-aarch64
 ```

@@ -120,7 +120,7 @@ check.call(Random.urandom(32).bytesize == 32, 'Random.urandom')
   end
 end
 
-blob = 'vinix' * 1000
+blob = 'tulpar' * 1000
 check.call(Zlib::Inflate.inflate(Zlib::Deflate.deflate(blob)) == blob, 'zlib round trip')
 check.call(Digest::SHA256.hexdigest(blob).length == 64, 'SHA-256')
 check.call(Psych.safe_load(Psych.dump({ 'ruby' => 3 })) == { 'ruby' => 3 }, 'Psych YAML round trip')

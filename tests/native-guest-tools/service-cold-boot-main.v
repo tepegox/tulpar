@@ -34,7 +34,7 @@ struct Receipt {
 	schema int = 2
 	architecture string
 	uid int = 1000
-	context string = 'native Vinix; three fresh QEMU processes sharing one private ext2 home; measured deferred-cleanup quiescence before unmount'
+	context string = 'native Tulpar; three fresh QEMU processes sharing one private ext2 home; measured deferred-cleanup quiescence before unmount'
 	options coldbootcore.Options
 	inputs map[string]string
 	plan_sha256 string
@@ -86,40 +86,40 @@ fn run() ! {
 	stage := os.real_path(os.args[3])
 	broker := os.real_path(os.args[4])
 	state := os.abs_path(os.args[5])
-	formatter := utility('VINIX_MKE2FS', ['mke2fs', 'mkfs.ext2', '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs'])!
-	checker := utility('VINIX_E2FSCK', ['e2fsck', '/opt/homebrew/opt/e2fsprogs/sbin/e2fsck'])!
+	formatter := utility('TULPAR_MKE2FS', ['mke2fs', 'mkfs.ext2', '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs'])!
+	checker := utility('TULPAR_E2FSCK', ['e2fsck', '/opt/homebrew/opt/e2fsprogs/sbin/e2fsck'])!
 	manifest := json2.decode[Stage](os.read_file(stage + '/development-tools.json')!)!
 	if manifest.schema != 1 || !manifest.complete || manifest.architecture != arch
-		|| digest(stage + '/usr/bin/vinix-jobs')! != manifest.binaries['vinix-jobs'] {
+		|| digest(stage + '/usr/bin/tulpar-jobs')! != manifest.binaries['tulpar-jobs'] {
 		return error('scheduler staging manifest is incomplete, changed or for another architecture')
 	}
 	devcore.fresh_directory(state)!
 	os.mkdir_all(state + '/kernel/bin')!
-	os.cp(kernel + '/bin/vinix', state + '/kernel/bin/vinix')!
+	os.cp(kernel + '/bin/tulpar', state + '/kernel/bin/tulpar')!
 	os.mkdir_all(state + '/fixture')!
 	init := guesthost.compile_init(guesthost.root() + '/tests/development/guestfixture/core.v', state + '/fixture', arch, false)!
 	os.mkdir_all(state + '/inputs/usr/bin')!
 	service_hashes := servicecore.stage(broker, state + '/inputs', arch)!
-	jobs := os.read_bytes(stage + '/usr/bin/vinix-jobs')!
+	jobs := os.read_bytes(stage + '/usr/bin/tulpar-jobs')!
 	if jobs.len < 20 || jobs[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1]
 		|| (u16(jobs[18]) | (u16(jobs[19]) << 8)) != if arch == 'aarch64' { u16(183) } else { u16(62) } {
 		return error('scheduler has the wrong native ELF target')
 	}
 	jobs_hash := sha256.sum(jobs).hex()
-	if jobs_hash != manifest.binaries['vinix-jobs'] { return error('scheduler changed during staging') }
-	os.write_file_array(state + '/inputs/usr/bin/vinix-jobs', jobs)!
-	os.chmod(state + '/inputs/usr/bin/vinix-jobs', 0o755)!
+	if jobs_hash != manifest.binaries['tulpar-jobs'] { return error('scheduler changed during staging') }
+	os.write_file_array(state + '/inputs/usr/bin/tulpar-jobs', jobs)!
+	os.chmod(state + '/inputs/usr/bin/tulpar-jobs', 0o755)!
 	plan := json2.encode(jobcore.Plan{uid: 1000, jobs: [jobcore.Job{
 		id: 'fixture', executable: devcore.Pin{'/usr/bin/development-payload', digest(init)!},
 		directory: '/home/developer', interval_seconds: 1, timeout_seconds: 30,
-		environment: {'VINIX_DEVELOPMENT_PAYLOAD': 'service-linger', 'VINIX_JOB_PROOF_PREFIX': '/home/developer/service'},
+		environment: {'TULPAR_DEVELOPMENT_PAYLOAD': 'service-linger', 'TULPAR_JOB_PROOF_PREFIX': '/home/developer/service'},
 		credential_files: {'TEST_TOKEN': '/home/developer/token'}
 	}]})
 	mut receipt := Receipt{architecture: arch, options: selected, plan_sha256: sha256.sum(plan.bytes()).hex(), inputs: {
-		'kernel': digest(state + '/kernel/bin/vinix')!, 'fixture': digest(init)!,
-		'vinix-jobs': jobs_hash, 'vinix-session': service_hashes['vinix-session'],
-		'vinix-timesync': service_hashes['vinix-timesync'],
-		'vinix-service-runner': service_hashes['vinix-service-runner'],
+		'kernel': digest(state + '/kernel/bin/tulpar')!, 'fixture': digest(init)!,
+		'tulpar-jobs': jobs_hash, 'tulpar-session': service_hashes['tulpar-session'],
+		'tulpar-timesync': service_hashes['tulpar-timesync'],
+		'tulpar-service-runner': service_hashes['tulpar-service-runner'],
 		'mke2fs': digest(formatter)!, 'e2fsck': digest(checker)!
 	}}
 	defer {
@@ -134,14 +134,14 @@ fn run() ! {
 	mut previous_disk := ''
 	// x86 brings up its SATA disk drivers only for the installed-disk boot mode.
 	// This private 64 MiB test volume is too small to become a system install.
-	if arch == 'x86_64' { os.setenv('VINIX_CMDLINE', 'vinix.disk=auto', true) }
+	if arch == 'x86_64' { os.setenv('TULPAR_CMDLINE', 'tulpar.disk=auto', true) }
 	for phase in 1 .. 4 {
 		boot := state + '/boot-' + phase.str()
 		os.mkdir_all(boot + '/rootfs/usr/bin')!
 		os.mkdir_all(boot + '/rootfs/home/developer')!
 		os.mkdir_all(boot + '/rootfs/fixture')!
 		mut payload_hashes := service_hashes.clone()
-		payload_hashes['vinix-jobs'] = jobs_hash
+		payload_hashes['tulpar-jobs'] = jobs_hash
 		for name, hash in payload_hashes {
 			source := state + '/inputs/usr/bin/' + name
 			if digest(source)! != hash { return error('cold boot executable input changed') }
@@ -167,7 +167,7 @@ fn run() ! {
 		if phase > 1 && before != previous_disk { return error('home volume changed between cold boots') }
 		code := guesthost.boot(command, launch.env, boot,
 			['DEVELOPMENT SERVICE COLD BOOT PASS: phase=' + phase.str() + ','],
-			['DEVELOPMENT GUEST FAIL', 'KERNEL PANIC', 'vinix-native-fixture-secret'], 180, true)!
+			['DEVELOPMENT GUEST FAIL', 'KERNEL PANIC', 'tulpar-native-fixture-secret'], 180, true)!
 		values := receipts(boot + '/serial.log')!
 		after := digest(disk)!
 		receipt.boots << Boot{phase, command, iso_hash, before, after, values, false}

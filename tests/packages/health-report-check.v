@@ -9,12 +9,12 @@ import tools.packages.pkgprotocol
 
 fn health_progress(event pkgprotocol.Progress) {
 	if event.phase != 'verify' || event.package == '' { return }
-	root := os.getenv('VINIX_HEALTH_ROOT')
+	root := os.getenv('TULPAR_HEALTH_ROOT')
 	defer { unsafe { root.free() } }
 	if root == '' { return }
 	if _ := (pkgcore.Service{ root: root }).transact('remove', ['app'], pkgcore.TransactionOptions{}) { panic('health did not hold its reader lock') }
 	else { message := err.msg(); assert message.contains('transaction'); unsafe { message.free(); err.free() } }
-	os.write_file(os.getenv('VINIX_HEALTH_LOCKED'), 'writer refused') or { panic(err) }
+	os.write_file(os.getenv('TULPAR_HEALTH_LOCKED'), 'writer refused') or { panic(err) }
 }
 
 struct Client { root string binary string }
@@ -89,12 +89,12 @@ fn (client Client) report() !pkgprotocol.HealthReport {
 fn check() ! {
 	if os.args.len !in [2, 3] { return error('usage: health-report-check NEW_WORK [PACKAGE_CLI]') }
 	work := os.abs_path(os.args[1]); if os.exists(work) || os.is_link(work) { return error('health qualification directory must be new') }
-	root := work + '/root'; os.mkdir_all(root + '/etc/vinix-packages')!
+	root := work + '/root'; os.mkdir_all(root + '/etc/tulpar-packages')!
 	arch := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	key := pkgcore.keygen(work + '/seed')!
 	config := pkgcore.Config{ architecture: arch, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }
-	configuration := root + '/etc/vinix-packages/config.json'; os.write_file(configuration, json2.encode(config))!
+	configuration := root + '/etc/tulpar-packages/config.json'; os.write_file(configuration, json2.encode(config))!
 	client := Client{ root: root, binary: if os.args.len == 3 { os.real_path(os.args[2]) } else { '' } }
 	store := pkgcore.state_directory(root)
 	mut empty := client.report()!; assert empty.generation == 0 && empty.rows.len == 0 && !os.exists(store)
@@ -119,19 +119,19 @@ fn check() ! {
 	os.write_file(app, 'x'.repeat(os.read_file(app)!.len))!
 	os.write_file(store + '/current/apps/runtime/unexpected', 'undeclared')!
 	os.chmod(store + '/current/apps/assets/bin/app', 0o600)!
-	os.rm(store + '/current/share/applications/vinix-utility.desktop')!
+	os.rm(store + '/current/share/applications/tulpar-utility.desktop')!
 	sentinel := store + '/generations/.stage-health-preserve'; os.mkdir(sentinel)!; os.write_file(sentinel + '/keep', 'recovery data')!
 	os.mkdir(work + '/personal')!; os.write_file(work + '/personal/memo', 'personal data')!
 	state := os.read_file(store + '/current/state.json')!
 	catalog := os.read_file(store + '/catalog.json')!; history := os.read_file(store + '/trust-history.json')!
-	os.setenv('VINIX_HEALTH_ROOT', root, true); os.setenv('VINIX_HEALTH_LOCKED', work + '/locked', true)
-	defer { os.unsetenv('VINIX_HEALTH_ROOT'); os.unsetenv('VINIX_HEALTH_LOCKED') }
+	os.setenv('TULPAR_HEALTH_ROOT', root, true); os.setenv('TULPAR_HEALTH_LOCKED', work + '/locked', true)
+	defer { os.unsetenv('TULPAR_HEALTH_ROOT'); os.unsetenv('TULPAR_HEALTH_LOCKED') }
 	mut damaged := client.report()!; defer { damaged.close() }
 	assert damaged.rows.map(it.id) == ['app', 'assets', 'runtime', 'utility']
 	assert damaged.rows.map(it.issue) == ['payload', 'namespace', 'namespace', 'registration']
 	assert damaged.rows.all(it.repository == 'trusted' && it.public_key == key && it.name.starts_with('Package é🚀'))
 	if client.binary == '' { assert os.read_file(work + '/locked')! == 'writer refused' }
-	os.unsetenv('VINIX_HEALTH_ROOT')
+	os.unsetenv('TULPAR_HEALTH_ROOT')
 	if _ := service.verify() { assert false } else { assert err.msg().contains('app: installed payload') }
 	if client.binary != '' {
 		text := client.command(['health'])!; assert text.contains('4; with issues: 4') && text.contains('utility 1.0.0: registration')

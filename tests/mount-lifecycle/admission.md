@@ -91,5 +91,5 @@ remain open. Propagation, pivot-root admission, complete bind-alias isolation,
 mount depth admission for every attachment, busy-reference accounting and
 allocation-flat mount/namespace creation remain open. Devpts still shares its
 existing backend: the `newinstance` option in the portable probe does not qualify
-independent Vinix PTY namespaces. Full OCI/rootless acceptance and the remaining
+independent Tulpar PTY namespaces. Full OCI/rootless acceptance and the remaining
 roadmap section 17 work are incomplete.

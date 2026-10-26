@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Parse libc's types and inline annotations before Linux compiler macros. */
 /* Keep libc's device type and declarations separate from kernel dev_t32. */
-#define dev_t vinix_linuxkpi_host_dev_t
+#define dev_t tulpar_linuxkpi_host_dev_t
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -20,7 +20,7 @@ typedef long long loff_t;
 #include <assert.h>
 /* The imported Linux build-bug contract supplies the variadic native form. */
 #undef static_assert
-#define timer_delete vinix_linuxkpi_host_libc_timer_delete
+#define timer_delete tulpar_linuxkpi_host_libc_timer_delete
 #include <time.h>
 #undef timer_delete
 /* The native Linux va_list macros use the same builtins. Parse libc's guarded

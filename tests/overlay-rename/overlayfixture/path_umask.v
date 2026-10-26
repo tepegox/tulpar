@@ -37,7 +37,7 @@ fn socket_creation_mode(path &char, mask u32, inherited bool, kind int) {
 		if kind != C.SOCK_DGRAM { check(C.listen(server, 1) == 0, 607) }
 		client := C.socket(C.AF_UNIX, kind, 0)
 		check(client >= 0, 608)
-		result := C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un)))
+		result := C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un)))
 		if wanted & 0o200 == 0 {
 			refused_socket_target(result, 609)
 		} else {

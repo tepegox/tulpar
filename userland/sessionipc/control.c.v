@@ -41,7 +41,7 @@ pub fn session_control_peer(fd int) ?SessionCredentials {
 }
 
 pub fn session_start_broker(home string) ?int {
-	executable := helper_path('vinix-session')
+	executable := helper_path('tulpar-session')
 	defer { unsafe { executable.free() } }
 	return session_start_broker_at(home, executable)
 }

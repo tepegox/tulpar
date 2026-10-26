@@ -11,7 +11,7 @@
 #define timezone vks_linux_timezone
 #define ffs vks_linux_ffs
 #define fls vks_linux_fls
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmacro-redefined"
 #endif
@@ -20,7 +20,7 @@
 #include <linux/preempt.h>
 _Static_assert(__builtin_types_compatible_p(__typeof__(&cpu_relax), void (*)(void)),
                "preempt headers must expose the native CPU hint");
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic pop
 #endif
 #undef fls

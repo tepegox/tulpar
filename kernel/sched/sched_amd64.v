@@ -19,11 +19,11 @@ import time
 import krandom
 import klock
 
-fn C.vinix_call_void_fn(f voidptr)
+fn C.tulpar_call_void_fn(f voidptr)
 @[noreturn]
-fn C.vinix_x86_resume_context(frame &cpulocal.GPRState, cpu_number u64)
-fn C.vinix_linuxkpi_workqueue_task_sleep(task voidptr)
-fn C.vinix_linuxkpi_workqueue_task_resume(task voidptr)
+fn C.tulpar_x86_resume_context(frame &cpulocal.GPRState, cpu_number u64)
+fn C.tulpar_linuxkpi_workqueue_task_sleep(task voidptr)
+fn C.tulpar_linuxkpi_workqueue_task_resume(task voidptr)
 
 __global (
 	// Hardware that this kernel drives without interrupts -- a network card --
@@ -58,7 +58,7 @@ fn poll_devices() {
 	if !device_poll_lock.test_and_acquire() {
 		return
 	}
-	C.vinix_call_void_fn(device_poll_callback)
+	C.tulpar_call_void_fn(device_poll_callback)
 	device_poll_lock.release()
 }
 
@@ -198,7 +198,7 @@ fn scheduler_isr(_ u32, gpr_state &cpulocal.GPRState) {
 			// The preemption guard has excluded compatibility lock holders;
 			// neither the native queue nor the task wait lock is held here.
 			if !katomic.load(&current_thread.is_in_queue) {
-				C.vinix_linuxkpi_workqueue_task_sleep(voidptr(&current_thread.linuxkpi_task[0]))
+				C.tulpar_linuxkpi_workqueue_task_sleep(voidptr(&current_thread.linuxkpi_task[0]))
 			}
 		}
 	}
@@ -241,7 +241,7 @@ fn scheduler_isr(_ u32, gpr_state &cpulocal.GPRState) {
 			$if linuxkpi ? {
 				// A wake can re-enqueue the thread after the blocked
 				// notification and before entitlement is checked below.
-				C.vinix_linuxkpi_workqueue_task_resume(voidptr(&current_thread.linuxkpi_task[0]))
+				C.tulpar_linuxkpi_workqueue_task_resume(voidptr(&current_thread.linuxkpi_task[0]))
 			}
 			current_thread.yield_requested = false
 			// An LDT another thread of the process has made since, which
@@ -274,7 +274,7 @@ fn scheduler_isr(_ u32, gpr_state &cpulocal.GPRState) {
 			if next_thread != unsafe { nil } {
 				// The outgoing GS view still names this CPU here. After
 				// running_on is cleared, native lock helpers cannot use it.
-				C.vinix_linuxkpi_workqueue_task_resume(voidptr(&next_thread.linuxkpi_task[0]))
+				C.tulpar_linuxkpi_workqueue_task_resume(voidptr(&next_thread.linuxkpi_task[0]))
 			}
 		}
 		// From here GS finds this CPU rather than the thread, as it does on an
@@ -340,7 +340,7 @@ fn scheduler_isr(_ u32, gpr_state &cpulocal.GPRState) {
 	publish_dispatch_priority(cpu_local.cpu_number, current_thread, now_ns)
 	$if linuxkpi ? {
 		if from_idle {
-			C.vinix_linuxkpi_workqueue_task_resume(voidptr(&current_thread.linuxkpi_task[0]))
+			C.tulpar_linuxkpi_workqueue_task_resume(voidptr(&current_thread.linuxkpi_task[0]))
 		}
 	}
 	proc.begin_cpu_time(mut current_thread, now_ns)
@@ -414,7 +414,7 @@ fn scheduler_isr(_ u32, gpr_state &cpulocal.GPRState) {
 	cpu.set_fs_base(fs_base)
 
 	// Assembly also applies the local return policy and overwrites the RSB.
-	C.vinix_x86_resume_context(&current_thread.gpr_state, cpu_local.cpu_number)
+	C.tulpar_x86_resume_context(&current_thread.gpr_state, cpu_local.cpu_number)
 
 	for {
 	}
@@ -885,7 +885,7 @@ pub fn await() {
 	// handler, is turned away, and returns into the wait it interrupted.
 	// The frames it wrote on the way would lie where the wait's are.
 	if cpuidle.active() && cpu_local.cpu_number < max_preemption_cpus {
-		C.vinix_enter_idle(cpu_local.idle_int_stack, voidptr(await_in_idle_states), voidptr(sleep_us))
+		C.tulpar_enter_idle(cpu_local.idle_int_stack, voidptr(await_in_idle_states), voidptr(sleep_us))
 	}
 	// Without one, as ever. STI takes effect after the instruction that
 	// follows it, so there is no moment with interrupts on and the CPU not
@@ -915,14 +915,14 @@ fn await_in_idle_states(sleep_us voidptr) {
 	}
 }
 
-fn C.vinix_enter_idle(stack_top u64, entry voidptr, arg voidptr)
+fn C.tulpar_enter_idle(stack_top u64, entry voidptr, arg voidptr)
 
 @[noreturn]
 pub fn enter_idle() {
 	asm volatile amd64 { cli }
 	require_task_context()
 	top := cpulocal.current().idle_int_stack
-	C.vinix_enter_idle(top, voidptr(await), unsafe { nil })
+	C.tulpar_enter_idle(top, voidptr(await), unsafe { nil })
 	for {}
 }
 

@@ -9,11 +9,11 @@ fn main() {
 		panic('valid FDT string list was rejected')
 	}
 
-	assert values == ['apple', 'vinix']
+	assert values == ['apple', 'tulpar']
 	// The decoded values must not retain views into firmware-owned storage.
 	blob[0] = `X`
 	blob[6] = `Y`
-	assert values == ['apple', 'vinix']
+	assert values == ['apple', 'tulpar']
 
 	unsafe { values.free() }
 	println('device-tree string-list ownership tests passed')

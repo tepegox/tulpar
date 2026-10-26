@@ -19,7 +19,7 @@ fn run() !int {
 	mut parent := ''
 	mut work := args.value('--state-dir', '')
 	if work == '' {
-		parent = sourcecommand.temporary('vinix-xattr-codec')!
+		parent = sourcecommand.temporary('tulpar-xattr-codec')!
 		work = parent + '/fixture'
 	}
 	defer { if parent != '' && '--keep' !in args.options { os.rmdir_all(parent) or {} } }

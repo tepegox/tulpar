@@ -14,7 +14,7 @@ fn volume_ciphertext_range(disk &DiskKey, row &Request) bool {
 fn encode_volume_ciphertext(disk &DiskKey, row &Request, digest &u8, output &u8) bool {
 	if !volume_ciphertext_range(disk, row) { return false }
 	unsafe { for i in 0 .. volume_ciphertext_bytes { output[i] = 0 } }
-	put_le(output, 0, 8, 0x31484358494e4956) // VINIXCH1
+	put_le(output, 0, 8, 0x31484358494e4956) // TULPARCH1
 	put_le(output, 8, 4, 1); put_le(output, 12, 4, volume_ciphertext_bytes)
 	put_le(output, 16, 8, disk.bytes); put_le(output, 24, 8, disk.sector)
 	put_le(output, 32, 4, disk.kind); put_le(output, 36, 4, row.slot)
@@ -93,7 +93,7 @@ fn volume_ciphertext_file(device &char, input &char, credential &char, reference
 		}
 	}
 	fd := ciphertext_scrub_parent(device, &work.disk, mut work.status)
-	if fd < 0 { C.perror(c'vinix-volume: open ciphertext parent'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open ciphertext parent'); return 1 }; defer { C.close(fd) }
 	if !check_ciphertext_scrub_parent(fd, device, mut *work)
 		|| !volume_seal_recheck(fd, mut *work) || !volume_seal_recheck(fd, mut *work)
 		|| !read_volume_ciphertext(fd, &work.disk, &work.request.data, &digest)

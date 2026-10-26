@@ -6,8 +6,8 @@ Run the scoped native qualification and disposable architecture guests:
 
 ```sh
 sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --host-recovery-rewrap --work /tmp/recovery-rewrap-host
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/vinix --recovery-rewrap --work /tmp/recovery-rewrap-arm
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/vinix --recovery-rewrap --work /tmp/recovery-rewrap-x86
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/tulpar --recovery-rewrap --work /tmp/recovery-rewrap-arm
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/tulpar --recovery-rewrap --work /tmp/recovery-rewrap-x86
 ```
 
 The host run checks the independent recovery codec, the extended real

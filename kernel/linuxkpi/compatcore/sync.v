@@ -97,7 +97,7 @@ pub fn mutex_destroy(storage voidptr) {
 }
 fn mutex_acquire(mutex &C.vkw_mutex, state u32) i32 {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		task := C.vkp_current()
 		mut wait := MutexWaiter{}
 		wait.task = task
@@ -512,7 +512,7 @@ pub fn complete_all(storage voidptr) {
 }
 fn completion_wait(completion &C.vkw_completion, duration i64, state u32) i64 {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		require(state == 2 || state == 1 || state == 0x102 || state == 0x402)
 		mut wait := C.vkw_swait{}
 		wait.task = C.vkp_current()

@@ -1,6 +1,6 @@
 # Cached procfs mount cycles
 
-Vinix shares a cached procfs root between mounts of one PID namespace and
+Tulpar shares a cached procfs root between mounts of one PID namespace and
 reuses inactive namespaces' trees. Mounting that root over itself previously
 returned success, then made proc path resolution fail with ELOOP. Mounting it
 over its own `sys` child left ordinary reads usable but hid the new mount from
@@ -31,12 +31,12 @@ ALLOC_TRACK=1 NPROC=4 V=/path/to/v ./scripts/build-amd64.sh --no-userland --no-i
 tests/procfs-mount/check-generated kernel/obj/blob.c
 tests/procfs-mount/check-generated build-amd64-kernel/obj/blob.c
 
-VINIX_VM_RUNNER_ROOT=/path/to/main-checkout VINIX_QEMU_RT_NO_BUILD=1 \
-  VINIX_KERNEL_DIR="$PWD/kernel" VINIX_QEMU_TIMEOUT=600 \
+TULPAR_VM_RUNNER_ROOT=/path/to/main-checkout TULPAR_QEMU_RT_NO_BUILD=1 \
+  TULPAR_KERNEL_DIR="$PWD/kernel" TULPAR_QEMU_TIMEOUT=600 \
   tests/procfs-mount/run
-VINIX_VM_RUNNER_ROOT=/path/to/main-checkout \
-  VINIX_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/vinix" \
-  VINIX_LIMINE_CACHE=/tmp/vinix-procfs-mount-limine VINIX_QEMU_TIMEOUT=600 \
+TULPAR_VM_RUNNER_ROOT=/path/to/main-checkout \
+  TULPAR_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/tulpar" \
+  TULPAR_LIMINE_CACHE=/tmp/tulpar-procfs-mount-limine TULPAR_QEMU_TIMEOUT=600 \
   tests/procfs-mount/run --arch amd64
 ```
 
@@ -70,7 +70,7 @@ full-run denial measurements were:
 
 Every sample satisfies the unchanged retention assertion; none grows during
 the denials. The x86 starting values differ, so these results do not claim
-identical cold process-retirement timing. Native Vinix namespace and procfs
+identical cold process-retirement timing. Native Tulpar namespace and procfs
 semantics are required; there is no desktop-host execution claim.
 
 ## Coverage and measured results
@@ -117,32 +117,32 @@ compiler exits 0/1, and 157 failing file/kind categories. All reported file/kind
 counts and failing categories match the earlier baseline audit; no allowance
 was changed. The x86 scratch-copy audit compilation remains distinct from its
 successful production build. The report is
-`/tmp/vinix-procfs-mount-alloc-audit.log`.
+`/tmp/tulpar-procfs-mount-alloc-audit.log`.
 
 ## Reproduction evidence
 
 The unfixed draft is preserved against base `679ee739` under
-`/tmp/vinix-procfs-mount-artifacts/baseline/`, with matching tracked ELFs/C and
+`/tmp/tulpar-procfs-mount-artifacts/baseline/`, with matching tracked ELFs/C and
 its exact patch. Its old `kind == 'proc'` precheck was unreachable after type
 normalization, so it is baseline evidence rather than a fixed build.
 
-`/tmp/vinix-procfs-mount-{arm,amd64}-baseline.log` shows self mount returning 0
+`/tmp/tulpar-procfs-mount-{arm,amd64}-baseline.log` shows self mount returning 0
 and subsequent mountinfo and meminfo reads failing with errno 40. The focused
 ARM serial reuse baseline separately shows a stale-root mount returning 0 and
 its meminfo failing with ELOOP. The descendant baseline prints the mountinfo
 graph without the successfully mounted `/proc/sys` entry; the stale-descendant
 baseline also shows the formerly invisible self link changed to `/proc/1`.
 
-Those logs are `/tmp/vinix-procfs-mount-arm-reuse-serial-baseline.log`,
-`/tmp/vinix-procfs-mount-arm-descendant-baseline.log` and
-`/tmp/vinix-procfs-mount-arm-stale-descendant-baseline.log`. Initial concurrent
+Those logs are `/tmp/tulpar-procfs-mount-arm-reuse-serial-baseline.log`,
+`/tmp/tulpar-procfs-mount-arm-descendant-baseline.log` and
+`/tmp/tulpar-procfs-mount-arm-stale-descendant-baseline.log`. Initial concurrent
 failure logs remain separate, since serial output can interleave. The earlier
 equality-only stage and its passing guests are archived as superseded evidence;
 its descendant graph assertion failed and prompted the ancestry extension.
 
-Final logs are `/tmp/vinix-procfs-mount-{arm,amd64}-fixed.log`, the matching
-`-fixed-build.log` files and `/tmp/vinix-procfs-mount-generated-checks.log`.
-`/tmp/vinix-procfs-mount-artifacts/final/` records the final exact kernel patch,
+Final logs are `/tmp/tulpar-procfs-mount-{arm,amd64}-fixed.log`, the matching
+`-fixed-build.log` files and `/tmp/tulpar-procfs-mount-generated-checks.log`.
+`/tmp/tulpar-procfs-mount-artifacts/final/` records the final exact kernel patch,
 ELFs/C, guest sources and hashes, including baseline graph and bind coverage.
 
 The [native V controller](../native-guest-tools/abi-guests.md) accepts

@@ -405,7 +405,7 @@ fn scalar_store_test_join(_reader &ScalarStoreReader, actor &proc.Thread) bool {
 	event.pthread_wait(actor)
 	// The second retained reference protects this off-stack observer after
 	// pthread_wait has released the join reference.
-	for !C.vinix_linuxkpi_test_thread_reap_ready(actor) {
+	for !C.tulpar_linuxkpi_test_thread_reap_ready(actor) {
 		if time.monotonic_ns() - started >= scalar_test_timeout_ns {
 			proc.unpin_thread(actor)
 			sched.reap_deferred()
@@ -416,7 +416,7 @@ fn scalar_store_test_join(_reader &ScalarStoreReader, actor &proc.Thread) bool {
 	proc.unpin_thread(actor)
 	// Never inspect actor after releasing its final retained reference.
 	sched.reap_deferred()
-	for !C.vinix_linuxkpi_test_reap_quiescent() {
+	for !C.tulpar_linuxkpi_test_reap_quiescent() {
 		if time.monotonic_ns() - started >= scalar_test_timeout_ns {
 			return scalar_test_require(false, c'scalar store reader final reclamation deadline')
 		}
@@ -427,7 +427,7 @@ fn scalar_store_test_join(_reader &ScalarStoreReader, actor &proc.Thread) bool {
 }
 
 fn scalar_store_test_lifecycle() bool {
-	mut reader := unsafe { &ScalarStoreReader(C.vinix_stack_alloc(sizeof(ScalarStoreReader))) }
+	mut reader := unsafe { &ScalarStoreReader(C.tulpar_stack_alloc(sizeof(ScalarStoreReader))) }
 	unsafe { *reader = ScalarStoreReader{} }
 	mut actor := sched.try_new_kernel_thread(voidptr(scalar_store_test_reader), reader) or {
 		return scalar_test_require(false, c'scalar store reader creation')

@@ -102,12 +102,12 @@ fn check() ! {
 	if os.args.len != 3 { return error('usage: deployment-snapshot-check NEW_WORK PACKAGE_CLI') }
 	work := os.args[1]; binary := os.args[2]
 	if os.exists(work) { return error('snapshot qualification requires a new workspace') }
-	root := work + '/root'; os.mkdir_all(root + '/etc/vinix-packages')!
+	root := work + '/root'; os.mkdir_all(root + '/etc/tulpar-packages')!
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	key := pkgcore.keygen(work + '/seed')!
 	config := pkgcore.Config{ architecture: architecture, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	version(work, architecture, '1.0.0')!
 	pkgcore.publish(work + '/repository', 'trusted', work + '/seed', 1, time.now().unix() + 3600)!
 	command(binary, root, ['update'])!; command(binary, root, ['install', 'app'])!
@@ -146,18 +146,18 @@ fn check() ! {
 	command(binary, root, ['deployment-review', path]) or { refused = err.msg().contains('absent from the authenticated catalog') }
 	assert refused && service.state()! == state
 	directory := pkgcore.state_directory(root)
-	config_text := os.read_file(root + '/etc/vinix-packages/config.json')!
+	config_text := os.read_file(root + '/etc/tulpar-packages/config.json')!
 	catalog_text := os.read_file(directory + '/catalog.json')!
 	history_text := os.read_file(directory + '/trust-history.json')!
 	for file in ['catalog.json', 'trust-history.json'] { os.write_file(directory + '/' + file, 'unavailable metadata')! }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ ...config, repositories: [],
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ ...config, repositories: [],
 		policy: pkgcore.Policy{ offline: true, allowed: ['unrelated'], permissions: [], reserve_bytes: 0 } }))!
 	assert command(binary, root, ['deployment-snapshot'])! == first
 	assert audit_command(binary, root, path, true)! == audit
 	command(binary, root, ['--offline', 'deployment-snapshot-save', work + '/revoked.json'])!
 	assert os.read_file(work + '/revoked.json')! == first
 	for file in ['catalog.json', 'trust-history.json'] { assert os.read_file(directory + '/' + file)! == 'unavailable metadata' }
-	os.write_file(root + '/etc/vinix-packages/config.json', config_text)!
+	os.write_file(root + '/etc/tulpar-packages/config.json', config_text)!
 	os.write_file(directory + '/catalog.json', catalog_text)!; os.write_file(directory + '/trust-history.json', history_text)!
 	for names in [['missing'], ['app', 'app'], ['../app']] {
 		refused = false; command(binary, root, ['deployment-snapshot', ...names]) or { refused = true }; assert refused
@@ -167,8 +167,8 @@ fn check() ! {
 	// alone cannot supply trust or payloads to a new machine.
 	for index, id in ['app', 'runtime'] { os.write_file(work + '/repository/manifests/' + id + '-' + architecture + '-1.0.0.json', old_manifests[index])! }
 	pkgcore.publish_release(work + '/repository', 'trusted', work + '/seed', 3, time.now().unix() + 3600, work + '/approved-media')!
-	consumer := work + '/consumer'; os.mkdir_all(consumer + '/etc/vinix-packages')!
-	os.write_file(consumer + '/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ ...config,
+	consumer := work + '/consumer'; os.mkdir_all(consumer + '/etc/tulpar-packages')!
+	os.write_file(consumer + '/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ ...config,
 		repositories: [pkgcore.Repository{ ...config.repositories[0], url: 'file://' + work + '/approved-media' }] }))!
 	mut absent := pkgprotocol.decode_deployment_audit(audit_command(binary, consumer, path, false)!)!; defer { absent.close() }
 	assert absent.generation == 0 && absent.rows.len == 3 && absent.rows.all(it.status == 'missing')

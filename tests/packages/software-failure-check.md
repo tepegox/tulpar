@@ -42,7 +42,7 @@ generated assets; these are not guest graphical executions.
 
 ```sh
 V=/path/to/pinned/v V_MACOS_V3_NO_FALLBACK=1 \
-VINIX_PACKAGE_TEST_UI2=/path/to/headless/modules \
+TULPAR_PACKAGE_TEST_UI2=/path/to/headless/modules \
   /path/to/distribution-check --software-only --direct-tests
 ```
 

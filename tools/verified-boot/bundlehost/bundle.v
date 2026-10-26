@@ -80,12 +80,12 @@ pub fn build(options Build) ! {
 	if pe.signature_size != 0 {
 		return invalid('loader input must be unsigned: enrollment must happen before signing')
 	}
-	staging := temporary(os.dir(output), '.vinix-verified-')!
+	staging := temporary(os.dir(output), '.tulpar-verified-')!
 	defer { retire(staging) }
 	mkdirs(staging + '/boot')!
 	mkdirs(staging + '/EFI/BOOT')!
-	os.cp(options.kernel, staging + '/boot/vinix')!
-	bootpolicy.check_kernel(staging + '/boot/vinix', options.arch)!
+	os.cp(options.kernel, staging + '/boot/tulpar')!
+	bootpolicy.check_kernel(staging + '/boot/tulpar', options.arch)!
 	mut hashes := []string{}
 	for index, source in options.initramfs {
 		path := staging + '/boot/root-' + index.str() + '.tar'
@@ -102,7 +102,7 @@ pub fn build(options Build) ! {
 		dtb_hash = bootpolicy.digest(staging + '/boot/platform.dtb')!
 	}
 	config := staging + '/boot/limine.conf'
-	os.write_file(config, bootpolicy.config_text(bootpolicy.digest(staging + '/boot/vinix')!, hashes, cmdline, dtb_hash, token)!)!
+	os.write_file(config, bootpolicy.config_text(bootpolicy.digest(staging + '/boot/tulpar')!, hashes, cmdline, dtb_hash, token)!)!
 	for index, byte in bootpolicy.digest(config)!.bytes() { data[int(pe.field) + index] = byte }
 	loader := staging + '/EFI/BOOT/' + architecture.loader
 	if options.developer {
@@ -177,7 +177,7 @@ pub fn verify(bundle_arg string, arch string, certificate string, backend string
 	mut cmdline_found := false
 	mut dtb_hash := ''
 	for line in content.split('\n') {
-		if line.starts_with('    path: boot():/boot/vinix#') {
+		if line.starts_with('    path: boot():/boot/tulpar#') {
 			kernel_hash = line.all_after('#')
 		} else if line.starts_with('    module_path: boot():/boot/root-') {
 			tail := line.all_after('    module_path: boot():/boot/root-')
@@ -204,10 +204,10 @@ pub fn verify(bundle_arg string, arch string, certificate string, backend string
 	mut expected := {
 		loader_relative:    true
 		'boot/limine.conf': true
-		'boot/vinix':       true
+		'boot/tulpar':       true
 	}
 	mut artifacts := {
-		'boot/vinix': kernel_hash
+		'boot/tulpar': kernel_hash
 	}
 	for index, hash in hashes {
 		path := 'boot/root-' + index.str() + '.tar'
@@ -220,7 +220,7 @@ pub fn verify(bundle_arg string, arch string, certificate string, backend string
 	}
 	if token != '' { expected['boot/verity-root.img'] = true }
 	if files != expected { return invalid('bundle contains missing or unexpected boot files') }
-	bootpolicy.check_kernel(bundle + '/boot/vinix', arch)!
+	bootpolicy.check_kernel(bundle + '/boot/tulpar', arch)!
 	for path, hash in artifacts {
 		if bootpolicy.digest(bootpolicy.regular_file(bundle + '/' + path)!)! != hash {
 			return invalid('boot artifact checksum mismatch: ' + path)

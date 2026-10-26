@@ -99,15 +99,15 @@ fn platform_deep_available() bool {
 
 fn decide_deep() {
 	mut reason := ''
-	policy := devcore.boot_option('vinix.deep_sleep=') or { '' }
+	policy := devcore.boot_option('tulpar.deep_sleep=') or { '' }
 	if policy == 'off' {
-		reason = 'switched off with vinix.deep_sleep=off'
+		reason = 'switched off with tulpar.deep_sleep=off'
 	} else if !wake.available() {
 		reason = wake.unavailable_reason()
 	} else if !uacpi.sleep_state_supported(uacpi.sleep_state_s3) {
 		reason = 'firmware offers no S3'
 	} else if policy != 'force' && !display_survives_deep() {
-		reason = 'the display could not be brought back afterwards (vinix.deep_sleep=force offers it anyway)'
+		reason = 'the display could not be brought back afterwards (tulpar.deep_sleep=force offers it anyway)'
 	}
 	syspower_deep_reason = reason
 	syspower_deep_offered = reason.len == 0

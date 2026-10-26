@@ -77,12 +77,12 @@ fn speculation_command(args []string) !int {
 	guest := '--arch' in parsed.options
 	if guest { needed(parsed, ['--state-dir', '--kernel-dir', '--guest-state-dir'])! }
 	arch := parsed.options['--arch'] or { if (parsed.options['--host-arch'] or { policyhost.caller_arch() }) == 'arm64' { 'aarch64' } else { 'x86_64' } }
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-speculation-policy-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-speculation-policy-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	reference := if '--original-reference' in parsed.options { resolve(parsed.options['--original-reference'])! } else { '' }
 	mut cc := []string{}
 	if guest && arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		cc = [os.getenv_opt('CC_AARCH64') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk, '-fuse-ld=lld', '-L' + sdk + '/lib']
 	} else if guest { cc = [os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }] } else {
 		cc = [os.getenv_opt('CC') or { 'clang' }]

@@ -10,8 +10,8 @@ import smpfixture
 const scope = 'Compile the six exact Linux 6.6.157 stddef wrappers through the unchanged UAPI owner. Strict GNU99/GNU11 x86-64 and actual AArch64 targets compare 32 declaration/layout facts and reject targeted mutations. ARM covers generic declarations only; LinuxKPI runtime remains x86-only. No memory mapping, device, allocator or GPU runtime is implemented.'
 
 const prior_header = '/* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_STDDEF_H
-#define VINIX_LINUX_STDDEF_H
+#ifndef TULPAR_LINUX_STDDEF_H
+#define TULPAR_LINUX_STDDEF_H
 #include <stddef.h>
 #endif
 '
@@ -166,7 +166,7 @@ fn run_profile(keep string) ! {
 	archive := os.join_path(os.dir(linux), 'linux-' + pin['version']!.str() + '.tar.xz')
 	hosttest.verify_upstream(linux, pin)!
 	require(hosttest.file_digest(archive)! == pin['sha256']!.str(), 'Pinned archive differs')!
-	work := hosttest.work_dir(keep, 'vinix-stddef-layout-')!
+	work := hosttest.work_dir(keep, 'tulpar-stddef-layout-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	os.mkdir_all(os.join_path(work, 'input-snapshots'))!
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!

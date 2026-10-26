@@ -189,10 +189,10 @@ fn abi_atomic_adapter(metadata map[string]AbiValue, exported map[string]AbiExpor
 	wide := abi_name(metadata, 'wide_export')!
 	count := if operation == 'exchange' { 4 } else { 5 }
 	if abi_export_arity(exported, small)! != count || abi_export_arity(exported, wide)! != count - 1 { return error('V export arity does not match native adapter: ${name}') }
-	p := '__vinix_atomic_pointer'
-	old := '__vinix_atomic_expected'
-	value := '__vinix_atomic_value'
-	out := '__vinix_atomic_result'
+	p := '__tulpar_atomic_pointer'
+	old := '__tulpar_atomic_expected'
+	value := '__tulpar_atomic_value'
+	out := '__tulpar_atomic_result'
 	mut lines := ['__auto_type ${p} = (ptr);']
 	if operation == 'compare_exchange' { lines << '__typeof__(*${p}) ${old} = (old);' }
 	lines << '__typeof__(*${p}) ${value} = (value);'

@@ -33,10 +33,10 @@ fn marker_check(original string) ![]string {
 	features := section(text, 'FEATURE_MARKERS')
 	x86 := section(text, 'AMD64_FEATURE_MARKERS')
 	assert features.len == 47 && x86.len == 2
-	assert corevm.required(false, false) == [...features, 'VINIX QEMU CORE: PASS']
-	assert corevm.required(false, true) == [...features, ...x86, 'VINIX QEMU CORE: PASS']
-	assert corevm.required(true, false) == ['VINIX QEMU CORE PERSIST: PASS']
-	return [...features, ...x86, 'VINIX QEMU CORE: PASS']
+	assert corevm.required(false, false) == [...features, 'TULPAR QEMU CORE: PASS']
+	assert corevm.required(false, true) == [...features, ...x86, 'TULPAR QEMU CORE: PASS']
+	assert corevm.required(true, false) == ['TULPAR QEMU CORE PERSIST: PASS']
+	return [...features, ...x86, 'TULPAR QEMU CORE: PASS']
 }
 
 fn check_policy() {
@@ -52,7 +52,7 @@ fn check_policy() {
 					assert absent == [marker] && bad.len == 0
 				}
 			}
-			for marker in ['VINIX QEMU CORE: FAIL', 'QEMU CORE FAIL line', 'FATAL EXCEPTION',
+			for marker in ['TULPAR QEMU CORE: FAIL', 'QEMU CORE FAIL line', 'FATAL EXCEPTION',
 				'KERNEL PANIC'] {
 				_, bad := corevm.results(corevm.Run{ output: good + marker, finished: true }, verification, amd64)
 				assert bad == [marker]
@@ -87,8 +87,8 @@ fn no_process(path string) ! {
 
 pub fn guest(arguments []string) ! {
 	mode := arguments[0]
-	case_name := os.getenv('VINIX_CORE_FIXTURE_CASE')
-	work := os.getenv('VINIX_CORE_FIXTURE_WORK')
+	case_name := os.getenv('TULPAR_CORE_FIXTURE_CASE')
+	work := os.getenv('TULPAR_CORE_FIXTURE_WORK')
 	if mode == 'descendant' {
 		os.write_file(work + '/descendant.pid', os.getpid().str())!
 		for { time.sleep(10 * time.millisecond) }
@@ -117,7 +117,7 @@ pub fn guest(arguments []string) ! {
 		})
 		os.write_file(work + '/boots.json', json2.encode(entries))!
 		if entries.len == 2 && case_name == 'persist-fail' {
-			print('VINIX QEMU CORE: FAIL\n')
+			print('TULPAR QEMU CORE: FAIL\n')
 			flush_stdout()
 			time.sleep(100 * time.millisecond)
 			return
@@ -128,10 +128,10 @@ pub fn guest(arguments []string) ! {
 	assert termios.tcgetattr(0, mut terminal) == 0
 	C.cfmakeraw(unsafe { &terminal })
 	assert termios.tcsetattr(0, C.TCSANOW, mut terminal) == 0
-	mut text := os.read_file(os.getenv('VINIX_CORE_FIXTURE_MARKERS'))!
+	mut text := os.read_file(os.getenv('TULPAR_CORE_FIXTURE_MARKERS'))!
 	if mode == 'arm' {
 		boots := json2.decode[[]json2.Any](os.read_file(work + '/boots.json')!)!
-		if boots.len == 2 { text = 'VINIX QEMU CORE PERSIST: PASS\n' }
+		if boots.len == 2 { text = 'TULPAR QEMU CORE PERSIST: PASS\n' }
 	}
 	if case_name == 'missing' { text = text.replace('QEMU CORE PASS: secure getrandom\n', '') }
 	if case_name == 'duplicate' { text += 'QEMU CORE PASS: secure getrandom\n' }
@@ -178,22 +178,22 @@ fn tests(work string, original string, runner string) ! {
 	assert corevm.arm_command(base, true, '')[1] == '--no-build'
 	assert corevm.arm_command(base, false, '1')[1] == '--no-build'
 	env := corevm.arm_environment(base, {
-		'VINIX_QEMU_PERSIST':            'old'
-		'VINIX_QEMU_PACKAGE_STORE_PORT': ''
+		'TULPAR_QEMU_PERSIST':            'old'
+		'TULPAR_QEMU_PACKAGE_STORE_PORT': ''
 		'USE_TCG':                       '0'
 		'ordinary':                      'kept'
 	}, 'Linux')!
-	assert 'VINIX_QEMU_PERSIST' !in env && env['USE_TCG'] == '0' && env['VINIX_QEMU_PACKAGE_STORE_PORT'] == '' && env['ordinary'] == 'kept'
-	assert env['VINIX_QEMU_PERSIST_SIZE_MB'] == '64' && env['VINIX_BOOT_DISK'] == base.state_dir + '/boot.img'
+	assert 'TULPAR_QEMU_PERSIST' !in env && env['USE_TCG'] == '0' && env['TULPAR_QEMU_PACKAGE_STORE_PORT'] == '' && env['ordinary'] == 'kept'
+	assert env['TULPAR_QEMU_PERSIST_SIZE_MB'] == '64' && env['TULPAR_BOOT_DISK'] == base.state_dir + '/boot.img'
 	linux := corevm.arm_environment(base, map[string]string{}, 'Linux')!
-	assert linux['USE_TCG'] == '1' && linux['VINIX_QEMU_PACKAGE_STORE_PORT'].int() > 0
+	assert linux['USE_TCG'] == '1' && linux['TULPAR_QEMU_PACKAGE_STORE_PORT'].int() > 0
 	darwin := corevm.arm_environment(base, map[string]string{}, 'Darwin')!
 	assert 'USE_TCG' !in darwin
 	for cpu in ['max', 'max,-la57'] {
 		opt := corevm.parse(['--arch=amd64', '--iso=', '--cpus=64', '--timeout=1'], '/', cpu)!
 		assert opt.iso == os.getwd() && opt.cpus == 64 && opt.cpu == cpu
 		command := corevm.amd64_command(opt, {
-			'VINIX_QEMU_ACCEL': 'hvf'
+			'TULPAR_QEMU_ACCEL': 'hvf'
 		})
 		assert command[4] == 'hvf' && command[6] == cpu
 	}
@@ -205,12 +205,12 @@ fn tests(work string, original string, runner string) ! {
 	os.write_file(base.root + '/scripts/run-aarch64.sh', '#!/bin/sh\nexec ' + hosttest.shell_quote(os.executable()) + ' --guest arm "$@"\n')!
 	os.chmod(base.root + '/scripts/run-aarch64.sh', 0o755)!
 	mut environment := os.environ()
-	environment['VINIX_CORE_FIXTURE_MARKERS'] = work + '/markers'
+	environment['TULPAR_CORE_FIXTURE_MARKERS'] = work + '/markers'
 	for case_name in ['success', 'missing', 'duplicate', 'failure', 'nonzero', 'large', 'descendant'] {
 		here := work + '/' + case_name
 		os.mkdir_all(here)!
-		environment['VINIX_CORE_FIXTURE_WORK'] = here
-		environment['VINIX_CORE_FIXTURE_CASE'] = case_name
+		environment['TULPAR_CORE_FIXTURE_WORK'] = here
+		environment['TULPAR_CORE_FIXTURE_CASE'] = case_name
 		result := corevm.capture([os.executable(), '--guest', 'arm'], environment, '', 5, false, false, false)!
 		missing, failures := corevm.results(result, false, false)
 		assert (missing.len + failures.len == 0) == (case_name in ['success', 'large', 'descendant'])
@@ -229,8 +229,8 @@ fn tests(work string, original string, runner string) ! {
 	for amd64 in [false, true] {
 		here := work + '/timeout-' + amd64.str()
 		os.mkdir_all(here)!
-		environment['VINIX_CORE_FIXTURE_WORK'] = here
-		environment['VINIX_CORE_FIXTURE_CASE'] = 'resist'
+		environment['TULPAR_CORE_FIXTURE_WORK'] = here
+		environment['TULPAR_CORE_FIXTURE_CASE'] = 'resist'
 		started := time.sys_mono_now()
 		result := corevm.capture([os.executable(), '--guest', if amd64 { 'amd64' } else { 'arm' }], environment, '', 0.2, false, amd64, false)!
 		assert !result.has_status && result.forced && !result.finished
@@ -243,8 +243,8 @@ fn tests(work string, original string, runner string) ! {
 	for case_name in ['success', 'persist-fail'] {
 		here := work + '/vm-' + case_name
 		os.mkdir_all(here)!
-		environment['VINIX_CORE_FIXTURE_WORK'] = here
-		environment['VINIX_CORE_FIXTURE_CASE'] = case_name
+		environment['TULPAR_CORE_FIXTURE_WORK'] = here
+		environment['TULPAR_CORE_FIXTURE_CASE'] = case_name
 		args := [runner, '--root', base.root, '--init', '/guest init', '--initramfs', '/base.tar',
 			'--state-dir', here + '/state', '--timeout', '5']
 		result := hosttest.capture(args, here + '/run.log', 30, environment)!
@@ -255,9 +255,9 @@ fn tests(work string, original string, runner string) ! {
 			row := item.as_map()
 			assert row['cwd']!.str() == base.root
 			argv := row['argv']!.as_array().map(it.str())
-			assert ('--no-build' in argv) == (index == 1 || os.getenv('VINIX_QEMU_CORE_NO_BUILD') == '1')
+			assert ('--no-build' in argv) == (index == 1 || os.getenv('TULPAR_QEMU_CORE_NO_BUILD') == '1')
 			guest_env := row['environment']!.as_map()
-			assert guest_env['VINIX_QEMU_PERSIST_DISK']!.str() == here + '/state/root.ext2'
+			assert guest_env['TULPAR_QEMU_PERSIST_DISK']!.str() == here + '/state/root.ext2'
 		}
 	}
 	println('PASS two-boot persistence sequence and first/second boot environments')
@@ -269,8 +269,8 @@ fn tests(work string, original string, runner string) ! {
 	for case_name in ['success', 'missing', 'nonzero', 'early'] {
 		here := work + '/amd64-' + case_name
 		os.mkdir_all(here)!
-		environment['VINIX_CORE_FIXTURE_WORK'] = here
-		environment['VINIX_CORE_FIXTURE_CASE'] = case_name
+		environment['TULPAR_CORE_FIXTURE_WORK'] = here
+		environment['TULPAR_CORE_FIXTURE_CASE'] = case_name
 		started := time.sys_mono_now()
 		result := hosttest.capture([runner, '--arch', 'amd64', '--iso', '/core.iso', '--qemu',
 			'qemu-fixture', '--firmware', '/firmware', '--timeout', '5', '--cpus', '2'], here + '/run.log', 20, environment)!
@@ -284,8 +284,8 @@ fn tests(work string, original string, runner string) ! {
 	for signal in [2, 15] {
 		here := work + '/signal-' + signal.str()
 		os.mkdir_all(here)!
-		environment['VINIX_CORE_FIXTURE_WORK'] = here
-		environment['VINIX_CORE_FIXTURE_CASE'] = 'hang'
+		environment['TULPAR_CORE_FIXTURE_WORK'] = here
+		environment['TULPAR_CORE_FIXTURE_CASE'] = 'hang'
 		mut child := os.new_process(runner)
 		child.set_args(['--root', base.root, '--init', '/init', '--initramfs', '/initramfs',
 			'--state-dir', here + '/state', '--timeout', '30'])

@@ -12,29 +12,29 @@ import x86.cpu.local as cpulocal
 import x86.hpet as rwsem_clock
 
 #include "linuxkpi_rwsem_fixture_v_primitives.h"
-struct C.vinix_rwsem_fixture {}
-struct C.vinix_rwsem_completion {}
-fn C.vinix_linuxkpi_rwsem_fixture_static() voidptr
-fn C.vinix_linuxkpi_rwsem_fixture_init(voidptr)
-fn C.vinix_linuxkpi_rwsem_fixture_read(voidptr, u32) i32
-fn C.vinix_linuxkpi_rwsem_fixture_write(voidptr, bool) i32
-fn C.vinix_linuxkpi_rwsem_fixture_try(voidptr, bool) i32
-fn C.vinix_linuxkpi_rwsem_fixture_up(voidptr, u32)
-fn C.vinix_linuxkpi_rwsem_fixture_downgrade(voidptr)
-fn C.vinix_linuxkpi_rwsem_fixture_value(voidptr, u32) i64
-fn C.vinix_linuxkpi_rwsem_fixture_init_completion(voidptr)
-fn C.vinix_linuxkpi_rwsem_fixture_complete(voidptr)
-fn C.vinix_linuxkpi_rwsem_fixture_wait(voidptr)
-fn C.vinix_linuxkpi_rwsem_fixture_alloc() voidptr
-fn C.vinix_linuxkpi_rwsem_fixture_free(voidptr)
+struct C.tulpar_rwsem_fixture {}
+struct C.tulpar_rwsem_completion {}
+fn C.tulpar_linuxkpi_rwsem_fixture_static() voidptr
+fn C.tulpar_linuxkpi_rwsem_fixture_init(voidptr)
+fn C.tulpar_linuxkpi_rwsem_fixture_read(voidptr, u32) i32
+fn C.tulpar_linuxkpi_rwsem_fixture_write(voidptr, bool) i32
+fn C.tulpar_linuxkpi_rwsem_fixture_try(voidptr, bool) i32
+fn C.tulpar_linuxkpi_rwsem_fixture_up(voidptr, u32)
+fn C.tulpar_linuxkpi_rwsem_fixture_downgrade(voidptr)
+fn C.tulpar_linuxkpi_rwsem_fixture_value(voidptr, u32) i64
+fn C.tulpar_linuxkpi_rwsem_fixture_init_completion(voidptr)
+fn C.tulpar_linuxkpi_rwsem_fixture_complete(voidptr)
+fn C.tulpar_linuxkpi_rwsem_fixture_wait(voidptr)
+fn C.tulpar_linuxkpi_rwsem_fixture_alloc() voidptr
+fn C.tulpar_linuxkpi_rwsem_fixture_free(voidptr)
 
 // Every cross-task control and original record has boot lifetime. Each actor
 // has separate join and observer references until actual off-stack retirement.
 struct RwsemTestLedger {
 mut:
-	sem C.vinix_rwsem_fixture
-	atomic_sem C.vinix_rwsem_fixture
-	gates [3]C.vinix_rwsem_completion
+	sem C.tulpar_rwsem_fixture
+	atomic_sem C.tulpar_rwsem_fixture
+	gates [3]C.tulpar_rwsem_completion
 	ready [3]bool
 	command [3]u32
 	mode [3]u32
@@ -52,7 +52,7 @@ mut:
 	dynamic_hold bool
 	dynamic_freed bool
 	freed_objects u32
-	irq C.vinix_irqwork_fixture
+	irq C.tulpar_irqwork_fixture
 	irq_ready bool
 	irq_done bool
 	irq_queued bool
@@ -83,17 +83,17 @@ fn rwsem_test_parked(index u32, state u32, waiters i64) bool {
 		else { voidptr(unsafe { &rwsem_test_ledger.sem }) }
 	for {
 		if katomic.load(&rwsem_test_ledger.started[index])
-			&& C.vinix_linuxkpi_dmafence_fixture_task_state(unsafe { &owner.linuxkpi_task[0] }) == state
+			&& C.tulpar_linuxkpi_dmafence_fixture_task_state(unsafe { &owner.linuxkpi_task[0] }) == state
 			&& !katomic.load(&owner.is_in_queue) && katomic.load(&owner.running_on) == u64(-1)
 			&& !katomic.load(&owner.is_in_queue)
-			&& C.vinix_linuxkpi_rwsem_fixture_value(sem, 2) == waiters { return true }
+			&& C.tulpar_linuxkpi_rwsem_fixture_value(sem, 2) == waiters { return true }
 		if rwsem_clock.nanoseconds() - start >= dmafence_test_timeout_ns { return false }
 		sched.reschedule()
 	}
 	return false
 }
 fn rwsem_test_start(index u32, command u32, mode u32) {
-	C.vinix_linuxkpi_rwsem_fixture_init_completion(unsafe { &rwsem_test_ledger.gates[index] })
+	C.tulpar_linuxkpi_rwsem_fixture_init_completion(unsafe { &rwsem_test_ledger.gates[index] })
 	rwsem_test_ledger.mode[index] = mode
 	rwsem_test_ledger.results[index] = -999
 	katomic.store(mut &rwsem_test_ledger.started[index], false)
@@ -102,7 +102,7 @@ fn rwsem_test_start(index u32, command u32, mode u32) {
 	katomic.store(mut &rwsem_test_ledger.command[index], command)
 }
 fn rwsem_test_release(index u32) bool {
-	C.vinix_linuxkpi_rwsem_fixture_complete(unsafe { &rwsem_test_ledger.gates[index] })
+	C.tulpar_linuxkpi_rwsem_fixture_complete(unsafe { &rwsem_test_ledger.gates[index] })
 	return rwsem_test_wait(&rwsem_test_ledger.done[index])
 }
 fn rwsem_test_readers(add bool) {
@@ -140,8 +140,8 @@ fn rwsem_test_actor(argument voidptr) {
 			sem := if command == 6 { rwsem_test_ledger.dynamic } else { voidptr(unsafe { &rwsem_test_ledger.sem }) }
 			mode := rwsem_test_ledger.mode[index]
 			writer := command == 2 || command == 4 || command == 6
-			result := if writer { C.vinix_linuxkpi_rwsem_fixture_write(sem, mode != 0) }
-				else { C.vinix_linuxkpi_rwsem_fixture_read(sem, mode) }
+			result := if writer { C.tulpar_linuxkpi_rwsem_fixture_write(sem, mode != 0) }
+				else { C.tulpar_linuxkpi_rwsem_fixture_read(sem, mode) }
 			rwsem_test_ledger.results[index] = result
 			if result == 0 {
 				if command == 5 {
@@ -156,7 +156,7 @@ fn rwsem_test_actor(argument voidptr) {
 					}
 					katomic.store(mut &rwsem_test_ledger.acquired[index], true)
 					if command == 1 || command == 2 {
-						C.vinix_linuxkpi_rwsem_fixture_wait(unsafe { &rwsem_test_ledger.gates[index] })
+						C.tulpar_linuxkpi_rwsem_fixture_wait(unsafe { &rwsem_test_ledger.gates[index] })
 					}
 					if writer {
 						if katomic.load(&rwsem_test_ledger.readers) != 0 { rwsem_test_fail(32) }
@@ -165,9 +165,9 @@ fn rwsem_test_actor(argument voidptr) {
 						if katomic.load(&rwsem_test_ledger.writer) { rwsem_test_fail(64) }
 						rwsem_test_readers(false)
 					}
-					C.vinix_linuxkpi_rwsem_fixture_up(sem, if writer { u32(1) } else { u32(0) })
+					C.tulpar_linuxkpi_rwsem_fixture_up(sem, if writer { u32(1) } else { u32(0) })
 					if command == 6 {
-						C.vinix_linuxkpi_rwsem_fixture_free(sem)
+						C.tulpar_linuxkpi_rwsem_fixture_free(sem)
 						katomic.store(mut &rwsem_test_ledger.dynamic_freed, true)
 					}
 				}
@@ -184,22 +184,22 @@ fn rwsem_test_actor(argument voidptr) {
 
 fn rwsem_test_empty(sem voidptr) bool {
 	// A reader-owner hint may retain a dead task's address; it is not a ref.
-	return C.vinix_linuxkpi_rwsem_fixture_value(sem, 0) == 0
-		&& C.vinix_linuxkpi_rwsem_fixture_value(sem, 2) == 0
+	return C.tulpar_linuxkpi_rwsem_fixture_value(sem, 0) == 0
+		&& C.tulpar_linuxkpi_rwsem_fixture_value(sem, 2) == 0
 }
 fn rwsem_test_atomic(sem voidptr) bool {
-	if C.vinix_linuxkpi_rwsem_fixture_try(sem, false) != 1 { return false }
-	mut valid := C.vinix_linuxkpi_rwsem_fixture_value(sem, 0) == 256
-		&& C.vinix_linuxkpi_rwsem_fixture_try(sem, true) == 0
-	C.vinix_linuxkpi_rwsem_fixture_up(sem, 0)
-	if C.vinix_linuxkpi_rwsem_fixture_try(sem, true) != 1 { return false }
-	valid = valid && C.vinix_linuxkpi_rwsem_fixture_value(sem, 0) == 1
-		&& C.vinix_linuxkpi_rwsem_fixture_try(sem, false) == 0
-		&& C.vinix_linuxkpi_rwsem_fixture_try(sem, true) == 0
-	C.vinix_linuxkpi_rwsem_fixture_downgrade(sem)
-	valid = valid && C.vinix_linuxkpi_rwsem_fixture_value(sem, 0) == 256
-		&& (C.vinix_linuxkpi_rwsem_fixture_value(sem, 1) & 1) != 0
-	C.vinix_linuxkpi_rwsem_fixture_up(sem, 0)
+	if C.tulpar_linuxkpi_rwsem_fixture_try(sem, false) != 1 { return false }
+	mut valid := C.tulpar_linuxkpi_rwsem_fixture_value(sem, 0) == 256
+		&& C.tulpar_linuxkpi_rwsem_fixture_try(sem, true) == 0
+	C.tulpar_linuxkpi_rwsem_fixture_up(sem, 0)
+	if C.tulpar_linuxkpi_rwsem_fixture_try(sem, true) != 1 { return false }
+	valid = valid && C.tulpar_linuxkpi_rwsem_fixture_value(sem, 0) == 1
+		&& C.tulpar_linuxkpi_rwsem_fixture_try(sem, false) == 0
+		&& C.tulpar_linuxkpi_rwsem_fixture_try(sem, true) == 0
+	C.tulpar_linuxkpi_rwsem_fixture_downgrade(sem)
+	valid = valid && C.tulpar_linuxkpi_rwsem_fixture_value(sem, 0) == 256
+		&& (C.tulpar_linuxkpi_rwsem_fixture_value(sem, 1) & 1) != 0
+	C.tulpar_linuxkpi_rwsem_fixture_up(sem, 0)
 	return rwsem_test_empty(sem) && valid
 }
 fn rwsem_test_atomic_context() bool {
@@ -241,18 +241,18 @@ fn rwsem_test_irq(_work &C.irq_work) {
 fn rwsem_test_run_irq() bool {
 	katomic.store(mut &rwsem_test_ledger.irq_ready, false)
 	katomic.store(mut &rwsem_test_ledger.irq_done, false)
-	if C.vinix_linuxkpi_irqwork_fixture_init(unsafe { &rwsem_test_ledger.irq }, rwsem_test_irq, 0) != 0 { return false }
+	if C.tulpar_linuxkpi_irqwork_fixture_init(unsafe { &rwsem_test_ledger.irq }, rwsem_test_irq, 0) != 0 { return false }
 	rwsem_test_start(0, 7, 0)
 	defer {
 		if rwsem_test_ledger.irq_queued {
-			C.vinix_linuxkpi_irqwork_fixture_sync(unsafe { &rwsem_test_ledger.irq })
+			C.tulpar_linuxkpi_irqwork_fixture_sync(unsafe { &rwsem_test_ledger.irq })
 			rwsem_test_ledger.irq_queued = false
 		}
 		katomic.store(mut &rwsem_test_ledger.irq_done, true)
 		if !rwsem_test_wait(&rwsem_test_ledger.done[0]) { lib.kpanic(unsafe { nil }, c'linuxkpi: rwsem IRQ actor cleanup deadline') }
 	}
 	if !rwsem_test_wait(&rwsem_test_ledger.irq_ready) { return false }
-	rwsem_test_ledger.irq_queued = C.vinix_linuxkpi_irqwork_fixture_queue(unsafe { &rwsem_test_ledger.irq }, 1)
+	rwsem_test_ledger.irq_queued = C.tulpar_linuxkpi_irqwork_fixture_queue(unsafe { &rwsem_test_ledger.irq }, 1)
 	return rwsem_test_ledger.irq_queued && rwsem_test_wait(&rwsem_test_ledger.irq_done)
 		&& rwsem_test_wait(&rwsem_test_ledger.done[0])
 }
@@ -261,30 +261,30 @@ fn rwsem_test_controller_up() {
 	mode := rwsem_test_ledger.controller_hold
 	if mode != 0 {
 		rwsem_test_ledger.controller_hold = 0
-		C.vinix_linuxkpi_rwsem_fixture_up(unsafe { &rwsem_test_ledger.sem }, mode - 1)
+		C.tulpar_linuxkpi_rwsem_fixture_up(unsafe { &rwsem_test_ledger.sem }, mode - 1)
 	}
 }
 fn rwsem_test_fairness() bool {
 	sem := unsafe { &rwsem_test_ledger.sem }
-	if C.vinix_linuxkpi_rwsem_fixture_read(sem, 0) != 0 { return false }
+	if C.tulpar_linuxkpi_rwsem_fixture_read(sem, 0) != 0 { return false }
 	rwsem_test_ledger.controller_hold = 1
 	rwsem_test_start(0, 2, 0)
 	if !rwsem_test_parked(0, 2, 1) { return false }
 	rwsem_test_start(1, 1, 0)
 	if !rwsem_test_parked(1, 2, 2) { return false }
 	rwsem_test_start(2, 1, 0)
-	if !rwsem_test_parked(2, 2, 3) || C.vinix_linuxkpi_rwsem_fixture_try(sem, false) != 0 { return false }
+	if !rwsem_test_parked(2, 2, 3) || C.tulpar_linuxkpi_rwsem_fixture_try(sem, false) != 0 { return false }
 	rwsem_test_controller_up()
 	if !rwsem_test_wait(&rwsem_test_ledger.acquired[0]) || katomic.load(&rwsem_test_ledger.acquired[1])
-		|| katomic.load(&rwsem_test_ledger.acquired[2]) || C.vinix_linuxkpi_rwsem_fixture_value(sem, 2) != 2 { return false }
+		|| katomic.load(&rwsem_test_ledger.acquired[2]) || C.tulpar_linuxkpi_rwsem_fixture_value(sem, 2) != 2 { return false }
 	if !rwsem_test_release(0) || !rwsem_test_wait(&rwsem_test_ledger.acquired[1])
 		|| !rwsem_test_wait(&rwsem_test_ledger.acquired[2]) || katomic.load(&rwsem_test_ledger.readers) != 2
-		|| C.vinix_linuxkpi_rwsem_fixture_try(sem, true) != 0 { return false }
+		|| C.tulpar_linuxkpi_rwsem_fixture_try(sem, true) != 0 { return false }
 	return rwsem_test_release(1) && rwsem_test_release(2) && rwsem_test_empty(sem)
 }
 fn rwsem_test_batch_downgrade() bool {
 	sem := unsafe { &rwsem_test_ledger.sem }
-	if C.vinix_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
+	if C.tulpar_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
 	rwsem_test_ledger.controller_hold = 2
 	rwsem_test_start(0, 1, 0)
 	if !rwsem_test_parked(0, 2, 1) { return false }
@@ -292,12 +292,12 @@ fn rwsem_test_batch_downgrade() bool {
 	if !rwsem_test_parked(2, 2, 2) { return false }
 	rwsem_test_start(1, 1, 0)
 	if !rwsem_test_parked(1, 2, 3) { return false }
-	C.vinix_linuxkpi_rwsem_fixture_downgrade(sem)
+	C.tulpar_linuxkpi_rwsem_fixture_downgrade(sem)
 	rwsem_test_ledger.controller_hold = 1
 	if !rwsem_test_wait(&rwsem_test_ledger.acquired[0]) || !rwsem_test_wait(&rwsem_test_ledger.acquired[1])
 		|| katomic.load(&rwsem_test_ledger.acquired[2]) || katomic.load(&rwsem_test_ledger.readers) != 2
-		|| C.vinix_linuxkpi_rwsem_fixture_value(sem, 0) != 770
-		|| C.vinix_linuxkpi_rwsem_fixture_value(sem, 2) != 1 { return false }
+		|| C.tulpar_linuxkpi_rwsem_fixture_value(sem, 0) != 770
+		|| C.tulpar_linuxkpi_rwsem_fixture_value(sem, 2) != 1 { return false }
 	rwsem_test_controller_up()
 	if !rwsem_test_release(0) || katomic.load(&rwsem_test_ledger.acquired[2])
 		|| !rwsem_test_release(1) || !rwsem_test_wait(&rwsem_test_ledger.acquired[2]) { return false }
@@ -305,27 +305,27 @@ fn rwsem_test_batch_downgrade() bool {
 }
 fn rwsem_test_signal(command u32, mode u32) bool {
 	sem := unsafe { &rwsem_test_ledger.sem }
-	if C.vinix_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
+	if C.tulpar_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
 	rwsem_test_ledger.controller_hold = 2
 	rwsem_test_start(0, command, mode)
 	state := if mode == 1 && command == 3 { u32(1) } else { u32(258) }
 	if !rwsem_test_parked(0, state, 1) { return false }
 	test_task_signal(rwsem_test_ledger.owners[0], u64(1) << 14)
 	if state == 258 {
-		C.vinix_linuxkpi_migration_fixture_sleep(2)
+		C.tulpar_linuxkpi_migration_fixture_sleep(2)
 		if katomic.load(&rwsem_test_ledger.done[0]) || !rwsem_test_parked(0, state, 1) { return false }
 		test_task_signal(rwsem_test_ledger.owners[0], u64(1) << 8)
 	}
 	if !rwsem_test_wait(&rwsem_test_ledger.done[0]) || rwsem_test_ledger.results[0] != -4
-		|| C.vinix_linuxkpi_rwsem_fixture_value(sem, 2) != 0
-		|| C.vinix_linuxkpi_rwsem_fixture_value(sem, 0) != 1 { return false }
+		|| C.tulpar_linuxkpi_rwsem_fixture_value(sem, 2) != 0
+		|| C.tulpar_linuxkpi_rwsem_fixture_value(sem, 0) != 1 { return false }
 	rwsem_test_controller_up()
 	return rwsem_test_empty(sem)
 }
 fn rwsem_test_races() bool {
 	sem := unsafe { &rwsem_test_ledger.sem }
 	for round in 0 .. 48 {
-		if C.vinix_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
+		if C.tulpar_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
 		rwsem_test_ledger.controller_hold = 2
 		writer := round % 3 == 0
 		mode := if writer || round % 4 == 1 { u32(1) } else { u32(2) }
@@ -346,12 +346,12 @@ fn rwsem_test_races() bool {
 }
 fn rwsem_test_uninterruptible(writer bool) bool {
 	sem := unsafe { &rwsem_test_ledger.sem }
-	if C.vinix_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
+	if C.tulpar_linuxkpi_rwsem_fixture_write(sem, false) != 0 { return false }
 	rwsem_test_ledger.controller_hold = 2
 	rwsem_test_start(0, if writer { u32(4) } else { u32(3) }, 0)
 	if !rwsem_test_parked(0, 2, 1) { return false }
 	test_task_signal(rwsem_test_ledger.owners[0], u64(1) << 8)
-	C.vinix_linuxkpi_migration_fixture_sleep(2)
+	C.tulpar_linuxkpi_migration_fixture_sleep(2)
 	if katomic.load(&rwsem_test_ledger.done[0]) || !rwsem_test_parked(0, 2, 1) { return false }
 	rwsem_test_controller_up()
 	if !rwsem_test_wait(&rwsem_test_ledger.done[0]) || rwsem_test_ledger.results[0] != 0 { return false }
@@ -359,7 +359,7 @@ fn rwsem_test_uninterruptible(writer bool) bool {
 }
 fn rwsem_test_cancel_head() bool {
 	sem := unsafe { &rwsem_test_ledger.sem }
-	if C.vinix_linuxkpi_rwsem_fixture_read(sem, 0) != 0 { return false }
+	if C.tulpar_linuxkpi_rwsem_fixture_read(sem, 0) != 0 { return false }
 	rwsem_test_ledger.controller_hold = 1
 	rwsem_test_start(0, 4, 1)
 	if !rwsem_test_parked(0, 258, 1) { return false }
@@ -368,8 +368,8 @@ fn rwsem_test_cancel_head() bool {
 	test_task_signal(rwsem_test_ledger.owners[0], u64(1) << 8)
 	if !rwsem_test_wait(&rwsem_test_ledger.done[0]) || rwsem_test_ledger.results[0] != -4
 		|| !rwsem_test_wait(&rwsem_test_ledger.acquired[1])
-		|| C.vinix_linuxkpi_rwsem_fixture_value(sem, 0) != 512
-		|| C.vinix_linuxkpi_rwsem_fixture_value(sem, 2) != 0 { return false }
+		|| C.tulpar_linuxkpi_rwsem_fixture_value(sem, 0) != 512
+		|| C.tulpar_linuxkpi_rwsem_fixture_value(sem, 2) != 0 { return false }
 	rwsem_test_controller_up()
 	return rwsem_test_release(1) && rwsem_test_empty(sem)
 }
@@ -377,24 +377,24 @@ fn rwsem_test_transfer() bool {
 	sem := unsafe { &rwsem_test_ledger.sem }
 	rwsem_test_start(0, 5, 3)
 	if !rwsem_test_wait(&rwsem_test_ledger.done[0]) || !katomic.load(&rwsem_test_ledger.transfer_hold)
-		|| C.vinix_linuxkpi_rwsem_fixture_try(sem, true) != 0 { return false }
-	C.vinix_linuxkpi_rwsem_fixture_up(sem, 2)
+		|| C.tulpar_linuxkpi_rwsem_fixture_try(sem, true) != 0 { return false }
+	C.tulpar_linuxkpi_rwsem_fixture_up(sem, 2)
 	katomic.store(mut &rwsem_test_ledger.transfer_hold, false)
 	return rwsem_test_empty(sem)
 }
 fn rwsem_test_self_free() bool {
 	for _ in 0 .. 12 {
-		rwsem_test_ledger.dynamic = C.vinix_linuxkpi_rwsem_fixture_alloc()
+		rwsem_test_ledger.dynamic = C.tulpar_linuxkpi_rwsem_fixture_alloc()
 		if rwsem_test_ledger.dynamic == unsafe { nil } { return false }
 		katomic.store(mut &rwsem_test_ledger.dynamic_freed, false)
-		if C.vinix_linuxkpi_rwsem_fixture_write(rwsem_test_ledger.dynamic, false) != 0 { return false }
+		if C.tulpar_linuxkpi_rwsem_fixture_write(rwsem_test_ledger.dynamic, false) != 0 { return false }
 		rwsem_test_ledger.dynamic_hold = true
 		rwsem_test_start(0, 6, 0)
 		if !rwsem_test_parked(0, 2, 1) { return false }
 		rwsem_test_ledger.dynamic_hold = false
 		// A granted actor may unlock/free before this releaser returns. Only
 		// boot-ledger flags, never the detached sem, may be read after this call.
-		C.vinix_linuxkpi_rwsem_fixture_up(rwsem_test_ledger.dynamic, 1)
+		C.tulpar_linuxkpi_rwsem_fixture_up(rwsem_test_ledger.dynamic, 1)
 		if !rwsem_test_wait(&rwsem_test_ledger.done[0]) || !katomic.load(&rwsem_test_ledger.dynamic_freed) { return false }
 		rwsem_test_ledger.dynamic = unsafe { nil }
 		rwsem_test_ledger.freed_objects++
@@ -417,21 +417,21 @@ fn rwsem_test_lifecycle(fail_after int, fail_stage int) bool {
 			rwsem_test_controller_up()
 			if rwsem_test_ledger.dynamic_hold {
 				rwsem_test_ledger.dynamic_hold = false
-				C.vinix_linuxkpi_rwsem_fixture_up(rwsem_test_ledger.dynamic, 1)
+				C.tulpar_linuxkpi_rwsem_fixture_up(rwsem_test_ledger.dynamic, 1)
 			}
-			for i in 0 .. 3 { C.vinix_linuxkpi_rwsem_fixture_complete(unsafe { &rwsem_test_ledger.gates[i] }) }
+			for i in 0 .. 3 { C.tulpar_linuxkpi_rwsem_fixture_complete(unsafe { &rwsem_test_ledger.gates[i] }) }
 			if rwsem_test_ledger.irq_queued {
-				C.vinix_linuxkpi_irqwork_fixture_sync(unsafe { &rwsem_test_ledger.irq })
+				C.tulpar_linuxkpi_irqwork_fixture_sync(unsafe { &rwsem_test_ledger.irq })
 			}
 			katomic.store(mut &rwsem_test_ledger.irq_done, true)
 			katomic.store(mut &rwsem_test_ledger.quit, true)
 			for i in 0 .. created { test_task_signal(owners[i], 0); irq_test_join(owners[i]) }
 			if rwsem_test_ledger.transfer_hold {
-				C.vinix_linuxkpi_rwsem_fixture_up(unsafe { &rwsem_test_ledger.sem }, 2)
+				C.tulpar_linuxkpi_rwsem_fixture_up(unsafe { &rwsem_test_ledger.sem }, 2)
 				rwsem_test_ledger.transfer_hold = false
 			}
 			if rwsem_test_ledger.dynamic != unsafe { nil } && !katomic.load(&rwsem_test_ledger.dynamic_freed) {
-				C.vinix_linuxkpi_rwsem_fixture_free(rwsem_test_ledger.dynamic)
+				C.tulpar_linuxkpi_rwsem_fixture_free(rwsem_test_ledger.dynamic)
 			}
 			rwsem_test_ledger.dynamic = unsafe { nil }
 		}
@@ -443,9 +443,9 @@ fn rwsem_test_lifecycle(fail_after int, fail_stage int) bool {
 	}
 	if !ints || worker_bind(0) != 0 { return false }
 	rwsem_test_ledger = RwsemTestLedger{}
-	C.vinix_linuxkpi_rwsem_fixture_init(unsafe { &rwsem_test_ledger.sem })
-	C.vinix_linuxkpi_rwsem_fixture_init(unsafe { &rwsem_test_ledger.atomic_sem })
-	for i in 0 .. 3 { C.vinix_linuxkpi_rwsem_fixture_init_completion(unsafe { &rwsem_test_ledger.gates[i] }) }
+	C.tulpar_linuxkpi_rwsem_fixture_init(unsafe { &rwsem_test_ledger.sem })
+	C.tulpar_linuxkpi_rwsem_fixture_init(unsafe { &rwsem_test_ledger.atomic_sem })
+	for i in 0 .. 3 { C.tulpar_linuxkpi_rwsem_fixture_init_completion(unsafe { &rwsem_test_ledger.gates[i] }) }
 	records_live = true
 	for i in 0 .. 3 {
 		if i == fail_after { sched.test_kernel_thread_failure(fail_stage) }
@@ -468,7 +468,7 @@ fn rwsem_test_lifecycle(fail_after int, fail_stage int) bool {
 		created++
 	}
 	for i in 0 .. 3 { if !rwsem_test_wait(&rwsem_test_ledger.ready[i]) { return false } }
-	static_sem := C.vinix_linuxkpi_rwsem_fixture_static()
+	static_sem := C.tulpar_linuxkpi_rwsem_fixture_static()
 	if !rwsem_test_empty(static_sem) || !rwsem_test_atomic(static_sem) || !rwsem_test_atomic_context()
 		|| !rwsem_test_run_irq() || !rwsem_test_fairness() || !rwsem_test_batch_downgrade()
 		|| !rwsem_test_signal(3, 1) || !rwsem_test_signal(3, 2) || !rwsem_test_signal(4, 1)

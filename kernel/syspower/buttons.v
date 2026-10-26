@@ -28,7 +28,7 @@ pub enum Button {
 	sleep
 }
 
-// What busybox's poweroff sends init, and what Vinix's inits act on.
+// What busybox's poweroff sends init, and what Tulpar's inits act on.
 const signal_power_off = 12
 
 struct Hooks {

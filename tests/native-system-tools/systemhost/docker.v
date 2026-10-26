@@ -20,7 +20,7 @@ fn docker(args []string) !int {
 	required(options, ['--init', '--initramfs', '--state-dir', '--pass-marker'])!
 	seconds := positive(options, '--timeout', 900)!
 	memory := positive(options, '--mem', 4096)!
-	state := state_dir(options, 'vinix-docker-')!
+	state := state_dir(options, 'tulpar-docker-')!
 	init := resolve(options.value('--init', ''))!
 	archive := resolve(options.value('--initramfs', ''))!
 	kernel := snapshot(state, kernel_source(options, 'aarch64'), 'aarch64')!
@@ -37,8 +37,8 @@ fn docker(args []string) !int {
 	configured := guesthost.launch(init, patched, state, kernel, 'aarch64', false)!
 	mut argv := configured.command.clone()
 	argv[argv.index('-m') + 1] = memory.str()
-	if os.getenv('VINIX_QEMU_EXTRA') != '' {
-		argv.insert(1, hosttest.shell_split(os.getenv('VINIX_QEMU_EXTRA'))!)
+	if os.getenv('TULPAR_QEMU_EXTRA') != '' {
+		argv.insert(1, hosttest.shell_split(os.getenv('TULPAR_QEMU_EXTRA'))!)
 	}
 	pass := options.value('--pass-marker', '')
 	failures := ['FATAL EXCEPTION', 'KERNEL PANIC', ...options.values['--fail-marker']]

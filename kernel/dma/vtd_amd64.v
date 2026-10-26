@@ -328,7 +328,7 @@ fn vtd_after_map(mut unit VtdUnit, did u32, iova u64, bytes u64) {
 }
 
 fn vtd_unit_name(index u32) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(8) }
 	text.add('dmar')
 	text.add_unsigned(u64(index))
@@ -526,8 +526,8 @@ fn vtd_unit_start(drhd_index u32) {
 	// graphics device, and the picture firmware put on the screen is read
 	// out of memory through this unit. Switched on, it would block that.
 	if vtd_drhd_graphics_only(vtd_firmware, drhd_index)
-		&& !devcore.boot_flag('vinix.iommu_igfx=', false) {
-		C.kprintf(c'vtd: the unit at 0x%llx serves only the integrated graphics at 00:02.0; left off (vinix.iommu_igfx=1 to switch it on)\n',
+		&& !devcore.boot_flag('tulpar.iommu_igfx=', false) {
+		C.kprintf(c'vtd: the unit at 0x%llx serves only the integrated graphics at 00:02.0; left off (tulpar.iommu_igfx=1 to switch it on)\n',
 			drhd.address)
 		return
 	}
@@ -580,7 +580,7 @@ fn vtd_firmware_new() &VtdFirmware {
 }
 
 // Find the machine's VT-d units and switch them on. Called by dma.initialise()
-// when the command line has vinix.iommu=1, after PCI has been enumerated and
+// when the command line has tulpar.iommu=1, after PCI has been enumerated and
 // before the first driver that does DMA registers.
 fn vtd_initialise() {
 	table := acpi.find_sdt('DMAR', 0) or {

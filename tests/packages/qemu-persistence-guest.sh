@@ -23,5 +23,5 @@ printf '%s\n' persistent-gtk-marker >"$marker"
 # Reproduce apk's current mode-restoration gap for a preinstalled curl. The
 # persistence helper must repair it before uploading.
 [ ! -f /usr/bin/curl ] || /bin/busybox chmod 0644 /usr/bin/curl
-/usr/libexec/vinix-persist-packages save
+/usr/libexec/tulpar-persist-packages save
 echo "QEMU PACKAGE PERSISTENCE: SAVE PASS"

@@ -24,14 +24,14 @@ python3 tests/memory/run-pagetable.py --arch x86_64 \
 
 Use `--arch aarch64` for ARM, or `--build-only` to emit a static executable
 without booting. `CC_AMD64` selects GNU musl GCC; `CC_AARCH64` and
-`VINIX_AARCH64_SYSROOT` select the ARM Clang/SDK. The test gets a 3,600-second
+`TULPAR_AARCH64_SYSROOT` select the ARM Clang/SDK. The test gets a 3,600-second
 outer boot allowance with every original check unchanged. PID 1 remains alive
 after the complete success marker.
 
 The expected final marker is `PAGETABLE CHECK: PASS`. The generated fixture
-object also exports `vinix_pagetable_boundaries`, so a core regression can link
+object also exports `tulpar_pagetable_boundaries`, so a core regression can link
 it and call
-`CHECK(vinix_pagetable_boundaries() == 0)` from its first-boot worker. The
+`CHECK(tulpar_pagetable_boundaries() == 0)` from its first-boot worker. The
 allocator comparison's frozen full-core validation uses that form on both
 architectures, with two CPUs; amd64 runs with five-level paging enabled and
 disabled, and AArch64 also runs its existing persistence verification boot.

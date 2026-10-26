@@ -19,8 +19,8 @@ fn C.vhst_unlock_u32(&C.spinlock_t, u32)
 fn C.vhst_lock_i16(&C.spinlock_t, i16)
 @[c: 'spin_unlock_irqrestore']
 fn C.vhst_unlock_i16(&C.spinlock_t, i16)
-fn C.vinix_spin_fixture_guard() &C.spinlock_t
-fn C.vinix_spin_fixture_flags() &usize
+fn C.tulpar_spin_fixture_guard() &C.spinlock_t
+fn C.tulpar_spin_fixture_flags() &usize
 fn C.printf(&char, ...) i32
 
 @[cinit]
@@ -35,27 +35,27 @@ __global (
 	vhst_unlock bool
 )
 
-@[export: 'vinix_linuxkpi_irq_save']
+@[export: 'tulpar_linuxkpi_irq_save']
 pub fn irq_save() usize {
 	unsafe { old := vhst_irq; vhst_irq &= ~(usize(1)<<9); return old }
 }
 
-@[export: 'vinix_linuxkpi_irq_restore']
+@[export: 'tulpar_linuxkpi_irq_restore']
 pub fn irq_restore(flags usize) { unsafe { vhst_irq = flags } }
 
-@[export: 'vinix_linuxkpi_irq_flags']
+@[export: 'tulpar_linuxkpi_irq_flags']
 pub fn irq_flags() usize { return unsafe { vhst_irq } }
 
-@[export: 'vinix_linuxkpi_preempt_disable']
+@[export: 'tulpar_linuxkpi_preempt_disable']
 pub fn preempt_disable() { unsafe { vhst_preempt++ } }
 
-@[export: 'vinix_linuxkpi_preempt_enable']
+@[export: 'tulpar_linuxkpi_preempt_enable']
 pub fn preempt_enable() { unsafe { vhst_preempt-- } }
 
-@[export: 'vinix_linuxkpi_spin_wait']
+@[export: 'tulpar_linuxkpi_spin_wait']
 pub fn spin_wait() { unsafe { vhst_failures++ } }
 
-@[export: 'vinix_spin_fixture_guard']
+@[export: 'tulpar_spin_fixture_guard']
 pub fn guard_argument() &C.spinlock_t {
 	unsafe {
 		vhst_guard_calls++
@@ -64,7 +64,7 @@ pub fn guard_argument() &C.spinlock_t {
 	}
 }
 
-@[export: 'vinix_spin_fixture_flags']
+@[export: 'tulpar_spin_fixture_flags']
 pub fn flag_argument() &usize {
 	unsafe {
 		vhst_flag_calls++
@@ -78,17 +78,17 @@ pub fn main_entry() i32 {
 	unsafe {
 		vhst_irq = 0x202; vhst_saved = 0x55; vhst_preempt = 0
 		C.spin_lock_init(&vhst_guard)
-		C.spin_lock_irqsave(C.vinix_spin_fixture_guard(), *C.vinix_spin_fixture_flags())
+		C.spin_lock_irqsave(C.tulpar_spin_fixture_guard(), *C.tulpar_spin_fixture_flags())
 		if vhst_guard.locked != 1 || vhst_preempt != 1 || vhst_saved != 0x202 || vhst_flag_calls != 1 || vhst_guard_calls != 1 { vhst_failures++ }
 		vhst_unlock = true
-		C.spin_unlock_irqrestore(&vhst_guard, *C.vinix_spin_fixture_flags())
+		C.spin_unlock_irqrestore(&vhst_guard, *C.tulpar_spin_fixture_flags())
 		if vhst_guard.locked != 0 || vhst_preempt != 0 || vhst_irq != 0x202 || vhst_flag_calls != 2 { vhst_failures++ }
 		vhst_unlock = false; vhst_flag_calls = 0; vhst_guard_calls = 0; vhst_saved = 0x55
-		if !C.spin_trylock_irqsave(C.vinix_spin_fixture_guard(), *C.vinix_spin_fixture_flags()) || vhst_preempt != 1 || vhst_irq != 2 || vhst_flag_calls != 1 || vhst_guard_calls != 1 { vhst_failures++ }
+		if !C.spin_trylock_irqsave(C.tulpar_spin_fixture_guard(), *C.tulpar_spin_fixture_flags()) || vhst_preempt != 1 || vhst_irq != 2 || vhst_flag_calls != 1 || vhst_guard_calls != 1 { vhst_failures++ }
 		C.spin_unlock_irqrestore(&vhst_guard, vhst_saved)
 		// A failed try restores flags, and only that branch rereads the lvalue.
 		vhst_guard.locked = 1; vhst_flag_calls = 0; vhst_guard_calls = 0; vhst_saved = 0x55
-		if C.spin_trylock_irqsave(C.vinix_spin_fixture_guard(), *C.vinix_spin_fixture_flags()) || vhst_preempt != 0 || vhst_irq != 0x202 || vhst_flag_calls != 2 || vhst_guard_calls != 1 { vhst_failures++ }
+		if C.spin_trylock_irqsave(C.tulpar_spin_fixture_guard(), *C.tulpar_spin_fixture_flags()) || vhst_preempt != 0 || vhst_irq != 0x202 || vhst_flag_calls != 2 || vhst_guard_calls != 1 { vhst_failures++ }
 		// Native assignment preserves the original conversion for every lvalue type.
 		C.spin_lock_init(&vhst_guard)
 		mut narrow32 := u32(0)

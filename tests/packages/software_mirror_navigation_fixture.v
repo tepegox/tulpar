@@ -156,7 +156,7 @@ fn check_mirror_reader_boundaries() ! {
 }
 
 fn software_mirror_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_MIRROR_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_MIRROR_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if mode.starts_with('review-') && args[1] in ['mirror-review', 'mirror-deployment-review']! {
 		locked := software_snapshot_export_review(if args[1] == 'mirror-deployment-review' { args[3] } else { mirror_fixture_lock }, false)
@@ -173,7 +173,7 @@ fn software_mirror_navigation_service_fixture(args []string) !bool {
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'copy', package: 'runtime', path: 'lib/runtime', current: 1, total: 2 }))
 		flush_stdout()
 		mut release := u8(0); assert C.read(0, &release, 1) == 1 && release == `!`
-		os.write_file(os.getenv('VINIX_SOFTWARE_MIRROR_FIXTURE'), 'published mirror')!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_MIRROR_FIXTURE'), 'published mirror')!
 		if mode == 'writer-failure' { eprintln('Complete mirror exists, but the parent directory could not be flushed.'); exit(23) }
 		println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete', current: 1, total: 1 }))
 		println('Offline deployment mirror ready: ' + mirror_fixture_destination + '/_deployment.json')
@@ -204,9 +204,9 @@ fn wait_for_mirror_output(mut app SoftwareApp, progress bool) {
 
 fn check_software_mirror_navigation() ! {
 	check_mirror_reader_boundaries()!
-	receipt := os.temp_dir() + '/vinix-mirror-navigation-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_MIRROR_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_MIRROR_FIXTURE'); os.unsetenv('VINIX_SOFTWARE_MIRROR_NAVIGATION') }
+	receipt := os.temp_dir() + '/tulpar-mirror-navigation-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_MIRROR_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_MIRROR_FIXTURE'); os.unsetenv('TULPAR_SOFTWARE_MIRROR_NAVIGATION') }
 	mut app := SoftwareApp{ service_path: os.executable(), output: []u8{cap: 8192}, query: 'kept query'.bytes(), filter: 1,
 		rows: [SoftwareRow{ id: 'editor', name: 'Editor' }], selected: 0 }
 	defer { app.close_app() }
@@ -214,7 +214,7 @@ fn check_software_mirror_navigation() ! {
 		for mode in ['review-partial', 'review-complete'] {
 			for action in ['software.mirror.stop', 'software.cancel', 'escape'] {
 				prepare_mirror_navigation(mut app, locked)!
-				os.setenv('VINIX_SOFTWARE_MIRROR_NAVIGATION', mode, true)
+				os.setenv('TULPAR_SOFTWARE_MIRROR_NAVIGATION', mode, true)
 				app.handle('software.mirror.review')!
 				pid := app.worker.pid
 				wait_for_mirror_output(mut app, false)
@@ -238,7 +238,7 @@ fn check_software_mirror_navigation() ! {
 				compact := app.build(ui2.rect(0, 0, 320, 240))!
 				assert compact.children.any(it.id == 'software.mirror.back'); free_window_tree(compact)
 				// A fresh review after cancellation must use the preserved intent.
-				os.unsetenv('VINIX_SOFTWARE_MIRROR_NAVIGATION')
+				os.unsetenv('TULPAR_SOFTWARE_MIRROR_NAVIGATION')
 				app.handle('software.mirror.review')!; wait_for_software(mut app)
 				assert app.review_ready && app.mirror_details
 				for input in ['\x1b', '\r', '\n', '\x01', '\x08', '\x7f']! { app.paste_input(input) }
@@ -271,7 +271,7 @@ fn check_software_mirror_navigation() ! {
 		app.handle('software.mirror.review')!; wait_for_software(mut app)
 		for app.mirror_seen + 1 < app.mirror_pages.len { app.handle('software.mirror.next')! }
 		app.handle('software.mirror.packages')!
-		os.setenv('VINIX_SOFTWARE_MIRROR_NAVIGATION', mode, true)
+		os.setenv('TULPAR_SOFTWARE_MIRROR_NAVIGATION', mode, true)
 		app.handle('software.confirm')!; pid := app.worker.pid
 		wait_for_mirror_output(mut app, true)
 		assert app.worker_mirror && !app.mirror_review_running() && !app.prepare_close()
@@ -299,7 +299,7 @@ fn check_software_mirror_navigation() ! {
 		} else { assert app.status.contains('/_deployment.json') }
 		free_window_tree(compact)
 		app.handle('software.mirror.back')!; os.rm(receipt)!
-		os.unsetenv('VINIX_SOFTWARE_MIRROR_NAVIGATION')
+		os.unsetenv('TULPAR_SOFTWARE_MIRROR_NAVIGATION')
 	}
 	assert app.query.bytestr() == 'kept query' && app.filter == 1 && app.selected == 0
 	println('Software offline export navigation: compact Back/Cancel/Stop/status/progress/failures, partial and complete-before-exit review cancellation/reaping, frozen retry and protected publication passed')
@@ -315,7 +315,7 @@ fn check_software_mirror_navigation_memory() ! {
 		app.initialize_mirror_field()
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.snapshot_ready = true; app.snapshot_mode = true
 				app.snapshot_pending = software_snapshot_fixture_path.clone()
@@ -346,7 +346,7 @@ fn check_software_mirror_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'offline export navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'offline export navigation retained ${kept} bytes'
 		println('Software offline export navigation: 1000 compact form/path/package/failure render, cancel and retirement cycles retain zero tracked bytes')
 		println('Software offline path paste: 1000 literal/rejected/selected/empty input cycles retain zero tracked bytes')
 		println('Software offline export reader: 1000 decode/read/page/render/resize/ignored-publish/Back/cancel/cache-retirement cycles retain zero tracked bytes')

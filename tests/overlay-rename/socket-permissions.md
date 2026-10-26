@@ -35,7 +35,7 @@ On 14 October 2026, results were retained under `build/development17-20261013`:
 | State | Result |
 | --- | --- |
 | `socketperm-arm-before-a`, `socketperm-x86-before-a` | Previous pathname-open kernels accept a mode-0000 stream connection; assertion 486 fails with result 0. |
-| `socketperm-arm-basic-a`, `socketperm-x86-basic-a` | Expanded disk-free probe passes in native Vinix. |
+| `socketperm-arm-basic-a`, `socketperm-x86-basic-a` | Expanded disk-free probe passes in native Tulpar. |
 | `socketperm-arm-linux-a`, `socketperm-x86-linux-a` | The exact same native probe ELF passes in Linux 6.12.51-0-virt. |
 | `socketperm-arm-after-a`, `socketperm-x86-after-a` | Extended direct-ext2/overlay socket checks and clean remount pass; two batches of 32 cycles per backend retain equal live allocation counts. |
 | `socketperm-arm-all-a`, `socketperm-x86-all-a` | Existing atomic replacement, rollback, mixed lifetime, persistence, whiteout and opacity regressions pass. |

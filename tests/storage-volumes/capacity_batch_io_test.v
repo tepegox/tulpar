@@ -208,7 +208,7 @@ fn assert_capacity_batch_pins_drained() {
 }
 
 fn test_capacity_batch_later_regular_missing_and_symlink_devices_close_the_earlier_pin() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-batch-device-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-batch-device-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	capacity_batch_io_fixture(path, 2)
@@ -226,7 +226,7 @@ fn test_capacity_batch_later_regular_missing_and_symlink_devices_close_the_earli
 }
 
 fn test_capacity_batch_pins_all_devices_rechecks_in_order_and_previews_under_writer_lock() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-batch-probe-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-batch-probe-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	before := capacity_batch_io_fixture(path, 2)
@@ -257,7 +257,7 @@ fn test_capacity_batch_pins_all_devices_rechecks_in_order_and_previews_under_wri
 }
 
 fn test_capacity_batch_later_probe_open_and_recheck_failures_preserve_whole_file_and_close_all_pins() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-batch-fail-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-batch-fail-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	batch := two_capacity_requests()
@@ -280,7 +280,7 @@ fn test_capacity_batch_later_probe_open_and_recheck_failures_preserve_whole_file
 }
 
 fn test_capacity_batch_invalid_lists_and_saved_inputs_never_open_devices() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-batch-input-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-batch-input-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	capacity_batch_io_fixture(path, 2)
@@ -311,7 +311,7 @@ fn test_capacity_batch_invalid_lists_and_saved_inputs_never_open_devices() {
 }
 
 fn test_capacity_batch_changed_and_equal_retries_under_all_publisher_faults_and_preview_is_readonly() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-batch-publish-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-batch-publish-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	batch := two_capacity_requests()
@@ -344,7 +344,7 @@ fn test_capacity_batch_changed_and_equal_retries_under_all_publisher_faults_and_
 }
 
 fn test_capacity_batch_buffered_stdout_failure_closes_every_device_and_preserves_publication_rules() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-batch-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-batch-output-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	batch := two_capacity_requests()
@@ -375,14 +375,14 @@ fn test_capacity_batch_buffered_stdout_failure_closes_every_device_and_preserves
 }
 
 fn test_maximum_capacity_batch_cli_pins_all_64_devices_with_all_195_arguments() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-batch-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-batch-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	before := capacity_batch_io_fixture(path, 64)
 	unsafe {
 		mut args := [196]&char{}
 		mut disks := [64][4]char{}; mut devices := [64][64]char{}; mut ends := [64][21]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'plan-capacity-batch'); args[2] = path.str
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'plan-capacity-batch'); args[2] = path.str
 		for i in 0 .. 64 {
 			disk := 63 - i
 			capacity_batch_io.bytes[disk] = u64(-1) & ~(before.plans[disk].key.sector - 1)
@@ -425,7 +425,7 @@ fn two_contract_capacity_requests(set &PlanSet) CapacityContractBatch {
 }
 
 fn test_contract_capacity_complete_validation_before_open_and_saved_input_rejection() {
-	work := os.join_path(os.temp_dir(), 'vinix-contract-capacity-input-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-contract-capacity-input-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	before := contract_capacity_io_fixture(path, 2); original := os.read_bytes(path)!
 	for preview in [false, true] { for bad in 0 .. 8 {
@@ -450,7 +450,7 @@ fn test_contract_capacity_complete_validation_before_open_and_saved_input_reject
 }
 
 fn test_contract_capacity_later_device_probe_and_final_recheck_failures_rollback_and_drain() {
-	work := os.join_path(os.temp_dir(), 'vinix-contract-capacity-fail-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-contract-capacity-fail-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	before := contract_capacity_io_fixture(path, 2); original := os.read_bytes(path)!; requests := two_contract_capacity_requests(&before)
 	os.symlink(path, work + '/device-link')!
@@ -473,7 +473,7 @@ fn test_contract_capacity_later_device_probe_and_final_recheck_failures_rollback
 }
 
 fn test_contract_capacity_mixed_keep_contract_writer_exclusion_preview_and_pin_order() {
-	work := os.join_path(os.temp_dir(), 'vinix-contract-capacity-probe-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-contract-capacity-probe-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	mut before := contract_capacity_io_fixture(path, 2); before.plans[1].key.bytes = 16777216
 	capacity_batch_io.active = false; assert publish_bundle(path.str, &before); contract_capacity_io_reset(2)
@@ -492,7 +492,7 @@ fn test_contract_capacity_mixed_keep_contract_writer_exclusion_preview_and_pin_o
 }
 
 fn test_contract_capacity_changed_and_keep_publication_faults_preview_and_buffered_output_failure() {
-	work := os.join_path(os.temp_dir(), 'vinix-contract-capacity-publish-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-contract-capacity-publish-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	for retry in [false, true] { for mode in 1 .. 7 {
 		before := contract_capacity_io_fixture(path, 2); batch := two_contract_capacity_requests(&before)
@@ -531,14 +531,14 @@ fn test_contract_capacity_changed_and_keep_publication_faults_preview_and_buffer
 }
 
 fn test_maximum_contract_capacity_cli_64_identities_195_arguments_full_width_rechecks_and_retry() {
-	work := os.join_path(os.temp_dir(), 'vinix-contract-capacity-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-contract-capacity-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/saved.vset'
 	mut before := contract_capacity_io_fixture(path, 64); capacity_batch_io.active = false
 	for disk in 0 .. 64 { before.plans[disk].key.bytes = u64(-1) & ~(before.plans[disk].key.sector - 1) }
 	assert publish_bundle(path.str, &before); contract_capacity_io_reset(64)
 	unsafe {
 		mut args := [196]&char{}; mut identities := [64][41]char{}; mut devices := [64][64]char{}; mut ends := [64][21]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'plan-preview-contract-capacity-batch'); args[2] = path.str
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'plan-preview-contract-capacity-batch'); args[2] = path.str
 		for i in 0 .. 64 {
 			disk := 63 - i; capacity_batch_io.bytes[disk] = before.plans[disk].key.bytes - 8192
 			disk_identity(&before.plans[disk].key, &identities[i][0]); C.snprintf(&devices[i][0], 64, c'/capacity-batch-device-%u', u32(disk))

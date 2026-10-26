@@ -11,16 +11,16 @@ fn C.mkfifo(&char, u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn test_repository_status_owns_both_architectures_and_growing_retained_documents() {
 	for architecture in ['aarch64', 'x86_64']! {
 		root := repository_status_fixture()!; defer { os.rmdir_all(root) or {} }
 		directory := state_directory(root); guard := acquire(directory)!; guard.release()
-		path := root + '/etc/vinix-packages/config.json'
+		path := root + '/etc/tulpar-packages/config.json'
 		for count in [0, 64, 4096]! {
 			mut repositories := []Repository{cap: count}; mut floors := []RepositoryFloor{cap: count}
 			for i in 0 .. count {
@@ -34,12 +34,12 @@ fn test_repository_status_owns_both_architectures_and_growing_retained_documents
 			// The combined maximum has over 16,384 live owned strings. Qualify it
 			// functionally and under ASan; track empty/growing observations.
 			tracked := count != 4096
-			$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+			$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 			for _ in 0 .. if tracked { 1000 } else { 1 } {
 				mut status := repository_status(root)!; assert status.repositories.len == count && status.history.len == count
 				retire_repository_status(mut status)
 			}
-			$if track_heap ? { if tracked { kept := C.vinix_heap_end(); assert kept == 0 } }
+			$if track_heap ? { if tracked { kept := C.tulpar_heap_end(); assert kept == 0 } }
 			mut first := repository_status(root)!; mut second := repository_status(root)!
 			assert first == second && first.architecture == architecture && first.architecture.str != second.architecture.str
 			if count > 0 { assert first.repositories.data != second.repositories.data && first.history.data != second.history.data }
@@ -67,7 +67,7 @@ fn test_repository_status_preserves_authenticated_migration_and_retired_replay_f
 	for architecture in ['aarch64', 'x86_64']! {
 		root := repository_status_fixture()!; defer { os.rmdir_all(root) or {} }
 		directory := state_directory(root); guard := acquire(directory)!; guard.release()
-		path := root + '/etc/vinix-packages/config.json'
+		path := root + '/etc/tulpar-packages/config.json'
 		private := signing.new_key_from_seed([]u8{len: 32, init: 7})
 		repository := Repository{ id: 'publisher', url: 'file:///repository', public_key: private.public_key().hex() }
 		configuration := json2.encode(Config{ architecture: architecture, repositories: [repository] })
@@ -82,7 +82,7 @@ fn test_repository_status_preserves_authenticated_migration_and_retired_replay_f
 			if phase != 'legacy' { os.write_file(directory + '/trust-history.json', history)! }
 			current_cache := if phase == 'signature' { json2.encode([Snapshot{ ...snapshot, signature: '00'.repeat(64) }]) } else { cache }
 			os.write_file(directory + '/catalog.json', current_cache)!
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. 64 {
 				if phase in ['signature', 'equivocation']! { repository_status_refusal(root, if phase == 'signature' { 'signature verification failed' } else { 'sequence equivocation' }) }
 				else {
@@ -91,9 +91,9 @@ fn test_repository_status_preserves_authenticated_migration_and_retired_replay_f
 				}
 			}
 			$if track_heap ? {
-				kept := C.vinix_heap_end()
+				kept := C.tulpar_heap_end()
 				assert kept == 0
-				assert C.vinix_heap_count() == 0
+				assert C.tulpar_heap_count() == 0
 				println('REPOSITORY STATUS signed ' + phase + ': 64 cycles retained ' + kept.str() + ' bytes')
 			}
 			assert os.read_file(path)! == configuration && os.read_file(directory + '/catalog.json')! == current_cache
@@ -105,14 +105,14 @@ fn test_repository_status_preserves_authenticated_migration_and_retired_replay_f
 		legacy_cache := json2.encode([Snapshot{ repository: legacy, text: legacy_text, signature: '01' + '00'.repeat(63) }])
 		legacy_history := json2.encode(TrustHistory{ repositories: [RepositoryFloor{ id: legacy.id, public_key: legacy.public_key, sequence: 42, index_sha256: index_digest(legacy_text) }] })
 		os.write_file(directory + '/catalog.json', legacy_cache)!; os.write_file(directory + '/trust-history.json', legacy_history)!
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 64 {
 			mut status := repository_status(root)!; assert status.repositories[0].id == 'publisher' && status.history[0].id == 'legacy' && status.history[0].sequence == 42
 			retire_repository_status(mut status)
 		}
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0
-			assert C.vinix_heap_count() == 0
+			kept := C.tulpar_heap_end(); assert kept == 0
+			assert C.tulpar_heap_count() == 0
 			println('REPOSITORY STATUS retired key: 64 cycles retained ' + kept.str() + ' bytes')
 		}
 		assert os.read_file(directory + '/catalog.json')! == legacy_cache && os.read_file(directory + '/trust-history.json')! == legacy_history
@@ -124,7 +124,7 @@ fn test_repository_status_preserves_authenticated_migration_and_retired_replay_f
 fn test_repository_status_retires_special_metadata_and_lock_refusals_without_mutation() {
 	root := repository_status_fixture()!; defer { os.rmdir_all(root) or {} }
 	directory := state_directory(root); guard := acquire(directory)!; guard.release()
-	path := root + '/etc/vinix-packages/config.json'; configuration := os.read_file(path)!
+	path := root + '/etc/tulpar-packages/config.json'; configuration := os.read_file(path)!
 	history := '{"format":1,"repositories":[]}'
 	os.write_file(directory + '/catalog.json', '[]')!; os.write_file(directory + '/trust-history.json', history)!
 	partial := directory + '/objects/' + 'a'.repeat(64) + '.part'; os.write_file(partial, 'retained download')!
@@ -141,9 +141,9 @@ fn test_repository_status_retires_special_metadata_and_lock_refusals_without_mut
 		else { writer = acquire(directory)! }
 		if failure.starts_with('lock') || failure == 'busy' { os.write_file(path, '{must not be parsed')! }
 		expected := if failure == 'busy' { 'another package transaction' } else if failure.starts_with('lock') { 'state is unavailable' } else { '' }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 { repository_status_refusal(root, expected) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, failure + ' retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, failure + ' retained ' + kept.str() }
 		if failure == 'busy' { writer.release() }
 		if failure.ends_with('schema') { assert os.read_file(target)! == '{damaged metadata' }
 		if failure.ends_with('alias') { assert os.readlink(target)! == root + '/missing'; os.rm(target)! }
@@ -159,11 +159,11 @@ fn test_repository_status_retires_special_metadata_and_lock_refusals_without_mut
 }
 
 fn repository_status_fixture() !string {
-	root := os.temp_dir() + '/vinix-repository-status-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.temp_dir() + '/tulpar-repository-status-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	config := Config{ architecture: 'aarch64', launch_user: 'alex', repositories: [Repository{ id: 'publisher', url: 'file:///repository', public_key: 'a'.repeat(64) }],
 		policy: Policy{ allowed: ['app'], pins: [Dependency{ id: 'app', minimum: '1.0.0' }], permissions: ['files'], licenses: ['Vendor é🚀'], reserve_bytes: 7 } }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	return root
 }
 
@@ -184,12 +184,12 @@ fn test_repository_status_retires_results_and_observation_scratch() {
 			}
 			if mode == 'bad-cache' { os.write_file(directory + '/catalog.json', '{broken cache')! }
 			if mode == 'bad-history' { os.write_file(directory + '/trust-history.json', '{broken history')! }
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 1000 {
 				if mut document := repository_status(root) { assert mode in ['fresh', 'retained']!; retire_repository_status(mut document) }
 				else { message := err.msg(); assert mode !in ['fresh', 'retained']! && message != ''; unsafe { message.free(); err.free() } }
 			}
-			kept := C.vinix_heap_end(); retained += kept
+			kept := C.tulpar_heap_end(); retained += kept
 			println('REPOSITORY STATUS 1000 ' + mode + ' reads/retirements retained ' + kept.str() + ' bytes')
 		}
 		assert retained == 0

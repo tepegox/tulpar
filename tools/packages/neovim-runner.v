@@ -8,7 +8,7 @@ import os
 fn C.execv(&char, &&char) int
 
 fn run_neovim() ! {
-	if os.args.len < 3 { return error('usage: vinix-neovim-runner RUNTIME_DATA APPLICATION [ARGS...]') }
+	if os.args.len < 3 { return error('usage: tulpar-neovim-runner RUNTIME_DATA APPLICATION [ARGS...]') }
 	for index in 1 .. 3 {
 		path := os.args[index]
 		if !path.starts_with('/') || path.contains('\x00') {

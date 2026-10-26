@@ -46,7 +46,7 @@ Run the [host controller](mirror-ownership-check.v) with a reviewed compiler in
 ASan/UBSan for ownership, signed ordinary mirrors and deployment locks. The
 [target controller](mirror-ownership-runtime-check.v) runs the tracked fixture
 and signed mirror/deployment/release suites in both architecture guests. Use
-`VINIX_HWTEST_TCG=1`, the usual cross-toolchain environment, `--kernel`, `--arch`
+`TULPAR_HWTEST_TCG=1`, the usual cross-toolchain environment, `--kernel`, `--arch`
 and a new short `--state-dir`. The existing
 [image export controller](image-export-check.v) covers shared parent checks,
 publisher releases, image staging, real CLI maintenance and offline consumption.

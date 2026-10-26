@@ -76,17 +76,17 @@ fn filesystem_command(args []string, family string) !int {
 	blocks := if sparse { filesystem_blocks(parsed.options['--blocks'] or { '1024,4096' })! } else { [4096] }
 	timeout := environment_timeout(300)!
 	tool := filesystem_tools()!
-	repo := resolve(os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() })!
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-' + family + '-')!
+	repo := resolve(os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() })!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-' + family + '-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	private_kernel := snapshot_kernel_input(work, parsed.options['--kernel'] or {
-		if arch == 'aarch64' { os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' } } else {
-			os.getenv_opt('VINIX_AMD64_KERNEL') or { root() + '/kernel/bin/vinix' }
+		if arch == 'aarch64' { os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' } } else {
+			os.getenv_opt('TULPAR_AMD64_KERNEL') or { root() + '/kernel/bin/tulpar' }
 		}
 	}, arch)!
 	mut cc := []string{}
 	if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		cc = [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk,
 			'-L' + sdk + '/lib', '-fuse-ld=lld']
 	} else { cc = [os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }] }
@@ -118,12 +118,12 @@ fn filesystem_command(args []string, family string) !int {
 	if arch == 'x86_64' {
 		hosttest.module_copy_tree(work + '/rootfs', seed)!
 		for name in ['dev', 'proc', 'tmp', 'run', 'root'] { os.mkdir_all(seed + '/' + name)! }
-		write(seed + '/.vinix-image-id', hosttest.sha(archive)![..16] + '\n')!
+		write(seed + '/.tulpar-image-id', hosttest.sha(archive)![..16] + '\n')!
 	} else { os.mkdir(seed)! }
 	mut receipt := { 'family': json2.Any(family), 'arch': json2.Any(arch), 'timeout': json2.Any(timeout),
 		'memory': json2.Any(if arch == 'aarch64' { 2048 } else { 1024 }),
 		'compile_command': json2.Any(hosttest.strings(compile)), 'source': json2.Any(source),
-		'init_sha256': json2.Any(hosttest.sha(init)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!),
+		'init_sha256': json2.Any(hosttest.sha(init)!), 'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!),
 		'archive_sha256': json2.Any(hosttest.sha(archive)!), 'blocks': json2.Any(blocks.map(json2.Any(it))),
 		'retention_only': json2.Any('--retention-only' in parsed.options), 'power_cut': json2.Any(true), 'kernel_rebuilt': json2.Any(false) }
 	if os.is_file(source) { receipt['source_sha256'] = hosttest.sha(source)! }
@@ -147,8 +147,8 @@ fn filesystem_command(args []string, family string) !int {
 			argv = guesthost.arm_persist_launch(argv, disk, work, repo)!
 		} else {
 			argv[argv.index('-serial') + 1] = 'stdio'
-			argv[argv.index('-accel') + 1] = os.getenv_opt('VINIX_QEMU_ACCEL') or { 'tcg' }
-			firmware := os.getenv_opt('VINIX_OVMF_CODE_AMD64') or { os.dir(os.dir(argv[0])) + '/share/qemu/edk2-x86_64-code.fd' }
+			argv[argv.index('-accel') + 1] = os.getenv_opt('TULPAR_QEMU_ACCEL') or { 'tcg' }
+			firmware := os.getenv_opt('TULPAR_OVMF_CODE_AMD64') or { os.dir(os.dir(argv[0])) + '/share/qemu/edk2-x86_64-code.fd' }
 			argv[argv.index('-drive') + 1] = 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware
 			argv << ['-drive', 'if=ide,format=raw,file=' + disk + ',cache=writeback']
 		}

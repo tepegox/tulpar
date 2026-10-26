@@ -32,10 +32,10 @@ installed architecture executes.
 ```sh
 v -no-skip-unused -path '.|tests/hardware-platform|@vlib|@vmodules' \
   -o /tmp/composition-check tests/packages/composition-runtime-check.v
-V=/path/to/v VINIX_HWTEST_TCG=1 \
-  VINIX_SQLITE_INPUTS=/build/sqlite-inputs \
-  VINIX_FFMPEG_INPUTS=/build/ffmpeg-inputs \
-  VINIX_COMPOSITION_SANDBOX=/build/target-root/usr/bin/vinix-sandbox \
+V=/path/to/v TULPAR_HWTEST_TCG=1 \
+  TULPAR_SQLITE_INPUTS=/build/sqlite-inputs \
+  TULPAR_FFMPEG_INPUTS=/build/ffmpeg-inputs \
+  TULPAR_COMPOSITION_SANDBOX=/build/target-root/usr/bin/tulpar-sandbox \
   /tmp/composition-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-composition-arm
 ```

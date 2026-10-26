@@ -10,8 +10,8 @@ Provision these external SDKs before requesting a fresh build:
 
 | Builder | Default SDK entry point | Override | Required distributions |
 | --- | --- | --- | --- |
-| `scripts/build-qemu-input.sh` | `build/qemu-horizontal/python/bin/python3` | `VINIX_QEMU_BUILD_PYTHON` | tomli 2.2.1 |
-| `build-support/virglrenderer/build-host.sh` | `build/virglrenderer-tools/bin/meson` | `VINIX_VIRGLRENDERER_MESON` | Meson and PyYAML |
+| `scripts/build-qemu-input.sh` | `build/qemu-horizontal/python/bin/python3` | `TULPAR_QEMU_BUILD_PYTHON` | tomli 2.2.1 |
+| `build-support/virglrenderer/build-host.sh` | `build/virglrenderer-tools/bin/meson` | `TULPAR_VIRGLRENDERER_MESON` | Meson and PyYAML |
 
 Use an isolated Unix SDK layout with `bin/` and one
 `lib/python3.<minor>/site-packages` directory; `lib64/` is accepted too.
@@ -41,4 +41,4 @@ guest producer, then builds both real musl guest ELFs and checks staged runtime
 exports as data. The SDK fixtures cover spaces/Unicode paths, symlinked
 executables, distribution/version mismatches, invalid UTF-8, duplicate metadata,
 missing modules, aliased lib directories and ambiguous layouts. No interpreter,
-upstream generator, target ELF or Vinix guest executes during qualification.
+upstream generator, target ELF or Tulpar guest executes during qualification.

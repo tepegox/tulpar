@@ -20,7 +20,7 @@ fn C.puts(&char) int
 fn C.cpu_feature_enabled(...) bool
 fn C.boot_cpu_has(...) bool
 fn C.static_cpu_has(...) bool
-fn C.vinix_linuxkpi_cpu_has(u32) bool
+fn C.tulpar_linuxkpi_cpu_has(u32) bool
 fn C.policy_configure(i64, u32, bool, bool)
 fn C.policy_initialize(u32)
 fn C.policy_state(int) u32
@@ -78,7 +78,7 @@ fn failure(kind u32, bit u32, text &char) {
 		match kind {
 			0 { C.policy_initialize(0) }
 			1 { C.policy_initialize(1) }
-			2 { C.vinix_linuxkpi_cpu_has(bit) }
+			2 { C.tulpar_linuxkpi_cpu_has(bit) }
 			3 {
 				mut dynamic := C.vpp_volatile_u32{}
 				unsafe { C.__atomic_store_n(&dynamic, bit, 0) }
@@ -211,12 +211,12 @@ fn cold_and_unknown_queries() {
 	model.set_leaf(true, 0xa5a536e9, 0x693bc157)
 	before := model.metrics(1)
 	for bit in u32(0) .. u32(32) {
-		model.require(C.vinix_linuxkpi_cpu_has(bit) == (u32(0x693bc157) & (u32(1) << bit) != 0), 22)
-		model.require(C.vinix_linuxkpi_cpu_has(4 * 32 + bit) == (u32(0xa5a536e9) & (u32(1) << bit) != 0), 23)
+		model.require(C.tulpar_linuxkpi_cpu_has(bit) == (u32(0x693bc157) & (u32(1) << bit) != 0), 22)
+		model.require(C.tulpar_linuxkpi_cpu_has(4 * 32 + bit) == (u32(0xa5a536e9) & (u32(1) << bit) != 0), 23)
 	}
 	model.require(model.metrics(1) == before + 64, 24)
 	model.set_leaf(false, 0, 0)
-	model.require(!C.vinix_linuxkpi_cpu_has(0) && !C.vinix_linuxkpi_cpu_has(4 * 32), 25)
+	model.require(!C.tulpar_linuxkpi_cpu_has(0) && !C.tulpar_linuxkpi_cpu_has(4 * 32), 25)
 }
 
 fn query_actor(_argument voidptr) voidptr {

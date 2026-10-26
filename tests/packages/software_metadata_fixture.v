@@ -8,7 +8,7 @@ import tools.packages.pkgprotocol
 
 fn software_metadata_service_fixture(args []string) bool {
 	if args[1] != 'review' { return false }
-	mode := os.getenv('VINIX_SOFTWARE_METADATA_FIXTURE')
+	mode := os.getenv('TULPAR_SOFTWARE_METADATA_FIXTURE')
 	defer { unsafe { mode.free() } }
 	if mode == '' { return false }
 	assert args[2..] == ['install', 'editor']
@@ -24,9 +24,9 @@ fn software_metadata_service_fixture(args []string) bool {
 
 fn check_software_metadata() ! {
 	mut app := SoftwareApp{ service_path: os.executable(), administration_required: true, output: []u8{cap: 8192} }
-	defer { os.unsetenv('VINIX_SOFTWARE_METADATA_FIXTURE'); app.close_app() }
+	defer { os.unsetenv('TULPAR_SOFTWARE_METADATA_FIXTURE'); app.close_app() }
 	for mode in ['missing', 'duplicate'] {
-		os.setenv('VINIX_SOFTWARE_METADATA_FIXTURE', mode, true)
+		os.setenv('TULPAR_SOFTWARE_METADATA_FIXTURE', mode, true)
 		app.begin_review('install', ['editor']); wait_for_software(mut app)
 		assert !app.review_ready && app.review_snapshot.rows.len == 0 && app.review == ''
 		assert app.status.contains('invalid package review') && app.worker == unsafe { nil } && !app.admin_prompt
@@ -73,7 +73,7 @@ fn check_software_metadata_memory() ! {
 		unsafe { app.output.flags |= .noslices }
 		app.initialize_repository_fields()
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for kind, text in texts {
 					metadata_fixture_review(mut app, kind, text)
@@ -102,7 +102,7 @@ fn check_software_metadata_memory() ! {
 			}
 			unsafe { app.status.free() }; app.status = ''
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		app.close_app()
 		assert kept == 0, 'Software metadata workflows retained ${kept} bytes'
 		println('Software package/trust/offline metadata: 1000 valid/partial-invalid review, page/redraw/cancel/retire cycles retain zero tracked bytes')

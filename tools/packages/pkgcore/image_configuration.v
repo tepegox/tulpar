@@ -23,7 +23,7 @@ fn image_configuration_root_matches(root string, device u64, inode u64) bool {
 }
 
 fn image_configuration_parents(root string) ! {
-	for suffix in ['/etc', '/etc/vinix-packages']! {
+	for suffix in ['/etc', '/etc/tulpar-packages']! {
 		path := root + suffix
 		defer { unsafe { path.free() } }
 		mut info := C.stat{}
@@ -46,7 +46,7 @@ fn image_configuration_exists(path string) !bool {
 }
 
 fn image_configuration_fresh_state(root string) ! {
-	for suffix in ['/var', '/var/lib', '/var/lib/vinix-packages']! {
+	for suffix in ['/var', '/var/lib', '/var/lib/tulpar-packages']! {
 		path := root + suffix
 		defer { unsafe { path.free() } }
 		mut info := C.stat{}
@@ -67,7 +67,7 @@ fn image_configuration_fresh_state(root string) ! {
 }
 
 fn image_configuration_architecture(root string, architecture string) ! {
-	path := rooted_package_path(root, '/etc/vinix-packages/config.json')
+	path := rooted_package_path(root, '/etc/tulpar-packages/config.json')
 	defer { unsafe { path.free() } }
 	mut info := C.stat{}
 	if C.lstat(path.str, unsafe { &info }) != 0 || info.st_mode & 0o170000 != 0o100000
@@ -124,7 +124,7 @@ pub fn prepare_image_configuration(root string, architecture string, source stri
 	if physical == '/' { return error('image package staging cannot target the running system root') }
 	check_export_parent(physical, 'package image')!
 	image_configuration_parents(physical)!
-	target := physical + '/etc/vinix-packages/config.json'
+	target := physical + '/etc/tulpar-packages/config.json'
 	defer { if !accepted { unsafe { target.free() } } }
 	existing := image_configuration_exists(target)!
 	if existing { image_configuration_architecture(physical, architecture)! }

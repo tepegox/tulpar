@@ -552,7 +552,7 @@ fn amdvi_nic_send(mut nic AmdviNic, target u64, mut probe AmdviProbe) {
 	transmit := nic.ring_virt + amdvi_nic_tx_offset + u64(nic.tx_next) * 16
 	nic.sequence++
 	mut frame := unsafe { &u8(nic.frame_virt) }
-	text := 'VINIX AMD-Vi self-test'
+	text := 'TULPAR AMD-Vi self-test'
 	for i := u64(0); i < amdvi_nic_frame_bytes; i++ {
 		unsafe {
 			frame[i] = if i < 6 {

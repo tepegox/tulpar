@@ -19,7 +19,7 @@ SYM(mock_prctl):
  ldr x3,[sp,#16]
  ldr x4,[sp,#24]
 #endif
- b SYM(vinix_mac_cli_capture)
+ b SYM(tulpar_mac_cli_capture)
 .cfi_endproc
 #ifndef __APPLE__
 .size mock_prctl,.-mock_prctl

@@ -1,8 +1,8 @@
-# Reclaimable Vinix heap: implementation and comparison
+# Reclaimable Tulpar heap: implementation and comparison
 
 ## Status and provenance
 
-Prepared 2026-09-11 against Vinix commit
+Prepared 2026-09-11 against Tulpar commit
 `7c085707f535e498ff2ce9a6447d8a5b59844388` and subsequently integrated onto
 `master`. The original `physical.v` and
 `klock_amd64.v` blobs were reconstructed from the GitHub connector and checked
@@ -11,7 +11,7 @@ against Git blob hashes `f8b11f618825eefa39a32bc33e5b2e8af43a3e99` and
 
 This is an independent V implementation of familiar slab techniques, NOT a
 C-to-V translation of Apple's allocator. No XNU implementation is copied.
-XNU's inspected `zalloc.c` carries APSL 2.0 terms; Vinix carries GPL v2.
+XNU's inspected `zalloc.c` carries APSL 2.0 terms; Tulpar carries GPL v2.
 Source translation must not be treated as permission to discard the original
 license. A literal import needs licensing review and suitable permissions.
 
@@ -28,7 +28,7 @@ Reference: Apple's public XNU commit
 pins the inspected source; it is not a claim that every Apple shipping kernel
 uses exactly that revision or configuration.
 
-Vinix currently allocates physical pages with a globally locked bitmap scan.
+Tulpar currently allocates physical pages with a globally locked bitmap scan.
 Its heap uses nine classes, 8 through 2048 bytes in powers of two. Each class
 has one lock and an intrusive free-object chain. Slab pages never return to the
 PMM. Larger heap objects use contiguous physical pages plus a whole metadata
@@ -39,21 +39,21 @@ XNU's zone layer tracks allocation state and page/chunk occupancy, can reclaim
 empty backing, and offers per-CPU magazines, depots, and batched circulation.
 Its cache design explicitly depends on preemption control. General allocations
 also involve kalloc heaps and, on the relevant paths, type-based segregation.
-VM-backed allocations use Mach VM facilities rather than Vinix's direct PMM
+VM-backed allocations use Mach VM facilities rather than Tulpar's direct PMM
 path. The zone source imports scheduling, locks, VM, pmap, diagnostics and
 security infrastructure: it is not a self-contained malloc.c to translate.
 
 These are substantial architectural advantages in reclaimability, scalability
-and hardening, not evidence of a measured speedup on Vinix. A small, uncontended
+and hardening, not evidence of a measured speedup on Tulpar. A small, uncontended
 intrusive allocator can have a shorter fast path. XNU itself cites Bonwick and
 Adams' magazine design and FreeBSD UMA in its cache description.
 
 Primary references:
 
-- Vinix heap and PMM: https://github.com/vlang/vinix/blob/7c085707f535e498ff2ce9a6447d8a5b59844388/kernel/modules/memory/physical.v
+- Tulpar heap and PMM: https://github.com/tepegox/tulpar/blob/7c085707f535e498ff2ce9a6447d8a5b59844388/kernel/modules/memory/physical.v
 - XNU zone implementation, including cache design near lines 250-370: https://github.com/apple-oss-distributions/xnu/blob/f6217f891ac0bb64f3d375211650a4c1ff8ca1ea/osfmk/kern/zalloc.c
 - Apple's allocator architecture and type-isolation explanation: https://security.apple.com/blog/towards-the-next-generation-of-xnu-memory-safety/
-- Existing ARM64 interrupt-state snapshot: https://github.com/vlang/vinix/blob/7c085707f535e498ff2ce9a6447d8a5b59844388/kernel/modules/klock/klock_arm64.v
+- Existing ARM64 interrupt-state snapshot: https://github.com/tepegox/tulpar/blob/7c085707f535e498ff2ce9a6447d8a5b59844388/kernel/modules/klock/klock_arm64.v
 
 ## Implemented scope
 
@@ -85,7 +85,7 @@ XNU-style protected/external metadata, type isolation, or VA sequestering.
 Additional fixes reject calloc multiplication and large-allocation rounding
 /metadata-page overflow; failed growing realloc keeps its original allocation.
 The x86 lock now snapshots interrupt state before publishing unlock, matching
-the ordering already used by Vinix's ARM64 lock.
+the ordering already used by Tulpar's ARM64 lock.
 
 The physical allocator and virtual-memory implementation are otherwise
 unchanged. Infallible PMM exhaustion still panics. Large heap allocations still
@@ -109,7 +109,7 @@ caches before reclamation; otherwise a speed optimization can introduce UAF.
 
 ## Validation
 
-From a complete patched Vinix checkout:
+From a complete patched Tulpar checkout:
 
 ```sh
 . build-support/find-v.sh
@@ -178,11 +178,11 @@ alone do not justify production deployment.
 
 Run `tests/memory/run-runtime.sh` on an ARM64 or x86-64 POSIX host to exercise
 `kernel/lib/stubs/memory.v` directly. The test uses the selected V compiler
-(`V` or `VINIX_V_COMPILER`, otherwise the repository's usual compiler discovery)
+(`V` or `TULPAR_V_COMPILER`, otherwise the repository's usual compiler discovery)
 to generate C without the builtin runtime, then compiles it with the kernel's
 freestanding, aliasing and general-register-only flags under private exported
 symbol names. AddressSanitizer and UndefinedBehaviorSanitizer are enabled by default;
-set `VINIX_MEMORY_SANITIZERS=none` for an uninstrumented run.
+set `TULPAR_MEMORY_SANITIZERS=none` for an uninstrumented run.
 
 The test checks every source/destination alignment modulo 16 for lengths
 through 257, fill-byte conversion, both overlapping move directions, unchanged

@@ -107,7 +107,7 @@ pub fn run() i32 {
 		C.assert(C.memcmp(&print_fixture_terminal[0], expected, 50) == 0)
 		reset()
 		ordinary := C.fixture_printf(c'%s:%u', c'serial', u32(17))
-		if C.VINIX_PRINT_FIXTURE_PROD == 1 {
+		if C.TULPAR_PRINT_FIXTURE_PROD == 1 {
 			C.assert(ordinary == 0 && print_fixture_serial_len == 0 && print_fixture_acquired == 0 && print_fixture_released == 0)
 		} else {
 			C.assert(ordinary == 9 && print_fixture_serial_len == 9 && print_fixture_acquired == 1 && print_fixture_released == 1)

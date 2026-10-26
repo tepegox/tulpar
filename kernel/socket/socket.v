@@ -103,7 +103,7 @@ fn collect_passed_fds(msg &sock_pub.MsgHdr) ?[]&file.FD {
 			return none
 		}
 
-		// A sender may attach its own identity beside the descriptors. Vinix
+		// A sender may attach its own identity beside the descriptors. Tulpar
 		// hands the receiver the credentials captured when the connection was
 		// established, which is the check Linux performs on this record for an
 		// unprivileged sender, so the attached copy carries no new information.
@@ -391,7 +391,7 @@ pub fn syscall_bind(_ voidptr, fdnum int, _addr voidptr, addrlen u32) (u64, u64)
 	if _addr == unsafe { nil } {
 		return errno.err, if addrlen == 0 { errno.einval } else { errno.efault }
 	}
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0, sockaddr_max) }
 	address := address_from_user(_addr, addrlen, unsafe { voidptr(&storage[0]) }) or {
 		return errno.err, errno.get()
@@ -467,7 +467,7 @@ pub fn syscall_recvmsg(_ voidptr, fdnum int, msg &sock_pub.MsgHdr, flags int) (u
 		C.printf(c'\e[32m%s\e[m: returning\n', process.name.str)
 	}
 
-	mut header := unsafe { &sock_pub.MsgHdr(C.vinix_stack_alloc(sizeof(sock_pub.MsgHdr))) }
+	mut header := unsafe { &sock_pub.MsgHdr(C.tulpar_stack_alloc(sizeof(sock_pub.MsgHdr))) }
 	unsafe { *header = sock_pub.MsgHdr{} }
 	if !usercopy.copy_from_user(voidptr(header), u64(voidptr(msg)), sizeof(sock_pub.MsgHdr)) {
 		return errno.err, errno.efault
@@ -499,7 +499,7 @@ pub fn receive_message(fdnum int, mut header sock_pub.MsgHdr, flags int) (u64, u
 	}
 	scratch := proc.reserve_kernel(.scratch, size * 2 + control_max * 2 + 256) or { return errno.err, errno.get() }
 	defer { kbudget.release(scratch) }
-	small := unsafe { &u8(C.vinix_stack_alloc(small_message)) }
+	small := unsafe { &u8(C.tulpar_stack_alloc(small_message)) }
 	unsafe { C.memset(small, 0, small_message) }
 	buffer := if size <= small_message { unsafe { voidptr(&small[0]) } } else { unsafe { malloc(size) } }
 	if buffer == unsafe { nil } {
@@ -510,7 +510,7 @@ pub fn receive_message(fdnum int, mut header sock_pub.MsgHdr, flags int) (u64, u
 			unsafe { free(buffer) }
 		}
 	}
-	mut vector := unsafe { &sock_pub.IoVec(C.vinix_stack_alloc(sizeof(sock_pub.IoVec))) }
+	mut vector := unsafe { &sock_pub.IoVec(C.tulpar_stack_alloc(sizeof(sock_pub.IoVec))) }
 	unsafe { *vector = sock_pub.IoVec{ iov_base: buffer, iov_len: size } }
 	control_size := if header.msg_control == unsafe { nil } {
 		u64(0)
@@ -527,7 +527,7 @@ pub fn receive_message(fdnum int, mut header sock_pub.MsgHdr, flags int) (u64, u
 	}
 	// A family with no address to report leaves these as they are, and then
 	// so is the caller's buffer left.
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0xff, sockaddr_max) }
 	offered := if header.msg_name == unsafe { nil } {
 		u32(0)
@@ -536,7 +536,7 @@ pub fn receive_message(fdnum int, mut header sock_pub.MsgHdr, flags int) (u64, u
 	} else {
 		sockaddr_max
 	}
-	mut message := unsafe { &sock_pub.MsgHdr(C.vinix_stack_alloc(sizeof(sock_pub.MsgHdr))) }
+	mut message := unsafe { &sock_pub.MsgHdr(C.tulpar_stack_alloc(sizeof(sock_pub.MsgHdr))) }
 	unsafe {
 		*message = sock_pub.MsgHdr{
 			msg_name:       if header.msg_name == unsafe { nil } {
@@ -619,7 +619,7 @@ fn receive_into(fdnum int, message &sock_pub.MsgHdr, flags int) (u64, u64) {
 	}
 
 	// MSG_DONTWAIT is a per-call override, not a permanent descriptor flag.
-	mut call_handle := unsafe { &file.Handle(C.vinix_stack_alloc(sizeof(file.Handle))) }
+	mut call_handle := unsafe { &file.Handle(C.tulpar_stack_alloc(sizeof(file.Handle))) }
 	prepare_io_handle(mut call_handle, fd.handle, flags)
 	mut remaining_flags := flags & ~0x40000040 // MSG_CMSG_CLOEXEC | MSG_DONTWAIT
 	if mut res is sock_unix.UnixSocket {
@@ -637,7 +637,7 @@ pub fn syscall_sendto(_ voidptr, fdnum int, buf voidptr, len u64, flags int, des
 	if !usercopy.user_range(u64(buf), len) {
 		return errno.err, errno.efault
 	}
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0, sockaddr_max) }
 	address := address_from_user(dest_addr, addrlen, unsafe { voidptr(&storage[0]) }) or {
 		return errno.err, errno.get()
@@ -645,7 +645,7 @@ pub fn syscall_sendto(_ voidptr, fdnum int, buf voidptr, len u64, flags int, des
 	size := if len <= message_max { len } else { message_max + 1 }
 	scratch := proc.reserve_kernel(.scratch, size * 2 + 256) or { return errno.err, errno.get() }
 	defer { kbudget.release(scratch) }
-	small := unsafe { &u8(C.vinix_stack_alloc(small_message)) }
+	small := unsafe { &u8(C.tulpar_stack_alloc(small_message)) }
 	unsafe { C.memset(small, 0, small_message) }
 	buffer := if size <= small_message { unsafe { voidptr(&small[0]) } } else { unsafe { malloc(size) } }
 	if buffer == unsafe { nil } {
@@ -691,7 +691,7 @@ fn send_from_kernel(fdnum int, buf voidptr, len u64, flags int, dest_addr voidpt
 	defer {
 		fd.unref()
 	}
-	mut call_handle := unsafe { &file.Handle(C.vinix_stack_alloc(sizeof(file.Handle))) }
+	mut call_handle := unsafe { &file.Handle(C.tulpar_stack_alloc(sizeof(file.Handle))) }
 	prepare_io_handle(mut call_handle, fd.handle, flags)
 	mut res := fd.handle.resource
 	if mut res is sock_inet.InetSocket {
@@ -728,7 +728,7 @@ pub fn syscall_recvfrom(_ voidptr, fdnum int, buf voidptr, len u64, flags int, s
 		return errno.err, errno.efault
 	}
 	wants_address := src_addr != unsafe { nil } && addrlen != unsafe { nil }
-	mut address_lengths := unsafe { &u32(C.vinix_stack_alloc(2 * sizeof(u32))) }
+	mut address_lengths := unsafe { &u32(C.tulpar_stack_alloc(2 * sizeof(u32))) }
 	unsafe { *address_lengths = 0 }
 	if wants_address
 		&& !usercopy.copy_from_user(voidptr(address_lengths), u64(voidptr(addrlen)), sizeof(u32)) {
@@ -736,7 +736,7 @@ pub fn syscall_recvfrom(_ voidptr, fdnum int, buf voidptr, len u64, flags int, s
 	}
 	// A family that has no address to report leaves these as they are, and
 	// then so is the caller's buffer left.
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0xff, sockaddr_max) }
 	capacity := unsafe { *address_lengths }
 	offered := if capacity < sockaddr_max { capacity } else { sockaddr_max }
@@ -745,7 +745,7 @@ pub fn syscall_recvfrom(_ voidptr, fdnum int, buf voidptr, len u64, flags int, s
 	size := if len < message_max { len } else { message_max }
 	scratch := proc.reserve_kernel(.scratch, size * 2 + 256) or { return errno.err, errno.get() }
 	defer { kbudget.release(scratch) }
-	small := unsafe { &u8(C.vinix_stack_alloc(small_message)) }
+	small := unsafe { &u8(C.tulpar_stack_alloc(small_message)) }
 	unsafe { C.memset(small, 0, small_message) }
 	buffer := if size <= small_message { unsafe { voidptr(&small[0]) } } else { unsafe { malloc(size) } }
 	if buffer == unsafe { nil } {
@@ -793,7 +793,7 @@ fn receive_to_kernel(fdnum int, buf voidptr, len u64, flags int, src_addr voidpt
 	defer {
 		fd.unref()
 	}
-	mut call_handle := unsafe { &file.Handle(C.vinix_stack_alloc(sizeof(file.Handle))) }
+	mut call_handle := unsafe { &file.Handle(C.tulpar_stack_alloc(sizeof(file.Handle))) }
 	prepare_io_handle(mut call_handle, fd.handle, flags)
 	mut res := fd.handle.resource
 	if mut res is sock_inet.InetSocket {
@@ -824,7 +824,7 @@ fn receive_to_kernel(fdnum int, buf voidptr, len u64, flags int, src_addr voidpt
 
 // One of a message's iovecs, copied in.
 fn iovec_from_user(vector voidptr, index u64) ?sock_pub.IoVec {
-	mut iov := unsafe { &sock_pub.IoVec(C.vinix_stack_alloc(sizeof(sock_pub.IoVec))) }
+	mut iov := unsafe { &sock_pub.IoVec(C.tulpar_stack_alloc(sizeof(sock_pub.IoVec))) }
 	unsafe { *iov = sock_pub.IoVec{} }
 	if !usercopy.copy_from_user(voidptr(iov), u64(vector) + index * sizeof(sock_pub.IoVec),
 		sizeof(sock_pub.IoVec)) {
@@ -853,7 +853,7 @@ fn iovec_total(header &sock_pub.MsgHdr) ?u64 {
 }
 
 pub fn syscall_sendmsg(_ voidptr, fdnum int, msg &sock_pub.MsgHdr, flags int) (u64, u64) {
-	mut header := unsafe { &sock_pub.MsgHdr(C.vinix_stack_alloc(sizeof(sock_pub.MsgHdr))) }
+	mut header := unsafe { &sock_pub.MsgHdr(C.tulpar_stack_alloc(sizeof(sock_pub.MsgHdr))) }
 	unsafe { *header = sock_pub.MsgHdr{} }
 	if !usercopy.copy_from_user(voidptr(header), u64(voidptr(msg)), sizeof(sock_pub.MsgHdr)) {
 		return errno.err, errno.efault
@@ -876,7 +876,7 @@ pub fn send_message(fdnum int, header &sock_pub.MsgHdr, flags int) (u64, u64) {
 	}
 	scratch := proc.reserve_kernel(.scratch, total * 2 + header.msg_controllen * 4 + 256) or { return errno.err, errno.get() }
 	defer { kbudget.release(scratch) }
-	small := unsafe { &u8(C.vinix_stack_alloc(small_message)) }
+	small := unsafe { &u8(C.tulpar_stack_alloc(small_message)) }
 	unsafe { C.memset(small, 0, small_message) }
 	buffer := if total <= small_message { unsafe { voidptr(&small[0]) } } else { unsafe { malloc(total) } }
 	if buffer == unsafe { nil } {
@@ -901,7 +901,7 @@ pub fn send_message(fdnum int, header &sock_pub.MsgHdr, flags int) (u64, u64) {
 	}
 	total = copied
 
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0, sockaddr_max) }
 	name := address_from_user(header.msg_name, header.msg_namelen, unsafe { voidptr(&storage[0]) }) or {
 		return errno.err, errno.get()
@@ -933,7 +933,7 @@ fn send_with_control(fdnum int, buffer voidptr, total u64, header &sock_pub.MsgH
 	if !usercopy.copy_from_user(control, u64(header.msg_control), header.msg_controllen) {
 		return errno.err, errno.efault
 	}
-	mut message := unsafe { &sock_pub.MsgHdr(C.vinix_stack_alloc(sizeof(sock_pub.MsgHdr))) }
+	mut message := unsafe { &sock_pub.MsgHdr(C.tulpar_stack_alloc(sizeof(sock_pub.MsgHdr))) }
 	unsafe {
 		*message = sock_pub.MsgHdr{
 			msg_control:    control
@@ -949,7 +949,7 @@ fn send_with_control(fdnum int, buffer voidptr, total u64, header &sock_pub.MsgH
 		mut passed_fds := collect_passed_fds(message) or {
 			return errno.err, errno.get()
 		}
-		mut call_handle := unsafe { &file.Handle(C.vinix_stack_alloc(sizeof(file.Handle))) }
+		mut call_handle := unsafe { &file.Handle(C.tulpar_stack_alloc(sizeof(file.Handle))) }
 		prepare_io_handle(mut call_handle, fd.handle, flags)
 		ret := res.write_with_fds(call_handle, buffer, total, passed_fds) or {
 			release_passed_fds(mut passed_fds)
@@ -998,7 +998,7 @@ pub fn syscall_connect(_ voidptr, fdnum int, _addr voidptr, addrlen u32) (u64, u
 	if _addr == unsafe { nil } {
 		return errno.err, if addrlen == 0 { errno.einval } else { errno.efault }
 	}
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0, sockaddr_max) }
 	address := address_from_user(_addr, addrlen, unsafe { voidptr(&storage[0]) }) or {
 		return errno.err, errno.get()
@@ -1018,7 +1018,7 @@ pub fn syscall_getpeername(_ voidptr, fdnum int, _addr voidptr, addrlen &u32) (u
 	if !usercopy.copy_from_user(voidptr(&capacity), u64(voidptr(addrlen)), sizeof(u32)) {
 		return errno.err, errno.efault
 	}
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0, sockaddr_max) }
 	mut length := if capacity < sockaddr_max { capacity } else { sockaddr_max }
 	// The family always has somewhere to write. A null address with room
@@ -1069,7 +1069,7 @@ pub fn syscall_getsockname(_ voidptr, fdnum int, _addr voidptr, addrlen &u32) (u
 	if !usercopy.copy_from_user(voidptr(&capacity), u64(voidptr(addrlen)), sizeof(u32)) {
 		return errno.err, errno.efault
 	}
-	storage := unsafe { &u8(C.vinix_stack_alloc(sockaddr_max)) }
+	storage := unsafe { &u8(C.tulpar_stack_alloc(sockaddr_max)) }
 	unsafe { C.memset(storage, 0, sockaddr_max) }
 	mut length := if capacity < sockaddr_max { capacity } else { sockaddr_max }
 	// The family always has somewhere to write. A null address with room

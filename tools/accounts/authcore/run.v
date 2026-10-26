@@ -68,7 +68,7 @@ pub fn run_action(action Action, argv []string, input []u8, peer Peer, user stri
 	}
 	c_argv << &char(unsafe { nil })
 	environment := ['PATH=/usr/sbin:/usr/bin:/sbin:/bin', 'HOME=/root', 'USER=root', 'LOGNAME=root',
-		'LANG=C', 'VINIX_AUTH_UID=${peer.uid}', 'VINIX_AUTH_USER=${user}']
+		'LANG=C', 'TULPAR_AUTH_UID=${peer.uid}', 'TULPAR_AUTH_USER=${user}']
 	mut c_env := []&char{cap: environment.len + 1}
 	for variable in environment {
 		c_env << &char(variable.str)

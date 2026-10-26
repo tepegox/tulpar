@@ -29,7 +29,7 @@ pub fn parse_securelevel_value(text string) (int, bool) {
 // so boot configuration has one unambiguous authority.
 pub fn parse_securelevel_boot(text string) (int, bool) {
 	if text.len >= securelevel_cmdline_max { return 0, false }
-	prefix := 'vinix.securelevel='
+	prefix := 'tulpar.securelevel='
 	mut level := -2
 	mut first := 0
 	for first < text.len {

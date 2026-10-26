@@ -160,7 +160,7 @@ fn recovery_mock_erase(pointer voidptr, size usize) {
 }
 
 fn test_recovery_all_io_failures_balance_descriptors_erase_keys_and_preserve_publication() {
-	work := os.join_path(os.temp_dir(), 'vinix-recovery-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-recovery-io-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	key := []u8{len: 64, init: u8(index * 13 + 7)}
 	recovery := []u8{len: 64, init: u8(index * 29 + 41)}
@@ -181,12 +181,12 @@ fn test_recovery_all_io_failures_balance_descriptors_erase_keys_and_preserve_pub
 				if !backup { assert os.read_bytes(destination)! == key }
 				os.rm(destination)!
 			}
-			assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+			assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 		}
 	}
 	// Existing temporary names belong to somebody else. Only the file created
 	// by this invocation may be linked or removed, even on failed publication.
-	collision := work + '/.vinix-key-${os.getpid()}-0'
+	collision := work + '/.tulpar-key-${os.getpid()}-0'
 	os.write_file(collision, 'keep this unrelated file')!
 	for mode in [0, 18] {
 		recovery_io = RecoveryIO{mode: mode}
@@ -195,9 +195,9 @@ fn test_recovery_all_io_failures_balance_descriptors_erase_keys_and_preserve_pub
 		assert recovery_io.opened == recovery_io.closed && recovery_io.wipes == 1
 		if os.exists(work + '/output') { os.rm(work + '/output')! }
 	}
-	for attempt in 1 .. 64 { os.write_file(work + '/.vinix-key-${os.getpid()}-${attempt}', 'keep this unrelated file')! }
+	for attempt in 1 .. 64 { os.write_file(work + '/.tulpar-key-${os.getpid()}-${attempt}', 'keep this unrelated file')! }
 	recovery_io = RecoveryIO{}
 	assert recovery_key_file((work + '/key').str, (work + '/recovery').str, (work + '/output').str, true) == 1
 	assert recovery_io.opened == recovery_io.closed && recovery_io.wipes == 1 && recovery_io.links == 0 && recovery_io.unlinks == 0
-	for attempt in 0 .. 64 { assert os.read_file(work + '/.vinix-key-${os.getpid()}-${attempt}')! == 'keep this unrelated file' }
+	for attempt in 0 .. 64 { assert os.read_file(work + '/.tulpar-key-${os.getpid()}-${attempt}')! == 'keep this unrelated file' }
 }

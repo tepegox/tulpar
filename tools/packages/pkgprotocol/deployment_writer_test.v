@@ -4,9 +4,9 @@ module pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn deployment_writer_require(ok bool) {
 	// Explicit checks remain active when this consumer is compiled with -prod.
@@ -116,9 +116,9 @@ fn test_deployment_writer_bounds_every_string_count_and_escaped_wire_size() {
 		architecture: control16, repository: control128, public_key: control64, metadata_sha256: control64 }}
 	defer { unsafe { (&array(&escaped)).free() } }
 	oversized := DeploymentDocument{ format: 2, locked: escaped }
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 8 { deployment_writer_refused(&oversized) }
-	$if track_heap ? { deployment_writer_require(C.vinix_heap_end() == 0 && C.vinix_heap_count() == 0) }
+	$if track_heap ? { deployment_writer_require(C.tulpar_heap_end() == 0 && C.tulpar_heap_count() == 0) }
 	println('DEPLOYMENT WRITER UTF-8, per-field/count boundaries and escaped 8 MiB refusal PASS')
 }
 
@@ -136,13 +136,13 @@ fn test_deployment_writer_repeated_success_refusal_and_double_close_retire_alloc
 		two := DeploymentDocument{ format: 2, architecture: 'aarch64', packages: roots, locked: pins }
 		bad := DeploymentDocument{ format: 1, locked: pins }
 		bad_utf8 := DeploymentDocument{ format: 2, architecture: '\xff' }
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			deployment_writer_roundtrip(&one); deployment_writer_roundtrip(&two)
 			deployment_writer_refused(&bad); deployment_writer_refused(&bad_utf8)
 		}
-		kept := C.vinix_heap_end()
-		deployment_writer_require(kept == 0 && C.vinix_heap_count() == 0)
+		kept := C.tulpar_heap_end()
+		deployment_writer_require(kept == 0 && C.tulpar_heap_count() == 0)
 		println('DEPLOYMENT WRITER 1000 encode/decode/refusal/double-close cycles with 256 pins retain zero tracked bytes PASS')
 	}
 }

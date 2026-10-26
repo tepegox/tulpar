@@ -64,7 +64,7 @@ fn setup(work string) !muslnative.Options {
 	os.write_file_array(work + '/stage/lib/ld-musl-x86_64.so.1', loader(62, '1.2.5'))!
 	os.cp(os.executable(), work + '/cc')!
 	os.chmod(work + '/cc', 0o755)!
-	os.setenv('VINIX_MUSL_TEST_READELF', os.executable(), true)
+	os.setenv('TULPAR_MUSL_TEST_READELF', os.executable(), true)
 	for name in ['alpine', 'alpine-1.2.6'] {
 		os.write_file(work + '/support/' + name + '/manifest.json', '[]')!
 	}
@@ -200,8 +200,8 @@ fn cases(tool string, work string) ! {
 		assert result.status == if arguments[0] == '--require-export' { 1 } else { 2 }, result.str()
 	}
 	for key, value in {
-		'VINIX_MUSL_RETAIN':       'bad'
-		'VINIX_MUSL_TEST_MACHINE': 'aarch64-linux-musl'
+		'TULPAR_MUSL_RETAIN':       'bad'
+		'TULPAR_MUSL_TEST_MACHINE': 'aarch64-linux-musl'
 	} {
 		mut env := os.environ()
 		env[key] = value
@@ -209,8 +209,8 @@ fn cases(tool string, work string) ! {
 		assert result.status == 2, result.str()
 	}
 	mut disabled := os.environ()
-	disabled['VINIX_OPTIMIZED_MUSL'] = '0'
-	disabled['VINIX_MUSL_RETAIN'] = 'bad'
+	disabled['TULPAR_OPTIMIZED_MUSL'] = '0'
+	disabled['TULPAR_MUSL_RETAIN'] = 'bad'
 	assert invoke([...command, '--cc', '/missing'], disabled)!.status == 0
 	build := options.cache + '/x86_64/' + plan.key
 	manifest_path := build + '/build.json'
@@ -224,7 +224,7 @@ fn cases(tool string, work string) ! {
 	assert invoke(command, os.environ())!.status == 1
 	seed(plan)!
 	mut missing_exports := os.environ()
-	missing_exports['VINIX_MUSL_TEST_REMOVE_EXPORT'] = '1'
+	missing_exports['TULPAR_MUSL_TEST_REMOVE_EXPORT'] = '1'
 	result := invoke(command, missing_exports)!
 	assert result.status == 1 && result.stderr.contains('remove existing exports'), result.str()
 	println('MUSL CLI / actual child probes / cached input and library corruption / export preservation / required exports / invalid options / package opt-out: PASS')
@@ -237,7 +237,7 @@ fn cases(tool string, work string) ! {
 	for signal in [2, 15] {
 		ready := work + '/lock-ready-' + signal.str()
 		mut env := os.environ()
-		env['VINIX_MUSL_TEST_READY'] = ready
+		env['TULPAR_MUSL_TEST_READY'] = ready
 		context := SignalCase{signal, ready}
 		output := sourcecommand.capture_owned(command, env, 20, 4 * 1024 * 1024, unsafe { nil }, unsafe { nil }, signal_ready, unsafe { &context }, 3)!
 		assert output.status == 128 + signal, output.str()
@@ -247,7 +247,7 @@ fn cases(tool string, work string) ! {
 	for signal in [2, 15] {
 		ready := work + '/probe-ready-' + signal.str()
 		mut env := os.environ()
-		env['VINIX_MUSL_TEST_BLOCK_PROBE'] = ready
+		env['TULPAR_MUSL_TEST_BLOCK_PROBE'] = ready
 		context := SignalCase{signal, ready}
 		output := sourcecommand.capture_owned(command, env, 20, 4 * 1024 * 1024, unsafe { nil }, unsafe { nil }, signal_ready, unsafe { &context }, 3)!
 		assert output.status == 128 + signal, output.str()
@@ -262,35 +262,35 @@ fn cases(tool string, work string) ! {
 	for _ in 0 .. 20 { muslnative.publish(plan)! }
 	assert descriptors() == before
 	println('MUSL OWNERS / SIGINT and SIGTERM during lock wait and compiler probes / private child retirement / reuse after cancellation / flat descriptor count: PASS')
-	release := os.getenv('VINIX_MUSL_TEST_RELEASE')
+	release := os.getenv('TULPAR_MUSL_TEST_RELEASE')
 	if release != '' { rebuild_failures(options, release)! }
 }
 
 fn main() {
 	if os.base(os.args[0]) == 'cc' {
-		blocked := os.getenv('VINIX_MUSL_TEST_BLOCK_PROBE')
+		blocked := os.getenv('TULPAR_MUSL_TEST_BLOCK_PROBE')
 		if blocked != '' {
 			os.write_file(blocked, os.getpid().str()) or { exit(1) }
 			for { time.sleep(20 * time.millisecond) }
 		}
 		match os.args[1] {
 			'-dumpmachine' {
-				println(os.getenv_opt('VINIX_MUSL_TEST_MACHINE') or { 'x86_64-linux-musl' })
+				println(os.getenv_opt('TULPAR_MUSL_TEST_MACHINE') or { 'x86_64-linux-musl' })
 			}
 			'--version' { println('gcc (controlled) 14.2.0') }
 			'-print-prog-name=ar' { println('ar') }
 			'-print-prog-name=ranlib' {
-				ready := os.getenv('VINIX_MUSL_TEST_READY')
+				ready := os.getenv('TULPAR_MUSL_TEST_READY')
 				if ready != '' { os.write_file(ready, 'ready') or { exit(1) } }
 				println('ranlib')
 			}
-			'-print-prog-name=readelf' { println(os.getenv('VINIX_MUSL_TEST_READELF')) }
+			'-print-prog-name=readelf' { println(os.getenv('TULPAR_MUSL_TEST_READELF')) }
 			else { exit(1) }
 		}
 		return
 	}
 	if os.args.len == 4 && os.args[1..3] == ['--dyn-syms', '--wide'] {
-		if os.getenv('VINIX_MUSL_TEST_REMOVE_EXPORT') != '1' || !os.args[3].contains('/objects/') {
+		if os.getenv('TULPAR_MUSL_TEST_REMOVE_EXPORT') != '1' || !os.args[3].contains('/objects/') {
 			println('1: 0 0 FUNC GLOBAL DEFAULT 1 malloc')
 		}
 		println('2: 0 0 FUNC WEAK DEFAULT 1 malloc_trim')

@@ -55,7 +55,7 @@ V=/path/to/reviewed/v /tmp/composition-ownership-check /build/new-ownership-chec
 
 v -no-skip-unused -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/composition-ownership-runtime-check tests/packages/catalog-normalize-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/composition-ownership-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-ownership-arm
 ```

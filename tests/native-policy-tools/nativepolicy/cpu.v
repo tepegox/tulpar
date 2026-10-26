@@ -23,7 +23,7 @@ fn cpu() ! {
 		program += source[begin..end] + '\n'
 	}
 	program += cpu_assertions
-	work := private_work('vinix-cpu-logic-')!
+	work := private_work('tulpar-cpu-logic-')!
 	defer { retire(work) }
 	write(work + '/cpu.v', program)!
 	// Use the native host preference for both compilation and the fixture run.

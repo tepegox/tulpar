@@ -6,8 +6,8 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn test_saved_deployment_receipts_require_complete_typed_bounded_coherent_fields_and_own_strings() {
 	text := json2.encode(DeploymentSnapshotSaved{ generation: 7, architecture: 'aarch64', destination: '/部署/file with spaces; $literal.json', sha256: 'a'.repeat(64), roots: 1, packages: 3 })
@@ -28,12 +28,12 @@ fn test_saved_deployment_receipts_require_complete_typed_bounded_coherent_fields
 	println('DEPLOYMENT SAVED PROTOCOL complete typed fields, duplicate/unknown keys, numeric/path/count/digest bounds and independent closeable strings PASS')
 	$if track_heap ? {
 		bad := text[..text.len - 1] + ',"extra":{}}'
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut saved := decode_deployment_saved(text)!; saved.close()
 			decode_deployment_saved(bad) or { message := err.msg(); unsafe { message.free(); err.free() } }
 		}
-		kept := C.vinix_heap_end(); assert kept == 0, 'saved receipt reader retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'saved receipt reader retained ${kept} bytes'
 		println('DEPLOYMENT SAVED PROTOCOL 1000 valid/partial-invalid decode/close cycles retain zero tracked bytes PASS')
 	}
 }

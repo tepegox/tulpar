@@ -4,11 +4,11 @@ module main
 import os
 
 // Run the kernel's gzip decoder (kernel/initramfs/gzip.v) on the host against
-// the system gzip's output. VINIX_GZIP_SAMPLE names an extra file to inflate,
+// the system gzip's output. TULPAR_GZIP_SAMPLE names an extra file to inflate,
 // such as a release image, and reports the speed.
 fn main() {
 	root := os.real_path(os.join_path(os.dir(@FILE), '..', '..'))
-	work := os.join_path(os.temp_dir(), 'vinix-initramfs-gzip-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-initramfs-gzip-${os.getpid()}')
 	os.mkdir_all(work) or { panic(err) }
 	defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/v.mod', "Module { name: 'initramfs' }\n") or { panic(err) }

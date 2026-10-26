@@ -145,8 +145,8 @@ fn (mut context Context) probe(standard string, name string, code string, expect
 				'query_stable':      'raw_smp_processor_id'
 				'query_arch_stable': 'raw_smp_processor_id'
 				'query_safe':        'raw_smp_processor_id'
-				'query_pinned':      'vinix_get_cpu'
-				'release_pin':       'vinix_linuxkpi_preempt_enable'
+				'query_pinned':      'tulpar_get_cpu'
+				'release_pin':       'tulpar_linuxkpi_preempt_enable'
 			} {
 				require(word_count(assembly_body(disassembly, function)!, target) == 1, 'Wrong actual query/pin relocation: ' + function)!
 			}
@@ -191,7 +191,7 @@ fn (mut context Context) probe(standard string, name string, code string, expect
 }
 
 fn run_profile(keep string) ! {
-	work := hosttest.work_dir(keep, 'vinix-smp-headers-')!
+	work := hosttest.work_dir(keep, 'tulpar-smp-headers-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	root := hosttest.root()
 	here := hosttest.upstream_here()
@@ -273,8 +273,8 @@ fn run_profile(keep string) ! {
 		reference_abi := context.probe(standard, 'original-abi', baseline + cold + abi, []string{}, reference, false, '')!
 		actual_abi := context.probe(standard, 'production-abi', header + cold + abi, []string{}, production, false, '')!
 		require(reference_abi['observable_abi_sha256']!.str() == actual_abi['observable_abi_sha256']!.str(), 'Production changed actual original CSD/smp_ops ABI bytes')!
-		context.probe(standard, 'cpu-queries', header + query, ['raw_smp_processor_id', 'vinix_get_cpu',
-			'vinix_linuxkpi_preempt_enable'], production, false, '')!
+		context.probe(standard, 'cpu-queries', header + query, ['raw_smp_processor_id', 'tulpar_get_cpu',
+			'tulpar_linuxkpi_preempt_enable'], production, false, '')!
 		context.probe(standard, 'early-references', header + early, [
 			'x86_cpu_to_apicid',
 			'x86_cpu_to_acpiid',
@@ -410,7 +410,7 @@ const header = '#include <linux/smp.h>
 const query = '
 _Static_assert(__builtin_types_compatible_p(__typeof__(&raw_smp_processor_id),
     unsigned int (*)(void)), "native CPU accessor ABI");
-_Static_assert(__builtin_types_compatible_p(__typeof__(&vinix_get_cpu),
+_Static_assert(__builtin_types_compatible_p(__typeof__(&tulpar_get_cpu),
     unsigned int (*)(void)), "native scheduler pin ABI");
 unsigned int query_raw(void) { return raw_smp_processor_id(); }
 unsigned int query_stable(void) { return smp_processor_id(); }

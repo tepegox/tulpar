@@ -1,6 +1,6 @@
 /* Shared ABI for the generated V sampler; platform/compiler selection is C. */
-#ifndef VINIX_HEAP_BENCHMARK_V_H
-#define VINIX_HEAP_BENCHMARK_V_H
+#ifndef TULPAR_HEAP_BENCHMARK_V_H
+#define TULPAR_HEAP_BENCHMARK_V_H
 #include <stddef.h>
 #include <stdint.h>
 #if defined(__clang__)
@@ -19,7 +19,7 @@
 #define VKB_COMPILER_MINOR 0
 #define VKB_COMPILER_PATCH 0
 #endif
-#if defined(VINIX_KALLOC_HOST_TEST)
+#if defined(TULPAR_KALLOC_HOST_TEST)
 void *vkb_test_alloc(size_t);
 void vkb_test_free(void *);
 int vkb_test_log(const char *, ...);
@@ -27,7 +27,7 @@ uint64_t vkb_test_ticks(void);
 #define vkb_alloc vkb_test_alloc
 #define vkb_free vkb_test_free
 #define vkb_log vkb_test_log
-#define VKB_PLATFORM "vinix"
+#define VKB_PLATFORM "tulpar"
 #else
 void *malloc(size_t);
 void free(void *);
@@ -35,6 +35,6 @@ int printf_benchmark(const char *, ...);
 #define vkb_alloc malloc
 #define vkb_free free
 #define vkb_log printf_benchmark
-#define VKB_PLATFORM "vinix"
+#define VKB_PLATFORM "tulpar"
 #endif
 #endif

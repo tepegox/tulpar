@@ -34,7 +34,7 @@ fn ci_finish() {
 		check(C.mkdir(c'/home/developer/ci-3', 0o700) == 0, 413)
 		write_text(c'/home/developer/ci-3/sentinel', c'preserved', 9)
 		C.usleep(1100000)
-		check(command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/ci-state', nil) == 1, 414)
+		check(command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/ci-state', nil) == 1, 414)
 		job_state(c'/home/developer/ci-state/state.json', false, c'"exit_code":1', c'"runs":3')
 		mut data := [10]char{}
 		fd := C.open(c'/home/developer/ci-3/sentinel', C.O_RDONLY)

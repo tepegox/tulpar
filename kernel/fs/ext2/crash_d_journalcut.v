@@ -26,7 +26,7 @@ fn journal_test_mode() int {
 	kernel := limine.kernel_file()
 	if kernel == unsafe { nil } || kernel.cmdline == unsafe { nil } { return 0 }
 	text := unsafe { cstring_to_vstring(kernel.cmdline) }
-	prefix := 'vinix.journal_mode='
+	prefix := 'tulpar.journal_mode='
 	for i in 0 .. text.len {
 		if i + prefix.len > text.len { break }
 		mut matches := true

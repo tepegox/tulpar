@@ -15,7 +15,7 @@ __global (
 
 // V3 inserts VEXE before _vinit. Capture two flags before that insertion and
 // before the V allocator starts; no pointers or allocated values escape.
-@[export: 'vinix_policy_remember_environment'; _constructor]
+@[export: 'tulpar_policy_remember_environment'; _constructor]
 fn remember_caller_environment() {
 	value := C.getenv(c'VEXE')
 	caller_vexe_present = value != unsafe { nil }
@@ -58,7 +58,7 @@ pub fn run_fixture(work string, vexe bool) ! {
 		'. "$1/build-support/find-v.sh"; printf "%s" "$V"', 'find-v', root()],
 		'', env, false, '', false, caller_arch())!
 	mut argv := [compiler, '-cc', 'cc', '-enable-globals', '-arch', caller_arch()]
-	if os.getenv('VINIX_HOST_POLICY_SANITIZE') == '1' {
+	if os.getenv('TULPAR_HOST_POLICY_SANITIZE') == '1' {
 		argv << ['-cflags', '-fsanitize=address,undefined', '-ldflags', '-fsanitize=address,undefined']
 	}
 	argv << ['-o', work + '/fixture', work]

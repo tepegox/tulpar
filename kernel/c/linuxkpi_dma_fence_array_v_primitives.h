@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUXKPI_DMA_FENCE_ARRAY_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_DMA_FENCE_ARRAY_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_DMA_FENCE_ARRAY_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_DMA_FENCE_ARRAY_V_PRIMITIVES_H
 #include "linuxkpi_dma_fence_v_primitives.h"
 #include "linuxkpi_irq_work_v_primitives.h"
 struct dma_fence_array;

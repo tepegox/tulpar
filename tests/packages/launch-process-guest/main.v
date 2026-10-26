@@ -36,7 +36,7 @@ fn actor(ordinary bool) ! {
 }
 
 fn check() ! {
-	os.setenv('VINIX_PACKAGE_LAUNCH_CHILD', '/usr/share/package-fixtures/launch-child', true)
+	os.setenv('TULPAR_PACKAGE_LAUNCH_CHILD', '/usr/share/package-fixtures/launch-child', true)
 	actor(false)!
 	actor(true)!
 	for name in ['coordination', 'session', 'command']! {

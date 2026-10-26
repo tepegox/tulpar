@@ -37,10 +37,10 @@ fn regression_command(args []string, family string) !int {
 		else { 'job', 'JOB', 'job-control-regression.log' }
 	}
 	log := resolve(parsed.options['--log'] or { filename })!
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-' + tag + '-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-' + tag + '-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	llvm := os.getenv_opt('LLVM_BIN') or { '/opt/homebrew/opt/llvm/bin' }
-	sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/staging' }
+	sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/staging' }
 	gcc_root := sdk + '/usr/lib/gcc/aarch64-alpine-linux-musl'
 	mut versions := os.ls(gcc_root)!
 	versions.sort()
@@ -66,7 +66,7 @@ fn regression_command(args []string, family string) !int {
 	base := repo + '/build-support/init-aarch64/initramfs.tar'
 	mut receipt := { 'family': json2.Any(family), 'compile_command': json2.Any(hosttest.strings(command)),
 		'source_sha256': json2.Any(hosttest.sha(source)!), 'program_sha256': json2.Any(hosttest.sha(binary)!),
-		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!),
+		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!),
 		'base_archive_sha256': json2.Any(hosttest.sha(base)!), 'timeout': json2.Any(timeout), 'smp': json2.Any(smp) }
 	hosttest.write_json(work + '/inputs.json', receipt)!
 	if '--build-only' in parsed.options { return 0 }

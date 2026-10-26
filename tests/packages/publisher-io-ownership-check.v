@@ -30,9 +30,9 @@ fn check() ! {
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-cflags', '-O1', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	mut checks := []Check{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true); os.setenv('VINIX_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('VINIX_PACKAGE_PACK_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true); os.setenv('TULPAR_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('TULPAR_PACKAGE_PACK_CLI', cli, true)
 	for name in ['pack_ownership', 'pack_source', 'publisher_workspace', 'copy', 'import_capture', 'import_limits', 'import', 'catalog', 'composition', 'native_profile', 'sqlite_profile', 'ffmpeg_profile', 'wine_profile', 'apple_profile', 'profile_inventory', 'prepared_root', 'publisher_io_ownership', 'durability', 'atomic', 'release']! {
 		binary := work + '/' + name
 		checks << task(name + '-compile', [v, ...flags, '-o', binary, repository + '/tools/packages/pkgcore/' + name + '_test.v'], work)!

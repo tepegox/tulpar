@@ -103,7 +103,7 @@ mut:
 
 pub fn block_status(mut device Resource) ?BlockStatus {
 	if mut device is BlockStatusResource {
-		mut call := unsafe { &BlockStatusCall(C.vinix_stack_alloc(sizeof(BlockStatusCall))) }
+		mut call := unsafe { &BlockStatusCall(C.tulpar_stack_alloc(sizeof(BlockStatusCall))) }
 		unsafe { call.device = BlockStatusResource(device) }
 		snapshot := call.device.block_status()
 		if snapshot.version == 1 { return snapshot }

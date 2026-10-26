@@ -8,12 +8,12 @@ import time
 import tools.packages.pkgprotocol
 
 fn rollback_fixture(architecture string) !(string, Service) {
-	work := os.temp_dir() + '/vinix-rollback-transaction-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/root/etc/vinix-packages')!
+	work := os.temp_dir() + '/tulpar-rollback-transaction-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/root/etc/tulpar-packages')!
 	key := keygen(work + '/seed')!
 	config := Config{ architecture: architecture, policy: Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }
-	os.write_file(work + '/root/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(work + '/root/etc/tulpar-packages/config.json', json2.encode(config))!
 	service := Service{ root: work + '/root' }
 	for version in 1 .. 5 {
 		os.mkdir_all(work + '/source/bin')!
@@ -53,7 +53,7 @@ fn test_rollback_after_cleanup_preserves_a_complete_reversible_history_edge() {
 		os.rmdir_all(work + '/repository')!
 		os.write_file(directory + '/catalog.json', 'unavailable catalog')!
 		os.write_file(directory + '/trust-history.json', 'unavailable replay history')!
-		personal := work + '/root/home/user/.local/share/vinix-apps/app'
+		personal := work + '/root/home/user/.local/share/tulpar-apps/app'
 		os.mkdir_all(personal)!; os.write_file(personal + '/note', 'personal data')!
 		mut review := service.review('rollback', [])!; defer { review.close() }
 		assert review.target_generation == 3 && review.generation == 4
@@ -90,7 +90,7 @@ fn test_rollback_disk_refusal_precedes_recovery_and_preserves_current_and_previo
 	reserve := u64(1024) * 1024 * 1024 * 1024
 	assert free_bytes(directory)! < reserve, 'disk refusal fixture requires less than the supported 1 TiB reserve'
 	limited := Config{ ...config, policy: Policy{ ...config.policy, reserve_bytes: reserve } }
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(limited))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(limited))!
 	os.mkdir(directory + '/generations/.stage-sentinel')!
 	os.write_file(directory + '/generations/.stage-sentinel/keep', 'recovery data')!
 	mut review := service.review('rollback', [])!; defer { review.close() }
@@ -104,14 +104,14 @@ fn test_rollback_disk_refusal_precedes_recovery_and_preserves_current_and_previo
 	assert os.read_file(directory + '/generations/.stage-sentinel/keep')! == 'recovery data'
 	assert !os.exists(directory + '/generations/5') && !os.exists(directory + '/generations/.stage-5')
 	assert read_generation_state(directory, 'aarch64', 3)!.packages[0].package.version == '3.0.0'
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	assert service.rollback('')!.generation == 5
 	println('ROLLBACK TRANSACTION exact retained-source disk estimate and reserve refusal preserve activation, rollback and interrupted work PASS')
 }
 
 fn rollback_damage_published(phase string) {
 	if phase != 'published' { return }
-	path := os.getenv('VINIX_ROLLBACK_TEST_DIRECTORY') + '/generations/5/apps/app/bin/app'
+	path := os.getenv('TULPAR_ROLLBACK_TEST_DIRECTORY') + '/generations/5/apps/app/bin/app'
 	os.write_file(path, 'damaged published copy') or { panic(err) }
 }
 
@@ -125,13 +125,13 @@ fn test_rollback_interruption_and_published_failure_retry_at_a_safe_identity() {
 		directory := state_directory(service.root)
 		config := load_config(service.root)!
 		mut review := service.review('rollback', [])!; defer { review.close() }
-		os.setenv('VINIX_ROLLBACK_TEST_DIRECTORY', directory, true)
+		os.setenv('TULPAR_ROLLBACK_TEST_DIRECTORY', directory, true)
 		guard := acquire(directory)!
 		mut refused := false
 		rollback_transaction_locked(config, directory, TransactionOptions{ expected_review: review.fingerprint,
 			stop_before_activation: !published_failure, checkpoint: rollback_damage_published,
 			progress: rollback_no_acquisition }) or { refused = true; unsafe { err.free() } }
-		guard.release(); os.unsetenv('VINIX_ROLLBACK_TEST_DIRECTORY')
+		guard.release(); os.unsetenv('TULPAR_ROLLBACK_TEST_DIRECTORY')
 		assert refused && service.verify()!.generation == 4
 		assert os.exists(directory + '/generations/.stage-5') == !published_failure
 		assert os.exists(directory + '/generations/5') == published_failure
@@ -159,7 +159,7 @@ fn test_rollback_to_empty_set_and_equal_manifests_still_retains_the_replaced_gen
 	previous := State{ ...state, generation: 6, previous: 4 }
 	root := directory + '/generations/6'
 	os.rmdir_all(root + '/apps')!; os.mkdir(root + '/apps')!
-	os.rm(root + '/share/applications/vinix-app.desktop')!
+	os.rm(root + '/share/applications/tulpar-app.desktop')!
 	os.write_file(root + '/state.json', encode_generation_state(previous)!)!
 	mut review := service.review('rollback', [])!; defer { review.close() }
 	assert review.rows.len == 0 && review.disk_needed == 4 * 1024 * 1024

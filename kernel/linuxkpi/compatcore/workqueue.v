@@ -117,13 +117,13 @@ fn C.vkwq_warn_queue_cpu(bool)
 fn C.vkwq_warn_delayed_cpu(bool)
 fn C.vkwq_warn_mod_cpu(bool)
 fn C.vkwq_warn_limit()
-fn C.vinix_linuxkpi_worker_set_nice(i32) i32
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_cond_resched() i32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_irq_flags() u64
-fn C.vinix_linuxkpi_maskable_irq_depth() u32
-fn C.vinix_linuxkpi_spin_wait()
+fn C.tulpar_linuxkpi_worker_set_nice(i32) i32
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_cond_resched() i32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_irq_flags() u64
+fn C.tulpar_linuxkpi_maskable_irq_depth() u32
+fn C.tulpar_linuxkpi_spin_wait()
 fn C.try_to_del_timer_sync(voidptr) i32
 fn C.timer_delete_sync(voidptr) i32
 fn C.mod_timer(voidptr, u64) i32
@@ -174,7 +174,7 @@ fn wq_task_running_locked(task voidptr) &WorkRun {
 fn wq_current_locked() &WorkRun {
 	// An IRQ borrows the interrupted task's stack but is not its work callback.
 	// IF-off and ordinary preemption pins do not discard callback ownership.
-	if C.vinix_linuxkpi_maskable_irq_depth() != 0 { return unsafe { nil } }
+	if C.tulpar_linuxkpi_maskable_irq_depth() != 0 { return unsafe { nil } }
 	return wq_task_running_locked(C.vkp_current())
 }
 fn wq_canceling_locked(work &C.vks_work) bool {
@@ -218,7 +218,7 @@ fn wq_route_locked(cpu i32, wq &WorkQueue, work &C.vks_work) &WqPool {
 		if wq.unbound { return &wq.pools[0] }
 		run := wq_running_locked(work)
 		if !is_null(run) && voidptr(run.wq) == voidptr(wq) { return run.pool }
-		selected := if cpu == 256 { C.vinix_linuxkpi_cpu_id() } else { u32(cpu) }
+		selected := if cpu == 256 { C.tulpar_linuxkpi_cpu_id() } else { u32(cpu) }
 		require(selected < wq.nr_pools)
 		return &wq.pools[selected]
 	}
@@ -304,7 +304,7 @@ pub fn delayed_work_timer_fn(timer &C.timer_list) {
 	unsafe {
 		dwork := &C.vks_delayed_work(uint(timer) - __offsetof(C.vks_delayed_work, timer))
 		C.vkwq_delayed_gate(timer)
-		require((C.vinix_linuxkpi_irq_flags() & 512) == 0)
+		require((C.tulpar_linuxkpi_irq_flags() & 512) == 0)
 		flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
 		wq_promote_delayed_locked(dwork)
 		C.vkp_spin_unlock_irqrestore(&vkwq_work_lock, flags)
@@ -314,7 +314,7 @@ pub fn delayed_work_timer_fn(timer &C.timer_list) {
 fn wq_arm_delayed_locked(cpu i32, wq &WorkQueue, dwork &C.vks_delayed_work, delay u64) {
 	unsafe {
 		require(voidptr(dwork.timer.function) == C.vkwq_delayed_callback() && dwork.timer.flags == 0x200000)
-		selected := if cpu == 256 { C.vinix_linuxkpi_cpu_id() } else { u32(cpu) }
+		selected := if cpu == 256 { C.tulpar_linuxkpi_cpu_id() } else { u32(cpu) }
 		pool_index := if wq.unbound { u32(0) } else { selected }
 		pool := if delay != 0 { &wq.pools[pool_index] }
 			else { wq_route_locked(cpu, wq, &dwork.work) }
@@ -365,8 +365,8 @@ fn wq_grab_delayed_retry_locked(dwork &C.vks_delayed_work, irq &u64) i32 {
 			result := wq_grab_delayed_locked(dwork)
 			if result != -11 { return result }
 			C.vkp_spin_unlock_irqrestore(&vkwq_work_lock, *irq)
-			C.vinix_linuxkpi_spin_wait()
-			C.vinix_linuxkpi_cond_resched()
+			C.tulpar_linuxkpi_spin_wait()
+			C.tulpar_linuxkpi_cond_resched()
 			*irq = C.vkp_spin_lock_irqsave(&vkwq_work_lock)
 		}
 	}
@@ -487,15 +487,15 @@ fn wq_worker_enter(worker &WqWorker) bool {
 	unsafe {
 		C.vkwq_worker_enter()
 		worker.task = C.vkwq_get_current()
-		worker.start_result = C.vinix_linuxkpi_worker_set_nice(if worker.wq.highpri { -20 } else { 0 })
+		worker.start_result = C.tulpar_linuxkpi_worker_set_nice(if worker.wq.highpri { -20 } else { 0 })
 		if worker.start_result == 0 && !is_null(worker.pool) && !worker.wq.unbound {
-			worker.start_result = C.vinix_linuxkpi_worker_bind(worker.pool.cpu)
+			worker.start_result = C.tulpar_linuxkpi_worker_bind(worker.pool.cpu)
 		}
 		complete(&worker.ready)
 		return worker.start_result == 0
 	}
 }
-@[export: 'vinix_linuxkpi_work_worker']
+@[export: 'tulpar_linuxkpi_work_worker']
 pub fn work_worker(argument voidptr) voidptr {
 	unsafe {
 		worker := &WqWorker(argument)
@@ -533,7 +533,7 @@ pub fn work_worker(argument voidptr) voidptr {
 			wq_wake_workers_locked(wq)
 			C.vkp_spin_unlock_irqrestore(&vkwq_work_lock, flags)
 			function(&C.work_struct(work))
-			require(C.vinix_linuxkpi_may_sleep() && C.vkwq_current_running())
+			require(C.tulpar_linuxkpi_may_sleep() && C.vkwq_current_running())
 			flags = C.vkp_spin_lock_irqsave(&vkwq_work_lock)
 			// The callback may have freed work. Only use retained run/wait records.
 			mut entry := run.waiters.next
@@ -562,7 +562,7 @@ pub fn work_worker(argument voidptr) voidptr {
 		return nil
 	}
 }
-@[export: 'vinix_linuxkpi_workqueue_task_sleep']
+@[export: 'tulpar_linuxkpi_workqueue_task_sleep']
 pub fn workqueue_task_sleep(task_view voidptr) {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
@@ -579,7 +579,7 @@ pub fn workqueue_task_sleep(task_view voidptr) {
 		C.vkp_spin_unlock_irqrestore(&vkwq_work_lock, flags)
 	}
 }
-@[export: 'vinix_linuxkpi_workqueue_task_resume']
+@[export: 'tulpar_linuxkpi_workqueue_task_resume']
 pub fn workqueue_task_resume(task_view voidptr) {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
@@ -597,7 +597,7 @@ pub fn workqueue_task_resume(task_view voidptr) {
 fn wq_join_worker(worker &WqWorker) {
 	unsafe {
 		require(C.vkwq_pthread_join(worker.thread) == 0)
-		for C.vkwq_task_state(worker.task) != 128 { C.vinix_linuxkpi_cond_resched() }
+		for C.vkwq_task_state(worker.task) != 128 { C.tulpar_linuxkpi_cond_resched() }
 		C.vkwq_put_task(worker.task)
 		C.kfree(worker)
 	}
@@ -626,7 +626,7 @@ fn wq_pool_needing_worker_locked(wq &WorkQueue) &WqPool {
 		return nil
 	}
 }
-@[export: 'vinix_linuxkpi_pool_manager']
+@[export: 'tulpar_linuxkpi_pool_manager']
 pub fn pool_manager(argument voidptr) voidptr {
 	unsafe {
 		manager := &WqWorker(argument)
@@ -659,7 +659,7 @@ pub fn pool_manager(argument voidptr) voidptr {
 		return nil
 	}
 }
-@[export: 'vinix_linuxkpi_workqueue_allocate']
+@[export: 'tulpar_linuxkpi_workqueue_allocate']
 pub fn workqueue_allocate(flags u32, requested i32) voidptr {
 	unsafe {
 		ordered := (flags & 131072) != 0
@@ -671,7 +671,7 @@ pub fn workqueue_allocate(flags u32, requested i32) voidptr {
 			|| (!ordered && (flags & 524288) != 0) { return nil }
 		mut max_active := if requested == 0 { i32(256) } else { requested }
 		if u32(max_active) > 512 { C.vkwq_warn_limit(); max_active = 512 }
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		// Preserve original private geometry and tagged-pool array stride.
 		require(sizeof(WorkQueue) == 256 && sizeof(WqPool) == 256 && sizeof(WqWorker) == 88)
 		wq := &WorkQueue(C.kzalloc(sizeof(WorkQueue), 3264))
@@ -695,9 +695,9 @@ pub fn workqueue_allocate(flags u32, requested i32) voidptr {
 		return wq
 	}
 }
-@[export: 'vinix_linuxkpi_workqueue_name']
+@[export: 'tulpar_linuxkpi_workqueue_name']
 pub fn workqueue_name(storage voidptr) &char { unsafe { return &(&WorkQueue(storage)).name[0] } }
-@[export: 'vinix_linuxkpi_workqueue_start']
+@[export: 'tulpar_linuxkpi_workqueue_start']
 pub fn workqueue_start(storage voidptr) voidptr {
 	unsafe {
 		wq := &WorkQueue(storage)
@@ -715,7 +715,7 @@ pub fn workqueue_start(storage voidptr) voidptr {
 		return wq
 	}
 }
-@[export: 'vinix_linuxkpi_workqueue_bootstrap']
+@[export: 'tulpar_linuxkpi_workqueue_bootstrap']
 pub fn workqueue_bootstrap() i32 {
 	unsafe {
 		if !is_null(C.system_unbound_wq) { require(!is_null(C.system_wq) && !is_null(C.system_highpri_wq)); return 0 }
@@ -734,7 +734,7 @@ pub fn workqueue_bootstrap() i32 {
 		return 0
 	}
 }
-@[export: 'vinix_linuxkpi_host_workqueue_stopped']
+@[export: 'tulpar_linuxkpi_host_workqueue_stopped']
 pub fn host_workqueue_stopped(storage voidptr) bool {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
@@ -743,7 +743,7 @@ pub fn host_workqueue_stopped(storage voidptr) bool {
 		return stop
 	}
 }
-@[export: 'vinix_linuxkpi_workqueue_shutdown_for_test']
+@[export: 'tulpar_linuxkpi_workqueue_shutdown_for_test']
 pub fn workqueue_shutdown_for_test() {
 	unsafe {
 		wq_system_retire := [C.system_wq, C.system_highpri_wq, C.system_unbound_wq]!
@@ -793,7 +793,7 @@ pub fn cancel_work(storage voidptr) bool {
 }
 fn wq_cancel_sync(work &C.vks_work, dwork &C.vks_delayed_work) bool {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		mut cancel := WorkCancel{work: work}
 		mut flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
 		require(!is_null(dwork) || is_null(wq_delayed_locked(work)))
@@ -818,7 +818,7 @@ pub fn cancel_work_sync(storage voidptr) bool { unsafe { return wq_cancel_sync(&
 pub fn cancel_delayed_work_sync(storage voidptr) bool {
 	unsafe { dwork := &C.vks_delayed_work(storage); return wq_cancel_sync(&dwork.work, dwork) }
 }
-@[export: 'vinix_linuxkpi_work_barrier']
+@[export: 'tulpar_linuxkpi_work_barrier']
 pub fn work_barrier_callback(work &C.work_struct) { require(false) }
 fn wq_init_barrier(barrier &WorkBarrier) {
 	unsafe {
@@ -829,7 +829,7 @@ fn wq_init_barrier(barrier &WorkBarrier) {
 }
 fn wq_flush_work_common(work &C.vks_work, dwork &C.vks_delayed_work) bool {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		mut barrier := WorkBarrier{}
 		wq_init_barrier(&barrier)
 		mut flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
@@ -838,8 +838,8 @@ fn wq_flush_work_common(work &C.vks_work, dwork &C.vks_delayed_work) bool {
 				result := C.try_to_del_timer_sync(&dwork.timer)
 				if result >= 0 { require(result != 0); wq_promote_delayed_locked(dwork); break }
 				C.vkp_spin_unlock_irqrestore(&vkwq_work_lock, flags)
-				C.vinix_linuxkpi_spin_wait()
-				C.vinix_linuxkpi_cond_resched()
+				C.tulpar_linuxkpi_spin_wait()
+				C.tulpar_linuxkpi_cond_resched()
 				flags = C.vkp_spin_lock_irqsave(&vkwq_work_lock)
 			}
 		}
@@ -875,7 +875,7 @@ pub fn flush_delayed_work(storage voidptr) bool {
 @[export: '__flush_workqueue']
 pub fn flush_workqueue(storage voidptr) {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		wq := &WorkQueue(storage)
 		mut barrier := WorkBarrier{}
 		wq_init_barrier(&barrier)
@@ -921,7 +921,7 @@ fn wq_drain_locked(wq &WorkQueue, irq &u64) {
 @[export: 'drain_workqueue']
 pub fn drain_workqueue(storage voidptr) {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		mut flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
 		wq_drain_locked(&WorkQueue(storage), &flags)
 		C.vkp_spin_unlock_irqrestore(&vkwq_work_lock, flags)
@@ -930,7 +930,7 @@ pub fn drain_workqueue(storage voidptr) {
 @[export: 'destroy_workqueue']
 pub fn destroy_workqueue(storage voidptr) {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		wq := &WorkQueue(storage)
 		mut flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)
 		require(!wq.destroying && !wq.system && ww_list_empty(&wq.delayed))
@@ -966,7 +966,7 @@ pub fn current_work() voidptr {
 }
 // A synchronous fixture witness of the actual drain interval. Its caller
 // retains this queue until all observers and the drainer have returned.
-@[export: 'vinix_linuxkpi_workqueue_draining_for_test']
+@[export: 'tulpar_linuxkpi_workqueue_draining_for_test']
 pub fn workqueue_draining_for_test(storage voidptr) bool {
 	unsafe {
 		flags := C.vkp_spin_lock_irqsave(&vkwq_work_lock)

@@ -8,7 +8,7 @@ import time
 
 pub const catalog = ['c', 'cpp', 'v', 'node', 'typescript', 'rust', 'cargo', 'go', 'java', 'make',
 	'cmake', 'ninja', 'npm', 'gdb', 'sqlite', 'http']
-const marker = 'VINIX-TOOLCHAIN:PASS'
+const marker = 'TULPAR-TOOLCHAIN:PASS'
 
 struct MissingTool {
 	name string
@@ -72,7 +72,7 @@ fn (mut runner Runner) command(program string, arguments []string) !string {
 	argv := [executable, ...arguments]
 	log := runner.work + '/command-${runner.commands.len}.log'
 	hash := devcore.file_hash(executable)!
-	overrides := if runner.jit_requested { {'VINIX_ALLOW_WX': '1'} } else { map[string]string{} }
+	overrides := if runner.jit_requested { {'TULPAR_ALLOW_WX': '1'} } else { map[string]string{} }
 	status := devcore.run(argv, runner.work, runner.env, runner.timeout_seconds, log) or {
 		runner.commands << CommandReceipt{argv, hash, -1, log, overrides}
 		return err
@@ -95,15 +95,15 @@ fn (mut runner Runner) verify_binary(name string) ! {
 fn command_timeout(value string) !int {
 	if value.len < 1 || value.len > 5 || !value.bytes().all(it >= `0` && it <= `9`)
 		|| value.int() < 1 || value.int() > 86400 {
-		return error('VINIX_QUALIFY_TIMEOUT_SECONDS must be 1..86400 seconds')
+		return error('TULPAR_QUALIFY_TIMEOUT_SECONDS must be 1..86400 seconds')
 	}
 	return value.int()
 }
 
-pub fn qualify(profiles []string, output_path string, require_vinix bool) !Report {
-	timeout := if value := os.getenv_opt('VINIX_QUALIFY_TIMEOUT_SECONDS') { command_timeout(value)! } else { 120 }
-	jit_value := os.getenv('VINIX_QUALIFY_JIT')
-	if jit_value !in ['', '0', '1'] { return error('VINIX_QUALIFY_JIT must be 0 or 1') }
+pub fn qualify(profiles []string, output_path string, require_tulpar bool) !Report {
+	timeout := if value := os.getenv_opt('TULPAR_QUALIFY_TIMEOUT_SECONDS') { command_timeout(value)! } else { 120 }
+	jit_value := os.getenv('TULPAR_QUALIFY_JIT')
+	if jit_value !in ['', '0', '1'] { return error('TULPAR_QUALIFY_JIT must be 0 or 1') }
 	jit := jit_value == '1'
 	if profiles.len == 0 || profiles.any(it !in catalog) {
 		return error('unknown or empty qualification profile')
@@ -114,10 +114,10 @@ pub fn qualify(profiles []string, output_path string, require_vinix bool) !Repor
 		selected[profile] = true
 	}
 	uname := os.uname()
-	native := uname.sysname.to_lower() == 'vinix'
+	native := uname.sysname.to_lower() == 'tulpar'
 	if jit && (!native || profiles != ['java']) { return error('JIT qualification currently requires only the native Java profile and an administrator-approved runtime mount') }
-	if require_vinix && !native {
-		return error('guest qualification requires an installed Vinix system')
+	if require_tulpar && !native {
+		return error('guest qualification requires an installed Tulpar system')
 	}
 	devcore.fresh_directory(output_path)!
 	output := os.real_path(output_path)
@@ -126,7 +126,7 @@ pub fn qualify(profiles []string, output_path string, require_vinix bool) !Repor
 		release:       uname.release
 		architecture:  uname.machine
 		uid:           os.getuid()
-		context:       if native { 'vinix-native' } else { 'host-only' }
+		context:       if native { 'tulpar-native' } else { 'host-only' }
 		runner_sha256: devcore.file_hash(os.executable())!
 		started:       time.now().format_rfc3339()
 		requested:     profiles
@@ -153,7 +153,7 @@ pub fn qualify(profiles []string, output_path string, require_vinix bool) !Repor
 		env['npm_config_cache'] = work + '/home/npm-cache'
 		env['VJOBS'] = '1'
 		env['V_C_ERROR_BUG_REPORT_DISABLED'] = '1'
-		if jit { env['VINIX_ALLOW_WX'] = '1' }
+		if jit { env['TULPAR_ALLOW_WX'] = '1' }
 		mut runner := Runner{ work: work, env: env, timeout_seconds: timeout, jit_requested: jit }
 		mut status := 'passed'
 		mut detail := 'project completed its checks'

@@ -12,7 +12,7 @@ fn C.link(&char, &char) int
 fn C.mkfifo(&char, u32) int
 
 fn release_fixture() !(string, string, i64) {
-	work := os.real_path(os.temp_dir()) + '/vinix-release-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-release-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/source/bin')!
 	os.mkdir_all(work + '/repository')!
 	os.chmod(work + '/repository', 0o700)!
@@ -33,13 +33,13 @@ fn release_fixture() !(string, string, i64) {
 }
 
 fn release_retirement_replace(phase string, input string) ! {
-	if phase != os.getenv('VINIX_RELEASE_REPLACE_PHASE') { return }
-	work := os.getenv('VINIX_RELEASE_REPLACE_WORK')
+	if phase != os.getenv('TULPAR_RELEASE_REPLACE_PHASE') { return }
+	work := os.getenv('TULPAR_RELEASE_REPLACE_WORK')
 	if os.exists(work + '/stage-path') { return }
 	stage := if phase == 'copied' { os.dir(os.dir(input)) } else { input }
 	os.write_file(work + '/stage-path', stage)!
 	os.write_file(stage + '/original', 'retained original')!
-	kind := os.getenv('VINIX_RELEASE_REPLACE_KIND')
+	kind := os.getenv('TULPAR_RELEASE_REPLACE_KIND')
 	if kind == 'parent' {
 		os.rename(os.dir(stage), work + '/saved-parent')!; os.mkdir(os.dir(stage))!
 	} else { os.rename(stage, work + '/saved-stage')! }
@@ -53,12 +53,12 @@ fn release_retirement_replace(phase string, input string) ! {
 		'clone' { os.cp_all(work + '/saved-stage', stage, true)! }
 		else { panic('unknown release replacement') }
 	}
-	if os.getenv('VINIX_RELEASE_REPLACE_FAIL') == 'yes' { return error('injected release refusal') }
+	if os.getenv('TULPAR_RELEASE_REPLACE_FAIL') == 'yes' { return error('injected release refusal') }
 }
 
 fn test_release_root_and_parent_substitution_preserve_replacements_and_sequence_reservations() {
 	work, _, expires := release_fixture()!; defer { os.rmdir_all(work) or {} }
-	defer { for name in ['VINIX_RELEASE_REPLACE_PHASE', 'VINIX_RELEASE_REPLACE_WORK', 'VINIX_RELEASE_REPLACE_KIND', 'VINIX_RELEASE_REPLACE_FAIL']! { os.unsetenv(name) } }
+	defer { for name in ['TULPAR_RELEASE_REPLACE_PHASE', 'TULPAR_RELEASE_REPLACE_WORK', 'TULPAR_RELEASE_REPLACE_KIND', 'TULPAR_RELEASE_REPLACE_FAIL']! { os.unsetenv(name) } }
 	seed := os.read_file(work + '/seed')!
 	mut cases := 0
 	for phase in ['created', 'copied', 'staged', 'reserved']! {
@@ -66,7 +66,7 @@ fn test_release_root_and_parent_substitution_preserve_replacements_and_sequence_
 			for fail in ['yes', 'no']! {
 				case := work + '/case-' + cases.str(); os.mkdir_all(case + '/output')!
 				os.mkdir(case + '/outside')!; os.write_file(case + '/outside/keep', 'preserved')!; os.chmod(case + '/outside', 0o700)!
-				for key, value in {'VINIX_RELEASE_REPLACE_PHASE': phase, 'VINIX_RELEASE_REPLACE_WORK': case, 'VINIX_RELEASE_REPLACE_KIND': kind, 'VINIX_RELEASE_REPLACE_FAIL': fail} { os.setenv(key, value, true) }
+				for key, value in {'TULPAR_RELEASE_REPLACE_PHASE': phase, 'TULPAR_RELEASE_REPLACE_WORK': case, 'TULPAR_RELEASE_REPLACE_KIND': kind, 'TULPAR_RELEASE_REPLACE_FAIL': fail} { os.setenv(key, value, true) }
 				mut message := ''
 				release_locked(work + '/repository', 'fixture', work + '/seed', 1, expires, case + '/output/export', ReleaseOptions{ checkpoint: release_retirement_replace }) or { message = err.msg() }
 				assert message != '' && !os.exists(case + '/output/export'), phase + '/' + kind + '/' + fail
@@ -125,7 +125,7 @@ fn test_release_reproducibility_both_architectures_and_no_private_publisher_file
 		assert state.packages.len == 2 && state.packages.any(it.package.architecture == 'all')
 		assert os.read_file(store + '/generations/1/apps/app/bin/app')! == 'application ' + architecture
 	}
-	assert os.ls(work)!.all(!it.starts_with('.vinix-release-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-release-'))
 }
 
 fn test_release_missing_and_wrong_architecture_closures_cannot_hide_behind_other_versions() {
@@ -186,7 +186,7 @@ fn test_release_failed_copy_and_space_check_do_not_reserve_or_publish() {
 			refused = err.msg().contains('changed while copying') || err.msg().contains('insufficient disk space')
 		}
 		assert refused && !os.exists(work + '/failed') && !os.exists(work + '/repository/.publisher/history.json')
-		assert os.ls(work)!.all(!it.starts_with('.vinix-release-'))
+		assert os.ls(work)!.all(!it.starts_with('.tulpar-release-'))
 	}
 	os.chmod(work + '/seed', 0o644)!
 	mut refused := false
@@ -206,7 +206,7 @@ fn test_release_raced_publication_and_corrupt_history_fail_closed() {
 	}
 	guard.release()
 	assert refused && os.ls(work + '/raced')!.len == 0
-	assert os.ls(work)!.all(!it.starts_with('.vinix-release-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-release-'))
 	assert release_history(work + '/repository')!.repositories[0].sequence == 1
 	path := work + '/repository/.publisher/history.json'
 	history := os.read_file(path)!
@@ -219,7 +219,7 @@ fn test_release_raced_publication_and_corrupt_history_fail_closed() {
 			refused = err.msg().contains('invalid publisher release history:')
 		}
 		assert refused && !os.exists(work + '/broken-history')
-		assert os.read_file(path)! == invalid && os.ls(work)!.all(!it.starts_with('.vinix-release-'))
+		assert os.read_file(path)! == invalid && os.ls(work)!.all(!it.starts_with('.tulpar-release-'))
 	}
 	os.write_file(path, history)!
 	publish_release(work + '/repository', 'fixture', work + '/seed', 1, expires, work + '/retry')!
@@ -252,7 +252,7 @@ fn test_release_interruption_preserves_sequence_and_exact_retry_without_fork_or_
 	}
 	mut status := 0
 	assert C.waitpid(pid, &status, 0) == pid && status == 77 << 8
-	assert !os.exists(work + '/release') && os.ls(work)!.filter(it.starts_with('.vinix-release-')).len == 1
+	assert !os.exists(work + '/release') && os.ls(work)!.filter(it.starts_with('.tulpar-release-')).len == 1
 	assert release_history(work + '/repository')!.repositories[0].sequence == 2
 	for sequence in [u64(1), 2] {
 		mut refused := false
@@ -262,7 +262,7 @@ fn test_release_interruption_preserves_sequence_and_exact_retry_without_fork_or_
 		assert refused && !os.exists(work + '/fork')
 	}
 	info := publish_release(work + '/repository', 'fixture', work + '/seed', 2, expires, work + '/release')!
-	assert info.sequence == 2 && os.ls(work)!.filter(it.starts_with('.vinix-release-')).len == 1
+	assert info.sequence == 2 && os.ls(work)!.filter(it.starts_with('.tulpar-release-')).len == 1
 	mut refused := false
 	publish_release(work + '/repository', 'fixture', work + '/seed', 3, expires, work + '/release') or { refused = err.msg().contains('must be new') }
 	assert refused && release_history(work + '/repository')!.repositories[0].sequence == 2
@@ -286,7 +286,7 @@ fn test_release_late_metadata_change_refuses_publication_and_preserves_exact_ret
 		ReleaseOptions{ checkpoint: release_change_reserved_index }) or { message = err.msg() }
 	println('RELEASE ADMISSION late-index refused=' + message.contains('publisher release verification').str() + ' unpublished=' + (!os.exists(work + '/export')).str())
 	assert message.contains('publisher release verification') && !os.exists(work + '/export')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-release-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-release-'))
 	assert release_history(work + '/repository')!.repositories[0].sequence == 1
 	publish_release(work + '/repository', 'fixture', work + '/seed', 1, expires, work + '/export')!
 	index := verify_index(Repository{ id: 'fixture', public_key: key }, os.read_file(work + '/export/index.json')!,
@@ -296,11 +296,11 @@ fn test_release_late_metadata_change_refuses_publication_and_preserves_exact_ret
 }
 
 fn release_admission_mutate(phase string, stage string) ! {
-	if phase != os.getenv('VINIX_RELEASE_ADMISSION_PHASE') { return }
-	work := os.getenv('VINIX_RELEASE_ADMISSION_WORK')
+	if phase != os.getenv('TULPAR_RELEASE_ADMISSION_PHASE') { return }
+	work := os.getenv('TULPAR_RELEASE_ADMISSION_WORK')
 	if os.exists(work + '/mutated') { return }
-	subject := os.getenv('VINIX_RELEASE_ADMISSION_SUBJECT')
-	kind := os.getenv('VINIX_RELEASE_ADMISSION_KIND')
+	subject := os.getenv('TULPAR_RELEASE_ADMISSION_SUBJECT')
+	kind := os.getenv('TULPAR_RELEASE_ADMISSION_KIND')
 	path := stage + '/' + subject
 	assert os.lstat(stage)!.mode & 0o777 == if phase == 'staged' { u32(0o700) } else { u32(0o755) }
 	os.write_file(work + '/mutated', 'once')!
@@ -342,20 +342,20 @@ fn test_release_complete_stage_refusal_obeys_reservation_and_preserves_workspace
 		os.write_file(work + '/outside', 'preserved')!; os.chmod(work + '/outside', 0o600)!
 		os.mkdir(work + '/outside-dir')!; os.chmod(work + '/outside-dir', 0o700)!
 		os.write_file(work + '/outside-dir/keep', 'preserved')!
-		os.setenv('VINIX_RELEASE_ADMISSION_WORK', work, true); os.setenv('VINIX_RELEASE_ADMISSION_PHASE', phase, true)
-		defer { for name in ['VINIX_RELEASE_ADMISSION_WORK', 'VINIX_RELEASE_ADMISSION_PHASE', 'VINIX_RELEASE_ADMISSION_SUBJECT', 'VINIX_RELEASE_ADMISSION_KIND'] { os.unsetenv(name) } }
+		os.setenv('TULPAR_RELEASE_ADMISSION_WORK', work, true); os.setenv('TULPAR_RELEASE_ADMISSION_PHASE', phase, true)
+		defer { for name in ['TULPAR_RELEASE_ADMISSION_WORK', 'TULPAR_RELEASE_ADMISSION_PHASE', 'TULPAR_RELEASE_ADMISSION_SUBJECT', 'TULPAR_RELEASE_ADMISSION_KIND'] { os.unsetenv(name) } }
 		for subject in ['index.json', 'index.sig', payload, '', 'objects'] {
 			kinds := if subject == '' { ['extra', 'mode'] }
 				else if subject == 'objects' { ['extra', 'dir-alias'] }
 				else if subject == payload { ['rewrite', 'missing', 'fifo'] }
 				else { ['rewrite', 'missing', 'alias', 'link', 'mode'] }
 			for kind in kinds {
-				os.setenv('VINIX_RELEASE_ADMISSION_SUBJECT', subject, true); os.setenv('VINIX_RELEASE_ADMISSION_KIND', kind, true)
+				os.setenv('TULPAR_RELEASE_ADMISSION_SUBJECT', subject, true); os.setenv('TULPAR_RELEASE_ADMISSION_KIND', kind, true)
 				mut message := ''
 				release_locked(repository, 'fixture', work + '/seed', 2, expires, work + '/export',
 					ReleaseOptions{ checkpoint: release_admission_mutate }) or { message = err.msg(); unsafe { err.free() } }
 				assert message.contains('publisher release verification') && !os.exists(work + '/export'), phase + '/' + subject + '/' + kind + ': ' + message
-				assert os.exists(work + '/mutated') && os.ls(work)!.all(!it.starts_with('.vinix-release-'))
+				assert os.exists(work + '/mutated') && os.ls(work)!.all(!it.starts_with('.tulpar-release-'))
 				history := release_history(repository)!
 				assert history.repositories.len == 1
 				assert history.repositories[0].sequence == if phase == 'staged' { u64(1) } else { u64(2) }

@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2026 Alexander Medvednikov
 //
-// vinix-security-events: keeps what the kernel decided. It reads
+// tulpar-security-events: keeps what the kernel decided. It reads
 // /proc/security_events four times a second and appends what is new to
-// /var/log/vinix-audit/events.log, synced to the disk before it considers a
+// /var/log/tulpar-audit/events.log, synced to the disk before it considers a
 // record kept. Gaps -- records the kernel overwrote before they were read --
 // are written down as gaps, with their exact numbers.
 //
 // The log is set aside and a new one begun when it passes a size, and
-// set-aside logs are deleted by count and by age: /etc/vinix/audit.conf,
+// set-aside logs are deleted by count and by age: /etc/tulpar/audit.conf,
 // eventcore/core.v. Nothing else ever deletes a record.
 //
-//	vinix-security-events            run until stopped
-//	vinix-security-events --once     one pass, for a test or a shutdown
+//	tulpar-security-events            run until stopped
+//	tulpar-security-events --once     one pass, for a test or a shutdown
 //
 // --source FILE, --directory DIR and --settings FILE name other places, for
 // tests; --interval-ms N another pace.
@@ -47,7 +47,7 @@ mut:
 }
 
 fn fail(message string) {
-	eprintln('vinix-security-events: ${message}')
+	eprintln('tulpar-security-events: ${message}')
 	exit(1)
 }
 
@@ -187,8 +187,8 @@ fn (mut c Collector) collect() !int {
 
 fn main() {
 	mut source := '/proc/security_events'
-	mut directory := '/var/log/vinix-audit'
-	mut settings := '/etc/vinix/audit.conf'
+	mut directory := '/var/log/tulpar-audit'
+	mut settings := '/etc/tulpar/audit.conf'
 	mut once := false
 	mut interval := 250
 	mut args := os.args[1..].clone()
@@ -240,7 +240,7 @@ fn main() {
 	for {
 		mut failed := false
 		collector.collect() or {
-			eprintln('vinix-security-events: ${err.msg()}')
+			eprintln('tulpar-security-events: ${err.msg()}')
 			failed = true
 			0
 		}

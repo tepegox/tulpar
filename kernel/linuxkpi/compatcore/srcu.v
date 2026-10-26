@@ -181,7 +181,7 @@ fn srcu_initialized_usage(ssp &C.vks_srcu) &C.vks_srcu_usage {
 }
 fn srcu_bootstrap_limit(active_limit u32) i32 {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		require(C.vks_unbound_ready() && percpu_count() != 0)
 		if !is_null(C.vkw_load_pointer(&vks_srcu_workqueue, 2)) { return 0 }
 		queue := C.alloc_workqueue(c'linuxkpi-srcu', 2, i32(active_limit))
@@ -190,14 +190,14 @@ fn srcu_bootstrap_limit(active_limit u32) i32 {
 		return 0
 	}
 }
-@[export: 'vinix_linuxkpi_srcu_bootstrap']
+@[export: 'tulpar_linuxkpi_srcu_bootstrap']
 pub fn srcu_bootstrap() i32 { return srcu_bootstrap_limit(0) }
 @[export: 'srcu_init']
 pub fn srcu_init() { require(srcu_bootstrap() == 0) }
 @[export: 'init_srcu_struct']
 pub fn init_srcu_struct(storage voidptr) i32 {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep() && !is_null(storage))
+		require(C.tulpar_linuxkpi_may_sleep() && !is_null(storage))
 		ssp := &C.vks_srcu(storage)
 		ssp.srcu_idx = 0
 		ssp.sda = nil
@@ -282,7 +282,7 @@ pub fn call_srcu(storage voidptr, record voidptr, function fn (&C.callback_head)
 		C.vkp_spin_unlock_irqrestore(&sup.lock, flags)
 	}
 }
-@[export: 'vinix_linuxkpi_srcu_gp_work']
+@[export: 'tulpar_linuxkpi_srcu_gp_work']
 pub fn srcu_gp_work(work &C.work_struct) {
 	unsafe {
 		sup := &C.vks_srcu_usage(uint(work) - __offsetof(C.vks_srcu_usage, work))
@@ -324,7 +324,7 @@ pub fn srcu_gp_work(work &C.work_struct) {
 		C.vkp_spin_unlock_irqrestore(&sup.lock, flags)
 	}
 }
-@[export: 'vinix_linuxkpi_srcu_callback_work']
+@[export: 'tulpar_linuxkpi_srcu_callback_work']
 pub fn srcu_callback_work(work &C.work_struct) {
 	unsafe {
 		sdp := &C.vks_srcu_data(uint(work) - __offsetof(C.vks_srcu_data, work))
@@ -341,7 +341,7 @@ pub fn srcu_callback_work(work &C.work_struct) {
 			function := head.func
 			head.next = nil
 			C.vkp_spin_unlock_irqrestore(&sup.lock, flags)
-			require(C.vinix_linuxkpi_may_sleep())
+			require(C.tulpar_linuxkpi_may_sleep())
 			C.vks_preempt_disable()
 			function(&C.callback_head(head)) // Callback may free or requeue head; never read it again.
 			require(C.vks_preempt_count() == 1 && !C.vkw_irqs_disabled())
@@ -391,7 +391,7 @@ pub fn poll_state_synchronize_srcu(storage voidptr, cookie u64) bool {
 }
 fn srcu_synchronize_domain(ssp &C.vks_srcu, expedited bool) {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		sup := srcu_initialized_usage(ssp)
 		C.vks_fence(5)
 		flags := C.vkp_spin_lock_irqsave(&sup.lock)
@@ -411,7 +411,7 @@ pub fn synchronize_srcu_expedited(storage voidptr) { unsafe { srcu_synchronize_d
 @[export: 'srcu_barrier']
 pub fn srcu_barrier(storage voidptr) {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		ssp := &C.vks_srcu(storage)
 		sup := srcu_initialized_usage(ssp)
 		C.vks_fence(5)
@@ -451,7 +451,7 @@ fn srcu_quiesce_domain(ssp &C.vks_srcu, sup &C.vks_srcu_usage) {
 @[export: 'cleanup_srcu_struct']
 pub fn cleanup_srcu_struct(storage voidptr) {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep() && !is_null(storage))
+		require(C.tulpar_linuxkpi_may_sleep() && !is_null(storage))
 		ssp := &C.vks_srcu(storage)
 		if is_null(ssp.srcu_sup) { require(is_null(ssp.sda)); return }
 		sup := srcu_initialized_usage(ssp)
@@ -464,14 +464,14 @@ pub fn cleanup_srcu_struct(storage voidptr) {
 		C.kfree(sup)
 	}
 }
-@[export: 'vinix_linuxkpi_srcu_bootstrap_limit_for_test']
+@[export: 'tulpar_linuxkpi_srcu_bootstrap_limit_for_test']
 pub fn srcu_bootstrap_limit_for_test(active_limit u32) i32 {
 	require(active_limit >= 2 && active_limit <= 512)
 	return srcu_bootstrap_limit(active_limit)
 }
-@[export: 'vinix_linuxkpi_srcu_queue_for_test']
+@[export: 'tulpar_linuxkpi_srcu_queue_for_test']
 pub fn srcu_queue_for_test() voidptr { return srcu_updater_queue() }
-@[export: 'vinix_linuxkpi_srcu_shutdown_for_test']
+@[export: 'tulpar_linuxkpi_srcu_shutdown_for_test']
 pub fn srcu_shutdown_for_test() {
 	unsafe {
 		queue := C.vkw_load_pointer(&vks_srcu_workqueue, 2)
@@ -480,7 +480,7 @@ pub fn srcu_shutdown_for_test() {
 		C.vkw_store_pointer(&vks_srcu_workqueue, nil, 3)
 	}
 }
-@[export: 'vinix_linuxkpi_srcu_static_quiesce_for_test']
+@[export: 'tulpar_linuxkpi_srcu_static_quiesce_for_test']
 pub fn srcu_static_quiesce_for_test(storage voidptr) {
 	unsafe {
 		ssp := &C.vks_srcu(storage)

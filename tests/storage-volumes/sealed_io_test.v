@@ -190,7 +190,7 @@ fn sealed_mock_munmap(pointer voidptr, size usize) i32 {
 }
 
 fn test_sealed_io_faults_preserve_destinations_close_descriptors_and_erase_credentials() {
-	work := os.join_path(os.temp_dir(), 'vinix-sealed-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-sealed-io-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	key := []u8{len: 64, init: u8(index * 13 + 7)}
 	os.write_file_array(work + '/key', key)!; os.chmod(work + '/key', 0o600)!
@@ -210,7 +210,7 @@ fn test_sealed_io_faults_preserve_destinations_close_descriptors_and_erase_crede
 				if !seal { assert os.read_bytes(destination)! == key }
 				os.rm(destination)!
 			}
-			assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+			assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 		}
 	}
 	for readonly in [false, true] {
@@ -233,11 +233,11 @@ fn test_sealed_io_faults_preserve_destinations_close_descriptors_and_erase_crede
 		assert open_sealed_volume(c'/sealed-parent', (work + '/bad').str, (work + '/pass').str, &request) == 1
 		assert sealed_io.derive_calls == 0 && sealed_io.ioctls == 0 && sealed_io.parent_flags == 0 && sealed_io.wipes == 1 && sealed_io.opened == sealed_io.closed
 	}
-	for attempt in 0 .. 64 { os.write_file(work + '/.vinix-key-${os.getpid()}-${attempt}', 'keep unrelated temporary')! }
+	for attempt in 0 .. 64 { os.write_file(work + '/.tulpar-key-${os.getpid()}-${attempt}', 'keep unrelated temporary')! }
 	sealed_io = SealedIO{}
 	assert sealed_key_file((work + '/valid').str, (work + '/pass').str, (work + '/output').str, false) == 1
 	assert sealed_io.opened == sealed_io.closed && sealed_io.wipes == 1 && sealed_io.unlinks == 0
-	for attempt in 0 .. 64 { assert os.read_file(work + '/.vinix-key-${os.getpid()}-${attempt}')! == 'keep unrelated temporary' }
+	for attempt in 0 .. 64 { assert os.read_file(work + '/.tulpar-key-${os.getpid()}-${attempt}')! == 'keep unrelated temporary' }
 }
 
 fn test_scrypt_mapping_refusal_erasure_release_failure_and_eintr_do_not_release_candidate_keys() {
@@ -259,7 +259,7 @@ fn test_scrypt_mapping_refusal_erasure_release_failure_and_eintr_do_not_release_
 }
 
 fn test_rewrap_stage_faults_authentication_before_new_inputs_no_raw_key_and_erasure_between_credentials() {
-	work := os.join_path(os.temp_dir(), 'vinix-rewrap-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-rewrap-io-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	key := []u8{len: 64, init: u8(index * 13 + 7)}
 	old := []u8{len: 1024, init: u8(112)}
@@ -291,6 +291,6 @@ fn test_rewrap_stage_faults_authentication_before_new_inputs_no_raw_key_and_eras
 			os.rm(destination)!
 		}
 		assert os.read_bytes(work + '/source')! == source && os.read_bytes(next_path)! == next && os.read_bytes(work + '/old')! == old
-		assert !os.exists(work + '/key') && os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+		assert !os.exists(work + '/key') && os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 	}
 }

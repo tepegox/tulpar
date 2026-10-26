@@ -19,7 +19,7 @@ fn stored_artifact(role string, path string) !StoredArtifact {
 fn stored_suite() hwhost.Suite {
 	return hwhost.Suite{ name: 'package-stored-state', guest: 'tests/accounts/guest',
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring'],
-		programs: [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' }],
+		programs: [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' }],
 		directories: ['run', 'home', 'var/log', 'tmp:1777'],
 		scenarios: [hwhost.Scenario{ name: 'packages-state-schema', arches: ['aarch64', 'x86_64'],
 			about: 'complete stored manifests, maintenance refusal without mutation and restored-state recovery', timeout: 240, ending: .poweroff,
@@ -33,9 +33,9 @@ fn check() !int {
 	options := hwhost.parse_options(os.args[1..])!
 	definition := stored_suite()
 	if options.help || options.list { return hwhost.run_suite(definition, os.args[1..], @FILE) }
-	if os.getenv('VINIX_HWTEST_TCG') != '1' || !os.is_file(options.kernel) || options.state_dir == ''
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' || !os.is_file(options.kernel) || options.state_dir == ''
 		|| os.exists(options.state_dir) || os.is_link(options.state_dir) {
-		return error('provide VINIX_HWTEST_TCG=1, a target --kernel and a new --state-dir')
+		return error('provide TULPAR_HWTEST_TCG=1, a target --kernel and a new --state-dir')
 	}
 	repository := hwhost.find_root(@FILE)!
 	selection := hwhost.select_scenarios(definition.scenarios, options.arch, options.scenarios)!
@@ -48,7 +48,7 @@ fn check() !int {
 	guest := hwhost.build_program(host, repository + '/' + definition.guest, work + '/guest', 'init', definition.module_paths)!
 	root := hwhost.build_extras(host, definition, work + '/guest')!
 	mut artifacts := [stored_artifact('kernel', work + '/kernel')!, stored_artifact('guest-init', guest)!,
-		stored_artifact('package-service', root + '/usr/bin/vinix-package')!]
+		stored_artifact('package-service', root + '/usr/bin/tulpar-package')!]
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: work + '/kernel', guest: guest, extras: root,
 		state: work + '/packages-state-schema', timeout: if options.timeout > 240 { options.timeout } else { 240 }, keep: true })
 	println(hwhost.report(options.arch, outcome))

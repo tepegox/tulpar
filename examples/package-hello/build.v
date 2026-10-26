@@ -18,7 +18,7 @@ fn build(destination string) ! {
 	v := os.find_abs_path_of_executable(if os.getenv('V') == '' { 'v' } else { os.getenv('V') })!
 	output := os.abs_path(destination)
 	if os.exists(output) { return error('example repository output must be new') }
-	work := os.temp_dir() + '/vinix-sdk-example-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-sdk-example-' + os.getpid().str()
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or {} }
 	for architecture in ['aarch64', 'x86_64'] {

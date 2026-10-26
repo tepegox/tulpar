@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_HOST_MODEL_V_CONTRACT_H
-#define VINIX_LINUXKPI_HOST_MODEL_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_HOST_MODEL_V_CONTRACT_H
+#define TULPAR_LINUXKPI_HOST_MODEL_V_CONTRACT_H
 /* Native typedef names differ from the V backend's fixed-width aliases. */
 #undef atomic_fetch_add
 #undef atomic_fetch_sub
@@ -45,7 +45,7 @@
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/string.h>
-#include <vinix/runtime.h>
+#include <tulpar/runtime.h>
 
 
 typedef u64 vmh_u64;
@@ -85,7 +85,7 @@ extern unsigned int vmh_worker_bind_failures;
 extern atomic_t vmh_refcount_warnings, vmh_time_warnings;
 extern vmh_u64 vmh_host_clock_ns;
 /* Architecture TLS data uses these exact native declarations and initializer
- * values. The V backend's Vinix target currently cannot emit thread-local
+ * values. The V backend's Tulpar target currently cannot emit thread-local
  * storage itself; libc retains the original per-thread ownership/lifetime. */
 extern _Thread_local bool vmh_interrupts, vmh_resched_pending;
 extern _Thread_local unsigned int vmh_preempt_depth, vmh_current_cpu;
@@ -103,8 +103,8 @@ _Static_assert(sizeof(((struct native_task_model *)0)->storage) == 64,
 void vmh_model_queue_init(struct native_task_model *);
 void vmh_sync_model_init(struct native_task_model *, unsigned int);
 void vmh_sync_model_destroy(struct native_task_model *);
-unsigned int vinix_linuxkpi_maskable_irq_depth(void);
-bool vinix_linuxkpi_workqueue_draining_for_test(void *);
+unsigned int tulpar_linuxkpi_maskable_irq_depth(void);
+bool tulpar_linuxkpi_workqueue_draining_for_test(void *);
 /* Implemented by the independent I/O fixture; the caller holds queue_lock. */
 void vmh_iowait_end_locked(struct native_task_model *);
 #endif

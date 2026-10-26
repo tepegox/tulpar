@@ -85,7 +85,7 @@ these runs do not establish that all kernel allocation paths are leak-free.
 For an already compiled static guest and kernel, build `check-prebuilt.v` with
 the `tests/hardware-platform` module path and invoke
 `check-prebuilt GUEST aarch64|x86_64 FRESH-OUT KERNEL`. It retains boot media,
-serial output and `result.json`, refusing any failure marker. Set `VINIX_ROOT`
+serial output and `result.json`, refusing any failure marker. Set `TULPAR_ROOT`
 to the checkout containing the QEMU/firmware tools when building the controller
 in a sparse worktree. x86 uses the raw-initramfs ISO helper for older kernels.
 These receipts use the clean V `826e96f` kernel compiler rebuilt with fallback

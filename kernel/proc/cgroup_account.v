@@ -196,7 +196,7 @@ pub fn (mut account CGroupAccount) cpu_stat_text() string {
 	throttled := account.nr_throttled
 	throttled_us := account.throttled_ns / 1000
 	account.lock.release()
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(160) }
 	text.add('usage_usec ')
 	text.add_unsigned(u64(usage))

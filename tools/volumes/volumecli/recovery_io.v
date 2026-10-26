@@ -16,7 +16,7 @@ fn read_recovery_file(path &char, output &u8, size int) bool {
 fn read_private_key_file(path &char, output &u8, minimum int, maximum int) int {
 	if minimum <= 0 || maximum < minimum || maximum > 1024 { return 0 }
 	fd := C.open(path, C.O_RDONLY | C.O_NOFOLLOW | C.O_CLOEXEC | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open key input'); return 0 }
+	if fd < 0 { C.perror(c'tulpar-volume: open key input'); return 0 }
 	defer { C.close(fd) }
 	return read_private_key_fd(fd, output, minimum, maximum)
 }
@@ -52,7 +52,7 @@ fn recovery_nonce(output &u8) bool {
 fn key_random_bytes(output &u8, size int) bool {
 	if size <= 0 || size > 64 { return false }
 	fd := C.open(c'/dev/urandom', C.O_RDONLY | C.O_NOFOLLOW | C.O_CLOEXEC | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open nonce source'); return false }
+	if fd < 0 { C.perror(c'tulpar-volume: open nonce source'); return false }
 	defer { C.close(fd) }
 	mut info := C.stat{}
 	if C.fstat(fd, unsafe { &info }) != 0 || info.st_mode & C.S_IFMT != C.S_IFCHR { plan_error(c'nonce source must be a character device'); return false }
@@ -77,28 +77,28 @@ fn publish_recovery(edit &PlanEdit, bytes &u8, size int) bool {
 	mut temporary := [64]char{}; mut fd := i32(-1); mut owned := false
 	defer {
 		if fd >= 0 { C.close(fd) }
-		if owned && C.unlinkat(edit.directory, &temporary[0], 0) != 0 { C.perror(c'vinix-volume: temporary key cleanup failed') }
+		if owned && C.unlinkat(edit.directory, &temporary[0], 0) != 0 { C.perror(c'tulpar-volume: temporary key cleanup failed') }
 	}
 	for attempt in 0 .. 64 {
-		length := C.snprintf(&temporary[0], sizeof(temporary), c'.vinix-key-%d-%d', C.getpid(), attempt)
+		length := C.snprintf(&temporary[0], sizeof(temporary), c'.tulpar-key-%d-%d', C.getpid(), attempt)
 		if length <= 0 || length >= 64 { return false }
 		if C.strcmp(&temporary[0], &edit.name[0]) == 0 { continue }
 		fd = C.openat(edit.directory, &temporary[0], C.O_WRONLY | C.O_CREAT | C.O_EXCL | C.O_NOFOLLOW | C.O_CLOEXEC, u32(0o600))
 		if fd >= 0 { owned = true; break }
-		if unsafe { C.errno != C.EEXIST } { C.perror(c'vinix-volume: create temporary key'); return false }
+		if unsafe { C.errno != C.EEXIST } { C.perror(c'tulpar-volume: create temporary key'); return false }
 	}
 	if fd < 0 { plan_error(c'no unused temporary key filename'); return false }
-	if C.fchmod(fd, 0o600) != 0 { C.perror(c'vinix-volume: private output permissions'); return false }
+	if C.fchmod(fd, 0o600) != 0 { C.perror(c'tulpar-volume: private output permissions'); return false }
 	mut done := 0
 	for done < size {
 		count := C.write(fd, unsafe { bytes + done }, uint(size - done))
 		if count < 0 && unsafe { C.errno == C.EINTR } { continue }
 		if count <= 0 || count > size - done { plan_error(c'incomplete recovery output'); return false }; done += int(count)
 	}
-	if C.fsync(fd) != 0 { C.perror(c'vinix-volume: flush key output'); return false }
+	if C.fsync(fd) != 0 { C.perror(c'tulpar-volume: flush key output'); return false }
 	closed := C.close(fd); fd = -1
-	if closed != 0 { C.perror(c'vinix-volume: close key output'); return false }
-	if C.linkat(edit.directory, &temporary[0], edit.directory, &edit.name[0], 0) != 0 { C.perror(c'vinix-volume: publish key without replacement'); return false }
+	if closed != 0 { C.perror(c'tulpar-volume: close key output'); return false }
+	if C.linkat(edit.directory, &temporary[0], edit.directory, &edit.name[0], 0) != 0 { C.perror(c'tulpar-volume: publish key without replacement'); return false }
 	if C.unlinkat(edit.directory, &temporary[0], 0) != 0 {
 		plan_error(c'key output published, but temporary cleanup and durability are unconfirmed'); return false
 	}

@@ -38,7 +38,7 @@ fn recovery_rewrap_before_open(path &char, flags i32) bool {
 fn recovery_rewrap_check(input string, old string, next string, output string, mode int, expected i32) {
 	recovery_io = RecoveryIO{mode: mode}; recovery_rewrap_io = RecoveryRewrapIO{}
 	unsafe {
-		args := [&char(c'vinix-volume'), &char(c'rewrap-recovery-volume'), input.str, old.str, next.str, output.str, &char(nil)]!
+		args := [&char(c'tulpar-volume'), &char(c'rewrap-recovery-volume'), input.str, old.str, next.str, output.str, &char(nil)]!
 		assert run(6, &args[0]) == expected
 	}
 	assert recovery_io.opened == recovery_io.closed && recovery_io.volume_wipes == 1 && !recovery_io.locked
@@ -48,7 +48,7 @@ fn recovery_rewrap_check(input string, old string, next string, output string, m
 fn test_recovery_rewrap_authentication_erasure_stages_exact_metadata_and_private_publication() {
 	recovery_rewrap_model = true; defer { recovery_rewrap_model = false }
 	volume_recovery_io = VolumeRecoveryIO{}
-	work := os.join_path(os.temp_dir(), 'vinix-recovery-rewrap-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-recovery-rewrap-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	input := work + '/backup'; old := work + '/oldkey'; next := work + '/newkey'; output := work + '/output'
 	old_key := [64]u8{init: u8(index * 29 + 41)}; new_key := [64]u8{init: u8(index * 37 + 23)}
@@ -73,7 +73,7 @@ fn test_recovery_rewrap_authentication_erasure_stages_exact_metadata_and_private
 						assert !decode_volume_recovery(bytes.data, 320, &old_key[0], mut observed, mut decoded)
 						os.rm(output)!
 					}
-					assert os.read_bytes(input)! == source[..] && os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+					assert os.read_bytes(input)! == source[..] && os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 				}
 				for destination in [input, old, next, work + '/link'] {
 					if destination.ends_with('/link') { os.symlink(work + '/absent', destination)! }

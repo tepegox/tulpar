@@ -22,7 +22,7 @@ fn values(value json2.Any) []string { return value.as_array().map(it.str()) }
 
 fn qualify(binary string, profile string, selected string) ! {
 	mut env := policyhost.environment()
-	env['V'] = os.getenv_opt('V') or { '/tmp/vinix-native-v-compiler/v' }
+	env['V'] = os.getenv_opt('V') or { '/tmp/tulpar-native-v-compiler/v' }
 	env['VEXE'] = env['V']
 	env['V_MACOS_V3_NO_FALLBACK'] = '1'
 	env['ASAN_OPTIONS'] = 'detect_leaks=0'
@@ -36,11 +36,11 @@ fn qualify(binary string, profile string, selected string) ! {
 	for family in families {
 		if selected != '' && selected != family { continue }
 		for arch in if family == 'aarch64-sigreturn' { ['aarch64'] } else { ['aarch64', 'x86_64'] } {
-			work := (os.getenv_opt('VINIX_PROCESS_TEST_BUILD_PREFIX') or { '/tmp/vinix-process-build-' }) + profile + '-' + family + '-' + arch
+			work := (os.getenv_opt('TULPAR_PROCESS_TEST_BUILD_PREFIX') or { '/tmp/tulpar-process-build-' }) + profile + '-' + family + '-' + arch
 			kernel := if arch == 'aarch64' {
-				os.getenv_opt('VINIX_PROCESS_TEST_ARM_KERNEL') or { '/tmp/vinix-volume-guest-arm-final/kernel' }
+				os.getenv_opt('TULPAR_PROCESS_TEST_ARM_KERNEL') or { '/tmp/tulpar-volume-guest-arm-final/kernel' }
 			} else {
-				os.getenv_opt('VINIX_PROCESS_TEST_X86_KERNEL') or { '/tmp/vinix-xinput-guest-x86/kernel' }
+				os.getenv_opt('TULPAR_PROCESS_TEST_X86_KERNEL') or { '/tmp/tulpar-xinput-guest-x86/kernel' }
 			}
 			mut argv := [binary, family, '--state-dir', work, '--kernel-dir', kernel, '--build-only']
 			if family != 'aarch64-sigreturn' { argv << ['--arch', arch] }

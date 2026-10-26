@@ -1,17 +1,17 @@
 # Package-tool interface discovery
 
-Run `vinix-package capabilities` before choosing a package SDK or native window
+Run `tulpar-package capabilities` before choosing a package SDK or native window
 protocol. The command always writes one JSON object to standard output and exits
 zero on success. It reads no repository configuration or installation state and
 does not contact a repository, request approval, or create an installation.
 
 ```console
-$ vinix-package capabilities
+$ tulpar-package capabilities
 {"format":1,"package_formats":[1],"application_sdks":[1],"native_window_protocols":[1,2],"deployment_formats":[1,2]}
 ```
 
-`vinix-package --json capabilities` produces the same response. Global options
-precede the command: `vinix-package capabilities --json` is refused, as are
+`tulpar-package --json capabilities` produces the same response. Global options
+precede the command: `tulpar-package capabilities --json` is refused, as are
 operands, `--root`, `--offline`, and `--progress`. An older package tool that does
 not implement the command will exit nonzero; callers must treat that as unknown
 capabilities and require a compatible package tool rather than assume a version.

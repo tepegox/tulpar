@@ -29,7 +29,7 @@ fn check() ! {
 	before := os.args.len == 4
 	if os.exists(work) || os.is_link(work) { return error('HTTPS destination work must be new') }
 	os.mkdir_all(work + '/repository')!
-	os.write_file(work + '/certificate.cnf', '[req]\nprompt=no\ndistinguished_name=subject\nx509_extensions=extensions\n[subject]\nCN=Vinix destination fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\nextendedKeyUsage=serverAuth\nsubjectAltName=IP:127.0.0.1\n')!
+	os.write_file(work + '/certificate.cnf', '[req]\nprompt=no\ndistinguished_name=subject\nx509_extensions=extensions\n[subject]\nCN=Tulpar destination fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\nkeyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\nextendedKeyUsage=serverAuth\nsubjectAltName=IP:127.0.0.1\n')!
 	command(['openssl', 'req', '-new', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1', '-config',
 		work + '/certificate.cnf', '-keyout', work + '/key.pem', '-out', work + '/ca.pem'])!
 	os.chmod(work + '/key.pem', 0o600)!

@@ -2,7 +2,7 @@
 module volumecli
 
 fn monitor_test_run(interval &char, count &char) i32 {
-	arguments := [&char(c'vinix-volume'), &char(c'monitor'), &char(c'/dev/test'), interval, count]!
+	arguments := [&char(c'tulpar-volume'), &char(c'monitor'), &char(c'/dev/test'), interval, count]!
 	return run(5, unsafe { &arguments[0] })
 }
 
@@ -71,13 +71,13 @@ fn test_monitor_retries_interrupted_sleep_and_rejects_invalid_arguments_before_o
 		assert monitor_test_run(c'1', count) == 2 && monitor_model.opens == 0
 	}
 	monitor_model_reset(0)
-	arguments := [&char(c'vinix-volume'), &char(c'monitor'), &char(c'/dev/test')]!
+	arguments := [&char(c'tulpar-volume'), &char(c'monitor'), &char(c'/dev/test')]!
 	assert run(3, unsafe { &arguments[0] }) == 2 && monitor_model.opens == 0
 }
 
 fn test_monitor_accepts_optional_count_and_numeric_upper_bounds() {
 	monitor_model_reset(18) // Stop an unbounded session at the output boundary.
-	arguments := [&char(c'vinix-volume'), &char(c'monitor'), &char(c'/dev/test'), &char(c'1')]!
+	arguments := [&char(c'tulpar-volume'), &char(c'monitor'), &char(c'/dev/test'), &char(c'1')]!
 	assert run(4, unsafe { &arguments[0] }) == 1
 	assert monitor_model.opens == 1 && monitor_model.closes == 1 && monitor_model.health_calls == 1
 	monitor_model_reset(0)

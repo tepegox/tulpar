@@ -75,7 +75,7 @@ V=/path/to/reviewed/v /tmp/image-export-check /build/new-image-export-host
 
 v -path '@vlib|@vmodules|.|tests/hardware-platform' \
   -o /tmp/image-export-runtime-check tests/packages/image-export-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/image-export-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-image-export-arm
 ```

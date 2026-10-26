@@ -6,7 +6,7 @@ module volumecli
 // supplies the stream and authentication halves directly.
 fn volume_recovery_header(bytes &u8, size int) bool {
 	if size != volume_seal_bytes { return false }
-	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'VINIXVR1'[i]) { return false } } }
+	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'TULPARVR1'[i]) { return false } } }
 	if get_le(bytes, 8, 4) != 1 || get_le(bytes, 12, 4) != 1
 		|| get_le(bytes, 16, 4) != volume_seal_bytes || get_le(bytes, 20, 4) != 64 { return false }
 	unsafe {
@@ -27,7 +27,7 @@ fn encode_volume_recovery(disk &DiskKey, request &EncryptedRequest, recovery &u8
 	mut work := unsafe { &VolumeSealCrypto(C.alloca(sizeof(VolumeSealCrypto))) }
 	unsafe { *work = VolumeSealCrypto{} }
 	defer { erase_key(work, sizeof(VolumeSealCrypto)) }
-	unsafe { C.memcpy(&work.bytes[0], c'VINIXVR1', 8) }
+	unsafe { C.memcpy(&work.bytes[0], c'TULPARVR1', 8) }
 	put_le(&work.bytes[0], 8, 4, 1); put_le(&work.bytes[0], 12, 4, 1)
 	put_le(&work.bytes[0], 16, 4, volume_seal_bytes); put_le(&work.bytes[0], 20, 4, 64)
 	put_le(&work.bytes[0], 80, 8, disk.bytes); put_le(&work.bytes[0], 88, 8, disk.sector); put_le(&work.bytes[0], 96, 4, disk.kind)

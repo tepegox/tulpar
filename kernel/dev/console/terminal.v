@@ -453,7 +453,7 @@ fn (mut this Console) ioctl(handle voidptr, request u64, argp voidptr) ?int {
 	}
 
 	match request {
-		// Vinix physical-key input mode; immediate argument 0/1. Foreground
+		// Tulpar physical-key input mode; immediate argument 0/1. Foreground
 		// terminal owners only. Canonical mode/text-mode restoration resets it.
 		0x564b0001 {
 			if u64(argp) > 1 || this.termios.c_lflag & termios.icanon != 0 {

@@ -7,8 +7,8 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn stored_schema_fixture(architecture string) State {
@@ -136,8 +136,8 @@ fn stored_inventory(path string) ![]string {
 }
 
 fn test_malformed_stored_declarations_preserve_current_previous_cache_and_recovery_before_retry() {
-	work := os.real_path(os.temp_dir()) + '/vinix-stored-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/root/etc/vinix-packages')!
+	work := os.real_path(os.temp_dir()) + '/tulpar-stored-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/root/etc/tulpar-packages')!
 	defer { os.rmdir_all(work) or {} }
 	os.mkdir_all(work + '/source/bin')!
 	os.write_file(work + '/source/bin/app', 'signed payload')!
@@ -145,7 +145,7 @@ fn test_malformed_stored_declarations_preserve_current_previous_cache_and_recove
 	key := keygen(work + '/seed')!
 	config := Config{ architecture: 'aarch64', repositories: [Repository{ id: 'publisher', public_key: key,
 		url: 'file://' + work + '/repository' }], policy: Policy{ offline: true, reserve_bytes: 0 } }
-	os.write_file(work + '/root/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(work + '/root/etc/tulpar-packages/config.json', json2.encode(config))!
 	service := Service{ root: work + '/root' }
 	for i, version in ['1.0.0', '2.0.0'] {
 		os.write_file(work + '/manifest.json', json2.encode(Package{ id: 'app', version: version, architecture: 'aarch64',
@@ -206,7 +206,7 @@ fn test_stored_state_schema_scanning_retires_owned_keys() {
 			valid.replace('"sdk":1', '"sdk":1,"s\\u0064k":1'), valid.replace('"package":{', '"package":{"unknown":0,'),
 			valid.replace('"previous":0,', ''), valid.replace(',"sequence":1', '')]
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for i, input in inputs {
 					mut accepted := true
@@ -217,7 +217,7 @@ fn test_stored_state_schema_scanning_retires_owned_keys() {
 					assert accepted == (i == 0)
 				}
 			}
-			if warmup == 1 { kept := C.vinix_heap_end(); println('Stored state scanner: retained ' + kept.str() + ' tracked bytes in 1000 cycles'); assert kept == 0 }
+			if warmup == 1 { kept := C.tulpar_heap_end(); println('Stored state scanner: retained ' + kept.str() + ' tracked bytes in 1000 cycles'); assert kept == 0 }
 		}
 	}
 }

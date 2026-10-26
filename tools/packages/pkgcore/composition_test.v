@@ -6,7 +6,7 @@ import os
 import time
 
 fn composition_fixture() !(string, []CatalogSource) {
-	work := os.real_path(os.temp_dir()) + '/vinix-composition-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-composition-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	mut sources := []CatalogSource{}
 	for profile in ['alpha', 'beta'] {
 		mut imports := []CatalogImport{}
@@ -86,7 +86,7 @@ fn composition_refused(sources []CatalogSource, work string, options CatalogOpti
 	mut denied := false
 	compose_catalog_with(sources, work + '/refused', options) or { denied = err.msg().contains(diagnostic) }
 	assert denied && !os.exists(work + '/refused'), diagnostic
-	assert os.ls(work)!.all(!it.starts_with('.vinix-composition-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-composition-'))
 }
 
 fn composition_no_space(_ string) !u64 { return 0 }
@@ -116,7 +116,7 @@ fn test_composition_refuses_duplicate_packages_profile_ids_targets_space_and_cha
 	os.write_file(sources[1].catalog, valid)!
 	mut raced := false
 	compose_catalog_with(sources, work + '/refused', CatalogOptions{ checkpoint: composition_race }) or { raced = true }
-	assert raced && os.ls(work)!.all(!it.starts_with('.vinix-composition-'))
+	assert raced && os.ls(work)!.all(!it.starts_with('.tulpar-composition-'))
 	assert os.is_dir(work + '/refused') && os.ls(work + '/refused')!.len == 0
 }
 
@@ -141,7 +141,7 @@ fn test_scoped_sources_refuse_traversal_wrong_targets_excessive_depth_and_ancest
 	mut changed := false
 	pack_catalog(composed.catalog, work + '/roots', work + '/changed') or { changed = err.msg().contains('inventory differs') }
 	assert changed && !os.exists(work + '/changed')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-catalog-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-catalog-'))
 }
 
 fn composition_replace_namespace(phase string, stage string) ! {
@@ -264,7 +264,7 @@ fn composition_target_refused(architecture string, sources []CatalogSource, work
 	mut denied := false
 	compose_catalog_for_with(architecture, sources, work + '/refused', options) or { denied = err.msg().contains(diagnostic) }
 	assert denied && !os.exists(work + '/refused'), diagnostic
-	assert os.ls(work)!.all(!it.starts_with('.vinix-composition-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-composition-'))
 }
 
 fn test_selected_composition_validates_full_inputs_before_omitting_other_variants() {
@@ -308,7 +308,7 @@ fn test_selected_composition_refuses_invalid_targets_space_staging_corruption_an
 	mut raced := false
 	compose_catalog_for_with('aarch64', sources, work + '/refused', CatalogOptions{ checkpoint: composition_race }) or { raced = true }
 	assert raced && os.is_dir(work + '/refused') && os.ls(work + '/refused')!.len == 0
-	assert os.ls(work)!.all(!it.starts_with('.vinix-composition-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-composition-'))
 	os.rmdir(work + '/refused')!
 	assert compose_catalog_for('aarch64', sources, work + '/refused')!.package_count == 4
 }
@@ -320,7 +320,7 @@ fn composition_command(argv []string) os.Result {
 }
 
 fn test_selected_composition_cli_matches_api_with_literal_paths_and_refuses_invalid_requests() {
-	cli := os.getenv('VINIX_PACKAGE_COMPOSITION_CLI'); if cli == '' { return }
+	cli := os.getenv('TULPAR_PACKAGE_COMPOSITION_CLI'); if cli == '' { return }
 	work, sources := composition_fixture()!
 	defer { os.rmdir_all(work) or {} }
 	composition_single_target(sources[1], 'aarch64')!

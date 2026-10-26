@@ -27,7 +27,7 @@ fn fixture_policy_review() pkgprotocol.PolicyReview {
 fn software_policy_service_fixture(args []string) !bool {
 	if args[1] == 'policy' {
 		assert args.len == 2
-		path := os.getenv('VINIX_SOFTWARE_POLICY_FIXTURE')
+		path := os.getenv('TULPAR_SOFTWARE_POLICY_FIXTURE')
 		println(if os.exists(path) { os.read_file(path)! } else { json2.encode(fixture_policy_document()) })
 		return true
 	}
@@ -54,7 +54,7 @@ fn software_policy_service_fixture(args []string) !bool {
 		if args[4] == '/stale-policy' { eprintln('organization policy review is stale: configuration, installed state or proposed policy changed; review again'); exit(23) }
 		assert args[4] == policy_fixture_path || args[4].len > 300
 		document := pkgprotocol.PolicyDocument{ format: 1, architecture: 'aarch64', policy: fixture_policy_review().proposed }
-		os.write_file(os.getenv('VINIX_SOFTWARE_POLICY_FIXTURE'), json2.encode(document))!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_POLICY_FIXTURE'), json2.encode(document))!
 		println(json2.encode(document))
 		return true
 	}
@@ -62,9 +62,9 @@ fn software_policy_service_fixture(args []string) !bool {
 }
 
 fn check_software_policy() ! {
-	receipt := os.temp_dir() + '/vinix-software-policy-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_POLICY_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_POLICY_FIXTURE') }
+	receipt := os.temp_dir() + '/tulpar-software-policy-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_POLICY_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_POLICY_FIXTURE') }
 	mut app := SoftwareApp{ administration_required: true, service_path: os.executable(), output: []u8{cap: 8192}, query: []u8{cap: 256} }
 	app.handle('software.deployment')!
 	deployment := app.build(ui2.rect(0, 0, 640, 610))!
@@ -299,7 +299,7 @@ fn check_software_policy_memory() ! {
 		mut app := SoftwareApp{ policy_mode: true, administration_required: true, output: []u8{cap: 8192}, policy_path: long_path.bytes() }
 		unsafe { app.output.flags |= .noslices; app.policy_path.flags |= .noslices }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.output.clear(); for byte in text { app.output << byte }
 				app.load_policy_document()
@@ -319,7 +319,7 @@ fn check_software_policy_memory() ! {
 			}
 			unsafe { app.status.free() }; app.status = ''
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		app.close_app()
 		unsafe { text.free(); review.free(); invalid.free(); long_path.free() }
 		assert kept == 0, 'policy workflow retained ${kept} bytes'

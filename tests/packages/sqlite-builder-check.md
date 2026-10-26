@@ -61,12 +61,12 @@ No kernel code or allocation lifetime changes here.
 
 ```sh
 v -nocache -o /tmp/sqlite-builder-check tests/packages/sqlite-builder-check.v
-VINIX_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
+TULPAR_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
   /tmp/sqlite-builder-check /build/new-sqlite-builder-host
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/sqlite-builder-runtime tests/packages/sqlite-builder-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/sqlite-builder-runtime --arch aarch64 --timeout 900 --kernel /build/aarch64-kernel \
   --state-dir /build/new-sqlite-builder-arm
 ```

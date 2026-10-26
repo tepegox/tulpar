@@ -19,9 +19,9 @@ fn captured_workspace_descriptors() int {
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn captured_workspace_selected(name string) bool {
@@ -31,7 +31,7 @@ fn captured_workspace_selected(name string) bool {
 }
 
 fn captured_workspace_fixture() !string {
-	return os.real_path(os.temp_dir()) + '/vinix-workspace-capture-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	return os.real_path(os.temp_dir()) + '/tulpar-workspace-capture-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 }
 
 fn test_import_workspace_retirement_preserves_replaced_entries_and_retires_all_check_storage() {
@@ -87,7 +87,7 @@ fn test_import_workspace_retirement_preserves_replaced_entries_and_retires_all_c
 			'renamed-parent' { assert C.rename(parent.str, saved.str) == 0; os.mkdir(parent)!; os.write_file(parent + '/keep', 'replacement')! }
 			else {}
 		}
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		if mode == 'ordinary' {
 			work.check()!; work.retire()!
 		} else {
@@ -102,7 +102,7 @@ fn test_import_workspace_retirement_preserves_replaced_entries_and_retires_all_c
 		}
 		work.close(); work.close()
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+			kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			println('IMPORT WORKSPACE CAPTURE case=' + mode + ' retained=' + kept.str() + ' allocations=' + count.str())
 			assert kept == 0 && count == 0
 		}
@@ -122,10 +122,10 @@ fn test_import_workspace_retirement_preserves_replaced_entries_and_retires_all_c
 }
 
 fn captured_workspace_change(phase string, path string) ! {
-	wanted := os.getenv('VINIX_WORKSPACE_PHASE'); defer { unsafe { wanted.free() } }
+	wanted := os.getenv('TULPAR_WORKSPACE_PHASE'); defer { unsafe { wanted.free() } }
 	if phase != wanted { return }
-	os.setenv('VINIX_WORKSPACE_ACTUAL', path, true)
-	site := os.getenv('VINIX_WORKSPACE_SITE'); saved := os.getenv('VINIX_WORKSPACE_SAVED')
+	os.setenv('TULPAR_WORKSPACE_ACTUAL', path, true)
+	site := os.getenv('TULPAR_WORKSPACE_SITE'); saved := os.getenv('TULPAR_WORKSPACE_SAVED')
 	defer { unsafe { site.free(); saved.free() } }
 	if site == 'extra' { os.mkdir(path + '/extra')!; os.write_file(path + '/extra/keep', 'replacement')!; return }
 	if site == 'content' {
@@ -140,7 +140,7 @@ fn captured_workspace_change(phase string, path string) ! {
 
 fn test_public_import_workspace_refuses_namespace_and_manifest_changes_before_and_after_packing() {
 	if !captured_workspace_selected('public') { return }
-	defer { for name in ['PHASE', 'SITE', 'SAVED', 'ACTUAL']! { os.unsetenv('VINIX_WORKSPACE_' + name) } }
+	defer { for name in ['PHASE', 'SITE', 'SAVED', 'ACTUAL']! { os.unsetenv('TULPAR_WORKSPACE_' + name) } }
 	mut cases := 0
 	for phase in ['workspace-created', 'workspace-copied', 'workspace-manifest', 'workspace-packed']! {
 		for site in ['root', 'payload', 'manifest', 'content', 'extra']! {
@@ -151,7 +151,7 @@ fn test_public_import_workspace_refuses_namespace_and_manifest_changes_before_an
 			recipe := RootRecipe{ manifest: Package{ id: 'fixture', name: 'Fixture', version: '1.0.0', architecture: 'all', kind: 'data', license: 'MIT' },
 				entries: [RootEntry{ source: 'data', path: 'data' }] }
 			fd := capture_prepared_root(root, 'test')!; defer { C.close(fd) }
-			os.setenv('VINIX_WORKSPACE_PHASE', phase, true); os.setenv('VINIX_WORKSPACE_SITE', site, true); os.setenv('VINIX_WORKSPACE_SAVED', saved, true)
+			os.setenv('TULPAR_WORKSPACE_PHASE', phase, true); os.setenv('TULPAR_WORKSPACE_SITE', site, true); os.setenv('TULPAR_WORKSPACE_SAVED', saved, true)
 			mut refused := false
 			pack_root_descriptor_with(recipe, fd, repository, false, PackSourceOptions{ checkpoint: captured_workspace_change }) or {
 				message := err.msg(); assert message.contains('private import cleanup refused'), message
@@ -161,8 +161,8 @@ fn test_public_import_workspace_refuses_namespace_and_manifest_changes_before_an
 			assert refused && os.read_file(root + '/data')! == 'source'
 			manifest := repository + '/manifests/fixture-all-1.0.0.json'
 			assert os.exists(manifest) == (phase == 'workspace-packed')
-			actual := os.getenv('VINIX_WORKSPACE_ACTUAL')
-			assert actual.starts_with(os.real_path(os.temp_dir()) + '/vinix-pack-root-' + os.getpid().str() + '-')
+			actual := os.getenv('TULPAR_WORKSPACE_ACTUAL')
+			assert actual.starts_with(os.real_path(os.temp_dir()) + '/tulpar-pack-root-' + os.getpid().str() + '-')
 			if site == 'root' { assert os.read_file(actual + '/keep')! == 'replacement' && os.is_dir(saved + '/payload') }
 			if site == 'payload' { assert os.read_file(actual + '/payload/keep')! == 'replacement' && os.is_dir(saved) }
 			if site == 'manifest' { assert os.read_file(actual + '/manifest.json/keep')! == 'replacement' && os.read_file(saved)!.contains('Fixture') }
@@ -170,7 +170,7 @@ fn test_public_import_workspace_refuses_namespace_and_manifest_changes_before_an
 			if site == 'extra' { assert os.read_file(actual + '/extra/keep')! == 'replacement' }
 			// Only remove this fixture's explicitly retained random workspace.
 			os.rmdir_all(actual)!
-			os.unsetenv('VINIX_WORKSPACE_PHASE')
+			os.unsetenv('TULPAR_WORKSPACE_PHASE')
 			mut retried := pack_root_descriptor(recipe, fd, repository, false)!
 			assert retried.name == 'Fixture' && retried.files.len == 1 && retried.files[0].sha256 == index_digest('source')
 			retried.close(); retried.close(); cases++
@@ -201,8 +201,8 @@ fn test_import_workspace_creation_refusal_closes_captures_and_names_retained_rec
 	C.close(descriptors[held - 1]); C.close(descriptors[held - 2]); held -= 2
 	defer { for index in 0 .. held { C.close(descriptors[index]) } }
 	before := captured_workspace_descriptors()
-	expected := 'cannot initialize private import workspace at ' + parent + '/vinix-pack-root-'
-	$if track_heap ? { C.vinix_heap_begin() }
+	expected := 'cannot initialize private import workspace at ' + parent + '/tulpar-pack-root-'
+	$if track_heap ? { C.tulpar_heap_begin() }
 	mut refused := false
 	if created := create_import_workspace_at(parent) {
 		mut unexpected := created; unexpected.close()
@@ -213,7 +213,7 @@ fn test_import_workspace_creation_refusal_closes_captures_and_names_retained_rec
 	}
 	assert refused
 	$if track_heap ? {
-		kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+		kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 		println('IMPORT WORKSPACE CAPTURE case=creation-refusal retained=' + kept.str() + ' allocations=' + count.str())
 		assert kept == 0 && count == 0
 	}

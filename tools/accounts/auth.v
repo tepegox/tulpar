@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2026 Alexander Medvednikov
 //
-// vinix-auth: ask the authentication service for something, from a
+// tulpar-auth: ask the authentication service for something, from a
 // terminal or a script.
 //
-//	vinix-auth info                     who the service takes you for
-//	vinix-auth verify [USER]            check a password
-//	vinix-auth passwd                   change your own password
-//	vinix-auth describe ACTION          what an action is and whether you may
-//	vinix-auth run ACTION [ARGUMENT...] do something as root, if allowed
+//	tulpar-auth info                     who the service takes you for
+//	tulpar-auth verify [USER]            check a password
+//	tulpar-auth passwd                   change your own password
+//	tulpar-auth describe ACTION          what an action is and whether you may
+//	tulpar-auth run ACTION [ARGUMENT...] do something as root, if allowed
 //
 // Passwords are read from the terminal without echo, or, when standard
 // input is not a terminal, one per line from it. `run --input` reads one
@@ -35,7 +35,7 @@ mut:
 }
 
 fn socket_path() string {
-	override := os.getenv('VINIX_AUTH_SOCKET')
+	override := os.getenv('TULPAR_AUTH_SOCKET')
 	return if override != '' { override } else { authclient.default_socket }
 }
 
@@ -67,7 +67,7 @@ fn read_secret(prompt string) []u8 {
 }
 
 fn usage() {
-	eprintln('usage: vinix-auth info | verify [USER] | passwd | describe ACTION | run [--input] ACTION [ARGUMENT...]')
+	eprintln('usage: tulpar-auth info | verify [USER] | passwd | describe ACTION | run [--input] ACTION [ARGUMENT...]')
 	exit(2)
 }
 
@@ -77,19 +77,19 @@ fn finish(reply authproto.Frame) {
 			exit(0)
 		}
 		authproto.status_wait {
-			eprintln('vinix-auth: too many wrong passwords; try again in ${reply.text(0)} seconds')
+			eprintln('tulpar-auth: too many wrong passwords; try again in ${reply.text(0)} seconds')
 			exit(3)
 		}
 		authproto.status_invalid {
-			eprintln('vinix-auth: ${reply.text(0)}')
+			eprintln('tulpar-auth: ${reply.text(0)}')
 			exit(2)
 		}
 		authproto.status_denied {
-			eprintln('vinix-auth: denied')
+			eprintln('tulpar-auth: denied')
 			exit(1)
 		}
 		else {
-			eprintln('vinix-auth: failed${if reply.text(0) != '' {
+			eprintln('tulpar-auth: failed${if reply.text(0) != '' {
 				': ' + reply.text(0)
 			} else {
 				''
@@ -101,11 +101,11 @@ fn finish(reply authproto.Frame) {
 
 fn own_name() string {
 	reply := authclient.ask(socket_path(), authproto.op_info) or {
-		eprintln('vinix-auth: ${err.msg()}')
+		eprintln('tulpar-auth: ${err.msg()}')
 		exit(1)
 	}
 	if reply.code != authproto.status_ok {
-		eprintln('vinix-auth: the service does not know this account')
+		eprintln('tulpar-auth: the service does not know this account')
 		exit(1)
 	}
 	return reply.text(0)
@@ -119,7 +119,7 @@ fn main() {
 	match args[0] {
 		'info' {
 			reply := authclient.ask(socket_path(), authproto.op_info) or {
-				eprintln('vinix-auth: ${err.msg()}')
+				eprintln('tulpar-auth: ${err.msg()}')
 				exit(1)
 			}
 			if reply.code == authproto.status_ok {
@@ -133,7 +133,7 @@ fn main() {
 			name := if args.len > 1 { args[1] } else { own_name() }
 			password := read_secret('Password for ${name}: ')
 			reply := authclient.ask(socket_path(), authproto.op_verify, name.bytes(), password) or {
-				eprintln('vinix-auth: ${err.msg()}')
+				eprintln('tulpar-auth: ${err.msg()}')
 				exit(1)
 			}
 			finish(reply)
@@ -145,17 +145,17 @@ fn main() {
 			if C.isatty(0) == 1 {
 				again := read_secret('New password again: ')
 				if again != new {
-					eprintln('vinix-auth: the two do not match')
+					eprintln('tulpar-auth: the two do not match')
 					exit(2)
 				}
 			}
 			reply := authclient.ask(socket_path(), authproto.op_change_password, name.bytes(),
 				old, new) or {
-				eprintln('vinix-auth: ${err.msg()}')
+				eprintln('tulpar-auth: ${err.msg()}')
 				exit(1)
 			}
 			if reply.code == authproto.status_ok {
-				eprintln('vinix-auth: password changed')
+				eprintln('tulpar-auth: password changed')
 			}
 			finish(reply)
 		}
@@ -164,7 +164,7 @@ fn main() {
 				usage()
 			}
 			reply := authclient.ask(socket_path(), authproto.op_describe, args[1].bytes()) or {
-				eprintln('vinix-auth: ${err.msg()}')
+				eprintln('tulpar-auth: ${err.msg()}')
 				exit(1)
 			}
 			if reply.code == authproto.status_ok {
@@ -185,14 +185,14 @@ fn main() {
 				usage()
 			}
 			described := authclient.ask(socket_path(), authproto.op_describe, rest[0].bytes()) or {
-				eprintln('vinix-auth: ${err.msg()}')
+				eprintln('tulpar-auth: ${err.msg()}')
 				exit(1)
 			}
 			if described.code != authproto.status_ok {
 				finish(described)
 			}
 			if described.text(1) != '1' {
-				eprintln('vinix-auth: ${described.text(0)}: not permitted for this account')
+				eprintln('tulpar-auth: ${described.text(0)}: not permitted for this account')
 				exit(1)
 			}
 			mut password := []u8{}
@@ -206,7 +206,7 @@ fn main() {
 				fields << argument.bytes()
 			}
 			reply := authclient.ask(socket_path(), authproto.op_run, ...fields) or {
-				eprintln('vinix-auth: ${err.msg()}')
+				eprintln('tulpar-auth: ${err.msg()}')
 				exit(1)
 			}
 			if reply.code == authproto.status_ok || (reply.code == authproto.status_failed

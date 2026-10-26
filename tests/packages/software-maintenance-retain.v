@@ -36,8 +36,8 @@ fn exact_marker(transcript string, marker string) ! {
 fn proposal(line string, arch string, key string, operation string, version string,
 	previous string, generation int, action string) ! {
 	review := json2.decode[json2.Any](line.all_after('SOFTWARE MAINTENANCE PROPOSAL '))!.as_map()
-	names := if operation in ['install', 'remove'] { ['org.vinix.counter'] } else { []string{} }
-	roots := if operation == 'remove' { []string{} } else { ['org.vinix.counter'] }
+	names := if operation in ['install', 'remove'] { ['org.tulpar.counter'] } else { []string{} }
+	roots := if operation == 'remove' { []string{} } else { ['org.tulpar.counter'] }
 	if review['operation']!.str() != operation || review['architecture']!.str() != arch ||
 		review['generation']! != json2.Any(f64(generation)) ||
 		review['fingerprint']!.str().len != 64 || review['rows']!.as_array().len != 1 ||
@@ -47,7 +47,7 @@ fn proposal(line string, arch string, key string, operation string, version stri
 		return error('maintenance proposal differs from the exact complete package set or generation')
 	}
 	row := review['rows']!.as_array()[0].as_map()
-	if row['id']!.str() != 'org.vinix.counter' || row['version']!.str() != version ||
+	if row['id']!.str() != 'org.tulpar.counter' || row['version']!.str() != version ||
 		row['installed_version']!.str() != previous || row['architecture']!.str() != arch ||
 		row['kind']!.str() != 'native' || row['repository']!.str() != 'native' ||
 		row['public_key']!.str() != key || row['license']!.str() != 'MIT' ||
@@ -186,11 +186,11 @@ fn retain() ! {
 	}
 	mut paths := {
 		'controller': os.abs_path(os.args[4])
-		'desktop': build + '/vinix-desktop'
+		'desktop': build + '/tulpar-desktop'
 		'desktop-build': run + '/desktop-build.json'
 		'desktop-build-original': build + '/desktop-build.json'
 		'kernel': os.abs_path(os.args[3])
-		'config': run + '/rootfs/etc/vinix-packages/config.json'
+		'config': run + '/rootfs/etc/tulpar-packages/config.json'
 		'initramfs': run + '/initramfs.tar'
 		'serial': run + '/serial.log'
 		'serial-2': run + '/serial-2.log'
@@ -210,7 +210,7 @@ fn retain() ! {
 	for name in ['software-maintenance-check.v', 'software-graphical-build.v'] { paths['source/' + name] = run + '/source/' + name }
 	for name in ['main.v', 'installed.v', 'maintenance.v'] { paths['source/guest/' + name] = run + '/source/guest/' + name }
 	for name, location in {
-		'repository': '/usr/share/vinix-packages/repositories/native'
+		'repository': '/usr/share/tulpar-packages/repositories/native'
 		'repository-newer': '/usr/share/software-maintenance-release-1.1.0'
 	} {
 		base := run + '/rootfs' + location
@@ -254,12 +254,12 @@ fn retain() ! {
 		return error('maintenance compositor differs from the frozen c035 first-run snapshot')
 	}
 	manifest := json2.decode[map[string]string](os.read_file(build + '/desktop-build.json')!)!
-	if manifest['vinix-desktop'] != receipt.artifacts['desktop'] { return error('desktop receipt does not bind the qualified executable') }
+	if manifest['tulpar-desktop'] != receipt.artifacts['desktop'] { return error('desktop receipt does not bind the qualified executable') }
 	mut source_count := 0
 	for name, expected in manifest {
 		if name in ['compiler', 'repository-head'] { continue }
 		if name.starts_with('/') || '..' in name.split('/') { return error('desktop manifest contains an invalid path') }
-		input := build + if name.starts_with('app/') || name == 'vinix-desktop' { '/' + name } else { '/source/' + name }
+		input := build + if name.starts_with('app/') || name == 'tulpar-desktop' { '/' + name } else { '/source/' + name }
 		if digest(input)! != expected { return error('qualified frozen desktop input differs: ' + name) }
 		source_count++
 	}

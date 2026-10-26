@@ -1,6 +1,6 @@
 .section .rodata
 message:
-    .ascii "VINIX X86_64 TRANSLATION: PASS\n"
+    .ascii "TULPAR X86_64 TRANSLATION: PASS\n"
 .set message_length, . - message
 
 .section .text

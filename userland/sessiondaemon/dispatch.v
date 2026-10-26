@@ -204,7 +204,7 @@ fn session_handle_dialog_take(mut daemon SessionDaemon, mut request SessionReque
 
 fn session_handle_services(mut daemon SessionDaemon, mut _ SessionRequest) !string {
 	mut w := sessioncore.Writer{}
-	w.add('vinix-service-status\t1\n')
+	w.add('tulpar-service-status\t1\n')
 	for i in 0 .. daemon.supervisor.count {
 		v := daemon.supervisor.services[i]
 		w.add('service\t')
@@ -359,7 +359,7 @@ fn session_handle_settings_set(mut daemon SessionDaemon, mut request SessionRequ
 fn session_handle_policy_set(mut daemon SessionDaemon, mut request SessionRequest) !string {
 	mut message := unsafe { &request.message }
 	new_policy := sessioncore.decode_policy(message.fields[1].str())!
-	path := '${daemon.home}/.vinix-shell-policy'
+	path := '${daemon.home}/.tulpar-shell-policy'
 	record := new_policy.encode()
 	defer {
 		unsafe {
@@ -450,7 +450,7 @@ fn session_handle_service_import(mut daemon SessionDaemon, mut request SessionRe
 	candidate.count++
 	candidate.validate()!
 	record := candidate.encode()
-	config := '${daemon.home}/.vinix-services'
+	config := '${daemon.home}/.tulpar-services'
 	defer {
 		unsafe {
 			record.free()
@@ -492,7 +492,7 @@ fn session_handle_service_remove(mut daemon SessionDaemon, mut request SessionRe
 	}
 	candidate.validate()!
 	record := candidate.encode()
-	config := '${daemon.home}/.vinix-services'
+	config := '${daemon.home}/.tulpar-services'
 	defer {
 		unsafe {
 			record.free()

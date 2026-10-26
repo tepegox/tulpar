@@ -96,10 +96,10 @@ pub:
 	greeter_fallback []string // tried in the same child only if execve fails
 	desktop_fallback []string
 	socket  string = authclient.default_socket
-	system  string = '/usr/sbin/vinix-system'
+	system  string = '/usr/sbin/tulpar-system'
 	// Started in each new session with the password that was typed, to
 	// open the account's credential store. Not started if it is not there.
-	keyring []string = ['/usr/bin/vinix-keyring', 'daemon', '--unlock-stdin']
+	keyring []string = ['/usr/bin/tulpar-keyring', 'daemon', '--unlock-stdin']
 }
 
 struct Session {
@@ -277,13 +277,13 @@ fn (mut m Manager) greet() (accountcore.User, []u8) {
 	for {
 		if manager_signal != 0 { return accountcore.User{}, []u8{} }
 		mut db := load_accounts() or {
-			report_manager_error(err, 'vinix-session: ')
+			report_manager_error(err, 'tulpar-session: ')
 			C.usleep(2_000_000)
 			continue
 		}
 		defer { db.close() }
 		greeter := db.user('greeter') or {
-			eprintln('vinix-session: there is no greeter account; run vinix-account init')
+			eprintln('tulpar-session: there is no greeter account; run tulpar-account init')
 			C.usleep(2_000_000)
 			continue
 		}
@@ -300,7 +300,7 @@ fn (mut m Manager) greet() (accountcore.User, []u8) {
 		}
 		mark_active('')
 		started := start_fallback(db, greeter, m.config.greeter, m.config.greeter_fallback, true, int(line[1]), Unlock{}) or {
-			report_manager_error(err, 'vinix-session: the login screen could not be started: ')
+			report_manager_error(err, 'tulpar-session: the login screen could not be started: ')
 			C.close(line[0])
 			C.close(line[1])
 			C.usleep(2_000_000)
@@ -389,7 +389,7 @@ fn (mut m Manager) prepare_session(user accountcore.User, typed []u8) ?int {
 		// Theirs was waiting. The seat first: a continued process may use
 		// the display at once.
 		give_seat(m.sessions[index].session) or {
-			report_manager_error(err, 'vinix-session: ')
+			report_manager_error(err, 'tulpar-session: ')
 			return none
 		}
 		mark_active_uid(user.uid)
@@ -397,7 +397,7 @@ fn (mut m Manager) prepare_session(user accountcore.User, typed []u8) ?int {
 		signal_session(m.sessions[index].session, C.SIGCONT)
 	} else {
 		mut db := load_accounts() or {
-			report_manager_error(err, 'vinix-session: ')
+			report_manager_error(err, 'tulpar-session: ')
 			return none
 		}
 		defer { db.close() }
@@ -415,7 +415,7 @@ fn (mut m Manager) prepare_session(user accountcore.User, typed []u8) ?int {
 			secret: typed
 			helper: m.config.keyring
 		}) or {
-			report_manager_error(err, 'vinix-session: ')
+			report_manager_error(err, 'tulpar-session: ')
 			C.close(line[0])
 			C.close(line[1])
 			return none
@@ -539,7 +539,7 @@ pub fn run_manager(config ManagerConfig) {
 		what := if manager_signal == C.SIGTERM { 'restart' } else { 'off' }
 		os.execvp(config.system, ['power', what]) or {
 			discard_manager_error(err)
-			eprintln('vinix-session: power request failed')
+			eprintln('tulpar-session: power request failed')
 		}
 	}
 }

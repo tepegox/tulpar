@@ -35,7 +35,7 @@ V, Clang, LLVM (`ld.lld`, `llvm-ar`, `llvm-objcopy`), make and patch
 are needed to obtain a loader. `get-loader` downloads the same repository
 pinned Limine 12.9.3 source archive as `scripts/build-limine-aarch64.sh`, checks its
 SHA-256 before extraction, and builds the UEFI port for either architecture.
-For aarch64 it applies the existing Vinix protocol base revision 2 patch.
+For aarch64 it applies the existing Tulpar protocol base revision 2 patch.
 An offline archive may be supplied with `--source-archive`.
 
 ```sh
@@ -45,13 +45,13 @@ tools/verified-boot/get-loader --arch aarch64 --output build/verified-limine-aar
 
 Use a privately held PEM signing key and a PEM X.509 certificate. The operator
 must arrange firmware trust enrollment; these tools never change firmware keys.
-Build the Vinix kernel and root archive with the existing architecture builder,
+Build the Tulpar kernel and root archive with the existing architecture builder,
 then assemble a new bundle:
 
 ```sh
 tools/verified-boot/build build --arch x86_64 \
     --loader build/verified-limine-x86_64/BOOTX64.EFI \
-    --kernel build-amd64-kernel/bin/vinix \
+    --kernel build-amd64-kernel/bin/tulpar \
     --initramfs build-amd64-userland/initramfs.tar \
     --key /private/signing/db.key --certificate /private/signing/db.crt \
     --output build/verified-boot-x86_64
@@ -75,7 +75,7 @@ filesystem. Add `--verity-root IMAGE`, `--verity-device /dev/vda`,
 `--verity-data-blocks N` and `--verity-root-hash HASH` to the build command.
 The count and hash must be trusted outputs of that local build, supplied
 separately from the image being checked. The builder fully verifies the copied
-image, then generates the canonical `vinix.verity=1,DEVICE,N,HASH` token inside
+image, then generates the canonical `tulpar.verity=1,DEVICE,N,HASH` token inside
 the enrolled configuration. Supplying it manually through `--cmdline` is
 rejected. The authenticated initramfs remains a bootstrap module; the verified
 device supplies the system files. The image is included as
@@ -118,14 +118,14 @@ to configuration, kernel and initramfs bytes. They never use simulated signing.
 The QEMU runtime test compiles a small Limine protocol fixture kernel that
 requires the module response, then boots the real loader. It tests successful
 handoff and rejection of modified config, kernel and initramfs. It is a
-bootloader enforcement test; the fixture is not the Vinix kernel.
+bootloader enforcement test; the fixture is not the Tulpar kernel.
 
 ```sh
 tests/verified-boot/runtime --arch x86_64 \
     --loader build/verified-limine-x86_64/BOOTX64.EFI \
     --firmware-code /path/to/edk2-x86_64-secure-code.fd \
     --firmware-vars /path/to/edk2-i386-vars.fd \
-    --logs /tmp/vinix-verified-x86_64 \
+    --logs /tmp/tulpar-verified-x86_64 \
     --secure-boot --backend osslsigncode
 ```
 
@@ -170,7 +170,7 @@ policy. `verifiedhost` builds independent fixtures, owns QEMU process groups,
 mutates live roots only after the matching READY marker, and retires temporary
 firmware copies after the child has exited.
 
-`VINIX_AARCH64_SYSROOT` and `VINIX_AMD64_SYSROOT` select the fixture compiler
+`TULPAR_AARCH64_SYSROOT` and `TULPAR_AMD64_SYSROOT` select the fixture compiler
 headers; both `include` and `usr/include` sysroot layouts are supported.
 [Native qualification](../../tests/verified-boot/native-tools.md) records host,
 real signature, firmware and kernel guest evidence separately.

@@ -1,24 +1,24 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Copyright (c) 2026 Alexander Medvednikov
 //
-// vinix-account: the administrator's tool for the account database. It is
+// tulpar-account: the administrator's tool for the account database. It is
 // run by root -- at boot, by an installer, or by the authentication service
 // on behalf of an administrator who gave their password -- and does no
 // authentication of its own.
 //
-//	vinix-account init                   the accounts every system has, and
+//	tulpar-account init                   the accounts every system has, and
 //	                                     the person registered before there
 //	                                     were accounts, if any
-//	vinix-account add [--admin] NAME [FULL-NAME [admin|standard]]
+//	tulpar-account add [--admin] NAME [FULL-NAME [admin|standard]]
 //	                                     the password, if any, on standard input
-//	vinix-account remove [--remove-home] NAME
-//	vinix-account passwd NAME            the new password on standard input
-//	vinix-account admin NAME on|off
-//	vinix-account lock NAME on|off
-//	vinix-account rename NAME FULL-NAME
-//	vinix-account make-home NAME
-//	vinix-account list
-//	vinix-account check
+//	tulpar-account remove [--remove-home] NAME
+//	tulpar-account passwd NAME            the new password on standard input
+//	tulpar-account admin NAME on|off
+//	tulpar-account lock NAME on|off
+//	tulpar-account rename NAME FULL-NAME
+//	tulpar-account make-home NAME
+//	tulpar-account list
+//	tulpar-account check
 //
 // `--root DIR` before the command works on the system installed under DIR.
 module main
@@ -40,7 +40,7 @@ fn C.sync()
 // The folders a home starts with.
 const home_folders = ['Desktop', 'Documents', 'Downloads', 'Music', 'Pictures', 'Videos']
 // Where the desktop kept the one registered person's record and folders.
-const registration_record = '/root/.vinix-user'
+const registration_record = '/root/.tulpar-user'
 const legacy_homes = '/root/home'
 
 struct Tool {
@@ -50,12 +50,12 @@ struct Tool {
 }
 
 fn fail(message string) {
-	eprintln('vinix-account: ${message}')
+	eprintln('tulpar-account: ${message}')
 	exit(1)
 }
 
 fn usage() {
-	eprintln('usage: vinix-account [--root DIR] init | add [--admin] NAME [FULL-NAME [admin|standard]] | remove [--remove-home] NAME | passwd NAME | admin NAME on|off | lock NAME on|off | rename NAME FULL-NAME | make-home NAME | list | check')
+	eprintln('usage: tulpar-account [--root DIR] init | add [--admin] NAME [FULL-NAME [admin|standard]] | remove [--remove-home] NAME | passwd NAME | admin NAME on|off | lock NAME on|off | rename NAME FULL-NAME | make-home NAME | list | check')
 	exit(2)
 }
 
@@ -131,7 +131,7 @@ fn (t Tool) attach_legacy_homes() {
 	$if linux {
 		// MS_BIND.
 		if C.mount(c'/root/home', c'/home', c'', u64(4096), unsafe { nil }) != 0 {
-			eprintln('vinix-account: cannot mount ${legacy_homes} on /home')
+			eprintln('tulpar-account: cannot mount ${legacy_homes} on /home')
 		}
 	}
 }
@@ -157,16 +157,16 @@ fn (t Tool) init() ! {
 			}
 			imported = name
 		} else {
-			eprintln('vinix-account: ${record_path} is not a registration record; ignored')
+			eprintln('tulpar-account: ${record_path} is not a registration record; ignored')
 		}
 	}
 	t.store.save(db)!
 	t.attach_legacy_homes()
 	for user in db.people() {
-		t.make_home(user) or { eprintln('vinix-account: ${err.msg()}') }
+		t.make_home(user) or { eprintln('tulpar-account: ${err.msg()}') }
 	}
 	if imported != '' {
-		println('vinix-account: ${imported} is now an account, with the password it was registered with')
+		println('tulpar-account: ${imported} is now an account, with the password it was registered with')
 	}
 	C.sync()
 }
@@ -283,7 +283,7 @@ fn main() {
 		usage()
 	}
 	if C.geteuid() != 0 && root == '' {
-		fail('only root may change accounts; ask through vinix-auth')
+		fail('only root may change accounts; ask through tulpar-auth')
 	}
 	tool := Tool{
 		root:  root
@@ -291,7 +291,7 @@ fn main() {
 			etc:   root + '/etc'
 			owned: C.geteuid() == 0
 		}
-		cost:  accountcore.configured_cost(root + '/etc/vinix/auth.conf', C.geteuid() == 0) or {
+		cost:  accountcore.configured_cost(root + '/etc/tulpar/auth.conf', C.geteuid() == 0) or {
 			fail(err.msg())
 			return
 		}
@@ -354,7 +354,7 @@ fn main() {
 		}
 		'check' {
 			tool.store.load() or { fail(err.msg()) }
-			println('vinix-account: the account database is consistent')
+			println('tulpar-account: the account database is consistent')
 		}
 		else {
 			usage()

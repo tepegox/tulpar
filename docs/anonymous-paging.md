@@ -63,7 +63,7 @@ stopped until translation and instruction-cache updates finish.
 
 `sysinfo(2)` and `/proc/meminfo` report actual disk capacity/free space.
 `Zswap` reports compressed payload bytes and `Zswapped` their uncompressed size;
-`VinixPageouts`, `VinixRefaults` and `VinixSwapErrors` count completed stores,
+`TulparPageouts`, `TulparRefaults` and `TulparSwapErrors` count completed stores,
 loads and storage failures. These global counters do not provide per-process
 swap accounting. Compression/backing metadata is not yet charged to cgroups.
 

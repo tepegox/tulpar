@@ -106,7 +106,7 @@ fn heap_benchmark_report(phase &char, sample int, operations u64, ticks u64,
 		C.printf_benchmark(c'heap-bench: allocator=xnu-zone phase=%s sample=%u operations=%llu ticks=%llu ticks_per_op=%llu checksum=%llx\n',
 			phase, sample, operations, ticks, ticks / operations, checksum)
 	} $else {
-		C.printf_benchmark(c'heap-bench: allocator=vinix-bitmap phase=%s sample=%u operations=%llu ticks=%llu ticks_per_op=%llu checksum=%llx\n',
+		C.printf_benchmark(c'heap-bench: allocator=tulpar-bitmap phase=%s sample=%u operations=%llu ticks=%llu ticks_per_op=%llu checksum=%llx\n',
 			phase, sample, operations, ticks, ticks / operations, checksum)
 	}
 }
@@ -158,7 +158,7 @@ pub fn heap_benchmark() {
 		C.printf_benchmark(c'heap-bench: allocator=xnu-zone phase=memory cache_bytes=%llu burst_retained_bytes=%llu trim_released_bytes=%llu unreclaimed_bytes=%llu\n',
 			cache_bytes, retained, released, unreclaimed)
 	} $else {
-		C.printf_benchmark(c'heap-bench: allocator=vinix-bitmap phase=memory cache_bytes=%llu burst_retained_bytes=%llu trim_released_bytes=%llu unreclaimed_bytes=%llu\n',
+		C.printf_benchmark(c'heap-bench: allocator=tulpar-bitmap phase=memory cache_bytes=%llu burst_retained_bytes=%llu trim_released_bytes=%llu unreclaimed_bytes=%llu\n',
 			cache_bytes, retained, released, unreclaimed)
 	}
 	C.printf_benchmark(c'heap-bench: done\n')

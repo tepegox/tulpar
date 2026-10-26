@@ -12,7 +12,7 @@ fn qualify_empty_package_deployment(mut t Test, db accountcore.Database, alex ac
 	store := pkgcore.state_directory('')
 	before := service.state()!
 	state_text := os.read_file(store + '/current/state.json')!
-	config_path := '/etc/vinix-packages/config.json'
+	config_path := '/etc/tulpar-packages/config.json'
 	config_text := os.read_file(config_path)!
 	config := pkgcore.load_config('')!
 	catalog := os.read_file(store + '/catalog.json')!
@@ -24,8 +24,8 @@ fn qualify_empty_package_deployment(mut t Test, db accountcore.Database, alex ac
 	os.write_file(store + '/trust-history.json', '{unavailable history')!
 	os.rename(store + '/objects', store + '/objects-empty-saved')!
 	os.mkdir(store + '/objects', mode: 0o700)!
-	data := '/home/alex/.local/share/vinix-apps/admin-fixture'
-	for directory in ['/home/alex/.local', '/home/alex/.local/share', '/home/alex/.local/share/vinix-apps', data] {
+	data := '/home/alex/.local/share/tulpar-apps/admin-fixture'
+	for directory in ['/home/alex/.local', '/home/alex/.local/share', '/home/alex/.local/share/tulpar-apps', data] {
 		os.mkdir(directory, mode: 0o700)!
 		os.chown(directory, int(alex.uid), int(alex.gid))!
 	}
@@ -37,7 +37,7 @@ fn qualify_empty_package_deployment(mut t Test, db accountcore.Database, alex ac
 		os.write_file(path, '{"format":${format},"architecture":"${config.architecture}","packages":[]' + if format == 2 { ',"locked":[]}' } else { '}' })!
 		os.chmod(path, 0o644)!
 		for user in [alex, sam] {
-			response := run(['/usr/bin/vinix-package', 'deployment-review', path], '', db, user)
+			response := run(['/usr/bin/tulpar-package', 'deployment-review', path], '', db, user)
 			assert response.status == 0, response.output
 			mut view := pkgprotocol.decode_review(response.output)!
 			assert view.generation == before.generation && view.requested.len == 0 && view.rows.len == 1
@@ -48,7 +48,7 @@ fn qualify_empty_package_deployment(mut t Test, db accountcore.Database, alex ac
 		}
 		assert service.state()! == before && os.read_file(store + '/current/state.json')! == state_text
 	}
-	command := ['/usr/bin/vinix-package', 'admin', '--progress', 'deployment-apply', fingerprint, path]
+	command := ['/usr/bin/tulpar-package', 'admin', '--progress', 'deployment-apply', fingerprint, path]
 	standard := run(command, sam_password + '\n', db, sam)
 	assert standard.status != 0 && standard.output.contains('cannot approve'), standard.output
 	wrong := run(command, 'wrong password\n', db, alex)
@@ -71,7 +71,7 @@ fn qualify_empty_package_deployment(mut t Test, db accountcore.Database, alex ac
 	os.write_file(store + '/catalog.json', catalog)!; os.write_file(store + '/trust-history.json', history)!
 	mut rollback := service.review('rollback', [])!
 	defer { rollback.close() }
-	restored := run(['/usr/bin/vinix-package', 'admin', 'apply', rollback.fingerprint, 'rollback'], alex_password + '\n', db, alex)
+	restored := run(['/usr/bin/tulpar-package', 'admin', 'apply', rollback.fingerprint, 'rollback'], alex_password + '\n', db, alex)
 	assert restored.status == 0 && service.verify()!.packages == before.packages, restored.output
 	assert os.ls(store + '/objects')!.len == 0 && os.read_file(data + '/empty-retained')! == 'retain private application data'
 	os.rmdir(store + '/objects')!

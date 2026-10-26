@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Alexander Medvednikov
 module sys
 
-// Time syscalls the Linux ABI expects that the Vinix-native set never had.
+// Time syscalls the Linux ABI expects that the Tulpar-native set never had.
 
 import errno
 import event

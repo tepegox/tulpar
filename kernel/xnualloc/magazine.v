@@ -63,7 +63,7 @@
 @[manualfree]
 module xnualloc
 
-// Data-structure translations used by zone.v and its opt-in Vinix adapter.
+// Data-structure translations used by zone.v and its opt-in Tulpar adapter.
 // Callers supply CPU pinning, locks, ownership transitions, refill, accounting
 // and safe reclamation. No SMR grace-period implementation is hidden behind
 // a successful stub. Depot polling requires an explicit poll callback when

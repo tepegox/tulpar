@@ -71,7 +71,7 @@ fn check(work string, mode string, arm bool, verdict int) {
 
 fn main() {
 	if os.args.len > 1 && os.args[1] == '--child' { child(os.args[2]); return }
-	work := hosttest.work_dir('', 'vinix-powercut-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-powercut-check-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	baseline := descriptors()
 	for arm in [true, false] {

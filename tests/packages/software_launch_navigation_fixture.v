@@ -35,7 +35,7 @@ fn fill_launch_navigation_draft(mut app SoftwareApp, files []string) ! {
 }
 
 fn software_launch_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_LAUNCH_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_LAUNCH_NAVIGATION')
 	if mode == '' || args.len < 2 || args[1] != 'run-args' { return false }
 	mut words := pkgprotocol.command_words(launch_navigation_arguments)!
 	files := launch_navigation_files()
@@ -44,7 +44,7 @@ fn software_launch_navigation_service_fixture(args []string) !bool {
 	assert args[1..] == expected
 	println('Application is running with the frozen literal command.'); flush_stdout()
 	mut release := u8(0); assert C.read(0, &release, 1) == 1
-	os.write_file(os.getenv('VINIX_SOFTWARE_LAUNCH_NAVIGATION_RECEIPT'), json2.encode(args[1..]))!
+	os.write_file(os.getenv('TULPAR_SOFTWARE_LAUNCH_NAVIGATION_RECEIPT'), json2.encode(args[1..]))!
 	if mode == 'failed' { eprintln('Granted file is unavailable to the ordinary account. Correct file access and retry.'); exit(27) }
 	println('Application finished successfully.')
 	return true
@@ -197,7 +197,7 @@ fn check_software_launch_reader() ! {
 	app.key_input('\x08'); app.handle('software.launch.data-cwd')!
 	app.handle('software.report.read')!
 	private := launch_reader_text(&app)
-	assert private.contains('~/.local/share/vinix-apps/launch-app') && private.contains('Entered file path (not yet granted): (empty)')
+	assert private.contains('~/.local/share/tulpar-apps/launch-app') && private.contains('Entered file path (not yet granted): (empty)')
 	unsafe { private.free() }; app.key_input('\x1b')
 	app.handle('software.launch.back')!; app.selected = 1; app.handle('software.run-options')!
 	app.handle('software.report.read')!
@@ -211,9 +211,9 @@ fn check_software_launch_reader() ! {
 
 fn check_software_launch_navigation() ! {
 	check_software_launch_reader()!
-	receipt := os.temp_dir() + '/vinix-launch-navigation-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_LAUNCH_NAVIGATION_RECEIPT', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_LAUNCH_NAVIGATION'); os.unsetenv('VINIX_SOFTWARE_LAUNCH_NAVIGATION_RECEIPT') }
+	receipt := os.temp_dir() + '/tulpar-launch-navigation-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_LAUNCH_NAVIGATION_RECEIPT', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_LAUNCH_NAVIGATION'); os.unsetenv('TULPAR_SOFTWARE_LAUNCH_NAVIGATION_RECEIPT') }
 	files := launch_navigation_files()
 	defer { unsafe { (&array(&files)).free() } }
 	mut words := pkgprotocol.command_words(launch_navigation_arguments)!
@@ -261,7 +261,7 @@ fn check_software_launch_navigation() ! {
 	app.key_input('\x01'); app.paste_input(launch_navigation_arguments); app.key_input('\r')
 	assert app.launch_focus == 0 && !app.select_all
 	for mode in ['failed', 'complete']! {
-		os.setenv('VINIX_SOFTWARE_LAUNCH_NAVIGATION', mode, true)
+		os.setenv('TULPAR_SOFTWARE_LAUNCH_NAVIGATION', mode, true)
 		app.handle('software.launch.run')!; pid := app.worker.pid
 		wait_for_launch_navigation_output(mut app)
 		assert app.worker_run && app.worker.args == vector && !app.admin_prompt && !app.prepare_close()
@@ -292,7 +292,7 @@ fn check_software_launch_navigation() ! {
 		} else { assert app.status.contains('finished successfully') }
 		os.rm(receipt)!
 	}
-	os.unsetenv('VINIX_SOFTWARE_LAUNCH_NAVIGATION')
+	os.unsetenv('TULPAR_SOFTWARE_LAUNCH_NAVIGATION')
 	app.handle('software.launch.terminal')!
 	mut terminal_vector := pkgprotocol.command_vector('launch-app', words, files, false, true)!
 	defer { pkgprotocol.free_command_values(mut terminal_vector) }
@@ -320,7 +320,7 @@ fn check_software_launch_navigation_memory() ! {
 		mut app := launch_navigation_app()
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				fill_launch_navigation_draft(mut app, files)!
 				check_launch_empty_paste(mut app)
@@ -346,7 +346,7 @@ fn check_software_launch_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'launch navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'launch navigation retained ${kept} bytes'
 		println('Software launch navigation: 1000 256-file draft/full/compact/paging/paste/blur/failure/terminal-transfer/retirement cycles retain zero tracked bytes')
 		println('Software launch reader: 1000 entry/file/page/render/resize/ignored-run/Back/cache-retirement cycles retain zero tracked bytes')
 	}

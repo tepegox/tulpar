@@ -16,7 +16,7 @@ streams use V's zlib diagnostics; these need not match the old exception text.
 ```sh
 v -cc cc test build-support/screenshotcore
 v -cc cc -o /tmp/check-screenshot build-support/check-screenshot.v
-VINIX_SCREENSHOT_TOOL=/tmp/check-screenshot v -cc cc test build-support/screenshotcore
+TULPAR_SCREENSHOT_TOOL=/tmp/check-screenshot v -cc cc test build-support/screenshotcore
 ```
 
 Native tests decode 144 independently filtered RGB/RGBA fixtures, check PPM

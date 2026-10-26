@@ -41,7 +41,7 @@ fn verify() ! {
 	if os.file_size(screenshot) < 1024 { return error('QEMU screenshot is empty') }
 	latest := os.read_file(os.args[1])!
 	if latest.contains('KERNEL PANIC') || latest.contains('Heap self-test failed')
-		|| (os.args[3] == 'Vinix: starting the desktop' && latest.count(os.args[3]) != 1) {
+		|| (os.args[3] == 'Tulpar: starting the desktop' && latest.count(os.args[3]) != 1) {
 		return error('guest did not remain running; inspect the serial log and screenshot')
 	}
 	println('PASS: ' + os.args[3] + '; screenshot: ' + screenshot)

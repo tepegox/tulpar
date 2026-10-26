@@ -73,7 +73,7 @@ fn stage(work string) ![]string {
 	ww := root + '/kernel/linuxkpi/compatcore/ww_mutex.v'
 	wait := root + '/kernel/linuxkpi/compatcore/wait_bit.v'
 	paths << [p, ww, wait]
-	mut bind := '@[translated]\nmodule compatcore\n#include "linuxkpi_rwsem_v_primitives.h"\nstruct C.vkw_list{mut:next &C.vkw_list,prev &C.vkw_list}\nfn C.vinix_linuxkpi_bug(&char,i32)\nfn C.vinix_linuxkpi_may_sleep()bool\nfn C.vkp_current()voidptr\nfn C.vkp_spin_init(voidptr)\nfn C.vkp_spin_lock_irqsave(voidptr)u64\nfn C.vkp_spin_unlock_irqrestore(voidptr,u64)\nfn C.vkw_signal_state(u32,voidptr)bool\nfn C.vkw_current_state(u32)\nfn C.vkw_wake_task(voidptr)i32\nfn C.vkp_schedule()\n@[c:"__atomic_load_n"]fn C.vkw_load_owner(&i64,i32)i64\n@[c:"__atomic_store_n"]fn C.vkw_store_owner(&i64,i64,i32)\n@[c:"__atomic_load_n"]fn C.vkw_load_pointer(&voidptr,i32)voidptr\n@[c:"__atomic_store_n"]fn C.vkw_store_pointer(&voidptr,voidptr,i32)\n'
+	mut bind := '@[translated]\nmodule compatcore\n#include "linuxkpi_rwsem_v_primitives.h"\nstruct C.vkw_list{mut:next &C.vkw_list,prev &C.vkw_list}\nfn C.tulpar_linuxkpi_bug(&char,i32)\nfn C.tulpar_linuxkpi_may_sleep()bool\nfn C.vkp_current()voidptr\nfn C.vkp_spin_init(voidptr)\nfn C.vkp_spin_lock_irqsave(voidptr)u64\nfn C.vkp_spin_unlock_irqrestore(voidptr,u64)\nfn C.vkw_signal_state(u32,voidptr)bool\nfn C.vkw_current_state(u32)\nfn C.vkw_wake_task(voidptr)i32\nfn C.vkp_schedule()\n@[c:"__atomic_load_n"]fn C.vkw_load_owner(&i64,i32)i64\n@[c:"__atomic_store_n"]fn C.vkw_store_owner(&i64,i64,i32)\n@[c:"__atomic_load_n"]fn C.vkw_load_pointer(&voidptr,i32)voidptr\n@[c:"__atomic_store_n"]fn C.vkw_store_pointer(&voidptr,voidptr,i32)\n'
 	bind += hosttest.v_function(os.read_file(p)!, 'is_null')! + hosttest.v_function(os.read_file(wait)!, 'wait_list_init')!
 	for name in ['ww_list_empty', 'ww_list_add_tail', 'ww_list_del_init'] {
 		bind += hosttest.v_function(os.read_file(ww)!, name)!
@@ -116,7 +116,7 @@ fn select_source(raw string, group string) !string {
 			' up_write(',
 			' downgrade_write(',
 			' arch_atomic64_read(',
-		].any(line.contains(it))) || (group == 'rwsemfixture' && (line.contains(' vkp_') || line.contains(' vkw_') || line.contains(' vinix_linuxkpi_') || line.contains(' kmalloc(') || line.contains(' kzalloc(') || line.contains(' main('))) {
+		].any(line.contains(it))) || (group == 'rwsemfixture' && (line.contains(' vkp_') || line.contains(' vkw_') || line.contains(' tulpar_linuxkpi_') || line.contains(' kmalloc(') || line.contains(' kzalloc(') || line.contains(' main('))) {
 			bodies << body
 		}
 	}
@@ -261,18 +261,18 @@ fn freestanding(work string, linux string, env map[string]string) ![]json2.Any {
 					'-ffreestanding', '-fno-builtin', '-fwrapv', '-fno-strict-aliasing', '-fno-stack-protector',
 					'-fstack-usage', '-nostdinc', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function',
 					'-Wno-unused-parameter', '-Wno-sign-compare', '-Wno-typedef-redefinition',
-					'-DVINIX_LINUXKPI', '-D__KERNEL__', '-include', 'linux/kconfig.h', '-include',
+					'-DTULPAR_LINUXKPI', '-D__KERNEL__', '-include', 'linux/kconfig.h', '-include',
 					linux + '/include/linux/compiler_types.h', '-isystem', root + '/kernel/freestnd-c-hdrs']
 				for directory in [work + '/include', root + '/kernel/linuxkpi/include', root + '/kernel/c',
 					linux + '/include', linux + '/include/uapi', linux + '/arch/x86/include', linux + '/arch/x86/include/uapi'] {
 					argv << ['-I', directory]
 				}
-				if group == 'compatcore' { argv << '-DVINIX_V_RUNTIME' }
+				if group == 'compatcore' { argv << '-DTULPAR_V_RUNTIME' }
 				compiled := compile_input(argv, work + '/' + group + '-selected.c', object, env)!
 				imports := hosttest.command([hosttest.tool('llvm-nm'), '--undefined-only', object], object + '.imports.log', 30, env)!.stdout
 				mut actual := imports.split_into_lines().filter(it.fields().len > 0).map(it.fields().last())
 				mut expected := if group == 'compatcore' {
-					['vinix_linuxkpi_bug', 'vinix_linuxkpi_may_sleep', 'vkp_current', 'vkp_schedule',
+					['tulpar_linuxkpi_bug', 'tulpar_linuxkpi_may_sleep', 'vkp_current', 'vkp_schedule',
 						'vkp_spin_init', 'vkp_spin_lock_irqsave', 'vkp_spin_unlock_irqrestore',
 						'vkw_current_state', 'vkw_signal_state', 'vkw_wake_task']
 				} else {
@@ -325,7 +325,7 @@ fn flags(work string, linux string, standard string, optimization string) []stri
 		'-fwrapv', '-fno-strict-aliasing', '-ffunction-sections', '-fdata-sections', '-Wall', '-Wextra',
 		'-Werror', '-Wno-unused-function', '-Wno-unused-parameter', '-Wno-sign-compare',
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-D_FORTIFY_SOURCE=0',
-		'-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
+		'-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
 		root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h', '-include',
 		linux + '/include/linux/compiler_types.h']
 	for directory in [work + '/include', work + '/stage', root + '/tests/linuxkpi/rwsemfixture',
@@ -371,7 +371,7 @@ fn run(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	hosttest.verify_upstream(linux, hosttest.upstream_pin()!)!
-	work := hosttest.work_dir(keep, 'vinix-rwsem-')!
+	work := hosttest.work_dir(keep, 'tulpar-rwsem-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	// Keep producer scratch private and preserve its exact inputs on every
 	// generation, including failures. This is isolation, not a retry policy.
@@ -409,7 +409,7 @@ fn run(keep string) ! {
 		'overflow':        'integer_policy'
 		'spinlock':        'spinlock_adapters'
 	} {
-		hosttest.generate_abi(root + '/kernel/linuxkpi/abi/' + schema + '.json', root + '/kernel/linuxkpi', work + '/include/vinix/' + name + '.h')!
+		hosttest.generate_abi(root + '/kernel/linuxkpi/abi/' + schema + '.json', root + '/kernel/linuxkpi', work + '/include/tulpar/' + name + '.h')!
 	}
 	mut proofs := []json2.Any{}
 	for group in ['compatcore', 'headercore', 'rwsemfixture'] {
@@ -454,7 +454,7 @@ fn run(keep string) ! {
 			for group in ['compatcore', 'headercore', 'rwsemfixture'] {
 				object := work + '/' + tag + '-' + group + '.o'
 				mut argv := base.clone()
-				if group == 'compatcore' { argv << '-DVINIX_V_RUNTIME' }
+				if group == 'compatcore' { argv << '-DTULPAR_V_RUNTIME' }
 				proof := compile_input(argv, work + '/' + group + '-selected.c', object, env)!
 				objects << proof
 				imports := hosttest.command([hosttest.tool('llvm-nm'), '-u', object], object + '.imports.log', 30, env)!.stdout

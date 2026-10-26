@@ -126,7 +126,7 @@ fn receive_byte(fd i32, expected u8) {
 fn exercise(backlog i32, index u32) {
 	unsafe {
 		mut address := C.sockaddr_un{sun_family: C.AF_UNIX}
-		written := C.snprintf(&socket_path[0], sizeof(socket_path), c'/tmp/vinix-listen-%ld-%u.sock', i64(C.getpid()), index)
+		written := C.snprintf(&socket_path[0], sizeof(socket_path), c'/tmp/tulpar-listen-%ld-%u.sock', i64(C.getpid()), index)
 		require(written > 0 && usize(written) < sizeof(socket_path), c'socket pathname fits')
 		C.memcpy(&address.sun_path[0], &socket_path[0], usize(written) + 1)
 		address_length := u32(C.VLB_PATH_OFFSET + written + 1)
@@ -169,7 +169,7 @@ fn exercise(backlog i32, index u32) {
 	}
 }
 
-@[export: 'vinix_independent_fixture']
+@[export: 'tulpar_independent_fixture']
 pub fn run() i32 {
 	unsafe {
 		C.setvbuf(C.stdout, nil, C._IONBF, 0)

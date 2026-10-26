@@ -36,7 +36,7 @@ fn say(text &char) {
 pub fn entry() i32 {
 	unsafe {
 		marker := &char(c'/root/hello.txt')
-		payload := &char(c'vinix-reboot-persistence-v1')
+		payload := &char(c'tulpar-reboot-persistence-v1')
 		C.setbuf(C.stdout, nil)
 		// ARM's console is serial; x86 exposes its serial port as com1.
 		mut console := i32(-1)
@@ -50,47 +50,47 @@ pub fn entry() i32 {
 			C.dup2(console, C.STDERR_FILENO)
 			if console > C.STDERR_FILENO { C.close(console) }
 		}
-		say(c'VINIX REBOOT PERSISTENCE: START\n')
+		say(c'TULPAR REBOOT PERSISTENCE: START\n')
 		mut fd := C.open(marker, C.O_RDONLY)
 		if fd >= 0 {
 			mut observed := [28]char{}
 			got := C.read(fd, &observed[0], sizeof(observed))
 			C.close(fd)
 			if got != 27 || C.memcmp(&observed[0], payload, 27) != 0 {
-				say(c'VINIX REBOOT PERSISTENCE: FAIL corrupt marker\n')
+				say(c'TULPAR REBOOT PERSISTENCE: FAIL corrupt marker\n')
 				return 1
 			}
 			C.unlink(marker)
-			say(c'VINIX REBOOT PERSISTENCE: SYNCING\n')
+			say(c'TULPAR REBOOT PERSISTENCE: SYNCING\n')
 			C.sync()
-			say(c'VINIX REBOOT PERSISTENCE: PASS\n')
+			say(c'TULPAR REBOOT PERSISTENCE: PASS\n')
 			C.reboot(C.RB_POWER_OFF)
-			say(c'VINIX REBOOT PERSISTENCE: FAIL power off refused\n')
+			say(c'TULPAR REBOOT PERSISTENCE: FAIL power off refused\n')
 			return 1
 		}
 		if C.errno != C.ENOENT {
-			C.printf(c'VINIX REBOOT PERSISTENCE: FAIL open errno=%d\n', C.errno)
+			C.printf(c'TULPAR REBOOT PERSISTENCE: FAIL open errno=%d\n', C.errno)
 			return 1
 		}
 		fd = C.open(marker, C.O_CREAT | C.O_EXCL | C.O_WRONLY, i32(0o600))
 		if fd < 0 {
-			C.printf(c'VINIX REBOOT PERSISTENCE: FAIL create errno=%d\n', C.errno)
+			C.printf(c'TULPAR REBOOT PERSISTENCE: FAIL create errno=%d\n', C.errno)
 			return 1
 		}
 		if C.write(fd, payload, 27) != 27 {
-			C.printf(c'VINIX REBOOT PERSISTENCE: FAIL write errno=%d\n', C.errno)
+			C.printf(c'TULPAR REBOOT PERSISTENCE: FAIL write errno=%d\n', C.errno)
 			return 1
 		}
 		if C.close(fd) != 0 {
-			C.printf(c'VINIX REBOOT PERSISTENCE: FAIL close errno=%d\n', C.errno)
+			C.printf(c'TULPAR REBOOT PERSISTENCE: FAIL close errno=%d\n', C.errno)
 			return 1
 		}
 		// No fsync/O_SYNC: preserve the buffered close, sync brackets and reboot.
-		say(c'VINIX REBOOT PERSISTENCE: SYNCING\n')
+		say(c'TULPAR REBOOT PERSISTENCE: SYNCING\n')
 		C.sync()
-		say(c'VINIX REBOOT PERSISTENCE: WROTE MARKER, REBOOTING\n')
+		say(c'TULPAR REBOOT PERSISTENCE: WROTE MARKER, REBOOTING\n')
 		C.reboot(C.RB_AUTOBOOT)
-		C.printf(c'VINIX REBOOT PERSISTENCE: FAIL reboot returned errno=%d\n', C.errno)
+		C.printf(c'TULPAR REBOOT PERSISTENCE: FAIL reboot returned errno=%d\n', C.errno)
 		return 1
 	}
 }

@@ -37,7 +37,7 @@ fn test_scrub_report_exact_complete_canonical_text_with_both_digests_and_zero_ro
 	mut manifest := DataManifest{}; scrub_fixture(mut manifest, 3); mut observed := manifest.digests
 	observed.values[0][31] ^= 1; observed.values[2][0] ^= 1
 	mut bytes := [11392]u8{}; size := encode_data_manifest(&manifest, &bytes[0]); fingerprint := hex.encode(sha256.sum(bytes[..size]))
-	mut expected := 'format=VINIXSR1 operation=scrubbed-data disks=1 mappings=3 matched=1 changed=2 algorithm=sha256 reference_sha256=${fingerprint}\n'
+	mut expected := 'format=TULPARSR1 operation=scrubbed-data disks=1 mappings=3 matched=1 changed=2 algorithm=sha256 reference_sha256=${fingerprint}\n'
 	for i in 0 .. 3 {
 		row := manifest.set.plans[0].rows[i]; result := if i == 1 { 'match' } else { 'changed' }
 		expected += 'disk=0 slot=${row.slot} offset=${row.offset} bytes=${row.length} readonly=${row.flags} result=${result} expected_sha256=' + hex.encode(manifest.digests.values[i][..]) + ' actual_sha256=' + hex.encode(observed.values[i][..]) + '\n'
@@ -48,7 +48,7 @@ fn test_scrub_report_exact_complete_canonical_text_with_both_digests_and_zero_ro
 	assert encode_scrub_report(&manifest, &wrong, &text[0]) == 0 && text == old
 	manifest = DataManifest{}; scrub_fixture(mut manifest, 0); observed = manifest.digests
 	zero_size := encode_data_manifest(&manifest, &bytes[0]); zero_fingerprint := hex.encode(sha256.sum(bytes[..zero_size]))
-	length_zero := encode_scrub_report(&manifest, &observed, &text[0]); assert unsafe { tos(&u8(&text[0]), length_zero) } == 'format=VINIXSR1 operation=scrubbed-data disks=1 mappings=0 matched=0 changed=0 algorithm=sha256 reference_sha256=${zero_fingerprint}\n'
+	length_zero := encode_scrub_report(&manifest, &observed, &text[0]); assert unsafe { tos(&u8(&text[0]), length_zero) } == 'format=TULPARSR1 operation=scrubbed-data disks=1 mappings=0 matched=0 changed=0 algorithm=sha256 reference_sha256=${zero_fingerprint}\n'
 }
 
 fn test_scrub_maximum_64_disks_rows_regions_and_full_width_offsets_report_bounds_cli_132_arguments() {
@@ -66,12 +66,12 @@ fn test_scrub_maximum_64_disks_rows_regions_and_full_width_offsets_report_bounds
 	mut summary := DataScrub{}; assert compare_scrub_digests(&manifest, &observed, mut summary) && summary.changed == 64 && summary.bits == u64(-1)
 	mut text := [32768]char{}; length := encode_scrub_report(&manifest, &observed, &text[0]); report := unsafe { tos(&u8(&text[0]), length) }
 	assert length > 12000 && length < scrub_report_max && report.count(' result=changed ') == 64 && report.count(' expected_sha256=') == 64 && report.count(' actual_sha256=') == 64 && text[length] == 0
-	assert report.starts_with('format=VINIXSR1 operation=scrubbed-data disks=64 mappings=64 matched=0 changed=64 algorithm=sha256 reference_sha256=')
-	work := os.join_path(os.temp_dir(), 'vinix-scrub-max-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/data.vhash'; output := work + '/scrub.txt'
+	assert report.starts_with('format=TULPARSR1 operation=scrubbed-data disks=64 mappings=64 matched=0 changed=64 algorithm=sha256 reference_sha256=')
+	work := os.join_path(os.temp_dir(), 'tulpar-scrub-max-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/data.vhash'; output := work + '/scrub.txt'
 	mut bytes := [11392]u8{}; size := encode_data_manifest(&manifest, &bytes[0]); assert size == 11392; os.write_file_array(path, bytes[..size])!
 	unsafe {
 		mut args := [133]&char{}; mut indices := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'scrub-data'); args[2] = path.str; args[3] = output.str
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'scrub-data'); args[2] = path.str; args[3] = output.str
 		for disk in 0 .. 64 { C.snprintf(&indices[disk][0], 4, c'%u', u32(disk)); args[4 + disk * 2] = &indices[disk][0]; args[5 + disk * 2] = &char(c'/missing-scrub-device') }
 		assert run(132, &args[0]) == 1 && !os.exists(output) && os.read_bytes(path)! == bytes[..size]
 	}
@@ -79,7 +79,7 @@ fn test_scrub_maximum_64_disks_rows_regions_and_full_width_offsets_report_bounds
 
 fn test_scrub_complete_cli_token_count_and_remainder_rejection() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'scrub-data'), &char(c'/unused-reference'), &char(c'/unused-report'), &char(c'0'), &char(c'/unused-device'), &char(c'1'), &char(c'/unused-later'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'scrub-data'), &char(c'/unused-reference'), &char(c'/unused-report'), &char(c'0'), &char(c'/unused-device'), &char(c'1'), &char(c'/unused-later'), &char(nil)]!
 		for count in [2, 3, 4, 5, 7, 133, 134] { assert run(count, &args[0]) == 2 }
 		for at in [4, 6] { old := args[at]; for bad in [c'', c'-1', c'1x', c'64', c'18446744073709551616'] { args[at] = &char(bad); assert run(8, &args[0]) == 2 }; args[at] = old }
 		args[7] = &char(c''); assert run(8, &args[0]) == 2

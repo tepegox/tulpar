@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_SRCU_V_CONTRACT_H
-#define VINIX_LINUXKPI_SRCU_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_SRCU_V_CONTRACT_H
+#define TULPAR_LINUXKPI_SRCU_V_CONTRACT_H
 /* Linux and the V backend use distinct names for their native 64-bit typedefs.
  * This changes names only; the upstream declarations/layouts stay intact. */
 /* C11 and Linux use the same spellings for different atomic interfaces. */
@@ -17,14 +17,14 @@
 #define timezone vkh_linux_timezone
 #define ffs vkh_linux_ffs
 #define fls vkh_linux_fls
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmacro-redefined"
 #endif
 #include <linux/srcu.h>
 #include <linux/percpu.h>
 #include <linux/sched.h>
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic pop
 #endif
 #undef fls
@@ -96,10 +96,10 @@ VKS_FIELD(vks_srcu, srcu_struct, srcu_sup);
 _Static_assert(RCU_NUM_LVLS == 2 && RCU_CBLIST_NSEGS == 4, "pinned SRCU dimensions");
 
 struct vks_data_alignment_probe { char prefix; struct srcu_data data; };
-void vinix_linuxkpi_srcu_gp_work(struct work_struct *);
-void vinix_linuxkpi_srcu_callback_work(struct work_struct *);
+void tulpar_linuxkpi_srcu_gp_work(struct work_struct *);
+void tulpar_linuxkpi_srcu_callback_work(struct work_struct *);
 _Static_assert(__builtin_types_compatible_p(__typeof__(((struct vks_rcu_head *)0)->func), rcu_callback_t), "native RCU callback type");
 _Static_assert(__builtin_types_compatible_p(__typeof__(((struct vks_work *)0)->func), work_func_t), "native work callback type");
 _Static_assert(__builtin_types_compatible_p(__typeof__(((struct vks_timer *)0)->function), __typeof__(((struct timer_list *)0)->function)), "native delayed timer callback type");
-_Static_assert(_Generic(&vinix_linuxkpi_srcu_gp_work, work_func_t: 1, default: 0) && _Generic(&vinix_linuxkpi_srcu_callback_work, work_func_t: 1, default: 0), "registered SRCU work callback types");
+_Static_assert(_Generic(&tulpar_linuxkpi_srcu_gp_work, work_func_t: 1, default: 0) && _Generic(&tulpar_linuxkpi_srcu_callback_work, work_func_t: 1, default: 0), "registered SRCU work callback types");
 #endif

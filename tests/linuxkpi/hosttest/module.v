@@ -55,7 +55,7 @@ pub fn generate_header_primitives(output string, arch string, host bool, impleme
 		generate_module(source, output, arch, defines)!
 		return
 	}
-	work := work_dir('', 'vinix-header-implementations-')!
+	work := work_dir('', 'tulpar-header-implementations-')!
 	defer { remove_work_dir(work) or { eprintln(err) } }
 	isolated := os.join_path(work, 'headercore')
 	os.mkdir(isolated)!
@@ -99,7 +99,7 @@ pub fn generate_module_with_capture(source string, output string, arch string, d
 	runner fn ([]string, string, int, map[string]string) !Result) !Result {
 	selected := command(['sh', '-c', '. "$1/build-support/find-v.sh"; printf "%s" "$V"', 'find-v',
 		root()], '', -1, os.environ())!.stdout
-	work := work_dir('', 'vinix-v-module-')!
+	work := work_dir('', 'tulpar-v-module-')!
 	defer { module_remove_tree(work) or { eprintln(err) } }
 	name := module_name(source)
 	if source.contains('\x00') || output.contains('\x00') || arch.contains('\x00') || defines.any(it.contains('\x00')) {
@@ -282,7 +282,7 @@ pub fn emit_module_header(source string, output string, header string) ! {
 		return error('Readonly metadata names absent exports: ${module_metadata_repr(readonly)}, ${module_metadata_repr(readonly_pointer)}')
 	}
 	if declarations.len == 0 { return error('Module has no exported declarations') }
-	mut guard := 'VINIX_GENERATED_'
+	mut guard := 'TULPAR_GENERATED_'
 	for ch in module_upper(module_name(header)).runes() {
 		guard += if module_word(ch) { ch.str() } else { '_' }
 	}

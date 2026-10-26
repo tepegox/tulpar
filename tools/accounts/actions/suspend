@@ -1,5 +1,5 @@
 description = Put the computer to sleep
 auth = session
-exec = /usr/sbin/vinix-system
+exec = /usr/sbin/tulpar-system
 arg = power
 arg = suspend

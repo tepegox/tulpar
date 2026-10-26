@@ -3,7 +3,7 @@ module planguest
 
 fn disk_forgets(path &char, first &char, second &char, third &char, preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'plan-preview-forget-batch') } else { &char(c'plan-forget-batch') },
 			path, first, second, third, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
@@ -30,8 +30,8 @@ fn planned_forget_batch() {
 		mut original := [8768]u8{}
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'forget baseline')
-		first := status(c'/dev/mapper/vinix12').generation; second := status(c'/dev/mapper/vinix9').generation
-		held := C.open(c'/dev/mapper/vinix12', C.O_RDONLY); check(held >= 0, c'hold view across disk forget')
+		first := status(c'/dev/mapper/tulpar12').generation; second := status(c'/dev/mapper/tulpar9').generation
+		held := C.open(c'/dev/mapper/tulpar12', C.O_RDONLY); check(held >= 0, c'hold view across disk forget')
 		enrollment_plans(c'/root/saved.vset', c'/root/offline.vmap', c'/root/offline-second.vmap', false, 0, nil)
 		changed := C.open(c'/root/saved.vset', C.O_RDONLY)
 		mut enrolled := [8768]u8{}
@@ -66,7 +66,7 @@ fn planned_forget_batch() {
 		check(contains(&output[0], c'request=0 action=keep identity=mbr:1234567c') && contains(&output[0], c'request=2 action=keep identity=mbr:1234567b'), c'absent retry cannot select compacted survivors')
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
-		check(status(c'/dev/mapper/vinix12').generation == first && status(c'/dev/mapper/vinix9').generation == second, c'forget preserves live generations')
+		check(status(c'/dev/mapper/tulpar12').generation == first && status(c'/dev/mapper/tulpar9').generation == second, c'forget preserves live generations')
 		mut bytes := [4096]u8{}
 		check(C.pread(held, &bytes[0], 4096, 0) == 4096 && C.close(held) == 0, c'held view readable after disk forget')
 		for byte in bytes { check(byte == 0xe7, c'forget preserves live data') }
@@ -81,7 +81,7 @@ fn forget_boot_prepare() {
 	mut original := [8768]u8{}
 	size := C.read(fd, &original[0], 8768)
 	check(fd >= 0 && size == 536 && C.close(fd) == 0, c'boot forget baseline')
-	second := status(c'/dev/mapper/vinix9').generation
+	second := status(c'/dev/mapper/tulpar9').generation
 	tool(c'pool-remove', c'/root/saved.vset', c'3', c'1', unsafe { nil }, 0)
 	mapping_removals(c'/root/saved.vset', c'9', c'13', unsafe { nil }, false, 0, unsafe { nil })
 	simple(c'plan-forget', c'/root/saved.vset', c'1', 0)
@@ -94,21 +94,21 @@ fn forget_boot_prepare() {
 	disk_forgets(c'/root/saved.vset', c'mbr:1234567c', c'mbr:1234567b', unsafe { nil }, true, 0, unsafe { nil })
 	disk_forgets(c'/root/saved.vset', c'mbr:1234567c', c'mbr:1234567b', unsafe { nil }, false, 0, unsafe { nil })
 	bundle_unchanged(c'/root/saved.vset', &original[0], size)
-	check(status(c'/dev/mapper/vinix9').generation == second, c'boot forget retains live generation')
+	check(status(c'/dev/mapper/tulpar9').generation == second, c'boot forget retains live generation')
 	C.printf(c'PLAN FORGET BATCH SAVED: secondary disk and pool references compacted from 3 to 1 before replay\n')
 }
 
 fn forget_boot_check() {
-	fd := C.open(c'/etc/vinix/volumes.vset', C.O_RDONLY)
+	fd := C.open(c'/etc/tulpar/volumes.vset', C.O_RDONLY)
 	mut original := [8768]u8{}
 	size := C.read(fd, &original[0], 8768)
 	check(fd >= 0 && size == 536 && C.close(fd) == 0, c'persistent forget bundle')
 	mut output := [4096]char{}
-	disk_forgets(c'/etc/vinix/volumes.vset', c'mbr:1234567c', c'mbr:1234567b', unsafe { nil }, true, 0, &output[0])
+	disk_forgets(c'/etc/tulpar/volumes.vset', c'mbr:1234567c', c'mbr:1234567b', unsafe { nil }, true, 0, &output[0])
 	check(contains(&output[0], c'request=0 action=keep identity=mbr:1234567c')
 		&& contains(&output[0], c'request=1 action=keep identity=mbr:1234567b')
 		&& contains(&output[0], c'previous_disk=1 disk=1 action=retain identity=mbr:12345679'), c'identity retries and survivor indices persist')
-	disk_forgets(c'/etc/vinix/volumes.vset', c'mbr:1234567c', c'mbr:1234567b', unsafe { nil }, false, 0, unsafe { nil })
-	bundle_unchanged(c'/etc/vinix/volumes.vset', &original[0], size)
+	disk_forgets(c'/etc/tulpar/volumes.vset', c'mbr:1234567c', c'mbr:1234567b', unsafe { nil }, false, 0, unsafe { nil })
+	bundle_unchanged(c'/etc/tulpar/volumes.vset', &original[0], size)
 	C.printf(c'PLAN FORGET BATCH BOOT PRESERVED\n')
 }

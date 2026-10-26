@@ -23,8 +23,8 @@ struct CpuWorker {
 @[c_extern] __global C.vmh_cpu_record_type i32
 @[c_extern] __global C.EBUSY i32
 @[c_extern] __global C.EINVAL i32
-fn C.vinix_linuxkpi_percpu_init(u32,voidptr,voidptr) i32
-fn C.vinix_linuxkpi_percpu_destroy_for_test()
+fn C.tulpar_linuxkpi_percpu_init(u32,voidptr,voidptr) i32
+fn C.tulpar_linuxkpi_percpu_destroy_for_test()
 fn C.__alloc_percpu(usize,usize) voidptr
 fn C.__alloc_percpu_gfp(usize,usize,u32) voidptr
 fn C.alloc_percpu(i32) voidptr
@@ -73,7 +73,7 @@ pub fn percpu_worker(argument voidptr) voidptr { unsafe {
 } }
 @[export:'vmh_percpu_tests']
 pub fn percpu_tests() { unsafe {
- C.assert(C.vinix_linuxkpi_percpu_init(4,&C.vmh_host_percpu_start,&C.vmh_host_percpu_end)==-C.EBUSY)
+ C.assert(C.tulpar_linuxkpi_percpu_init(4,&C.vmh_host_percpu_start,&C.vmh_host_percpu_end)==-C.EBUSY)
  C.assert(C.__alloc_percpu(0,8)==nil && C.__alloc_percpu(8,0)==nil && C.__alloc_percpu(8,3)==nil)
  C.assert(C.__alloc_percpu(8,8192)==nil && C.__alloc_percpu(C.SIZE_MAX,8)==nil)
  C.assert(C.__alloc_percpu(C.SIZE_MAX/2,8)==nil);C.assert(C.__alloc_percpu_gfp(8,8,C.GFP_KERNEL|C.__GFP_DMA32)==nil)

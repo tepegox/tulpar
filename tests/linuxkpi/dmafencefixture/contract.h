@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_DMA_FENCE_HOST_CONTRACT_H
-#define VINIX_DMA_FENCE_HOST_CONTRACT_H
+#ifndef TULPAR_DMA_FENCE_HOST_CONTRACT_H
+#define TULPAR_DMA_FENCE_HOST_CONTRACT_H
 /* Metadata, compiler intrinsics and unchanged original-inline adapters only. */
 #include "../freefixture/contract.h"
 #include "linuxkpi_dma_fence_v_contract.h"

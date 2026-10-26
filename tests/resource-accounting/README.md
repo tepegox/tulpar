@@ -8,7 +8,7 @@ or filesystem metadata counts.
 The checks cover:
 
 - Touching 32 MiB of anonymous pages raises current RSS and minor faults.
-  The allocator reserves at least 64 MiB to enter Vinix's demand-paging path,
+  The allocator reserves at least 64 MiB to enter Tulpar's demand-paging path,
   then unmaps its untouched tail; smaller mappings are eagerly filled.
   The guest warms its allocation and `/proc` parsing helpers first so lazy
   faults in the EXT2 executable are outside that measurement.
@@ -41,14 +41,14 @@ The checks cover:
 Build the isolated kernel for the selected architecture, then run:
 
 ```sh
-VINIX_VM_RUNNER_ROOT=/path/to/main \
-VINIX_KERNEL_DIR=/path/to/worktree/kernel \
-VINIX_AARCH64_SYSROOT=/path/to/main/build-aarch64-userland/sysroot \
-VINIX_QEMU_RT_NO_BUILD=1 VINIX_QEMU_AUDIO=off \
+TULPAR_VM_RUNNER_ROOT=/path/to/main \
+TULPAR_KERNEL_DIR=/path/to/worktree/kernel \
+TULPAR_AARCH64_SYSROOT=/path/to/main/build-aarch64-userland/sysroot \
+TULPAR_QEMU_RT_NO_BUILD=1 TULPAR_QEMU_AUDIO=off \
   tests/resource-accounting/run --arch=aarch64
 
-VINIX_VM_RUNNER_ROOT=/path/to/main \
-VINIX_AMD64_KERNEL=/path/to/worktree/build-amd64-kernel/bin/vinix \
+TULPAR_VM_RUNNER_ROOT=/path/to/main \
+TULPAR_AMD64_KERNEL=/path/to/worktree/build-amd64-kernel/bin/tulpar \
   tests/resource-accounting/run --arch=amd64
 ```
 
@@ -122,6 +122,6 @@ not establish a pre-existing query leak. Generated C for both candidates
 showed no heap calls in the accounting helpers, `getrusage` or the child
 rusage-copy helper; the two ABI-copy paths each use one stack record.
 
-The saved local logs are `/tmp/vinix-resource-accounting-arm64-guest.log`,
-`/tmp/vinix-resource-accounting-amd64-guest.log` and
-`/tmp/vinix-resource-accounting-arm-baseline-guest.log`.
+The saved local logs are `/tmp/tulpar-resource-accounting-arm64-guest.log`,
+`/tmp/tulpar-resource-accounting-amd64-guest.log` and
+`/tmp/tulpar-resource-accounting-arm-baseline-guest.log`.

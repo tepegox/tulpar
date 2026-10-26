@@ -56,7 +56,7 @@ pub fn (mut status RepositoryStatus) close() {
 }
 
 fn writable_configuration(root string) !string {
-	parent := rooted_package_path(root, '/etc/vinix-packages')
+	parent := rooted_package_path(root, '/etc/tulpar-packages')
 	defer { unsafe { parent.free() } }
 	path := parent + '/config.json'
 	mut accepted := false

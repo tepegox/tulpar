@@ -43,7 +43,7 @@ fn mounted(args []string) !int {
 			return argument('Use a fresh state directory for independent guest disks and evidence')
 		}
 	}
-	work := work_dir(options, 'vinix-securedisk-')!
+	work := work_dir(options, 'tulpar-securedisk-')!
 	defer { remove_private(work, options) }
 	kernel_dir := kernel(work, options.value('--kernel-dir', ''), arch)!
 	link := [...flags(arch), '-pthread']
@@ -79,7 +79,7 @@ fn mounted(args []string) !int {
 		'fixture_elf_sha256':       json2.Any(hosttest.sha(work + '/init')!)
 		'native_link_flags':        json2.Any(link.map(json2.Any(it)))
 		'runner_sha256':            json2.Any(hosttest.sha(root() + '/tests/native-disk-tools/diskhost/mounted.v')!)
-		'immutable_kernel_sha256':  json2.Any(hosttest.sha(kernel_dir + '/bin/vinix')!)
+		'immutable_kernel_sha256':  json2.Any(hosttest.sha(kernel_dir + '/bin/tulpar')!)
 		'kernel_rebuilt_by_runner': json2.Any(false)
 	}
 	evidence_write(work + '/evidence.json', evidence)!
@@ -96,14 +96,14 @@ fn mounted(args []string) !int {
 		format_ext2(executable, disk, work + '/seed', 64 * 1024 * 1024)!
 		write_mbr(disk, 0, 64 * 1024 * 1024 / 512)!
 	}
-	prior_extra := os.getenv_opt('VINIX_QEMU_EXTRA')
-	if arch == 'aarch64' { os.unsetenv('VINIX_QEMU_EXTRA') }
+	prior_extra := os.getenv_opt('TULPAR_QEMU_EXTRA')
+	if arch == 'aarch64' { os.unsetenv('TULPAR_QEMU_EXTRA') }
 	defer {
 		if arch == 'aarch64' {
 			if value := prior_extra {
-				os.setenv('VINIX_QEMU_EXTRA', value, true)
+				os.setenv('TULPAR_QEMU_EXTRA', value, true)
 			} else {
-				os.unsetenv('VINIX_QEMU_EXTRA')
+				os.unsetenv('TULPAR_QEMU_EXTRA')
 			}
 		}
 	}

@@ -4,7 +4,7 @@ module planguest
 fn capacity_batch(path &char, first &char, first_device &char, first_bytes &char,
 	second &char, second_device &char, second_bytes &char, preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'plan-preview-capacity-batch') } else { &char(c'plan-capacity-batch') },
 			path, first, first_device, first_bytes, second, second_device, second_bytes, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
@@ -31,8 +31,8 @@ fn planned_capacity_batch(parent &char, other &char) {
 		mut original := [8768]u8{}
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'capacity batch baseline')
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9')
-		held := C.open(c'/dev/mapper/vinix2', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9')
+		held := C.open(c'/dev/mapper/tulpar2', C.O_RDONLY)
 		check(held >= 0, c'hold view across capacity batch')
 		mut output := [4096]char{}
 		for preview in [false, true]! {
@@ -62,8 +62,8 @@ fn planned_capacity_batch(parent &char, other &char) {
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
 		capacity_batch(c'/root/saved.vset', c'1', other, c'16777216', c'0', parent, c'16777216', false, 0, nil)
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
-		check(status(c'/dev/mapper/vinix2').generation == first.generation && status(c'/dev/mapper/vinix2').bytes == first.bytes
-			&& status(c'/dev/mapper/vinix9').generation == second.generation && status(c'/dev/mapper/vinix9').bytes == second.bytes,
+		check(status(c'/dev/mapper/tulpar2').generation == first.generation && status(c'/dev/mapper/tulpar2').bytes == first.bytes
+			&& status(c'/dev/mapper/tulpar9').generation == second.generation && status(c'/dev/mapper/tulpar9').bytes == second.bytes,
 			c'capacity batches retain live views and generations')
 		mut data := [4096]u8{}
 		check(C.pread(held, &data[0], 4096, 0) == 4096 && C.close(held) == 0, c'held capacity view readable')

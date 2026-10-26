@@ -223,7 +223,7 @@ pub fn bitmap_set(map_ &u64, start u32, len i32) {
 	unsafe {
 		for {
 			if len < 0 || u32(len) > (u32(2147483647) * 2 + 1) - start {
-				C.vinix_linuxkpi_bug(c'kernel/linuxkpi/compatcore/bitmap.v', 198)
+				C.tulpar_linuxkpi_bug(c'kernel/linuxkpi/compatcore/bitmap.v', 198)
 			}
 			// while()
 			break
@@ -251,7 +251,7 @@ pub fn bitmap_clear(map_ &u64, start u32, len i32) {
 	unsafe {
 		for {
 			if len < 0 || u32(len) > (u32(2147483647) * 2 + 1) - start {
-				C.vinix_linuxkpi_bug(c'kernel/linuxkpi/compatcore/bitmap.v', 213)
+				C.tulpar_linuxkpi_bug(c'kernel/linuxkpi/compatcore/bitmap.v', 213)
 			}
 			// while()
 			break
@@ -372,8 +372,8 @@ pub fn bitmap_to_arr32(dst &u32, src &u64, nbits u32) {
 // Called repeatedly by the native integration test, with the caller measuring
 // *pages around the batches. Every error path releases its owned allocation.
 
-@[export: 'vinix_linuxkpi_bitmap_runtime_selftest']
-pub fn vinix_linuxkpi_bitmap_runtime_selftest() i32 {
+@[export: 'tulpar_linuxkpi_bitmap_runtime_selftest']
+pub fn tulpar_linuxkpi_bitmap_runtime_selftest() i32 {
 	unsafe {
 		a := [u64(-1), u64(-1), u64(-1)]!
 

@@ -75,7 +75,7 @@ fn run() ! {
 		'status':   json2.Any('PASS')
 		'profile':  json2.Any(profile)
 		'receipts': json2.Any(receipts)
-		'limits':   json2.Any('Original V guest fixture retains known unresolved memdup build failure; C/prebuilt full workflows pass. Controlled guest only; no real Vinix guest or new allocation result.')
+		'limits':   json2.Any('Original V guest fixture retains known unresolved memdup build failure; C/prebuilt full workflows pass. Controlled guest only; no real Tulpar guest or new allocation result.')
 	}),
 		prettify: true
 	) + '\n')!

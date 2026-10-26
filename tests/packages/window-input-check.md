@@ -6,7 +6,7 @@ Software checks it before accepting a frame. The existing SDK/context/package
 versions remain 1. Protocol 1 keeps its original encoding, 512-byte event limit
 and reader. Protocol 2 adds single-line input fields capped at 256 UTF-8 bytes,
 with distinct button/input IDs and five-field events including explicit empty
-text replacements. Event lines are at most 2,048 bytes, below Vinix's 4,096-byte
+text replacements. Event lines are at most 2,048 bytes, below Tulpar's 4,096-byte
 atomic pipe-write bound.
 
 Software edits only a clicked current-frame field. Enter commits the replacement;
@@ -66,8 +66,8 @@ compiler:
 ```sh
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
-V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/vinix/desktop \
-  VINIX_PACKAGE_TEST_UI2=/path/to/headless/modules \
+V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/tulpar/desktop \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/headless/modules \
   /tmp/distribution-check --direct-tests --cross
 ```
 
@@ -76,9 +76,9 @@ Build [the guest controller](window-check.v) with the repository and
 and a new state directory:
 
 ```sh
-VINIX_WINDOW_INPUT=1 VINIX_HWTEST_TCG=1 V=/path/to/v \
-  VINIX_WINDOW_SANDBOX=/path/to/target/vinix-sandbox \
-  VINIX_AMD64_LIMINE_DIR=/path/to/limine \
+TULPAR_WINDOW_INPUT=1 TULPAR_HWTEST_TCG=1 V=/path/to/v \
+  TULPAR_WINDOW_SANDBOX=/path/to/target/tulpar-sandbox \
+  TULPAR_AMD64_LIMINE_DIR=/path/to/limine \
   /tmp/window-check --arch=x86_64 --kernel=/path/to/x86_64/kernel \
   --scenario=packages-window-input --state-dir=/tmp/new-window-input-state
 ```

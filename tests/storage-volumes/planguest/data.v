@@ -5,7 +5,7 @@ module planguest
 fn data_tool(bundle &char, manifest &char, parent &char, other &char, create bool, expected i32, output &char) {
 	unsafe {
 		mut args := [9]&char{}
-		args[0] = &char(c'/usr/sbin/vinix-volume'); args[1] = if create { &char(c'hash-bundle') } else { &char(c'verify-data') }
+		args[0] = &char(c'/usr/sbin/tulpar-volume'); args[1] = if create { &char(c'hash-bundle') } else { &char(c'verify-data') }
 		args[2] = if create { bundle } else { manifest }; mut at := 3
 		if create { args[at] = manifest; at++ }
 		args[at] = &char(c'1'); args[at + 1] = other; args[at + 2] = &char(c'0'); args[at + 3] = parent
@@ -27,8 +27,8 @@ fn planned_data(parent &char, other &char) {
 	unsafe {
 		fd := C.open(c'/root/saved.vset', C.O_RDONLY); mut baseline := [8768]u8{}; size := C.read(fd, &baseline[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'checksum baseline bundle'); copy_plan(c'/root/saved.vset', c'/root/data-base.vset')
-		first := status(c'/dev/mapper/vinix2').generation; second := status(c'/dev/mapper/vinix9').generation
-		held := C.open(c'/dev/mapper/vinix9', C.O_RDONLY); check(held >= 0, c'hold checksum view')
+		first := status(c'/dev/mapper/tulpar2').generation; second := status(c'/dev/mapper/tulpar9').generation
+		held := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY); check(held >= 0, c'hold checksum view')
 		mut output := [4096]char{}
 		data_tool(c'/root/saved.vset', other, parent, other, true, 1, &output[0]); check(status(other).bytes == 16777216, c'checksum destination preserves physical node')
 		data_tool(c'/root/saved.vset', c'/root/data.vhash', parent, other, true, 0, &output[0])
@@ -58,14 +58,14 @@ fn planned_data(parent &char, other &char) {
 		bundle_unchanged(c'/root/data.vhash', &reference[0], reference_size); bundle_unchanged(c'/root/saved.vset', &baseline[0], size)
 		check(C.pread(held, &changed[0], 4096, 0) == 4096 && C.close(held) == 0, c'held view after checksum verification')
 		for i in 0 .. 4096 { check(changed[i] == original[i], c'held checksum view data') }
-		check(status(c'/dev/mapper/vinix2').generation == first && status(c'/dev/mapper/vinix9').generation == second, c'checksum operations preserve mapping generations')
+		check(status(c'/dev/mapper/tulpar2').generation == first && status(c'/dev/mapper/tulpar9').generation == second, c'checksum operations preserve mapping generations')
 		C.printf(c'PLAN DATA PASSED: complete read-only hashing, trusted reference, later corruption rejection, writer contention and preserved held data\n')
 	}
 }
 
 fn prepare_data_boot(parent &char, other &char) {
 	unsafe {
-		data_tool(c'/etc/vinix/volumes.vset', c'/root/boot-data.vhash', parent, other, true, 0, nil)
+		data_tool(c'/etc/tulpar/volumes.vset', c'/root/boot-data.vhash', parent, other, true, 0, nil)
 		data_tool(nil, c'/root/boot-data.vhash', parent, other, false, 0, nil)
 		marker := C.open(c'/data-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(marker >= 0 && C.write(marker, c'1', 1) == 1 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist checksum boot marker')
@@ -78,15 +78,15 @@ fn prepare_data_boot(parent &char, other &char) {
 fn data_boot_phase(parent &char, other &char) {
 	unsafe {
 		check(C.getppid() == 1, c'checksum test started after production init')
-		fd := C.open(c'/etc/vinix/volumes.vset', C.O_RDONLY); mut bundle := [8768]u8{}; size := C.read(fd, &bundle[0], 8768)
+		fd := C.open(c'/etc/tulpar/volumes.vset', C.O_RDONLY); mut bundle := [8768]u8{}; size := C.read(fd, &bundle[0], 8768)
 		check(fd >= 0 && size == 680 && C.close(fd) == 0, c'checksum boot bundle')
 		ref := C.open(c'/root/boot-data.vhash', C.O_RDONLY); mut bytes := [11392]u8{}; refsize := C.read(ref, &bytes[0], 11392)
 		check(ref >= 0 && refsize == 1104 && C.close(ref) == 0, c'checksum boot reference')
-		first := status(c'/dev/mapper/vinix20').generation; second := status(c'/dev/mapper/vinix19').generation
+		first := status(c'/dev/mapper/tulpar20').generation; second := status(c'/dev/mapper/tulpar19').generation
 		data_tool(nil, c'/root/boot-data.vhash', parent, other, false, 0, nil); simple(c'show-data', c'/root/boot-data.vhash', nil, 0)
 		grown_view_data(); edited_view_data(); capacity_view_data(); pool_batch_boot_check(parent); multi_pool_grown_data(parent, other)
-		bundle_unchanged(c'/etc/vinix/volumes.vset', &bundle[0], size); bundle_unchanged(c'/root/boot-data.vhash', &bytes[0], refsize)
-		check(status(c'/dev/mapper/vinix20').generation == first && status(c'/dev/mapper/vinix19').generation == second, c'checksum boot verification preserves generation')
+		bundle_unchanged(c'/etc/tulpar/volumes.vset', &bundle[0], size); bundle_unchanged(c'/root/boot-data.vhash', &bytes[0], refsize)
+		check(status(c'/dev/mapper/tulpar20').generation == first && status(c'/dev/mapper/tulpar19').generation == second, c'checksum boot verification preserves generation')
 		C.printf(c'PLAN DATA BOOT PRESERVED\n')
 	}
 }

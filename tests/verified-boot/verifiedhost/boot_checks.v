@@ -13,7 +13,7 @@ fn boot_test(args []string) ! {
 	parsed := bh.parse(args, specs, [], 0, 'Usage: test [--x86_64-loader EFI] [--aarch64-loader EFI] [--backend sbsign|osslsigncode]')!
 	bh.run([bh.root() + '/build-support/run-v-tool.sh',
 		bh.root() + '/tools/verified-boot/bootpolicy/core_test.v'])!
-	work := temporary('vinix-boot-policy-')!
+	work := temporary('tulpar-boot-policy-')!
 	defer { bh.retire(work) }
 	for arch in ['x86_64', 'aarch64'] { bundle_regressions(work + '/' + arch, arch)! }
 	println('PASS native bundle policy: both architectures, all artifacts, symlinks, root geometry and every hash level')
@@ -47,7 +47,7 @@ pub fn bundle_regressions(work string, arch string) ! {
 	bh.verify(output, arch, '', 'sbsign', true)!
 	require_invalid(fn [output, arch] () ! { bh.verify(output, arch, '', 'sbsign', false)! })!
 	require_invalid(fn [original] () ! { bh.build(original)! })!
-	for filename in ['boot/vinix', 'boot/root-0.tar', 'boot/root-1.tar', 'boot/limine.conf'] {
+	for filename in ['boot/tulpar', 'boot/root-0.tar', 'boot/root-1.tar', 'boot/limine.conf'] {
 		path := output + '/' + filename
 		bytes := os.read_bytes(path)!
 		os.write_file_array(path, bytes_joined(bytes, 'tamper'.bytes()))!
@@ -115,7 +115,7 @@ pub fn bundle_regressions(work string, arch string) ! {
 fn signature_integration(work string, parsed bh.Options) ! {
 	for identity in ['trusted', 'other'] {
 		bh.quiet(['openssl', 'req', '-new', '-x509', '-newkey', 'rsa:2048', '-nodes', '-sha256',
-			'-subj', '/CN=Vinix test ' + identity, '-days', '1', '-addext',
+			'-subj', '/CN=Tulpar test ' + identity, '-days', '1', '-addext',
 			'extendedKeyUsage=codeSigning', '-keyout', work + '/' + identity + '.key', '-out',
 			work + '/' + identity + '.crt'])!
 	}
@@ -141,7 +141,7 @@ fn signature_integration(work string, parsed bh.Options) ! {
 			bh.verify(options.output, options.arch, options.certificate, options.backend, false)!
 		})!
 		os.write_file_array(path, data)!
-		for filename in ['boot/limine.conf', 'boot/vinix', 'boot/root-0.tar'] {
+		for filename in ['boot/limine.conf', 'boot/tulpar', 'boot/root-0.tar'] {
 			artifact := options.output + '/' + filename
 			saved := os.read_bytes(artifact)!
 			os.write_file_array(artifact, bytes_joined(saved, 'tamper'.bytes()))!

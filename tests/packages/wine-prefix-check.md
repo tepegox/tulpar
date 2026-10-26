@@ -23,7 +23,7 @@ The AArch64 Alpine QEMU 9.1.2 input has no `-split-wx` CLI option. Its exact
 four-byte patch replaces `ldr w1,[x19,#0x2c]` with `mov w1,#1` at `0x85c64`,
 immediately before `tcg_init`: the other arguments and call remain unchanged.
 Upstream's positive split-WX value requires separate writable and executable
-aliases and refuses a failed split mapping. No `VINIX_ALLOW_WX` or writable and
+aliases and refuses a failed split mapping. No `TULPAR_ALLOW_WX` or writable and
 executable mapping exception is used. This is explicitly a local qualification
 patch, with partial source evidence rather than a complete source offer.
 

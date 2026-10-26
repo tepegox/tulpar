@@ -45,15 +45,15 @@ fn runtime_suite(sandbox string) hwhost.Suite {
 		guest:        'tests/accounts/guest'
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
 		programs:     [
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 		]
-		binaries:     [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
+		binaries:     [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
 		files:        [
 			hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
 		]
 		directories:  ['run', 'home', 'var/log', 'tmp:1777']
 		scenarios:    [hwhost.Scenario{
@@ -76,7 +76,7 @@ fn check() !int {
 	}
 	if !os.is_file(options.kernel) { return error('--kernel is not a file: ${options.kernel}') }
 	repository := hwhost.find_root(@FILE)!
-	work := os.temp_dir() + '/vinix-package-runtime-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-package-runtime-' + os.getpid().str()
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or {} }
 	// Keep the boot input stable even if another session removes its worktree.
@@ -84,7 +84,7 @@ fn check() !int {
 	os.cp(options.kernel, kernel)!
 	invoke([repository + '/build-support/security-tools/stage', '--arch', options.arch, '--staging',
 		work])!
-	sandbox := work + '/usr/bin/vinix-sandbox'
+	sandbox := work + '/usr/bin/tulpar-sandbox'
 	status := hwhost.run_suite(runtime_suite(sandbox), [...args, '--kernel', kernel], @FILE)
 	if status == 0 && options.state_dir != '' {
 		root := os.join_path(options.state_dir, 'guest', 'root')
@@ -95,8 +95,8 @@ fn check() !int {
 				artifact('kernel', kernel)!,
 				artifact('sandbox', sandbox)!,
 				artifact('signed-native-payload', os.join_path(options.state_dir, 'guest', 'init'))!,
-				artifact('package-service', os.join_path(root, 'usr/bin/vinix-package'))!,
-				artifact('session-runner', os.join_path(root, 'usr/sbin/vinix-session'))!,
+				artifact('package-service', os.join_path(root, 'usr/bin/tulpar-package'))!,
+				artifact('session-runner', os.join_path(root, 'usr/sbin/tulpar-session'))!,
 				artifact('serial-log', os.join_path(options.state_dir, 'packages-enforced', 'serial.log'))!,
 			]
 		}

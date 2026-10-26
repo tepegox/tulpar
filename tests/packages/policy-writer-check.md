@@ -1,7 +1,7 @@
 # Public policy document authoring
 
 `tools.packages.pkgprotocol.PolicyDocument.encode()` authors the existing full
-format-1 policy file consumed by `vinix-package policy-review`. It always emits
+format-1 policy file consumed by `tulpar-package policy-review`. It always emits
 all seven settings and both range endpoints of every pin, including empty
 lists, empty range endpoints, false flags and zero reserve. The result has no
 trailing newline and belongs to the caller. Inputs remain borrowed and their
@@ -44,7 +44,7 @@ an arbitrary-order authoring file need not pass those stricter checks.
 Submit the saved file to the existing read-only review command:
 
 ```
-vinix-package --json policy-review policy.json
+tulpar-package --json policy-review policy.json
 ```
 
 Use `decode_policy_review()` to read that canonical response. Apply continues

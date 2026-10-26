@@ -55,7 +55,7 @@ pub fn configure(mode i32, condition i32, ordered bool) {
 	vsl_schedules = 0
 }
 
-@[export: 'vinix_linuxkpi_may_sleep']
+@[export: 'tulpar_linuxkpi_may_sleep']
 pub fn may_sleep() bool {
 	vsl_queries++
 	if vsl_ordered {
@@ -88,7 +88,7 @@ pub fn finish() {
 	require(vsl_safe_cases == 31 && vsl_false_cases == 13 && vsl_true_cases == 18, 9)
 }
 
-@[export: 'vinix_linuxkpi_bug'; noreturn]
+@[export: 'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(file C.vkh_const_char_p, line i32) {
 	verify(1, 1)
 	require(vsl_mode > 0 && vsl_sequence == 2, 6)

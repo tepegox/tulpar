@@ -13,7 +13,7 @@ module memory
 // usercopy resolves each page and copies through the direct map. What the bit
 // catches is a path that still dereferences a user pointer as it stands.
 //
-// vinix.user_access= on the kernel command line picks what happens then:
+// tulpar.user_access= on the kernel command line picks what happens then:
 //   strict  the fault is a kernel fault, as on OpenBSD
 //   audit   the access is let through, and the kernel address is logged once
 //   off     the bit stays clear
@@ -84,7 +84,7 @@ pub fn user_guard_requested() int {
 		return user_guard_mode
 	}
 	mut mode := user_guard_default()
-	if value := cmdline_option('vinix.user_access=') {
+	if value := cmdline_option('tulpar.user_access=') {
 		if value == 'off' {
 			mode = user_guard_off
 			user_guard_asked = true

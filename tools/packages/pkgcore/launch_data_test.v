@@ -43,8 +43,8 @@ fn test_launch_data_creates_private_owned_directories_preserves_content_and_supp
 	os.chmod(home, 0o755)!
 	uid := u32(os.geteuid())
 	prepare_launch_data(home, 'app', uid)!
-	data := home + '/.local/share/vinix-apps/app'
-	for part in ['.local', '.local/share', '.local/share/vinix-apps', '.local/share/vinix-apps/app', '.local/share/vinix-apps/app/tmp'] {
+	data := home + '/.local/share/tulpar-apps/app'
+	for part in ['.local', '.local/share', '.local/share/tulpar-apps', '.local/share/tulpar-apps/app', '.local/share/tulpar-apps/app/tmp'] {
 		info := os.lstat(home + '/' + part)!
 		assert info.uid == uid && info.mode & 0o777 == 0o700
 	}
@@ -66,7 +66,7 @@ fn test_launch_data_creates_private_owned_directories_preserves_content_and_supp
 }
 
 fn test_launch_data_refuses_unsafe_components_without_following_links_or_opening_special_files() {
-	for part in ['.local', '.local/share', '.local/share/vinix-apps', '.local/share/vinix-apps/app', '.local/share/vinix-apps/app/tmp'] {
+	for part in ['.local', '.local/share', '.local/share/tulpar-apps', '.local/share/tulpar-apps/app', '.local/share/tulpar-apps/app/tmp'] {
 		for kind in ['symlink', 'dangling', 'fifo', 'regular'] {
 			work := launch_data_work()!
 			defer { os.rmdir_all(work) or { panic(err) } }
@@ -91,7 +91,7 @@ fn test_launch_data_refuses_unsafe_components_without_following_links_or_opening
 			assert os.lstat(outside)!.mode & 0o777 == 0o755
 		}
 	}
-	for part in ['.local/share/vinix-apps/app', '.local/share/vinix-apps/app/tmp'] {
+	for part in ['.local/share/tulpar-apps/app', '.local/share/tulpar-apps/app/tmp'] {
 		work := launch_data_work()!
 		defer { os.rmdir_all(work) or { panic(err) } }
 		home := work + '/home'
@@ -106,17 +106,17 @@ fn test_launch_data_refuses_unsafe_components_without_following_links_or_opening
 }
 
 fn test_launch_data_refuses_shared_or_foreign_directories_and_invalid_home_or_id() {
-	for part in ['', '/.local', '/.local/share', '/.local/share/vinix-apps', '/.local/share/vinix-apps/app', '/.local/share/vinix-apps/app/tmp'] {
+	for part in ['', '/.local', '/.local/share', '/.local/share/tulpar-apps', '/.local/share/tulpar-apps/app', '/.local/share/tulpar-apps/app/tmp'] {
 		work := launch_data_work()!
 		defer { os.rmdir_all(work) or { panic(err) } }
 		home := work + '/home'
-		data := home + '/.local/share/vinix-apps/app'
+		data := home + '/.local/share/tulpar-apps/app'
 		os.mkdir_all(data + '/tmp')!
 		os.chmod(data, 0o755)!
 		os.chmod(home + part, 0o777)!
 		launch_data_refusal(home, 'app', u32(os.geteuid()))
 		assert os.lstat(home + part)!.mode & 0o777 == 0o777
-		if part != '/.local/share/vinix-apps/app' { assert os.lstat(data)!.mode & 0o777 == 0o755 }
+		if part != '/.local/share/tulpar-apps/app' { assert os.lstat(data)!.mode & 0o777 == 0o755 }
 	}
 	work := launch_data_work()!
 	defer { os.rmdir_all(work) or { panic(err) } }
@@ -144,7 +144,7 @@ fn test_launch_data_repeated_success_and_failure_retires_descriptors_with_low_li
 	home := work + '/home'
 	os.mkdir(home)!
 	prepare_launch_data(home, 'app', u32(os.geteuid()))!
-	data := home + '/.local/share/vinix-apps/app'
+	data := home + '/.local/share/tulpar-apps/app'
 	mut original := LaunchDataLimit{}
 	assert C.getrlimit(C.RLIMIT_NOFILE, voidptr(&original)) == 0
 	limited := LaunchDataLimit{ current: 32, maximum: original.maximum }
@@ -168,7 +168,7 @@ fn test_launch_refuses_aliased_app_data_before_creating_or_chmodding_the_target(
 	work := launch_data_work()!
 	defer { os.rmdir_all(work) or { panic(err) } }
 	home := work + '/home'
-	parent := home + '/.local/share/vinix-apps'
+	parent := home + '/.local/share/tulpar-apps'
 	os.mkdir_all(parent)!
 	os.mkdir(work + '/outside')!
 	os.chmod(work + '/outside', 0o755)!
@@ -186,7 +186,7 @@ fn test_launch_refuses_aliased_app_data_before_creating_or_chmodding_the_target(
 		files: [Payload{ path: 'bin/app', bytes: os.file_size(file), sha256: hash_file(file)!, executable: true }] }
 	state := State{ generation: 1, architecture: 'aarch64', requested: ['app'], packages: [Installed{ package: app, repository: 'fixture', public_key: key, sequence: 1 }] }
 	os.mkdir_all(directory + '/generations/1/share/applications')!
-	os.write_file(directory + '/generations/1/share/applications/vinix-app.desktop', desktop_entry(app))!
+	os.write_file(directory + '/generations/1/share/applications/tulpar-app.desktop', desktop_entry(app))!
 	original_home := os.getenv('HOME')
 	os.setenv('HOME', home, true)
 	defer { os.setenv('HOME', original_home, true) }

@@ -29,7 +29,7 @@ fn service_plan(root string) !Plan {
 }
 
 fn test_exported_service_preserves_literal_argv_and_runs_under_the_native_supervisor() {
-	root := os.real_path(sourcecommand.temporary('vinix-jobs-service')!)
+	root := os.real_path(sourcecommand.temporary('tulpar-jobs-service')!)
 	defer { os.rmdir_all(root) or {} }
 	cli := service_cli(root)!
 	state := root + '/schedule "quoted" \\ literal'
@@ -90,7 +90,7 @@ fn test_exported_service_preserves_literal_argv_and_runs_under_the_native_superv
 }
 
 fn test_service_export_refuses_expansion_and_control_paths_without_changing_the_schedule() {
-	root := os.real_path(sourcecommand.temporary('vinix-jobs-service-refusal')!)
+	root := os.real_path(sourcecommand.temporary('tulpar-jobs-service-refusal')!)
 	defer { os.rmdir_all(root) or {} }
 	cli := service_cli(root)!
 	for name in ['dollar$path', 'percent%path', 'newline\npath'] {

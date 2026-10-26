@@ -74,7 +74,7 @@ fn (mut this EXT2Resource) release_mapping(_handle voidptr, _page u64,
 			state := mmap_mod.file_page_state(voidptr(this.box), mapped.page, mapped.physical, false)
 			if !state.ready { return }
 			mapped.shared_dirty = mapped.shared_dirty || state.dirty
-			mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+			mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 			unsafe { *inode = EXT2Inode{} }
 			inode.read_entry(mut this.filesystem, u32(this.stat.ino)) or { return }
 			this.write_mapped_page_locked(mut inode, mapped) or { return }
@@ -169,7 +169,7 @@ fn (mut this EXT2Resource) write_mapped_pages_once(offset u64, length u64) ? {
 		return
 	}
 
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *inode = EXT2Inode{} }
 	mut inode_loaded := false
 	mut index := 0
@@ -223,7 +223,7 @@ fn (mut this EXT2Resource) reclaim_mapped_span(wanted u64, foreground bool, begi
 		if drop_registry { this.unref(unsafe { nil }) or {} }
 	}
 	mut reclaimed := u64(0)
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *inode = EXT2Inode{} }
 	mut inode_loaded := false
 	// The first pass ages referenced pages. Foreground recovery revisits them

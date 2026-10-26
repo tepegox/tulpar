@@ -51,7 +51,7 @@ fn build(version string, destination string) ! {
 		os.mkdir_all(root + '/licenses')!
 		os.cp(repository + '/tools/packages/appsdk/LICENSE', root + '/licenses/application-sdk-MIT.txt')!
 		os.cp(os.dir(v) + '/LICENSE', root + '/licenses/v-MIT.txt')!
-		os.cp(os.getenv_opt('VINIX_MUSL_COPYRIGHT') or { repository + '/build-support/musl/COPYRIGHT' }, root + '/licenses/musl-MIT.txt')!
+		os.cp(os.getenv_opt('TULPAR_MUSL_COPYRIGHT') or { repository + '/build-support/musl/COPYRIGHT' }, root + '/licenses/musl-MIT.txt')!
 		for example in ['hello', 'counter', 'memo'] {
 			name := if example == 'hello' { 'package-hello' } else { example }
 			c_file := output + '/' + architecture + '-' + name + '.c'

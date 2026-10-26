@@ -21,7 +21,7 @@ fn invoke(arguments []string, log string) ! {
 
 fn certificate(work string) ! {
 	os.write_file(work + '/certificate.cnf', '[req]\nprompt=no\ndistinguished_name=subject\nx509_extensions=extensions\n'
-		+ '[subject]\nCN=Vinix package HTTPS fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\n'
+		+ '[subject]\nCN=Tulpar package HTTPS fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\n'
 		+ 'keyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\nextendedKeyUsage=serverAuth\nsubjectAltName=IP:127.0.0.1\n')!
 	invoke(['openssl', 'req', '-new', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1',
 		'-config', work + '/certificate.cnf', '-keyout', work + '/key.pem', '-out', work + '/ca.pem'], work + '/certificate-build.txt')!
@@ -39,7 +39,7 @@ fn wait_ready(path string, mut server os.Process) !string {
 
 fn transfer_events(event pkgprotocol.Progress) {
 	event.validate() or { panic(err) }
-	mut file := os.open_file(os.getenv('VINIX_HTTPS_EVENTS'), 'a', 0o600) or { panic(err) }
+	mut file := os.open_file(os.getenv('TULPAR_HTTPS_EVENTS'), 'a', 0o600) or { panic(err) }
 	file.writeln(json2.encode(event)) or { panic(err) }
 	file.close()
 }
@@ -50,8 +50,8 @@ fn requests(work string, mode string) ![]string {
 
 fn qualify_transaction(work string, base string, mode string, text string, key string, payload pkgcore.Payload) ! {
 	root := work + '/store-' + mode
-	os.mkdir_all(root + '/etc/vinix-packages')!
-	configuration := root + '/etc/vinix-packages/config.json'
+	os.mkdir_all(root + '/etc/tulpar-packages')!
+	configuration := root + '/etc/tulpar-packages/config.json'
 	initial := pkgcore.Config{architecture: 'aarch64',
 		repositories: [pkgcore.Repository{id: 'tls-fixture', public_key: key, url: base + '/ranges'}],
 		policy: pkgcore.Policy{reserve_bytes: 0}}
@@ -73,7 +73,7 @@ fn qualify_transaction(work string, base string, mode string, text string, key s
 	plain.refresh()!
 	event_file := root + '/events.txt'
 	os.write_file(event_file, '')!
-	os.setenv('VINIX_HTTPS_EVENTS', event_file, true)
+	os.setenv('TULPAR_HTTPS_EVENTS', event_file, true)
 	service := pkgcore.Service{root: root, progress: transfer_events}
 	before := requests(work, url_mode)!.len
 	state := service.state()!
@@ -136,7 +136,7 @@ fn check() ! {
 	certificate(work)!
 	mut environment := []SavedEnvironment{}
 	for name, value in {'CURL_CA_BUNDLE': work + '/ca.pem', 'NO_PROXY': '127.0.0.1,localhost',
-		'no_proxy': '127.0.0.1,localhost', 'CURL_HOME': work, 'VINIX_HTTPS_EVENTS': ''} {
+		'no_proxy': '127.0.0.1,localhost', 'CURL_HOME': work, 'TULPAR_HTTPS_EVENTS': ''} {
 		if old := os.getenv_opt(name) { environment << SavedEnvironment{name: name, value: old, present: true} }
 		else { environment << SavedEnvironment{name: name} }
 		os.setenv(name, value, true)

@@ -50,7 +50,7 @@ fn (mut inode EXT2Inode) get_block(mut filesystem EXT2Filesystem, logical u32) ?
 	}
 	root, depth, indices := filesystem.block_path(logical)?
 	mut block := inode.blocks[root]
-	value := unsafe { &u32(C.vinix_stack_alloc(sizeof(u32))) }
+	value := unsafe { &u32(C.tulpar_stack_alloc(sizeof(u32))) }
 	for level in 0 .. depth {
 		// A missing intermediate table is a hole, never block zero on the device.
 		if block == 0 { return 0 }
@@ -95,7 +95,7 @@ fn (mut inode EXT2Inode) attach_block_chain(mut filesystem EXT2Filesystem, inode
 	for level in first .. depth {
 		tables[level] = inode.allocate_accounted_block(mut filesystem)?
 	}
-	value := unsafe { &u32(C.vinix_stack_alloc(sizeof(u32))) }
+	value := unsafe { &u32(C.tulpar_stack_alloc(sizeof(u32))) }
 	for level in first .. depth {
 		unsafe { *value = if level + 1 == depth { data } else { tables[level + 1] } }
 		filesystem.raw_device_write(value, u64(tables[level]) * filesystem.block_size + u64(indices[level]) * 4, 4)?
@@ -127,7 +127,7 @@ fn (mut inode EXT2Inode) set_block(mut filesystem EXT2Filesystem, inode_index u3
 	}
 	mut table := inode.blocks[root]
 	mut parent := u64(0)
-	value := unsafe { &u32(C.vinix_stack_alloc(sizeof(u32))) }
+	value := unsafe { &u32(C.tulpar_stack_alloc(sizeof(u32))) }
 	for level in 0 .. depth {
 		if table == 0 {
 			if data == 0 { return 0 }
@@ -158,7 +158,7 @@ fn (mut inode EXT2Inode) prune_block_table(mut filesystem EXT2Filesystem, table 
 	pointers := filesystem.block_size / 4
 	mut span := u64(1)
 	for _ in 1 .. depth { span *= pointers }
-	zero := unsafe { &u32(C.vinix_stack_alloc(sizeof(u32))) }
+	zero := unsafe { &u32(C.tulpar_stack_alloc(sizeof(u32))) }
 	unsafe { *zero = 0 }
 	mut empty := true
 	for index := u64(0); index < pointers; index++ {

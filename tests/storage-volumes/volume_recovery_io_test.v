@@ -53,7 +53,7 @@ fn volume_recovery_check_output(path string, disk &DiskKey, request &EncryptedRe
 
 fn test_volume_recovery_io_faults_erasure_no_replacement_and_exact_authenticated_metadata() {
 	volume_recovery_model = true; defer { volume_recovery_model = false }
-	work := os.join_path(os.temp_dir(), 'vinix-volume-recovery-io-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-recovery-io-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	mut disk := DiskKey{bytes: 16777216, sector: 512, kind: 1}; disk.id[0] = 1
 	request := EncryptedRequest{data: Request{slot: 63, offset: 8192, length: 4096, flags: 1}, key: [64]u8{init: u8(index * 13 + 7)}}
@@ -79,7 +79,7 @@ fn test_volume_recovery_io_faults_erasure_no_replacement_and_exact_authenticated
 			assert recovery_io.opened == recovery_io.closed && recovery_io.volume_wipes == 1 && !recovery_io.locked
 			assert os.exists(destination) == (mode <= 1 || mode in [19, 20, 21])
 			if os.exists(destination) { volume_recovery_check_output(destination, &disk, &request, backup, &recovery[0])!; os.rm(destination)! }
-			assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+			assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 		}
 		// Existing output, input alias and dangling output symlink all survive.
 		for destination in [work + '/config', work + '/backup', work + '/recovery', work + '/link'] {

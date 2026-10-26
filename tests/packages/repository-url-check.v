@@ -50,8 +50,8 @@ fn check() ! {
 	fixtures := work + '/fixtures'
 	os.write_file(fixtures + '/sentinel', 'preserve unrelated data\n')!
 	corrupt := fixtures + '/corrupt'
-	os.mkdir_all(corrupt + '/etc/vinix-packages', mode: 0o755)!
-	os.write_file(corrupt + '/etc/vinix-packages/config.json', '{broken\n')!
+	os.mkdir_all(corrupt + '/etc/tulpar-packages', mode: 0o755)!
+	os.write_file(corrupt + '/etc/tulpar-packages/config.json', '{broken\n')!
 	mut baseline := map[string]string{}
 	tree(fixtures, '', mut baseline)!
 	for kind in ['missing', 'corrupt'] {
@@ -82,20 +82,20 @@ fn check() ! {
 	mut controls := 0; mut refusals := 0
 	for store in ['fresh', 'existing'] {
 		root := fixtures + '/' + store
-		os.mkdir_all(root + '/etc/vinix-packages', mode: 0o755)!
+		os.mkdir_all(root + '/etc/tulpar-packages', mode: 0o755)!
 		os.write_file(root + '/sentinel', 'preserve root data\n')!
 		if store == 'existing' {
-			os.mkdir_all(root + '/var/lib/vinix-packages/objects', mode: 0o755)!
-			os.write_file(root + '/var/lib/vinix-packages/lock', '')!
-			os.write_file(root + '/var/lib/vinix-packages/catalog.json', 'preserve catalog bytes\n')!
-			os.write_file(root + '/var/lib/vinix-packages/objects/sentinel', 'preserve immutable payload\n')!
+			os.mkdir_all(root + '/var/lib/tulpar-packages/objects', mode: 0o755)!
+			os.write_file(root + '/var/lib/tulpar-packages/lock', '')!
+			os.write_file(root + '/var/lib/tulpar-packages/catalog.json', 'preserve catalog bytes\n')!
+			os.write_file(root + '/var/lib/tulpar-packages/objects/sentinel', 'preserve immutable payload\n')!
 		}
 		for good in [true, false] {
 			for i, url in if good { accepted } else { refused } {
 				require(pkgprotocol.valid_repository_url(url) == good, 'SDK and service matrix disagree')!
 				configuration := '{"format":1,"architecture":"aarch64","repositories":[{"id":"fixture","url":'
 					+ json2.encode(url) + ',"public_key":"' + key + '"}],"policy":{"offline":true,"reserve_bytes":0}}\n'
-				os.write_file(root + '/etc/vinix-packages/config.json', configuration)!
+				os.write_file(root + '/etc/tulpar-packages/config.json', configuration)!
 				mut before := map[string]string{}; tree(fixtures, '', mut before)!
 				for json in [false, true] {
 					log := work + '/logs/' + store + '-' + good.str() + '-' + i.str() + '-' + json.str()
@@ -112,8 +112,8 @@ fn check() ! {
 					} else {
 						// Oversized JSON strings are refused by the bounded decoder first.
 						expected := if url.len > 4096 {
-							'vinix-package: invalid package configuration: package metadata JSON string exceeds its bound\n'
-						} else { 'vinix-package: invalid package configuration: invalid or duplicate repository: fixture\n' }
+							'tulpar-package: invalid package configuration: package metadata JSON string exceeds its bound\n'
+						} else { 'tulpar-package: invalid package configuration: invalid or duplicate repository: fixture\n' }
 						require(code == 1 && reply == expected,
 							'malformed URL did not reach exact service refusal; see ' + log)!
 						refusals++

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* ABI metadata and libc/compiler declarations; executable transport is V. */
-#ifndef VINIX_CPU_BUG_FIXTURE_H
-#define VINIX_CPU_BUG_FIXTURE_H
+#ifndef TULPAR_CPU_BUG_FIXTURE_H
+#define TULPAR_CPU_BUG_FIXTURE_H
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>

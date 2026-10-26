@@ -41,8 +41,8 @@ ordinary-owned personal data. The saved before/after context bytes match exactly
 ```sh
 v -no-skip-unused -path '.|tests/hardware-platform|@vlib|@vmodules' \
   -o /tmp/context-check tests/packages/sdk-context-check.v
-V=/path/to/v VINIX_HWTEST_TCG=1 \
-  VINIX_CONTEXT_SANDBOX=/build/target-root/usr/bin/vinix-sandbox \
+V=/path/to/v TULPAR_HWTEST_TCG=1 \
+  TULPAR_CONTEXT_SANDBOX=/build/target-root/usr/bin/tulpar-sandbox \
   /tmp/context-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-context-arm
 ```
@@ -52,7 +52,7 @@ hardware-platform cross-toolchain, firmware and Limine settings apply. Passing
 receipts record nine hashes: kernel, native sandbox, guest init, service,
 account/session tools, native SDK example, manifest and serial log. The
 functional deadline is 300 seconds and the guest must power off cleanly.
-Set `VINIX_CONTEXT_EXAMPLE` to an existing matching-target ELF executable to
+Set `TULPAR_CONTEXT_EXAMPLE` to an existing matching-target ELF executable to
 qualify that exact SDK example binary instead of rebuilding it in the controller.
 
 The standalone V example builder also builds both static ELF targets with the

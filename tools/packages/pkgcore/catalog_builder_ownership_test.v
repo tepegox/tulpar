@@ -12,15 +12,15 @@ struct CatalogBuilderLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 #include "@VMODROOT/../../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 }
 
 // Synthetic payloads are inventoried, never executed. Two shared paths have
 // one digest; runtime selectors resolve guest-absolute aliases on both hosts.
 fn builder_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-catalog-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-catalog-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/roots/shared')!
 	os.write_file(work + '/roots/shared/COPYING', 'shared license document')!
 	mut imports := []CatalogImport{}
@@ -73,8 +73,8 @@ fn builder_write(path string, text string) ! {
 }
 
 fn builder_checkpoint(phase string, stage string) ! {
-	mode := os.getenv('VINIX_CATALOG_OWNER_MODE'); defer { unsafe { mode.free() } }
-	if phase == 'created' { assert C.setenv(c'VINIX_CATALOG_OWNER_STAGE', stage.str, 1) == 0 }
+	mode := os.getenv('TULPAR_CATALOG_OWNER_MODE'); defer { unsafe { mode.free() } }
+	if phase == 'created' { assert C.setenv(c'TULPAR_CATALOG_OWNER_STAGE', stage.str, 1) == 0 }
 	if mode == phase { return error('injected catalog owner checkpoint refusal') }
 	if phase == 'packed' && mode.starts_with('packed-') {
 		names := ['app-aarch64', 'app-x86_64', 'license-all', 'runtime-aarch64', 'runtime-x86_64']!
@@ -83,7 +83,7 @@ fn builder_checkpoint(phase string, stage string) ! {
 		if publisher_entry_exists(path) { return error('injected catalog owner checkpoint refusal') }
 	}
 	if phase == 'created' && mode.starts_with('import-') {
-		work := os.getenv('VINIX_CATALOG_OWNER_WORK'); path := work + '/roots/aarch64/bin/application'
+		work := os.getenv('TULPAR_CATALOG_OWNER_WORK'); path := work + '/roots/aarch64/bin/application'
 		defer { unsafe { work.free(); path.free() } }
 		if mode == 'import-mode' { assert C.chmod(path.str, 0o644) == 0 }
 		else if mode == 'import-bytes' { builder_write(path, 'Application aarch64')! }
@@ -93,11 +93,11 @@ fn builder_checkpoint(phase string, stage string) ! {
 		}
 	}
 	if phase == 'created' && mode == 'changed-recipe' {
-		work := os.getenv('VINIX_CATALOG_OWNER_WORK'); path := work + '/recipe.json'
+		work := os.getenv('TULPAR_CATALOG_OWNER_WORK'); path := work + '/recipe.json'
 		defer { unsafe { work.free(); path.free() } }; builder_write(path, '{}')!
 	}
 	if phase == 'created' && mode.starts_with('root-replaced') {
-		work := os.getenv('VINIX_CATALOG_OWNER_WORK'); saved := work + '/saved-stage'; keep := stage + '/keep'
+		work := os.getenv('TULPAR_CATALOG_OWNER_WORK'); saved := work + '/saved-stage'; keep := stage + '/keep'
 		defer { unsafe { work.free(); saved.free(); keep.free() } }
 		assert C.rename(stage.str, saved.str) == 0; assert C.mkdir(stage.str, 0o700) == 0
 		builder_write(keep, 'preserved replacement')!
@@ -108,19 +108,19 @@ fn builder_checkpoint(phase string, stage string) ! {
 		defer { unsafe { path.free() } }; builder_write(path, '{}')!
 	}
 	if phase == 'ready' && mode.starts_with('object-') {
-		hash := os.getenv('VINIX_CATALOG_OWNER_OBJECT'); path := stage + '/objects/' + hash
+		hash := os.getenv('TULPAR_CATALOG_OWNER_OBJECT'); path := stage + '/objects/' + hash
 		defer { unsafe { hash.free(); path.free() } }
 		if mode == 'object-mutated' { builder_write(path, 'changed')! }
 		else { assert C.unlinkat(C.AT_FDCWD, path.str, 0) == 0 }
 	}
 	if phase == 'ready' && mode == 'raced-target' {
-		path := os.getenv('VINIX_CATALOG_OWNER_TARGET'); keep := path + '/keep'
+		path := os.getenv('TULPAR_CATALOG_OWNER_TARGET'); keep := path + '/keep'
 		defer { unsafe { path.free(); keep.free() } }; assert C.mkdir(path.str, 0o700) == 0; builder_write(keep, 'preserved replacement')!
 	}
 }
 
 fn builder_space(path string) !u64 {
-	mode := os.getenv('VINIX_CATALOG_OWNER_MODE'); parent := os.getenv('VINIX_CATALOG_OWNER_PARENT')
+	mode := os.getenv('TULPAR_CATALOG_OWNER_MODE'); parent := os.getenv('TULPAR_CATALOG_OWNER_PARENT')
 	defer { unsafe { mode.free(); parent.free() } }
 	if mode == 'space-error' { return error('injected catalog space refusal') }
 	if (mode == 'no-output-space' && path == parent) || (mode == 'no-temp-space' && path != parent) { return 0 }
@@ -128,7 +128,7 @@ fn builder_space(path string) !u64 {
 }
 
 fn builder_flush(fd int) int {
-	mode := os.getenv('VINIX_CATALOG_OWNER_MODE'); defer { unsafe { mode.free() } }
+	mode := os.getenv('TULPAR_CATALOG_OWNER_MODE'); defer { unsafe { mode.free() } }
 	if mode == 'flush' { return -1 }
 	return atomic_flush(fd)
 }
@@ -194,7 +194,7 @@ fn builder_attempt(mode string, recipe string, roots string, target string) {
 }
 
 fn test_complete_catalog_builder_retires_import_verification_and_publication_storage() {
-	defer { for name in ['MODE', 'WORK', 'PARENT', 'TARGET', 'STAGE', 'OBJECT']! { os.unsetenv('VINIX_CATALOG_OWNER_' + name) } }
+	defer { for name in ['MODE', 'WORK', 'PARENT', 'TARGET', 'STAGE', 'OBJECT']! { os.unsetenv('TULPAR_CATALOG_OWNER_' + name) } }
 	for mode in ['complete', 'nested', 'missing-recipe', 'invalid-json', 'unknown-schema', 'wrong-host', 'unresolved', 'missing-root', 'missing-architecture', 'alias-source',
 		'no-output-space', 'no-temp-space', 'space-error', 'created', 'packed-1', 'packed-2', 'packed-3', 'packed-4', 'packed-5', 'ready',
 		'import-missing', 'import-bytes', 'import-mode', 'import-directory', 'manifest-mutated', 'manifest-extra', 'object-mutated', 'object-missing', 'catalog-mutated',
@@ -206,9 +206,9 @@ fn test_complete_catalog_builder_retires_import_verification_and_publication_sto
 		defer { unsafe { golden.free() } }
 		assert golden == 'a5fac25e7915d6a796c04f427d79e0a7eab7ebbcff09a5ea79bb1ddcd4ea9158'
 		println('CATALOG BUILDER golden=' + golden)
-		os.setenv('VINIX_CATALOG_OWNER_MODE', mode, true); os.setenv('VINIX_CATALOG_OWNER_WORK', work, true)
-		os.setenv('VINIX_CATALOG_OWNER_TARGET', target, true); os.setenv('VINIX_CATALOG_OWNER_PARENT', os.dir(target), true)
-		os.setenv('VINIX_CATALOG_OWNER_OBJECT', hash_file(roots + '/shared/COPYING')!, true)
+		os.setenv('TULPAR_CATALOG_OWNER_MODE', mode, true); os.setenv('TULPAR_CATALOG_OWNER_WORK', work, true)
+		os.setenv('TULPAR_CATALOG_OWNER_TARGET', target, true); os.setenv('TULPAR_CATALOG_OWNER_PARENT', os.dir(target), true)
+		os.setenv('TULPAR_CATALOG_OWNER_OBJECT', hash_file(roots + '/shared/COPYING')!, true)
 		mut original := CatalogBuilderLimit{}; assert C.getrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		limit := CatalogBuilderLimit{ current: 32, maximum: original.maximum }; assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 		before := builder_descriptors(); mut maximum := u64(0); mut records := u32(0)
@@ -216,10 +216,10 @@ fn test_complete_catalog_builder_retires_import_verification_and_publication_sto
 			builder_reset(work)!
 			if os.is_dir(work + '/saved-root') { os.rename(work + '/saved-root', roots + '/aarch64')! }
 			builder_prepare(mode, work, target)!
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			builder_attempt(mode, recipe, roots, target)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if count > records { records = count }
 			}
 			assert builder_descriptors() == before
@@ -228,8 +228,8 @@ fn test_complete_catalog_builder_retires_import_verification_and_publication_sto
 			else if mode == 'raced-target' { assert os.read_file(target + '/keep')! == 'preserved replacement' }
 			else { assert !os.exists(target) }
 			if mode.starts_with('root-replaced') {
-				stage := os.getenv('VINIX_CATALOG_OWNER_STAGE'); assert os.read_file(stage + '/keep')! == 'preserved replacement' && os.is_dir(work + '/saved-stage')
-			} else { assert os.ls(work + '/output')!.all(!it.starts_with('.vinix-catalog-')) }
+				stage := os.getenv('TULPAR_CATALOG_OWNER_STAGE'); assert os.read_file(stage + '/keep')! == 'preserved replacement' && os.is_dir(work + '/saved-stage')
+			} else { assert os.ls(work + '/output')!.all(!it.starts_with('.tulpar-catalog-')) }
 		}
 		assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		$if track_heap ? {
@@ -238,7 +238,7 @@ fn test_complete_catalog_builder_retires_import_verification_and_publication_sto
 		}
 		builder_reset(work)!
 		if os.is_dir(work + '/saved-root') { os.rename(work + '/saved-root', roots + '/aarch64')! }
-		os.unsetenv('VINIX_CATALOG_OWNER_MODE')
+		os.unsetenv('TULPAR_CATALOG_OWNER_MODE')
 		mut retried := pack_catalog(recipe, roots, target)!; assert retried.catalog_sha256 == golden; retried.close(); retried.close()
 		assert os.read_file(roots + '/aarch64/bin/application')! == 'application aarch64' && os.read_file(roots + '/shared/COPYING')! == 'shared license document'
 		println('CATALOG BUILDER ' + mode + ' canonical retry, deduplication, saved output, sources and descriptors PASS')

@@ -100,7 +100,7 @@ fn growth_load(path string, mut set PlanSet) bool {
 }
 
 fn test_planned_capacity_publication_is_offline_atomic_and_preserves_file_on_invalid_edit() {
-	work := os.join_path(os.temp_dir(), 'vinix-capacity-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-capacity-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'

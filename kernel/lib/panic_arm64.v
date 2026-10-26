@@ -42,7 +42,7 @@ pub fn kpanic(gpr_state &cpulocal.GPRState, message charptr) {
 
 	cpu_number := if smp_ready { cpulocal.current().cpu_number } else { 0 }
 
-	C.printf_panic(c'\n  *** Vinix KERNEL PANIC on CPU %d ***\n\n', cpu_number)
+	C.printf_panic(c'\n  *** Tulpar KERNEL PANIC on CPU %d ***\n\n', cpu_number)
 	C.printf_panic(c'Panic info: %s\n', message)
 	if gpr_state != unsafe { nil } {
 		C.printf_panic(c'ESR_EL1: 0x%016llx  FAR_EL1: 0x%016llx\n', cpu.read_esr_el1(),

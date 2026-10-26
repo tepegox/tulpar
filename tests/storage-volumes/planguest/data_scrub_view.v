@@ -4,7 +4,7 @@ module planguest
 @[direct_array_access]
 fn data_scrub_view_tool(path &char, expected i32) {
 	mut output := [4096]char{}; data_auto_tool(c'show-data-scrub', path, unsafe { nil }, expected, &output[0])
-	if expected != 0 { check(C.strstr(&output[0], c'format=VINIXSR1') == unsafe { nil } && C.strstr(&output[0], c'disk=') == unsafe { nil }, c'invalid scrub inspection emits no partial report'); return }
+	if expected != 0 { check(C.strstr(&output[0], c'format=TULPARSR1') == unsafe { nil } && C.strstr(&output[0], c'disk=') == unsafe { nil }, c'invalid scrub inspection emits no partial report'); return }
 	fd := C.open(path, C.O_RDONLY); mut saved := [4096]char{}; count := C.read(fd, &saved[0], 4095)
 	check(fd >= 0 && count > 0 && count < 4095 && C.close(fd) == 0, c'read saved scrub inspection fixture'); saved[count] = 0
 	check(C.strcmp(&output[0], &saved[0]) == 0, c'inspection preserves complete canonical report bytes')
@@ -50,13 +50,13 @@ fn data_scrub_view_entry() i32 {
 		copy_scrub_report(c'/root/auto-data-changed.txt', c'/root/invalid-scrub.txt'); bad := C.open(c'/root/invalid-scrub.txt', C.O_RDWR); mut info := C.stat{}; mut nul := u8(0)
 		check(bad >= 0 && C.fstat(bad, &info) == 0 && C.pwrite(bad, &nul, 1, info.st_size - 2) == 1 && C.fsync(bad) == 0 && C.close(bad) == 0, c'persist invalid last scrub digest')
 		data_scrub_view_tool(c'/root/invalid-scrub.txt', 1); check(C.unlink(c'/root/invalid-scrub.txt') == 0, c'reclaim malformed scrub report')
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9'); readonly := status(c'/dev/mapper/vinix5')
-		held := C.open(c'/dev/mapper/vinix9', C.O_RDONLY); check(held >= 0, c'hold scrub inspection mapping')
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9'); readonly := status(c'/dev/mapper/tulpar5')
+		held := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY); check(held >= 0, c'hold scrub inspection mapping')
 		root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold scrub inspection writer lock')
-		data_scrub_view_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/vinix2') && second == status(c'/dev/mapper/vinix9') && readonly == status(c'/dev/mapper/vinix5'), c'offline inspection preserves all live status under writer contention')
+		data_scrub_view_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/tulpar2') && second == status(c'/dev/mapper/tulpar9') && readonly == status(c'/dev/mapper/tulpar5'), c'offline inspection preserves all live status under writer contention')
 		check(C.pread(held, &change[0], 4096, 0) == 4096 && C.close(held) == 0, c'read held scrub inspection mapping'); for value in change { check(value == 0x9c, c'preserved scrub inspection mapping contents') }
-		data_scrub_view_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/vinix/volumes.vset')
-		check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'remove invalid scrub inspection boot plan')
+		data_scrub_view_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/tulpar/volumes.vset')
+		check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'remove invalid scrub inspection boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600)); check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist scrub inspection phase')
 		C.printf(c'PLAN DATA SCRUB VIEW PASSED: complete clean/changed historical reports, no partial output, live status and bounded lifetimes\n')
 	} else {
@@ -64,6 +64,6 @@ fn data_scrub_view_entry() i32 {
 		C.printf(c'PLAN DATA SCRUB VIEW REORDERED BOOT PRESERVED\n')
 	}
 	for file in [&char(c'/root/data-output'), &char(c'/root/scrub-output'), &char(c'/root/auto-data-output')]! { if C.unlink(file) != 0 { check(C.errno == C.ENOENT, c'reclaim scrub inspection captures') } }
-	for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist scrub inspection artifacts and boot phase') }
+	for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist scrub inspection artifacts and boot phase') }
 	C.printf(c'PLAN DONE\n'); for { C.pause() }; return 0
 }

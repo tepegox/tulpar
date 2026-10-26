@@ -1,13 +1,13 @@
 # Regular-file version backups
 
-`vinix-volume` can save full and incremental versions of a regular file, verify
+`tulpar-volume` can save full and incremental versions of a regular file, verify
 their complete content and restore an earlier version into a new file:
 
 ```sh
-vinix-volume backup-file notes.txt notes-full.vbackup
-vinix-volume backup-file-delta notes-full.vbackup notes.txt notes-next.vbackup
-vinix-volume restore-file notes-full.vbackup notes-original.txt
-vinix-volume restore-file-delta notes-full.vbackup notes-next.vbackup notes-next.txt
+tulpar-volume backup-file notes.txt notes-full.vbackup
+tulpar-volume backup-file-delta notes-full.vbackup notes.txt notes-next.vbackup
+tulpar-volume restore-file notes-full.vbackup notes-original.txt
+tulpar-volume restore-file-delta notes-full.vbackup notes-next.vbackup notes-next.txt
 ```
 
 Each archive represents one file of at most 64 MiB. A full archive stores all
@@ -64,11 +64,11 @@ remain roadmap work.
 
 ## Archive version 1
 
-`VINIXBK1` is a canonical little-endian format. Its 256-byte header contains:
+`TULPARBK1` is a canonical little-endian format. Its 256-byte header contains:
 
 | Offset | Field |
 | --- | --- |
-| 0 | Eight-byte magic `VINIXBK1` |
+| 0 | Eight-byte magic `TULPARBK1` |
 | 8 | Version `u32=1`, kind `u32` (0 full, 1 delta) |
 | 16 | Chunk size `u32=65536`, four reserved zero bytes |
 | 24 | File size `u64` |

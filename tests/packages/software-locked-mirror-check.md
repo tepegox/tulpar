@@ -44,9 +44,9 @@ headless UI assets:
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
 V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 \
-  VINIX_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
-  VINIX_PACKAGE_TEST_DESKTOP=/path/to/desktop-assets \
-  VINIX_UI2_SOURCE=/path/to/ui2 CPATH="$PWD/desktop" \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
+  TULPAR_PACKAGE_TEST_DESKTOP=/path/to/desktop-assets \
+  TULPAR_UI2_SOURCE=/path/to/ui2 CPATH="$PWD/desktop" \
   /tmp/distribution-check --direct-tests --desktop
 ```
 

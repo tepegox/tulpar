@@ -14,7 +14,7 @@ import time
 #include <errno.h>
 
 @[typedef]
-struct C.vinix_source_child_info { si_pid i32 si_code i32 si_status i32 }
+struct C.tulpar_source_child_info { si_pid i32 si_code i32 si_status i32 }
 @[typedef]
 struct C.posix_spawn_file_actions_t {}
 @[typedef]
@@ -36,7 +36,7 @@ fn C.posix_spawnattr_setflags(voidptr, i16) i32
 fn C.posix_spawnattr_setsigdefault(voidptr, voidptr) i32
 fn C.posix_spawnattr_setbinpref_np(voidptr, uint, &i32, &uint) i32
 fn C.poll(&C.pollfd, uint, i32) i32
-fn C.waitid(i32, u32, &C.vinix_source_child_info, i32) i32
+fn C.waitid(i32, u32, &C.tulpar_source_child_info, i32) i32
 fn C.waitpid(i32, &i32, i32) i32
 fn C.WIFEXITED(i32) i32
 fn C.WEXITSTATUS(i32) i32
@@ -55,7 +55,7 @@ pub struct Output { pub: status int stdout string stderr string }
 // Only use from a run_owned/capture_owned callback, which reserves the PID
 // until this observation and all callback work have finished.
 pub fn child_exited(pid int) !bool {
-	mut info := C.vinix_source_child_info{}
+	mut info := C.tulpar_source_child_info{}
 	for {
 		if C.waitid(C.P_PID, u32(pid), &info, C.WEXITED | C.WNOHANG | C.WNOWAIT) == 0 { break }
 		if C.errno != C.EINTR { return os.error_posix() }
@@ -72,7 +72,7 @@ pub:
 // Observe Python/Popen-style signed return codes without releasing the
 // leader identity. The command owner still performs the sole final reap.
 pub fn child_exit(pid int) !ChildExit {
-	mut info := C.vinix_source_child_info{}
+	mut info := C.tulpar_source_child_info{}
 	for {
 		if C.waitid(C.P_PID, u32(pid), &info, C.WEXITED | C.WNOHANG | C.WNOWAIT) == 0 { break }
 		if C.errno != C.EINTR { return os.error_posix() }
@@ -277,7 +277,7 @@ fn capture_stream_input_arch(argv []string, env map[string]string, timeout f64, 
 			C.killpg(pid, C.SIGTERM)
 			deadline := time.sys_mono_now() + u64(shutdown_grace * f64(time.second))
 			for time.sys_mono_now() < deadline {
-				mut observed := C.vinix_source_child_info{}
+				mut observed := C.tulpar_source_child_info{}
 				if C.waitid(C.P_PID, u32(pid), &observed, C.WEXITED | C.WNOHANG | C.WNOWAIT) == 0 && observed.si_pid == pid { break }
 				time.sleep(10 * time.millisecond)
 			}
@@ -297,7 +297,7 @@ fn capture_stream_input_arch(argv []string, env map[string]string, timeout f64, 
 	for {
 		if cancel != unsafe { nil } && cancel() { return error('command interrupted') }
 		if timeout >= 0 && f64(time.sys_mono_now() - started) >= timeout * f64(time.second) { return error('command timed out') }
-		mut observed := C.vinix_source_child_info{}
+		mut observed := C.tulpar_source_child_info{}
 		if C.waitid(C.P_PID, u32(pid), &observed, C.WEXITED | C.WNOHANG | C.WNOWAIT) != 0 && C.errno != C.EINTR { return os.error_posix() }
 		if streams[0].fd < 0 && streams[1].fd < 0 && observed.si_pid == pid { break }
 		if C.poll(&streams[0], 2, 50) < 0 { if C.errno == C.EINTR { continue }; return os.error_posix() }
@@ -318,11 +318,11 @@ fn capture_stream_input_arch(argv []string, env map[string]string, timeout f64, 
 	}
 	// Observe the SDK status while still reserving the PID; the defer retires
 	// the group and performs the only reap before any caller can reuse it.
-	mut info := C.vinix_source_child_info{}
+	mut info := C.tulpar_source_child_info{}
 	if C.waitid(C.P_PID, u32(pid), &info, C.WEXITED | C.WNOWAIT) != 0 { return os.error_posix() }
 	return Output{child_status(info), stdout.str(), stderr.str()}
 }
 
-fn child_status(info C.vinix_source_child_info) int {
+fn child_status(info C.tulpar_source_child_info) int {
 	return if info.si_code == C.CLD_EXITED { int(info.si_status) } else { -int(info.si_status) }
 }

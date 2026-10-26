@@ -2,7 +2,7 @@
 set -eu
 
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-find-v-test.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-find-v-test.XXXXXX")
 work=$(CDPATH= cd -- "$work" && pwd)
 trap 'rm -rf "$work"' EXIT INT TERM
 
@@ -29,7 +29,7 @@ make_compiler() {
 
 run_selector() {
 	# Neither the real HOME nor an installed `v` may affect the result.
-	"$env_command" -u V -u VINIX_V_COMPILER HOME="$work/empty-home" \
+	"$env_command" -u V -u TULPAR_V_COMPILER HOME="$work/empty-home" \
 		PATH="$work/empty-path" "$@" "$shell_command" -c \
 		'. "$1"; printf "%s" "$V"' sh "$repo/build-support/find-v.sh"
 }
@@ -66,12 +66,12 @@ assert_rejected() {
 	assert_diagnostic "$expected_diagnostic"
 }
 
-# Explicit settings are authoritative; V takes precedence over VINIX_V_COMPILER.
+# Explicit settings are authoritative; V takes precedence over TULPAR_V_COMPILER.
 make_compiler "$work/explicit-v"
 make_compiler "$work/secondary-v"
 assert_selected "$work/explicit-v" "V=$work/explicit-v" \
-	"VINIX_V_COMPILER=$work/secondary-v"
-assert_selected "$work/secondary-v" "VINIX_V_COMPILER=$work/secondary-v"
+	"TULPAR_V_COMPILER=$work/secondary-v"
+assert_selected "$work/secondary-v" "TULPAR_V_COMPILER=$work/secondary-v"
 
 # Passing a checkout selects its `v`, even beside a `vnew`.
 mkdir -p "$work/explicit-checkout/cmd/v"
@@ -79,7 +79,7 @@ mkdir -p "$work/explicit-checkout/cmd/v"
 make_compiler "$work/explicit-checkout/v"
 make_compiler "$work/explicit-checkout/vnew"
 assert_selected "$work/explicit-checkout/v" \
-	"VINIX_V_COMPILER=$work/explicit-checkout"
+	"TULPAR_V_COMPILER=$work/explicit-checkout"
 
 # An exact executable requested through V remains exact even inside a checkout.
 assert_selected "$work/explicit-checkout/v" "V=$work/explicit-checkout/v"
@@ -115,7 +115,7 @@ assert_selected "$work/installed/v" "HOME=$work/home" "PATH=$work/installed"
 assert_selected "$work/home/code/v/v" "HOME=$work/home"
 assert_selected "$work/explicit-v" "V=$work/explicit-v" \
 	"HOME=$work/home" "PATH=$work/installed"
-assert_selected "$work/secondary-v" "VINIX_V_COMPILER=$work/secondary-v" \
+assert_selected "$work/secondary-v" "TULPAR_V_COMPILER=$work/secondary-v" \
 	"HOME=$work/home" "PATH=$work/installed"
 
 # The reported .viminfo wrapper failure is diagnosed and a checkout is used.
@@ -131,9 +131,9 @@ for fixture in non-v failed-version no-version nondigit-version; do
 	assert_diagnostic "$work/$fixture/v"
 	# An explicit override fails instead of silently using a valid fallback.
 	assert_rejected "$work/$fixture/v" "V=$work/$fixture/v" \
-		"VINIX_V_COMPILER=$work/secondary-v" "HOME=$work/home" "PATH=$work/installed"
+		"TULPAR_V_COMPILER=$work/secondary-v" "HOME=$work/home" "PATH=$work/installed"
 done
-assert_rejected '.viminfo' "VINIX_V_COMPILER=$work/broken-path/v" \
+assert_rejected '.viminfo' "TULPAR_V_COMPILER=$work/broken-path/v" \
 	"HOME=$work/home" "PATH=$work/installed"
 
 # A broken first checkout still allows the second standard checkout.
@@ -153,12 +153,12 @@ assert_rejected "$work/broken-checkout/v" "V=$work/broken-checkout/vnew" \
 assert_rejected "$work/missing-v" "V=$work/missing-v" "HOME=$work/home"
 make_compiler "$work/not-executable-v"
 chmod -x "$work/not-executable-v"
-assert_rejected "$work/not-executable-v" "VINIX_V_COMPILER=$work/not-executable-v" \
+assert_rejected "$work/not-executable-v" "TULPAR_V_COMPILER=$work/not-executable-v" \
 	"HOME=$work/home"
 
 # With no usable candidate, fail early and explain how to select a compiler.
 assert_rejected 'cannot find a working V compiler'
-assert_diagnostic 'V/VINIX_V_COMPILER'
+assert_diagnostic 'V/TULPAR_V_COMPILER'
 make_compiler "$work/broken-home/code/v/v" failed-version
 make_compiler "$work/broken-home/v/v" non-v
 assert_rejected 'cannot find a working V compiler' "HOME=$work/broken-home" \

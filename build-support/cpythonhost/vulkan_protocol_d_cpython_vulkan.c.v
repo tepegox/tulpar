@@ -160,7 +160,7 @@ fn (c &VulkanContext) resolver() voidptr {
 	factory := vulkan_attr(util, 'spec_from_file_location')
 	drop(util)
 	if factory == unsafe { nil } { return factory }
-	name := vulkan_literal('vinix_debian_root')
+	name := vulkan_literal('tulpar_debian_root')
 	if name == unsafe { nil } { drop(factory); return name }
 	root := c.resolve('ROOT')
 	if root == unsafe { nil } { drop(name); drop(factory); return root }

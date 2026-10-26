@@ -48,7 +48,7 @@ v -nocache -no-skip-unused -gc none -manualfree \
   -path '@vlib|@vmodules|.|tools/accounts' \
   -o /tmp/installation-health tests/packages/installation-health-check.v
 /tmp/installation-health /tmp/new-installation-health
-/tmp/installation-health /tmp/new-installation-health-cli /path/to/vinix-package
+/tmp/installation-health /tmp/new-installation-health-cli /path/to/tulpar-package
 ```
 
 The [target controller](installation-health-runtime-check.v) runs core assertions

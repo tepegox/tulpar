@@ -6,8 +6,8 @@ import klock
 import memory
 import memory.mmap as mmap_mod
 
-#flag -Dvinix_stack_alloc=__builtin_alloca
-fn C.vinix_stack_alloc(bytes u64) voidptr
+#flag -Dtulpar_stack_alloc=__builtin_alloca
+fn C.tulpar_stack_alloc(bytes u64) voidptr
 
 const page_size = u64(4096)
 const higher_half = u64(0)

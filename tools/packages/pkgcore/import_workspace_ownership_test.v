@@ -11,9 +11,9 @@ struct WorkspaceLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn workspace_selected(name string) bool {
@@ -56,7 +56,7 @@ fn workspace_attempt(recipe string, root string, repository string, captured int
 }
 
 fn test_complete_prepared_import_workspace_retires_storage_on_success_and_refusal() {
-	work := os.real_path(os.temp_dir()) + '/vinix-import-workspace-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-import-workspace-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	defer { os.rmdir_all(work) or {} }
 	root := work + '/root'; recipe_path := work + '/recipe.json'; repository := work + '/repository'
 	os.mkdir_all(root + '/tree/a/empty')!
@@ -88,10 +88,10 @@ fn test_complete_prepared_import_workspace_retires_storage_on_success_and_refusa
 			if mode == 'publisher-file' { os.write_file(repository, 'preserved')! }
 			if mode == 'object-directory' { os.mkdir_all(repository + '/objects/' + expected.files[0].sha256)! }
 			if mode == 'manifest-directory' { os.mkdir_all(repository + '/manifests/fixture-all-1.0.0.json')! }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			workspace_attempt(recipe_path, root, repository, captured, pinned, mode)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 			}
 			assert workspace_descriptors() == before

@@ -74,13 +74,13 @@ No kernel code or lifetime changes here.
 
 ```sh
 v -nocache -o /tmp/ffmpeg-owner-check tests/packages/ffmpeg-owner-check.v
-VINIX_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
+TULPAR_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
   /tmp/ffmpeg-owner-check /build/new-ffmpeg-owner-host
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/ffmpeg-owner-runtime tests/packages/ffmpeg-owner-runtime-check.v
-VINIX_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz \
-  VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz \
+  TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/ffmpeg-owner-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-ffmpeg-owner-arm
 ```

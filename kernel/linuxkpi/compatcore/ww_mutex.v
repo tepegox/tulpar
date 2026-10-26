@@ -171,7 +171,7 @@ fn ww_must_back_off(ww_lock &C.vkw_ww_mutex, waiter &WwWaiter) bool {
 }
 fn ww_acquire_mutex(ww_lock &C.vkw_ww_mutex, ctx &C.vkw_ww_ctx, state u32) i32 {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		task := C.vkp_current()
 		mut waiter := WwWaiter{}
 		waiter.task = task

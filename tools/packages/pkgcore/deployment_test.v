@@ -6,8 +6,8 @@ import os
 import time
 
 fn deployment_fixture(label string) !(string, Service, Config) {
-	work := os.temp_dir() + '/vinix-deployment-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/root/etc/vinix-packages')!
+	work := os.temp_dir() + '/tulpar-deployment-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/root/etc/tulpar-packages')!
 	os.mkdir_all(work + '/source/bin')!
 	os.write_file(work + '/source/bin/runner', 'signed runner\n')!
 	os.chmod(work + '/source/bin/runner', 0o755)!
@@ -15,7 +15,7 @@ fn deployment_fixture(label string) !(string, Service, Config) {
 	config := Config{ architecture: 'aarch64',
 		repositories: [Repository{ id: 'fixture', url: 'file://' + work + '/repository', public_key: key }],
 		policy: Policy{ reserve_bytes: 0 } }
-	os.write_file(work + '/root/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(work + '/root/etc/tulpar-packages/config.json', json2.encode(config))!
 	deployment_version(work, '1.0.0')!
 	os.write_file(work + '/manifest.json', json2.encode(Package{ id: 'unused', version: '1.0.0',
 		architecture: 'all', name: 'Data', license: 'MIT', kind: 'data' }))!
@@ -73,8 +73,8 @@ fn test_deployment_mirror_exports_pinned_older_application_and_runtime_and_lock_
 	assert service.state()!.generation == 0
 	os.rmdir_all(work + '/repository')!
 	root := work + '/offline'
-	os.mkdir_all(root + '/etc/vinix-packages')!
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(Config{ ...config,
+	os.mkdir_all(root + '/etc/tulpar-packages')!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(Config{ ...config,
 		repositories: [Repository{ ...config.repositories[0], url: 'file://' + destination + '/fixture' }],
 		policy: Policy{ offline: true, reserve_bytes: 0 } }))!
 	offline := Service{ root: root }
@@ -115,12 +115,12 @@ fn test_deployment_mirror_binds_exact_lock_bytes_before_side_effects_and_validat
 		assert refused && !os.exists(work + '/absent')
 	}
 	os.write_file(path, text)!
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(Config{ ...config,
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(Config{ ...config,
 		policy: Policy{ ...config.policy, permissions: ['files'] } }))!
 	refused = false
 	service.review_deployment_mirror(destination, path) or { refused = err.msg().contains('permissions blocked') }
 	assert refused && !os.exists(work + '/absent')
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	guard := acquire(state_directory(service.root))!
 	defer { guard.release() }
 	refused = false
@@ -153,7 +153,7 @@ fn test_deployment_mirror_captures_one_document_and_cleans_unpublished_lock_on_f
 		refused = err.msg().contains('payload verification failed')
 	}
 	assert refused && !os.exists(work + '/export')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-mirror-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-mirror-'))
 	mirror_export(config, store, work + '/export', [], MirrorOptions{ deployment: path,
 		expected_review: review.mirror.review.fingerprint, checkpoint: deployment_replace_source })!
 	assert os.read_file(path)! == text + '\n'
@@ -173,7 +173,7 @@ fn test_locked_mirror_preserves_captured_document_through_final_publication() {
 	mut message := ''
 	mirror_export(config, store, work + '/export', [], MirrorOptions{ deployment: path, checkpoint: deployment_change_staged_lock }) or { message = err.msg() }
 	assert message.contains('offline mirror verification') && !os.exists(work + '/export')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-mirror-')) && os.read_file(path)! == text && service.state()!.generation == 0
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-mirror-')) && os.read_file(path)! == text && service.state()!.generation == 0
 	os.rmdir_all(work + '/repository')!
 	mirror_export(config, store, work + '/export', [], MirrorOptions{ deployment: path })!
 	assert os.read_file(work + '/export/_deployment.json')! == text
@@ -184,7 +184,7 @@ fn test_deployment_mirror_lock_filename_cannot_collide_with_repository_identifie
 	work, service, config := deployment_fixture('mirror-namespace')!
 	defer { os.rmdir_all(work) or {} }
 	changed := Config{ ...config, repositories: [Repository{ ...config.repositories[0], id: 'deployment.json' }] }
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(changed))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(changed))!
 	publish(work + '/repository', 'deployment.json', work + '/seed', 1, time.now().unix() + 3600)!
 	service.refresh()!
 	path := write_deployment(work, service.lock_deployment(['app'])!)!
@@ -221,8 +221,8 @@ fn test_locked_deployments_reproduce_versions_and_runtime_closure_after_refresh_
 	// A relocated offline mirror retains the publisher and exact manifests.
 	service.mirror(work + '/mirror', ['app'])!
 	root := work + '/offline'
-	os.mkdir_all(root + '/etc/vinix-packages')!
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(Config{ ...config,
+	os.mkdir_all(root + '/etc/tulpar-packages')!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(Config{ ...config,
 		repositories: [Repository{ ...config.repositories[0], url: 'file://' + work + '/mirror/fixture' }],
 		policy: Policy{ offline: true, reserve_bytes: 0 } }))!
 	offline := Service{ root: root }
@@ -269,13 +269,13 @@ fn test_deployment_reviews_bind_document_policy_state_and_command_domain_before_
 	service.apply_deployment(path, review.fingerprint) or { refused = err.msg().contains('stale') }
 	assert refused
 	write_deployment(work, locked)!
-	save_configuration(service.root + '/etc/vinix-packages/config.json', Config{ ...config,
+	save_configuration(service.root + '/etc/tulpar-packages/config.json', Config{ ...config,
 		policy: Policy{ ...config.policy, reserve_bytes: 1 } })!
 	refused = false
 	service.apply_deployment(path, review.fingerprint) or { refused = err.msg().contains('stale') }
 	assert refused && service.state()!.generation == 0
 	assert os.ls(directory + '/objects')!.len == 0 && os.is_dir(directory + '/generations/.stage-sentinel')
-	save_configuration(service.root + '/etc/vinix-packages/config.json', config)!
+	save_configuration(service.root + '/etc/tulpar-packages/config.json', config)!
 	service.transact('install', ['unused'], TransactionOptions{})!
 	refused = false
 	service.apply_deployment(path, review.fingerprint) or { refused = err.msg().contains('stale') }
@@ -310,12 +310,12 @@ fn test_deployment_lock_refuses_metadata_substitution_missing_or_extra_closure_a
 	for policy in [Policy{ permissions: ['files'], reserve_bytes: 0 },
 		Policy{ pins: [Dependency{ id: 'runtime', minimum: '2.0.0' }], reserve_bytes: 0 },
 		Policy{ allowed: ['app'], reserve_bytes: 0 }] {
-		save_configuration(service.root + '/etc/vinix-packages/config.json', Config{ ...config, policy: policy })!
+		save_configuration(service.root + '/etc/tulpar-packages/config.json', Config{ ...config, policy: policy })!
 		mut refused := false
 		service.review_deployment(path) or { refused = true }
 		assert refused && service.state()!.generation == 0
 	}
-	save_configuration(service.root + '/etc/vinix-packages/config.json', config)!
+	save_configuration(service.root + '/etc/tulpar-packages/config.json', config)!
 	// The same ID/version from the same trusted publisher cannot alter launch metadata.
 	actual := os.ls(work + '/repository/manifests')!.filter(it.contains('app'))[0]
 	p := json2.decode[Package](os.read_file(work + '/repository/manifests/' + actual)!)!
@@ -360,7 +360,7 @@ fn test_deployment_documents_are_strict_bounded_and_lock_before_reading() {
 	service.review_deployment(work + '/linked.json') or { refused = err.msg().contains('regular file') }
 	assert refused
 	guard := acquire(state_directory(service.root))!
-	os.write_file(service.root + '/etc/vinix-packages/config.json', '{broken')!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', '{broken')!
 	mut messages := []string{}
 	service.lock_deployment(['app']) or { messages << err.msg() }
 	service.review_deployment(work + '/absent') or { messages << err.msg() }

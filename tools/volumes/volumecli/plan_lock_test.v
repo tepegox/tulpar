@@ -24,7 +24,7 @@ fn wait_lock_child(child i32, expected i32) {
 }
 
 fn test_directory_lock_excludes_all_saved_state_writers_but_preserves_readonly_inspection() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-lock-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-lock-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -106,7 +106,7 @@ fn test_directory_lock_excludes_all_saved_state_writers_but_preserves_readonly_i
 }
 
 fn test_lock_covers_replaceable_source_and_publisher_duplicate_and_retry_reads_latest_state() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-lock-retry-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-lock-retry-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -140,7 +140,7 @@ fn test_lock_covers_replaceable_source_and_publisher_duplicate_and_retry_reads_l
 }
 
 fn test_locked_publication_keeps_original_directory_when_its_path_is_replaced() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-lock-anchor-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-lock-anchor-${os.getpid()}')
 	os.mkdir(work)!
 	os.mkdir(work + '/current')!
 	defer { os.rmdir_all(work) or {} }
@@ -164,7 +164,7 @@ fn test_locked_publication_keeps_original_directory_when_its_path_is_replaced() 
 }
 
 fn test_process_death_releases_lock_without_a_lock_file_or_manual_recovery() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-lock-exit-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-lock-exit-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -196,7 +196,7 @@ fn test_process_death_releases_lock_without_a_lock_file_or_manual_recovery() {
 }
 
 fn test_partial_acquisition_failures_release_descriptors_and_readonly_handles_cannot_publish() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-lock-fail-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-lock-fail-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/long-filename.vset'

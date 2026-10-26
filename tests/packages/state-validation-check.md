@@ -52,12 +52,12 @@ Reproduce the host suite and both target service builds with the pinned V compil
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
 V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 \
-  VINIX_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
   /tmp/distribution-check --direct-tests --cross
 ```
 
 Use [the Linux guest controller](linux-runtime-check.v) with matching kernel,
-native sandbox and musl copyright inputs, `VINIX_HWTEST_TCG=1`, and a fresh state
+native sandbox and musl copyright inputs, `TULPAR_HWTEST_TCG=1`, and a fresh state
 directory for each target. The final new state assertion runner also runs under
 clang ASan/UBSan with leak detection disabled and undefined behavior fatal.
 This checks exercised safety, rather than general decoder leak freedom.

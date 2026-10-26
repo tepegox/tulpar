@@ -68,7 +68,7 @@ fn set_control(value u16, mxcsr u32) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fpu_begin']
+@[export: 'tulpar_linuxkpi_fpu_begin']
 pub fn borrow_begin() {
 	unsafe {
 		if borrowed { protocol_errors++ }
@@ -78,7 +78,7 @@ pub fn borrow_begin() {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fpu_end']
+@[export: 'tulpar_linuxkpi_fpu_end']
 pub fn borrow_end() {
 	unsafe {
 		if !borrowed { protocol_errors++ }

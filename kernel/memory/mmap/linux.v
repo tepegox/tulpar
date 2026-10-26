@@ -453,7 +453,7 @@ pub fn syscall_mincore(_ voidptr, address u64, length u64, vec u64) (u64, u64) {
 pub fn syscall_madvise(_ voidptr, address u64, length u64, advice int) (u64, u64) {
 	mut process := proc.current_thread().process
 	mut pagemap := process.pagemap
-	// QEMU's x86 guests discard 4 KiB pages even though Vinix maps 16 KiB
+	// QEMU's x86 guests discard 4 KiB pages even though Tulpar maps 16 KiB
 	// host pages. Accept that alignment for the translators and clear only
 	// the requested subpage so adjacent guest pages keep their contents.
 	guest_page_size := if process.executable_path == '/usr/bin/qemu-x86_64'

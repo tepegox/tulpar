@@ -4,15 +4,15 @@ module sessionruntime
 import os
 
 fn test_numeric_defaults_keep_users_separate_and_preserve_explicit_paths() {
-	assert directory_for(0, '', false) == '/run/vinix-session.0'
-	assert directory_for(1000, '', false) == '/run/user/1000/vinix-session.1000'
-	assert directory_for(1001, '', false) == '/run/user/1001/vinix-session.1001'
-	assert directory_for(1000, '/tmp/development', true) == '/tmp/development/vinix-session.1000'
-	assert directory_for(0, '/tmp/development', true) == '/tmp/development/vinix-session.0'
+	assert directory_for(0, '', false) == '/run/tulpar-session.0'
+	assert directory_for(1000, '', false) == '/run/user/1000/tulpar-session.1000'
+	assert directory_for(1001, '', false) == '/run/user/1001/tulpar-session.1001'
+	assert directory_for(1000, '/tmp/development', true) == '/tmp/development/tulpar-session.1000'
+	assert directory_for(0, '/tmp/development', true) == '/tmp/development/tulpar-session.0'
 }
 
 fn test_runtime_parents_refuse_missing_insecure_foreign_and_replaced_directories() {
-	base := '${os.temp_dir()}/vinix-runtime-parents-${os.getpid()}'
+	base := '${os.temp_dir()}/tulpar-runtime-parents-${os.getpid()}'
 	uid := u32(C.getuid())
 	users := base + '/user'
 	parent := users + '/' + uid.str()
@@ -53,7 +53,7 @@ fn test_runtime_parents_refuse_missing_insecure_foreign_and_replaced_directories
 }
 
 fn test_private_leaf_rejects_replacement_without_changing_generic_directory_policy() {
-	base := '${os.temp_dir()}/vinix-runtime-leaf-${os.getpid()}'
+	base := '${os.temp_dir()}/tulpar-runtime-leaf-${os.getpid()}'
 	path := base + '/service-logs'
 	os.mkdir(base, mode: 0o700)!
 	defer {

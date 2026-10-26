@@ -13,7 +13,7 @@ fn build_pin_fixture(root string, source string, name string) !string {
 }
 
 fn test_relative_tool_pin_cannot_execute_a_workspace_shadow() {
-	root := os.real_path(sourcecommand.temporary('vinix-build-relative-tool')!)
+	root := os.real_path(sourcecommand.temporary('tulpar-build-relative-tool')!)
 	defer { os.rmdir_all(root) or {} }
 	repository := os.dir(os.dir(os.dir(os.dir(@FILE))))
 	runner := build_pin_fixture(root, repository + '/tools/development/build.v', 'build')!
@@ -39,7 +39,7 @@ fn test_relative_tool_pin_cannot_execute_a_workspace_shadow() {
 }
 
 fn test_changed_tools_are_refused_before_a_later_step_can_execute_them() {
-	root := os.real_path(sourcecommand.temporary('vinix-build-changed-tool')!)
+	root := os.real_path(sourcecommand.temporary('tulpar-build-changed-tool')!)
 	defer { os.rmdir_all(root) or {} }
 	repository := os.dir(os.dir(os.dir(os.dir(@FILE))))
 	fixture := build_pin_fixture(root, repository + '/tools/development/devcore/fixtures/build-tool.v', 'fixture')!

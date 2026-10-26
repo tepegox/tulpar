@@ -106,7 +106,7 @@ fn test_invalid_later_removal_requests_and_invalid_source_preserve_all_caller_fi
 }
 
 fn test_maximum_removal_cli_keeps_all_enrolled_disks_and_pool_order_and_reuses_freed_slots() {
-	work := os.join_path(os.temp_dir(), 'vinix-removal-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-removal-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	for single in [false, true] {
@@ -125,7 +125,7 @@ fn test_maximum_removal_cli_keeps_all_enrolled_disks_and_pool_order_and_reuses_f
 		assert publish_bundle(path.str, &set); original := os.read_bytes(path)!
 		unsafe {
 			mut args := [68]&char{}; mut numbers := [64][4]char{}
-			args[0] = &char(c'vinix-volume'); args[2] = path.str
+			args[0] = &char(c'tulpar-volume'); args[2] = path.str
 			for i in 0 .. 64 { C.snprintf(&numbers[i][0], 4, c'%u', u32(63 - i)); args[3 + i] = &numbers[i][0] }
 			args[1] = &char(c'plan-preview-remove-batch'); assert run(67, &args[0]) == 0 && os.read_bytes(path)! == original
 			args[1] = &char(c'plan-remove-batch'); assert run(67, &args[0]) == 0
@@ -145,7 +145,7 @@ fn test_maximum_removal_cli_keeps_all_enrolled_disks_and_pool_order_and_reuses_f
 }
 
 fn test_removal_cli_sources_and_later_bad_numbers_never_publish_a_prefix() {
-	work := os.join_path(os.temp_dir(), 'vinix-removal-input-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-removal-input-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut set := PlanSet{}; removal_fixture(mut set, false, 1)
@@ -160,7 +160,7 @@ fn test_removal_cli_sources_and_later_bad_numbers_never_publish_a_prefix() {
 		os.write_file_array(path, original)!
 	}
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-remove-batch'), path.str, &char(c'4'), &char(c'2'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-remove-batch'), path.str, &char(c'4'), &char(c'2'), &char(nil)]!
 		for command in [c'plan-remove-batch', c'plan-preview-remove-batch'] {
 			args[1] = &char(command)
 			for count in [2, 3, 68, 260] { assert run(count, &args[0]) == 2 }

@@ -21,7 +21,7 @@ fn main() {
 		return
 	}
 	desktop_ignore_broken_pipe()
-	factory := app_factory_named('vinix-calculator') or { panic('calculator missing') }
+	factory := app_factory_named('tulpar-calculator') or { panic('calculator missing') }
 	mut desktop := Desktop{}
 	mut app := start_remote_app_at_with_timeout(arguments()[0], factory, mut desktop,
 		app_response_timeout_ms) or { panic(err) }

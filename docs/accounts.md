@@ -1,6 +1,6 @@
 # Accounts, sessions and privilege
 
-Vinix has user accounts in the Unix sense: `/etc/passwd`, `/etc/group` and
+Tulpar has user accounts in the Unix sense: `/etc/passwd`, `/etc/group` and
 `/etc/shadow`, numeric ids the kernel checks on every file and process
 operation, and sessions that run as the person who logged in and not as
 root. This page says what exists, how the pieces fit, and what is not done.
@@ -14,15 +14,15 @@ that boot a kernel are in [`tests/accounts`](../tests/accounts/README.md).
 | Piece | Runs as | What it is for |
 | --- | --- | --- |
 | `accountcore` (module) | — | Reads, checks and writes the three files; password records; the wait after wrong passwords. |
-| `vinix-account` | root | The administrator's tool: accounts every system has, add, remove, lock, password, administrator on/off. No authentication of its own. |
-| `vinix-authd` | root | The authentication service: the one reader of `/etc/shadow` and the one way from an account to something done as root. |
-| `vinix-auth` | anyone | Asks the service from a terminal or a script. |
-| `vinix-session` | root | Turns a root process into a person's: `run USER COMMAND`, a login prompt on the console, and the session manager. |
-| `vinix-system` | root | The privileged halves of what a desktop does for the person at it: power off, restart, sleep, host name. |
+| `tulpar-account` | root | The administrator's tool: accounts every system has, add, remove, lock, password, administrator on/off. No authentication of its own. |
+| `tulpar-authd` | root | The authentication service: the one reader of `/etc/shadow` and the one way from an account to something done as root. |
+| `tulpar-auth` | anyone | Asks the service from a terminal or a script. |
+| `tulpar-session` | root | Turns a root process into a person's: `run USER COMMAND`, a login prompt on the console, and the session manager. |
+| `tulpar-system` | root | The privileged halves of what a desktop does for the person at it: power off, restart, sleep, host name. |
 
 There are no set-user-id programs. The kernel does not honour the bit, and
 nothing here needs it: a process that is not root gets something done as
-root by asking `vinix-authd` over a socket, and in no other way.
+root by asking `tulpar-authd` over a socket, and in no other way.
 
 ## Accounts
 
@@ -41,9 +41,9 @@ root by asking `vinix-authd` over a socket, and in no other way.
   password itself.
 - **`nobody`** (65534) is what programs that should be no one run as.
 
-`vinix-account init` adds whatever of this a system lacks and is safe to run
+`tulpar-account init` adds whatever of this a system lacks and is safe to run
 at every boot. On a system that was registered with the desktop before there
-were accounts, it turns the registration record (`/root/.vinix-user`) into
+were accounts, it turns the registration record (`/root/.tulpar-user`) into
 the first administrator: same name, same password -- the scrypt record is
 converted, the password is never known -- and the same files. Homes such a
 system kept in `/root/home` are mounted at `/home`, because nobody but root
@@ -72,7 +72,7 @@ format passlib calls `scrypt`:
 
     $scrypt$ln=15,r=8,p=1$<salt>$<key>
 
-The cost is in the record, so it can be changed (`/etc/vinix/auth.conf`,
+The cost is in the record, so it can be changed (`/etc/tulpar/auth.conf`,
 `scrypt_ln` and `scrypt_p`) without locking anyone out: an old record is
 checked at its own cost and, if that was less, replaced at the next
 successful login. The file is there to ask for more work; it accepts less,
@@ -95,7 +95,7 @@ not exist costs a guesser the same time as one that does.
 
 ## The authentication service
 
-`vinix-authd` listens on `/run/vinix/auth.sock`, which anyone may connect
+`tulpar-authd` listens on `/run/tulpar/auth.sock`, which anyone may connect
 to. The kernel says who is on the other end (`SO_PEERCRED`); the request
 cannot. One connection is one request and one reply, handled in a process of
 its own that exits afterwards. A request has ten seconds to arrive and 150
@@ -112,13 +112,13 @@ what is over that is refused, not queued.
 
 ### Actions
 
-An action is a file in `/usr/share/vinix/actions`, which only root can
+An action is a file in `/usr/share/tulpar/actions`, which only root can
 write. It names one program, its fixed arguments, what the caller may add,
 and who may ask:
 
     description = Change the name of this computer
     auth = admin
-    exec = /usr/sbin/vinix-system
+    exec = /usr/sbin/tulpar-system
     arg = hostname
     param = hostname
 
@@ -154,15 +154,15 @@ The actions that ship:
 
 | Action | `auth` | Does |
 | --- | --- | --- |
-| `power-off`, `restart`, `suspend` | `session` | `vinix-system power ...` |
+| `power-off`, `restart`, `suspend` | `session` | `tulpar-system power ...` |
 | `hostname-set` | `admin` | Sets the host name and `/etc/hostname`. |
-| `account-add`, `account-remove`, `account-password`, `account-admin`, `account-lock`, `account-rename` | `admin` | `vinix-account ...` |
+| `account-add`, `account-remove`, `account-password`, `account-admin`, `account-lock`, `account-rename` | `admin` | `tulpar-account ...` |
 
-"The person at the machine" is the uid in `/run/vinix/session/active`,
+"The person at the machine" is the uid in `/run/tulpar/session/active`,
 written by whatever started the session and believed only if it is root's
 file.
 
-Every decision is a line in `/var/log/vinix/auth.log` (mode 0600): the
+Every decision is a line in `/var/log/tulpar/auth.log` (mode 0600): the
 time, the caller's pid and uid, what was asked, and what came of it. No
 password is ever written there.
 
@@ -204,7 +204,7 @@ display's hot-plug device and the panel backlight.
   down to everything; for a login session those descriptors work only while
   it holds the seat.
 
-`vinix-session run --seat USER COMMAND` and the console login give the seat
+`tulpar-session run --seat USER COMMAND` and the console login give the seat
 to the session they start and take it back when it ends.
 
 What this does not reach: memory of the framebuffer that a session mapped
@@ -213,7 +213,7 @@ a session it moves into the background.
 
 ### The session manager
 
-`vinix-session manager` is what stands between the machine being on and a
+`tulpar-session manager` is what stands between the machine being on and a
 person using it:
 
 1. It starts the login screen as the `greeter` account, at the seat, with a
@@ -224,7 +224,7 @@ person using it:
    about nothing else: it cannot name who is logged in.
 3. On a yes for a person's account the login screen is ended, with
    everything it started, and that person's session starts: a login the
-   kernel knows, the seat, `/run/vinix/session/active`, and a socket to the
+   kernel knows, the seat, `/run/tulpar/session/active`, and a socket to the
    manager as descriptor 3 of its first program.
 4. When that program exits, or asks to log out, every process of the login
    is ended -- asked, then killed -- including what left the session's
@@ -242,7 +242,7 @@ not being able to take a mapped display away from a running process.
 
 A new session's credential store is opened with the password that was
 typed: the manager hands it to
-[`vinix-keyring`](../tools/keyring/README.md), started inside the session as
+[`tulpar-keyring`](../tools/keyring/README.md), started inside the session as
 the account, waits until that service is listening, and then wipes its own
 copy. The password goes nowhere else.
 
@@ -251,11 +251,11 @@ restarted. The requests are frames of the authentication service's format;
 `sessioncore/manager.v` lists them.
 
 The programs the manager starts are arguments (`--greeter`, `--desktop`), by
-default `vinix-desktop --greeter` and `vinix-desktop`. The desktop can now run
+default `tulpar-desktop --greeter` and `tulpar-desktop`. The desktop can now run
 as an ordinary account: its native qualification covers private account
 runtime directories, broker and framebuffer access, and an installed
 application across reboot. Normal desktop init now starts
-`vinix-session graphical --desktop /usr/bin/vinix-desktop` (or its selected
+`tulpar-session graphical --desktop /usr/bin/tulpar-desktop` (or its selected
 GPU build). This root supervisor imports a valid existing registration, or
 runs the exclusive registration screen when there is no person account,
 then starts the authentication service and manager. A private root-owned
@@ -278,7 +278,7 @@ normal-init, installed-system login qualification.
 
 ### Becoming the account
 
-`vinix-session run USER COMMAND` and the console login both end in the same
+`tulpar-session run USER COMMAND` and the console login both end in the same
 step (`sessioncore.become`): drop every capability from the bounding set,
 clear the ambient set, set the account's supplementary groups, then all
 three group ids, then all three user ids, clear what capability sets remain,
@@ -292,7 +292,7 @@ The session gets `HOME`, `USER`, `LOGNAME`, `SHELL` and
 rest of the environment as init fixed it minus anything that named root's
 places, and starts in its home.
 
-`vinix-session console` asks for a name and a password on the terminal,
+`tulpar-session console` asks for a name and a password on the terminal,
 checks them through the service like everything else, runs the account's
 shell as a session until it exits, and asks again.
 

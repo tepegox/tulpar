@@ -94,7 +94,7 @@ v -nocache -no-skip-unused -gc none -manualfree -o /tmp/launch-child \
 v -nocache -no-skip-unused -gc none -manualfree -d track_heap \
   -path '@vlib|@vmodules|.|tools/accounts' -o /tmp/launch-process \
   tools/packages/pkgcore/launch_process_test.v
-VINIX_PACKAGE_LAUNCH_CHILD=/tmp/launch-child /tmp/launch-process
+TULPAR_PACKAGE_LAUNCH_CHILD=/tmp/launch-child /tmp/launch-process
 ```
 
 The guest controller is `tests/packages/launch-process-runtime-check.v`; its

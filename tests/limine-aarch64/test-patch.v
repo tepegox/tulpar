@@ -6,7 +6,7 @@ import os
 
 const label = 'Limine 12.9.3 (aarch64, UEFI)'
 const guard = 'Base revision %u is no longer supported for aarch64'
-const patch = '12.9.3-vinix-base-revision-2.patch'
+const patch = '12.9.3-tulpar-base-revision-2.patch'
 const upstream = 'void limine_load(char *config, char *cmdline) {
     if (base_rev_p2_ptr != NULL) {
         *base_rev_p2_ptr = 0;
@@ -72,7 +72,7 @@ fn verify(work string, delegate string) ! {
 	require(!os.read_file(fresh.driver)!.contains(guard), 'fresh source still rejects base revision 2')!
 	installed := os.join_path(fresh.root, 'boot-image/limine-bin/BOOTAA64.EFI')
 	require(os.read_file(installed)!.contains(label), 'expected loader fixture was not installed')!
-	require(fresh.builder(['--check'])!.stdout.contains('Vinix base revision 2 compatibility'), 'installed compatibility report is missing')!
+	require(fresh.builder(['--check'])!.stdout.contains('Tulpar base revision 2 compatibility'), 'installed compatibility report is missing')!
 	println('PASS Limine fresh source: real patch applied before build and installed loader checked')
 
 	idempotent := setup(os.join_path(work, 'idempotent'), delegate)!
@@ -97,9 +97,9 @@ fn verify(work string, delegate string) ! {
 }
 
 fn run() ! {
-	work := hosttest.work_dir('', 'vinix-limine-patch-')!
+	work := hosttest.work_dir('', 'tulpar-limine-patch-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
-	configured := os.getenv('VINIX_LIMINE_FIXTURE')
+	configured := os.getenv('TULPAR_LIMINE_FIXTURE')
 	delegate := if configured != '' {
 		hosttest.module_resolve(configured)!
 	} else {

@@ -140,7 +140,7 @@ fn test_contract_capacity_identity_retry_after_compaction_and_u64_maximum_bundle
 
 fn test_contract_capacity_cli_validates_complete_syntax_before_bundle_access() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-contract-capacity-batch'), &char(c'/unused'),
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-contract-capacity-batch'), &char(c'/unused'),
 			&char(c'mbr:00000001'), &char(c'/unused-device'), &char(c'16777216'),
 			&char(c'gpt:02000000-0000-0000-0000-000000000083'), &char(c'/unused-device'), &char(c'16777216'), &char(nil)]!
 		for command in [c'plan-contract-capacity-batch', c'plan-preview-contract-capacity-batch'] {

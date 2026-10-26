@@ -6,7 +6,7 @@ import os
 
 fn main() {
 	name := os.base(os.args[0])
-	if os.getenv('VINIX_LIMINE_FAIL') == name {
+	if os.getenv('TULPAR_LIMINE_FAIL') == name {
 		eprintln('forced Limine fixture failure: ' + name)
 		exit(37)
 	}

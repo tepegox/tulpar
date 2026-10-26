@@ -22,8 +22,8 @@ Run the complete host suite and targeted architecture guests using V tooling:
 
 ```sh
 sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --host --work /tmp/volume-recovery-host
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/vinix --volume-recovery --work /tmp/volume-recovery-arm
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/vinix --volume-recovery --work /tmp/volume-recovery-x86
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/tulpar --volume-recovery --work /tmp/volume-recovery-arm
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/tulpar --volume-recovery --work /tmp/volume-recovery-x86
 ```
 
 Both guests use production tools and init on disposable persistent disks. A
@@ -45,7 +45,7 @@ extracts persisted backups, restored configurations and the actual boot pair;
 checks canonical headers, full HMAC and exact known keys with OpenSSL ChaCha20
 and production scrypt; and reconstructs native AES-XTS ciphertext with standard
 V AES. Its output directory includes an artifact hash manifest. The oracle uses
-`VINIX_OPENSSL` and `VINIX_DEBUGFS` overrides when those tools are outside their
+`TULPAR_OPENSSL` and `TULPAR_DEBUGFS` overrides when those tools are outside their
 Homebrew locations.
 
 Qualification on 2026-10-13 passes all 40 ASan/UBSan native suites, ten

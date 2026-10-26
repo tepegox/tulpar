@@ -55,7 +55,7 @@ fn encode_data_manifest(manifest &DataManifest, output &u8) int {
 	bundle_size := encode_bundle(unsafe { &manifest.set }, unsafe { output + data_manifest_header })
 	if bundle_size == 0 { return 0 }
 	size := data_manifest_header + bundle_size + manifest.digests.count * 40
-	put_le(output, 0, 8, 0x31484458494e4956) // VINIXDH1
+	put_le(output, 0, 8, 0x31484458494e4956) // TULPARDH1
 	put_le(output, 8, 4, 1); put_le(output, 12, 4, data_manifest_header)
 	put_le(output, 16, 4, u64(size)); put_le(output, 20, 4, u64(bundle_size)); put_le(output, 24, 4, u64(manifest.digests.count))
 	for i in 0 .. manifest.digests.count {

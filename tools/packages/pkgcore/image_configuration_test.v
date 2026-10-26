@@ -8,7 +8,7 @@ import time
 fn C.mkfifo(&char, u32) int
 
 fn image_configuration_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-image-config-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-image-config-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work, mode: 0o700)!
 	return work
 }
@@ -28,7 +28,7 @@ fn test_image_configuration_defaults_are_unenrolled_and_existing_bytes_survive()
 		config := load_config(root)!
 		assert config.architecture == architecture && config.repositories.len == 0 && config.policy == Policy{}
 		close_decoded_configuration(config)
-		path := root + '/etc/vinix-packages/config.json'
+		path := root + '/etc/tulpar-packages/config.json'
 		assert os.lstat(path)!.mode & 0o777 == 0o644
 		bytes := os.read_file(path)!
 		mut existing := prepare_image_configuration(root, architecture, work + '/missing-release-config')!
@@ -61,7 +61,7 @@ fn test_image_configuration_captures_reviewed_trust_policy_and_source_bytes() {
 		actual := load_config(root)!
 		assert actual == config
 		close_decoded_configuration(actual)
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == json2.encode(config) + '\n'
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == json2.encode(config) + '\n'
 	}
 }
 
@@ -103,8 +103,8 @@ fn test_image_configuration_preserves_raced_destinations_and_refuses_changed_roo
 	image_configuration_refused(root, 'aarch64', '')
 	assert os.ls(root)!.len == 0
 	os.chmod(root, 0o755)!
-	os.mkdir_all(root + '/etc/vinix-packages')!
-	path := root + '/etc/vinix-packages/config.json'
+	os.mkdir_all(root + '/etc/tulpar-packages')!
+	path := root + '/etc/tulpar-packages/config.json'
 	os.write_file(path, 'concurrent administrator configuration')!
 	if _ := unsafe { &plan }.publish() { assert false } else {}
 	assert os.read_file(path)! == 'concurrent administrator configuration'
@@ -122,7 +122,7 @@ fn test_image_configuration_refuses_unsafe_existing_configuration_and_parents() 
 	root := work + '/root'; os.mkdir(root)!
 	mut plan := prepare_image_configuration(root, 'aarch64', '')!
 	assert unsafe { &plan }.publish()!; plan.close()
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	original := os.read_file(path)!
 	os.chmod(path, 0o666)!
 	image_configuration_refused(root, 'aarch64', '')
@@ -138,8 +138,8 @@ fn test_image_configuration_refuses_unsafe_existing_configuration_and_parents() 
 	os.write_file(path, original.replace('aarch64', 'x86_64'))!
 	if _ := unsafe { &existing }.publish() { assert false } else {}
 	os.write_file(path, original)!
-	os.rename(root + '/etc/vinix-packages', root + '/saved')!
-	os.symlink(root + '/saved', root + '/etc/vinix-packages')!
+	os.rename(root + '/etc/tulpar-packages', root + '/saved')!
+	os.symlink(root + '/saved', root + '/etc/tulpar-packages')!
 	image_configuration_refused(root, 'aarch64', '')
 	if _ := unsafe { &existing }.publish() { assert false } else {}
 	assert os.read_file(root + '/saved/config.json')! == original
@@ -150,7 +150,7 @@ fn test_image_configuration_never_reinitializes_missing_trust_over_package_state
 	root := work + '/root'; os.mkdir(root)!
 	mut plan := prepare_image_configuration(root, 'aarch64', '')!
 	defer { plan.close() }
-	store := root + '/var/lib/vinix-packages'; os.mkdir_all(store)!
+	store := root + '/var/lib/tulpar-packages'; os.mkdir_all(store)!
 	os.write_file(store + '/trust-history.json', 'retained administrator history')!
 	image_configuration_refused(root, 'aarch64', '')
 	if _ := unsafe { &plan }.publish() { assert false } else {}
@@ -184,19 +184,19 @@ fn test_seeded_image_acquires_and_maintains_signed_catalog_without_configuration
 			repositories: [Repository{ id: 'release', url: 'file://' + work + '/export', public_key: key }] }))!
 		mut plan := prepare_image_configuration(root, architecture, source)!
 		assert unsafe { &plan }.publish()!; plan.close()
-		configuration := os.read_file(root + '/etc/vinix-packages/config.json')!
+		configuration := os.read_file(root + '/etc/tulpar-packages/config.json')!
 		service := Service{ root: root }
 		assert service.refresh()!.packages.len == 4
 		mut review := service.review('install', ['app'])!
 		service.transact('install', ['app'], TransactionOptions{ expected_review: review.fingerprint })!
 		review.close()
 		assert service.verify()!.packages[0].package.version == '2.0.0'
-		assert os.exists(root + '/var/lib/vinix-packages/current/share/applications/vinix-app.desktop')
+		assert os.exists(root + '/var/lib/tulpar-packages/current/share/applications/tulpar-app.desktop')
 		service.transact('remove', ['app'], TransactionOptions{})!
-		assert !os.exists(root + '/var/lib/vinix-packages/current/share/applications/vinix-app.desktop')
+		assert !os.exists(root + '/var/lib/tulpar-packages/current/share/applications/tulpar-app.desktop')
 		service.rollback('')!
 		assert service.verify()!.packages[0].package.version == '2.0.0'
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == configuration
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration
 	}
 	println('PACKAGE IMAGE CONFIG signed catalog install remove rollback both architectures PASS')
 }

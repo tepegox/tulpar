@@ -73,7 +73,7 @@ fn run_profile(keep string) ! {
 		require(macro(os.read_file(original)!, name)! == declaration && macro(os.read_file(header)!, name)! == declaration, 'Declaration differs from the pinned compiler contract: ' + name)!
 	}
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
-	work := hosttest.work_dir(keep, 'vinix-static-key-declaration-')!
+	work := hosttest.work_dir(keep, 'tulpar-static-key-declaration-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	include := os.join_path(work, 'include')
 	hosttest.audit_headers(include)!

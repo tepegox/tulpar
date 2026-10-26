@@ -99,7 +99,7 @@ fn selected_framebuffer() &limine.LimineFramebuffer {
 }
 
 // Emit this after the terminal exists. It makes a hardware boot unambiguous:
-// the log says which GOP surface Vinix owns and whether external preference
+// the log says which GOP surface Tulpar owns and whether external preference
 // was requested, instead of requiring a guess from the visible panel.
 pub fn report_framebuffer_selection() {
 	fb := selected_framebuffer()

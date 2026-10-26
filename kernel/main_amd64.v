@@ -123,7 +123,7 @@ fn kmain_thread() {
 	fs.mount(vfs_root, '', '/proc', 'procfs') or {}
 	hypervisor.initialise()
 
-	// A machine booted from an installer image (vinix.disk=auto) keeps its
+	// A machine booted from an installer image (tulpar.disk=auto) keeps its
 	// system on a disk, so the disk drivers come up before the image is
 	// unpacked, and the image goes onto the disk rather than into RAM when
 	// there is one to take it. See sysdisk. IDE and SATA only: the NVMe
@@ -241,7 +241,7 @@ fn kmain_thread() {
 
 fn kmain() {
 	// Before anything that returns: see lib/stack_protector.v.
-	C.vinix_stack_guard_init()
+	C.tulpar_stack_guard_init()
 	// Ensure the base revision is supported.
 	if limine_base_revision.revision != 0 {
 		for {}

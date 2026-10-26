@@ -326,7 +326,7 @@ diff -urN --no-dereference xorg-server-clean/os/utils.c xorg-server-workdir/os/u
          return BadAlloc;
  
 +#ifdef __vinix__
-+    /* Vinix only exposes authenticated render nodes. It has no legacy DRM
++    /* Tulpar only exposes authenticated render nodes. It has no legacy DRM
 +     * magic/auth ioctls, and the fd passed through DRI3 is the authority. */
 +    *fdp = fd;
 +    return Success;
@@ -340,7 +340,7 @@ diff -urN --no-dereference xorg-server-clean/os/utils.c xorg-server-workdir/os/u
           * to the same device we were handed in originally.
           */
 +#ifdef __vinix__
-+        /* libdrm normally reconstructs this through Linux sysfs, which Vinix
++        /* libdrm normally reconstructs this through Linux sysfs, which Tulpar
 +         * intentionally does not emulate. */
 +        glamor_egl->device_path = strdup("/dev/dri/renderD128");
 +#else

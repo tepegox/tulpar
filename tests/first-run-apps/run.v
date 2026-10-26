@@ -2,7 +2,7 @@
 // Install every app the first-run software picker offers, in QEMU, the way a
 // user does: boot an ISO onto a blank disk, create the user, choose all the
 // apps and let the setup Terminal install them. Each app's result is the
-// `vinix-setup:` line that Terminal writes to the console (the serial port).
+// `tulpar-setup:` line that Terminal writes to the console (the serial port).
 module main
 
 import json2
@@ -13,7 +13,7 @@ import time
 const usage = 'Usage: tests/first-run-apps/run [--out=DIR] [--timeout=MINUTES] [--disk=GIB] [--apps=A,B] [--min-free=GIB] [--keep] ISO
        tests/first-run-apps/run DIR key QCODE... | type TEXT | click X Y [double] | shot FILE
 
-Boots ISO (vinix-arm64.iso under HVF, vinix-amd64.iso under TCG) with a blank
+Boots ISO (tulpar-arm64.iso under HVF, tulpar-amd64.iso under TCG) with a blank
 disk and a network card, creates a user, selects every app on the "Choose your
 software" screen and waits for the setup Terminal to install them. Exits 0 when
 every app installed. Serial log and screenshots go to DIR (default
@@ -136,7 +136,7 @@ fn start(options Options) !Vm {
 	// The disk image is sparse and grows by every app installed, to about
 	// 8 GiB. When the host's own disk filled, QEMU's write stalled, the guest's
 	// disk request timed out and the run hung halfway, which looks like a
-	// Vinix failure.
+	// Tulpar failure.
 	usage := os.disk_usage(options.out)!
 	if usage.available < u64(options.min_free) << 30 {
 		return error('${options.out} has ${usage.available >> 20} MiB free; the run wants ${options.min_free} GiB (--min-free)')
@@ -358,10 +358,10 @@ fn result_lines(text string) map[string]string {
 	mut results := map[string]string{}
 	for raw in text.split_into_lines() {
 		// The kernel's own output can run into the start of a line on arm64.
-		if !raw.contains('vinix-setup: ') {
+		if !raw.contains('tulpar-setup: ') {
 			continue
 		}
-		rest := raw.trim_space().all_after_last('vinix-setup: ')
+		rest := raw.trim_space().all_after_last('tulpar-setup: ')
 		name := rest.all_before(' ')
 		results[name] = rest.all_after(' ')
 	}
@@ -383,15 +383,15 @@ fn run(options Options) !bool {
 	started := time.now()
 	// TCG emulates amd64 an order of magnitude slower than HVF runs arm64.
 	boot_limit := if options.arch == 'arm64' { 20 } else { 90 }
-	println('Booting and installing Vinix onto the blank disk...')
+	println('Booting and installing Tulpar onto the blank disk...')
 	vm.wait_for_registration(started.add(boot_limit * time.minute))!
 	time.sleep(5 * time.second)
 	registration := vm.screen()!.rgb
 	vm.screenshot('1-registration.png')!
 	println('Creating the user (${time.since(started).seconds():.0f} s)')
 	vm.type_text('tester\n')!
-	vm.type_text('vinix-test\n')!
-	vm.type_text('vinix-test\n')!
+	vm.type_text('tulpar-test\n')!
+	vm.type_text('tulpar-test\n')!
 	vm.wait_for_change(registration, time.now().add(5 * time.minute))!
 	time.sleep(5 * time.second)
 	vm.screenshot('2-software.png')!

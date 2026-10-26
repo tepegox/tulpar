@@ -103,7 +103,7 @@ fn main() {
 	assert guesthost.replacement_text([u8(0xed), 0xa0, 0x80]) == '���'
 	assert guesthost.replacement_text([u8(0xf4), 0x90, 0x80, 0x80]) == '����'
 	assert guesthost.replacement_text([u8(0xc0), 0xaf, 0xff]) == '���'
-	work := hosttest.work_dir('', 'vinix-native-guest-verdict-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-native-guest-verdict-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	baseline := descriptors()
 	check(work, 'one', ['ONE: PASS', 'TWO: PASS'], ['FAIL:'], 3, 1)
@@ -127,7 +127,7 @@ fn main() {
 	assert os.is_file(state + '/serial.log')
 	missing_state := work + '/missing-executable'
 	os.mkdir_all(missing_state) or { panic(err) }
-	missing_result := guesthost.boot(['/vinix-no-such-guest-executable'], policyhost.environment(),
+	missing_result := guesthost.boot(['/tulpar-no-such-guest-executable'], policyhost.environment(),
 		missing_state, ['ONE: PASS'], ['FAIL:'], 3, false) or { panic(err) }
 	assert missing_result == 1
 	assert (os.read_file(missing_state + '/serial.log') or { panic(err) }).contains('Cannot execute guest runner')

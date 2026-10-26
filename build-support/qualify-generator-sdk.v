@@ -56,7 +56,7 @@ fn qualify() ! {
 	}
 	os.write_file(work + '/qualification.json', json2.encode(json2.Any({'status': json2.Any('PASS'),
 		'profile': json2.Any(profile), 'receipts': json2.Any(receipts), 'inputs': json2.Any(inputs),
-		'limits': json2.Any('Native SDK metadata/layout and CPython reference/lifecycle models; cold host builds and real ARM/x86 musl guest ELF builds/export checks. No interpreter, upstream generator, target ELF or Vinix guest executed. SDK metadata declares prerequisites; it does not establish runtime importability.')}), prettify: true) + '\n')!
+		'limits': json2.Any('Native SDK metadata/layout and CPython reference/lifecycle models; cold host builds and real ARM/x86 musl guest ELF builds/export checks. No interpreter, upstream generator, target ELF or Tulpar guest executed. SDK metadata declares prerequisites; it does not establish runtime importability.')}), prettify: true) + '\n')!
 	println('PASS generator SDK and developer-tools probe ' + profile)
 }
 

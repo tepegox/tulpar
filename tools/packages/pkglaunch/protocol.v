@@ -7,7 +7,7 @@ import tools.packages.pkgprotocol
 
 pub const action = 'packages-launch'
 pub const request_limit = 512 * 1024 // JSON escaping preserves the 64 KiB literal command contract
-pub const result_prefix = 'VINIX-PACKAGE-LAUNCH '
+pub const result_prefix = 'TULPAR-PACKAGE-LAUNCH '
 
 pub struct Request {
 pub:

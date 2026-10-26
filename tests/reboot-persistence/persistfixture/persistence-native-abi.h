@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native libc declarations and scalar constraints only. */
-#ifndef VINIX_REBOOT_PERSISTENCE_NATIVE_ABI_H
-#define VINIX_REBOOT_PERSISTENCE_NATIVE_ABI_H
+#ifndef TULPAR_REBOOT_PERSISTENCE_NATIVE_ABI_H
+#define TULPAR_REBOOT_PERSISTENCE_NATIVE_ABI_H
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>

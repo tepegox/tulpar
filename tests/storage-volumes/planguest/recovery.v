@@ -3,7 +3,7 @@ module planguest
 
 fn recovery_tool(input &char, recovery &char, output &char, backup bool, expected i32) {
 	unsafe {
-		arguments := [&char(c'/usr/sbin/vinix-volume'), if backup { &char(c'backup-key') } else { &char(c'recover-key') },
+		arguments := [&char(c'/usr/sbin/tulpar-volume'), if backup { &char(c'backup-key') } else { &char(c'recover-key') },
 			input, recovery, output, &char(nil)]!
 		run_utility(&arguments[0], expected)
 	}
@@ -45,8 +45,8 @@ fn planned_recovery(parent &char) {
 		recovery_tool(c'/root/crypt.backup', c'/root/recovery.key', c'/root/crypt.key', false, 0)
 		recovery_check(c'/root/crypt.key')
 		crypt_tool(parent, c'/root/crypt.key', true, 0)
-		view := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); crypt_data(view, 0, 0x73)
-		check(C.close(view) == 0, c'close recovered volume'); simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		view := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); crypt_data(view, 0, 0x73)
+		check(C.close(view) == 0, c'close recovered volume'); simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		bundle_unchanged(c'/root/crypt.backup', &original[0], 160)
 		C.printf(c'PLAN RECOVERY PASSED: authenticated backup, original key deletion, private restore, ciphertext reopen and no replacement\n')
 	}

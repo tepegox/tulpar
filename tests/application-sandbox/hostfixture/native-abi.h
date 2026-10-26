@@ -1,15 +1,15 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_APPLICATION_SANDBOX_HOST_FIXTURE_ABI_H
-#define VINIX_APPLICATION_SANDBOX_HOST_FIXTURE_ABI_H
+#ifndef TULPAR_APPLICATION_SANDBOX_HOST_FIXTURE_ABI_H
+#define TULPAR_APPLICATION_SANDBOX_HOST_FIXTURE_ABI_H
 #include <assert.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-#define VINIX_V_RUNTIME
+#define TULPAR_V_RUNTIME
 #include "sandbox_v.h"
-int vinix_sandbox_main(int, char **);
+int tulpar_sandbox_main(int, char **);
 _Static_assert(sizeof(int) == 4, "original errno and return width");
 _Static_assert(sizeof(unsigned long) == 8, "original prctl argument width");
 _Static_assert(sizeof(size_t) == 8 && sizeof(void *) == 8, "original pointer and index width");

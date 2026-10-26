@@ -105,7 +105,7 @@ fn C.PyErr_SetString(voidptr, &char)
 __global C.PyExc_SystemError voidptr
 
 pub fn run_take(capsule voidptr, index i32) voidptr {
-	mut state := unsafe { &RunExpression(C.PyCapsule_GetPointer(capsule, c'vinix.android.run.expression')) }
+	mut state := unsafe { &RunExpression(C.PyCapsule_GetPointer(capsule, c'tulpar.android.run.expression')) }
 	if state == unsafe { nil } { return unsafe { nil } }
 	if index < 0 || index >= state.count || state.values[index] == unsafe { nil } {
 		C.PyErr_SetString(unsafe { voidptr(C.PyExc_SystemError) }, c'invalid Android expression operand')
@@ -127,7 +127,7 @@ fn (mut s RunScope) syntax(slot string, binding string, operands []string) voidp
 	}
 	unsafe { *state = RunExpression{ count: i32(operands.len) } }
 	for i, name in operands { state.values[i] = s.take(name) }
-	capsule := C.PyCapsule_New(state, c'vinix.android.run.expression', unsafe { nil })
+	capsule := C.PyCapsule_New(state, c'tulpar.android.run.expression', unsafe { nil })
 	mut result := voidptr(0)
 	if capsule != unsafe { nil } { result = boot_call(target, [capsule]) }
 	drop(capsule)

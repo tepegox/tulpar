@@ -6,13 +6,13 @@ import os
 import tools.packages.signing
 
 #include "@VMODROOT/../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn finish(operation string, before bool) {
-	live := C.vinix_heap_end()
-	count := C.vinix_heap_count()
+	live := C.tulpar_heap_end()
+	count := C.tulpar_heap_count()
 	println('${operation}: ${live} retained bytes in ${count} allocations after caller cleanup')
 	if before { assert live > 0 && count > 0 }
 	else { assert live == 0 && count == 0 }
@@ -29,19 +29,19 @@ fn main() {
 	assert public_key.hex() == 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a'
 	expected := hex.decode('e5564300c360ac729086e2cc806e828a84877f1eb8e5d974d873e065224901555fb8821590a33bacc61e39701cf9b46bd25bf5f0595bbe24655141438e7a100b')!
 	defer { unsafe { seed.free(); key.free(); public_key.free(); expected.free() } }
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	generated := signing.new_key_from_seed(seed)
 	assert generated == key
 	generated_public := generated.public_key()
 	assert generated_public == public_key
 	unsafe { generated_public.free(); generated.free() }
 	finish('key', before)
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	signature := signing.sign(key, [])!
 	assert signature == expected
 	unsafe { signature.free() }
 	finish('sign', before)
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	assert signing.verify(public_key, [], expected)!
 	finish('verify', before)
 	if !before {
@@ -53,7 +53,7 @@ fn main() {
 			mut changed := valid.clone()
 			changed[0] ^= 1
 			for _ in 0 .. 4 {
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 				produced := signing.sign(key, message)!
 				assert produced == valid
 				unsafe { produced.free() }

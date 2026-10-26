@@ -6,8 +6,8 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn test_cleanup_review_strict_roundtrip_bounds_and_owned_decoding() {
 	text := json2.encode(CleanupReview{ architecture: 'aarch64', generation: 9, previous: 8,
@@ -37,13 +37,13 @@ fn test_cleanup_review_strict_roundtrip_bounds_and_owned_decoding() {
 		fingerprint: 'b'.repeat(64), generations: generations })
 	mut refused := false; decode_cleanup_review(excess) or { refused = true; unsafe { err.free() } }; assert refused
 	unsafe { generations.free(); wide.free(); excess.free() }
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		mut owned := decode_cleanup_review(text)!; owned.close()
 		decode_cleanup_review('{"architecture":"aarch64","fingerprint":"owned","generations":[1,2,3],"previous":null}') or { unsafe { err.free() } }
 	}
 	$if track_heap ? {
-		kept := C.vinix_heap_end(); assert kept == 0, 'cleanup decoder retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'cleanup decoder retained ${kept} bytes'
 	}
 	println('CLEANUP PROTOCOL strict bounded metadata, retained generation refusal and 1000 owned decode cycles PASS')
 }

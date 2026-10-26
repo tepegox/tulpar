@@ -12,7 +12,7 @@ the binary's size and permissions. Missing or duplicate paths and longer
 replacements fail before writing the image.
 
 Both commands compile and run V directly, using ordinary `V` or
-`VINIX_V_COMPILER` selection. Image builders and verified-root preparation
+`TULPAR_V_COMPILER` selection. Image builders and verified-root preparation
 invoke these commands without Python.
 
 ```sh

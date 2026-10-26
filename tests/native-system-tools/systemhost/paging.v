@@ -30,7 +30,7 @@ fn paging(args []string) !int {
 	arch := options.value('--arch', '')
 	seconds := positive(options, '--timeout', 240)!
 	memory := positive(options, '--memory', 1024)!
-	state := state_dir(options, 'vinix-paging-')!
+	state := state_dir(options, 'tulpar-paging-')!
 	defer { private_cleanup(state, options) }
 	kernel := snapshot(state, kernel_source(options, arch), arch)!
 	extra := if arch == 'aarch64' { ['-fno-stack-protector'] } else { []string{} }
@@ -55,7 +55,7 @@ fn paging(args []string) !int {
 	mut argv := configured.command.clone()
 	argv[argv.index('-m') + 1] = memory.str()
 	if arch == 'aarch64' {
-		arm_config(state, root(), 'vinix.qemu_platform=1 ' + os.getenv('VINIX_CMDLINE'))!
+		arm_config(state, root(), 'tulpar.qemu_platform=1 ' + os.getenv('TULPAR_CMDLINE'))!
 		argv << ['-drive', 'if=none,format=raw,file=' + disk + ',id=paging-swap', '-device',
 			'virtio-blk-device,drive=paging-swap']
 	} else {

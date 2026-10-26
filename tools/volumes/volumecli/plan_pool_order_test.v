@@ -105,7 +105,7 @@ fn test_invalid_priority_lists_preserve_every_field_and_caller_results() {
 }
 
 fn test_maximum_priority_cli_previews_publishes_retries_and_roundtrips_all_64_members() {
-	work := os.join_path(os.temp_dir(), 'vinix-priority-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-priority-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut set := PlanSet{}
@@ -120,7 +120,7 @@ fn test_maximum_priority_cli_previews_publishes_retries_and_roundtrips_all_64_me
 	original := os.read_bytes(path)!
 	unsafe {
 		mut args := [69]&char{}; mut numbers := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[2] = path.str; args[3] = &char(c'3')
+		args[0] = &char(c'tulpar-volume'); args[2] = path.str; args[3] = &char(c'3')
 		for i in 0 .. 64 { C.snprintf(&numbers[i][0], 4, c'%u', u32(63 - i)); args[4 + i] = &numbers[i][0] }
 		args[1] = &char(c'pool-preview-order'); assert run(68, &args[0]) == 0 && os.read_bytes(path)! == original
 		args[1] = &char(c'pool-order'); assert run(68, &args[0]) == 0
@@ -135,7 +135,7 @@ fn test_maximum_priority_cli_previews_publishes_retries_and_roundtrips_all_64_me
 }
 
 fn test_priority_cli_and_sources_reject_invalid_arguments_corruption_and_symlinks() {
-	work := os.join_path(os.temp_dir(), 'vinix-priority-input-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-priority-input-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut set := PlanSet{}; priority_fixture(mut set, true, 2)
@@ -152,7 +152,7 @@ fn test_priority_cli_and_sources_reject_invalid_arguments_corruption_and_symlink
 		os.write_file_array(path, original)!
 	}
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-order'), path.str, &char(c'3'), &char(c'0'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-order'), path.str, &char(c'3'), &char(c'0'), &char(nil)]!
 		for command in [c'pool-order', c'pool-preview-order'] {
 			args[1] = &char(command)
 			for count in [2, 3, 4, 69, 260] { assert run(count, &args[0]) == 2 }

@@ -182,7 +182,7 @@ pub fn (mut panel Panel) bring_back() bool {
 // ── /sys/class/backlight ────────────────────────────────────────────────────
 
 fn panel_path(panel &Panel, file string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(64) }
 	text.add('class/backlight/')
 	text.add(panel.name)
@@ -233,7 +233,7 @@ fn show_type(context voidptr, mut text lib.Text) {
 	text.add_byte(`\n`)
 }
 
-// Vinix's: how often the panel went down for a sleep and how often it would
+// Tulpar's: how often the panel went down for a sleep and how often it would
 // not take a level.
 fn show_stats(context voidptr, mut text lib.Text) {
 	panel := unsafe { &Panel(context) }

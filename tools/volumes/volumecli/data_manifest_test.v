@@ -103,11 +103,11 @@ fn test_manifest_maximum_64_disks_rows_regions_near_u64_and_11392_byte_format() 
 	}
 	mut bytes := [11392]u8{}; assert encode_data_manifest(&manifest, &bytes[0]) == 11392
 	mut decoded := DataManifest{}; assert decode_data_manifest(&bytes[0], 11392, mut decoded) && decoded == manifest
-	work := os.join_path(os.temp_dir(), 'vinix-data-max-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-data-max-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/data.vhash'; os.write_file_array(path, bytes[..11392])!
 	unsafe {
 		mut args := [133]&char{}; mut indices := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'verify-data'); args[2] = path.str
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'verify-data'); args[2] = path.str
 		for disk in 0 .. 64 { C.snprintf(&indices[disk][0], 4, c'%u', u32(disk)); args[3 + disk * 2] = &indices[disk][0]; args[4 + disk * 2] = &char(c'/missing-checksum-device') }
 		assert run(131, &args[0]) == 1 && os.read_bytes(path)! == bytes[..11392]
 		args[1] = &char(c'show-data'); assert run(3, &args[0]) == 0 && os.read_bytes(path)! == bytes[..11392]
@@ -120,7 +120,7 @@ fn test_manifest_maximum_64_disks_rows_regions_near_u64_and_11392_byte_format() 
 
 fn test_data_complete_cli_argument_and_token_bounds() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'hash-bundle'), &char(c'/unused'), &char(c'/unused-manifest'), &char(c'0'), &char(c'/unused-device'), &char(c'1'), &char(c'/unused-device-1'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'hash-bundle'), &char(c'/unused'), &char(c'/unused-manifest'), &char(c'0'), &char(c'/unused-device'), &char(c'1'), &char(c'/unused-device-1'), &char(nil)]!
 		for count in [2, 3, 4, 5, 7, 133, 134] { assert run(count, &args[0]) == 2 }
 		for at in [4, 6] { old := args[at]; for bad in [c'', c'-1', c'1x', c'64', c'18446744073709551616'] { args[at] = &char(bad); assert run(8, &args[0]) == 2 }; args[at] = old }
 		args[7] = &char(c''); assert run(8, &args[0]) == 2

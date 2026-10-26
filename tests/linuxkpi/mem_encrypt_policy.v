@@ -60,7 +60,7 @@ fn run(keep string, requested_header string) ! {
 	for disabled in ['CONFIG_AMD_MEM_ENCRYPT', 'CONFIG_X86_MEM_ENCRYPT', 'CONFIG_ARCH_HAS_CC_PLATFORM'] {
 		require(!defines(text, disabled), 'Unsupported native encryption configuration: ' + disabled)!
 	}
-	work := hosttest.work_dir(keep, 'vinix-mem-encrypt-policy-')!
+	work := hosttest.work_dir(keep, 'tulpar-mem-encrypt-policy-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	contract := root + '/tests/linuxkpi/memencryptfixture/contract.h'
 	compiler := os.real_path(os.find_abs_path_of_executable(hosttest.env_default('CC', 'clang'))!)
@@ -94,10 +94,10 @@ fn run(keep string, requested_header string) ! {
 				mut argv := [compiler, '--target=x86_64-unknown-none', '-std=' + standard, '-O2',
 					'-ffreestanding', '-fno-builtin', '-fwrapv', '-Wall', '-Wextra', '-Werror',
 					'-Wno-unused-parameter', '-Wno-unused-function', '-nostdinc', '-D__KERNEL__',
-					'-DVINIX_LINUXKPI', '-include', 'linux/kconfig.h', '-include',
+					'-DTULPAR_LINUXKPI', '-include', 'linux/kconfig.h', '-include',
 					linux + '/include/linux/compiler_types.h']
-				if page_first { argv << '-DVINIX_MEM_ENCRYPT_PAGE_FIRST' }
-				if kind == 'configured' { argv << '-DVINIX_MEM_ENCRYPT_CONFIGURED' }
+				if page_first { argv << '-DTULPAR_MEM_ENCRYPT_PAGE_FIRST' }
+				if kind == 'configured' { argv << '-DTULPAR_MEM_ENCRYPT_CONFIGURED' }
 				for path in [selected, work + '/abi', root + '/tests/linuxkpi',
 					root + '/kernel/linuxkpi/include', linux + '/include', linux + '/include/uapi',
 					linux + '/arch/x86/include', linux + '/arch/x86/include/uapi'] {

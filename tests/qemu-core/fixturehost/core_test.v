@@ -19,7 +19,7 @@ fn test_original_oracle_and_ranges_preserve_provenance() {
 }
 
 fn test_copy_lifetime_backslashes_duplicate_and_fifo_inputs() {
-	work := hosttest.work_dir('', 'vinix-qemu-copy-')!
+	work := hosttest.work_dir('', 'tulpar-qemu-copy-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	mkdir_all(work + '/source')!
 	mkdir_all(work + '/target')!
@@ -52,7 +52,7 @@ fn test_copy_lifetime_backslashes_duplicate_and_fifo_inputs() {
 }
 
 fn test_reader_failures_and_child_streams_restore_descriptor_set() {
-	work := hosttest.work_dir('', 'vinix-qemu-fd-')!
+	work := hosttest.work_dir('', 'tulpar-qemu-fd-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	write(work + '/inherited', 'owned')!
 	mut inherited := os.open(work + '/inherited')!
@@ -76,8 +76,8 @@ fn test_reader_failures_and_child_streams_restore_descriptor_set() {
 		}
 		assert command(['/bin/sh', '-c', 'printf "first\\n"; printf "second\\r\\n" >&2'], '')! == 'first\nsecond\n'
 	}
-	inherited_command_environment(['/bin/sh', '-c', 'test "$VINIX_FIXTURE_ENV_CONTROL" = custom'], {
-		'VINIX_FIXTURE_ENV_CONTROL': 'custom'
+	inherited_command_environment(['/bin/sh', '-c', 'test "$TULPAR_FIXTURE_ENV_CONTROL" = custom'], {
+		'TULPAR_FIXTURE_ENV_CONTROL': 'custom'
 	})!
 	if _ := inherited_command(['/bin/sh', '-c', 'kill -PIPE $$']) {
 		assert false
@@ -95,7 +95,7 @@ fn test_python_metadata_framing_preserves_ascii_and_unicode() {
 }
 
 fn test_spawn_errors_signal_status_and_log_order_preserve_contract() {
-	work := hosttest.work_dir('', 'vinix-qemu-spawn-')!
+	work := hosttest.work_dir('', 'tulpar-qemu-spawn-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	mut before := os.ls('/dev/fd')!
 	before.sort()
@@ -129,7 +129,7 @@ fn test_spawn_errors_signal_status_and_log_order_preserve_contract() {
 }
 
 fn test_invalid_child_output_is_decoded_before_log_and_status() {
-	work := hosttest.work_dir('', 'vinix-qemu-decode-')!
+	work := hosttest.work_dir('', 'tulpar-qemu-decode-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for suffix in ['', '; exit 7'] {
 		if _ := command(['/bin/sh', '-c', 'printf "before\\377after"' + suffix], work + '/invalid.log') {
@@ -144,7 +144,7 @@ fn test_invalid_child_output_is_decoded_before_log_and_status() {
 }
 
 fn test_oracle_commands_preserve_cwd_stderr_and_raw_bytes() {
-	work := hosttest.work_dir('', 'vinix-qemu-raw-')!
+	work := hosttest.work_dir('', 'tulpar-qemu-raw-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	write(work + '/marker', 'present')!
 	result := capture_in(['/bin/sh', '-c', 'test -f marker && printf "raw\\377\\r\\n"'], '', os.environ(), false, work, true)!

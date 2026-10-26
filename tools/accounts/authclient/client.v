@@ -41,7 +41,7 @@ mut:
 	sun_path   [108]char
 }
 
-pub const default_socket = '/run/vinix/auth.sock'
+pub const default_socket = '/run/tulpar/auth.sock'
 
 // Send `request` and return the reply. The request is wiped either way.
 pub fn transact(socket_path string, mut request authproto.Frame) !authproto.Frame {

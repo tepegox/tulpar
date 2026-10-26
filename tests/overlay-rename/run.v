@@ -14,7 +14,7 @@ fn C.truncate(&char, i64) int
 struct Receipt {
 	architecture string
 	case_name    string
-	context      string = 'native Vinix QEMU guest; UID 1000 overlay workload; networking disabled'
+	context      string = 'native Tulpar QEMU guest; UID 1000 overlay workload; networking disabled'
 	inputs       map[string]string
 	exit_code    int
 }
@@ -47,7 +47,7 @@ fn main() {
 		eprintln('state must be fresh and timeout positive')
 		exit(2)
 	}
-	kernel := os.read_bytes(options.value('--kernel-dir', '') + '/bin/vinix')!
+	kernel := os.read_bytes(options.value('--kernel-dir', '') + '/bin/tulpar')!
 	expected := if arch == 'aarch64' { 183 } else { 62 }
 	if kernel.len < 20 || kernel[..6] != [u8(127), `E`, `L`, `F`, 2, 1]
 		|| int(kernel[18]) + (int(kernel[19]) << 8) != expected {
@@ -55,7 +55,7 @@ fn main() {
 		exit(2)
 	}
 	os.mkdir_all(state + '/kernel/bin')!
-	os.write_file_array(state + '/kernel/bin/vinix', kernel)!
+	os.write_file_array(state + '/kernel/bin/tulpar', kernel)!
 	os.mkdir_all(state + '/sources')!
 	hosttest.module_copy_tree(@DIR + '/overlayfixture', state + '/sources/overlayfixture')!
 	mut inputs := {
@@ -87,7 +87,7 @@ fn main() {
 			eprintln('cannot size private volume')
 			exit(1)
 		}
-		mut formatter := os.getenv('VINIX_MKE2FS')
+		mut formatter := os.getenv('TULPAR_MKE2FS')
 		if formatter == '' {
 			for candidate in ['mke2fs', 'mkfs.ext2', '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs'] {
 				formatter = os.find_abs_path_of_executable(candidate) or { continue }
@@ -139,7 +139,7 @@ fn run_guest(state string, arch string, case_name string, disk string, timeout i
 	os.write_file(state + '/rootfs/overlay-case', case_name)!
 	archive := guesthost.image(init, state)!
 	if arch == 'x86_64' && case_name !in ['atomic', 'retention', 'socket-access'] {
-		os.setenv('VINIX_CMDLINE', os.getenv('VINIX_CMDLINE') + ' vinix.disk=auto', true)
+		os.setenv('TULPAR_CMDLINE', os.getenv('TULPAR_CMDLINE') + ' tulpar.disk=auto', true)
 	}
 	configured := guesthost.launch(init, archive, state, state + '/kernel', arch, true)!
 	mut command := configured.command.clone()

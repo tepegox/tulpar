@@ -38,7 +38,7 @@ edit snapshots. Keep the bundle outside the repository. It preserves every
 historical artifact version, rather than just the final result directory.
 `git bundle verify /external/backup/original.bundle` verifies the bundle; its
 published base commit is a prerequisite. If its backup ref is no longer local,
-`git fetch /external/backup/original.bundle 'refs/vinix-backups/*:refs/vinix-backups/*'`
+`git fetch /external/backup/original.bundle 'refs/tulpar-backups/*:refs/tulpar-backups/*'`
 restores it. Never push backup refs containing artifacts.
 
 Enable the V pre-push check in each clone:

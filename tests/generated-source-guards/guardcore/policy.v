@@ -25,14 +25,14 @@ pub fn allocation_check(generated Generated, name string, family string) !string
 	body := generated.body(name, family)!
 	if hidden_allocation(body) { return error('hidden allocation in ${name}') }
 	if family == 'accounting' && name in ['sys__syscall_getrusage', 'userland__write_child_rusage']
-		&& body.count('vinix_stack_alloc(') != 1 {
+		&& body.count('tulpar_stack_alloc(') != 1 {
 		return error('${name}: expected one synchronous caller-stack record')
 	}
 	if family == 'pagecache' && name == 'pagecache__Cache__prefetch' {
-		if body.count('vinix_stack_alloc(') != 1 {
+		if body.count('tulpar_stack_alloc(') != 1 {
 			return error('prefetch slots must be allocated once before its loop')
 		}
-		if required_index(body, 'vinix_stack_alloc(')! > required_index(body, 'while (')! {
+		if required_index(body, 'tulpar_stack_alloc(')! > required_index(body, 'while (')! {
 			return error('prefetch slots must be allocated once before its loop')
 		}
 	}

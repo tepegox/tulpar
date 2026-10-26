@@ -39,7 +39,7 @@ headless ui2 module:
 
 ```sh
 v -nocache -o /tmp/software-space tests/packages/software-space-check.v
-V=/path/to/reviewed/v VINIX_PACKAGE_TEST_UI2=/path/to/modules \
+V=/path/to/reviewed/v TULPAR_PACKAGE_TEST_UI2=/path/to/modules \
   /tmp/software-space /build/new-software-space
 ```
 

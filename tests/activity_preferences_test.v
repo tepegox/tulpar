@@ -8,7 +8,7 @@ fn C.mkfifo(path &char, mode u32) int
 
 fn activity_preferences_test_home(suffix string) string {
 	pid := C.getpid().str()
-	home := os.join_path(os.temp_dir(), 'vinix-activity-preferences-${pid}-${suffix}')
+	home := os.join_path(os.temp_dir(), 'tulpar-activity-preferences-${pid}-${suffix}')
 	unsafe { pid.free() }
 	os.mkdir(home) or { panic(err) }
 	canonical := os.real_path(home)
@@ -117,7 +117,7 @@ fn test_activity_preferences_native_actions_restore_registered_user_view_and_sor
 	free_tree(tree)
 	reopened.handle('activity.view.processes')!
 	mut records := [2]ActivitySample{}
-	for index, byte in '/usr/bin/vinix-files' { records[0].name[index] = byte }
+	for index, byte in '/usr/bin/tulpar-files' { records[0].name[index] = byte }
 	for index, byte in '/bin/zebra' { records[1].name[index] = byte }
 	records[0].pid = 900001 records[1].pid = 900002
 	header := ActivityTable{sample_ns: 1_000_000_000}
@@ -251,7 +251,7 @@ fn test_activity_preferences_unsafe_record_types_and_missing_homes_do_not_block_
 		invalid.close_app()
 	}
 	mut missing := ActivityApp{}
-	missing.load_view_preferences('/nonexistent-vinix-activity-home')
+	missing.load_view_preferences('/nonexistent-tulpar-activity-home')
 	assert missing.preferences.read_failed && missing.preferences.home_fd == -1
 	missing.close_app()
 }
@@ -259,7 +259,7 @@ fn test_activity_preferences_unsafe_record_types_and_missing_homes_do_not_block_
 fn test_activity_preferences_failed_lock_is_visible_preserves_last_saved_bytes_and_retries_on_change() {
 	home := activity_preferences_test_home('failure')
 	path := activity_preferences_test_file(home)
-	lock_path := home + '/.vinix-activity-settings.lock'
+	lock_path := home + '/.tulpar-activity-settings.lock'
 	defer { os.rmdir_all(home) or {} unsafe { home.free() path.free() lock_path.free() } }
 	mut app := ActivityApp{}
 	app.load_view_preferences(home)
@@ -284,7 +284,7 @@ fn test_activity_preferences_failed_lock_is_visible_preserves_last_saved_bytes_a
 	reopened.load_view_preferences(home)
 	assert reopened.monitor.interval_ms == 5000 && reopened.monitor.hierarchy
 	reopened.close_app()
-	for entry in os.ls(home)! { assert !entry.starts_with('.vinix-activity-settings.tmp.') }
+	for entry in os.ls(home)! { assert !entry.starts_with('.tulpar-activity-settings.tmp.') }
 }
 
 fn test_activity_preferences_newer_window_and_later_damaged_record_are_preserved() {
@@ -318,7 +318,7 @@ fn test_activity_preferences_newer_window_and_later_damaged_record_are_preserved
 
 fn test_activity_preferences_temporary_cleanup_does_not_unlink_a_replacement() {
 	home := activity_preferences_test_home('inode')
-	name := '.vinix-activity-settings.tmp.test'
+	name := '.tulpar-activity-settings.tmp.test'
 	path := home + '/' + name
 	defer { os.rmdir_all(home) or {} unsafe { home.free() path.free() } }
 	mut app := ActivityApp{}
@@ -341,7 +341,7 @@ fn test_activity_preferences_temporary_cleanup_does_not_unlink_a_replacement() {
 	defer { unsafe { pid.free() } }
 	for number in 1 .. 17 {
 		serial := number.str()
-		collision := home + '/.vinix-activity-settings.tmp.' + pid + '.' + serial
+		collision := home + '/.tulpar-activity-settings.tmp.' + pid + '.' + serial
 		os.write_file(collision, 'preserve collision')!
 		unsafe { serial.free() collision.free() }
 	}
@@ -353,7 +353,7 @@ fn test_activity_preferences_temporary_cleanup_does_not_unlink_a_replacement() {
 	assert !os.exists(record)
 	for number in 1 .. 17 {
 		serial := number.str()
-		collision := home + '/.vinix-activity-settings.tmp.' + pid + '.' + serial
+		collision := home + '/.tulpar-activity-settings.tmp.' + pid + '.' + serial
 		preserved := os.read_file(collision)!
 		assert preserved == 'preserve collision'
 		unsafe { serial.free() collision.free() preserved.free() }

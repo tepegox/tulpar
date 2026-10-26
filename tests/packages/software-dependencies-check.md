@@ -49,7 +49,7 @@ with the reviewed compiler and staged headless ui2 module:
 
 ```sh
 v -nocache -o /tmp/software-view-check tests/packages/software-provenance-check.v
-V=/path/to/reviewed/v VINIX_PACKAGE_TEST_UI2=/path/to/modules \
+V=/path/to/reviewed/v TULPAR_PACKAGE_TEST_UI2=/path/to/modules \
   /tmp/software-view-check /build/new-software-dependencies
 ```
 

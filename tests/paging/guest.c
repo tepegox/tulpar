@@ -122,10 +122,10 @@ static void pressure_pages(void) {
     if (access("/paging-pressure", F_OK) != 0) return;
     struct sysinfo info; CHECK(sysinfo(&info) == 0);
     size_t pages = (size_t)((uint64_t)info.totalram * info.mem_unit / page);
-    unsigned long before = meminfo_value("VinixPageouts:");
+    unsigned long before = meminfo_value("TulparPageouts:");
     unsigned char *p = mapping(pages, 0);
     for (size_t i = 0; i < pages; ++i) p[i * page] = (unsigned char)(i * 37 + 11);
-    CHECK(meminfo_value("VinixPageouts:") > before);
+    CHECK(meminfo_value("TulparPageouts:") > before);
     for (size_t i = 0; i < pages; ++i) CHECK(p[i * page] == (unsigned char)(i * 37 + 11));
     CHECK(munmap(p, pages * page) == 0);
     printf("PAGING automatic-pressure-reclaim PASS pages=%zu\n", pages); fflush(stdout);

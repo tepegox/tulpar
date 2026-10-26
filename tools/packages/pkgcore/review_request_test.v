@@ -9,8 +9,8 @@ import tools.packages.pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn request_cycles() int {
 	$if review_request_baseline ? { return 2 }
@@ -26,7 +26,7 @@ fn request_call(service Service, operation string, names []string, document stri
 // retirement. Fixture construction, maintenance and configuration edits precede it.
 fn request_scope(label string, service Service, operation string, names []string, document string, rows int, expected string) {
 	for warmup in 0 .. 2 {
-		if warmup == 1 { $if track_heap ? { C.vinix_heap_begin() } }
+		if warmup == 1 { $if track_heap ? { C.tulpar_heap_begin() } }
 		for _ in 0 .. request_cycles() {
 			mut review := request_call(service, operation, names, document) or {
 				message := err.msg()
@@ -41,7 +41,7 @@ fn request_scope(label string, service Service, operation string, names []string
 		}
 	}
 	mut kept := u64(0)
-	$if track_heap ? { kept = C.vinix_heap_end() }
+	$if track_heap ? { kept = C.tulpar_heap_end() }
 	println('REVIEW REQUEST ' + label + ' retained ' + kept.str() + ' tracked bytes')
 	$if !review_request_baseline ? { assert kept == 0, label }
 }
@@ -67,10 +67,10 @@ fn test_complete_review_requests_retire_preparation_and_preserve_signed_state() 
 	$if !track_heap ? { return }
 	$if track_heap ? {
 		for arch in ['aarch64', 'x86_64']! {
-			work := os.temp_dir() + '/vinix-review-request-' + arch + '-' + os.getpid().str()
+			work := os.temp_dir() + '/tulpar-review-request-' + arch + '-' + os.getpid().str()
 			root := work + '/root'; directory := state_directory(root)
-			config_path := root + '/etc/vinix-packages/config.json'
-			os.mkdir_all(root + '/etc/vinix-packages')!; os.mkdir_all(work + '/source/bin')!
+			config_path := root + '/etc/tulpar-packages/config.json'
+			os.mkdir_all(root + '/etc/tulpar-packages')!; os.mkdir_all(work + '/source/bin')!
 			os.write_file(work + '/source/bin/app', 'signed application\n')!; os.chmod(work + '/source/bin/app', 0o755)!
 			defer { os.rmdir_all(work) or {} }
 			key := keygen(work + '/seed')!
@@ -145,7 +145,7 @@ fn test_complete_review_requests_retire_preparation_and_preserve_signed_state() 
 			os.write_file(old_payload, 'damaged')!
 			request_scope(arch + ' damaged rollback', service, 'rollback', empty, '', 0, 'payload verification failed')
 			os.write_file(old_payload, old_bytes)!
-			registration := directory + '/generations/1/share/applications/vinix-app.desktop'
+			registration := directory + '/generations/1/share/applications/tulpar-app.desktop'
 			registration_bytes := os.read_file(registration)!; os.write_file(registration, 'damaged')!
 			request_scope(arch + ' damaged rollback registration', service, 'rollback', empty, '', 0, 'registration verification failed')
 			os.write_file(registration, registration_bytes)!

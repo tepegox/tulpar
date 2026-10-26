@@ -1,27 +1,25 @@
 # Security
 
-Vinix is pre-alpha. It has security mechanisms that are tested, and it has
+Tulpar is pre-alpha. It has security mechanisms that are tested, and it has
 large parts that nobody has reviewed; [`docs/security.md`](docs/security.md)
 says which is which, and [`docs/accounts.md`](docs/accounts.md) says what an
-account is and is not protected from. Do not put a Vinix machine anywhere
+account is and is not protected from. Do not put a Tulpar machine anywhere
 its being broken into would matter.
 
 ## Reporting a vulnerability
 
 Please do not open a public issue with the details of something that can
-be used against people running Vinix.
+be used against people running Tulpar.
 
-The intended channel is GitHub's private vulnerability reporting on
-[vlang/vinix](https://github.com/vlang/vinix) ("Security", then "Report a
-vulnerability"). **It was not switched on for the repository when this file
-was written** (checked 11 October 2026). Until it is, open an issue that
-says only that you have a security report and how you can be reached; a
-maintainer will arrange somewhere private.
+Use the [Tulpar repository](https://github.com/tepegox/tulpar)'s Security tab
+to report privately if that option is available. Otherwise, open an issue
+asking for a private reporting channel, without exploit details or sensitive
+data. Do not send Tulpar-specific reports to the upstream Vinix project.
 
 A report is most useful with:
 
 - the revision (`git rev-parse HEAD`, or the contents of
-  `/etc/vinix-release` on a release image) and the architecture;
+  `/etc/tulpar-release` on a release image) and the architecture;
 - what an attacker needs to start from: an account, a confined application,
   a container, a file the victim opens, the local network;
 - what they end up with;
@@ -47,9 +45,9 @@ Anything that crosses a boundary the documents say exists:
 
 Things that are known and written down are not news, but corrections to how
 they are written down are welcome: the "what is not done" sections of the
-documents above, the residual risks in
-[`docs/x86-cpu-mitigations.md`](docs/x86-cpu-mitigations.md), and that the
-desktop and everything it starts still run as root.
+documents above and the residual risks in
+[`docs/x86-cpu-mitigations.md`](docs/x86-cpu-mitigations.md). The default terminal
+image starts a root shell; do not expose it as a production server.
 
 ## What happens to a report
 

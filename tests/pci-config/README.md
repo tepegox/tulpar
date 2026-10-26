@@ -13,7 +13,7 @@ oracle's pthread/libc backing retains its normal ownership.
 Pass `--source /immutable/config_test.c` to run a frozen original C control, and
 `--keep-dir /new/evidence-directory` to retain compiler inputs, both dialect
 objects, binaries, logs and input hashes. Select V with `V` or
-`VINIX_V_COMPILER`; the selected compiler also supplies `VEXE`. Default Darwin
+`TULPAR_V_COMPILER`; the selected compiler also supplies `VEXE`. Default Darwin
 runs disable LeakSanitizer and make no LeakSanitizer claim. Only generated V
 objects receive unused-helper/parameter warning exceptions. Five byte-identical
 repeated V forward typedefs are normalized for strict GNU99, with raw bytes and
@@ -21,7 +21,7 @@ a normalization receipt retained; no generated function body is changed.
 
 The private native header contains declarations, native constants and layout
 checks. Its five bool/unsigned thread-local words retain the original true/zero
-initializers because the Vinix V backend cannot emit general TLS. Those two
+initializers because the Tulpar V backend cannot emit general TLS. Those two
 original storage declaration lines receive no V algorithm credit. V owns all
 transport/oracle algorithms and permanent device banks. Actor records and byte
 snapshots stay on the stack; the actual exported C callback wrapper is passed

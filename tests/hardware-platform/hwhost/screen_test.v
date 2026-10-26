@@ -75,7 +75,7 @@ fn test_what_is_not_a_picture_is_refused() {
 }
 
 fn test_a_picture_is_judged_from_its_file() {
-	state := os.join_path(os.temp_dir(), 'vinix-hwtest-screen-${os.getpid()}')
+	state := os.join_path(os.temp_dir(), 'tulpar-hwtest-screen-${os.getpid()}')
 	os.mkdir_all(state)!
 	defer {
 		os.rmdir_all(state) or {}
@@ -128,7 +128,7 @@ fn test_the_guests_pattern_is_found_pixel_by_pixel() {
 }
 
 fn test_a_picture_can_be_held_to_another_ones_mode_and_to_the_pattern() {
-	state := os.join_path(os.temp_dir(), 'vinix-hwtest-pattern-${os.getpid()}')
+	state := os.join_path(os.temp_dir(), 'tulpar-hwtest-pattern-${os.getpid()}')
 	os.mkdir_all(state)!
 	defer {
 		os.rmdir_all(state) or {}

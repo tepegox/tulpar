@@ -12,12 +12,12 @@ struct C.vkus_ull {}
 fn C.memcpy(voidptr, voidptr, uint) voidptr
 struct C.completion {}
 struct C.task_struct {
-	vinix_thread voidptr
+	tulpar_thread voidptr
 	__state u32
 	in_iowait u32
 }
 type SleepWorker = fn (voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_usleep_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_usleep_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, SleepWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
@@ -29,20 +29,20 @@ fn C.complete_all(&C.completion)
 fn C.wait_for_completion(&C.completion)
 fn C.wait_for_completion_timeout(&C.completion, uint) uint
 fn C.completion_done(&C.completion) bool
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_clock_ns() u64
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_test_alloc_oom(i32)
-fn C.vinix_linuxkpi_test_worker_oom(i32)
-fn C.vinix_linuxkpi_test_task_signal(voidptr, u64)
-fn C.vinix_linuxkpi_test_task_time_waiters(&C.task_struct) uint
-fn C.vinix_linuxkpi_test_thread_reap_ready(voidptr) bool
-fn C.vinix_linuxkpi_test_reap_quiescent() bool
-fn C.vinix_linuxkpi_task_queued(voidptr) bool
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_clock_ns() u64
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_test_alloc_oom(i32)
+fn C.tulpar_linuxkpi_test_worker_oom(i32)
+fn C.tulpar_linuxkpi_test_task_signal(voidptr, u64)
+fn C.tulpar_linuxkpi_test_task_time_waiters(&C.task_struct) uint
+fn C.tulpar_linuxkpi_test_thread_reap_ready(voidptr) bool
+fn C.tulpar_linuxkpi_test_reap_quiescent() bool
+fn C.tulpar_linuxkpi_task_queued(voidptr) bool
 fn C.task_is_running(&C.task_struct) bool
 fn C.wake_up_process(&C.task_struct) i32
 fn C.usleep_range(uint, uint)
@@ -136,9 +136,9 @@ fn check(test &NativeSleepWorker, index u32, minimum uint, elapsed u64, flags ui
 		mut reasons := u32(0)
 		if elapsed < u64(minimum) * 1000 { reasons |= 1 }
 		if !C.task_is_running(C.current) { reasons |= 2 }
-		if !C.vinix_linuxkpi_may_sleep() || C.vinix_linuxkpi_irq_flags() != flags ||
-			C.vinix_linuxkpi_preempt_count() != depth { reasons |= 4 }
-		if C.vinix_linuxkpi_cpu_id() != test.cpu { reasons |= 8 }
+		if !C.tulpar_linuxkpi_may_sleep() || C.tulpar_linuxkpi_irq_flags() != flags ||
+			C.tulpar_linuxkpi_preempt_count() != depth { reasons |= 4 }
+		if C.tulpar_linuxkpi_cpu_id() != test.cpu { reasons |= 8 }
 		if C.current.in_iowait != 0 { reasons |= 16 }
 		if reasons != 0 && test.reasons == 0 {
 			test.failed_case = index
@@ -155,57 +155,57 @@ fn series(test &NativeSleepWorker) bool {
 		ranges := [uint(0), uint(0), uint(0), uint(500), uint(1), uint(1),
 			uint(100), uint(250), uint(400), uint(500), uint(1000), uint(2000),
 			uint(3000), uint(4000)]!
-		C.vinix_linuxkpi_test_alloc_oom(0)
+		C.tulpar_linuxkpi_test_alloc_oom(0)
 		for round in 0 .. 4 {
 			for i in 0 .. 7 {
 				if cancelled(test) { return false }
-				flags := C.vinix_linuxkpi_irq_flags()
-				depth := C.vinix_linuxkpi_preempt_count()
-				before := C.vinix_linuxkpi_clock_ns()
+				flags := C.tulpar_linuxkpi_irq_flags()
+				depth := C.tulpar_linuxkpi_preempt_count()
+				before := C.tulpar_linuxkpi_clock_ns()
 				sleep_call(test, ranges[i * 2], ranges[i * 2 + 1])
-				check(test, u32(round * 7 + i), ranges[i * 2], C.vinix_linuxkpi_clock_ns() - before, flags, depth)
+				check(test, u32(round * 7 + i), ranges[i * 2], C.tulpar_linuxkpi_clock_ns() - before, flags, depth)
 			}
 		}
 		if test.kind == 0 {
-			flags := C.vinix_linuxkpi_irq_flags()
-			depth := C.vinix_linuxkpi_preempt_count()
-			before := C.vinix_linuxkpi_clock_ns()
+			flags := C.tulpar_linuxkpi_irq_flags()
+			depth := C.tulpar_linuxkpi_preempt_count()
+			before := C.tulpar_linuxkpi_clock_ns()
 			C.usleep_range_state(1000, 2000, u32(C.TASK_RUNNING))
-			check(test, 28, 1000, C.vinix_linuxkpi_clock_ns() - before, flags, depth)
+			check(test, 28, 1000, C.tulpar_linuxkpi_clock_ns() - before, flags, depth)
 		}
-		C.vinix_linuxkpi_test_alloc_oom(-1)
+		C.tulpar_linuxkpi_test_alloc_oom(-1)
 		C.complete(&test.series_done)
 		C.wait_for_completion(&test.long_go)
 		if cancelled(test) { return false }
-		flags := C.vinix_linuxkpi_irq_flags()
-		depth := C.vinix_linuxkpi_preempt_count()
-		test.long_start = C.vinix_linuxkpi_clock_ns()
+		flags := C.tulpar_linuxkpi_irq_flags()
+		depth := C.tulpar_linuxkpi_preempt_count()
+		test.long_start = C.tulpar_linuxkpi_clock_ns()
 		C.complete(&test.long_started)
-		C.vinix_linuxkpi_test_alloc_oom(0)
+		C.tulpar_linuxkpi_test_alloc_oom(0)
 		sleep_call(test, long_us, long_us + 1000)
-		test.long_elapsed = C.vinix_linuxkpi_clock_ns() - test.long_start
-		C.vinix_linuxkpi_test_alloc_oom(-1)
+		test.long_elapsed = C.tulpar_linuxkpi_clock_ns() - test.long_start
+		C.tulpar_linuxkpi_test_alloc_oom(-1)
 		check(test, 29, long_us, test.long_elapsed, flags, depth)
-		C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, 0)
+		C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, 0)
 		C.complete(&test.long_done)
 		C.wait_for_completion(&test.release)
 		return true
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_usleep_worker']
+@[export: 'tulpar_linuxkpi_fixture_usleep_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut test := &NativeSleepWorker(argument)
 		task := C.get_task_struct(C.current)
 		C.__atomic_store(&test.task, &task, 3)
-		if C.vinix_linuxkpi_worker_bind(test.cpu) != 0 { test.reasons |= 32 }
+		if C.tulpar_linuxkpi_worker_bind(test.cpu) != 0 { test.reasons |= 32 }
 		C.complete(&test.entered)
 		C.wait_for_completion(&test.go)
 		if !cancelled(test) { series(test) }
-		C.vinix_linuxkpi_test_alloc_oom(-1)
-		C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, 0)
-		if !C.task_is_running(C.current) || !C.vinix_linuxkpi_may_sleep() { test.reasons |= 64 }
+		C.tulpar_linuxkpi_test_alloc_oom(-1)
+		C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, 0)
+		if !C.task_is_running(C.current) || !C.tulpar_linuxkpi_may_sleep() { test.reasons |= 64 }
 		C.complete(&test.done)
 		C.pthread_exit(nil)
 		return nil
@@ -222,7 +222,7 @@ fn release(test &NativeSleepWorker) {
 		C.complete_all(&test.release)
 		task := retained_task(test)
 		if test.started && task != nil {
-			C.vinix_linuxkpi_test_task_signal(task.vinix_thread, 0)
+			C.tulpar_linuxkpi_test_task_signal(task.tulpar_thread, 0)
 			C.wake_up_process(task)
 		}
 	}
@@ -240,7 +240,7 @@ fn retire(tests &NativeSleepWorker, count u32) i32 {
 			}
 			C.BUG_ON(C.pthread_join(tests[i].thread, nil) != 0)
 		}
-		retirement_started := C.vinix_linuxkpi_clock_ns()
+		retirement_started := C.tulpar_linuxkpi_clock_ns()
 		for i := u32(0); i < count; i++ {
 			if !tests[i].started { continue }
 			task := retained_task(&tests[i])
@@ -251,13 +251,13 @@ fn retire(tests &NativeSleepWorker, count u32) i32 {
 				result = -C.EIO
 			}
 			for C.__atomic_load_n(&task.__state, 2) != C.TASK_DEAD {
-				if C.vinix_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
+				if C.tulpar_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
 					C.kprintf(c'linuxkpi: usleep worker=%u did not publish TASK_DEAD\n', i)
 					C.BUG()
 				}
 				C.cond_resched()
 			}
-			retained := C.vinix_linuxkpi_test_task_time_waiters(task)
+			retained := C.tulpar_linuxkpi_test_task_time_waiters(task)
 			if retained != 0 {
 				C.kprintf(c'linuxkpi: usleep worker=%u retained %zu deadline records\n', i, retained)
 				C.BUG()
@@ -265,8 +265,8 @@ fn retire(tests &NativeSleepWorker, count u32) i32 {
 		}
 		for i := u32(0); i < count; i++ {
 			if !tests[i].started { continue }
-			for !C.vinix_linuxkpi_test_thread_reap_ready(tests[i].task.vinix_thread) {
-				if C.vinix_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
+			for !C.tulpar_linuxkpi_test_thread_reap_ready(tests[i].task.tulpar_thread) {
+				if C.tulpar_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
 					C.kprintf(c'linuxkpi: usleep worker=%u did not reach off-stack reaper\n', i)
 					C.BUG()
 				}
@@ -278,8 +278,8 @@ fn retire(tests &NativeSleepWorker, count u32) i32 {
 			C.put_task_struct(tests[i].task)
 			tests[i].started = false
 		}
-		for !C.vinix_linuxkpi_test_reap_quiescent() {
-			if C.vinix_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
+		for !C.tulpar_linuxkpi_test_reap_quiescent() {
+			if C.tulpar_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
 				C.kprintf(c'linuxkpi: usleep deferred frees did not finish\n')
 				C.BUG()
 			}
@@ -300,18 +300,18 @@ fn wakes(tests &NativeSleepWorker, count u32) i32 {
 				finished = false
 				task := test.task
 				if C.__atomic_load_n(&task.__state, 2) != test.state ||
-					C.vinix_linuxkpi_task_queued(task.vinix_thread) ||
-					C.vinix_linuxkpi_test_task_time_waiters(task) == 0 { continue }
-				before := C.vinix_linuxkpi_clock_ns()
+					C.tulpar_linuxkpi_task_queued(task.tulpar_thread) ||
+					C.tulpar_linuxkpi_test_task_time_waiters(task) == 0 { continue }
+				before := C.tulpar_linuxkpi_clock_ns()
 				early := before - test.long_start < long_ns
 				if i < 2 && early && test.signal_sent == 0 {
 					test.signal_sent = 1
-					C.vinix_linuxkpi_test_task_signal(task.vinix_thread, u64(1) << 14)
+					C.tulpar_linuxkpi_test_task_signal(task.tulpar_thread, u64(1) << 14)
 					continue
 				}
 				if early && test.signal_sent != 0 { test.signal_reparked = 1 }
 				accepted := C.wake_up_process(task)
-				if accepted != 0 && C.vinix_linuxkpi_clock_ns() - test.long_start < long_ns { test.early_wakes++ }
+				if accepted != 0 && C.tulpar_linuxkpi_clock_ns() - test.long_start < long_ns { test.early_wakes++ }
 			}
 			if finished { break }
 			if C.time_after_eq(C.jiffies, watchdog) {
@@ -353,9 +353,9 @@ fn start_and_run(tests &NativeSleepWorker, fail_after u32, oom_stage u32) i32 {
 			C.init_completion(&test.release)
 			C.init_completion(&test.done)
 			test.initialized = true
-			if oom_stage != 0 && i == fail_after { C.vinix_linuxkpi_test_worker_oom(i32(oom_stage)) }
-			error := C.pthread_create(&test.thread, nil, C.vinix_linuxkpi_fixture_usleep_worker, test)
-			C.vinix_linuxkpi_test_worker_oom(0)
+			if oom_stage != 0 && i == fail_after { C.tulpar_linuxkpi_test_worker_oom(i32(oom_stage)) }
+			error := C.pthread_create(&test.thread, nil, C.tulpar_linuxkpi_fixture_usleep_worker, test)
+			C.tulpar_linuxkpi_test_worker_oom(0)
 			if error == 0 { test.started = true }
 			if oom_stage != 0 && i == fail_after {
 				return if error != C.EAGAIN || test.started { -C.EIO } else { i32(0) }
@@ -380,10 +380,10 @@ fn group(fail_after u32, oom_stage u32) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_usleep_native_selftest']
+@[export: 'tulpar_linuxkpi_usleep_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
-		if C.vinix_linuxkpi_percpu_count() < 4 { return -C.EIO }
+		if C.tulpar_linuxkpi_percpu_count() < 4 { return -C.EIO }
 		mut result := i32(0)
 		for stage in 1 .. 5 {
 			for before in 0 .. 4 {

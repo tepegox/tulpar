@@ -7,21 +7,21 @@ import os
 import policyhost
 
 fn owners() ![]string {
-	mut entries := os.ls('/tmp')!.filter(it.starts_with('vinix-process-smp-') || it.starts_with('vinix-v-module-'))
+	mut entries := os.ls('/tmp')!.filter(it.starts_with('tulpar-process-smp-') || it.starts_with('tulpar-v-module-'))
 	entries.sort()
 	return entries
 }
 
 fn qualify(binary string) ! {
-	work := hosttest.work_dir('', 'vinix-process-cli-check-')!
+	work := hosttest.work_dir('', 'tulpar-process-cli-check-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	mut env := policyhost.environment()
 	env['CC'] = 'false'
 	env['CC_AMD64'] = 'false'
 	env['ASAN_OPTIONS'] = 'detect_leaks=0'
-	env['V'] = os.getenv_opt('V') or { '/tmp/vinix-native-v-compiler/v' }
+	env['V'] = os.getenv_opt('V') or { '/tmp/tulpar-native-v-compiler/v' }
 	env['VEXE'] = env['V']
-	kernel := os.getenv_opt('VINIX_PROCESS_TEST_ARM_KERNEL') or { '/tmp/vinix-volume-guest-arm-final/kernel' }
+	kernel := os.getenv_opt('TULPAR_PROCESS_TEST_ARM_KERNEL') or { '/tmp/tulpar-volume-guest-arm-final/kernel' }
 	for family in ['process-smp', 'scheduler-qos', 'tlb', 'memory-retention'] {
 		for option in [['--smp', '1'], ['--memory', '0'], ['--timeout', 'bad'], ['--expect', '']] {
 			if family == 'memory-retention' && option[0] == '--expect' { continue }

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_PAGEFAULT_V_CONTRACT_H
-#define VINIX_LINUXKPI_PAGEFAULT_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_PAGEFAULT_V_CONTRACT_H
+#define TULPAR_LINUXKPI_PAGEFAULT_V_CONTRACT_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -8,21 +8,21 @@
 /* Borrow the current native task's aligned counter synchronously. The getter
  * allocates and schedules nothing and returns NULL before a task exists.
  * Queries can call it without an IRQ guard. No caller retains its result. */
-uint32_t *vinix_linuxkpi_fault_depth(void);
-uint64_t vinix_linuxkpi_irq_save(void);
-void vinix_linuxkpi_irq_restore(uint64_t flags);
-uint32_t vinix_linuxkpi_preempt_count(void);
+uint32_t *tulpar_linuxkpi_fault_depth(void);
+uint64_t tulpar_linuxkpi_irq_save(void);
+void tulpar_linuxkpi_irq_restore(uint64_t flags);
+uint32_t tulpar_linuxkpi_preempt_count(void);
 /* Actual native maskable depth; requires initialized kernel GS, preserves IF.
  * This is independent of Linux preempt-count bit encoding and NMI/BH state. */
-uint32_t vinix_linuxkpi_maskable_irq_depth(void);
+uint32_t tulpar_linuxkpi_maskable_irq_depth(void);
 
 /* Existing native CPU/worker primitives used by the task-scope fixture.
  * Keep their declarations independent of the Linux header/type namespace. */
-uint32_t vinix_linuxkpi_cpu_id(void);
-uint32_t vinix_linuxkpi_percpu_count(void);
-int vinix_linuxkpi_worker_bind(uint32_t cpu);
-void vinix_linuxkpi_preempt_disable(void);
-void vinix_linuxkpi_preempt_enable(void);
+uint32_t tulpar_linuxkpi_cpu_id(void);
+uint32_t tulpar_linuxkpi_percpu_count(void);
+int tulpar_linuxkpi_worker_bind(uint32_t cpu);
+void tulpar_linuxkpi_preempt_disable(void);
+void tulpar_linuxkpi_preempt_enable(void);
 
 /* These algorithms are implemented by the production V compatibility core.
  * Native user-copy and trap policy must consult the same task-owned counter. */

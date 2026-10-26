@@ -192,7 +192,7 @@ The initial application suite also attempts all categories and preserves missing
 dependencies as unsupported, with a nonzero complete-suite exit. Test roots
 contain real Alpine 3.21 SQLite 3.48.0-r4 and BusyBox Extras 1.37.0-r14 payloads;
 their package URLs and SHA-256 hashes are retained. They were extracted for
-testing, with shared-library soname links materialized as the current Vinix
+testing, with shared-library soname links materialized as the current Tulpar
 musl loader expects. Package scripts, signatures, update/remove transactions
 and a persistent installed desktop were not qualified by extraction.
 
@@ -227,10 +227,10 @@ separate acceptance requirements.
 The `package-install-*.json` and `package-upgrade-*.json` receipts qualify a
 real disk-backed CLI package lifecycle on both native architectures. The V
 stager retains unchanged signed Alpine v3.20/v3.21 repository indexes and APK
-archives. Inside Vinix, the existing `pkg` frontend invokes real APK with its
+archives. Inside Tulpar, the existing `pkg` frontend invokes real APK with its
 default signature validation and installs SQLite 3.45.3 into an ext2 target
 without SQLite. The installed executable uses the unmodified musl package
-installed by APK; the boot root retains its prepared Vinix interpreter. The
+installed by APK; the boot root retains its prepared Tulpar interpreter. The
 separate, unused GNU runtime probe in these receipts does not establish a
 glibc package result. SQLite commits saved data in WAL mode; a second cold
 QEMU boot checks the installed version, integrity and saved value, then
@@ -261,7 +261,7 @@ texture-size warning remains in the report.
 
 The host SQLite WAL/integrity/reopen and FFmpeg frame encode/probe checks pass.
 Those Darwin results validate workload predicates and report handling only.
-They are not Vinix application results. Host tests also verify that a missing
+They are not Tulpar application results. Host tests also verify that a missing
 executable, a nonzero command and an actual timeout cannot produce success.
 
 A later, separate AArch64 guest with the existing staged Go 1.23.9 toolchain
@@ -282,7 +282,7 @@ commands all exit successfully. `java-aarch64.json`, its input/build receipts
 and `packages-java-aarch64.json` retain the exact runtime and archive hashes.
 The first default-policy run failed during HotSpot executable-page setup;
 `java-default-policy-aarch64.json` retains that failure. The passing workload
-requests VINIX_ALLOW_WX=1 only in its children and limits application heaps to
+requests TULPAR_ALLOW_WX=1 only in its children and limits application heaps to
 128 MiB. This remains subject to the kernel's
 [privileged-launcher or wxallowed mount policy](mount-execution-policy.md);
 the qualification guest uses a privileged launcher. Unprivileged launches
@@ -380,7 +380,7 @@ pins repository indexes and archives; `selected-browsers-aarch64.json` records
 the dependency selection and `rootfs-browsers-aarch64.json` records installed
 input bytes and modes. This is disposable test-input extraction; browser
 package scripts, signature verification and installed-system registration are
-not claimed. The prepared Vinix musl interpreter is retained.
+not claimed. The prepared Tulpar musl interpreter is retained.
 
 Both engines run directly as UID 1000 with fresh profiles and their default
 sandbox policy. The regression requires a nonce-bearing JavaScript callback
@@ -536,7 +536,7 @@ output; that temporary executable is not exported from the guest.
 
 OpenJDK 21.0.10 passes javac compilation, threaded/NIO/TCP execution, JAR
 creation and execution from the saved JAR. All five commands come from the
-same complete JDK. This run uses UID 0 and VINIX_ALLOW_WX for HotSpot's code
+same complete JDK. This run uses UID 0 and TULPAR_ALLOW_WX for HotSpot's code
 cache, with a 128 MiB application heap; it does not qualify ordinary-user JIT
 launch policy or package/desktop installation.
 
@@ -844,7 +844,7 @@ ordering and architecture-specific serial calls, and the frozen test artifacts.
 The workload controller now accepts `--jit-runtimes firefox` or `java` for
 selected native workloads running as UID/GID 1000. PID 1 approves only the
 runtime's executable directory with a read-only `nosuid,nodev,wxallowed`
-self-bind. The driver remains outside it and sends VINIX_ALLOW_WX only to
+self-bind. The driver remains outside it and sends TULPAR_ALLOW_WX only to
 runtime children. Their report requires and records the actual most-specific
 mountinfo entry. Each helper exec still receives the kernel's existing
 authorization check; the global W^X policy and resource limits remain in force.
@@ -2227,7 +2227,7 @@ separately from concurrent shared-checkout changes. The initial bare fixture
 compile failure (`v_fixed_index`) is retained; it was corrected before runtime
 qualification. Independent review found no new lifetime blocker.
 
-At this revision, the first inaccessible destination retained Vinix's
+At this revision, the first inaccessible destination retained Tulpar's
 queue-preserving precheck, a known divergence from Linux datagram behavior.
 The following record-fault qualification closes that native UNIX vector
 divergence. Later byte-stream destination faults, within-iovec copied-prefix
@@ -2966,7 +2966,7 @@ before dropping credentials, dynamic procfs self/exe links, ordinary and O_PATH
 regular files, directories, `/dev/null`, pipe/socket handles and invalid/FDCWD
 arguments. Ordinary links and their deleted/private counterparts hold target
 text even when the target is absent. Procfs exe names the staged `/sbin/init`;
-self retains Vinix's existing absolute spelling, whose Linux qualification
+self retains Tulpar's existing absolute spelling, whose Linux qualification
 is separate. Three aliases, eight size words, three raw FD upper-word patterns
 and musl controls cover valid/null/inaccessible buffers, signed32 size errors,
 exact-zero libc scratch behavior and upper-word decoding.
@@ -2997,7 +2997,7 @@ ordering, origin-resource and orphan-parent pins, synchronous borrowing,
 matching final source/C captures and flat retention. No hidden fixture heap
 allocation or promotion is present.
 
-A concurrent cleanup deleted all `/tmp/vinix-*` build/compiler work areas
+A concurrent cleanup deleted all `/tmp/tulpar-*` build/compiler work areas
 during the first empty-path candidate builds. The root edits and committed
 prior results survived; no empty-path guest verdict existed in the lost area.
 Qualification was rebuilt from clean sources in
@@ -3185,7 +3185,7 @@ Public inventory fingerprints are regenerated from the committed parent plus
 this fix, separately from the tested kernel's input set.
 
 This closes the selected native task `Pid`/`NSpid` gap exposed in the preceding
-relative-link work. Nested namespaces beyond Vinix's existing one-level model,
+relative-link work. Nested namespaces beyond Tulpar's existing one-level model,
 zombie/task retirement, overmount/unmount and concurrent teardown, additional
 status/stat fields, full mount retention and glibc/translated/ELF32 or application
 installation/sandbox/portal acceptance remain separate. The three broad section
@@ -3375,7 +3375,7 @@ cohorts produce 120 initial R/S records. Full status descriptions are compared,
 including spaces and the newline. SIGSTOP plus WUNTRACED supplies 24 stopped
 process/task controls; SIGKILL plus WNOWAIT supplies 12 zombie process controls
 before the child is reaped. Zombie Thread objects are released before wait
-publication in Vinix, so zombie task directories remain unqualified.
+publication in Tulpar, so zombie task directories remain unqualified.
 
 | Architecture | Baseline | Candidate | Large pages before/after, both credential groups |
 | --- | --- | --- | --- |
@@ -3674,7 +3674,7 @@ and [flag definitions](https://raw.githubusercontent.com/torvalds/linux/v6.12/in
 | 64 raw lookup/output error calls | 14 | 0 | 0 |
 | 30 musl wrapper calls | 18 | 0 | 0 |
 
-Each architecture passes all 6214 calls on both Vinix and Linux 6.12.51.
+Each architecture passes all 6214 calls on both Tulpar and Linux 6.12.51.
 The baseline fails 4592 calls. Three upper-word patterns, five request masks
 and all 27 unknown single flag bits cover width/error behavior. Regular
 files, directory-relative and absolute names, followed/unfollowed symlinks,
@@ -3695,7 +3695,7 @@ The maintained [V reference controller](../tests/linux-compat/statx-reference.v)
 boots the exact same native musl probe ELF against caller-supplied Linux
 kernels, using a V-generated newc archive and a small V exec wrapper. The
 `--reference` argument selects the same semantic matrix while omitting
-Vinix-specific slab reporting. Dated reference inputs are fixed-release
+Tulpar-specific slab reporting. Dated reference inputs are fixed-release
 [Alpine 3.22.2 ARM](https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/aarch64/netboot-3.22.2/vmlinuz-virt)
 and [x86 kernels](https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/x86_64/netboot-3.22.2/vmlinuz-virt).
 Both boot logs identify Linux 6.12.51. Their hashes, QEMU binary/command,
@@ -3784,7 +3784,7 @@ inputs, compiles a V exec wrapper, creates a newc archive in V and records the
 QEMU command/binary and wrapper/source/C/ELF/archive/serial hashes. The dated
 inputs are the same fixed Alpine 3.22.2 kernels used by the statx reference:
 both identify Linux 6.12.51. ARM uses macOS HVF; x86 uses TCG. `--reference`
-runs the identical semantic matrix while skipping Vinix-specific slab reads.
+runs the identical semantic matrix while skipping Tulpar-specific slab reads.
 
 The isolated kernel worktrees start at
 `8fc078a86a6cd540c80ef667d9335afaf7c0230e`, with only the three stat adapter
@@ -3840,7 +3840,7 @@ requested and share the existing open description.
 | Native x86 dup2 self/replacement/errors | 0 | 276 | 0 | 192 | 0 |
 | Musl dup/dup2/dup3 controls | 70 | 70 | 6 | 6 | 0 |
 
-Each Vinix candidate and actual Linux 6.12.51 reference passes all 1678 ARM
+Each Tulpar candidate and actual Linux 6.12.51 reference passes all 1678 ARM
 or 1954 x86 calls. The baselines fail 1224 ARM and 1416 x86 calls. Independent
 three-pattern upper words cover old descriptor, new descriptor and flags;
 all 31 unknown single flag bits are refused. Sources include a regular file,
@@ -3866,7 +3866,7 @@ freezes the probe/kernel, compiles a V exec wrapper, creates the initramfs in
 V and records wrapper/source/C/ELF/archive/QEMU/serial hashes. These dated
 boots use the fixed Alpine 3.22.2 kernels from the statx reference; both logs
 identify Linux 6.12.51. ARM uses macOS HVF; x86 uses TCG. `--reference` runs
-the same semantic matrix while skipping Vinix-specific allocator reporting.
+the same semantic matrix while skipping Tulpar-specific allocator reporting.
 The native audit still requires all retention rows.
 
 Isolated worktrees start at
@@ -3936,7 +3936,7 @@ and completed-call controls pass. Baselines intentionally skip close/reuse
 after those failures. Both corrected production and instrumented candidates
 pass the visibility, fork and close/reuse controls. The same native probe ELF
 also passes on actual Linux 6.12.51 for each architecture; reference boots
-omit only Vinix allocator reporting.
+omit only Tulpar allocator reporting.
 
 Each candidate and Linux cohort runs 200 close/reuse rounds: observe source
 identity at 63, close it, immediately seed 64 with CLOEXEC, wait for duplicate
@@ -3967,7 +3967,7 @@ with only the function restored. The source and generated-C lifetime review chec
 failure cleanup, source retention, explicit stack worker state and joins.
 The probe compiler is pinned separately from the frozen kernel/controller
 compiler, and a reconstruction must reproduce the exact tested C and ELF.
-Initial stale-sample probe failures on Vinix and Linux and interrupted x86
+Initial stale-sample probe failures on Tulpar and Linux and interrupted x86
 timing captures remain private; published receipts use the corrected frozen
 probe with 16 fork samples per method and a 600-second cohort alarm.
 
@@ -4101,7 +4101,7 @@ existing lookup lock without nesting another lock.
 | Invalid sources/commands, libc and limit exhaustion | 324 | 76 | 0 |
 | Total | 8928 | 7348 | 0 |
 
-Every Vinix candidate and actual Linux 6.12.51 reference passes all 8,928 calls
+Every Tulpar candidate and actual Linux 6.12.51 reference passes all 8,928 calls
 using the same native musl ELF. Three independent patterns vary each upper
 word. Under soft limit 128, minima 0/63/127 succeed, while 128/129, INT_MAX,
 INT_MIN and -1 return EINVAL. Six held source classes cover a regular file,
@@ -4352,7 +4352,7 @@ separate. The three broad section 15 acceptance gates remain open.
 those bits were mutable, so a request to set nonblocking mode could silently
 remove synchronized-write status, and an ordinary open could acquire it through
 fcntl. Linux excludes both from its [mutable status mask](https://kernel.googlesource.com/pub/scm/linux/kernel/git/stable/linux/+/refs/tags/v6.12.38/fs/fcntl.c).
-Vinix now limits its implemented mutable mask to append and nonblocking bits.
+Tulpar now limits its implemented mutable mask to append and nonblocking bits.
 Access and descriptor flags retain their separate behavior.
 
 | Root and UID/GID 1000 controls | Calls per architecture | Baseline failures | Candidate/Linux failures |
@@ -4689,7 +4689,7 @@ nonfinal close retention and final close release. They reject a false fix
 that treats every request on an already locked description as a no-op.
 Directory ownership/mode/inode/flags are checked separately from regular-file
 bytes/size/cursors. The same native musl source/C/ELF passes actual Linux
-6.12.51, which skips Vinix allocator accounting.
+6.12.51, which skips Tulpar allocator accounting.
 
 To expose the release window, the maintained V instrumenter adds a private
 sched import and 32 reschedules immediately after description-lock release
@@ -4813,7 +4813,7 @@ remain unqualified. The three broad section 15 acceptance gates stay open.
 
 ## Native fcntl owner commands and target errors
 
-Linux F_SETOWN is command 8 and F_GETOWN command 9. Vinix had these reversed:
+Linux F_SETOWN is command 8 and F_GETOWN command 9. Tulpar had these reversed:
 ordinary setters executed the getter. The command constants now match Linux;
 the existing native wrapper imports descriptor, command and scalar owner
 words from their low32 bits while extended owner pointers stay full width.
@@ -4840,7 +4840,7 @@ queues. Held 64/65 remain usable at NOFILE soft limits eight/zero; closed 66
 is reused for regular/socket descriptions before being closed again.
 
 Both unchanged baselines fail exactly 2,736 of these controls. Patched
-Vinix and actual Linux 6.12.51 pass the identical native musl source/C/ELF.
+Tulpar and actual Linux 6.12.51 pass the identical native musl source/C/ELF.
 Two 200-cycle cohorts after warmups and settling measure aliases, accepted
 owner updates and refused targets; all slab classes and large pages stay
 flat. The new existence helper holds pid_lock across namespace/table/group
@@ -4904,13 +4904,13 @@ zero/ESRCH checks. Every directory record and terminating byte is bounded;
 EOF and successful close are required. This establishes observed settling,
 not a universal simultaneous PID-detach barrier. Earlier Linux x86 checks
 incorrectly assumed join itself guaranteed detachment and failed one control.
-A subsequent pathname predicate exposed Vinix's cached task-path limit:
+A subsequent pathname predicate exposed Tulpar's cached task-path limit:
 existing task paths are refreshed on directory listing or missing lookup.
 Those earlier receipts/captures remain published as diagnostics. Cached-path
 invalidation and exact thread-exit races remain unqualified.
 
 Both unchanged baselines fail exactly 1,290 controls. Native baseline/candidate
-source, C and ELF match exactly; patched Vinix and actual Linux 6.12.51 pass
+source, C and ELF match exactly; patched Tulpar and actual Linux 6.12.51 pass
 the same native musl ELF. The separate preflight C differs only in stderr
 scaffolding, with an identical resulting ELF; its whole-C hashes and raw diff
 are published without normalization. Two 200-cycle cohorts
@@ -4986,7 +4986,7 @@ forked before workers start.
 WNOWAIT records successful exit without reaping; waitpid supplies the separate
 reap boundary. Retained stat and directory descriptions remain usable for
 fstat/F_GETFD through all three aliases; dev/ino/mode are checked, without
-claiming Linux/Vinix detached nlink equivalence. These checks qualify opens
+claiming Linux/Tulpar detached nlink equivalence. These checks qualify opens
 and retained descriptor metadata; stat/status contents and reads through
 already-open retired files require separate qualification.
 
@@ -5063,7 +5063,7 @@ supervisor's pipe-transferred FINAL output.
 | Retained root/child alias metadata and descriptor flags | 108 | 0 |
 
 Both unchanged baselines fail exactly 360 of 2,592 controls per architecture.
-Fixed Vinix and actual Linux 6.12.51 pass every control using the same native
+Fixed Tulpar and actual Linux 6.12.51 pass every control using the same native
 musl ELF bytes. Both children are forked before any threading; private pipe
 protocols release each child, WNOWAIT observes successful exit, and waitpid
 reaps it. An independent kill-zero ESRCH query precedes the missing-path
@@ -5155,7 +5155,7 @@ and FINAL rows must agree exactly.
 | Retained aliases, inode owners, flags, bytes, cursor and queued AB | 15 | 0 | 3 |
 
 The unchanged kernels fail 3,623 of 6,430 controls per architecture. Final
-Vinix kernels and actual Linux 6.12.51 pass with the identical native probe
+Tulpar kernels and actual Linux 6.12.51 pass with the identical native probe
 C/ELF. The original word-only intermediate fixes all root controls and leaves
 180 ordinary-user pipe permission failures; its captures use the earlier
 probe without explicit UID/GID metadata assertions. The fresh final probe adds
@@ -5233,7 +5233,7 @@ An unexpected success for a bad destination is rejected before dereference.
 | Retained alias metadata/flags, file bytes/cursor, queued AB and FD slots | 13 | 0 | 13 |
 
 Each architecture's baseline fails 3,904 of 4,186 native controls. Corrected
-Vinix kernels pass all native rows. The identical musl ELF passes 3,546
+Tulpar kernels pass all native rows. The identical musl ELF passes 3,546
 controls on actual Linux6.12.51, deliberately skipping the native-only refusal
 row. Child CASES and supervisor FINAL rows agree exactly. Successful pipes
 retain original/dup/CLOEXEC handles on each end and check exact libc and raw
@@ -5301,7 +5301,7 @@ resource boxing, FD/Handle/Pipe unrefs, table growth and checked usercopy
 implementations stay unchanged. Linux likewise returns its unused first
 slot and both endpoint owners on a second-slot refusal in its
 [pipe implementation](https://kernel.googlesource.com/pub/scm/linux/kernel/git/torvalds/linux/+/b91872c56940950a6a0852e499d249c3091d4284/fs/pipe.c).
-Linux copies results before installing the endpoints; Vinix's later usercopy
+Linux copies results before installing the endpoints; Tulpar's later usercopy
 publication/rollback races are a separate boundary, not closed by this fix.
 
 The `pipepair` musl probe runs root and UID/GID1000 cohorts. Soft limits of
@@ -5321,7 +5321,7 @@ filler aliases and verifies the original 64-slot vector.
 | Applicable output canaries and restored filler aliases | 2,240 | 0 |
 | Retained aliases, data/cursor, queued AB and original slots | 13 | 0 |
 
-Both baselines fail 560 of 8,986 controls per architecture. Corrected Vinix
+Both baselines fail 560 of 8,986 controls per architecture. Corrected Tulpar
 and actual Linux6.12.51 pass every row with the same native probe C/ELF;
 child CASES and supervisor FINAL rows agree. Successful pairs temporarily
 restore the original soft limit before creating all six original/dup/CLOEXEC
@@ -5407,7 +5407,7 @@ raw/libc status flags, descriptor flags, EAGAIN, ABC transfers and EOF.
 
 Both baselines fail exactly 160 of 10,266 controls per architecture: only
 the nil destination with fewer than two slots has the wrong errno. Corrected
-Vinix and actual Linux 6.12.51 pass all rows with the same final native ELF.
+Tulpar and actual Linux 6.12.51 pass all rows with the same final native ELF.
 Child CASES and parent FINAL counters agree. Refused pairs leave the table
 unchanged, and every query restores the filler vector. Retained regular
 bytes/cursor, nine aliases, metadata/flags, queued AB and all 64 original
@@ -5476,7 +5476,7 @@ Positive setters request the current capacity, preserving occupied buffers.
 | Retained metadata/flags/cursors/capacities/data/queues/slots | 48 | 0 |
 
 Both original baselines fail exactly 1,724 of 3,172 checks per architecture.
-Corrected Vinix and actual Linux 6.12.51 pass every row with the same final
+Corrected Tulpar and actual Linux 6.12.51 pass every row with the same final
 native ELF. Child CASES and parent FINAL counters agree. Regular XYZ bytes
 and cursor 1, queued AB/CD/GH, every alias and the 80-slot vector survive.
 The errno correction is committed separately as `98c0df505`.
@@ -5751,7 +5751,7 @@ Across both children there are 448 bounds queries and two state controls.
 | x86-64 | 450 | 28 | 0 | 0 |
 
 Both original kernels fail only the 14 EXT queries per credential cohort.
-All other controls pass. Corrected Vinix and actual Linux 6.12.51 references
+All other controls pass. Corrected Tulpar and actual Linux 6.12.51 references
 execute identical architecture-specific probe ELFs and pass every row.
 Preview, final preflight and both native phases have byte-identical raw C.
 
@@ -5831,14 +5831,14 @@ The two cohorts total 992 syscall/wrapper checks plus six final controls.
 Original kernels have the same per-cohort failure vector `4/240/4/12`.
 Their ordinary raw and libc failures expose null-output error precedence;
 upper-word and RR failures expose the native PID decoder. Final policy,
-priority and buffer controls remain intact. Corrected Vinix and actual
+priority and buffer controls remain intact. Corrected Tulpar and actual
 Linux 6.12.51 execute identical architecture-specific probe ELFs and pass
 every row. Preview, preflight and both native phases have identical raw C.
 
 Interval duration depends on the scheduler and its configuration. Native
-controls retain Vinix's 5ms RR quantum and zero OTHER interval. Linux
+controls retain Tulpar's 5ms RR quantum and zero OTHER interval. Linux
 references require normalized nonnegative OTHER and positive RR timespecs,
-without requiring those durations to match Vinix. Other policy intervals,
+without requiring those durations to match Tulpar. Other policy intervals,
 fair-task timing and the query's relationship to actual CPU entitlement
 need separate qualification.
 
@@ -5942,7 +5942,7 @@ Boundary controls map the highest usable page with MAP_FIXED_NOREPLACE,
 verify the returned address exactly, and unmap it before storage measurement.
 A 56-byte prefix fits at its end; advertising 57 bytes or a full page must
 return `EFAULT` without writing that prefix. A missing task still returns
-`ESRCH` before checking this range. Vinix selects user limits of `2^47` ARM
+`ESRCH` before checking this range. Tulpar selects user limits of `2^47` ARM
 and `2^56` x86 in these captures. Linux selects `2^48` ARM and `2^47 - 4096`
 x86. Linux x86's
 [TASK_SIZE_MAX definition](https://github.com/torvalds/linux/blob/v6.12/arch/x86/include/asm/page_64_types.h)
@@ -6208,7 +6208,7 @@ Permission checks precede policy mutation. The new scalar helper holds the
 PID-table lock while borrowing the target and owner, returning only errno.
 Its emitted C has one lock and six compiler-emitted unlock sites, including
 the unreachable final defer. These changes add no kernel allocation or free.
-Vinix still stores nice on the process; this qualification uses single-thread
+Tulpar still stores nice on the process; this qualification uses single-thread
 process leaders and establishes no Linux per-thread nice contract.
 
 The V `attrnice` fixture runs root and UID/GID1000 cohorts. Each owns blocked
@@ -6250,7 +6250,7 @@ or fixed-index helpers.
 
 Each cohort records `3456/6912/3456/831` checks. Original root failures are
 `1056/2112/1056/435`; original UID1000 failures are `1080/2160/1080/387` on
-both architectures. Original/corrected Vinix and actual Linux 6.12.51 execute
+both architectures. Original/corrected Tulpar and actual Linux 6.12.51 execute
 identical final probe ELFs per architecture. Native pages are 16 KiB ARM/4 KiB x86;
 Linux references use 4 KiB. The syscall entry is genuine musl `syscall`; dedicated
 musl scheduling wrappers retain their separately documented ENOSYS behavior.
@@ -6558,7 +6558,7 @@ ARM CPU1 QoS blocker or the three broad section 15 gates.
 
 The 2026-10-15 qualification covers sched_getattr on stable single-thread
 process leaders in OTHER/BATCH/IDLE and FIFO/RR. Linux returns sched_nice zero
-for FIFO/RR, independently of the task's actual retained nice. Vinix originally
+for FIFO/RR, independently of the task's actual retained nice. Tulpar originally
 copied process nice into that field for every class. The corrected initializer
 selects zero for FIFO/RR and retains existing values for the other tested classes.
 Policy, realtime priority, flags, output size and the underlying nice are unchanged.
@@ -6966,7 +6966,7 @@ existing behavior.
 The primary [Linux 6.12 random implementation](https://github.com/torvalds/linux/blob/v6.12/drivers/char/random.c)
 accumulates the bytes copied to the user iterator and returns EFAULT only when
 none were copied. The supplied Linux 6.12.51 reference kernels run the exact
-same native musl probe ELFs used with Vinix, rather than rebuilt equivalents.
+same native musl probe ELFs used with Tulpar, rather than rebuilt equivalents.
 
 Each root and UID1000 cohort executes the following groups for PROT_NONE,
 read-only and unmapped suffixes, all six accepted flags, three raw register-word
@@ -7608,7 +7608,7 @@ Four fresh production kernels were built from committed base
 the complete generated C on both architectures: only the two adapter definitions
 and their exact declarations differ; no identifier normalization is used.
 The unchanged final probe source, C and ELF are bound across original/corrected
-Vinix and Linux 6.12.51 reference runs.
+Tulpar and Linux 6.12.51 reference runs.
 
 Root and UID/GID1000 run in initial and one-level PID namespaces. Each cohort
 creates a fresh session and two held direct children: one leads a separate
@@ -7640,7 +7640,7 @@ Valid waitid events verify signo, errno, code, PID and status; empty events also
 verify zero UID. Successful-event UID/accounting is outside this qualification.
 No-event wait4 ignores inaccessible status/rusage pointers; zombie waitid with
 WNOWAIT returns EFAULT for bad info/rusage and independently remains waitable.
-Original kernels fail exactly 51,452 controls per architecture. Corrected Vinix
+Original kernels fail exactly 51,452 controls per architecture. Corrected Tulpar
 and identical native ELF probes on Linux pass every final control.
 
 The first probe contained two incorrect assumptions. Linux writes waitid's
@@ -7733,7 +7733,7 @@ There are no added allocator, pin, free or stack-allocation calls in the helper.
 Four fresh production builds use committed base
 `0797ec9653a1570603e75ecffecd15145a3dded0`. Only the owned
 `kernel/userland/linux_task.v` patch enters the corrected builds. The probe's
-source, emitted C and ELF are identical across original/corrected Vinix and
+source, emitted C and ELF are identical across original/corrected Tulpar and
 the supplied Linux reference for each architecture.
 
 Root and UID/GID1000 cohorts run in initial and one-level PID namespaces.
@@ -7772,7 +7772,7 @@ padding, UID and accounting are not promoted by these event controls.
 
 Original kernels fail exactly 35,136 controls per architecture. Corrected
 kernels and identical-ELF Linux references pass every control on both native
-architectures. AArch64 uses 16 KiB Vinix pages; both Linux references and
+architectures. AArch64 uses 16 KiB Tulpar pages; both Linux references and
 native x86-64 use 4 KiB pages.
 
 Four warmed 200-cycle cohorts alternate raw upper-word and genuine musl calls.
@@ -7827,7 +7827,7 @@ Complete production C differs only in `syscall_waitid`, without normalization.
 The oracle is the pinned
 [Linux v6.12 wait implementation](https://github.com/torvalds/linux/blob/v6.12/kernel/exit.c),
 which uses `task_uid` for zombie, stopped and continued waits. The same native
-probe source, emitted C and ELF run against original/corrected Vinix and
+probe source, emitted C and ELF run against original/corrected Tulpar and
 Linux 6.12.51 on each architecture. Four fresh production kernel builds use
 committed base `b3d1ebcb8ea58a266d09982db5f525bbd445593a`; only the owned
 `linux_task.v` change enters corrected worktrees.
@@ -7865,7 +7865,7 @@ then an immediate WNOHANG check verifies cleared si_pid/si_uid or ECHILD
 after reaping. Canary bytes surround both output structures. These controls
 qualify identity and event fields; siginfo padding and rusage accounting retain
 separate limits. Originals fail exactly 9,264 controls on each architecture.
-Corrected Vinix and the unchanged-ELF Linux references pass every control.
+Corrected Tulpar and the unchanged-ELF Linux references pass every control.
 
 Four warmed 200-cycle storage cohorts retain one stopped child outside the
 measurement interval. Every cycle repeats the three selectors and eight
@@ -7873,7 +7873,7 @@ raw/musl forms, alternating NULL/valid rusage. Fork, credential changes,
 signals, exit and reap remain outside this interval. Slab object counts and
 big-page totals stay flat after settling. The emitted probe C has five
 explicit stack allocas and no malloc/memdup/dynamic-array/fixed-index calls.
-AArch64 uses 16 KiB Vinix pages; x86-64 and both Linux references use 4 KiB pages.
+AArch64 uses 16 KiB Tulpar pages; x86-64 and both Linux references use 4 KiB pages.
 Raw storage totals remain in the linked guest logs.
 
 The runtime and 38,400-control waitempty regressions pass on both native
@@ -7935,7 +7935,7 @@ and unchanged native probe ELFs on Linux 6.12.51 provide the oracle on both
 architectures. Four fresh production builds use committed base
 `069496c074d754da81848031d8e28c062b22f70e`. Only the owned `linux_task.v` patch
 enters corrected worktrees. Probe source, emitted C and ELF match across
-original/corrected Vinix and Linux for each architecture. Complete production
+original/corrected Tulpar and Linux for each architecture. Complete production
 C differs only in `syscall_waitid` and the added field-copy helper, including
 its declaration, without compiler normalization. The helper adds no allocation,
 free, pin or stack-allocation calls. Existing child claims, pins, credential
@@ -7976,7 +7976,7 @@ available for subsequent queries. A final consuming wait validates identity
 and event, then WNOHANG verifies cleared output or ECHILD after reaping.
 
 Original kernels fail exactly 122,880 controls per architecture. Corrected
-Vinix and the unchanged-ELF Linux references pass all 156,800 on each native
+Tulpar and the unchanged-ELF Linux references pass all 156,800 on each native
 architecture. The guard contract covers stable mappings; concurrent mprotect,
 unmap, alias and credential changes remain outside this qualification.
 
@@ -7987,7 +7987,7 @@ and 25-byte split-field fault, then checks read-only EFAULT. All slab object
 counts and big-page totals stay flat after settling. Fork, mappings, protection,
 signals, exit and reap remain outside the interval. The probe C uses five
 explicit stack allocas and no malloc/memdup/dynamic-array/fixed-index calls.
-AArch64 uses 16 KiB Vinix pages; x86-64 and both Linux references use 4 KiB pages.
+AArch64 uses 16 KiB Tulpar pages; x86-64 and both Linux references use 4 KiB pages.
 Raw storage totals remain in the linked logs.
 
 Runtime and the 13,952-control child-UID regressions pass on both architectures;
@@ -8015,7 +8015,7 @@ matching the Linux wrapper. A failed rusage copy returns EFAULT before any
 siginfo stores; with distinct buffers, siginfo stays untouched.
 A later siginfo fault leaves the earlier rusage visible.
 For overlapping buffers, the six siginfo fields are the final writes.
-Previously Vinix copied siginfo first, violating all three observable rules.
+Previously Tulpar copied siginfo first, violating all three observable rules.
 The patch swaps only the existing event-copy branches and adds an explanatory
 comment. It preserves both helpers, the child claim/pin, credential snapshot,
 accounting implementation, error cleanup and event-consumption rules.
@@ -8026,7 +8026,7 @@ The pinned
 [Linux v6.12 waitid wrapper](https://github.com/torvalds/linux/blob/v6.12/kernel/exit.c)
 copies rusage before beginning user siginfo access and returns immediately on
 rusage copy failure. Identical native probe source, emitted C and ELF run on
-original/corrected Vinix and Linux 6.12.51 for each architecture. Four fresh
+original/corrected Tulpar and Linux 6.12.51 for each architecture. Four fresh
 production builds use committed base `513723b3f0aa81ade15a203e98501d75a380082f`;
 only the owned `linux_task.v` patch enters corrected worktrees.
 
@@ -8076,7 +8076,7 @@ adjacent control. All six final siginfo fields must match the child's event,
 and every byte outside the rusage span and six siginfo fields stays poisoned.
 Rusage bytes overlapped by siginfo and exact accounting remain outside the
 alias oracle. Original kernels fail exactly 258,048 controls per architecture;
-corrected Vinix and unchanged-ELF Linux references pass all 310,400 each.
+corrected Tulpar and unchanged-ELF Linux references pass all 310,400 each.
 
 Four warmed 200-cycle storage cohorts keep one stopped child and all mappings
 outside the measured interval. Cycles rotate failed rusage with untouched
@@ -8085,7 +8085,7 @@ fault after valid rusage, and partial alias output. Each mode varies three
 selectors and eight raw/musl forms. Slab objects and big-page totals stay flat
 after settling. Fork, mappings, signals, exit and reap are outside the interval.
 The probe C has five explicit stack allocas and no malloc/memdup/dynamic-array/
-fixed-index calls. AArch64 uses 16 KiB Vinix pages; x86-64 and both Linux
+fixed-index calls. AArch64 uses 16 KiB Tulpar pages; x86-64 and both Linux
 references use 4 KiB pages. Raw storage totals remain in the linked logs.
 
 Runtime and the 156,800-control child-event output regressions pass on both
@@ -8130,7 +8130,7 @@ The pinned [Linux v6.12 wait implementation](https://github.com/torvalds/linux/b
 consumes stopped/continued state or reaps an exited child in do_wait before
 copying output to userspace. WNOWAIT bypasses consumption. Wait4 copies status
 before rusage; waitid copies rusage before siginfo. Identical probe source,
-emitted C and native musl ELF run on original/corrected Vinix and Linux 6.12.51
+emitted C and native musl ELF run on original/corrected Tulpar and Linux 6.12.51
 for each architecture. Four fresh production builds use committed base
 `96542f4955808cfe4492894c9b1bcf558c98734a`; only the owned wait-source patch enters
 the corrected worktrees. Complete generated C differs only in these four
@@ -8181,7 +8181,7 @@ or ECHILD after reaping. The probe normally consumes any still-pending event
 on original kernels before cleanup; these semantic failures therefore do not
 turn later cases into setup failures. Live children are resumed/released and
 reaped normally; exit pidfds are closed. Originals fail exactly 1,920 controls
-per architecture; corrected Vinix and the unchanged-ELF Linux references pass
+per architecture; corrected Tulpar and the unchanged-ELF Linux references pass
 all 2,880 each.
 
 Four warmed 200-cycle storage cohorts include fresh fork, selected event,
@@ -8268,7 +8268,7 @@ changes and general store atomicity remain outside this bounded contract.
 The pinned [Linux v6.12 implementation](https://github.com/torvalds/linux/blob/v6.12/kernel/exit.c)
 uses put_user for the scalar status after selecting an event, then copies
 rusage only after a positive result. Identical probe source, emitted C and
-native musl ELF run on original/corrected Vinix and Linux 6.12.51 for each
+native musl ELF run on original/corrected Tulpar and Linux 6.12.51 for each
 architecture. Four fresh production builds use committed base
 `6dae4896ea7902c559935cd418d783d6b4deff7c`; only this wait-source change enters
 the corrected worktrees.
@@ -8319,7 +8319,7 @@ bytes stay poisoned. A valid nonblocking waitid query after every selected
 wait4 must find a cleared live-child event or ECHILD after reaping. Live
 children are resumed/released and normally reaped, and exit pidfds are closed.
 Original kernels fail exactly 288 guard controls per architecture; corrected
-Vinix and unchanged-ELF Linux references pass all 2,496 each.
+Tulpar and unchanged-ELF Linux references pass all 2,496 each.
 
 Four warmed 200-cycle storage cohorts include fresh fork, COW preparation of
 the mapped buffers, event readiness, status store/fault, child cleanup and
@@ -9299,7 +9299,7 @@ This qualifies range rejection and admission, with inherited-stack fork/reap.
 Execution on a newly supplied stack, exact stack-pointer alignment, ARM tagged
 pointers, concurrent argument changes and every architecture-specific address
 boundary remain unqualified. Valid intervals use the common low-address
-domain; 2^47 is the ARM Vinix ceiling, while x86 can admit a larger domain
+domain; 2^47 is the ARM Tulpar ceiling, while x86 can admit a larger domain
 under five-level paging and Linux can reserve a final guard page. Alternative
 exit notification, clone-child wait classes, selected TIDs, pidfds, extensible
 sizes, cgroup placement and its authorization/lifetimes, GNU libc and
@@ -9573,7 +9573,7 @@ or both nonzero, and rejects counts above 32 without truncating either word.
 Malformed pairs return EINVAL without reading the vector or creating a child.
 This follows [Linux v6.12's clone3 importer](https://github.com/torvalds/linux/blob/v6.12/kernel/fork.c)
 and its [MAX_PID_NS_LEVEL limit](https://github.com/torvalds/linux/blob/v6.12/include/linux/pid_namespace.h).
-This limit does not advertise 32 nested PID namespaces in Vinix.
+This limit does not advertise 32 nested PID namespaces in Tulpar.
 
 The `clonetidpair` probe runs 1,248 controls per architecture, with 312 in each
 root/UID1000 and initial/one-level PID namespace cohort. Each cohort explicitly
@@ -9593,7 +9593,7 @@ native x86 and both Linux references use 4KiB.
 
 The nonempty admission controls intentionally stop at namespace permission
 checking before requested-PID validation/allocation. Linux imports their
-readable vectors; Vinix still does not import them. The tested arrays can
+readable vectors; Tulpar still does not import them. The tested arrays can
 overlap the argument block and their contents are not asserted to be valid
 PID selections. Successful requested-TID allocation, vector-fault ordering,
 namespace-depth and capability checks for allocation remain unqualified.
@@ -9644,7 +9644,7 @@ Raw original/corrected/Linux, build, preflight and regression logs accompany
 the receipts. The maintained auditor is `tests/linux-compat/clonetidpair-check.v`.
 
 This qualifies selected-TID pointer/count shape and the tested admission
-paths. Well-formed selected-TID requests are still ignored by Vinix after
+paths. Well-formed selected-TID requests are still ignored by Tulpar after
 this validation; ordinary successful clones must not be interpreted as
 requested-PID support. Concurrent arguments/mappings, selected-TID vector
 import and allocation, pidfds, non-SIGCHLD exit notification and clone-child
@@ -9924,7 +9924,7 @@ here. The broad libc, installation/sandbox/portal and translation gates remain o
 Both architectures now reject CLONE_THREAD combined with CLONE_NEWPID or
 CLONE_NEWUSER with EINVAL through the existing shared clone admission predicate.
 This replaces the earlier ENOTSUP for requests whose other sharing flags are
-valid on Linux but unsupported by Vinix. The guard applies to legacy clone
+valid on Linux but unsupported by Tulpar. The guard applies to legacy clone
 and clone3, following clone3 import/flag/stack checks and preceding unsupported
 sharing, namespace permissions and task construction. It follows
 [Linux v6.12's thread-group namespace exclusions](https://github.com/torvalds/linux/blob/v6.12/kernel/fork.c).
@@ -10036,7 +10036,7 @@ and its final close must succeed. The six classes per cohort are:
   descriptor forms in three layouts. Missing INT_MAX/1048576 descriptors and
   the held wrong-type descriptor require EBADF. VM, FS, FILES, shared handlers
   with VM, SYSVSEM, UNTRACED and CLEAR_SIGHAND must not be rejected early merely
-  because some sharing remains unsupported by Vinix later in admission.
+  because some sharing remains unsupported by Tulpar later in admission.
 - 60 earlier structure/vector/flag/signal/stack controls, retaining EFAULT,
   E2BIG and EINVAL before sharing or descriptor handling.
 - 72 cgroup ABI/extension controls: oversized descriptor words, prefixes too
@@ -10108,7 +10108,7 @@ parent check remains for legacy clone and later admission.
 This follows [Linux v6.12's early copy_process init-parent check](https://github.com/torvalds/linux/blob/v6.12/kernel/fork.c)
 and [later cgroup descriptor lookup](https://github.com/torvalds/linux/blob/v6.12/kernel/cgroup/cgroup.c).
 It qualifies init-parent versus descriptor errors. Namespace-creation permission
-checks also precede descriptor lookup on Linux and remain a separate Vinix gap.
+checks also precede descriptor lookup on Linux and remain a separate Tulpar gap.
 
 The `clonecgparent` probe runs 1,896 controls per architecture. Global PID1 runs
 24 parent/cgroup requests using eight flag combinations, two missing descriptor
@@ -10130,7 +10130,7 @@ six classes per cohort are:
 - 96 equivalent requests using the held wrong-type descriptor.
 - 108 requests without PARENT: twelve valid-sharing flag combinations, three
   missing/wrong-type descriptor forms and three layouts must reach EBADF. This
-  includes forms whose later sharing support remains incomplete in Vinix.
+  includes forms whose later sharing support remains incomplete in Tulpar.
 - 60 earlier structure/vector/flag/signal/stack errors retain exact EFAULT,
   E2BIG or EINVAL, including PARENT with a nonzero exit signal.
 - 72 cgroup ABI/extension controls retain oversized-descriptor, short-prefix,
@@ -10317,7 +10317,7 @@ This follows [Linux's copy_process check](https://github.com/torvalds/linux/blob
 
 The scalar helper compares `ns.pid` with `ns.pid_for_children`. The birth PID
 namespace remains unchanged by unshare/setns. Using `numbered_in` directly would
-incorrectly reject initial-namespace callers, where Vinix represents numbering
+incorrectly reject initial-namespace callers, where Tulpar represents numbering
 with nil. There are no new namespace references, locks, allocations or frees.
 
 The `clonefuture` probe runs 1,880 controls per native architecture: 1,872 raw
@@ -10405,7 +10405,7 @@ See the [executing audit](../tests/linux-compat/results/2026-10-16/clonefuture-a
 and [diagnostic pins](../tests/linux-compat/results/2026-10-16/clonefuture-diagnostic-pins.json).
 Raw original/corrected/Linux, build, preflight and regression logs accompany them.
 
-Nested callers remain unqualified: Vinix does not represent a descendant PID
+Nested callers remain unqualified: Tulpar does not represent a descendant PID
 namespace's numbers in its ancestor namespace. Worker-thread callers,
 per-thread namespace ownership and namespace/capability races,
 successful cross-namespace process construction beyond the keeper setup,
@@ -10429,7 +10429,7 @@ The rules follow Linux v6.12's
 [`kernel_clone` and `copy_process`](https://github.com/torvalds/linux/blob/v6.12/kernel/fork.c).
 The retained source also shows why a separate-output pidfd control cannot assume
 that cgroup descriptor lookup precedes writing the pidfd: actual pidfd creation
-and `put_user` occur earlier. That lifecycle remains unsupported by Vinix and
+and `put_user` occur earlier. That lifecycle remains unsupported by Tulpar and
 outside this qualification.
 
 The V-only `clonepidguard` case runs **1,872 native musl controls per architecture**
@@ -10459,8 +10459,8 @@ lifecycles per architecture**, with no unexpected children.
 The frozen originals fail **864 controls each**: 240 DETACHED and 240 legacy
 parent-TID conflicts return ENOTSUP; 288 clone3 aliases return EBADF and 96 return
 ENOTSUP. All other controls pass. Corrected native kernels and the **identical
-probe ELF on Linux 6.12.51** pass all controls. AArch64 Vinix uses 16 KiB pages;
-x86-64 Vinix and both Linux references use 4 KiB pages. This qualifies these
+probe ELF on Linux 6.12.51** pass all controls. AArch64 Tulpar uses 16 KiB pages;
+x86-64 Tulpar and both Linux references use 4 KiB pages. This qualifies these
 native ABIs and page layouts; it does not imply foreign ABI qualification.
 
 Four production kernel builds use isolated worktrees frozen at
@@ -10562,8 +10562,8 @@ results and **144 unwanted IPC-namespace children**. The test supervises,
 validates and reaps all those unwanted children; it never treats their success
 as conformance. Both phases also complete **144 legitimate fork/reap controls**.
 The corrected kernels and the **identical probe ELF on Linux 6.12.51** pass all
-1,872 controls, with no unwanted children. AArch64 Vinix uses 16 KiB pages;
-x86-64 Vinix and both Linux references use 4 KiB pages.
+1,872 controls, with no unwanted children. AArch64 Tulpar uses 16 KiB pages;
+x86-64 Tulpar and both Linux references use 4 KiB pages.
 
 Four production builds use isolated worktrees frozen at
 `1e90921fd6fd0394e0ba15c6a84bccf1b34f804a`, with retained dependency inputs.
@@ -10863,7 +10863,7 @@ foreign-application roadmap gates remain open.
 Native semop and semtimedop now interpret the operation count as an unsigned
 32-bit word, while semctl SETVAL interprets its union member as a signed
 32-bit word. Upper register bits are ignored. Empty vectors return EINVAL,
-counts beyond Vinix's 32-operation ceiling return E2BIG, and unreadable vectors
+counts beyond Tulpar's 32-operation ceiling return E2BIG, and unreadable vectors
 return EFAULT before set lookup or value mutation. Unknown sem_flg bits are
 ignored. An ID absent at syscall entry returns EINVAL; removal of an already
 queued vector still returns EIDRM.
@@ -10904,7 +10904,7 @@ toolchains and large boot media have explicit content pins. The evidence is
 for the isolated change and pinned integration base, without qualifying other
 sessions' changes to the shared checkout.
 
-This qualifies native ELF64 argument and import behavior only. Vinix's vector
+This qualifies native ELF64 argument and import behavior only. Tulpar's vector
 limit remains 32, below the Linux reference limit. SEM_UNDO is accepted without
 undo adjustments; IPC permission enforcement, namespace isolation, per-index
 GETPID, GNU libc and translated/32-bit paths remain unqualified. The broader
@@ -10946,7 +10946,7 @@ remain separately retained. External toolchains and large boot media have
 explicit content pins. This qualifies the isolated change rather than other
 sessions' changes to the shared checkout.
 
-Vinix still limits sets to 32 semaphores and vectors to 32 operations. SEM_UNDO,
+Tulpar still limits sets to 32 semaphores and vectors to 32 operations. SEM_UNDO,
 permissions/namespaces, per-index GETPID, GNU libc and translated/32-bit paths
 were outside this argument qualification. Per-index GETPID is qualified below.
 The broader libc, installation/sandbox and foreign
@@ -10962,7 +10962,7 @@ leave all values and PIDs unchanged.
 
 The [retained evidence](../tests/linux-compat/results/2026-10-23/sempid-evidence/README.md)
 contains 261-check native and Linux 6.12.51 runs for each architecture using
-identical static musl ELFs. Both original Vinix kernels fail exactly 79 checks;
+identical static musl ELFs. Both original Tulpar kernels fail exactly 79 checks;
 both corrected kernels and Linux references pass all 261. Controls cover
 untouched indices, same-value SETVAL, zero/duplicate/net-zero operations,
 queued decrement and zero waits, NOWAIT/range/index/pointer errors, timeout,
@@ -11047,8 +11047,8 @@ return EINVAL. This follows `ksys_semctl` and `semctl_setval` in the retained
 [Linux v6.12 source](https://github.com/torvalds/linux/blob/v6.12/ipc/sem.c).
 
 The [retained evidence](../tests/linux-compat/results/2026-10-23/semrange-evidence/README.md)
-uses identical static musl probe ELFs on Linux 6.12.51 and native Vinix for
-both architectures. Each passes 4,200 checks; each original Vinix kernel fails
+uses identical static musl probe ELFs on Linux 6.12.51 and native Tulpar for
+both architectures. Each passes 4,200 checks; each original Tulpar kernel fails
 240. The probe crosses seven ID forms, six indices, ten values and two command
 forms, including ignored upper register bits, signed boundaries, stale IDs
 and the legal 0/32767 limits. Every call also checks both values and per-index
@@ -11092,8 +11092,8 @@ UID zero without effective capabilities receives no implicit override.
 
 | Execution | AArch64 | x86-64 |
 | --- | --- | --- |
-| Original Vinix kernel, unchanged probe ELF | 256,552 checks, 95,772 failures | 256,552 checks, 95,772 failures |
-| Candidate Vinix kernel, unchanged probe ELF | 256,552 checks, 0 failures | 256,552 checks, 0 failures |
+| Original Tulpar kernel, unchanged probe ELF | 256,552 checks, 95,772 failures | 256,552 checks, 95,772 failures |
+| Candidate Tulpar kernel, unchanged probe ELF | 256,552 checks, 0 failures | 256,552 checks, 0 failures |
 | Linux 6.12.51, identical probe ELF | 256,552 checks, 0 failures | 256,552 checks, 0 failures |
 | Maintained runner on candidate | 256552/4200/457/261/276/175 checks, all pass; four vCPUs | 256552/4200/457/261/276/175 checks, all pass; two vCPUs |
 
@@ -11115,7 +11115,7 @@ Reference implementations are retained in `semperm-evidence/reference/linux-v6.1
 [ipc/sem.c](https://github.com/torvalds/linux/blob/v6.12/ipc/sem.c) and
 [ipc/util.c](https://github.com/torvalds/linux/blob/v6.12/ipc/util.c).
 Linux IPC access checks use effective UID and filesystem group membership.
-Vinix currently has no independent filesystem IDs/setfsuid/setfsgid, so the
+Tulpar currently has no independent filesystem IDs/setfsuid/setfsgid, so the
 qualified subset uses effective GID and supplementary groups. A preliminary
 AArch64 Linux run incorrectly assumed filesystem IDs never affected IPC
 permissions; its 9,232 failures and the earlier fixture/compile attempts are
@@ -11174,8 +11174,8 @@ operation time. Read permission and ownership failures follow Linux ordering.
 
 | Execution | AArch64 | x86-64 |
 | --- | --- | --- |
-| Original Vinix kernel, unchanged probe ELF | 28,713 checks, 19,480 failures | 28,713 checks, 19,480 failures |
-| Candidate Vinix kernel, unchanged probe ELF | 28,713 checks, 0 failures | 28,713 checks, 0 failures |
+| Original Tulpar kernel, unchanged probe ELF | 28,713 checks, 19,480 failures | 28,713 checks, 19,480 failures |
+| Candidate Tulpar kernel, unchanged probe ELF | 28,713 checks, 0 failures | 28,713 checks, 0 failures |
 | Linux 6.12.51, identical probe ELF | 28,713 checks, 0 failures | 28,713 checks, 0 failures |
 | Maintained runner on candidate | 28713/256552/4200/457/261/276/175 checks, all pass; four vCPUs | 28713/256552/4200/457/261/276/175 checks, all pass; two vCPUs |
 
@@ -11197,7 +11197,7 @@ semmeta-evidence/reference/linux-v6.12-util.c, from upstream
 [ipc/util.c](https://github.com/torvalds/linux/blob/v6.12/ipc/util.c).
 Earlier attempts remain under attempts/: compile/entry-point corrections,
 a Linux coarse-clock boundary expectation, an incorrect 4 KiB guard-page
-assumption on Vinix AArch64 and concurrent V-run controller executable
+assumption on Tulpar AArch64 and concurrent V-run controller executable
 replacement. A later maintained run was interrupted without controller status;
 its partial results are retained and a fresh full run supplies final results.
 The final controllers use stable executables, the guard uses
@@ -11375,7 +11375,7 @@ identity helper bodies are unchanged.
 
 Retained failed attempts include the initial fixture dereference syntax,
 fixed-array code generation, and an attempted unprivileged effective-UID
-change that failed setup on both Linux and Vinix. The fourth fixture regains
+change that failed setup on both Linux and Tulpar. The fourth fixture regains
 its saved root identity before changing effective UID and is the one used
 for all reported results. The first kernel build rejected an inferred int
 errno variable; the corrected variable is u64. The second build attempts

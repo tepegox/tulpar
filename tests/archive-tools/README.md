@@ -10,7 +10,7 @@ Run `tests/archive-tools/run.sh` for all three native suites. The individual
 entrypoints are `tests/qemu-initramfs-split/run.sh`,
 `tests/qemu-module-iso/run.sh` and
 `tests/storage/test_split_desktop_initramfs.v`. The storage runner also retains
-its separate QEMU guest test. `VINIX_ARCHIVE_TOOLS_DIR` can point the suites at
+its separate QEMU guest test. `TULPAR_ARCHIVE_TOOLS_DIR` can point the suites at
 three prebuilt production binaries; otherwise child processes dispatch through
 the same V CLI module.
 
@@ -36,8 +36,8 @@ ARM ASan/UBSan for the suites, production frontends and three shared tar test
 files. V 0.5.2 `c6bb06f` was rebuilt in an isolated matching source checkout:
 the shared development binary was reading newer embedded header bytes with its
 older recorded length. The shared compiler checkout was left untouched. Local
-logs are `/tmp/vinix-archive-{parts,desktop,iso}-{arm,x86,san}.log`,
-`/tmp/vinix-archive-front-*.log` and `/tmp/vinix-archive-shared-*.log`.
+logs are `/tmp/tulpar-archive-{parts,desktop,iso}-{arm,x86,san}.log`,
+`/tmp/tulpar-archive-front-*.log` and `/tmp/tulpar-archive-shared-*.log`.
 
 No Python was executed for qualification, and no new guest boot is claimed.
 Four captured allocation-benchmark Python runners still name the historical

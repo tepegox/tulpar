@@ -54,7 +54,7 @@ fn (mut suite Suite) service_control(arguments []string) !string {
 }
 
 fn (mut suite Suite) public_service_control(arguments []string) !string {
-	path := suite.work + '/unit-runtime/vinix-session.' + C.getuid().str() + '/broker'
+	path := suite.work + '/unit-runtime/tulpar-session.' + C.getuid().str() + '/broker'
 	mut connection := unix.connect_stream(path)!
 	defer { connection.close() or {} }
 	connection.set_read_timeout(3 * time.second)
@@ -167,7 +167,7 @@ fn (suite Suite) start_service_broker(home string) !int {
 			}
 		}
 	}
-	broker := sessionipc.session_start_broker_at(home, '/usr/bin/vinix-desktop') or { return error('cannot launch session broker') }
+	broker := sessionipc.session_start_broker_at(home, '/usr/bin/tulpar-desktop') or { return error('cannot launch session broker') }
 	watch := time.new_stopwatch()
 	for !sessionipc.session_call_ok('ping', []) {
 		if watch.elapsed() > 10 * time.second {
@@ -184,7 +184,7 @@ fn (suite Suite) start_service_broker(home string) !int {
 
 fn (mut suite Suite) service_units() ! {
 	expect(!suite.path.starts_with('translated-'), 'unsupported: Linux unit integration requires a native broker')!
-	_ = suite.command('/usr/bin/vinix-desktop', [])!
+	_ = suite.command('/usr/bin/tulpar-desktop', [])!
 	command := suite.command('busybox-extras', [])!
 	applets := suite.execute('busybox-extras', ['--list'])!
 	expect('httpd' in applets.split_into_lines(), 'unsupported: BusyBox Extras has no HTTP service')!
@@ -194,16 +194,16 @@ fn (mut suite Suite) service_units() ! {
 		os.mkdir_all(directory)!
 		os.chmod(directory, 0o700)!
 	}
-	suite.environment['VINIX_SESSION_RUNTIME'] = runtime
+	suite.environment['TULPAR_SESSION_RUNTIME'] = runtime
 	name := 'linux-http.service'
-	content := 'vinix-imported-service-' + sha256.sum(home.bytes()).hex()
+	content := 'tulpar-imported-service-' + sha256.sum(home.bytes()).hex()
 	os.write_file(home + '/www/index.html', content)!
-	unit := '[Unit]\nDescription=Vinix HTTP qualification\n[Service]\nType=simple\nExecStart=' + command[0] +
+	unit := '[Unit]\nDescription=Tulpar HTTP qualification\n[Service]\nType=simple\nExecStart=' + command[0] +
 		' httpd -f -p 127.0.0.1:19017 -h "' + home + '/www"\nRestart=on-failure\nRestartSec=0.1s\nTimeoutStopSec=1s\n[Install]\nWantedBy=default.target\n'
 	os.write_file(home + '/http.service', unit)!
 	os.write_file(home + '/unsupported.service', unit.replace('[Install]', 'PrivateNetwork=yes\n[Install]'))!
-	config := home + '/.vinix-services'
-	os.write_file(config, 'vinix-services\t1\n')!
+	config := home + '/.tulpar-services'
+	os.write_file(config, 'tulpar-services\t1\n')!
 	mut broker := suite.start_service_broker(home)!
 	defer {
 		if broker > 0 {
@@ -263,9 +263,9 @@ fn (mut suite Suite) service_units() ! {
 	suite.service_control(['ping'])!
 	suite.service_control(['attach'])!
 	record := suite.service_control(['services'])!
-	expect(record.trim_space() == 'vinix-service-status\t1', 'removed unit reappeared on broker restart')!
+	expect(record.trim_space() == 'tulpar-service-status\t1', 'removed unit reappeared on broker restart')!
 	suite.service_control(['shutdown'])!
 	finish_service_broker(broker)!
 	broker = 0
-	suite.service_units << ServiceUnitResult{sha256.sum(unit.bytes()).hex(), sha256.sum(os.read_bytes('/usr/bin/vinix-desktop')!).hex(), first, restarted, restored, response, true, true, true, true, true, true, suite.unit_requests}
+	suite.service_units << ServiceUnitResult{sha256.sum(unit.bytes()).hex(), sha256.sum(os.read_bytes('/usr/bin/tulpar-desktop')!).hex(), first, restarted, restored, response, true, true, true, true, true, true, suite.unit_requests}
 }

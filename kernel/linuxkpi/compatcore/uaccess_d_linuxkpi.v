@@ -4,24 +4,24 @@ module compatcore
 
 #include "linuxkpi_uaccess_v_contract.h"
 
-fn C.vinix_linuxkpi_user_address_limit() uint
-fn C.vinix_linuxkpi_raw_copy_from_user(voidptr, voidptr, uint) uint
-fn C.vinix_linuxkpi_raw_copy_to_user(voidptr, voidptr, uint) uint
-fn C.vinix_linuxkpi_raw_copy_from_user_inatomic(voidptr, voidptr, uint) uint
-fn C.vinix_linuxkpi_raw_copy_to_user_inatomic(voidptr, voidptr, uint) uint
+fn C.tulpar_linuxkpi_user_address_limit() uint
+fn C.tulpar_linuxkpi_raw_copy_from_user(voidptr, voidptr, uint) uint
+fn C.tulpar_linuxkpi_raw_copy_to_user(voidptr, voidptr, uint) uint
+fn C.tulpar_linuxkpi_raw_copy_from_user_inatomic(voidptr, voidptr, uint) uint
+fn C.tulpar_linuxkpi_raw_copy_to_user_inatomic(voidptr, voidptr, uint) uint
 
 // The native user half is exclusive. As in generic Linux access_ok, a zero
 // size still checks the address, and NULL is a numerically valid user address.
 // This check does not establish that pages are present or accessible.
-@[export: 'vinix_linuxkpi_access_ok']
+@[export: 'tulpar_linuxkpi_access_ok']
 pub fn user_access_ok(address voidptr, length uint) bool {
-	limit := C.vinix_linuxkpi_user_address_limit()
+	limit := C.tulpar_linuxkpi_user_address_limit()
 	return length <= limit && uint(address) <= limit - length
 }
 
 // Public header macros supply the kernel object's size from the callsite.
 // Rejected sizes return without touching either buffer, including its tail.
-@[export: 'vinix_linuxkpi_check_copy_size']
+@[export: 'tulpar_linuxkpi_check_copy_size']
 pub fn check_copy_size(known_size uint, length uint) bool {
 	return length <= uint(2147483647)
 		&& (known_size == uint(-1) || length <= known_size)
@@ -34,13 +34,13 @@ pub fn check_copy_size(known_size uint, length uint) bool {
 @[export: 'raw_copy_from_user']
 pub fn raw_from_user(destination voidptr, source voidptr, length uint) uint {
 	if length == 0 { return 0 }
-	return C.vinix_linuxkpi_raw_copy_from_user(destination, source, length)
+	return C.tulpar_linuxkpi_raw_copy_from_user(destination, source, length)
 }
 
 @[export: 'raw_copy_to_user']
 pub fn raw_to_user(destination voidptr, source voidptr, length uint) uint {
 	if length == 0 { return 0 }
-	return C.vinix_linuxkpi_raw_copy_to_user(destination, source, length)
+	return C.tulpar_linuxkpi_raw_copy_to_user(destination, source, length)
 }
 
 @[export: '__copy_from_user']
@@ -56,13 +56,13 @@ pub fn unchecked_to_user(destination voidptr, source voidptr, length uint) uint 
 @[export: '__copy_from_user_inatomic']
 pub fn inatomic_from_user(destination voidptr, source voidptr, length uint) uint {
 	if length == 0 { return 0 }
-	return C.vinix_linuxkpi_raw_copy_from_user_inatomic(destination, source, length)
+	return C.tulpar_linuxkpi_raw_copy_from_user_inatomic(destination, source, length)
 }
 
 @[export: '__copy_to_user_inatomic']
 pub fn inatomic_to_user(destination voidptr, source voidptr, length uint) uint {
 	if length == 0 { return 0 }
-	return C.vinix_linuxkpi_raw_copy_to_user_inatomic(destination, source, length)
+	return C.tulpar_linuxkpi_raw_copy_to_user_inatomic(destination, source, length)
 }
 
 @[export: '_copy_from_user']

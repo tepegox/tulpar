@@ -1783,14 +1783,14 @@
         {
             "arch": "aarch64",
             "number": 245,
-            "name": "vinix_private",
+            "name": "tulpar_private",
             "handler": "cpu.syscall_set_tls",
             "status": "private"
         },
         {
             "arch": "aarch64",
             "number": 246,
-            "name": "vinix_private",
+            "name": "tulpar_private",
             "handler": "userland.syscall_sigentry",
             "status": "private"
         },
@@ -2231,7 +2231,7 @@
         {
             "arch": "aarch64",
             "number": 511,
-            "name": "vinix_private",
+            "name": "tulpar_private",
             "handler": "syscall_seccomp_verdict",
             "status": "private"
         },
@@ -4779,7 +4779,7 @@
         {
             "arch": "x86_64",
             "number": 511,
-            "name": "vinix_private",
+            "name": "tulpar_private",
             "handler": "syscall_seccomp_verdict",
             "status": "private"
         }

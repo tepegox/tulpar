@@ -174,7 +174,7 @@ fn do_select(nfds int, readfds u64, writefds u64, exceptfds u64, timed bool, dea
 		return 0, 0
 	}
 
-	mut remaining := unsafe { &time.TimeSpec(C.vinix_stack_alloc(sizeof(time.TimeSpec))) }
+	mut remaining := unsafe { &time.TimeSpec(C.tulpar_stack_alloc(sizeof(time.TimeSpec))) }
 	unsafe { *remaining = deadline }
 	mut timeout_ptr := &time.TimeSpec(unsafe { nil })
 	if timed {

@@ -19,7 +19,7 @@ fn erase_key(pointer voidptr, bytes uint) {
 // Never place key bytes in argv, diagnostics, a saved plan or a report.
 fn read_volume_key(path &char, output &u8) bool {
 	fd := C.open(path, C.O_RDONLY | C.O_NOFOLLOW | C.O_CLOEXEC | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open key'); return false }
+	if fd < 0 { C.perror(c'tulpar-volume: open key'); return false }
 	defer { C.close(fd) }
 	mut info := C.stat{}
 	if C.fstat(fd, unsafe { &info }) != 0 || C.S_ISREG(info.st_mode) == 0 || info.st_size != 64
@@ -49,7 +49,7 @@ fn open_encrypted_volume(device &char, keyfile &char, data &Request) i32 {
 // The caller retains and erases the complete imported-key request.
 fn open_encrypted_request(device &char, request &EncryptedRequest) i32 {
 	fd := C.open(device, (if request.data.flags == 0 { C.O_RDWR } else { C.O_RDONLY }) | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open encrypted parent'); return 1 }; defer { C.close(fd) }
-	if C.ioctl(fd, u64(0x56560006), request) != 0 { C.perror(c'vinix-volume: open encrypted mapping'); return 1 }
-	return finish_bundle_report(C.printf(c'/dev/mapper/vinix%u\n', request.data.slot) >= 0)
+	if fd < 0 { C.perror(c'tulpar-volume: open encrypted parent'); return 1 }; defer { C.close(fd) }
+	if C.ioctl(fd, u64(0x56560006), request) != 0 { C.perror(c'tulpar-volume: open encrypted mapping'); return 1 }
+	return finish_bundle_report(C.printf(c'/dev/mapper/tulpar%u\n', request.data.slot) >= 0)
 }

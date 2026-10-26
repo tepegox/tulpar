@@ -45,7 +45,7 @@ fn prepare() ! {
 	needle := 'pub fn initialise(cmdline string) {'
 	if original.count(needle) != 1 { return error('Missing ANS boot boundary') }
 	mut model := os.read_file(root + '/tests/storage-health/ans_model.v')!
-	model = model.all_before("@[export: 'vinix_account_disk_transfer']")
+	model = model.all_before("@[export: 'tulpar_account_disk_transfer']")
 	model = model.replace('import klock', '').replace('fn C.posix_memalign(&voidptr, usize, usize) int', '')
 	model = model.replace('mut pointer := unsafe { nil }\n\thealth_model_require(C.posix_memalign(&pointer, 16384, 4587520) == 0)',
 		'pointer := C.calloc(1, 4587520)\n\thealth_model_require(pointer != unsafe { nil })')

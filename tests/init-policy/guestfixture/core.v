@@ -6,10 +6,10 @@ module guestfixture
 #include <guest-native-abi.h>
 
 @[typedef] struct C.FILE {}
-struct C.vinix_init_guest_signal_word { mut: value i32 }
+struct C.tulpar_init_guest_signal_word { mut: value i32 }
 @[c_extern] __global C.stdout &C.FILE
 @[c_extern] __global C.errno i32
-__global reloaded C.vinix_init_guest_signal_word
+__global reloaded C.tulpar_init_guest_signal_word
 const shell_lines = [&char(c'hello\n'), &char(c'uname\n'), &char(c'echo SHELL INIT GUEST: PASS\n')]!
 
 fn C.printf(&char, ...) i32
@@ -74,7 +74,7 @@ fn shell_entry() i32 {
 fn full_entry(argc i32, argv &&char) i32 {
 	unsafe {
 		require(C.getpid() == 1 && argc == 3, c'full PID1 argv')
-		require(C.strcmp(argv[0], c'/bin/busybox') == 0 && C.strcmp(argv[1], c'sh') == 0 && C.strcmp(argv[2], c'/etc/vinix-boot-test.sh') == 0, c'full command')
+		require(C.strcmp(argv[0], c'/bin/busybox') == 0 && C.strcmp(argv[1], c'sh') == 0 && C.strcmp(argv[2], c'/etc/tulpar-boot-test.sh') == 0, c'full command')
 		require(C.strcmp(C.getenv(c'PATH'), c'/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin') == 0 && C.strcmp(C.getenv(c'HOME'), c'/root') == 0 && C.strcmp(C.getenv(c'TERM'), c'linux') == 0, c'full environment')
 		require(C.fcntl(0, C.F_GETFD) >= 0 && C.fcntl(1, C.F_GETFD) >= 0 && C.fcntl(2, C.F_GETFD) >= 0, c'full console descriptors')
 		C.puts(c'FULL INIT GUEST: PASS'); C.fflush(C.stdout)
@@ -107,11 +107,11 @@ fn phase_write(phase i32) {
 fn desktop_entry(argc i32, argv &&char) i32 {
 	unsafe {
 		C.setvbuf(C.stdout, nil, C._IONBF, 0)
-		require(argc == 4 && C.strcmp(argv[0], c'/usr/sbin/vinix-session') == 0
+		require(argc == 4 && C.strcmp(argv[0], c'/usr/sbin/tulpar-session') == 0
 			&& C.strcmp(argv[1], c'graphical') == 0 && C.strcmp(argv[2], c'--desktop') == 0
-			&& C.strcmp(argv[3], c'/usr/bin/vinix-desktop') == 0, c'graphical manager args')
+			&& C.strcmp(argv[3], c'/usr/bin/tulpar-desktop') == 0, c'graphical manager args')
 		require(C.getppid() == 1 && C.getpgrp() == C.getpid(), c'desktop owner/group')
-		require(C.getenv(c'VINIX_SYSTEM_SESSION') != nil && C.strcmp(C.getenv(c'VINIX_SYSTEM_SESSION'), c'1') == 0, c'desktop environment')
+		require(C.getenv(c'TULPAR_SYSTEM_SESSION') != nil && C.strcmp(C.getenv(c'TULPAR_SYSTEM_SESSION'), c'1') == 0, c'desktop environment')
 		require(C.fcntl(0, C.F_GETFD) >= 0 && C.fcntl(1, C.F_GETFD) >= 0 && C.fcntl(2, C.F_GETFD) >= 0, c'desktop console descriptors')
 		mut fd := C.open(c'/run/init-phase', C.O_RDONLY)
 		mut byte := char(`0`)

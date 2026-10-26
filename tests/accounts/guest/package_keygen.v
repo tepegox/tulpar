@@ -19,7 +19,7 @@ fn qualify_package_keygen(mut t Test) ! {
 	assert info.mode & 0o777 == 0o600 && info.uid == 0 && before.len == 65
 	key := package_success(['key-public', path])!.trim_space()
 	assert key.len == 64
-	refused := run(['/usr/bin/vinix-package', 'keygen', path], '', none, none)
+	refused := run(['/usr/bin/tulpar-package', 'keygen', path], '', none, none)
 	assert refused.status == 1 && refused.output.contains('already exists')
 	assert os.read_file(path)! == before
 	assert !os.ls(package_disk)!.any(it.starts_with('.package-key-'))

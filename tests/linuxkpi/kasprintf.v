@@ -12,9 +12,9 @@ const ordinary = ['native_test_bit', 'const_string_kfree', 'const_string_kstrdup
 	'page_allocation_size', 'native_kmalloc', 'native_kfree', 'native_warn', 'add_taint', 'test_taint',
 	'get_taint', 'vkr_rotate', 'vkr_sipround', 'vkr_nested_parse', 'vkr_pointer_hash']
 const exports = ['vkc_kfree_const', 'vkc_kstrdup_const', 'kstrdup', 'kstrndup', 'kmemdup_nul',
-	'vinix_linuxkpi_gfp_supported', 'vinix_linuxkpi_alloc_gfp_pages', 'vkr_kmalloc', 'vkr_kfree',
+	'tulpar_linuxkpi_gfp_supported', 'tulpar_linuxkpi_alloc_gfp_pages', 'vkr_kmalloc', 'vkr_kfree',
 	'vkr_ksize', 'vkr_page_allocation_size', 'kmalloc', 'kfree', 'vkf_kvasprintf',
-	'vkf_kvasprintf_const', 'vinix_linuxkpi_kasprintf_entry', 'vinix_linuxkpi_warn_entry', 'add_taint',
+	'vkf_kvasprintf_const', 'tulpar_linuxkpi_kasprintf_entry', 'tulpar_linuxkpi_warn_entry', 'add_taint',
 	'test_taint', 'get_taint', 'vkr_nested_parse', 'vkr_pointer_hash', 'vkr_format_entry',
 	'vkr_format_parse']
 
@@ -66,17 +66,17 @@ fn select_source(raw string, group string, full []string) !string {
 				'kvasprintf_const',
 			]))
 			|| (group == 'linuxkpi' && symbol in ['linuxkpi__const_string_is_rodata',
-				'vinix_linuxkpi_is_kernel_rodata'])
+				'tulpar_linuxkpi_is_kernel_rodata'])
 			|| (group == 'kasprintffixture' && (symbol.starts_with(group + '__') || symbol in [
 				'main',
 				'kph_rodata_start',
 				'kph_rodata_end',
 				'kph_log_entry',
-				'vinix_linuxkpi_page_size',
-				'vinix_linuxkpi_may_sleep',
-				'vinix_linuxkpi_alloc_pages',
-				'vinix_linuxkpi_free_pages',
-				'vinix_linuxkpi_bug',
+				'tulpar_linuxkpi_page_size',
+				'tulpar_linuxkpi_may_sleep',
+				'tulpar_linuxkpi_alloc_pages',
+				'tulpar_linuxkpi_free_pages',
+				'tulpar_linuxkpi_bug',
 			])) {
 			if full.len != 0 && symbol != group + '__vinit' {
 				matches := full.filter(hosttest.named_body(it, symbol))
@@ -159,7 +159,7 @@ fn flags(work string, linux string, standard string, optimization string, target
 			argv << ['-arch', if target == 'amd64' { 'x86_64' } else { 'arm64' }]
 		}
 		argv << ['-iquote', work + '/include', '-g', '-fsanitize=address,undefined',
-			'-fno-omit-frame-pointer', '-D_FORTIFY_SOURCE=0', '-DVINIX_LINUXKPI_HOST_TEST', '-include',
+			'-fno-omit-frame-pointer', '-D_FORTIFY_SOURCE=0', '-DTULPAR_LINUXKPI_HOST_TEST', '-include',
 			root + '/tests/linuxkpi/host_types.h']
 	} else {
 		argv << [
@@ -179,7 +179,7 @@ fn flags(work string, linux string, standard string, optimization string, target
 	}
 	argv << ['-std=' + standard, '-' + optimization, '-ffreestanding', '-fno-builtin', '-fwrapv',
 		'-fno-strict-aliasing', '-ffunction-sections', '-fdata-sections', '-Wall', '-Wextra', '-Werror',
-		'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-sign-compare', '-DVINIX_LINUXKPI',
+		'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-sign-compare', '-DTULPAR_LINUXKPI',
 		'-D__KERNEL__', '-include', 'linux/kconfig.h', '-include',
 		linux + '/include/linux/compiler_types.h']
 	for path in [work + '/include', os.dir(@FILE) + '/kasprintffixture',
@@ -253,7 +253,7 @@ fn run(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	hosttest.verify_upstream(linux, hosttest.upstream_pin()!)!
-	work := hosttest.work_dir(keep, 'vinix-kasprintf-')!
+	work := hosttest.work_dir(keep, 'tulpar-kasprintf-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	previous := os.getenv('TMPDIR')
 	os.mkdir_all(work + '/generation-scratch')!
@@ -313,7 +313,7 @@ fn run(keep string) ! {
 	}
 	os.write_file(work + '/stage/compatcore/native_runtime.v', os.read_file(root + '/kernel/linuxkpi/compatcore/native_runtime.v')!.all_before('struct PciMatch'))!
 	warning := os.read_file(root + '/kernel/linuxkpi/compatcore/native_printk.v')!
-	os.write_file(work + '/stage/compatcore/native_warn.v', '@[translated]\nmodule compatcore\nfn C._printk(&char,...voidptr) i32\n' + warning[warning.index("@[export: 'vinix_linuxkpi_warn_entry']") or { return error('Warning definition absent') }..])!
+	os.write_file(work + '/stage/compatcore/native_warn.v', '@[translated]\nmodule compatcore\nfn C._printk(&char,...voidptr) i32\n' + warning[warning.index("@[export: 'tulpar_linuxkpi_warn_entry']") or { return error('Warning definition absent') }..])!
 	for group in ['compatcore', 'headercore', 'linuxkpi'] {
 		os.write_file(work + '/stage/' + group + '/anchor.v', '@[translated]\nmodule ' + group + '\n__global kph_guard_anchor i32=-1\n')!
 	}
@@ -328,7 +328,7 @@ fn run(keep string) ! {
 		'overflow':        'integer_policy'
 		'spinlock':        'spinlock_adapters'
 	} {
-		hosttest.generate_abi(root + '/kernel/linuxkpi/abi/' + schema + '.json', root + '/kernel/linuxkpi', work + '/include/vinix/' + file + '.h')!
+		hosttest.generate_abi(root + '/kernel/linuxkpi/abi/' + schema + '.json', root + '/kernel/linuxkpi', work + '/include/tulpar/' + file + '.h')!
 	}
 	os.write_file(work + '/include/symbols.h', 'void *kph_rodata_start(void);\nvoid *kph_rodata_end(void);\n#define rodata_start (kph_rodata_start())\n#define rodata_end (kph_rodata_end())\n')!
 	mut proofs := []json2.Any{}
@@ -377,12 +377,12 @@ fn run(keep string) ! {
 		assembly := work + '/' + arch + '-capture.S'
 		architecture := if arch == 'amd64' { 'x86_64' } else { 'aarch64' }
 		original := os.read_file(root + '/kernel/asm/' + architecture + '/linuxkpi_varargs.S')!
-		kas := 'VINIX_VARIADIC ABI_SYMBOL(kasprintf), ABI_SYMBOL(vinix_linuxkpi_kasprintf_entry), 2'
-		warn := 'VINIX_VARIADIC ABI_SYMBOL(vinix_linuxkpi_warn_format), ABI_SYMBOL(vinix_linuxkpi_warn_entry), 3'
+		kas := 'TULPAR_VARIADIC ABI_SYMBOL(kasprintf), ABI_SYMBOL(tulpar_linuxkpi_kasprintf_entry), 2'
+		warn := 'TULPAR_VARIADIC ABI_SYMBOL(tulpar_linuxkpi_warn_format), ABI_SYMBOL(tulpar_linuxkpi_warn_entry), 3'
 		if !original.split_into_lines().contains(kas) || !original.split_into_lines().contains(warn) {
 			return error('Changed original instruction-only entry')
 		}
-		os.write_file(assembly, '#include "' + root + '/kernel/asm/' + architecture + '/varargs.inc"\n.text\n' + kas + '\n' + warn + '\nVINIX_VARIADIC ABI_SYMBOL(_printk), ABI_SYMBOL(kph_log_entry), 1\n')!
+		os.write_file(assembly, '#include "' + root + '/kernel/asm/' + architecture + '/varargs.inc"\n.text\n' + kas + '\n' + warn + '\nTULPAR_VARIADIC ABI_SYMBOL(_printk), ABI_SYMBOL(kph_log_entry), 1\n')!
 		for standard in ['gnu99', 'gnu11'] {
 			for optimization in ['O0', 'O1', 'O2'] {
 				tag := arch + '-' + standard + '-' + optimization
@@ -392,7 +392,7 @@ fn run(keep string) ! {
 					for group in ['compatcore', 'headercore', 'linuxkpi', 'kasprintffixture'] {
 						if !host && group == 'kasprintffixture' { continue }
 						mut argv := flags(work, linux, standard, optimization, arch, host)!
-						if group == 'compatcore' { argv << '-DVINIX_V_RUNTIME' }
+						if group == 'compatcore' { argv << '-DTULPAR_V_RUNTIME' }
 						object := work + '/' + tag + '-' + group + if host {
 							'-host.o'
 						} else {
@@ -407,10 +407,10 @@ fn run(keep string) ! {
 							object], object + '.imports.log', 30, env)!.stdout
 						mut allowed := match group {
 							'compatcore' {
-								['vinix_linuxkpi_is_kernel_rodata', 'vinix_linuxkpi_page_size',
-									'vinix_linuxkpi_may_sleep', 'vinix_linuxkpi_alloc_pages',
-									'vinix_linuxkpi_free_pages', 'vinix_linuxkpi_bug',
-									'vinix_linuxkpi_warn_format', '_printk', 'memcpy', 'memmove',
+								['tulpar_linuxkpi_is_kernel_rodata', 'tulpar_linuxkpi_page_size',
+									'tulpar_linuxkpi_may_sleep', 'tulpar_linuxkpi_alloc_pages',
+									'tulpar_linuxkpi_free_pages', 'tulpar_linuxkpi_bug',
+									'tulpar_linuxkpi_warn_format', '_printk', 'memcpy', 'memmove',
 									'memset']
 							}
 							'headercore' {

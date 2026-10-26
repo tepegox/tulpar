@@ -4,7 +4,7 @@
 module compatcore
 
 fn C.memmove(voidptr, voidptr, uint) voidptr
-fn C.vinix_linuxkpi_log_caller() u64
+fn C.tulpar_linuxkpi_log_caller() u64
 fn C.msleep(u32)
 fn C.__msecs_to_jiffies(u32) u64
 
@@ -119,7 +119,7 @@ pub fn vkr_log_emit(facility i32, input_level i32, dev_info voidptr, fmt &char, 
 		record.text[length] = 0
 		record.length = u16(length)
 		record.level = u8(if level == -1 { vkr_log_console(1) & 7 } else { level })
-		record.caller = C.vinix_linuxkpi_log_caller()
+		record.caller = C.tulpar_linuxkpi_log_caller()
 		flags := vkrp_lock()
 		require(vkr_log_submitted != u64(-1))
 		vkr_log_submitted++
@@ -172,7 +172,7 @@ pub fn vkr_log_state(state &PrintState) {
 @[export: 'vkr_log_flush']
 pub fn vkr_log_flush(snapshot u64, timeout_ms u32) i32 {
 	unsafe {
-		if !C.vinix_linuxkpi_may_sleep() { return -11 }
+		if !C.tulpar_linuxkpi_may_sleep() { return -11 }
 		caller := C.vkp_current()
 		deadline := C.vkp_jiffies() + C.__msecs_to_jiffies(timeout_ms)
 		for {
@@ -238,7 +238,7 @@ fn vkrp_worker(_ voidptr) voidptr {
 				C.msleep(10)
 				continue
 			}
-			require(C.vinix_linuxkpi_may_sleep())
+			require(C.tulpar_linuxkpi_may_sleep())
 			if uint(sink) != 0 {
 				vkr_log_call_sink(sink, &record, argument)
 			} else if i32(record.level) < vkr_log_console(0) {
@@ -259,7 +259,7 @@ fn vkrp_worker(_ voidptr) voidptr {
 @[export: 'vkr_log_bootstrap']
 pub fn vkr_log_bootstrap() i32 {
 	unsafe {
-		if !C.vinix_linuxkpi_may_sleep() { return -11 }
+		if !C.tulpar_linuxkpi_may_sleep() { return -11 }
 		caller := C.vkp_current()
 		mut flags := vkrp_lock()
 		self := caller == vkr_log_task
@@ -291,7 +291,7 @@ pub fn vkr_log_bootstrap() i32 {
 @[export: 'vkr_log_shutdown']
 pub fn vkr_log_shutdown() i32 {
 	unsafe {
-		if !C.vinix_linuxkpi_may_sleep() { return -11 }
+		if !C.tulpar_linuxkpi_may_sleep() { return -11 }
 		caller := C.vkp_current()
 		mut flags := vkrp_lock()
 		self := caller == vkr_log_task
@@ -330,7 +330,7 @@ pub fn vkr_log_shutdown() i32 {
 @[export: 'vkr_log_pause']
 pub fn vkr_log_pause(pause bool, timeout_ms u32) i32 {
 	unsafe {
-		if !C.vinix_linuxkpi_may_sleep() { return -11 }
+		if !C.tulpar_linuxkpi_may_sleep() { return -11 }
 		caller := C.vkp_current()
 		deadline := C.vkp_jiffies() + C.__msecs_to_jiffies(timeout_ms)
 		for {
@@ -353,7 +353,7 @@ pub fn vkr_log_pause(pause bool, timeout_ms u32) i32 {
 @[export: 'vkr_log_sink']
 pub fn vkr_log_sink(sink voidptr, argument voidptr) i32 {
 	unsafe {
-		if !C.vinix_linuxkpi_may_sleep() { return -11 }
+		if !C.tulpar_linuxkpi_may_sleep() { return -11 }
 		flags := vkrp_lock()
 		mut result := i32(-16)
 		if vkr_log_paused && vkr_log_in_flight == 0 {
@@ -375,19 +375,19 @@ pub fn vkr_log_fail(fail bool) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_printk_snapshot']
+@[export: 'tulpar_linuxkpi_printk_snapshot']
 pub fn native_printk_snapshot() u64 { return vkr_log_snapshot() }
-@[export: 'vinix_linuxkpi_printk_get_state']
+@[export: 'tulpar_linuxkpi_printk_get_state']
 pub fn native_printk_state(p &PrintState) { vkr_log_state(p) }
-@[export: 'vinix_linuxkpi_printk_flush']
+@[export: 'tulpar_linuxkpi_printk_flush']
 pub fn native_printk_flush(seq u64, timeout u32) i32 { return vkr_log_flush(seq, timeout) }
-@[export: 'vinix_linuxkpi_printk_bootstrap']
+@[export: 'tulpar_linuxkpi_printk_bootstrap']
 pub fn native_printk_bootstrap() i32 { return vkr_log_bootstrap() }
-@[export: 'vinix_linuxkpi_printk_shutdown']
+@[export: 'tulpar_linuxkpi_printk_shutdown']
 pub fn native_printk_shutdown() i32 { return vkr_log_shutdown() }
-@[export: 'vinix_linuxkpi_printk_test_pause']
+@[export: 'tulpar_linuxkpi_printk_test_pause']
 pub fn native_printk_pause(pause bool, timeout u32) i32 { return vkr_log_pause(pause, timeout) }
-@[export: 'vinix_linuxkpi_printk_test_sink']
+@[export: 'tulpar_linuxkpi_printk_test_sink']
 pub fn native_printk_sink(sink LogSinkABI, arg voidptr) i32 { return unsafe { vkr_log_sink(voidptr(sink), arg) } }
-@[export: 'vinix_linuxkpi_printk_test_fail_create']
+@[export: 'tulpar_linuxkpi_printk_test_fail_create']
 pub fn native_printk_fail(fail bool) { vkr_log_fail(fail) }

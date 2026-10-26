@@ -31,7 +31,7 @@ fn test_boot_encrypted_geometry_conflicts_preflight_without_changing_saved_state
 
 fn test_boot_unlock_arity_rejects_before_any_configuration_access() {
 	unsafe {
-		args := [&char(c'vinix-volume'), &char(c'boot-unlock'), &char(c'/unused'), &char(nil)]!
+		args := [&char(c'tulpar-volume'), &char(c'boot-unlock'), &char(c'/unused'), &char(nil)]!
 		for count in [3, 4] { assert run(count, &args[0]) == 2 }
 	}
 }

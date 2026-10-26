@@ -82,7 +82,7 @@ fn run() ! {
 	mut environment := os.environ()
 	for key, value in {
 		'V':                             compiler
-		'VINIX_V_COMPILER':              compiler
+		'TULPAR_V_COMPILER':              compiler
 		'VTMP':                          work + '/tmp'
 		'TMPDIR':                        work + '/tmp'
 		'V_C_ERROR_BUG_REPORT_DISABLED': '1'
@@ -113,9 +113,9 @@ fn run() ! {
 			'sha256':  json2.Any(sha256.sum(os.read_bytes(work + '/' + name)!).hex())
 		})
 	}
-	environment['VINIX_STEAM_HOSTED_COMMAND'] = work + '/hosted'
+	environment['TULPAR_STEAM_HOSTED_COMMAND'] = work + '/hosted'
 	checked(['/bin/sh', root + '/tests/steam/hosted-test.sh'], environment, work + '/hosted-tests.log', 65)!
-	for argv in [[]string{}, ['/usr/bin/false'], ['/nonexistent/vinix-steam-launcher']] {
+	for argv in [[]string{}, ['/usr/bin/false'], ['/nonexistent/tulpar-steam-launcher']] {
 		result := sourcecommand.capture_full([work + '/hosted', ...argv], environment, 25, 1024 * 1024, cachecli.cancelled)!
 		assert result.status == if argv.len == 0 { 2 } else { 1 }, result.str()
 	}
@@ -198,7 +198,7 @@ fn run() ! {
 		'status':   json2.Any('PASS')
 		'profile':  json2.Any(profile)
 		'receipts': json2.Any(receipts)
-		'limits':   json2.Any('Actual musl-linked V probes execute on private RAM-only Alpine Linux SDK VMs on both architectures; repeated descriptor/path/child cleanup checked. No Python, Steam client, graphical app or Vinix guest executes. This establishes probe behavior and resource cleanup on the reference Linux SDK, not a new Vinix kernel pass.')
+		'limits':   json2.Any('Actual musl-linked V probes execute on private RAM-only Alpine Linux SDK VMs on both architectures; repeated descriptor/path/child cleanup checked. No Python, Steam client, graphical app or Tulpar guest executes. This establishes probe behavior and resource cleanup on the reference Linux SDK, not a new Tulpar kernel pass.')
 	}),
 		prettify: true
 	) + '\n')!

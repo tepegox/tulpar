@@ -48,7 +48,7 @@ tools/verified-root/build verify build/root.verity \
 
 tools/verified-boot/build build --arch aarch64 \
     --loader build/verified-limine-aarch64/BOOTAA64.EFI \
-    --kernel kernel/bin/vinix --initramfs build/bootstrap.tar \
+    --kernel kernel/bin/tulpar --initramfs build/bootstrap.tar \
     --verity-root build/root.verity --verity-device /dev/vda \
     --verity-data-blocks 32768 --verity-root-hash TRUSTED_64_LOWERCASE_HEX_DIGITS \
     --key /private/signing/db.key --certificate /private/signing/db.crt \
@@ -117,7 +117,7 @@ root-first layout.
 The exact authenticated token is:
 
 ```text
-vinix.verity=1,/dev/vda,N,64_lowercase_hex_root_hash
+tulpar.verity=1,/dev/vda,N,64_lowercase_hex_root_hash
 ```
 
 `command-line --device /dev/vda --data-blocks N --root-hash HASH` formats a
@@ -158,11 +158,11 @@ example, after building the ARM kernel and genuine Limine loader:
 
 ```sh
 tests/verified-root/runtime --arch aarch64 \
-    --kernel kernel/bin/vinix \
+    --kernel kernel/bin/tulpar \
     --loader build/verified-limine-aarch64/BOOTAA64.EFI \
     --firmware-code /path/to/edk2-aarch64-code.fd \
     --firmware-vars /path/to/edk2-arm-vars.fd \
-    --logs /tmp/vinix-verified-root-test
+    --logs /tmp/tulpar-verified-root-test
 ```
 
 It needs QEMU, a static musl cross compiler and e2fsprogs. `--mke2fs` and

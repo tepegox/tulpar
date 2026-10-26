@@ -151,7 +151,7 @@ and duplicate fixture symbols, so its original and native link checkers both
 fail until it is rebuilt cleanly. These ports do not establish new kernel builds,
 guest boots or hardware runs. Detailed commands and limits are recorded in each
 native module's README. Local comparisons and logs are under
-`/tmp/vinix-python-zero-20261010`.
+`/tmp/tulpar-python-zero-20261010`.
 
 The next four stages remove five Python files / 18,048 original bytes. They
 were verified with native V fixtures and independent tools, following the
@@ -174,7 +174,7 @@ real LLVM symbolization of isolated ARM and x86 ELF debug fixtures on each host.
 These stages establish host-tool behavior, not new image builds or guest boots.
 Their commands invoke V directly, and existing ISO/Docker shell callers and
 kernel-diagnostic documentation use the native entrypoints. Qualification
-artifacts are under `/tmp/vinix-python-zero-20261010/continuation`.
+artifacts are under `/tmp/tulpar-python-zero-20261010/continuation`.
 
 Between the `29ccceb7` and `5a189a86` inventories, counted Python
 declined by 16,895 bytes. That graph delta includes concurrent source changes;
@@ -205,7 +205,7 @@ its first package manifest. A native compiler fixture verifies stream routing,
 literal arguments, working directories, exit statuses and temporary cleanup on
 ARM and x86. All five Wine launchers and fourteen caller shell syntax checks
 passed. This fix adds no Python translation credit. Native qualification logs
-remain under `/tmp/vinix-python-zero-20261010/continuation`.
+remain under `/tmp/tulpar-python-zero-20261010/continuation`.
 
 Between `5a189a86` and `52f93ab8`, counted Python declined by exactly 19,738
 bytes, matching these two stages. Other sessions also committed V changes;
@@ -247,8 +247,8 @@ Linux defaults, missing-tool errors and cleanup goals. Clang and LLVM build
 and list the real one-object AArch64 ELF runtime archive. Both successful
 runs and forced compiler failures remove their temporary directories.
 ARM, Rosetta x86 and ARM ASan/UBSan checks pass for all three stages. Local
-logs are `/tmp/vinix-java-*`, `/tmp/vinix-guards-*-final-v3.log` and
-`/tmp/vinix-ar-cleanup-*.log`.
+logs are `/tmp/tulpar-java-*`, `/tmp/tulpar-guards-*-final-v3.log` and
+`/tmp/tulpar-ar-cleanup-*.log`.
 
 Between `52f93ab8` and `42eac0bc`, counted Python declined by exactly
 11,650 bytes, matching these three stages. Concurrent V and C changes affect
@@ -273,8 +273,8 @@ All five guards pass the current ARM generated C on each host profile. The
 cached October 1 x86 C is older: it lacks an IPv6 definition and the required
 scratch patterns, and all five checks correctly reject it. No new kernel builds,
 guest boots or retention measurements are established by these host checks.
-Logs are `/tmp/vinix-scratch-guards-*-final.log` and
-`/tmp/vinix-scratch-production-final.log`. Between `42eac0bc` and `d99bfe83`,
+Logs are `/tmp/tulpar-scratch-guards-*-final.log` and
+`/tmp/tulpar-scratch-production-final.log`. Between `42eac0bc` and `d99bfe83`,
 counted Python declined by exactly 10,860 bytes, matching the new stage.
 
 The next stage replaces the process-churn report checker and its Python bridge
@@ -291,7 +291,7 @@ source guard still passes. Caller auditing permits removal of the old callback
 query, bindings and three bridge aliases; the separate Python QEMU runner is
 unchanged and still needs translation. No Python was run. These are guest-format
 fixtures, not new guest boots or kernel retention measurements. Logs are
-`/tmp/vinix-churn-report-*-final.log` and `/tmp/vinix-churn-cold-final.log`.
+`/tmp/tulpar-churn-report-*-final.log` and `/tmp/tulpar-churn-cold-final.log`.
 
 Between `d99bfe83` and `12d47222`, counted Python declined by exactly 5,355
 bytes, matching this stage. Concurrent V source changes affect the language
@@ -312,8 +312,8 @@ directories. The Rosetta x86 runner correctly refuses the unsupported host befor
 creating work; its assembly and architecture tests pass. The cold launcher also
 passes from an unrelated working directory and cleans up after a missing compiler.
 No Python was run, and no new kernel build or guest boot is established. Logs are
-`/tmp/vinix-boundary-{arm,asan,x86}-final.log` and
-`/tmp/vinix-boundary-cold-final.log`.
+`/tmp/tulpar-boundary-{arm,asan,x86}-final.log` and
+`/tmp/tulpar-boundary-cold-final.log`.
 
 Between `12d47222` and `0caa1c87`, counted Python declined by exactly 4,283
 bytes, matching this stage. Concurrent V and C changes affect the language
@@ -337,8 +337,8 @@ CLI status/streams and temporary cleanup. Captured tool text now uses native
 strict UTF-8 with universal newlines and native errors; arbitrary Python locale
 codecs and exception classes are retired. The cold launcher checks exact real
 fixture reports from an unrelated working directory and cleanup after a missing
-compiler. Logs are `/tmp/vinix-vmx-{arm,x86,asan}-final.log` and
-`/tmp/vinix-vmx-cold-final.log`. These host checks establish no privileged VMX,
+compiler. Logs are `/tmp/tulpar-vmx-{arm,x86,asan}-final.log` and
+`/tmp/tulpar-vmx-cold-final.log`. These host checks establish no privileged VMX,
 nested VT-x, new kernel build or QEMU boot.
 
 The Limine test preserves all three original independent patch scenarios:
@@ -351,8 +351,8 @@ forced configure/make failures, help/status checks and private scratch cleanup.
 The cold launcher also compiles fresh native fixtures from an unrelated working
 directory and cleans up after success or a forced make failure. No source is
 downloaded and no real UEFI loader is compiled or deployed. Logs are
-`/tmp/vinix-limine-{arm,x86,asan}-final.log` and
-`/tmp/vinix-limine-cold-final.log`. No Python was run for either stage.
+`/tmp/tulpar-limine-{arm,x86,asan}-final.log` and
+`/tmp/tulpar-limine-cold-final.log`. No Python was run for either stage.
 
 Between `0caa1c87` and `951bf973`, counted Python declined by exactly 9,957
 bytes, matching these two stages. Concurrent V source changes affect the
@@ -379,8 +379,8 @@ and 100 repeated success/error cycles with no descriptor growth. Native suite
 compiler-selection failures also retire their private directories. Cold
 launchers pass a fresh suite build and record/check from an unrelated directory,
 preserving source bytes and clearing temporary files after success and an
-exclusive-create failure. Logs are `/tmp/vinix-ans-reads-{arm,x86,asan}-final.log`
-and `/tmp/vinix-ans-reads-cold-final.log`. No Python was run. Only synthetic
+exclusive-create failure. Logs are `/tmp/tulpar-ans-reads-{arm,x86,asan}-final.log`
+and `/tmp/tulpar-ans-reads-cold-final.log`. No Python was run. Only synthetic
 regular files and device/type rejection were tested; this establishes no ANS
 hardware identity, guest execution or power-loss persistence.
 
@@ -406,9 +406,9 @@ inputs remain unchanged. The trace workflow passed its four complete frozen-C
 JSON comparisons, explicit allocation/release counts, rollback and Mach/dyld
 sanitizer probe. Fresh recovery help commands, trace generation, native module
 generation and trace-runner help also passed. No Python was run and no Apple
-image was committed. Logs are `/tmp/vinix-recovery-{arm,x86,asan}-tests.log`,
-`/tmp/vinix-agx-recovery-real-final.log` and
-`/tmp/vinix-agx-trace-native-test.log`.
+image was committed. Logs are `/tmp/tulpar-recovery-{arm,x86,asan}-tests.log`,
+`/tmp/tulpar-agx-recovery-real-final.log` and
+`/tmp/tulpar-agx-trace-native-test.log`.
 
 The eight QEMU signal/touch/restart/nanosleep/blocked/poll/epoll/C-int comparison
 commands and normal fixture generator now compile and invoke V directly.
@@ -425,9 +425,9 @@ allocator guards on both architectures, and all sixteen paired guest binaries
 cross-built for AArch64/x86-64. The nine fresh shell entrypoints passed help and
 temporary cleanup, followed by a standalone host comparison and normal generator
 run from an unrelated directory. No Python was run. Logs are
-`/tmp/vinix-qemu-fixture-{arm,x86,asan}-tests.log`,
-`/tmp/vinix-qemu-fixture-qualified-{arm,x86}.log` and
-`/tmp/vinix-qemu-fixture-cold.log`. These are host and target-build checks;
+`/tmp/tulpar-qemu-fixture-{arm,x86,asan}-tests.log`,
+`/tmp/tulpar-qemu-fixture-qualified-{arm,x86}.log` and
+`/tmp/tulpar-qemu-fixture-cold.log`. These are host and target-build checks;
 they add no physical GPU, kernel or guest-boot result.
 
 Between `a99c83e8` and `ad94fe98`, counted Python declined by exactly 58,413
@@ -454,10 +454,10 @@ the committed Python source. Source-hash receipts were verified against every
 generated input. Both futex guest targets linked with their allocator guards.
 All three cold shell entries passed help, protected-output and temporary cleanup
 checks, and both complete standalone host commands passed. No Python was run.
-Logs are `/tmp/vinix-qemu-pending-{arm,x86,asan}-tests.log`,
-`/tmp/vinix-qemu-pending-final-{arm,x86,asan}-tests.log`,
-`/tmp/vinix-qemu-pending-qualified-{arm,x86,asan}.log` and
-`/tmp/vinix-qemu-pending-cold.log`. The fixture bodies still await normal guest
+Logs are `/tmp/tulpar-qemu-pending-{arm,x86,asan}-tests.log`,
+`/tmp/tulpar-qemu-pending-final-{arm,x86,asan}-tests.log`,
+`/tmp/tulpar-qemu-pending-qualified-{arm,x86,asan}.log` and
+`/tmp/tulpar-qemu-pending-cold.log`. The fixture bodies still await normal guest
 runner integration and receive zero completed C-implementation migration credit.
 These host-tool ports establish no new kernel or guest-boot result.
 
@@ -969,7 +969,7 @@ separate from the zero-target stages and current committed totals above.
 | Sound VM supervisor | `tests/sound/soundcore/core.v` | 2,074 / 46 | `033f6a3ed72e95bba79410c3f70c2364d3f68774` |
 | VMX host build and validation controller | `tests/hypervisor/check-vmx.v` | 4,757 / 78 | `f4c41516d642390ab1ecec15299cb5fdb1e33434` |
 | Roblox staging policy | `build-support/roblox/robloxstage/policy.v` | 3,975 / 69 | `e9f18c70d5b45f0cc1999030e6e5e211a7e5486f` |
-| Vinix allocation benchmark host runner | `tests/alloc-bench/vinixcore/core.v` | 5,491 / 93 | `f477d5efbe7c79976ff993ac52a1990d28f9aa45` |
+| Tulpar allocation benchmark host runner | `tests/alloc-bench/tulparcore/core.v` | 5,491 / 93 | `f477d5efbe7c79976ff993ac52a1990d28f9aa45` |
 | N64/PS1/PS2 desktop preparation | `tests/emulator-desktop/desktopprep/policy.v` | 4,856 / 57 | `d9933b67dc233a1e7239939f999bc36879f9bb8c` |
 
 Shell entrypoints compile V executables in a private temporary directory using
@@ -1919,7 +1919,7 @@ workloads were not weakened.
   and fifteen owner controls pass, with 100 complete PTY/server/worker
   retirements returning to the exact final FD baseline. Both ABIs pass cold
   installation and seven CLI plus six unavailable-compiler controls. Frozen
-  and native prepared ARM guests preserve the same `VINIX-DOTA2-PROBE-FAIL`
+  and native prepared ARM guests preserve the same `TULPAR-DOTA2-PROBE-FAIL`
   before game launch, 25 reads/51,200 bytes/zero errors and final capture.
   This is baseline-failure parity; no game, rendering or fresh kernel pass
   is claimed. Original non-OSError stop cleanup omissions are identified
@@ -2021,7 +2021,7 @@ workloads were not weakened.
   callback fixtures cover compiler/make/readelf failures and wide jobs. New
   pinned musl 1.2.5 builds for AArch64 and x86 retain all existing exports
   (1,645 and 1,648 rebuilt exports), exact staging checksums and Rosetta warm
-  cache reuse. Shared upstream C and Alpine/Vinix patches remain unchanged.
+  cache reuse. Shared upstream C and Alpine/Tulpar patches remain unchanged.
   The 1.2.6 build branch has host fixtures and actual compiler/patch-plan checks,
   without an actual 1.2.6 libc build claim. No new kernel/QEMU claim is made.
 - Verified-root helpers pass 57 comparisons, 29 weak/alias/error controls, five
@@ -2071,7 +2071,7 @@ workloads were not weakened.
   archive and SHA checks pass. The separate stack correction removes unintended
   address-escape allocation from the unchanged native probe; generated objects
   import no allocator. Provider allocation, frozen C oracle and every assertion
-  remain unchanged. The captured guest plan is not a fresh Vinix QEMU result.
+  remain unchanged. The captured guest plan is not a fresh Tulpar QEMU result.
 - Three zero-credit owner/replay corrections pass the existing package or GAP
   suites on all profiles and both cold installers. Private owner method/manager
   aliases retire after exit; replay locals retire after conditional traceback
@@ -2095,7 +2095,7 @@ workloads were not weakened.
   Linux ARM C/V sanitizer comparisons include all 64 OOM rollback cases and
   LeakSanitizer with `detect_leaks=1`. Both macOS ABI providers build and link;
   the original macOS unsupported LeakSanitizer failure remains preserved.
-  No fresh Vinix guest or benchmark-performance claim is made.
+  No fresh Tulpar guest or benchmark-performance claim is made.
 - The package adapter passes 73 full workflows, twenty ownership controls,
   twelve batches of twenty consumed errors with GC disabled, 58 actual rich
   objects, twelve result/ID boundaries, 36 Unicode/NUL/surrogate cases and
@@ -2696,9 +2696,9 @@ Machine-local evidence is under `/Users/alex/.cache/vinix-python-to-v/`:
 | `roblox-stage-controller-20261010` | `qualification-final-v3.json` | `9ab7ebb121d0252868eb46b016f250ce0cd44aef9c9d916b9d57ec03c09958a1` |
 | `roblox-stage-controller-20261010` | `post-commit-final-v3.json` | `7d34a8ec5a6e484ff49e930f5f481fe5e2c35104cd678a3a46dcd5099d1a0f98` |
 | `roblox-stage-controller-20261010` | `android-peer-final-v3.json` | `268d5ba8923a937309500d91717c40aa377420dd3a423a8f4f732cfbf10957f7` |
-| `alloc-bench-vinix-controller-20261010` | `qualification-final-v2.json` | `4e0408e65688576ee57fce9ce65dba1019aef5b7744a1aa1b13709ee16bfe372` |
-| `alloc-bench-vinix-controller-20261010` | `post-commit-final-v2.json` | `815521a5e8bf93d924381a7ec50d8f291adeb42fc8bab892c2028ffc829c0d81` |
-| `alloc-bench-vinix-controller-20261010` | `linux-host-peer-final-v2.json` | `02b69ef12f745ab84da84f1f2c3fce827bc9b04ec5f946ca3e0c48fd10db4609` |
+| `alloc-bench-tulpar-controller-20261010` | `qualification-final-v2.json` | `4e0408e65688576ee57fce9ce65dba1019aef5b7744a1aa1b13709ee16bfe372` |
+| `alloc-bench-tulpar-controller-20261010` | `post-commit-final-v2.json` | `815521a5e8bf93d924381a7ec50d8f291adeb42fc8bab892c2028ffc829c0d81` |
+| `alloc-bench-tulpar-controller-20261010` | `linux-host-peer-final-v2.json` | `02b69ef12f745ab84da84f1f2c3fce827bc9b04ec5f946ca3e0c48fd10db4609` |
 | `emulator-desktop-preparation-20261010` | `qualification-final-v3.json` | `67575f868295bfffdf6fe6ce139ec7a7e2da8e149c6f0ec6b78a5e5294609c22` |
 | `emulator-desktop-preparation-20261010` | `post-commit-final-v3.json` | `11d3788acf178050456bd9f0c625c91bd6711c6fd7cc1c9dc203516587b0e0cf` |
 | `emulator-desktop-preparation-20261010` | `linux-host-peer-final-v3.json` | `8b8795928121ed0bdd12a41dbc6a743aab4e19138e964648189fb4dc183e67cf` |
@@ -3088,7 +3088,7 @@ eight fronts and native commands, fixtures and argument guards. Runtime APIs
 and desktop build preflights use V. SDK spawn headers now use their system
 prototypes with the updated V compiler. Existing legacy bridges remain for
 other consumers, including OpenGothic input; no fresh Android application,
-Vinix guest boot or full Alpine source build is claimed. See
+Tulpar guest boot or full Alpine source build is claimed. See
 [native app and Roblox qualification](../tests/native-android-run/README.md).
 
 The OpenGothic stage retires six unchanged Python files, including the last
@@ -3103,7 +3103,7 @@ bridge and execinfo archive. A five-second timeout fixture allows the V mock gue
 to start under load; production deadlines stay unchanged. The build caller also
 changes Linguist classification from Python to Shell, accounting for another
 169 classified Python bytes beyond the six retired programs. No fresh upstream
-engine build, real Vinix game boot or Venus performance run is claimed. See
+engine build, real Tulpar game boot or Venus performance run is claimed. See
 [native OpenGothic qualification](../tests/native-game-tools/README.md).
 
 The runtime-tools stage retires sixteen unchanged Python files. Twenty-four
@@ -3121,7 +3121,7 @@ serialization are tested independently of the real package archives. Upstream
 Mesa/Mako and QEMU configure tooling are external prerequisites; the first-party
 frontends and LLVM helper are V and do not bootstrap an interpreter environment.
 No Python or Meson is executed during qualification, and no fresh upstream
-engine/driver build or real Vinix guest boot is claimed. See
+engine/driver build or real Tulpar guest boot is claimed. See
 [native runtime qualification](../tests/native-runtime-tools/README.md).
 
 The validation-tools stage retires six unchanged Python files and replaces their
@@ -3141,7 +3141,7 @@ All four V PSP fetchers pass real pinned archive extraction and reread controls,
 including a fresh native curl cube download. Their four original Python files
 remain while the concurrently staged iOS controller still invokes those paths;
 those prepared replacements receive no retirement credit in this stage. No
-Python, real model client or Vinix guest is executed during qualification. See
+Python, real model client or Tulpar guest is executed during qualification. See
 [native validation tools](../tests/native-validation-tools/README.md).
 
 The LinuxKPI tooling stage retires thirteen unchanged Python files and translates
@@ -3154,7 +3154,7 @@ and argument guards pass, as do the actual CPU-mask and SMP prerequisite callers
 The full Kbuild audit reports 5/269 units passing on the recorded checkout. A real
 ARM musl host build stops at existing PrintRecord memdup generation; the controlled
 recipe tests claim no native host ELF or workload pass. No kernel source, compiler
-guard or fixture assertion was weakened. No Python or Vinix guest was executed.
+guard or fixture assertion was weakened. No Python or Tulpar guest was executed.
 The concurrently edited compile-v-fixture.py remains and receives no retirement
 credit. See [native LinuxKPI tools](../tests/native-linuxkpi-tools/README.md).
 
@@ -3168,7 +3168,7 @@ passes independent original string, mbstate and ctype ABI assertions. Public
 commands also pass real warm and corrupt-object repair controls, and stage all
 40 libraries in the recorded Mesa closure with matching bytes and metadata.
 The original symbol header and linker stub remain byte-identical except for
-the generator provenance comment. No Python or Vinix guest was executed. See
+the generator provenance comment. No Python or Tulpar guest was executed. See
 [native iOS build tools](../build-support/ios/README.md).
 
 The GPU and random-controller stage retires seven unchanged Python files,
@@ -3181,7 +3181,7 @@ static G17 executables per profile pass input and native boot-delegation
 checks using a controlled downstream endpoint. Public entrypoints and actual
 ARM/x86 frozen C and unchanged V host oracles also pass. The random CLI retains
 normal and signalled guest exit codes, exclusive state, isolation guards and
-merged compiler logs. No Python or Vinix guest was executed. See
+merged compiler logs. No Python or Tulpar guest was executed. See
 [native render test tools](../tests/native-render-tools/README.md).
 
 The launcher-helper stage retires four unchanged Python implementations,
@@ -3194,7 +3194,7 @@ metadata. Actual decoder processes pass large-output, failure, descendant,
 closed-stdio and SIGINT/SIGTERM checks with exact PID/descriptor retirement.
 Six real static ARM/x86 helper/model ELFs, default and custom guest-cache
 regressions, cold public entry points and GNU tar delegation also pass. No
-Python or Vinix guest was executed. See
+Python or Tulpar guest was executed. See
 [native launcher tools](../tests/native-launcher-tools/README.md).
 
 The browser/control/input stage retires four unchanged Python files, totaling
@@ -3206,7 +3206,7 @@ against frozen original profile data, 27 real controlled process cases and
 Nine real static guest ELF builds and native initramfs byte/mode checks pass,
 along with existing QMP and archive/decoder regressions and cold public fronts.
 The pointer controller retains failure logs even when final cleanup reports an
-error. No Python or Vinix guest was executed. See
+error. No Python or Tulpar guest was executed. See
 [native VM tools](../tests/native-vm-tools/README.md).
 
 The Roblox Windows stage retires two unchanged Python files, totaling 12,279
@@ -3219,7 +3219,7 @@ controlled CLI workflows, including prepared-root refresh and an empty timeout
 with exact PID/descriptor retirement. Existing native archive regressions pass.
 The deployment ZIP reader supports stored/deflated archives up to 2 GiB; other
 methods fail explicitly. Curl uses connection/stall limits in place of urllib
-socket-read timeouts. No Python, proprietary client or Vinix guest was executed.
+socket-read timeouts. No Python, proprietary client or Tulpar guest was executed.
 See [native Roblox Windows runner](../tests/roblox-windows/README.md).
 
 The stdio stage retires its unchanged 3,995-byte, 126-line Python test.
@@ -3230,7 +3230,7 @@ retirement on ARM, Rosetta x86 and ASan/UBSan. Raw JSON numeric tokens retain
 unsigned device/inode identities and arbitrary widths; invalid callback error
 indices are rejected. Cold test/query/value/reader builds, current stress
 requalification, existing streamed archive/reader regressions and the public
-automatic query bootstrap pass. No Python or Vinix guest was executed. See
+automatic query bootstrap pass. No Python or Tulpar guest was executed. See
 [native stdio tests](../tests/native-host/README.md).
 
 The Android closure stage retires two unused bindings whose maintained callers
@@ -3260,7 +3260,7 @@ front pass. Direct suite compilation preserves argv and avoids rebuilding a
 shared cached test driver. No kernel source or test assertion changes.
 See [native ext2 host tests](../tests/ext2-xattr/README.md).
 
-No Python or Vinix guest is executed during these three qualifications.
+No Python or Tulpar guest is executed during these three qualifications.
 
 The font closure stage retires three unchanged Python files, totaling 21,749
 bytes and 574 lines. Twenty-one cold ARM/x86/ASanUBSan builds pass all 20,672
@@ -3274,7 +3274,7 @@ HarfBuzz 14.5.0 static SDKs build on ARM and x86; the public frontend also passe
 a real native cold SDK build, warm hash-qualified reuse and controlled CMake
 failure with old libraries preserved. Regenerated font table packing can differ
 while every captured glyph mask and header remains identical. SDK libraries are
-external dependencies; sanitizers instrument V. No Python or Vinix guest is
+external dependencies; sanitizers instrument V. No Python or Tulpar guest is
 executed. See [native font tools](../desktop/tools/fonthost/README.md).
 
 The iOS UI stage retires three unchanged Python files, totaling 17,035 bytes
@@ -3287,12 +3287,12 @@ cycles and 11 controlled logged-pipe/Unix-QMP desktop exchanges. Actual static
 AArch64 guest init builds and native USTAR byte/mode/link checks pass. Existing
 QMP/archive/reader regressions and cold public commands pass. Private owners
 retain leader identity through group cleanup and sole reap; desktop cleanup
-escalates after ten seconds. No Python or Vinix guest is executed. The retained
+escalates after ten seconds. No Python or Tulpar guest is executed. The retained
 host runner remains an external input; sanitizers instrument the V controller
 and fixtures. See [native iOS UI tests](../tests/native-ios-ui/README.md).
 
 A following native image-tool closure removes the two embedded Python blocks in
-`scripts/build-vinix-guest-disk.sh` and `scripts/deploy-iso.sh`. The guest image
+`scripts/build-tulpar-guest-disk.sh` and `scripts/deploy-iso.sh`. The guest image
 workflow is now V, including checked payload sizing, private sparse FAT32
 construction, original boot members and atomic publication without overwrite.
 Release sizes retain the original unit transitions and rounding. Nine cold
@@ -3314,7 +3314,7 @@ change or compiler guard relaxation is supplied. Resource checks found a real
 socket leak in the SDK failed-connect path. QMP now owns a nonblocking socket
 through connection and transfers it only on success; 100 missing/refused/cancel
 cycles and existing QMP cases keep descriptors flat. Public CLI checks pass.
-No Python, real Vinix guest or new kernel allocation result is claimed. This
+No Python, real Tulpar guest or new kernel allocation result is claimed. This
 caller-preparation stage receives zero Python-file retirement credit. See
 [native ext2 controller](../tests/native-ext2-run/README.md).
 
@@ -3329,7 +3329,7 @@ exits and existing VM regressions. Cleanup stress exposed the Darwin gap between
 process-group removal and waitid exit publication; the reserved owner now waits
 within its setup deadline before accepting an exited child. Large serial output
 uses bounded overlapping marker scans without repeated whole-log copies. No
-Python or real Vinix guest is executed; native gzip headers and archive ordering
+Python or real Tulpar guest is executed; native gzip headers and archive ordering
 can differ while members retain their bytes/modes/links. The independently
 staged Python bridge remains intact, so this controller receives zero
 Python-file retirement credit. See [native iOS VM controller](../tests/native-ios-run/README.md).
@@ -3345,14 +3345,14 @@ ELFs link against existing shared musl SDKs and verify their interpreter and
 source/compiler/runtime/executable receipts; all 36 required exports in both
 actual CPython libraries are verified as ELF data. Compiler failures preserve
 existing outputs and a cold public ARM build passes. No interpreter, SDK Python
-module or Vinix guest is executed, so this establishes build/ABI/model contracts
+module or Tulpar guest is executed, so this establishes build/ABI/model contracts
 and does not claim a new runtime pass. The original aarch64 uname check remains
 even in amd64 staging. See [native CPython smoke](../tests/native-python-smoke/README.md).
 
 The native macOS installer policy closure retires one unchanged Python adapter,
 8,147 bytes and 203 lines. Its twelve overrides retain allocation/action safety,
 38 GB macOS headroom, unique booted-container selection, aligned resize, sole
-Vinix profile, stub subtraction and compatible firmware choice. The app bundles
+Tulpar profile, stub subtraction and compatible firmware choice. The app bundles
 the V executable, and source installations build it before preparing components.
 The verified third-party Asahi v0.9.1 framework and SDK remain external; V
 attaches native method descriptors through the C API without evaluating
@@ -3378,8 +3378,8 @@ RAM-only Linux SDK boots pass 360 probe checks, descriptor/path/child retirement
 and immediate mincore checks after munmap. ARM/x86/host-ASanUBSan launcher
 workflows, three real timeouts and the cold public wrapper pass. The native
 qualifier writes newc/gzip initramfs data and retains failure console output.
-No Python, actual Steam client, graphics or Vinix guest executes: these are
-reference Linux SDK behavior/resource checks, not a new Vinix kernel pass. See
+No Python, actual Steam client, graphics or Tulpar guest executes: these are
+reference Linux SDK behavior/resource checks, not a new Tulpar kernel pass. See
 [native Steam probes](../tests/steam/syscall-probes/README.md).
 
 Supplement `7da8032f` replaces seven embedded Python readers in browser,
@@ -3397,7 +3397,7 @@ external-gzip CRC golden, XWD/timed blank cases and thirty native fixture
 capture/error ownership paths. Six real dynamic-musl guest ELFs link, and
 all seven exports in the actual ARM X11 SDK are verified as data. Desktop
 staging invokes that same producer. No Python, graphical app, real X11 server
-or Vinix guest executes; this establishes reader behavior/ABI/build contracts
+or Tulpar guest executes; this establishes reader behavior/ABI/build contracts
 without claiming a new graphics runtime pass. See
 [native surface checks](../tests/native-surface-tools/README.md).
 
@@ -3415,7 +3415,7 @@ Python environment or invokes pip. Nine cold ARM/x86/ASanUBSan host builds pass
 cache/failure/metadata cases, actual Mesa/34-package extraction and all 145
 private library names. Six real static ARM/x86 Venus probes and three dynamic
 ARM musl VNC viewers link. No Python, Mesa generator, graphics application or
-Vinix guest executes. These Shell blocks receive zero Python-file credit. See
+Tulpar guest executes. These Shell blocks receive zero Python-file credit. See
 [native graphics build tools](../build-support/graphics-tools/README.md).
 
 Supplement `44fb696a` closes 20 clean test/documentation callers. Kernel guest
@@ -3426,7 +3426,7 @@ points. Shell arguments and workflows compare exactly after substitution.
 Three syntax checks, both invalid-architecture exits, native runner help and
 actual unchanged execinfo runtime tests pass on ARM, Rosetta x86 and ASanUBSan;
 the execinfo checks use six cold generator-wrapper builds. No Python or new
-Vinix guest verdict is claimed. This caller closure receives zero Python-file
+Tulpar guest verdict is claimed. This caller closure receives zero Python-file
 retirement credit. The four concurrently edited legacy adapters and their
 import dependencies remain preserved pending coordination.
 
@@ -3445,7 +3445,7 @@ ARM/x86/ASanUBSan source/test/frozen-reference builds pass exact merge compariso
 Unicode/newline/marker/ordering/link/ELF cases, actual failed-test continuation,
 clock/security policy, EXT2 mapping, every private/file/paging combination and
 disposable M1 deployment. The committed Luna suite addition remains intact.
-No Python, full desktop UI suite, GUI application, live ESP or Vinix guest
+No Python, full desktop UI suite, GUI application, live ESP or Tulpar guest
 executes; no kernel implementation or lifetime changes. These Shell blocks
 receive zero Python-file credit. See [native source tools](../build-support/source-tools/README.md).
 
@@ -3465,7 +3465,7 @@ Darwin overflow reference separately raises SIGILL and fails the original
 SIGTRAP oracle; the oracle stays unchanged, and the x86 controller qualifies
 against native ARM reference children. Classic ZIP limits are explicit, with
 no ZIP64 claim. No Python, interpreter initialization, Security/Keychain or
-credential fixture, Blender build, UI app or Vinix guest executes. Pending
+credential fixture, Blender build, UI app or Tulpar guest executes. Pending
 Python/index edits remain untouched; these Shell blocks receive zero Python-file
 credit. See [native host helpers](../build-support/source-tools/README.md).
 
@@ -3507,5 +3507,5 @@ and ARM ASanUBSan, along with six real musl guest ELF builds, runtime export
 checks and compiler-failure preservation. Native SDK fixtures cover symlinked
 executables, spaces/Unicode, version mismatch, UTF-8, duplicate distributions,
 missing modules, alias directories and ambiguous layouts. No interpreter,
-upstream generator, target ELF or Vinix guest executes. Concurrent legacy
+upstream generator, target ELF or Tulpar guest executes. Concurrent legacy
 Python/index edits remain untouched. See [generator SDK prerequisites](../build-support/generatorsdk/README.md).

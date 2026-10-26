@@ -47,7 +47,7 @@ __global rcu_cold_irq_ledger RcuColdIrqLedger
 // enabling IRQs inside a borrowed handler does not make its task quiescent.
 // The interrupted scope must have had IF set and no native preemption pins.
 // No Linux lock can be used here: its pin/unpin accounting would recurse.
-@[export: 'vinix_linuxkpi_rcu_native_irq_exit']
+@[export: 'tulpar_linuxkpi_rcu_native_irq_exit']
 fn rcu_native_irq_exit(saved_flags u64) {
 	if katomic.load(&rcu_native_active) == 0 { return }
 	if cpu.interrupt_state() {
@@ -65,7 +65,7 @@ fn rcu_native_irq_exit(saved_flags u64) {
 // the calling CPU. IRQ-disabled and pinned scopes defer their acknowledgement
 // until a later qualifying return. An empty CSD queue still returns through the
 // ordinary THUNK; no callback or synthetic queue record supplies an early QS.
-@[export: 'vinix_linuxkpi_rcu_force_quiescence']
+@[export: 'tulpar_linuxkpi_rcu_force_quiescence']
 fn rcu_force_quiescence() {
 	if katomic.load(&rcu_native_active) == 0 || !C.vkr_rcu_ready() || !C.vks_smp_ready() {
 		lib.kpanic(unsafe { nil }, c'linuxkpi: RCU force before native SMP readiness')
@@ -78,7 +78,7 @@ fn rcu_force_quiescence() {
 
 // Read-only fixture witness: the actual transport has rung every boot CPU.
 // This observes no backend cookie/epoch and supplies no quiescent state.
-@[export: 'vinix_linuxkpi_rcu_test_force_count']
+@[export: 'tulpar_linuxkpi_rcu_test_force_count']
 fn rcu_test_force_count() u64 {
 	return katomic.load(&rcu_native_force_count)
 }
@@ -86,7 +86,7 @@ fn rcu_test_force_count() u64 {
 // The maintained immutable immediate-INT leaves execute the real maskable
 // THUNK even with IF clear. Exercise its saved-IF0 return without submitting a
 // synthetic RCU callback or manufacturing an epoch acknowledgement.
-@[export: 'vinix_linuxkpi_rcu_test_irq_off_probe']
+@[export: 'tulpar_linuxkpi_rcu_test_irq_off_probe']
 fn rcu_test_irq_off_probe() i32 {
 	if cpu.interrupt_state() || katomic.load(&rcu_native_active) == 0 {
 		return -22
@@ -95,7 +95,7 @@ fn rcu_test_irq_off_probe() i32 {
 	if local.maskable_irq_depth != 0 || preempt_depth[local.cpu_number] != 0 {
 		return -22
 	}
-	return C.vinix_linuxkpi_irq_probe(smp_call_vector)
+	return C.tulpar_linuxkpi_irq_probe(smp_call_vector)
 }
 
 fn rcu_cold_irq_actor(_argument voidptr) {
@@ -245,7 +245,7 @@ fn rcu_cold_irq_batch() bool {
 		sequence++
 		katomic.store(mut &rcu_cold_irq_ledger.sequence, sequence)
 		katomic.store(mut &rcu_native_cold_irq_result, i32(-2))
-		if C.vinix_linuxkpi_smp_fixture_single(1, rcu_cold_irq_probe, unsafe { nil }, 1) != 0
+		if C.tulpar_linuxkpi_smp_fixture_single(1, rcu_cold_irq_probe, unsafe { nil }, 1) != 0
 			|| !rcu_cold_irq_wait(sequence, false) { return false }
 		if katomic.load(&rcu_cold_irq_ledger.eligible) {
 			return katomic.load(&rcu_native_cold_irq_result) == 0

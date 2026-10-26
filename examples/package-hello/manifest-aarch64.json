@@ -1,5 +1,5 @@
 {
-  "id": "org.vinix.package-hello",
+  "id": "org.tulpar.package-hello",
   "version": "1.0.0",
   "architecture": "aarch64",
   "name": "Package Hello",

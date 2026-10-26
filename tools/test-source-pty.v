@@ -50,7 +50,7 @@ fn qualify(work string) ! {
 	}
 	assert observed.contains('ACK=owned input')
 	input.close()!
-	mut failed := sourcecommand.spawn_pty(['/missing-vinix-pty-command'], os.environ(), work)!
+	mut failed := sourcecommand.spawn_pty(['/missing-tulpar-pty-command'], os.environ(), work)!
 	assert failed.settle(1)! && failed.poll()!.return_code == 127
 	failed.close()!
 	mut signalled := sourcecommand.spawn_pty(['/bin/sh', '-c', 'kill -TERM $$'], os.environ(), work)!

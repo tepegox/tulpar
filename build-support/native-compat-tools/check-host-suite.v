@@ -168,7 +168,7 @@ fn controller_checks(controller string, work string) ! {
 
 fn owner_checks(controller string, work string, environment map[string]string) ! {
 	scratch := work + '/scratch'; os.mkdir(scratch)!
-	mut env := environment.clone(); env['TMPDIR'] = scratch; env['V'] = ''; env['VINIX_BLOCK_POLICY_GENERATOR'] = work + '/missing-generator'
+	mut env := environment.clone(); env['TMPDIR'] = scratch; env['V'] = ''; env['TULPAR_BLOCK_POLICY_GENERATOR'] = work + '/missing-generator'
 	for _ in 0 .. 3 {
 		for family in ['mounted-disk-host', 'securelevel-host', 'securelevel-dispatch', 'securelevel-attributes'] {
 			assert hosttest.capture([controller, family], '', 30, env)!.code == 1
@@ -179,7 +179,7 @@ fn owner_checks(controller string, work string, environment map[string]string) !
 		assert hosttest.capture(argv, '', 30, env)!.code != 0
 		assert os.ls(scratch)!.len == 0
 	}
-	env = environment.clone(); env['TMPDIR'] = scratch; env['VINIX_BLOCK_POLICY_GENERATOR'] = os.executable(); env['HOST_GENERATOR_SLEEP'] = '1'; env['HOST_CHILD_PID'] = work + '/generator-pid'
+	env = environment.clone(); env['TMPDIR'] = scratch; env['TULPAR_BLOCK_POLICY_GENERATOR'] = os.executable(); env['HOST_GENERATOR_SLEEP'] = '1'; env['HOST_CHILD_PID'] = work + '/generator-pid'
 	mut process := os.new_process(controller); process.set_args(['mounted-disk-host']); process.set_environment(env); process.set_redirect_stdio()
 	defer { process.close() }
 	process.run()
@@ -198,12 +198,12 @@ fn main() {
 	if os.args.len == 3 && os.args[1] == '--child' { child(os.args[2]) or { panic(err) }; return }
 	if os.args.len == 2 && os.args[1] == '--templates' { template_checks() or { panic(err) }; return }
 	if os.args.len == 4 && os.args[1] == '--owners' {
-		work := hosttest.work_dir(os.args[3], 'vinix-host-suite-owner-') or { panic(err) }
+		work := hosttest.work_dir(os.args[3], 'tulpar-host-suite-owner-') or { panic(err) }
 		owner_checks(os.args[2], work, policyhost.environment()) or { panic(err) }
 		return
 	}
 	if os.args.len != 3 { eprintln('Usage: check-host-suite CONTROLLER FRESH-STATE'); exit(2) }
-	work := hosttest.work_dir(os.args[2], 'vinix-host-suite-check-') or { panic(err) }
+	work := hosttest.work_dir(os.args[2], 'tulpar-host-suite-check-') or { panic(err) }
 	template_checks() or { panic(err) }
 	capture_checks(work) or { panic(err) }
 	controller_checks(os.args[1], work) or { panic(err) }

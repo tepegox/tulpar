@@ -4,7 +4,7 @@ Empty-path `execveat` now checks `wxallowed` on the executable description's
 actual saved mount. Revoking approval only in a copied namespace no longer
 denies an inherited approved description; granting it only in the copy no
 longer authorizes an inherited unapproved one. Unauthorized explicit
-`VINIX_ALLOW_WX=1` requests return `EPERM`.
+`TULPAR_ALLOW_WX=1` requests return `EPERM`.
 
 The existing scalar descriptor selector reaches `fs.wx_exec_allowed` in both
 architecture loaders. Its privileged initial-user-namespace effective-root
@@ -18,7 +18,7 @@ saved approval to inherited-directory relative execution. Cases 6/7 also
 cover retained script directories, and cases 8/9 add ELF directory routes.
 
 Use `--case descwx` or `dw-0` through `dw-9`. Native `all` includes the group.
-Linux `move-reference` excludes it: `wxallowed` and the explicit Vinix W^X
+Linux `move-reference` excludes it: `wxallowed` and the explicit Tulpar W^X
 opt-in are not Linux mount policy.
 
 | Case | Saved mount | Copied mount | Image / launcher |
@@ -61,7 +61,7 @@ Evidence from 2026-10-15 is retained under `build/development17-20261013`:
 | `mount-descwx-{arm,x86}-dw-{1,3}-before-b` | Previous kernels wrongly admit inherited unapproved linked/unlinked descriptions after approval in the copy; the image verifies RWX permission and exits 38. |
 | `mount-descwx-{arm,x86}-descwx-after-b` | All eight corrected native cases pass. |
 | `mount-descwx-{arm,x86}-all-after-b` | Complete native mount suites pass, including all eight W^X cases. |
-| `mount-descwx-{arm,x86}-linux-b` | The same probe ELFs pass the portable Linux 6.12.51 suites; the Vinix-only W^X group is excluded. |
+| `mount-descwx-{arm,x86}-linux-b` | The same probe ELFs pass the portable Linux 6.12.51 suites; the Tulpar-only W^X group is excluded. |
 
 | Architecture | Kernel SHA-256 | Shared native/Linux probe SHA-256 |
 | --- | --- | --- |
@@ -84,7 +84,7 @@ C files have SHA-256
 ARM probe compilation reuses the owned musl SDK and V Clang wrapper documented
 in [descriptor execution](descriptor-exec.md), including its GCC 14.2.0 support
 objects and hashed manifests. This is a host build input, not native toolchain
-qualification inside Vinix.
+qualification inside Tulpar.
 
 The isolated builds extend the qualified [descriptor-exec inputs](descriptor-exec.md),
 changing only `kernel/fs/wx_policy.v` and the two architecture loader calls.

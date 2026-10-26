@@ -1,5 +1,5 @@
-// The second Vinix kernel reaches this PID 1 only after UEFI, Limine and
-// the initramfs have all worked under QEMU running inside the first Vinix.
+// The second Tulpar kernel reaches this PID 1 only after UEFI, Limine and
+// the initramfs have all worked under QEMU running inside the first Tulpar.
 typedef unsigned long size_t;
 
 static void write_message(const char *message, size_t length) {
@@ -11,7 +11,7 @@ static void write_message(const char *message, size_t length) {
 }
 
 void _start(void) {
-    static const char message[] = "VINIX NESTED QEMU: PASS\n";
+    static const char message[] = "TULPAR NESTED QEMU: PASS\n";
     write_message(message, sizeof(message) - 1);
     struct { long seconds; long nanoseconds; } duration = { 1, 0 };
     register const void *sleep_arg __asm__("x0") = &duration;

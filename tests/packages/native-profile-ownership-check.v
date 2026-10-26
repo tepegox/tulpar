@@ -30,9 +30,9 @@ fn check() ! {
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-cflags', '-O1', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	mut checks := []Check{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true)
 	for name in ['native_profile_ownership', 'native_profile', 'apple_profile', 'profile_inventory', 'catalog', 'catalog_plan', 'catalog_normalize', 'publisher_schema', 'import', 'pack_source']! {
 		binary := work + '/' + name
 		checks << task(name + '-compile', [v, ...flags, '-o', binary, repository + '/tools/packages/pkgcore/' + name + '_test.v'], work)!

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_LIMITS_H
-#define VINIX_LINUX_LIMITS_H
+#ifndef TULPAR_LINUX_LIMITS_H
+#define TULPAR_LINUX_LIMITS_H
 #include <limits.h>
 #include <linux/types.h>
 #ifndef SSIZE_MAX

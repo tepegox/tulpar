@@ -26,7 +26,7 @@ fn auto_scrub_check(input string, credential string, reference string, report st
 	saved := C.dup(1); fd := C.open(output.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	unsafe {
-		args := [&char(c'vinix-volume'), if recovery { &char(c'scrub-recovery-volume-auto') } else { &char(c'scrub-volume-auto') }, input.str, credential.str, reference.str, report.str, &char(nil)]!
+		args := [&char(c'tulpar-volume'), if recovery { &char(c'scrub-recovery-volume-auto') } else { &char(c'scrub-volume-auto') }, input.str, credential.str, reference.str, report.str, &char(nil)]!
 		assert run(6, &args[0]) == expected
 	}
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
@@ -37,7 +37,7 @@ fn auto_scrub_check(input string, credential string, reference string, report st
 fn test_automatic_scrub_authentication_reference_before_discovery_and_pinned_complete_scan() {
 	volume_scrub_model = true; ciphertext_model = true; recovery_growth_model = true
 	defer { volume_scrub_model = false; ciphertext_model = false; recovery_growth_model = false; auto_scrub_refused = false }
-	work := os.join_path(os.temp_dir(), 'vinix-auto-scrub-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-auto-scrub-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	input := work + '/input'; credential := work + '/credential'; reference := work + '/reference'; report := work + '/report'
 	wrapping := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}
 	data := []u8{len: 73728, init: ciphertext_pattern(u64(index) + 8192)}; digest := sha256.sum(data)

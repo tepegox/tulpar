@@ -125,7 +125,7 @@ fn qualify(dirfd i32, filefd i32, linkfd i32, deleted i32, pipefd i32, ordinary 
 		mut good := true
 		for kind in 0 .. 4 { C.printf(c'LINUX STATX CASES: ordinary=%d kind=%d calls=%lu failures=%lu\n', i32(ordinary), kind, counts.calls[kind], counts.failures[kind]); if counts.failures[kind] != 0 { good = false } }; C.fflush(nil)
 		// Linux reference boots use the same semantic matrix and ELF, while
-		// Vinix-specific allocation accounting is required by native receipts.
+		// Tulpar-specific allocation accounting is required by native receipts.
 		if good && !reference_run && !storage(dirfd, filefd, ordinary) { good = false }
 		return good
 	}

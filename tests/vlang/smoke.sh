@@ -28,7 +28,7 @@ output=$(./hi) || {
 	exit "$status"
 }
 printf '%s\n' "$output"
-[ "$output" = 'V runs natively on Vinix' ] || {
+[ "$output" = 'V runs natively on Tulpar' ] || {
 	echo "V-compiled executable returned unexpected output" >&2
 	exit 1
 }

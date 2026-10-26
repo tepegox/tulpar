@@ -10,13 +10,13 @@ import tools.packages.pkgprotocol
 fn software_verify_service_fixture(args []string) bool {
 	if args.len != 2 || args[1] != 'verify' { return false }
 	assert os.args[1..] == ['--progress', 'verify']
-	mode := os.getenv('VINIX_SOFTWARE_VERIFY_MODE')
+	mode := os.getenv('TULPAR_SOFTWARE_VERIFY_MODE')
 	first := pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'verify' }) + '\n'
 	print(first[..8]); flush_stdout(); time.sleep(10 * time.millisecond); print(first[8..])
 	println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'verify', package: 'editor', repository: 'trusted', path: 'bin/editor' }))
 	flush_stdout()
 	if mode == 'slow' { time.sleep(3 * time.second); return true }
-	if mode == 'failed' { eprintln('editor: installed payload verification failed: bin/editor; use Repair installed or vinix-package repair'); exit(23) }
+	if mode == 'failed' { eprintln('editor: installed payload verification failed: bin/editor; use Repair installed or tulpar-package repair'); exit(23) }
 	if mode == 'incomplete' { return true }
 	if mode == 'oversized' { println('uninteresting listing '.repeat(800)) }
 	println(pkgprotocol.progress_prefix + json2.encode(pkgprotocol.Progress{ phase: 'complete', current: 1, total: 1 }))
@@ -31,9 +31,9 @@ fn check_software_verify() ! {
 		output: []u8{cap: 8192}, query: []u8{cap: 256}, selected: 0, filter: 1,
 		catalog_error: 'catalog expired'.clone(), update_error: 'publisher revoked'.clone(),
 		rows: [SoftwareRow{ id: 'editor', name: 'Editor', requested: true, installed_version: '1.0.0' }] }
-	defer { os.unsetenv('VINIX_SOFTWARE_VERIFY_MODE'); app.close_app() }
+	defer { os.unsetenv('TULPAR_SOFTWARE_VERIFY_MODE'); app.close_app() }
 	for mode in ['healthy', 'failed', 'incomplete', 'trailing', 'late-failure', 'oversized'] {
-		os.setenv('VINIX_SOFTWARE_VERIFY_MODE', mode, true)
+		os.setenv('TULPAR_SOFTWARE_VERIFY_MODE', mode, true)
 		tree := app.build(ui2.rect(0, 0, 640, 610))!
 		assert tree.children.any(it.id == 'software.verify' && it.text == 'Verify installed')
 		details := tree.children.filter(it.id == 'software.details')[0]
@@ -53,7 +53,7 @@ fn check_software_verify() ! {
 			assert app.failure_pages.len > 0 && app.failure_heading.starts_with('Verify installed software')
 			assert !app.status.contains('files and launchers verified')
 			if mode in ['incomplete', 'trailing'] { assert app.worker_failed && app.failure_heading.contains('incomplete response') }
-			if mode == 'failed' { assert app.status.contains('vinix-package repair') && app.failure_heading.contains('exit 23') }
+			if mode == 'failed' { assert app.status.contains('tulpar-package repair') && app.failure_heading.contains('exit 23') }
 			if mode == 'late-failure' { assert app.status.contains('storage read failed') }
 			app.handle('software.failure')!; assert app.failure_mode
 			app.handle('software.failure.back')!; assert !app.failure_mode
@@ -64,7 +64,7 @@ fn check_software_verify() ! {
 	review := app.build(ui2.rect(0, 0, 640, 610))!; assert !review.children.any(it.id == 'software.verify'); free_window_tree(review)
 	app.handle('software.verify')!; assert app.worker == unsafe { nil } && app.review_ready
 	app.handle('software.cancel')!
-	os.setenv('VINIX_SOFTWARE_VERIFY_MODE', 'slow', true); app.handle('software.verify')!
+	os.setenv('TULPAR_SOFTWARE_VERIFY_MODE', 'slow', true); app.handle('software.verify')!
 	for _ in 0 .. 500 { app.poll(); if app.progress_seen { break }; time.sleep(time.millisecond) }
 	assert app.worker != unsafe { nil } && app.progress_seen && app.status.contains('Verifying')
 	pid := app.worker.pid; assert app.prepare_close(); app.close_app(); assert C.kill(pid, 0) != 0
@@ -119,7 +119,7 @@ fn check_software_repair_memory() ! {
 		mut app := SoftwareApp{ query: []u8{cap: 256}, output: text.bytes() }
 		defer { app.close_app(); unsafe { text.free() } }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.review = 'repair'.clone()
 				app.load_review()
@@ -129,7 +129,7 @@ fn check_software_repair_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'repair reviews retained ${kept} bytes'
 		println('Software repair: 1000 decode/disclose/render/cancel cycles retain zero tracked bytes PASS')
 	}

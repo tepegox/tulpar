@@ -713,9 +713,9 @@ int main(void) {
 	check_wakeup_latency();
 
 	if (failures == 0) {
-		printf("VINIX QEMU RT: PASS\n");
+		printf("TULPAR QEMU RT: PASS\n");
 	} else {
-		printf("VINIX QEMU RT: FAIL (%d)\n", failures);
+		printf("TULPAR QEMU RT: FAIL (%d)\n", failures);
 	}
 	fflush(stdout);
 

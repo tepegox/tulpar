@@ -2,7 +2,7 @@
 module lib
 
 // Fatal/test markers bypass console locks and remain visible in PROD builds.
-@[export: 'vinix_stack_guard_message']
+@[export: 'tulpar_stack_guard_message']
 fn stack_guard_message(message charptr) {
 	unsafe {
 		bytes := &u8(message)
@@ -22,7 +22,7 @@ fn stack_guard_hex(value u64) {
 }
 
 // Emit scalar fault evidence without a console lock, formatting buffer or heap.
-@[export: 'vinix_stack_guard_diagnostic']
+@[export: 'tulpar_stack_guard_diagnostic']
 fn stack_guard_diagnostic(sp u64, pc u64, address u64) {
 	stack_guard_message(charptr(c'STACK-GUARD state sp=0x'))
 	stack_guard_hex(sp)

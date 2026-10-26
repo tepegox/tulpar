@@ -26,7 +26,7 @@ fn C.vkrf_kvfree_boundary(&C.vkrf_boundary)
 
 const magic = u64(0x7263752d66726565)
 
-@[export: 'vinix_linuxkpi_rcufree_fixture_new']
+@[export: 'tulpar_linuxkpi_rcufree_fixture_new']
 pub fn object_new(kind u32) voidptr {
 	unsafe {
 		if kind == 0 {
@@ -50,7 +50,7 @@ pub fn object_new(kind u32) voidptr {
 
 // Call only before ownership transfer, or while an independently held genuine
 // reader protects the entire allocation. Never call after releasing that scope.
-@[export: 'vinix_linuxkpi_rcufree_fixture_check']
+@[export: 'tulpar_linuxkpi_rcufree_fixture_check']
 pub fn object_check(kind u32, storage voidptr) bool {
 	unsafe {
 		if storage == nil { return false }
@@ -63,7 +63,7 @@ pub fn object_check(kind u32, storage voidptr) bool {
 	}
 }
 
-@[export: 'vinix_linuxkpi_rcufree_fixture_enqueue']
+@[export: 'tulpar_linuxkpi_rcufree_fixture_enqueue']
 pub fn object_enqueue(kind u32, storage voidptr) {
 	unsafe {
 		match kind {
@@ -75,11 +75,11 @@ pub fn object_enqueue(kind u32, storage voidptr) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_rcufree_fixture_headless']
+@[export: 'tulpar_linuxkpi_rcufree_fixture_headless']
 pub fn object_headless(storage voidptr) { C.kvfree_rcu_mightsleep(storage) }
-@[export: 'vinix_linuxkpi_rcufree_fixture_immediate']
+@[export: 'tulpar_linuxkpi_rcufree_fixture_immediate']
 pub fn object_immediate(storage voidptr) { C.kvfree(storage) }
-@[export: 'vinix_linuxkpi_rcufree_fixture_head_offset']
+@[export: 'tulpar_linuxkpi_rcufree_fixture_head_offset']
 pub fn head_offset(kind u32) u32 {
 	return match kind { 0 { u32(0) } 1 { u32(16) } 2 { u32(4088) } else { ~u32(0) } }
 }

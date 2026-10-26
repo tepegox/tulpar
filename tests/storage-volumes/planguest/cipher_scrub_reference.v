@@ -4,14 +4,14 @@ module planguest
 @[direct_array_access]
 fn cipher_binding_tool(reference &char, report &char, readonly bool, changed bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'verify-volume-scrub-reference'), reference, report, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'verify-volume-scrub-reference'), reference, report, &char(nil)]!
 		capture := C.open(c'/root/cipher-bind.out', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(capture >= 0, c'open binding capture'); child := C.fork(); check(child >= 0, c'fork binding tool')
 		if child == 0 { if C.dup2(capture, 1) != 1 || C.close(capture) != 0 { C._exit(126) }; C.execv(args[0], &args[0]); C._exit(127) }
 		check(C.close(capture) == 0, c'close binding capture'); mut code := i32(0); check(C.waitpid(child, &code, 0) == child && code == expected << 8, c'binding exact exit')
 		fd := C.open(c'/root/cipher-bind.out', C.O_RDONLY); mut text := [2048]char{}; check(fd >= 0, c'open binding output'); count := C.read(fd, &text[0], 2047); check(count >= 0 && count < 2047 && C.close(fd) == 0, c'bounded binding output')
 		if expected == 1 { check(C.strstr(&text[0], c'operation=') == nil, c'invalid binding emits no findings'); return }
 		mut wanted := [2048]char{}
-		check(C.snprintf(&wanted[0], 2048, c'format=VINIXCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s report_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n', u64(!changed), u64(changed), reference_hash(readonly, false), cipher_binding_report_hash(readonly, changed), u64(readonly), if changed { &char(c'changed') } else { &char(c'match') }, reference_digest(false), reference_digest(changed)) > 0, c'construct binding expectation')
+		check(C.snprintf(&wanted[0], 2048, c'format=TULPARCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=%lu changed=%lu algorithm=sha256 reference_sha256=%s report_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n', u64(!changed), u64(changed), reference_hash(readonly, false), cipher_binding_report_hash(readonly, changed), u64(readonly), if changed { &char(c'changed') } else { &char(c'match') }, reference_digest(false), reference_digest(changed)) > 0, c'construct binding expectation')
 		check(C.strcmp(&text[0], &wanted[0]) == 0, c'exact complete independent binding output and both fingerprints')
 	}
 }
@@ -43,10 +43,10 @@ fn cipher_scrub_reference_entry() i32 {
 		volume_scrub_first($if amd64 { &char(c'/dev/sd0') } $else { &char(c'/dev/vda') }, $if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') })
 		scrub_compare_matrix(); cipher_binding_matrix()
 		recovery_unlock_tool(c'/root/volume-ro.vrecover', c'/root/recovery.key', false, 0)
-		status_before := status(c'/dev/mapper/vinix60'); held := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); check(held >= 0, c'hold comparison mapping')
+		status_before := status(c'/dev/mapper/tulpar60'); held := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); check(held >= 0, c'hold comparison mapping')
 		root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold binding writer lock'); cipher_binding_matrix(); check(C.close(root) == 0, c'close binding writer lock')
-		check(status_before == status(c'/dev/mapper/vinix60'), c'comparison preserves live status'); crypt_data(held, 0, 0x73)
-		check(C.close(held) == 0, c'close comparison mapping'); simple(c'remove', c'/dev/mapper/vinix60', unsafe { nil }, 0)
+		check(status_before == status(c'/dev/mapper/tulpar60'), c'comparison preserves live status'); crypt_data(held, 0, 0x73)
+		check(C.close(held) == 0, c'close comparison mapping'); simple(c'remove', c'/dev/mapper/tulpar60', unsafe { nil }, 0)
 		cipher_binding_retention(); C.printf(c'PLAN CIPHER SCRUB REFERENCE PASSED: complete supplied-reference binding, private pinned inputs, exact historical findings and bounded lifetimes\n')
 	} else {
 		check(C.close(phase) == 0, c'close comparison phase'); scrub_compare_matrix(); cipher_binding_matrix()

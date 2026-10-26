@@ -181,7 +181,7 @@ pub fn entry(argc i32, argv &&char) i32 {
 		for i := i32(0); i < started; i++ { if C.pthread_join(readers[i], nil) != 0 { fail(c'join process inspector') } }
 		if pl_snapshots < 100 || pl_process_clocks < 10 { fail(c'inspectors made concurrent progress') }
 		C.printf(c'proc thread lock: %lu snapshots, %lu process CPU clocks\n', native_ulong(pl_snapshots), native_ulong(pl_process_clocks))
-		if pl_failures == 0 { C.puts(c'VINIX PROC THREAD LOCK: PASS') }
+		if pl_failures == 0 { C.puts(c'TULPAR PROC THREAD LOCK: PASS') }
 		if pl_owner_pid != 1 { return if pl_failures != 0 { 1 } else { 0 } }
 		C.sync(); C.reboot(C.RB_POWER_OFF); for { C.pause() }
 		return 0

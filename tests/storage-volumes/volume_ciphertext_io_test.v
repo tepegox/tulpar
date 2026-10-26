@@ -75,7 +75,7 @@ fn ciphertext_check(input string, credential string, reference string, recovery 
 	unsafe {
 		verb := if verify { if recovery { &char(c'verify-recovery-volume') } else { &char(c'verify-volume') } }
 			else { if recovery { &char(c'hash-recovery-volume') } else { &char(c'hash-volume') } }
-		args := [&char(c'vinix-volume'), verb, &char(c'/recovery-growth-parent'), input.str, credential.str, reference.str, &char(nil)]!
+		args := [&char(c'tulpar-volume'), verb, &char(c'/recovery-growth-parent'), input.str, credential.str, reference.str, &char(nil)]!
 		assert run(6, &args[0]) == expected
 	}
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
@@ -91,7 +91,7 @@ fn ciphertext_check(input string, credential string, reference string, recovery 
 fn test_ciphertext_authentication_streaming_reference_geometry_corruption_and_publication_cleanup() {
 	ciphertext_model = true; recovery_growth_model = true
 	defer { ciphertext_model = false; recovery_growth_model = false }
-	work := os.join_path(os.temp_dir(), 'vinix-ciphertext-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-ciphertext-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	input := work + '/input'; credential := work + '/credential'; reference := work + '/reference'
 	wrapping := [64]u8{init: u8(index * 29 + 41)}; random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}
 	data := []u8{len: 73728, init: ciphertext_pattern(u64(index) + 8192)}; sum := sha256.sum(data)
@@ -122,7 +122,7 @@ fn test_ciphertext_authentication_streaming_reference_geometry_corruption_and_pu
 				status := if fault <= 1 || (verify && fault >= 9 && fault <= 20) { 0 } else { 1 }
 				ciphertext_check(input, credential, reference, recovery, verify, 0, 0, fault, sector, kind, false, status)
 				if !verify && os.exists(reference) { assert os.read_bytes(reference)! == record[..]; os.rm(reference)! }
-				assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+				assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 			}
 			if verify { os.rm(reference)! }
 		}

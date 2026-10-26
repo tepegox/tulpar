@@ -5,8 +5,8 @@ import json2
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn stored_decode_fixture() (string, string) {
@@ -21,12 +21,12 @@ fn stored_decode_fixture() (string, string) {
 fn test_stored_decoders_retire_complete_owned_values() {
 	$if track_heap ? {
 		config_text, state_text := stored_decode_fixture()
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { config := decode_configuration(config_text)!; close_decoded_configuration(config) }
-		config_bytes := C.vinix_heap_end()
-		C.vinix_heap_begin()
+		config_bytes := C.tulpar_heap_end()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { state := decode_persistent_state(state_text, 'aarch64')!; close_decoded_state(state) }
-		state_bytes := C.vinix_heap_end()
+		state_bytes := C.tulpar_heap_end()
 		println('Stored decode: 1000 configuration decode/close cycles retained ${config_bytes} bytes; 1000 persistent-state cycles retained ${state_bytes} bytes')
 		assert config_bytes == 0 && state_bytes == 0
 	}
@@ -61,14 +61,14 @@ fn test_stored_decoders_retire_partial_values_for_every_truncated_prefix_and_lat
 		state_text.replace('"bytes":7', '"bytes":7.0'),
 		state_text.replace('"requested":["app"]', '"requested":["absent"]'),
 		state_text.replace('"firmware":false', '"firmware":false,"firm\\u0077are":false')]
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for end in 0 .. config_text.len { stored_config_failure(unsafe { tos(config_text.str, end) }) }
 	for end in 0 .. state_text.len { stored_state_failure(unsafe { tos(state_text.str, end) }) }
 	for _ in 0 .. 1000 {
 		for text in bad_configs { stored_config_failure(text) }
 		for text in bad_states { stored_state_failure(text) }
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); println('Stored decode: all truncated prefixes and 1000 late-refusal cycles retained ${kept} bytes'); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); println('Stored decode: all truncated prefixes and 1000 late-refusal cycles retained ${kept} bytes'); assert kept == 0 }
 	println('Stored decode: partial nested cleanup, escaped duplicate keys, canonical integers and late semantic refusal PASS')
 }
 
@@ -132,13 +132,13 @@ fn test_stored_decoders_bound_growth_and_keep_nested_declared_values() {
 	nested := State{ ...base, packages: [Installed{ ...base.packages[0], package: Package{ ...base.packages[0].package,
 		dependencies: [Dependency{ id: 'app', minimum: '1.0.0', before: '2.0.0' }], files: files, arguments: ['--literal', 'a "quoted" value'] } }] }
 	nested_text := encode_generation_state(nested)!
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		value := decode_persistent_state(nested_text, 'aarch64')!
 		assert value.packages[0].package.files.len == 32 && value.packages[0].package.dependencies[0].before == '2.0.0'
 		close_decoded_state(value)
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	assert config_text.contains('publisher')
 	println('Stored decode: 4096-repository/package limits, excess refusal, nested dependency/argument declarations and growing payload arrays PASS')
 }

@@ -36,7 +36,7 @@ fn test_repeated_options_and_literal_compiler_words() {
 }
 
 fn test_atomic_state_and_combined_stream_lifetimes() {
-	work := sourcecommand.temporary('vinix-cache-state')!
+	work := sourcecommand.temporary('tulpar-cache-state')!
 	defer { os.rmdir_all(work) or { panic(err) } }
 	before := descriptors()
 	for _ in 0 .. 100 {

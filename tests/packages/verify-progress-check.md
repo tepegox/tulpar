@@ -41,12 +41,12 @@ suite and memory modes remain active. Headless UI and typechecks do not claim
 ordinary graphical-session execution.
 
 ```sh
-vinix-package --progress verify
-vinix-package --json verify
+tulpar-package --progress verify
+tulpar-package --json verify
 v -nocache -no-skip-unused -gc none -manualfree \
   -path '@vlib|@vmodules|.|tools/accounts' \
   -o /tmp/verify-progress tests/packages/verify-progress-check.v
-/tmp/verify-progress /tmp/new-verification-work /path/to/vinix-package
+/tmp/verify-progress /tmp/new-verification-work /path/to/tulpar-package
 ```
 
 The [target controller](verify-progress-runtime-check.v) runs core and signed

@@ -36,7 +36,7 @@ with `EACCES`, while `O_PATH` can still name them. Open descriptions and working
 directories retain the mount used to reach them, so a restricted bind alias
 does not change another alias's policy.
 
-W^X is the default. `VINIX_ALLOW_WX=1` remains an explicit compatibility request,
+W^X is the default. `TULPAR_ALLOW_WX=1` remains an explicit compatibility request,
 but the kernel accepts it only from an effective-root launcher holding
 `CAP_SYS_ADMIN` in the initial user namespace, or for an executable reached
 through a mount that an administrator marked `wxallowed`. An unauthorized request fails exec with
@@ -49,7 +49,7 @@ For an unprivileged compatibility program, an administrator can set
 ```sh
 mount -t tmpfs -o wxallowed tmpfs /compat
 mount -o remount,wxallowed /compat
-VINIX_ALLOW_WX=1 /compat/program
+TULPAR_ALLOW_WX=1 /compat/program
 ```
 
 An installed runtime can instead receive its own read-only executable mount.
@@ -63,7 +63,7 @@ mount -o remount,bind,ro,nosuid,nodev,wxallowed /usr/lib/firefox-esr
 An ordinary user then launches the approved ELF directly:
 
 ```sh
-VINIX_ALLOW_WX=1 /usr/lib/firefox-esr/firefox-esr
+TULPAR_ALLOW_WX=1 /usr/lib/firefox-esr/firefox-esr
 ```
 
 The `/usr/bin` shell wrapper is outside this approval. Helpers must execute
@@ -114,7 +114,7 @@ so concurrent cwd, chroot and move operations cannot mix their policy.
 
 A relative `#!` interpreter name resolves from the caller's current working
 directory, including when `execveat` reaches the script through another
-directory descriptor. This follows the Linux ABI; older Vinix versions used
+directory descriptor. This follows the Linux ABI; older Tulpar versions used
 the descriptor's directory in that case. The interpreter's actual cwd mount
 route receives the same execution and W^X checks as other executable images.
 

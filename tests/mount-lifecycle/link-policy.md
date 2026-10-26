@@ -43,7 +43,7 @@ the `0755` directory (`EACCES`) or through the read-only alias (`EROFS`). It
 cannot link the root-owned `0600` marker into a `0777` directory (`EPERM`). Those
 denials preserve destination absence, source count and directory metadata.
 The group enables and reads back `fs.protected_hardlinks=1` in the owned Linux
-VM; Vinix already protects foreign hard links and has no corresponding sysctl.
+VM; Tulpar already protects foreign hard links and has no corresponding sysctl.
 This changes only the reference guest's policy and retains every assertion.
 
 | Case | Routes exercised |

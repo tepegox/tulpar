@@ -92,5 +92,5 @@ Prepared kernel SHA-256 values remain:
 Receipts, frozen original Python bytes (read only), native comparison helpers,
 prepared host/core stamps, SDK artifacts and `serial-*.log` are under
 `~/.cache/vinix-python-zero-process-20261011/`. Short guest states are recorded
-in the logs under `/tmp/vinix-ip-*`, `/tmp/vinix-pc-*` and
-`/tmp/vinix-module-recipe-*`. No Python was executed for this stage.
+in the logs under `/tmp/tulpar-ip-*`, `/tmp/tulpar-pc-*` and
+`/tmp/tulpar-module-recipe-*`. No Python was executed for this stage.

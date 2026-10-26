@@ -1,6 +1,6 @@
 # Overlay rename qualification
 
-This V controller runs native Vinix guests with a private tmpfs overlay and,
+This V controller runs native Tulpar guests with a private tmpfs overlay and,
 for disk cases, a fresh 128-MiB ext2 volume (4 MiB for `opaque-full`). Root prepares
 the mounts and transfers the private directories; all rename workloads run as
 UID/GID 1000 after clearing
@@ -23,7 +23,7 @@ V_C_ERROR_BUG_REPORT_DISABLED=1 USE_TCG=0 build-support/run-v-tool.sh \
 
 The ARM command uses HVF on macOS; use TCG without host acceleration. The
 controller uses the maintained guest build/boot tools, a declaration-only musl
-ABI header and `mke2fs` (`VINIX_MKE2FS` can select it). It owns a QEMU process with
+ABI header and `mke2fs` (`TULPAR_MKE2FS` can select it). It owns a QEMU process with
 networking disabled and records kernel, fixture, ABI, init, ISO and disk hashes
 in `receipt.json`. Guest serial output is retained in `serial.log`. A positive
 verdict is required for every selected case; assertion failures fail the run.
@@ -202,9 +202,9 @@ Linux reference guest. Compile the V reference controller from the repository ro
 ```sh
 V_C_ERROR_BUG_REPORT_DISABLED=1 v -cc cc \
   -path "$PWD/tests/native-guest-tools|$PWD/tests/linuxkpi|@vlib|@vmodules" \
-  -o /tmp/vinix-socket-reference tests/overlay-rename/socket-reference.v
+  -o /tmp/tulpar-socket-reference tests/overlay-rename/socket-reference.v
 
-/tmp/vinix-socket-reference --arch aarch64 --kernel /path/to/linux-arm64 \
+/tmp/tulpar-socket-reference --arch aarch64 --kernel /path/to/linux-arm64 \
   --init /path/to/native-socket-access-result/init \
   --state-dir /path/to/fresh-linux-reference
 ```
@@ -215,7 +215,7 @@ mounts procfs and executes the preserved probe. Both runs must report
 `OVERLAY SOCKET REFERENCE: PASS` and `OVERLAY GUEST: PASS`; the reference receipt
 pins the shared probe, Linux kernel, launcher source/C/ELF, cpio, QEMU and serial
 output. This case checks denied creation of a real device (1:3); disk cases
-retain Vinix's separate refusal of user-created 0/0 whiteouts. See
+retain Tulpar's separate refusal of user-created 0/0 whiteouts. See
 [socket metadata authorization evidence](socket-access.md).
 The expanded probe also checks [ordinary socket pathname opens](socket-open.md).
 

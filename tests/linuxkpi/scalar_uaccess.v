@@ -28,7 +28,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	root := hosttest.root()
 	arch := $if arm64 { 'arm64' } $else $if amd64 { 'amd64' } $else { '' }
 	if arch == '' { return error('Unsupported host architecture') }
-	work := hosttest.work_dir(keep, 'vinix-scalar-uaccess-host-')!
+	work := hosttest.work_dir(keep, 'tulpar-scalar-uaccess-host-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	core := os.join_path(work, 'compatcore')
 	os.mkdir(core)!
@@ -55,7 +55,7 @@ fn run_profile(keep string, supplied_header string) ! {
 		'-fno-omit-frame-pointer']
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
 	native_includes := ['-I' + include, '-I' + os.join_path(root, 'kernel/c')]
-	caller_includes := ['-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
+	caller_includes := ['-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
 		'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h'), '-I' + include,
 		'-I' + os.join_path(root, 'kernel/linuxkpi/include'), '-I' + os.join_path(linux, 'include'),
@@ -67,7 +67,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	for standard in ['gnu99', 'gnu11'] {
 		mut flags := common.clone(); flags << '-std=' + standard
 		production := os.join_path(work, standard + '-core.o')
-		mut argv := flags.clone(); argv << '-DVINIX_V_RUNTIME'; argv << native_includes
+		mut argv := flags.clone(); argv << '-DTULPAR_V_RUNTIME'; argv << native_includes
 		argv << ['-c', generated, '-o', production]
 		command(argv)!
 		imports := command(['nm', '-u', production])!.stdout
@@ -154,7 +154,7 @@ static void *last_source;
  * fault. The production V wrapper must discard that incomplete scalar and
  * clear the entire eight-byte kernel result. No synthetic user pointer is
  * dereferenced by the test process. */
-int vinix_linuxkpi_read_user_scalar(void *source, size_t size, uint64_t *result) {
+int tulpar_linuxkpi_read_user_scalar(void *source, size_t size, uint64_t *result) {
     bridge_calls++;
     last_source = source;
     last_size = size;
@@ -202,7 +202,7 @@ static void helper_tests(void) {
         for (size_t offset = 0; offset < sizeof(offsets) / sizeof(offsets[0]); offset++) {
             reset_model();
             memset(guarded, 0xa5, sizeof(guarded));
-            CHECK(vinix_linuxkpi_get_user((void *)(USER_BASE + offsets[offset]),
+            CHECK(tulpar_linuxkpi_get_user((void *)(USER_BASE + offsets[offset]),
                                           size, guarded + 3) == 0);
             uint64_t value = UINT64_MAX;
             memcpy(&value, guarded + 3, sizeof(value));
@@ -216,7 +216,7 @@ static void helper_tests(void) {
             reset_model();
             prefix = amount;
             memset(guarded, 0xa5, sizeof(guarded));
-            CHECK(vinix_linuxkpi_get_user(USER_POINTER, size, guarded + 3) == -14);
+            CHECK(tulpar_linuxkpi_get_user(USER_POINTER, size, guarded + 3) == -14);
             uint64_t value = UINT64_MAX;
             memcpy(&value, guarded + 3, sizeof(value));
             CHECK(value == 0 && bridge_calls == 1);
@@ -226,7 +226,7 @@ static void helper_tests(void) {
         reset_model();
         readable = size - 1;
         uint64_t value = UINT64_MAX;
-        CHECK(vinix_linuxkpi_get_user(USER_POINTER, size, &value) == -14);
+        CHECK(tulpar_linuxkpi_get_user(USER_POINTER, size, &value) == -14);
         CHECK(value == 0 && bridge_calls == 1);
     }
 
@@ -234,7 +234,7 @@ static void helper_tests(void) {
     for (size_t index = 0; index < sizeof(invalid_sizes) / sizeof(invalid_sizes[0]); index++) {
         reset_model();
         memset(guarded, 0xa5, sizeof(guarded));
-        CHECK(vinix_linuxkpi_get_user(NULL, invalid_sizes[index], guarded + 3) == -22);
+        CHECK(tulpar_linuxkpi_get_user(NULL, invalid_sizes[index], guarded + 3) == -22);
         uint64_t value = UINT64_MAX;
         memcpy(&value, guarded + 3, sizeof(value));
         CHECK(value == 0 && bridge_calls == 0);
@@ -254,7 +254,7 @@ static void invalid_source_tests(void) {
         for (size_t address = 0; address < sizeof(invalid) / sizeof(invalid[0]); address++) {
             uint64_t value = UINT64_MAX;
             unsigned before = bridge_calls;
-            CHECK(vinix_linuxkpi_get_user((void *)invalid[address], 8, &value) == -14);
+            CHECK(tulpar_linuxkpi_get_user((void *)invalid[address], 8, &value) == -14);
             CHECK(value == 0 && bridge_calls == before + 1);
         }
     }

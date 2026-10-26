@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_RCU_V_CONTRACT_H
-#define VINIX_LINUXKPI_RCU_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_RCU_V_CONTRACT_H
+#define TULPAR_LINUXKPI_RCU_V_CONTRACT_H
 #include "linuxkpi_task_v_contract.h"
 #include <linux/sched/task.h>
 #include "linuxkpi_rcu_v_primitives.h"

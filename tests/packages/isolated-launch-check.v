@@ -21,15 +21,15 @@ fn suite(repository string, sandbox string) !hwhost.Suite {
 		name: 'package-isolated-launch'
 		guest: 'tests/accounts/guest'
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
-		programs: [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/vinix-authd' },
-			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' }]
-		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
+		programs: [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/tulpar-authd' },
+			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' }]
+		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
 		files: [hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
-			hwhost.RootFile{ path: 'usr/share/vinix/actions/packages-launch', text: action }]
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'usr/share/tulpar/actions/packages-launch', text: action }]
 		directories: ['run', 'home', 'var/log', 'tmp:1777']
 		scenarios: [hwhost.Scenario{ name: 'packages-isolated-launch', arches: ['aarch64', 'x86_64'],
 			about: 'ordinary administrator and standard-user application launches with zero account groups and retained standard streams',
@@ -46,10 +46,10 @@ fn suite(repository string, sandbox string) !hwhost.Suite {
 fn check() !int {
 	options := hwhost.parse_options(os.args[1..])!
 	if options.help || options.list { return hwhost.run_suite(suite('', '')!, os.args[1..], @FILE) }
-	sandbox := os.getenv('VINIX_ISOLATED_SANDBOX')
-	if os.getenv('VINIX_HWTEST_TCG') != '1' || !os.is_file(options.kernel) || !os.is_file(sandbox)
+	sandbox := os.getenv('TULPAR_ISOLATED_SANDBOX')
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' || !os.is_file(options.kernel) || !os.is_file(sandbox)
 		|| options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) {
-		return error('provide VINIX_HWTEST_TCG=1, VINIX_ISOLATED_SANDBOX, a target --kernel and a new --state-dir')
+		return error('provide TULPAR_HWTEST_TCG=1, TULPAR_ISOLATED_SANDBOX, a target --kernel and a new --state-dir')
 	}
 	repository := hwhost.find_root(@FILE)!
 	definition := suite(repository, sandbox)!
@@ -65,10 +65,10 @@ fn check() !int {
 	guest := hwhost.build_program(host, repository + '/' + definition.guest, guest_dir, 'init', definition.module_paths)!
 	root := hwhost.build_extras(host, definition, guest_dir)!
 	mut artifacts := []Artifact{}
-	for role, path in {'kernel': kernel, 'guest-init': guest, 'package-service': root + '/usr/bin/vinix-package',
-		'authentication-service': root + '/usr/sbin/vinix-authd', 'account-manager': root + '/usr/sbin/vinix-account',
-		'session-runner': root + '/usr/sbin/vinix-session', 'sandbox': root + '/usr/bin/vinix-sandbox',
-		'launch-action': root + '/usr/share/vinix/actions/packages-launch'} { artifacts << artifact(role, path)! }
+	for role, path in {'kernel': kernel, 'guest-init': guest, 'package-service': root + '/usr/bin/tulpar-package',
+		'authentication-service': root + '/usr/sbin/tulpar-authd', 'account-manager': root + '/usr/sbin/tulpar-account',
+		'session-runner': root + '/usr/sbin/tulpar-session', 'sandbox': root + '/usr/bin/tulpar-sandbox',
+		'launch-action': root + '/usr/share/tulpar/actions/packages-launch'} { artifacts << artifact(role, path)! }
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: kernel, guest: guest, extras: root,
 		state: work + '/packages-isolated-launch', timeout: if options.timeout > 300 { options.timeout } else { 300 }, keep: true })
 	println(hwhost.report(options.arch, outcome))

@@ -49,8 +49,8 @@ syscall_entry:
     push %rax
     mov %ds, %eax
     push %rax
-    VINIX_RSB_FILL
-    VINIX_SPEC_ENTER
+    TULPAR_RSB_FILL
+    TULPAR_SPEC_ENTER
     lfence
     sti
     // syscall_trace() answers the table slot to run: the call's number, or
@@ -63,7 +63,7 @@ syscall_entry:
     // Resolve the user-controlled bounds check before loading a handler.
     lfence
 
-    // Vinix handlers take the saved GPR frame as their first argument, so
+    // Tulpar handlers take the saved GPR frame as their first argument, so
     // shift the six Linux arguments right once; the last one is passed on the
     // C stack.
     mov %rsp, %rax
@@ -114,7 +114,7 @@ syscall_exit_load_ds:
 syscall_exit_load_es:
     mov %eax, %es
     // Keep legacy IBRS enabled if either segment restore faults.
-    VINIX_SPEC_RETURN gs0, 120
+    TULPAR_SPEC_RETURN gs0, 120
     pop %rax
     pop %rbx
     pop %rcx
@@ -130,7 +130,7 @@ syscall_exit_load_es:
     pop %r13
     pop %r14
     pop %r15
-    VINIX_SPEC_CLEAR
+    TULPAR_SPEC_CLEAR
     // Restore the user stack. sysretq takes RIP from rcx and RFLAGS from r11.
     mov %gs:32, %rsp
     swapgs

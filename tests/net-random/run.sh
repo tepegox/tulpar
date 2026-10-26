@@ -4,5 +4,5 @@
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 . "$root/build-support/find-v.sh"
-export VINIX_V_COMPILER="$V"
+export TULPAR_V_COMPILER="$V"
 exec "$root/tests/net-random/run" "$@"

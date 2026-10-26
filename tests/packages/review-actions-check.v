@@ -24,11 +24,11 @@ fn run(name string, argv []string, work string, binary string) !Check {
 }
 
 fn qualify() ! {
-	if os.args.len != 2 { return error('usage: review-actions-check NEW_WORK_DIRECTORY; set V and VINIX_PACKAGE_TEST_UI2') }
+	if os.args.len != 2 { return error('usage: review-actions-check NEW_WORK_DIRECTORY; set V and TULPAR_PACKAGE_TEST_UI2') }
 	root := os.dir(os.dir(os.dir(@FILE)))
 	work := os.abs_path(os.args[1]); assert !os.exists(work) && !os.is_link(work); os.mkdir_all(work + '/software')!
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
-	modules := os.getenv_opt('VINIX_PACKAGE_TEST_UI2') or { root + '/build/vmodules' }
+	modules := os.getenv_opt('TULPAR_PACKAGE_TEST_UI2') or { root + '/build/vmodules' }
 	assert os.is_file(modules + '/ui2/v.mod')
 	mut paths := [v, @FILE, root + '/tools/packages/pkgcore/review_test.v', root + '/tools/packages/pkgprotocol/review_actions_test.v', root + '/tools/packages/pkgprotocol/review_test.v', root + '/tests/packages/distribution-cli.v']
 	for directory in ['tools/packages', 'tools/accounts', 'desktop/packagecore', 'desktop/reportcore', 'desktop/sessioncore', 'compat/ios/plist']! {

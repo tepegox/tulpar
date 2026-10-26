@@ -196,10 +196,10 @@ fn run() ! {
 	mut executable := ''
 	mut work := ''
 	if os.args.len == 1 {
-		private = sourcecommand.temporary('vinix-native-stdio')!
+		private = sourcecommand.temporary('tulpar-native-stdio')!
 		executable = private + '/query'
 		work = private + '/evidence'
-		if override := os.getenv_opt('VINIX_NATIVE_STDIO_QUERY') {
+		if override := os.getenv_opt('TULPAR_NATIVE_STDIO_QUERY') {
 			executable = override
 		} else {
 			root := os.real_path(os.dir(@FILE) + '/../..')

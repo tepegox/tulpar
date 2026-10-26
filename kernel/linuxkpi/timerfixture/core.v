@@ -20,16 +20,16 @@ struct C.pthread_t {}
 type TimerCallback = fn (&C.timer_list)
 type TimerWorker = fn (voidptr) voidptr
 
-fn C.vinix_linuxkpi_fixture_timer_callback(&C.timer_list)
-fn C.vinix_linuxkpi_fixture_timer_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_timer_callback(&C.timer_list)
+fn C.tulpar_linuxkpi_fixture_timer_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, TimerWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
 fn C.get_task_struct(&C.task_struct) &C.task_struct
 fn C.put_task_struct(&C.task_struct)
 fn C.preempt_count() u32
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_may_sleep() bool
 fn C.timer_pending(&C.timer_list) bool
 fn C.time_before(uint, uint) bool
 fn C.mod_timer(&C.timer_list, uint) i32
@@ -39,7 +39,7 @@ fn C.timer_setup_on_stack(&C.timer_list, TimerCallback, u32)
 fn C.wait_for_completion_timeout(&C.completion, uint) uint
 fn C.timer_shutdown_sync(&C.timer_list) i32
 fn C.destroy_timer_on_stack(&C.timer_list)
-fn C.vinix_linuxkpi_timer_active() uint
+fn C.tulpar_linuxkpi_timer_active() uint
 fn C.__atomic_load_n(&u32, i32) u32
 fn C.cond_resched() i32
 fn C.BUG_ON(bool)
@@ -93,15 +93,15 @@ mut:
 	failures [12]TimerFailure
 }
 
-@[export: 'vinix_linuxkpi_fixture_timer_callback']
+@[export: 'tulpar_linuxkpi_fixture_timer_callback']
 pub fn callback(timer &C.timer_list) {
 	unsafe {
 		mut test := &NativeTimerTest(&u8(timer) - __offsetof(NativeTimerTest, timer))
 		mut reasons := u32(0)
 		depth := C.preempt_count()
-		flags := C.vinix_linuxkpi_irq_flags()
+		flags := C.tulpar_linuxkpi_irq_flags()
 		now := C.jiffies
-		if C.vinix_linuxkpi_may_sleep() { reasons |= 1 }
+		if C.tulpar_linuxkpi_may_sleep() { reasons |= 1 }
 		if depth == 0 { reasons |= 2 }
 		if C.timer_pending(timer) { reasons |= 4 }
 		if ((flags & (uint(1) << 9)) != 0) == test.irq_safe { reasons |= 8 }
@@ -123,7 +123,7 @@ pub fn callback(timer &C.timer_list) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_timer_worker']
+@[export: 'tulpar_linuxkpi_fixture_timer_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut test_worker := &NativeTimerWorker(argument)
@@ -131,7 +131,7 @@ pub fn worker(argument voidptr) voidptr {
 		for round in 0 .. 12 {
 			mut test := NativeTimerTest{ irq_safe: (round & 1) != 0 }
 			C.init_completion(&test.done)
-			C.timer_setup_on_stack(&test.timer, C.vinix_linuxkpi_fixture_timer_callback,
+			C.timer_setup_on_stack(&test.timer, C.tulpar_linuxkpi_fixture_timer_callback,
 				if test.irq_safe { C.TIMER_IRQSAFE } else { u32(0) })
 			mut reasons := u32(0)
 			started := C.jiffies
@@ -145,7 +145,7 @@ pub fn worker(argument voidptr) voidptr {
 			C.mod_timer(&test.timer, C.jiffies + 1)
 			if C.timer_pending(&test.timer) { reasons |= 16 }
 			C.destroy_timer_on_stack(&test.timer)
-			if !C.vinix_linuxkpi_may_sleep() { reasons |= 32 }
+			if !C.tulpar_linuxkpi_may_sleep() { reasons |= 32 }
 			if reasons != 0 {
 				test_worker.result = -C.EIO
 				test_worker.failures[round] = TimerFailure{
@@ -165,14 +165,14 @@ pub fn worker(argument voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_timer_native_selftest']
+@[export: 'tulpar_linuxkpi_timer_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		mut workers := [4]NativeTimerWorker{}
 		mut threads := [4]C.pthread_t{}
 		mut result := i32(0)
 		for i in 0 .. 4 {
-			C.BUG_ON(C.pthread_create(&threads[i], nil, C.vinix_linuxkpi_fixture_timer_worker, &workers[i]) != 0)
+			C.BUG_ON(C.pthread_create(&threads[i], nil, C.tulpar_linuxkpi_fixture_timer_worker, &workers[i]) != 0)
 		}
 		for i in 0 .. 4 {
 			C.BUG_ON(C.pthread_join(threads[i], nil) != 0)
@@ -187,7 +187,7 @@ pub fn selftest() i32 {
 			for C.__atomic_load_n(&workers[i].task.__state, 2) != C.TASK_DEAD { C.cond_resched() }
 			C.put_task_struct(workers[i].task)
 		}
-		active := C.vinix_linuxkpi_timer_active()
+		active := C.tulpar_linuxkpi_timer_active()
 		if active != 0 {
 			C.kprintf(c'linuxkpi: timer test retained %zu active timers\n', active)
 			result = -C.EIO

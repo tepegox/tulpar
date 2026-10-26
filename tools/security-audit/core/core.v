@@ -344,7 +344,7 @@ fn end_line(output &C.output, collector &C.collector, once bool) i32 {
 @[export: 'vka_main']
 pub fn audit_main(argc i32, argv &&char) i32 {
  unsafe {
-  mut path := &char(c'/var/log/vinix-audit/seccomp.log'); mut source := &char(c'/proc/security_audit'); mut interval := u64(250); mut once := false
+  mut path := &char(c'/var/log/tulpar-audit/seccomp.log'); mut source := &char(c'/proc/security_audit'); mut interval := u64(250); mut once := false
   for i := i32(1); i < argc; i++ {
    if C.strcmp(argv[i], c'--once') == 0 { once = true }
    else if C.strcmp(argv[i], c'--log') == 0 && i + 1 < argc { i++; path = argv[i] }
@@ -355,19 +355,19 @@ pub fn audit_main(argc i32, argv &&char) i32 {
   }
   if C.vka_uid() != 0 || C.vka_euid() != 0 { C.vka_root_required(); return 1 }
   C.vka_umask()
-  if C.vka_signals() != 0 { C.vka_perror(c'vinix-security-audit: signals'); return 1 }
+  if C.vka_signals() != 0 { C.vka_perror(c'tulpar-security-audit: signals'); return 1 }
   // These buffers stay within this call. Allocate the candidate once, outside
   // the polling loop, so stack use stays bounded across collection rounds.
   collector := &C.collector(C.__builtin_alloca(sizeof(C.collector)))
   next := &C.collector(C.__builtin_alloca(sizeof(C.collector)))
   C.memset(collector, 0, sizeof(C.collector))
-  if session_id(&collector.session[0]) != 0 { C.vka_perror(c'vinix-security-audit: session entropy'); return 1 }
+  if session_id(&collector.session[0]) != 0 { C.vka_perror(c'tulpar-security-audit: session entropy'); return 1 }
   snapshot := &C.snapshot(C.__builtin_alloca(sizeof(C.snapshot)))
   C.memset(snapshot, 0, sizeof(C.snapshot))
   // Canonical authority is checked even for a diagnostic source override.
-  if read_snapshot(c'/proc/security_audit', snapshot) != 0 || (C.strcmp(source, c'/proc/security_audit') != 0 && read_snapshot(source, snapshot) != 0) { C.vka_perror(c'vinix-security-audit: snapshot'); return 1 }
+  if read_snapshot(c'/proc/security_audit', snapshot) != 0 || (C.strcmp(source, c'/proc/security_audit') != 0 && read_snapshot(source, snapshot) != 0) { C.vka_perror(c'tulpar-security-audit: snapshot'); return 1 }
   mut fd := open_log(path, -1)
-  if fd < 0 { C.vka_perror(c'vinix-security-audit: secure log'); return 1 }
+  if fd < 0 { C.vka_perror(c'tulpar-security-audit: secure log'); return 1 }
   output := &C.output(C.__builtin_alloca(sizeof(C.output)))
   C.memset(output, 0, sizeof(C.output))
   mut failed := start_line(output, collector) != 0 || append(fd, output, 0) != 0
@@ -396,7 +396,7 @@ pub fn audit_main(argc i32, argv &&char) i32 {
    if put(output, c'\ncollector_error session=') == 0 && put(output, &collector.session[0]) == 0 && put(output, c' wall_ns=') == 0
     && decimal(output, C.vka_wall_ns()) == 0 && put(output, c' errno=') == 0 && decimal(output, u64(e)) == 0 && put(output, c'\n') == 0 { append(fd, output, 0) }
   }
-  if C.vka_close(fd) != 0 { C.vka_perror(c'vinix-security-audit: log close'); failed = true }
+  if C.vka_close(fd) != 0 { C.vka_perror(c'tulpar-security-audit: log close'); failed = true }
   return if failed { 1 } else { 0 }
  }
 }

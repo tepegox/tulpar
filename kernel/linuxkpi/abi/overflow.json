@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "guard": "VINIX_GENERATED_INTEGER_POLICY_H",
+  "guard": "TULPAR_GENERATED_INTEGER_POLICY_H",
   "sources": [
     "headercore/policy.v"
   ],
@@ -13,12 +13,12 @@
   ],
   "native_call_adapters": [
     {
-      "name": "vinix_might_sleep_if",
+      "name": "tulpar_might_sleep_if",
       "parameters": ["condition"],
       "shape": "statement",
       "steps": [
         {
-          "call": "vinix_might_sleep_if_native",
+          "call": "tulpar_might_sleep_if_native",
           "arguments": [
             "condition",
             {"source_location": "file"},
@@ -139,8 +139,8 @@
     }
   ],
   "native_expression_exports": [
-    "vinix_zero_or_null_ptr",
-    "vinix_preemptible"
+    "tulpar_zero_or_null_ptr",
+    "tulpar_preemptible"
   ],
   "native_expression_adapters": [
     {
@@ -187,7 +187,7 @@
               "native": "int"
             },
             "value": {
-              "call": "vinix_zero_or_null_ptr",
+              "call": "tulpar_zero_or_null_ptr",
               "arguments": [
                 {
                   "cast": {
@@ -211,7 +211,7 @@
           "native": "int"
         },
         "value": {
-          "call": "vinix_preemptible",
+          "call": "tulpar_preemptible",
           "arguments": []
         }
       }

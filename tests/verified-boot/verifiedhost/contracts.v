@@ -41,7 +41,7 @@ pub fn native_contracts() ! {
 		}
 		assert rejected
 	}
-	work := temporary('vinix-verified-contracts-')!
+	work := temporary('tulpar-verified-contracts-')!
 	defer { bh.retire(work) }
 	before := descriptors()
 	// Repeated verification touches success, malformed geometry, size mismatch

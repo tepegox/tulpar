@@ -3,7 +3,7 @@ module mountfixture
 
 fn mount_link_hardlink_policy() {
 	unsafe {
-		// Vinix always protects foreign hard links. Configure the same
+		// Tulpar always protects foreign hard links. Configure the same
 		// policy in an owned Linux reference VM when its sysctl exists.
 		fd := C.open(c'/proc/sys/fs/protected_hardlinks', C.O_WRONLY)
 		if fd < 0 { check(*C.__errno_location() == C.ENOENT, 479); return }

@@ -53,7 +53,7 @@ pub fn splitwx_patch(input string) !string {
 // Wine 9.17's Linux server and client both chdir(WINEPREFIX) before using
 // these strings. Keep UID and prefix device/inode binding, but resolve the
 // server directory inside that private prefix instead of shared /tmp.
-// Accept only the exact Alpine/Vinix inputs whose source ordering was checked.
+// Accept only the exact Alpine/Tulpar inputs whose source ordering was checked.
 pub fn private_server_patch(input string, client bool) !string {
 	expected := if client { wine_client_input } else { wine_server_input }
 	before := if client { '/tmp/.wine-%u/server-%llx-%llx\x00' } else { '/tmp/.wine-%u\x00' }

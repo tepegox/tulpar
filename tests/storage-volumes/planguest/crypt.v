@@ -21,7 +21,7 @@ mut:
 
 fn crypt_tool(parent &char, key &char, readonly bool, expected i32) {
 	unsafe {
-		arguments := [&char(c'/usr/sbin/vinix-volume'), &char(c'open-crypt'), parent,
+		arguments := [&char(c'/usr/sbin/tulpar-volume'), &char(c'open-crypt'), parent,
 			&char(c'60'), &char(c'15728640'), &char(c'4096'), key,
 			if readonly { &char(c'ro') } else { &char(nil) }, &char(nil)]!
 		run_utility(&arguments[0], expected)
@@ -53,17 +53,17 @@ fn planned_crypt(parent &char) {
 		check(C.chmod(c'/root/crypt.key', 0o600) == 0 && C.chown(c'/root/crypt.key', 65534, 65534) == 0, c'foreign key fixture'); crypt_tool(parent, c'/root/crypt.key', false, 1)
 		check(C.chown(c'/root/crypt.key', 0, 0) == 0, c'restore key owner')
 		crypt_tool(c'/root/crypt-fifo', c'/root/crypt.key', true, 1)
-		missing(c'/dev/mapper/vinix60')
+		missing(c'/dev/mapper/tulpar60')
 		crypt_tool(parent, c'/root/crypt.key', false, 0)
-		info := status(c'/dev/mapper/vinix60')
+		info := status(c'/dev/mapper/tulpar60')
 		check(info.flags & 64 != 0 && info.flags & 32 == 0 && info.bytes == 4096 && info.sector == 512 && info.start == request.offset, c'encrypted status and no discard')
 		tool(c'create', parent, c'61', c'15728640', c'4096', 1)
-		missing(c'/dev/mapper/vinix61')
+		missing(c'/dev/mapper/tulpar61')
 		// Saving plain metadata must refuse before replacing a durable plan.
 		prior_fd := C.open(c'/root/saved.vmap', C.O_RDONLY); mut prior := [2112]u8{}; size := C.read(prior_fd, &prior[0], 2112)
 		check(prior_fd >= 0 && size > 0 && C.close(prior_fd) == 0, c'plain plan before encrypted save')
 		simple(c'save', parent, c'/root/saved.vmap', 1); bundle_unchanged(c'/root/saved.vmap', &prior[0], size)
-		fd := C.open(c'/dev/mapper/vinix60', C.O_RDWR); check(fd >= 0, c'open crypto descriptor')
+		fd := C.open(c'/dev/mapper/tulpar60', C.O_RDWR); check(fd >= 0, c'open crypto descriptor')
 		mut plain := [1024]u8{init: 0x73}; mut got := [1024]u8{}
 		check(C.pwrite(fd, &plain[0], 1024, 0) == 1024 && C.pread(fd, &got[0], 1024, 0) == 1024, c'encrypted positioned roundtrip')
 		for i in 0 .. 1024 { check(plain[i] == 0x73 && got[i] == plain[i], c'caller plaintext unchanged') }
@@ -80,17 +80,17 @@ fn planned_crypt(parent &char) {
 		copy := C.open(c'/root/crypt-copy', C.O_RDWR | C.O_CREAT | C.O_TRUNC, u32(0o600)); mut at := i64(0)
 		check(copy >= 0 && C.sendfile(copy, fd, &at, 512) == 512 && at == 512, c'encrypted sendfile read')
 		crypt_data(copy, 0, 0x73); check(C.close(copy) == 0, c'close encrypted copy')
-		tool(c'grow', c'/dev/mapper/vinix60', c'8192', nil, nil, 0)
-		check(status(c'/dev/mapper/vinix60').generation == info.generation, c'crypto growth retains generation')
+		tool(c'grow', c'/dev/mapper/tulpar60', c'8192', nil, nil, 0)
+		check(status(c'/dev/mapper/tulpar60').generation == info.generation, c'crypto growth retains generation')
 		plain = [1024]u8{init: 0xa6}; check(C.pwrite(fd, &plain[0], 512, 4096) == 512 && C.fsync(fd) == 0, c'encrypted grown data')
 		crypt_data(fd, 0, 0x73); crypt_data(fd, 4096, 0xa6)
-		simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		check(C.pread(fd, &got[0], 512, 0) < 0 && C.errno == C.ENODEV && C.close(fd) == 0, c'removed held descriptor cannot use erased key')
 		// The first 4096 bytes reopen read-only through the same stable tweak units.
 		crypt_tool(parent, c'/root/crypt.key', true, 0)
-		check(C.open(c'/dev/mapper/vinix60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'crypto readonly descriptor')
-		fd2 := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); crypt_data(fd2, 0, 0x73); check(C.close(fd2) == 0, c'crypto reopen')
-		simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		check(C.open(c'/dev/mapper/tulpar60', C.O_RDWR) < 0 && C.errno == C.EROFS, c'crypto readonly descriptor')
+		fd2 := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); crypt_data(fd2, 0, 0x73); check(C.close(fd2) == 0, c'crypto reopen')
+		simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		C.printf(c'PLAN CRYPT PASSED: key policy, ciphertext, vector/sendfile IO, growth, held removal, readonly reopen and plain-plan exclusion\n')
 	}
 }
@@ -103,7 +103,7 @@ fn crypt_cycles(parent &char, count int) {
 		mut plain := [512]u8{init: 0x73}; mut got := [512]u8{}
 		for _ in 0 .. count {
 			check(C.ioctl(raw, u64(0x56560006), &request) == 0, c'crypto cycle import')
-			fd := C.open(c'/dev/mapper/vinix60', C.O_RDWR); check(fd >= 0, c'crypto cycle descriptor')
+			fd := C.open(c'/dev/mapper/tulpar60', C.O_RDWR); check(fd >= 0, c'crypto cycle descriptor')
 			check(C.pwrite(fd, &plain[0], 512, 0) == 512 && C.pread(fd, &got[0], 512, 0) == 512, c'crypto cycle IO')
 			for value in got { check(value == 0x73, c'crypto cycle plaintext') }
 			check(C.ioctl(fd, u64(0x56560003), &request) == 0 && C.close(fd) == 0, c'crypto cycle erase and release')
@@ -115,10 +115,10 @@ fn crypt_cycles(parent &char, count int) {
 
 fn crypt_reordered_boot(parent &char) {
 	unsafe {
-		missing(c'/dev/mapper/vinix60')
+		missing(c'/dev/mapper/tulpar60')
 		crypt_tool(parent, c'/root/crypt.key', true, 0)
-		fd := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); crypt_data(fd, 0, 0x73); check(C.close(fd) == 0, c'persisted ciphertext reopen')
-		simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		fd := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); crypt_data(fd, 0, 0x73); check(C.close(fd) == 0, c'persisted ciphertext reopen')
+		simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		C.printf(c'PLAN CRYPT REORDERED BOOT PRESERVED\n')
 	}
 }

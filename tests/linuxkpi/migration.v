@@ -34,10 +34,10 @@ fn selected_source(raw string) !string {
 		if ['linuxkpi__', 'sched__', 'migrationfixture__', 'cpu__', 'local__', 'proc__', 'katomic__',
 			'lib__', 'apic__', 'klock__'].any(line.contains(it))
 			|| line.contains(' mh_') || ['migrate_disable', 'migrate_enable',
-			'vinix_linuxkpi_worker_bind', 'vinix_linuxkpi_test_worker_route',
-			'vinix_linuxkpi_preempt_disable', 'vinix_linuxkpi_preempt_enable',
-			'vinix_linuxkpi_preempt_enable_no_resched', 'vinix_linuxkpi_preempt_check_resched',
-			'vinix_linuxkpi_preempt_count', 'vinix_linuxkpi_cpu_id', 'array_get', 'v_panic', '_v_panic',
+			'tulpar_linuxkpi_worker_bind', 'tulpar_linuxkpi_test_worker_route',
+			'tulpar_linuxkpi_preempt_disable', 'tulpar_linuxkpi_preempt_enable',
+			'tulpar_linuxkpi_preempt_enable_no_resched', 'tulpar_linuxkpi_preempt_check_resched',
+			'tulpar_linuxkpi_preempt_count', 'tulpar_linuxkpi_cpu_id', 'array_get', 'v_panic', '_v_panic',
 			'v_fixed_index', 'v_fixed_index_u64', 'v3_eprint_lit', 'main', '_vno_main_init_caller'].any(hosttest.named_body(body, it)) {
 			bodies << body
 		}
@@ -201,13 +201,13 @@ fn stage(work string) !([]string, []string, json2.Any) {
 		'sched__may_run_here_with_affinity', 'sched__parking', 'sched__cpu_capacity',
 		'sched__placement_cpu', 'sched__placement_cpu_with_affinity', 'sched__capacity_preferred',
 		'sched__queue_append', 'sched__queue_unlink', 'sched__scan_run_queue', 'sched__wake_cpu',
-		'linuxkpi__worker_bind', 'vinix_linuxkpi_worker_bind', 'linuxkpi__test_worker_route',
-		'vinix_linuxkpi_test_worker_route', 'linuxkpi__preempt_disable',
-		'vinix_linuxkpi_preempt_disable', 'linuxkpi__preempt_enable', 'vinix_linuxkpi_preempt_enable',
-		'linuxkpi__preempt_enable_no_resched', 'vinix_linuxkpi_preempt_enable_no_resched',
-		'linuxkpi__release_preemption', 'linuxkpi__native_preempt_count', 'vinix_linuxkpi_preempt_count',
-		'linuxkpi__native_cpu_id', 'vinix_linuxkpi_cpu_id', 'linuxkpi__preempt_check_resched',
-		'vinix_linuxkpi_preempt_check_resched']
+		'linuxkpi__worker_bind', 'tulpar_linuxkpi_worker_bind', 'linuxkpi__test_worker_route',
+		'tulpar_linuxkpi_test_worker_route', 'linuxkpi__preempt_disable',
+		'tulpar_linuxkpi_preempt_disable', 'linuxkpi__preempt_enable', 'tulpar_linuxkpi_preempt_enable',
+		'linuxkpi__preempt_enable_no_resched', 'tulpar_linuxkpi_preempt_enable_no_resched',
+		'linuxkpi__release_preemption', 'linuxkpi__native_preempt_count', 'tulpar_linuxkpi_preempt_count',
+		'linuxkpi__native_cpu_id', 'tulpar_linuxkpi_cpu_id', 'linuxkpi__preempt_check_resched',
+		'tulpar_linuxkpi_preempt_check_resched']
 	return inputs, production_names, {
 		'current_scan_sha256':             json2.Any(hosttest.text_sha(scanner))
 		'historical_scan_sha256':          hosttest.text_sha(historical)
@@ -300,11 +300,11 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	hosttest.verify_upstream(linux, hosttest.upstream_pin()!)!
-	work := hosttest.work_dir(keep, 'vinix-migration-v-')!
+	work := hosttest.work_dir(keep, 'tulpar-migration-v-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut inputs, names, historical := stage(work)!
 	inputs << [@FILE, root + '/kernel/linuxkpi/include/linux/preempt.h',
-		root + '/kernel/linuxkpi/include/vinix/runtime.h', root + '/kernel/linuxkpi/upstream.json']
+		root + '/kernel/linuxkpi/include/tulpar/runtime.h', root + '/kernel/linuxkpi/upstream.json']
 	for directory in ['tests/linuxkpi/migrationfixture', 'tests/linuxkpi/hosttest'] {
 		for extension in ['.v', '.h'] { inputs << os.walk_ext(root + '/' + directory, extension) }
 	}
@@ -344,7 +344,7 @@ fn run_profile(keep string) ! {
 	}
 	include := work + '/include'
 	hosttest.audit_headers(include)!
-	mut includes := ['-D__KERNEL__', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-include',
+	mut includes := ['-D__KERNEL__', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-include',
 		root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h', '-include',
 		linux + '/include/linux/compiler_types.h']
 	for directory in [work + '/stage', include, root + '/kernel/linuxkpi/include', linux + '/include',

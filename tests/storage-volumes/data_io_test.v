@@ -138,7 +138,7 @@ fn data_io_fixture(mut manifest DataManifest, mut devices DataDevices) {
 }
 
 fn test_data_hash_verify_all_readonly_pin_rechecks_short_reads_corruption_and_later_failures() {
-	work := os.join_path(os.temp_dir(), 'vinix-data-io-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-data-io-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	bundle := work + '/saved.vset'; path := work + '/data.vhash'; mut expected := DataManifest{}; mut devices := DataDevices{}
 	data_io_fixture(mut expected, mut devices); assert publish_bundle(bundle.str, &expected.set)
 	mut bytes := [11392]u8{}; size := encode_data_manifest(&expected, &bytes[0]); original := os.read_bytes(bundle)!
@@ -177,7 +177,7 @@ fn test_data_hash_verify_all_readonly_pin_rechecks_short_reads_corruption_and_la
 }
 
 fn test_data_manifest_changed_and_equal_publication_faults_and_retry_both_flushes() {
-	work := os.join_path(os.temp_dir(), 'vinix-data-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-data-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	bundle := work + '/saved.vset'; path := work + '/data.vhash'; mut expected := DataManifest{}; mut devices := DataDevices{}
 	data_io_fixture(mut expected, mut devices); data_io = DataIO{}; assert publish_bundle(bundle.str, &expected.set)
 	mut bytes := [11392]u8{}; size := encode_data_manifest(&expected, &bytes[0])
@@ -194,7 +194,7 @@ fn test_data_manifest_changed_and_equal_publication_faults_and_retry_both_flushe
 }
 
 fn test_data_checksum_reports_detect_buffered_stdout_failure_and_drain_all_descriptors() {
-	work := os.join_path(os.temp_dir(), 'vinix-data-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-data-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	bundle := work + '/saved.vset'; path := work + '/data.vhash'; mut expected := DataManifest{}; mut devices := DataDevices{}
 	data_io_fixture(mut expected, mut devices); data_io = DataIO{}; assert publish_bundle(bundle.str, &expected.set)
 	assert hash_bundle_data(bundle.str, path.str, &devices) == 0 && C.fflush(C.stdout) == 0; original := os.read_bytes(path)!
@@ -215,7 +215,7 @@ fn test_data_checksum_reports_detect_buffered_stdout_failure_and_drain_all_descr
 fn scrub_io_expected(manifest &DataManifest, mask int) string {
 	changed := int(mask & 1 != 0) + int(mask & 2 != 0)
 	mut bytes := [11392]u8{}; size := encode_data_manifest(manifest, &bytes[0]); fingerprint := hex.encode(sha256.sum(bytes[..size]))
-	mut report := 'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=2 matched=${2 - changed} changed=${changed} algorithm=sha256 reference_sha256=${fingerprint}\n'
+	mut report := 'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=2 matched=${2 - changed} changed=${changed} algorithm=sha256 reference_sha256=${fingerprint}\n'
 	for disk in 0 .. 2 {
 		mut data := []u8{len: 73728, init: data_pattern(disk, u64(index) + 8192)}
 		if mask & (1 << disk) != 0 { data[0] ^= 1; data[65536] ^= 1 }
@@ -226,7 +226,7 @@ fn scrub_io_expected(manifest &DataManifest, mask int) string {
 }
 
 fn test_scrub_all_rows_multiple_corruptions_later_io_failure_readonly_pins_and_source_destination_rejections() {
-	work := os.join_path(os.temp_dir(), 'vinix-scrub-io-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-scrub-io-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/data.vhash'; report := work + '/scrub.txt'; mut reference := DataManifest{}; mut devices := DataDevices{}
 	data_io_fixture(mut reference, mut devices); mut bytes := [11392]u8{}; size := encode_data_manifest(&reference, &bytes[0]); os.write_file_array(path, bytes[..size])!
 	for mode in [0, 1, 18, 19] {
@@ -261,7 +261,7 @@ fn test_scrub_all_rows_multiple_corruptions_later_io_failure_readonly_pins_and_s
 }
 
 fn test_scrub_clean_and_changed_equal_publications_all_faults_retry_both_flushes_and_no_partial_reports() {
-	work := os.join_path(os.temp_dir(), 'vinix-scrub-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-scrub-publish-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/data.vhash'; report := work + '/scrub.txt'; mut reference := DataManifest{}; mut devices := DataDevices{}
 	data_io_fixture(mut reference, mut devices); mut bytes := [11392]u8{}; size := encode_data_manifest(&reference, &bytes[0]); os.write_file_array(path, bytes[..size])!
 	for corrupt in [false, true] { for equal in [false, true] { for mode in 1 .. 7 {
@@ -276,7 +276,7 @@ fn test_scrub_clean_and_changed_equal_publications_all_faults_retry_both_flushes
 }
 
 fn test_scrub_clean_and_changed_reports_detect_buffered_stdout_failure_after_complete_publication() {
-	work := os.join_path(os.temp_dir(), 'vinix-scrub-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-scrub-output-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/data.vhash'; report := work + '/scrub.txt'; mut reference := DataManifest{}; mut devices := DataDevices{}
 	data_io_fixture(mut reference, mut devices); mut bytes := [11392]u8{}; size := encode_data_manifest(&reference, &bytes[0]); os.write_file_array(path, bytes[..size])!
 	assert C.fflush(C.stdout) == 0

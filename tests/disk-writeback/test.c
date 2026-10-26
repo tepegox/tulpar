@@ -6,7 +6,7 @@
  * Copyright (c) 2026 Alexander Medvednikov
  *
  * A large write must not stop the machine, as PID 1 on a disk root. A desktop
- * froze while vinix-host-sync downloaded a 5 GB archive into /tmp: the block
+ * froze while tulpar-host-sync downloaded a 5 GB archive into /tmp: the block
  * cache of the system disk filled with dirty pages, and writing them back held
  * the lock every read of the disk waits for, with interrupts off, for seconds
  * at a time. Launching an application meant reading its executable, so it
@@ -40,8 +40,8 @@
 #define CHUNK (64ul * 1024ul)
 #define READERS 2
 
-static const char *probe_path = "/tmp/vinix-writeback-probe";
-static const char *stream_path = "/tmp/vinix-writeback-stream";
+static const char *probe_path = "/tmp/tulpar-writeback-probe";
+static const char *stream_path = "/tmp/tulpar-writeback-stream";
 
 static unsigned long stream_mib = 768;
 static long quiet_ms = 8000;
@@ -130,7 +130,7 @@ static void *create_files(void *argument)
 	char path[64];
 	unsigned long round = 0;
 	while (!atomic_load(&stopping)) {
-		snprintf(path, sizeof path, "/tmp/vinix-writeback-small-%lu", round % 4);
+		snprintf(path, sizeof path, "/tmp/tulpar-writeback-small-%lu", round % 4);
 		unsigned long long start = now_ns();
 		int fd = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0644);
 		if (fd < 0) {
@@ -212,7 +212,7 @@ static int stream(unsigned long long *took)
 		}
 		if (done / (128 * MIB) != reported) {
 			reported = done / (128 * MIB);
-			printf("VINIX WRITEBACK: streamed %lu MiB\n", done / MIB);
+			printf("TULPAR WRITEBACK: streamed %lu MiB\n", done / MIB);
 			fflush(stdout);
 		}
 	}
@@ -232,7 +232,7 @@ static unsigned long long mean_us(const struct stats *s)
 static void show(const struct watch *w)
 {
 	const struct stats *quiet = &w->phases[0], *busy = &w->phases[1];
-	printf("VINIX WRITEBACK: %-14s quiet: worst %llu ms, mean %llu us over %lu; "
+	printf("TULPAR WRITEBACK: %-14s quiet: worst %llu ms, mean %llu us over %lu; "
 	       "writing: worst %llu ms, mean %llu us over %lu\n",
 	       w->name, quiet->worst_ns / 1000000ull, mean_us(quiet), quiet->count,
 	       busy->worst_ns / 1000000ull, mean_us(busy), busy->count);
@@ -243,20 +243,20 @@ static int judge(const struct watch *w)
 	const struct stats *busy = &w->phases[1];
 	unsigned long long worst_ms = busy->worst_ns / 1000000ull;
 	if (w->failed) {
-		printf("VINIX WRITEBACK: FAIL %s stopped with errno %d\n", w->name, w->failed);
+		printf("TULPAR WRITEBACK: FAIL %s stopped with errno %d\n", w->name, w->failed);
 		return 1;
 	}
 	if (w->phases[0].count == 0 || busy->count == 0) {
-		printf("VINIX WRITEBACK: FAIL %s never ran\n", w->name);
+		printf("TULPAR WRITEBACK: FAIL %s never ran\n", w->name);
 		return 1;
 	}
 	if (mean_us(busy) > w->mean_limit_us) {
-		printf("VINIX WRITEBACK: FAIL %s waited %llu us on average, limit %llu us\n",
+		printf("TULPAR WRITEBACK: FAIL %s waited %llu us on average, limit %llu us\n",
 		       w->name, mean_us(busy), w->mean_limit_us);
 		return 1;
 	}
 	if (worst_ms > worst_limit_ms) {
-		printf("VINIX WRITEBACK: FAIL %s waited %llu ms, limit %lu ms\n", w->name,
+		printf("TULPAR WRITEBACK: FAIL %s waited %llu ms, limit %lu ms\n", w->name,
 		       worst_ms, worst_limit_ms);
 		return 1;
 	}
@@ -266,9 +266,9 @@ static int judge(const struct watch *w)
 int main(void)
 {
 	setvbuf(stdout, NULL, _IOLBF, 0);
-	printf("VINIX WRITEBACK: START\n");
+	printf("TULPAR WRITEBACK: START\n");
 	if (make_probe() != 0) {
-		printf("VINIX WRITEBACK: FAIL cannot make %s errno=%d\n", probe_path, errno);
+		printf("TULPAR WRITEBACK: FAIL cannot make %s errno=%d\n", probe_path, errno);
 		return 1;
 	}
 
@@ -287,14 +287,14 @@ int main(void)
 	for (int i = 0; i < READERS + 2; i++)
 		pthread_join(threads[i], NULL);
 	if (streamed != 0) {
-		printf("VINIX WRITEBACK: FAIL streaming %s errno=%d\n", stream_path, saved);
+		printf("TULPAR WRITEBACK: FAIL streaming %s errno=%d\n", stream_path, saved);
 		return 1;
 	}
-	printf("VINIX WRITEBACK: streamed %lu MiB in %llu ms\n", stream_mib, took / 1000000ull);
+	printf("TULPAR WRITEBACK: streamed %lu MiB in %llu ms\n", stream_mib, took / 1000000ull);
 
 	unsigned long long start = now_ns();
 	sync();
-	printf("VINIX WRITEBACK: final sync %llu ms\n", (now_ns() - start) / 1000000ull);
+	printf("TULPAR WRITEBACK: final sync %llu ms\n", (now_ns() - start) / 1000000ull);
 	unlink(stream_path);
 	unlink(probe_path);
 
@@ -306,9 +306,9 @@ int main(void)
 	for (unsigned i = 0; i < sizeof watches / sizeof watches[0]; i++)
 		failures += judge(watches[i]);
 	if (failures == 0)
-		printf("VINIX WRITEBACK: PASS\n");
+		printf("TULPAR WRITEBACK: PASS\n");
 	sync();
 	reboot(RB_POWER_OFF);
-	printf("VINIX WRITEBACK: FAIL power off refused\n");
+	printf("TULPAR WRITEBACK: FAIL power off refused\n");
 	return 1;
 }

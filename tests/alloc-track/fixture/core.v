@@ -11,7 +11,7 @@ fn C.memcmp(voidptr, voidptr, usize) i32
 fn C.memcpy(voidptr, voidptr, usize) voidptr
 fn C.strchr(&char, i32) &char
 fn C.sscanf(&char, &char, ...) i32
-fn C.vinix_alloc_track_enter(voidptr, u64, &u64)
+fn C.tulpar_alloc_track_enter(voidptr, u64, &u64)
 fn C.alloc_untrack(voidptr)
 fn C.alloc_track_start()
 fn C.alloc_track_dump(&char, u64, u64) u64
@@ -22,7 +22,7 @@ __global (
 )
 
 fn record(index u32, size u32) {
-	unsafe { C.vinix_alloc_track_enter(voidptr(usize(0x10000 + 16 * index)), u64(size), &track_fixture_frames[0]) }
+	unsafe { C.tulpar_alloc_track_enter(voidptr(usize(0x10000 + 16 * index)), u64(size), &track_fixture_frames[0]) }
 }
 
 fn check(expected u32, count16 u32, count32 u32) {

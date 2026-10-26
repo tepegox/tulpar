@@ -10,10 +10,10 @@ See [the contract](../../docs/storage-volumes.md#identity-based-automatic-data-c
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-data-auto --work /tmp/data-auto-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --data-auto --work /tmp/data-auto-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --data-auto --work /tmp/data-auto-x86
 ```
 
@@ -62,8 +62,8 @@ on the reordered second boot; automatic argv contains no device paths and
 manual/automatic outputs remain exact.
 
 The independent V artifact oracle imports no producer codec. It constructs the
-exact 288-byte bundle, both 472-byte `VINIXDH1` files, clean and changed complete
-ASCII `VINIXSR1` reports, reserved fields, bitwise CRC, identity, geometry and
+exact 288-byte bundle, both 472-byte `TULPARDH1` files, clean and changed complete
+ASCII `TULPARSR1` reports, reserved fields, bitwise CRC, identity, geometry and
 canonical row order. V standard-library SHA and OpenSSL independently check
 every restored/changed full physical extent and the reference fingerprint.
 Complete utility and selected guest generated C receive allocation audits and

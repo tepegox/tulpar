@@ -3,7 +3,7 @@
 @[translated]
 module exchangefixture
 
-#include "vinix/atomic_exchange.h"
+#include "tulpar/atomic_exchange.h"
 
 fn C.fflush(voidptr) i32
 fn C.pause() i32
@@ -37,9 +37,9 @@ fn C.vhf_exchange_pointer(&voidptr, voidptr) voidptr
 fn C.vhf_compare_pointer(&voidptr, voidptr, voidptr) voidptr
 
 fn C.printf(&char, ...) i32
-fn C.vinix_exchange_fixture_pointer() &u8
-fn C.vinix_exchange_fixture_expected() u8
-fn C.vinix_exchange_fixture_value() u8
+fn C.tulpar_exchange_fixture_pointer() &u8
+fn C.tulpar_exchange_fixture_expected() u8
+fn C.tulpar_exchange_fixture_value() u8
 
 @[cinit]
 __global (
@@ -49,17 +49,17 @@ __global (
 	vhf_value_calls u32
 )
 
-@[export: 'vinix_exchange_fixture_pointer']
+@[export: 'tulpar_exchange_fixture_pointer']
 pub fn pointer_argument() &u8 {
 	unsafe { vhf_pointer_calls++; return &vhf_native_byte }
 }
 
-@[export: 'vinix_exchange_fixture_expected']
+@[export: 'tulpar_exchange_fixture_expected']
 pub fn expected_argument() u8 {
 	unsafe { vhf_expected_calls++; return 9 }
 }
 
-@[export: 'vinix_exchange_fixture_value']
+@[export: 'tulpar_exchange_fixture_value']
 pub fn value_argument() u8 {
 	unsafe { vhf_value_calls++; return 11 }
 }
@@ -150,10 +150,10 @@ pub fn main_entry() i32 {
 		check(wide_old == next_wide && wide_value == 3, &errors)
 		// The generated adapter must capture every expression exactly once.
 		vhf_pointer_calls = 0; vhf_expected_calls = 0; vhf_value_calls = 0; vhf_native_byte = 9
-		byte_old = C.vhf_exchange8(C.vinix_exchange_fixture_pointer(), C.vinix_exchange_fixture_value())
+		byte_old = C.vhf_exchange8(C.tulpar_exchange_fixture_pointer(), C.tulpar_exchange_fixture_value())
 		check(byte_old == 9 && vhf_native_byte == 11 && vhf_pointer_calls == 1 && vhf_value_calls == 1, &errors)
 		vhf_pointer_calls = 0; vhf_expected_calls = 0; vhf_value_calls = 0; vhf_native_byte = 9
-		byte_old = C.vhf_compare8(C.vinix_exchange_fixture_pointer(), C.vinix_exchange_fixture_expected(), C.vinix_exchange_fixture_value())
+		byte_old = C.vhf_compare8(C.tulpar_exchange_fixture_pointer(), C.tulpar_exchange_fixture_expected(), C.tulpar_exchange_fixture_value())
 		check(byte_old == 9 && vhf_native_byte == 11 && vhf_pointer_calls == 1 && vhf_expected_calls == 1 && vhf_value_calls == 1, &errors)
 		C.printf(c'LinuxKPI generic exchange widths=1,2,4,8,16 and pointer errors=%d\n', errors)
 		C.fflush(nil)

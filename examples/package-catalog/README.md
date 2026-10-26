@@ -13,7 +13,7 @@ V=/path/to/v /path/to/v -path '@vlib|@vmodules|.' \
   run examples/package-catalog/build.v 1.0.0 /tmp/new-native-build
 ```
 
-The parent directory must exist. `VINIX_MUSL_COPYRIGHT` selects the matching
+The parent directory must exist. `TULPAR_MUSL_COPYRIGHT` selects the matching
 toolchain's musl notice. The builder creates `roots`, `lock/catalog.json`,
 `workspace` and `build.json`. The receipt hashes the prepared files and compiler
 executables. It requires a new output, removes its partial build on failure and
@@ -23,7 +23,7 @@ completion before reviewing or signing the workspace.
 Review the catalog's six manifests, payload pins, permissions and notices, then
 use [`publish-release`](../../tools/packages/SDK.md#build-and-publish) to sign
 `workspace`. Authenticate/enroll the publisher key separately; refresh and install
-`org.vinix.package-hello`, `org.vinix.counter` and `org.vinix.memo` through Software
+`org.tulpar.package-hello`, `org.tulpar.counter` and `org.tulpar.memo` through Software
 or the CLI. No host image rebuild or shared runtime is needed for these static
 applications. Select an ordinary `launch_user` for a root desktop session.
 
@@ -31,12 +31,12 @@ For a release image, save the advertised set as a reviewed requirements file
 (use `x86_64` for that target):
 
 ```json
-{"format":1,"architecture":"aarch64","packages":["org.vinix.package-hello","org.vinix.counter","org.vinix.memo"]}
+{"format":1,"architecture":"aarch64","packages":["org.tulpar.package-hello","org.tulpar.counter","org.tulpar.memo"]}
 ```
 
-Select it with `VINIX_PACKAGE_IMAGE_APPLICATIONS=/absolute/native-apps.json`
-alongside the reviewed `VINIX_PACKAGE_IMAGE_CONFIG` and signed offline
-`VINIX_PACKAGE_IMAGE_REPOSITORIES` bundle. Desktop staging checks their joint
+Select it with `TULPAR_PACKAGE_IMAGE_APPLICATIONS=/absolute/native-apps.json`
+alongside the reviewed `TULPAR_PACKAGE_IMAGE_CONFIG` and signed offline
+`TULPAR_PACKAGE_IMAGE_REPOSITORIES` bundle. Desktop staging checks their joint
 installability before package-tool compilation, and its cache tracks the selected
 requirements and contents. Direct `stage.v --check --applications FILE` returns
 the requirements digest and exact deployment lock without changing the image.

@@ -615,7 +615,7 @@ fn write_child_rusage(rusage_ptr u64, child &proc.Process) bool {
 		return true
 	}
 
-	mut usage := unsafe { &proc.Rusage(C.vinix_stack_alloc(sizeof(proc.Rusage))) }
+	mut usage := unsafe { &proc.Rusage(C.tulpar_stack_alloc(sizeof(proc.Rusage))) }
 	unsafe { *usage = proc.Rusage{} }
 	proc.fill_process_rusage(mut usage, child, proc.cpu_time_now_ns(), true)
 	return usercopy.copy_to_user(rusage_ptr, usage, sizeof(proc.Rusage))

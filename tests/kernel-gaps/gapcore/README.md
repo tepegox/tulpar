@@ -76,7 +76,7 @@ The ordinary object bridge is now a maintained V shared library:
 `build-support/cpythonhost/gap_d_cpython_gap.c.v`, selected only by
 `cpython_gap`. `core_library.v` exposes the shared CPython object ABI; the
 lazy loader uses the calling interpreter's public development headers.
-`VINIX_KERNEL_GAP_CORE_LIBRARY` selects an explicitly prepared library.
+`TULPAR_KERNEL_GAP_CORE_LIBRARY` selects an explicitly prepared library.
 The interface retains actual objects, aliases and exceptions. Function
 lookup/calls, argument and keyword iteration, owner IDs, checkpoint/sweep,
 wait-status consumption, policy/boot/drain/stop forwarding and recursive

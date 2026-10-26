@@ -16,7 +16,7 @@ fn main() {
 		eprintln('staging must be an existing image root')
 		exit(2)
 	}
-	cache := os.abs_path(os.getenv_opt('VINIX_ATH10K_BUILD_DIR') or { root + '/build/ath10k' })
+	cache := os.abs_path(os.getenv_opt('TULPAR_ATH10K_BUILD_DIR') or { root + '/build/ath10k' })
 	mut builder := os.new_process(os.getenv_opt('V') or { @VEXE })
 	builder.set_args(['-cc', 'cc', 'run', root + '/tools/ath10k/build.v', sysroot, cache])
 	builder.run()

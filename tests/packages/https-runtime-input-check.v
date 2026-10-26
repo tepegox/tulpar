@@ -34,7 +34,7 @@ fn run() ! {
 	if os.args.len !in [2, 3] {
 		return error('usage: https-runtime-input-check RETAINER_BINARY [REPORT]')
 	}
-	work := os.join_path(os.temp_dir(), 'vinix-tls-inputs-' + os.getpid().str() + '-' + time.now().unix_milli().str())
+	work := os.join_path(os.temp_dir(), 'tulpar-tls-inputs-' + os.getpid().str() + '-' + time.now().unix_milli().str())
 	os.mkdir(work, mode: 0o700)!
 	defer { os.rmdir_all(work) or {} }
 	os.mkdir(work + '/source')!

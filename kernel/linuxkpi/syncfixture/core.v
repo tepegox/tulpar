@@ -49,14 +49,14 @@ struct C.pthread_t {}
 
 type SyncWorker = fn (voidptr) voidptr
 
-fn C.vinix_linuxkpi_fixture_sync_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_sync_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, SyncWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
 fn C.get_task_struct(&C.task_struct) &C.task_struct
 fn C.put_task_struct(&C.task_struct)
 fn C.task_is_running(&C.task_struct) bool
-fn C.vinix_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_may_sleep() bool
 fn C.mutex_init(&C.mutex)
 fn C.mutex_trylock(&C.mutex) bool
 fn C.mutex_is_locked(&C.mutex) bool
@@ -110,7 +110,7 @@ __global C.UINT_MAX u32
 @[c_extern]
 __global C.EIO i32
 
-@[export: 'vinix_linuxkpi_sync_selftest']
+@[export: 'tulpar_linuxkpi_sync_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		mut guard := C.mutex{}
@@ -182,7 +182,7 @@ mut:
 	result i32
 }
 
-@[export: 'vinix_linuxkpi_fixture_sync_worker']
+@[export: 'tulpar_linuxkpi_fixture_sync_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut worker := &NativeSyncWorker(argument)
@@ -202,7 +202,7 @@ pub fn worker(argument voidptr) voidptr {
 		C.swait_event_exclusive(test.simple, C.__atomic_load_n(&test.simple_go, 2))
 		C.complete(&test.stage)
 		C.wait_for_completion(&test.release)
-		if !C.task_is_running(C.current) || !C.vinix_linuxkpi_may_sleep() { worker.result = -C.EIO }
+		if !C.task_is_running(C.current) || !C.tulpar_linuxkpi_may_sleep() { worker.result = -C.EIO }
 		C.pthread_exit(nil)
 		return nil
 	}
@@ -216,7 +216,7 @@ fn queue_count(head &C.list_head) u32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_sync_native_selftest']
+@[export: 'tulpar_linuxkpi_sync_native_selftest']
 pub fn native_selftest() i32 {
 	unsafe {
 		mut test := NativeSyncTest{}
@@ -231,7 +231,7 @@ pub fn native_selftest() i32 {
 		mut result := i32(0)
 		for i in 0 .. 4 {
 			workers[i] = NativeSyncWorker{ test: &test }
-			C.BUG_ON(C.pthread_create(&threads[i], nil, C.vinix_linuxkpi_fixture_sync_worker, &workers[i]) != 0)
+			C.BUG_ON(C.pthread_create(&threads[i], nil, C.tulpar_linuxkpi_fixture_sync_worker, &workers[i]) != 0)
 		}
 		for _ in 0 .. 4 { C.wait_for_completion(&test.ready) }
 		if test.counter != 4 * 32 { result = -C.EIO }

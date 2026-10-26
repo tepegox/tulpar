@@ -76,8 +76,8 @@ fn scenario_thermal(mut t Test) {
 }
 
 fn scenario_thermal_selftest(mut t Test) {
-	zone := zone_called('vinix_selftest')
-	t.check(zone != '', 'no vinix_selftest zone: is this a kernel built with -d thermal_selftest?')
+	zone := zone_called('tulpar_selftest')
+	t.check(zone != '', 'no tulpar_selftest zone: is this a kernel built with -d thermal_selftest?')
 	if zone == '' {
 		return
 	}

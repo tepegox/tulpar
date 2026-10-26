@@ -9,10 +9,10 @@ import os
 
 fn C.mkstemp(&u8) i32
 
-const os_release = 'NAME="Vinix"\nID=vinix\nVERSION_ID="0.1.0"\nPRETTY_NAME="Vinix 0.1.0"\n'
-const lsb_release = 'DISTRIB_ID=Vinix\nDISTRIB_RELEASE=0.1.0\nDISTRIB_DESCRIPTION="Vinix 0.1.0"\n'
-const issue = 'Welcome to Vinix\nKernel \\r on an \\m (\\l)\n\n'
-const motd = 'Welcome to Vinix!\n\n'
+const os_release = 'NAME="Tulpar"\nID=tulpar\nVERSION_ID="0.1.0"\nPRETTY_NAME="Tulpar 0.1.0"\n'
+const lsb_release = 'DISTRIB_ID=Tulpar\nDISTRIB_RELEASE=0.1.0\nDISTRIB_DESCRIPTION="Tulpar 0.1.0"\n'
+const issue = 'Welcome to Tulpar\nKernel \\r on an \\m (\\l)\n\n'
+const motd = 'Welcome to Tulpar!\n\n'
 
 fn install(target string, data string, mode int) ! {
 	mut pattern := (os.dir(target) + '/.identity.XXXXXX\x00').bytes()

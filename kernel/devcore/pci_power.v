@@ -34,7 +34,7 @@
 // PME switched off and its stale status cleared on the way down, ten
 // milliseconds after either change before the function is spoken to again.
 //
-// `vinix.pci_d3=off` keeps every function in D0 through every sleep.
+// `tulpar.pci_d3=off` keeps every function in D0 through every sleep.
 @[has_globals]
 module devcore
 
@@ -62,7 +62,7 @@ __global (
 // Whether functions are put into D3 for a sleep at all.
 pub fn pci_d3_wanted() bool {
 	if !devcore_pci_d3_decided {
-		devcore_pci_d3_off = !boot_flag('vinix.pci_d3=', true)
+		devcore_pci_d3_off = !boot_flag('tulpar.pci_d3=', true)
 		devcore_pci_d3_decided = true
 	}
 	return !devcore_pci_d3_off

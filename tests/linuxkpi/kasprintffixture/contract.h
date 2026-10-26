@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /* Original typed declarations and host transport metadata; implementations are V. */
-#ifndef VINIX_KASPRINTF_HOST_CONTRACT_H
-#define VINIX_KASPRINTF_HOST_CONTRACT_H
+#ifndef TULPAR_KASPRINTF_HOST_CONTRACT_H
+#define TULPAR_KASPRINTF_HOST_CONTRACT_H
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

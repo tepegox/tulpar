@@ -1,6 +1,6 @@
 # Multiple encrypted boot volumes
 
-The legacy fixed pair and named pairs in `/etc/vinix/boot-volumes.d` form one
+The legacy fixed pair and named pairs in `/etc/tulpar/boot-volumes.d` form one
 bounded authenticated set. See [input policy, ordering and application limits](../../docs/storage-volumes.md#multiple-encrypted-boot-volumes).
 
 Native sanitizer coverage verifies all 64 global slots, full-width geometry,
@@ -28,7 +28,7 @@ Four warmup and four measured two-volume unlock/remove lifetimes each use two
 full-cost production KDFs, with snapshot-reader warmup and thirteen-second grace
 reclamation. All earlier cohorts, 400-cycle workloads and nine boots remain.
 The default per-boot deadline is 1800 seconds; the bounded
-`VINIX_STORAGE_BOOT_TIMEOUT` override accommodates slower software emulation.
+`TULPAR_STORAGE_BOOT_TIMEOUT` override accommodates slower software emulation.
 Exact slab and large-page comparisons remain.
 
 Production init must restore both volumes after physical device reordering,
@@ -81,7 +81,7 @@ file had been removed. The second attempt reached the default 30-minute
 watchdog at 324 of 400 publications without a guest failure marker; its new
 boot-set retention cohort passed. Both failed logs remain retained. The complete
 third x86 attempt selects a 45-minute per-boot budget through the bounded
-`VINIX_STORAGE_BOOT_TIMEOUT=2700` setting and uses owned bootloader copies
+`TULPAR_STORAGE_BOOT_TIMEOUT=2700` setting and uses owned bootloader copies
 matching repository pinned hashes. Production source, workload counts and all
 strict memory assertions remain unchanged. ARM used the default 30-minute budget.
 

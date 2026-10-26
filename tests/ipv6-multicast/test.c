@@ -13,7 +13,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 
-#define CHECK(x) do { if (!(x)) { printf("VINIX IPV6: FAIL line=%d errno=%d: %s\n", __LINE__, errno, #x); return 1; } } while (0)
+#define CHECK(x) do { if (!(x)) { printf("TULPAR IPV6: FAIL line=%d errno=%d: %s\n", __LINE__, errno, #x); return 1; } } while (0)
 static struct sockaddr_in6 addr6(const char *text, unsigned port, unsigned scope) {
     struct sockaddr_in6 result = {.sin6_family = AF_INET6, .sin6_port = htons(port), .sin6_scope_id = scope};
     if (inet_pton(AF_INET6, text, &result.sin6_addr) != 1) abort();
@@ -212,7 +212,7 @@ int main(void) {
     if(serial>=0) { dup2(serial,STDOUT_FILENO);dup2(serial,STDERR_FILENO);close(serial); }
 #endif
     setbuf(stdout, NULL);
-    puts("VINIX IPV6: START");
+    puts("TULPAR IPV6: START");
     int status = loopback() || dual() || membership(AF_INET,1,1) || membership(AF_INET6,1,1) || automatic_membership() || physical();
     if (!status) {
         int live6=socket(AF_INET6,SOCK_STREAM,0),live4=socket(AF_INET,SOCK_STREAM,0);
@@ -227,7 +227,7 @@ int main(void) {
         CHECK(before != ~0ul && after <= before + 16);
         close(live6);close(live4);
         puts("IPV6 PASS: repeated memberships and close stay flat");
-        puts("VINIX IPV6: PASS");
+        puts("TULPAR IPV6: PASS");
     }
     sleep(1); sync(); reboot(RB_POWER_OFF); for (;;) pause();
 }

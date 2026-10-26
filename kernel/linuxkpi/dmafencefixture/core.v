@@ -53,15 +53,15 @@ fn C.spin_lock_irqsave(voidptr, u64)
 fn C.spin_unlock_irqrestore(voidptr, u64)
 fn C.__atomic_load_n(&u32, i32) u32
 
-@[export: 'vinix_linuxkpi_dmafence_fixture_bytes']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_bytes']
 pub fn bytes(kind u32) u32 {
 	return if kind == 0 { u32(sizeof(C.dma_fence)) } else if kind == 1 { u32(sizeof(C.dma_fence_cb)) } else { u32(sizeof(C.dma_fence_ops)) }
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_init']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_init']
 pub fn init(storage voidptr, ops voidptr, guard voidptr, context u64, seqno u64) {
 	unsafe { C.dma_fence_init(&C.dma_fence(storage), &C.dma_fence_ops(ops), guard, context, seqno) }
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_get']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_get']
 pub fn get(storage voidptr, mode u32) voidptr {
 	unsafe {
 		mut fence := &C.dma_fence(storage)
@@ -70,11 +70,11 @@ pub fn get(storage voidptr, mode u32) voidptr {
 		return C.dma_fence_get_rcu_safe(&fence)
 	}
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_put']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_put']
 pub fn put(storage voidptr) { unsafe { C.dma_fence_put(&C.dma_fence(storage)) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_free']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_free']
 pub fn free(storage voidptr) { unsafe { C.dma_fence_free(&C.dma_fence(storage)) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_signal']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_signal']
 pub fn signal(storage voidptr, mode u32, timestamp i64) i32 {
 	unsafe {
 		fence := &C.dma_fence(storage)
@@ -86,9 +86,9 @@ pub fn signal(storage voidptr, mode u32, timestamp i64) i32 {
 		return ret
 	}
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_status']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_status']
 pub fn status(storage voidptr) i32 { unsafe { return C.dma_fence_get_status(&C.dma_fence(storage)) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_signaled']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_signaled']
 pub fn signaled(storage voidptr, locked bool) bool {
 	unsafe {
 		fence := &C.dma_fence(storage)
@@ -99,40 +99,40 @@ pub fn signaled(storage voidptr, locked bool) bool {
 		return ret
 	}
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_error']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_error']
 pub fn set_error(storage voidptr, error i32) { unsafe { C.dma_fence_set_error(&C.dma_fence(storage), error) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_timestamp']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_timestamp']
 pub fn timestamp(storage voidptr) i64 { unsafe { return C.dma_fence_timestamp(&C.dma_fence(storage)) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_enable']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_enable']
 pub fn enable(storage voidptr) { unsafe { C.dma_fence_enable_sw_signaling(&C.dma_fence(storage)) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_add']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_add']
 pub fn add(storage voidptr, cb voidptr, callback Callback) i32 { unsafe { return C.dma_fence_add_callback(&C.dma_fence(storage), &C.dma_fence_cb(cb), callback) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_remove']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_remove']
 pub fn remove(storage voidptr, cb voidptr) bool { unsafe { return C.dma_fence_remove_callback(&C.dma_fence(storage), &C.dma_fence_cb(cb)) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_wait']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_wait']
 pub fn wait(storage voidptr, mode u32, intr bool, timeout i64) i64 {
 	unsafe { fence := &C.dma_fence(storage)
 		return if mode == 0 { C.dma_fence_default_wait(fence, intr, timeout) }
 			else if mode == 1 { C.dma_fence_wait_timeout(fence, intr, timeout) } else { C.dma_fence_wait(fence, intr) }
 	}
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_any']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_any']
 pub fn wait_any(fences &voidptr, count u32, intr bool, timeout i64, index &u32) i64 {
 	unsafe { return C.dma_fence_wait_any_timeout(&&C.dma_fence(fences), count, intr, timeout, index) }
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_stub']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_stub']
 pub fn stub(private bool, time i64) voidptr { return if private { C.dma_fence_allocate_private_stub(time) } else { C.dma_fence_get_stub() } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_context']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_context']
 pub fn context(count u32) u64 { return C.dma_fence_context_alloc(count) }
-@[export: 'vinix_linuxkpi_dmafence_fixture_deadline']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_deadline']
 pub fn deadline(storage voidptr, time i64) { unsafe { C.dma_fence_set_deadline(&C.dma_fence(storage), time) } }
-@[export: 'vinix_linuxkpi_dmafence_fixture_compare']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_compare']
 pub fn compare(first voidptr, second voidptr, mode u32) bool {
 	unsafe { a := &C.dma_fence(first); b := &C.dma_fence(second)
 		return if mode == 0 { C.dma_fence_is_later(a, b) } else if mode == 1 { C.dma_fence_is_later_or_same(a, b) } else { uint(C.dma_fence_later(a, b)) == uint(a) }
 	}
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_callbacks']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_callbacks']
 pub fn callbacks(storage voidptr) u32 {
 	unsafe {
 		fence := &C.dma_fence(storage)
@@ -147,7 +147,7 @@ pub fn callbacks(storage voidptr) u32 {
 		return count
 	}
 }
-@[export: 'vinix_linuxkpi_dmafence_fixture_task_state']
+@[export: 'tulpar_linuxkpi_dmafence_fixture_task_state']
 pub fn task_state(storage voidptr) u32 {
 	unsafe { return C.__atomic_load_n(&(&C.task_struct(storage)).__state, 2) }
 }

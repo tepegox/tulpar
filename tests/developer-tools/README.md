@@ -1,6 +1,6 @@
 # Native developer tools smoke test
 
-`smoke.sh` runs inside the aarch64 Vinix userland. It validates the packaged
+`smoke.sh` runs inside the aarch64 Tulpar userland. It validates the packaged
 Git, GNU make, CMake, Ninja, Meson, pkg-config, Autoconf, Automake, Libtool,
 patch/diffutils, file, GDB, radare2, strace, and tmux programs.
 
@@ -25,5 +25,5 @@ Build the package overlay with:
 ```
 
 The aarch64 userland builder automatically copies the overlay when the staging
-directory is present. Run `/root/developer-tools-smoke.sh` in Vinix to execute
+directory is present. Run `/root/developer-tools-smoke.sh` in Tulpar to execute
 the smoke test, or launch `r2 <binary>` for an interactive analysis session.

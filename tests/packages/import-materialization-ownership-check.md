@@ -39,7 +39,7 @@ It includes source mutation/retry, traversal bounds, lookups, ordinary imports,
 direct packing, all five publisher profiles, captured profile/catalog exports,
 composition and signed releases. Sanitizer leak detection is disabled; the
 separate V tracker measures retained allocations.
-Captured FFmpeg export checks require `VINIX_PROFILE_EXPORT_SOURCE` naming the
+Captured FFmpeg export checks require `TULPAR_PROFILE_EXPORT_SOURCE` naming the
 reviewed 8.0.1 source archive. The driver checks its exact length and SHA-256
 before creating output or compiling tests; no source-pin check is bypassed.
 
@@ -59,12 +59,12 @@ runtime/device/crash acceptance. Roadmap section 14 remains open.
 
 ```sh
 v -nocache -o /tmp/materialization-check tests/packages/import-materialization-ownership-check.v
-VINIX_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz \
+TULPAR_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz \
   V=/path/to/reviewed/v /tmp/materialization-check /build/new-materialization-host
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/materialization-runtime tests/packages/import-materialization-ownership-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/materialization-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-materialization-arm
 ```

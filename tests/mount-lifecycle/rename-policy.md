@@ -22,7 +22,7 @@ owned allocation, retained context address, release or reference-count transitio
 
 [Linux v6.12's `do_renameat2`](https://github.com/torvalds/linux/blob/v6.12/fs/namei.c)
 also requires matching source/destination mounts and a writable mount. Its
-ordering differs from Vinix's retained validation order; combined failures such
+ordering differs from Tulpar's retained validation order; combined failures such
 as a cross-mount rename involving a read-only route remain unqualified here.
 
 Use `--case renames` or `rp-0` through `rp-9`. Native `all` and Linux

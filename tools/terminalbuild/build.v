@@ -90,9 +90,10 @@ fn userland(arch string) ! {
 }
 
 pub fn check_inventory(staging string) ! {
-	for name in ['usr/bin/Xorg', 'usr/bin/Xvfb', 'usr/bin/Hyprland', 'usr/bin/vinix-desktop',
+	for name in ['usr/bin/Xorg', 'usr/bin/Xvfb', 'usr/bin/Hyprland', 'usr/bin/tulpar-desktop',
+		'usr/bin/vinix-desktop',
 		'usr/bin/run-android', 'bin/zsh', 'usr/bin/vim', 'usr/bin/gcc', 'usr/lib/vlang',
-		'usr/lib/libX11.so', 'root/.oh-my-zsh', 'opt/vinix-android-aarch64'] {
+		'usr/lib/libX11.so', 'root/.oh-my-zsh', 'opt/tulpar-android-aarch64', 'opt/vinix-android-aarch64'] {
 		if os.exists(staging + '/' + name) { return error('Non-base guest content: ' + name) }
 	}
 	if !os.is_executable(staging + '/sbin/init') || !os.is_executable(staging + '/bin/busybox') {
@@ -123,10 +124,10 @@ fn kernel(arch string) ! {
 
 fn iso(arch string) ! {
 	work := directory(arch)
-	run('llvm-strip', ['--strip-debug', '-o', work + '/kernel/bin/vinix.boot', work + '/kernel/bin/vinix'])!
-	os.setenv('VINIX_' + if arch == 'arm64' { 'AARCH64' } else { 'AMD64' } + '_KERNEL', work + '/kernel/bin/vinix.boot', true)
-	os.setenv('VINIX_' + if arch == 'arm64' { 'AARCH64' } else { 'AMD64' } + '_INITRAMFS', work + '/initramfs.tar', true)
-	os.setenv('VINIX_' + if arch == 'arm64' { 'AARCH64' } else { 'AMD64' } + '_ISO', image(arch), true)
+	run('llvm-strip', ['--strip-debug', '-o', work + '/kernel/bin/tulpar.boot', work + '/kernel/bin/tulpar'])!
+	os.setenv('TULPAR_' + if arch == 'arm64' { 'AARCH64' } else { 'AMD64' } + '_KERNEL', work + '/kernel/bin/tulpar.boot', true)
+	os.setenv('TULPAR_' + if arch == 'arm64' { 'AARCH64' } else { 'AMD64' } + '_INITRAMFS', work + '/initramfs.tar', true)
+	os.setenv('TULPAR_' + if arch == 'arm64' { 'AARCH64' } else { 'AMD64' } + '_ISO', image(arch), true)
 	run(root() + '/build-support/build-' + if arch == 'arm64' { 'aarch64' } else { 'amd64' } + '-iso.sh', [])!
 }
 

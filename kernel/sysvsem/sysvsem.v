@@ -340,7 +340,7 @@ fn vacant_index_unlocked() int {
 }
 
 fn inspect_limits(command i32, argument u64) (u64, u64) {
-    mut info := unsafe { &SemInfo(C.vinix_stack_alloc(sizeof(SemInfo))) }
+    mut info := unsafe { &SemInfo(C.tulpar_stack_alloc(sizeof(SemInfo))) }
     unsafe {
         *info = SemInfo{
             // These three unused fields and SEMUSZ retain Linux's legacy
@@ -458,7 +458,7 @@ pub fn syscall_semctl(_ voidptr, id i32, number i32, command i32, argument u64) 
     }
     // IPC_SET imports the full native structure before lookup/ownership
     // checks. Faults must not change metadata or hold a set lock/pointer.
-    mut info := unsafe { &SemIdDs(C.vinix_stack_alloc(sizeof(SemIdDs))) }
+    mut info := unsafe { &SemIdDs(C.tulpar_stack_alloc(sizeof(SemIdDs))) }
     unsafe { *info = SemIdDs{} }
     if command == ipc_set && !usercopy.copy_from_user(info, argument, semid_size()) {
         return errno.err, errno.efault
@@ -691,7 +691,7 @@ fn operate(id i32, user_operations u64, count u32, timeout_address u64) (u64, u6
     // Explicit stack storage avoids an escaping local being heap-promoted.
     // No queue/vector allocation occurs on the blocking path. The record's
     // private event also avoids a shared event's listener limit across waiters.
-    mut pending := unsafe { &Pending(C.vinix_stack_alloc(sizeof(Pending))) }
+    mut pending := unsafe { &Pending(C.tulpar_stack_alloc(sizeof(Pending))) }
     unsafe {
         *pending = Pending{
             operations: &operations[0]

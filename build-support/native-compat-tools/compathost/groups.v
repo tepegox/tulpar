@@ -47,14 +47,14 @@ fn groups_command(args []string) !int {
 	memory := positive_option(parsed, '--memory', 1024)!
 	smp := positive_option(parsed, '--smp', 4)!
 	// Original default and explicit evidence directories remain available.
-	work := if '--state-dir' in parsed.options { resolve(parsed.options['--state-dir'])! } else { hosttest.work_dir('', 'vinix-resource-groups-')! }
+	work := if '--state-dir' in parsed.options { resolve(parsed.options['--state-dir'])! } else { hosttest.work_dir('', 'tulpar-resource-groups-')! }
 	os.mkdir_all(work)!
 	kernel := resolve(parsed.options['--kernel-dir'] or { root() + '/kernel' })!
-	if !os.is_file(kernel + '/bin/vinix') { return error_with_code('build the requested kernel first', 2) }
+	if !os.is_file(kernel + '/bin/tulpar') { return error_with_code('build the requested kernel first', 2) }
 	private_kernel := snapshot_kernel(work, kernel, arch)!
 	mut cc := []string{}
 	if arch == 'aarch64' {
-		sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+		sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		cc = [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk,
 			'-L' + sdk + '/lib', '-fuse-ld=lld', '-fno-stack-protector']
 	} else { cc = [os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }] }
@@ -75,7 +75,7 @@ fn groups_command(args []string) !int {
 	if unsafe { C.truncate(disk.str, size) } < 0 { return error('Cannot size the dedicated swap image: ' + os.get_error_msg(int(C.errno))) }
 	mut receipt := { 'arch': json2.Any(arch), 'compile_command': json2.Any(hosttest.strings(compile)),
 		'source_sha256': json2.Any(hosttest.sha(source)!), 'init_sha256': json2.Any(hosttest.sha(init)!),
-		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!), 'archive_sha256': json2.Any(hosttest.sha(archive)!),
+		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!), 'archive_sha256': json2.Any(hosttest.sha(archive)!),
 		'swap_header_sha256': json2.Any(hosttest.text_sha(header.bytestr())), 'swap_size': json2.Any(size),
 		'timeout': json2.Any(timeout), 'memory': json2.Any(memory), 'smp': json2.Any(smp) }
 	hosttest.write_json(work + '/inputs.json', receipt)!

@@ -29,17 +29,17 @@ fn cold_boot_account(phase i32, persistent bool) {
 		check(C.setgroups(0, nil) == 0 && C.setgid(1000) == 0 && C.setuid(1000) == 0
 			&& C.chdir(c'/home/developer') == 0, 490)
 		check(C.setenv(c'UNSELECTED_PARENT_SECRET', c'parent-must-not-reach-job', 1) == 0
-			&& C.setenv(c'VINIX_SESSION_RUNTIME', if persistent { &char(c'/home/developer/service-runtime') }
+			&& C.setenv(c'TULPAR_SESSION_RUNTIME', if persistent { &char(c'/home/developer/service-runtime') }
 				else { &char(c'/run/development-service') }, 1) == 0, 491)
 		mut before := [8192]char{}
 		if phase == 1 {
 			snapshot_job(c'/fixture/service-jobs.json', c'/home/developer/service-jobs.json')
-			write_text(c'/home/developer/token', c'vinix-native-fixture-secret', 27)
-			check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/service-jobs.json',
+			write_text(c'/home/developer/token', c'tulpar-native-fixture-secret', 27)
+			check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/service-jobs.json',
 				c'/home/developer/service-state') == 0, 493)
-			check(command_output(c'/usr/bin/vinix-jobs', c'service-unit', c'/home/developer/service-state',
+			check(command_output(c'/usr/bin/tulpar-jobs', c'service-unit', c'/home/developer/service-state',
 				nil, c'/home/developer/service.service') == 0, 494)
-			check(C.open(c'/home/developer/.vinix-services', C.O_RDONLY) == -1, 495)
+			check(C.open(c'/home/developer/.tulpar-services', C.O_RDONLY) == -1, 495)
 		} else {
 			// Read the previous boot's state before starting any broker or job.
 			private_receipt(c'/home/developer/service-state/state.json', c'job interrupted')
@@ -51,7 +51,7 @@ fn cold_boot_account(phase i32, persistent bool) {
 		broker := service_broker()
 		service_call(c'attach', nil, nil)
 		if phase == 1 {
-			_ = service_request([&char(c'service.import'), &char(c'vinix-jobs.service'),
+			_ = service_request([&char(c'service.import'), &char(c'tulpar-jobs.service'),
 				&char(c'/home/developer/service.service'), &char(c'0')]!, 4, false)
 			service_wait(true)
 			service_call(c'service.enable', c'0', c'1')
@@ -70,7 +70,7 @@ fn cold_boot_account(phase i32, persistent bool) {
 		if phase == 3 {
 			service_call(c'service.enable', c'0', c'0')
 			service_wait(true)
-			service_call(c'service.remove', c'vinix-jobs.service', nil)
+			service_call(c'service.remove', c'tulpar-jobs.service', nil)
 		}
 		service_call(c'shutdown', nil, nil)
 		wait_jobs(broker, 0)

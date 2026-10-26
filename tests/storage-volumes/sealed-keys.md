@@ -1,7 +1,7 @@
 # Passphrase-sealed key qualification
 
 The `seal-key`, `unseal-key` and `open-sealed` commands implement the separate
-192-byte `VINIXKP1` format and fixed scrypt N=32768,r=8,p=3 profile documented in
+192-byte `TULPARKP1` format and fixed scrypt N=32768,r=8,p=3 profile documented in
 [storage volumes](../../docs/storage-volumes.md#passphrase-sealed-volume-keys).
 Production code is V with fixed stack workspaces and one bounded private 32 MiB
 anonymous vector. The existing encrypted mapper and on-disk XTS format stay exact.

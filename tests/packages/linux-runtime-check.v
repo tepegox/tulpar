@@ -53,7 +53,7 @@ fn compiler_output(command []string) !string {
 }
 
 fn linux_suite(work string, repository string) !hwhost.Suite {
-	mut binaries := [hwhost.RootBinary{ source: work + '/usr/bin/vinix-sandbox', path: 'usr/bin/vinix-sandbox' }]
+	mut binaries := [hwhost.RootBinary{ source: work + '/usr/bin/tulpar-sandbox', path: 'usr/bin/tulpar-sandbox' }]
 	for name in ['linux-probe', 'linux-runner', 'musl', 'linux-library', 'https-output-check', 'output-producer', 'signing-seed-check', 'durability-check', 'keygen-check', 'copy-output-check'] {
 		binaries << hwhost.RootBinary{ source: work + '/' + name, path: 'usr/share/package-fixtures/' + name }
 	}
@@ -61,22 +61,22 @@ fn linux_suite(work string, repository string) !hwhost.Suite {
 	musl_copyright := if work == '' {
 		''
 	} else {
-		os.read_file(os.getenv_opt('VINIX_MUSL_COPYRIGHT') or { repository + '/build-support/musl/COPYRIGHT' })!
+		os.read_file(os.getenv_opt('TULPAR_MUSL_COPYRIGHT') or { repository + '/build-support/musl/COPYRIGHT' })!
 	}
 	return hwhost.Suite{
 		name:         'package-linux-runtime'
 		guest:        'tests/accounts/guest'
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
 		programs:     [
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 		]
 		binaries:     binaries
 		files:        [
 			hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
 			hwhost.RootFile{ path: 'usr/share/package-fixtures/COPYING', text: copying },
 			hwhost.RootFile{ path: 'usr/share/package-fixtures/musl-COPYRIGHT', text: musl_copyright },
 		]
@@ -124,7 +124,7 @@ fn require_dynamic_payload(path string) ! {
 
 fn stage_linux(repository string, work string, architecture string) ! {
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
-	cc := os.find_abs_path_of_executable(os.getenv_opt('VINIX_MUSL_CC_' + architecture.to_upper()) or { architecture + '-linux-musl-gcc' })!
+	cc := os.find_abs_path_of_executable(os.getenv_opt('TULPAR_MUSL_CC_' + architecture.to_upper()) or { architecture + '-linux-musl-gcc' })!
 	arch := if architecture == 'aarch64' { 'arm64' } else { 'amd64' }
 	for output, input in {
 		'linux-probe':   'tests/packages/linux-probe.v'
@@ -161,11 +161,11 @@ fn stage_linux(repository string, work string, architecture string) ! {
 		return error('target musl compiler has no dynamic libc.so: ${loader}')
 	}
 	os.cp(loader, work + '/musl')!
-	if sandbox := os.getenv_opt('VINIX_LINUX_SANDBOX') {
+	if sandbox := os.getenv_opt('TULPAR_LINUX_SANDBOX') {
 		// RootBinary admission checks ELF class and target before guest boot.
-		if !os.is_file(sandbox) { return error('VINIX_LINUX_SANDBOX must select an existing native sandbox') }
+		if !os.is_file(sandbox) { return error('TULPAR_LINUX_SANDBOX must select an existing native sandbox') }
 		os.mkdir_all(work + '/usr/bin')!
-		os.cp(sandbox, work + '/usr/bin/vinix-sandbox')!
+		os.cp(sandbox, work + '/usr/bin/tulpar-sandbox')!
 	} else {
 		invoke([repository + '/build-support/security-tools/stage', '--arch', architecture, '--staging', work])!
 	}
@@ -179,7 +179,7 @@ fn check() !int {
 		return hwhost.run_suite(linux_suite('', repository)!, args, @FILE)
 	}
 	if !os.is_file(options.kernel) { return error('--kernel is not a file') }
-	work := os.temp_dir() + '/vinix-package-linux-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-package-linux-' + os.getpid().str()
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or {} }
 	kernel := work + '/kernel'
@@ -189,7 +189,7 @@ fn check() !int {
 	// after a completed guest; receipts must describe the admitted input bytes.
 	inputs := [
 		artifact('kernel', kernel)!,
-		artifact('sandbox', work + '/usr/bin/vinix-sandbox')!,
+		artifact('sandbox', work + '/usr/bin/tulpar-sandbox')!,
 		artifact('dynamic-linux-payload', work + '/linux-probe')!,
 		artifact('shared-linux-library', work + '/linux-library')!,
 		artifact('musl-loader', work + '/musl')!,
@@ -209,10 +209,10 @@ fn check() !int {
 			completed_at: time.now().unix()
 			artifacts:    [
 				...inputs,
-				artifact('package-service', root + '/usr/bin/vinix-package')!,
+				artifact('package-service', root + '/usr/bin/tulpar-package')!,
 				artifact('guest-init', options.state_dir + '/guest/init')!,
-				artifact('account-manager', root + '/usr/sbin/vinix-account')!,
-				artifact('session-runner', root + '/usr/sbin/vinix-session')!,
+				artifact('account-manager', root + '/usr/sbin/tulpar-account')!,
+				artifact('session-runner', root + '/usr/sbin/tulpar-session')!,
 				artifact('serial-log', options.state_dir + '/packages-linux/serial.log')!,
 			]
 		}

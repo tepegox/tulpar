@@ -81,7 +81,7 @@ fn encode_plan(plan &Plan, out &u8) int {
 	if !plan_valid(plan) { return 0 }
 	size := plan_header_bytes + int(plan.count) * 32
 	unsafe { for i := 0; i < size; i++ { out[i] = 0 } }
-	put_le(out, 0, 8, 0x314d5658494e4956) // VINIXVM1
+	put_le(out, 0, 8, 0x314d5658494e4956) // TULPARVM1
 	put_le(out, 8, 4, 1)
 	put_le(out, 12, 4, plan.count)
 	put_le(out, 16, 8, plan.key.bytes)

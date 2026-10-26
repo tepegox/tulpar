@@ -6,10 +6,10 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export HOME=/root
 export SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-echo "VINIX GTK PACKAGE TEST"
+echo "TULPAR GTK PACKAGE TEST"
 
 if [ ! -x /usr/bin/Xorg ]; then
-	echo "GTK test needs the Vinix Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
+	echo "GTK test needs the Tulpar Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
 	exit 1
 fi
 
@@ -68,7 +68,7 @@ run_example() {
 	# The preload exits successfully only after the example has reached its GTK
 	# interface with a live Xorg display. An earlier application failure is fatal.
 	if ! LD_PRELOAD=/root/libgtk-smoke-auto-close.so \
-		VINIX_GTK_SMOKE_BUILDER_BOUNDARY="$builder_boundary" \
+		TULPAR_GTK_SMOKE_BUILDER_BOUNDARY="$builder_boundary" \
 		GDK_SYNCHRONIZE=1 DISPLAY="$display" "$@" \
 		>/tmp/"$name".log 2>&1; then
 		cat /tmp/"$name".log >&2
@@ -82,4 +82,4 @@ run_example gtk3-demo "opened a GTK window" 0 /usr/bin/gtk3-demo
 run_example gtk3-widget-factory "reached GTK interface construction" 1 \
 	/usr/bin/gtk3-widget-factory
 
-echo "VINIX GTK PACKAGE TEST: PASS"
+echo "TULPAR GTK PACKAGE TEST: PASS"

@@ -9,23 +9,23 @@ fn C.mkfifo(&char, u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn test_snapshot_decoder_retires_complete_and_partial_results() {
 	$if track_heap ? {
 		text := json2.encode([Snapshot{ repository: Repository{ id: 'publisher', url: 'file:///repository', public_key: 'a'.repeat(64) }, text: '{"format":1}', signature: 'b'.repeat(128) }])
 		broken := text[..text.len - 3]
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { snapshots := decode_snapshots(text)!; close_decoded_snapshots(snapshots) }
-		valid := C.vinix_heap_end()
-		C.vinix_heap_begin()
+		valid := C.tulpar_heap_end()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			if snapshots := decode_snapshots(broken) { close_decoded_snapshots(snapshots); assert false }
 			else { message := err.msg(); unsafe { message.free(); err.free() } }
 		}
-		invalid := C.vinix_heap_end()
+		invalid := C.tulpar_heap_end()
 		println('SNAPSHOT DECODE 1000 complete decodes retained ' + valid.str() + ' bytes; 1000 partial refusals retained ' + invalid.str() + ' bytes')
 		assert valid == 0 && invalid == 0
 	}
@@ -52,13 +52,13 @@ fn test_snapshot_decoder_preserves_opaque_bytes_and_owned_bounded_records() {
 		// at the valid maximum; track empty/growing cases and qualify full bounds
 		// functionally and under ASan instead.
 		tracked := count != 4096
-		$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+		$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 		for _ in 0 .. if tracked { 1000 } else { 1 } {
 			values := decode_snapshots(canonical)!; assert values.len == count
 			if count > 0 { assert values[count - 1].repository.id == expected[count - 1].repository.id && values[0].text == opaque.text && values[0].signature == opaque.signature }
 			close_decoded_snapshots(values)
 		}
-		$if track_heap ? { if tracked { kept := C.vinix_heap_end(); assert kept == 0 } }
+		$if track_heap ? { if tracked { kept := C.tulpar_heap_end(); assert kept == 0 } }
 		input := canonical.clone()
 		first := decode_snapshots(input)!; second := decode_snapshots(input)!
 		if count > 0 { assert first.data != second.data && first[0].text.str != second[0].text.str }
@@ -91,9 +91,9 @@ fn test_snapshot_decoder_retires_partial_schema_string_and_duplicate_refusals() 
 		text.replace('b'.repeat(128) + '\\n', ''), text.replace('b'.repeat(128), 'b'.repeat(257)),
 		text.replace('"public_key":"' + base.repository.public_key + '"', '"public_key":null'),
 		json2.encode([base, base])] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 { refuse_snapshot_decode(input) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	}
 	mut too_many := []Snapshot{cap: 4097}
 	for i in 0 .. 4097 { too_many << snapshot_decode_fixture('publisher-' + i.str()) }
@@ -108,20 +108,20 @@ fn test_snapshot_decoder_counts_exact_encoded_metadata_boundary() {
 	boundary := Snapshot{ ...base, text: 'x'.repeat(max_metadata - overhead) }
 	for sample in [Snapshot{ ...boundary, text: boundary.text[..boundary.text.len - 1] }, boundary] {
 		text := json2.encode([sample]); assert text.len <= max_metadata && text.len >= max_metadata - 1
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		values := decode_snapshots(text)!; assert values.len == 1 && values[0].text == sample.text
 		close_decoded_snapshots(values)
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	}
 	too_large := json2.encode([Snapshot{ ...boundary, text: boundary.text + 'x' }]); assert too_large.len == max_metadata + 1
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	refuse_snapshot_decode(too_large)
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	println('SNAPSHOT DECODE exact 8 MiB and limit-minus-one preserve opaque text; limit-plus-one refuses before parsing PASS')
 }
 
 fn test_snapshot_file_reader_retires_scratch_preserves_damage_and_allows_restored_retry() {
-	directory := os.temp_dir() + '/vinix-snapshot-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-snapshot-decode-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory)!; defer { os.rmdir_all(directory) or {} }
 	path := directory + '/catalog.json'; text := json2.encode([snapshot_decode_fixture('publisher')])
 	for failure in ['absent', 'valid', 'partial', 'alias', 'fifo']! {
@@ -132,7 +132,7 @@ fn test_snapshot_file_reader_retires_scratch_preserves_damage_and_allows_restore
 			'fifo' { os.rm(path)!; assert C.mkfifo(path.str, 0o600) == 0 }
 			else {}
 		}
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			if values := read_snapshots(directory) {
 				assert failure in ['absent', 'valid']! && values.len == if failure == 'absent' { 0 } else { 1 }
@@ -143,7 +143,7 @@ fn test_snapshot_file_reader_retires_scratch_preserves_damage_and_allows_restore
 				unsafe { message.free(); err.free() }
 			}
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		if failure == 'absent' { assert os.ls(directory)!.len == 0 }
 		if failure == 'partial' { assert os.read_file(path)! == text[..text.len - 1] }
 		if failure == 'fifo' { assert os.lstat(path)!.mode & 0o170000 == 0o010000 }
@@ -154,12 +154,12 @@ fn test_snapshot_file_reader_retires_scratch_preserves_damage_and_allows_restore
 	values := read_snapshots(directory)!; assert values[0].text == 'payload'; close_decoded_snapshots(values)
 	assert os.read_file(path)! == text
 	blocked := directory + '/blocked'; os.write_file(blocked, 'ordinary parent')!
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		if unexpected := read_snapshots(blocked) { close_decoded_snapshots(unexpected); assert false }
 		else { message := err.msg(); assert message != ''; unsafe { message.free(); err.free() } }
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	assert os.read_file(blocked)! == 'ordinary parent'
 	println('SNAPSHOT DECODE 1000 absent/valid/partial/alias/FIFO/parent file reads retire scratch, preserve retained bytes and permit restored retry PASS')
 }

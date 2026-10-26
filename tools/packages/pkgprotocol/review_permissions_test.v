@@ -6,8 +6,8 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn permission_review(architecture string) Review {
 	return Review{format: 2, operation: 'upgrade', architecture: architecture, fingerprint: 'a'.repeat(64), requested: ['editor'],
@@ -49,7 +49,7 @@ fn test_review_permissions_own_complete_and_legacy_groups_and_reject_inconsisten
 			text.replace('"installed_permissions":["files"]', '"installed_permissions":["\xff"]')]
 		defer { unsafe { for value in invalid { value.free() }; (&array(&invalid)).free() } }
 		for warmup in 0 .. 2 {
-			$if track_heap ? { if warmup == 1 { C.vinix_heap_begin() } }
+			$if track_heap ? { if warmup == 1 { C.tulpar_heap_begin() } }
 			for _ in 0 .. 1000 {
 				mut complete := decode_review(text)!; complete.close()
 				mut prior := decode_review(legacy)!; prior.close()
@@ -60,7 +60,7 @@ fn test_review_permissions_own_complete_and_legacy_groups_and_reject_inconsisten
 			}
 		}
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0, 'review permissions retained ' + kept.str()
+			kept := C.tulpar_heap_end(); assert kept == 0, 'review permissions retained ' + kept.str()
 		}
 		// A known empty previous set is different from unavailable metadata.
 		empty := text.replace('"installed_permissions":["files"]', '"installed_permissions":[]')

@@ -77,7 +77,7 @@ V=/path/to/reviewed/v /tmp/publisher-io-check /build/new-publisher-io-host
 
 v -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/publisher-io-runtime tests/packages/publisher-io-ownership-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/publisher-io-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-publisher-io-arm
 ```

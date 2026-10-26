@@ -94,7 +94,7 @@ fn check_software_paragraphs() ! {
 	free_window_tree(data); app.clear_personal_data()
 	app.data_mode = true; app.data_ready = true; app.data_status = fixture_personal_data_status(); app.data_selected = 1
 	data_row := app.build(ui2.rect(0, 0, 640, 610))!
-	software_paragraph_fixture_check(&data_row, 'Location: ~/.local/share/vinix-apps/ID')
+	software_paragraph_fixture_check(&data_row, 'Location: ~/.local/share/tulpar-apps/ID')
 	free_window_tree(data_row); app.clear_personal_data(); app.data_mode = false
 	app.repository_mode = true
 	repository := app.build(ui2.rect(0, 0, 640, 610))!
@@ -500,7 +500,7 @@ fn check_software_details_memory() ! {
 		mut app := SoftwareApp{ rows: [row], selected: 0, catalog_error: '\n'.repeat(4096) }
 		review_text := json2.encode(fixture_review('upgrade', []))
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				free_window_tree(software_label('Owned paragraph é🚀 '.repeat(16), 14, 8, 352, 72, true))
 				free_window_tree(software_label(row.description, 14, 8, 96, 54, false))
@@ -524,7 +524,7 @@ fn check_software_details_memory() ! {
 				app.clear_review()
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		app.close_app()
 		unsafe { review_text.free() }
 		assert kept == 0, 'details pages retained ${kept} bytes'

@@ -10,7 +10,7 @@ import resource
 // interpreters retain their own pathname and the same pinned directory FD.
 fn exec_relative_script_name(path string) string {
 	thr := proc.current_thread()
-	mut name := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut name := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *name = lib.new_text(32 + path.len) }
 	name.add('/proc/self/fd/')
 	name.add_decimal(i64(thr.exec_descriptor_number))

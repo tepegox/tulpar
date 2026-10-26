@@ -38,12 +38,12 @@ fn suite() hwhost.Suite {
 fn qualify() !int {
 	options := hwhost.parse_options(os.args[1..])!; base := suite()
 	if options.help || options.list { return hwhost.run_suite(base, os.args[1..], @FILE) }
-	archive := os.getenv('VINIX_PROFILE_EXPORT_SOURCE')
+	archive := os.getenv('TULPAR_PROFILE_EXPORT_SOURCE')
 	if !os.is_file(archive) || os.file_size(archive) != 11388848 || sha256.sum(os.read_bytes(archive)!).hex() != '05ee0b03119b45c0bdb4df654b96802e909e0a752f72e4fe3794f487229e5a41' {
-		return error('provide VINIX_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive')
+		return error('provide TULPAR_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive')
 	}
-	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('VINIX_HWTEST_TCG') != '1' {
-		return error('provide VINIX_HWTEST_TCG=1, --kernel and a new --state-dir')
+	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) || os.getenv('TULPAR_HWTEST_TCG') != '1' {
+		return error('provide TULPAR_HWTEST_TCG=1, --kernel and a new --state-dir')
 	}
 	definition := hwhost.Suite{ ...base, files: [hwhost.RootFile{ path: 'usr/share/package-fixtures/ffmpeg.tar.xz', text: os.read_file(archive)! }] }
 	repository := hwhost.find_root(@FILE)!; host := hwhost.find_host(repository, options.arch, options.qemu)!

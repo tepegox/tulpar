@@ -15,7 +15,7 @@ Boots a built kernel in QEMU with a V test program as its init, and judges
 each scenario by what the guest prints on the serial port.
 
   --arch ARCH        the kernel's architecture
-  --kernel PATH      the kernel to boot (bin/vinix of a kernel build)
+  --kernel PATH      the kernel to boot (bin/tulpar of a kernel build)
   --scenario NAME    run this scenario; may be repeated. Without it every
                      scenario for the architecture runs, except pending ones
   --list             print the scenarios and exit
@@ -202,7 +202,7 @@ fn process_exists(pid int) bool {
 // the images of runs that were killed. Two runs at once would boot each
 // other's images; the second is refused while the first is alive.
 fn claim_work_directory(arch string) !string {
-	parent := os.join_path(os.temp_dir(), 'vinix-hwtest')
+	parent := os.join_path(os.temp_dir(), 'tulpar-hwtest')
 	os.mkdir_all(parent)!
 	work := os.join_path(parent, arch)
 	lock_path := work + '.pid'

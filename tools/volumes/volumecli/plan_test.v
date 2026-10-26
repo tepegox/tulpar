@@ -19,7 +19,7 @@ fn test_plan_roundtrip_and_every_truncated_prefix_fails() {
 	mut bytes := [2112]u8{}
 	size := encode_plan(&plan, &bytes[0])
 	assert size == 128
-	assert bytes[..8].bytestr() == 'VINIXVM1'
+	assert bytes[..8].bytestr() == 'TULPARVM1'
 	mut decoded := Plan{}
 	assert decode_plan(&bytes[0], size, mut decoded)
 	assert key_matches(&plan.key, &decoded.key) && decoded.count == 2
@@ -124,7 +124,7 @@ fn test_gpt_identity_and_plan_with_4096_byte_sectors() {
 }
 
 fn test_plan_publication_preserves_previous_file_on_failure_and_rejects_links() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-test-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-test-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := os.join_path(work, 'saved.vmap')
@@ -156,7 +156,7 @@ fn test_plan_publication_preserves_previous_file_on_failure_and_rejects_links() 
 }
 
 fn test_discovery_ignores_regular_files_and_symlinks_and_rejects_invalid_plans() {
-	work := os.join_path(os.temp_dir(), 'vinix-discovery-test-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-discovery-test-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := os.join_path(work, 'raw')
@@ -211,14 +211,14 @@ fn host_plan_directory(path string, mut set PlanSet) bool {
 }
 
 fn test_plan_directory_sorting_ignored_files_and_selected_link_rejection() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-set-test-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-set-test-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	first := sample_plan()
 	mut second := first; second.key.id[0]++; second.rows[0].slot = 9; second.rows[1].slot = 12
 	assert publish_plan((work + '/z-data.vmap').str, &second)
 	assert publish_plan((work + '/a-main.vmap').str, &first)
-	for name in ['.disabled.vmap', '.vinix-volume-0-0', 'README', 'old.vmap.bak'] {
+	for name in ['.disabled.vmap', '.tulpar-volume-0-0', 'README', 'old.vmap.bak'] {
 		os.write_file(work + '/' + name, 'deliberately not a plan')!
 	}
 	mut set := PlanSet{}
@@ -235,7 +235,7 @@ fn test_plan_directory_sorting_ignored_files_and_selected_link_rejection() {
 }
 
 fn test_plan_directory_enforces_plan_and_entry_limits_before_loading() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-set-limit-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-set-limit-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	for i := 0; i < 65; i++ { os.write_file(work + '/${i}.vmap', 'invalid')! }

@@ -5,9 +5,9 @@ import time
 
 $if track_heap ? {
 #include "@VMODROOT/../../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 }
 
 fn owned_recipe(architecture string, application bool) RootRecipe {
@@ -31,7 +31,7 @@ fn owned_recipe(architecture string, application bool) RootRecipe {
 
 
 fn owned_fixture() !string {
-	path := os.real_path(os.temp_dir()) + '/vinix-wine-metadata-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	path := os.real_path(os.temp_dir()) + '/tulpar-wine-metadata-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for arch in ['aarch64', 'x86_64']! {
 		os.mkdir_all(path + '/' + arch)!
 		for role in ['application', 'runtime']! {
@@ -87,10 +87,10 @@ fn test_wine_owned_templates_partial_manifests_and_canonical_refusals() {
 		owned_attempt(recipes, count, fault)
 		mut maximum := u64(0); mut records := u32(0)
 		for _ in 0 .. 128 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			owned_attempt(recipes, count, fault)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); count_ := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count_ := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if count_ > records { records = count_ }
 			}
 		}

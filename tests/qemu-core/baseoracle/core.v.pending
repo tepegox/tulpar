@@ -60,7 +60,7 @@ pub fn random_provider(buffer voidptr, length usize, flags u32) isize {
 fn marker_case(original bool, length usize, bytes usize, mismatch bool) i32 {
 	unsafe {
 		mut path := [64]char{}
-		C.strcpy(&path[0], c'/tmp/vinix-qemu-base-XXXXXX')
+		C.strcpy(&path[0], c'/tmp/tulpar-qemu-base-XXXXXX')
 		fd := C.mkstemp(&path[0])
 		C.assert(fd >= 0)
 		mut content := [80]char{}

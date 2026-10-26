@@ -44,7 +44,7 @@ fn main() {
 	os.mkdir_all(work + '/arch')!
 	os.write_file(work + '/lwipopts.h', os.read_file(repo + '/kernel/c/lwipopts.h')!.replace('#define LWIP_STATS 0', '#define LWIP_STATS 1'))!
 	os.cp(repo + '/kernel/c/arch/cc.h', work + '/arch/cc.h')!
-	for name in ['vinix_net.h', 'vinix_inet6.h', 'vinix_endpoint.h', 'net_random.h', 'net_driver_abi.h',
+	for name in ['tulpar_net.h', 'tulpar_inet6.h', 'tulpar_endpoint.h', 'net_random.h', 'net_driver_abi.h',
 		'net_receive_abi.h', 'stack_slots.h'] {
 		os.cp(repo + '/kernel/c/' + name, work + '/' + name)!
 	}
@@ -53,7 +53,7 @@ fn main() {
 		'-fno-omit-frame-pointer', '-DSSIZE_MAX=__LONG_MAX__', '-include', 'sys/types.h', '-include',
 		'limits.h', '-I' + work, '-I' + lwip + '/include']
 	run([repo + '/tests/network-options/compile-core', work + '/core.c'])
-	run(['clang', ...flags, '-DVINIX_V_RUNTIME', '-D_vinit=icmp_core_vinit', '-ffreestanding',
+	run(['clang', ...flags, '-DTULPAR_V_RUNTIME', '-D_vinit=icmp_core_vinit', '-ffreestanding',
 		'-fno-builtin', '-Wno-incompatible-pointer-types-discards-qualifiers', '-Wno-pointer-sign',
 		'-c', work + '/core.c', '-o', work + '/core.o'])
 	allocator_guard(work + '/core.o')
@@ -68,7 +68,7 @@ fn main() {
 	run(['ar', 'rcs', work + '/lwip.a', ...objects])
 	selected := os.getenv_opt('V') or { @VEXE }
 	run([selected, '-enable-globals', '-cc', 'clang', '-gc', 'none', '-cflags',
-		flags.join(' ') + ' -DVINIX_V_RUNTIME', '-ldflags',
+		flags.join(' ') + ' -DTULPAR_V_RUNTIME', '-ldflags',
 		work + '/core.o ' + work + '/lwip.a -fsanitize=address,undefined', '-o', work + '/fixture',
 		repo + '/tests/network-icmp/fixture.v'])
 	run([work + '/fixture'])
@@ -79,8 +79,8 @@ fn main() {
 		os.mkdir_all(work + '/fixtures/' + pair[0])!
 		mut source := os.read_file(repo + '/tests/' + pair[0] + '/' + pair[1])!
 		for driver in ['virtio_net', 'e1000'] {
-			source = source.replace('int vinix_' + driver + '_send(const void *',
-				'int vinix_' + driver + '_send(void *')
+			source = source.replace('int tulpar_' + driver + '_send(const void *',
+				'int tulpar_' + driver + '_send(void *')
 		}
 		os.write_file(work + '/fixtures/' + pair[0] + '/' + pair[1], source)!
 	}

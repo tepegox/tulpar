@@ -68,7 +68,7 @@ fn check_x86_word_store(work string) !json2.Any {
 	hosttest.generate_module(native, generated, 'amd64', ['linuxkpi', 'nofloat'])!
 	flags := [hosttest.env_default('CLANG', 'clang'), '-target', 'x86_64-unknown-none',
 		'-ffreestanding', '-fno-builtin', '-nostdinc', '-I' + os.join_path(root, 'kernel/freestnd-c-hdrs'),
-		'-I' + os.join_path(root, 'kernel/c'), '-DVINIX_V_RUNTIME', '-Wall', '-Wextra', '-Werror',
+		'-I' + os.join_path(root, 'kernel/c'), '-DTULPAR_V_RUNTIME', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter']
 	mut results := map[string]json2.Any{}
 	for standard in ['gnu99', 'gnu11'] {
@@ -111,7 +111,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	root := hosttest.root()
 	arch := $if arm64 { 'arm64' } $else $if amd64 { 'amd64' } $else { '' }
 	if arch == '' { return error('Unsupported host architecture') }
-	work := hosttest.work_dir(keep, 'vinix-scalar-store-host-')!
+	work := hosttest.work_dir(keep, 'tulpar-scalar-store-host-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	core := os.join_path(work, 'compatcore')
 	os.mkdir(core)!
@@ -139,7 +139,7 @@ fn run_profile(keep string, supplied_header string) ! {
 		'-fno-omit-frame-pointer']
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
 	native_includes := ['-I' + include, '-I' + os.join_path(root, 'kernel/c')]
-	caller_includes := ['-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
+	caller_includes := ['-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
 		'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h'), '-I' + include,
 		'-I' + os.join_path(root, 'kernel/linuxkpi/include'), '-I' + os.join_path(linux, 'include'),
@@ -151,7 +151,7 @@ fn run_profile(keep string, supplied_header string) ! {
 	for standard in ['gnu99', 'gnu11'] {
 		mut flags := common.clone(); flags << '-std=' + standard
 		production := os.join_path(work, standard + '-core.o')
-		mut argv := flags.clone(); argv << '-DVINIX_V_RUNTIME'; argv << native_includes
+		mut argv := flags.clone(); argv << '-DTULPAR_V_RUNTIME'; argv << native_includes
 		argv << ['-c', generated, '-o', production]
 		command(argv)!
 		imports := command(['nm', '-u', production])!.stdout
@@ -249,7 +249,7 @@ static uint64_t last_value;
 /* The independent callback model may commit a writable prefix before a
  * fault. The ordinary frontend must report that fault without retrying,
  * replacing the value, zeroing the target or rolling the prefix back. */
-int vinix_linuxkpi_write_user_scalar(void *destination, size_t size,
+int tulpar_linuxkpi_write_user_scalar(void *destination, size_t size,
                                     uint64_t value) {
     bridge_calls++;
     last_destination = destination;
@@ -297,7 +297,7 @@ static void helper_tests(void) {
             for (size_t index = 0; index < sizeof(values) / sizeof(values[0]); index++) {
                 reset_model();
                 void *destination = (void *)(USER_BASE + offsets[offset]);
-                CHECK(vinix_linuxkpi_put_user(destination, size, values[index]) == 0);
+                CHECK(tulpar_linuxkpi_put_user(destination, size, values[index]) == 0);
                 CHECK(bridge_calls == 1 && last_size == size);
                 CHECK(last_destination == destination && last_value == values[index]);
                 check_bytes(offsets[offset], size, values[index]);
@@ -306,21 +306,21 @@ static void helper_tests(void) {
         for (size_t amount = 0; amount < size; amount++) {
             reset_model();
             prefix = amount;
-            CHECK(vinix_linuxkpi_put_user(USER_POINTER, size,
+            CHECK(tulpar_linuxkpi_put_user(USER_POINTER, size,
                                          UINT64_C(0x8877665544332211)) == -14);
             CHECK(bridge_calls == 1);
             check_bytes(0, amount, UINT64_C(0x8877665544332211));
         }
         reset_model();
         writable = size - 1;
-        CHECK(vinix_linuxkpi_put_user(USER_POINTER, size, UINT64_MAX) == -14);
+        CHECK(tulpar_linuxkpi_put_user(USER_POINTER, size, UINT64_MAX) == -14);
         CHECK(bridge_calls == 1);
         check_bytes(0, size - 1, UINT64_MAX);
     }
     const size_t invalid_sizes[] = {0, 3, 5, 6, 7, 9, 16, SIZE_MAX};
     for (size_t index = 0; index < sizeof(invalid_sizes) / sizeof(invalid_sizes[0]); index++) {
         reset_model();
-        CHECK(vinix_linuxkpi_put_user(NULL, invalid_sizes[index], UINT64_MAX) == -22);
+        CHECK(tulpar_linuxkpi_put_user(NULL, invalid_sizes[index], UINT64_MAX) == -22);
         CHECK(bridge_calls == 0);
         check_bytes(0, 0, 0);
     }
@@ -335,7 +335,7 @@ static void invalid_destination_tests(void) {
         for (size_t address = 0; address < sizeof(invalid) / sizeof(invalid[0]); address++) {
             reset_model();
             address_limit = limits[index];
-            CHECK(vinix_linuxkpi_put_user((void *)invalid[address], 8, UINT64_MAX) == -14);
+            CHECK(tulpar_linuxkpi_put_user((void *)invalid[address], 8, UINT64_MAX) == -14);
             CHECK(bridge_calls == 1);
             check_bytes(0, 0, 0);
         }

@@ -61,13 +61,13 @@ fn load_relative_plan(directory i32, name &char, mut set PlanSet, trusted bool, 
 	fd := C.openat(directory, name, C.O_RDONLY | C.O_NOFOLLOW | C.O_NONBLOCK | C.O_CLOEXEC)
 	if fd < 0 {
 		if optional && unsafe { C.errno == C.ENOENT } { return true }
-		C.perror(c'vinix-volume: open plan in set'); return false
+		C.perror(c'tulpar-volume: open plan in set'); return false
 	}
 	defer { C.close(fd) }
 	mut plan := unsafe { &Plan(C.alloca(sizeof(Plan))) }
 	unsafe { *plan = Plan{} }
 	if !read_plan(fd, mut plan, trusted) || !append_plan(mut set, plan) {
-		C.printf(c'vinix-volume: rejected plan %s\n', name); return false
+		C.printf(c'tulpar-volume: rejected plan %s\n', name); return false
 	}
 	return true
 }
@@ -77,9 +77,9 @@ fn load_relative_plan(directory i32, name &char, mut set PlanSet, trusted bool, 
 @[direct_array_access]
 fn load_plan_directory(directory i32, mut set PlanSet, trusted bool) bool {
 	copy := C.fcntl(directory, C.F_DUPFD_CLOEXEC, 0)
-	if copy < 0 { C.perror(c'vinix-volume: duplicate plan directory'); return false }
+	if copy < 0 { C.perror(c'tulpar-volume: duplicate plan directory'); return false }
 	stream := C.fdopendir(copy)
-	if stream == unsafe { nil } { C.close(copy); C.perror(c'vinix-volume: enumerate plans'); return false }
+	if stream == unsafe { nil } { C.close(copy); C.perror(c'tulpar-volume: enumerate plans'); return false }
 	defer { C.closedir(stream) }
 	mut names := [64][256]char{}
 	mut count := 0
@@ -88,7 +88,7 @@ fn load_plan_directory(directory i32, mut set PlanSet, trusted bool) bool {
 		unsafe { C.errno = 0 }
 		entry := C.readdir(stream)
 		if entry == unsafe { nil } {
-			if unsafe { C.errno != 0 } { C.perror(c'vinix-volume: plan enumeration'); return false }
+			if unsafe { C.errno != 0 } { C.perror(c'tulpar-volume: plan enumeration'); return false }
 			break
 		}
 		name := unsafe { &entry.d_name[0] }
@@ -118,7 +118,7 @@ fn load_boot_plans(directory i32, mut set PlanSet) bool {
 	plans := C.openat(directory, c'volumes.d', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
 	if plans < 0 {
 		if unsafe { C.errno == C.ENOENT } { return true }
-		C.perror(c'vinix-volume: boot plans directory'); return false
+		C.perror(c'tulpar-volume: boot plans directory'); return false
 	}
 	defer { C.close(plans) }
 	return load_plan_directory(plans, mut set, true)
@@ -156,7 +156,7 @@ fn prepare_plan_set(set &PlanSet, mut state SetRestore, grow bool, writable bool
 		if fd < 0 { return false }
 		state.fds[i] = fd
 		state.opened++
-		C.printf(c'vinix-volume: matched /dev/%s\n', &name[0])
+		C.printf(c'tulpar-volume: matched /dev/%s\n', &name[0])
 		if !prepare_restore_mode(fd, plan, mut state.states[i], grow) { return false }
 		for j := 0; j < i; j++ {
 			if state.states[i].parent.disk_id == state.states[j].parent.disk_id {
@@ -179,7 +179,7 @@ fn close_plan_set(state &SetRestore) {
 
 fn restore_set_directory(path &char) i32 {
 	directory := C.open(path, C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
-	if directory < 0 { C.perror(c'vinix-volume: open plan set'); return 1 }
+	if directory < 0 { C.perror(c'tulpar-volume: open plan set'); return 1 }
 	defer { C.close(directory) }
 	mut set := unsafe { &PlanSet(C.alloca(sizeof(PlanSet))) }
 	unsafe { *set = PlanSet{} }

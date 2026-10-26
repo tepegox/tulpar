@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_IRQWORK_HOST_CONTRACT_H
-#define VINIX_IRQWORK_HOST_CONTRACT_H
+#ifndef TULPAR_IRQWORK_HOST_CONTRACT_H
+#define TULPAR_IRQWORK_HOST_CONTRACT_H
 #include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>

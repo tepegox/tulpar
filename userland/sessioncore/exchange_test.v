@@ -42,14 +42,14 @@ fn test_exchange_requires_both_peers_type_and_one_use() {
 
 fn test_mime_and_uri_associations_validate_identity() {
 	mut a := Associations{}
-	a.set('text/plain', 'vinix-editor', false) or { panic(err) }
-	a.set('https', 'vinix-firefox', true) or { panic(err) }
-	assert a.resolve(mime_for_path('/tmp/HELLO.TXT'), false) or { '' } == 'vinix-editor'
-	assert a.resolve('https', true) or { '' } == 'vinix-firefox'
+	a.set('text/plain', 'tulpar-editor', false) or { panic(err) }
+	a.set('https', 'tulpar-firefox', true) or { panic(err) }
+	assert a.resolve(mime_for_path('/tmp/HELLO.TXT'), false) or { '' } == 'tulpar-editor'
+	assert a.resolve('https', true) or { '' } == 'tulpar-firefox'
 	if _ := a.set('https', 'sh -c', true) {
 		assert false
 	}
-	if _ := a.set('1bad', 'vinix-firefox', true) {
+	if _ := a.set('1bad', 'tulpar-firefox', true) {
 		assert false
 	}
 }

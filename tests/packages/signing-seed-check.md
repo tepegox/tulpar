@@ -55,7 +55,7 @@ v -nocache -no-skip-unused -gc none -manualfree \
   -o /tmp/seed-core tools/packages/pkgcore/signing_seed_test.v
 /tmp/seed-core
 v -nocache -gc none -manualfree -o /tmp/seed-check tests/packages/signing-seed-check.v
-/tmp/seed-check /path/to/vinix-package /tmp/new-seed-work
+/tmp/seed-check /path/to/tulpar-package /tmp/new-seed-work
 ```
 
 Publisher enrollment, advertised-catalog migration and graphical/runtime

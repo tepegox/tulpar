@@ -7,7 +7,7 @@
 // A PC's batteries, charger and lid exist for the kernel only as what
 // firmware's ACPI tables say about them, and QEMU's PC has none of the three.
 // QEMU does accept extra tables (-acpitable), so a test that wants a battery
-// writes one. There is no ASL compiler on a machine that only builds Vinix,
+// writes one. There is no ASL compiler on a machine that only builds Tulpar,
 // and the handful of opcodes such a table needs are quickly put together by
 // hand; these functions each return the bytes of one construct, to be
 // concatenated. The encodings are the ACPI specification's (6.5, chapter 20).
@@ -297,7 +297,7 @@ pub fn acpi_blob(signature string, revision u8, table_id string, content []u8) [
 		out[4 + i] = u8(length >> (8 * i))
 	}
 	out[8] = revision
-	oem := 'VINIX '
+	oem := 'TULPAR '
 	for i in 0 .. 6 {
 		out[10 + i] = oem[i]
 	}

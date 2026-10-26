@@ -126,7 +126,7 @@ fn (mut daemon SessionDaemon) settings_status(category string) string {
 			s.control('storage.mounts', 'View mounted filesystems', os.exists('/proc/mounts'), false)
 		}
 		'updates' {
-			release_record := sessioncore.load('/etc/vinix-release', 256) or { '' }
+			release_record := sessioncore.load('/etc/tulpar-release', 256) or { '' }
 			release := release_record.trim_space().clone()
 			unsafe { release_record.free() }
 			if release.len > 0 {
@@ -136,7 +136,7 @@ fn (mut daemon SessionDaemon) settings_status(category string) string {
 			}
 			unsafe { release.free() }
 			s.line('Release checks report a new ISO. In-place system updates are unavailable.')
-			s.control('updates.check', 'Check releases', session_has_tool('vinix-version-check'), false)
+			s.control('updates.check', 'Check releases', session_has_tool('tulpar-version-check'), false)
 		}
 		'accessibility' {
 			s.line('Display scale changes text and control size together.')
@@ -201,7 +201,7 @@ fn (mut daemon SessionDaemon) settings_status(category string) string {
 }
 
 fn (mut daemon SessionDaemon) save_policy() ! {
-	path := '${daemon.home}/.vinix-shell-policy'
+	path := '${daemon.home}/.tulpar-shell-policy'
 	record := daemon.policy.encode()
 	defer {
 		unsafe {
@@ -388,7 +388,7 @@ fn (mut daemon SessionDaemon) settings_apply_inner(message sessionipc.SessionMes
 				else { return error('unknown account control') }
 			}
 		} else if action == 'updates.check' {
-			tool = 'vinix-version-check'
+			tool = 'tulpar-version-check'
 		} else {
 			return error('unknown settings control')
 		}

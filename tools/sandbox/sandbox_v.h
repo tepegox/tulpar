@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_SANDBOX_V_H
-#define VINIX_SANDBOX_V_H
+#ifndef TULPAR_SANDBOX_V_H
+#define TULPAR_SANDBOX_V_H
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -11,7 +11,7 @@ enum {
  SB_PR_CAP_AMBIENT_CLEAR_ALL = 4, SB_CAP_SETPCAP = 8, SB_MAX_PATHS = 127, SB_MAX_ENV = 64
 };
 struct sb_cap_data { uint32_t effective, permitted, inheritable; };
-#ifdef VINIX_SECURITY_FIXTURE
+#ifdef TULPAR_SECURITY_FIXTURE
 int sb_prctl(int, unsigned long);
 int sb_capget(struct sb_cap_data *);
 int sb_capset(struct sb_cap_data *);
@@ -24,11 +24,11 @@ int sb_unveil(const char *, const char *);
 int sb_pledge(const char *, const char *);
 int sb_exec(const char *, char *const *, char *const *);
 #endif
-#ifndef VINIX_V_RUNTIME
+#ifndef TULPAR_V_RUNTIME
 int vksb_main(int, char **);
 int vksb_verify_ambient_core(void);
 #endif
-#ifndef VINIX_V_RUNTIME
+#ifndef TULPAR_V_RUNTIME
 int vksb_prctl(int, uint64_t);
 int vksb_capget(void *);
 int vksb_capset(void *);

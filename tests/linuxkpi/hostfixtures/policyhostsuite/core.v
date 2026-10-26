@@ -22,8 +22,8 @@ fn C.format_dev_t(&char,u32) &char
 fn C.print_dev_t(&char,u32) i32
 fn C.intel_lookup_range_min_qp(i32,i32,i32,bool) u8
 fn C.intel_lookup_range_max_qp(i32,i32,i32,bool) u8
-fn C.vinix_linuxkpi_irq_flags() u64
-fn C.vinix_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_irq_flags() u64
+fn C.tulpar_linuxkpi_preempt_count() u32
 fn C.i915_fence_context_timeout(&C.drm_i915_private,u64) usize
 fn C.i915_fence_timeout(&C.drm_i915_private) usize
 fn C.msecs_to_jiffies_timeout(u32) usize
@@ -92,7 +92,7 @@ struct QpFamily { bpc i32 columns i32 is_420 bool }
 const families=[QpFamily{8,37,false},QpFamily{10,49,false},QpFamily{12,61,false},QpFamily{8,17,true},QpFamily{10,23,true},QpFamily{12,29,true}]!
 @[export: 'vmh_qp_table_tests']
 pub fn qp_table_tests() { unsafe {
- pages:=C.vmh_live_pages; irq:=C.vinix_linuxkpi_irq_flags(); depth:=C.vinix_linuxkpi_preempt_count()
+ pages:=C.vmh_live_pages; irq:=C.tulpar_linuxkpi_irq_flags(); depth:=C.tulpar_linuxkpi_preempt_count()
  for i:=u32(0); i<48; i++ {
   golden:=qp_goldens[i]
   C.assert(C.intel_lookup_range_min_qp(golden.bpc,golden.row,golden.column,golden.is_420)==golden.minimum)
@@ -114,7 +114,7 @@ pub fn qp_table_tests() { unsafe {
   C.assert(C.intel_lookup_range_min_qp(bpc,14,8-8,true)==bpc*2-3)
   C.assert(C.intel_lookup_range_max_qp(bpc,14,last_420_column,true)==if bpc==8 { 4 } else { 5 })
  }
- C.assert(C.vmh_live_pages==pages && C.vinix_linuxkpi_irq_flags()==irq && C.vinix_linuxkpi_preempt_count()==depth)
+ C.assert(C.vmh_live_pages==pages && C.tulpar_linuxkpi_irq_flags()==irq && C.tulpar_linuxkpi_preempt_count()==depth)
 } }
 __global vmp_config_devices u32
 __global vmp_config_contexts u32

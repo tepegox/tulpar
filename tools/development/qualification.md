@@ -1,13 +1,13 @@
 # Developer workload qualification
 
-`vinix-qualify` builds and executes small real projects using installed tools.
+`tulpar-qualify` builds and executes small real projects using installed tools.
 It records OS/architecture, UID, the runner hash and each invoked executable's
 hash, argv, exit status and log. The output distinguishes `passed`, `failed` and
 `unsupported`; any selected profile that does not pass makes the command exit 1.
 It never reports a startup/version check as a completed project.
 
 ```
-v -gc none -cc gcc -o vinix-qualify tools/development/qualify.v
+v -gc none -cc gcc -o tulpar-qualify tools/development/qualify.v
 ./vinix-qualify --require-vinix /home/developer/new-results
 ./vinix-qualify --require-vinix /home/developer/cpp-results c,cpp,v,make,cmake,ninja
 ```
@@ -22,7 +22,7 @@ executables use bounded owned child processes. Logs remain private under the
 result directory; inherited environment credentials are omitted.
 
 Each command has a 120-second default deadline. Set
-`VINIX_QUALIFY_TIMEOUT_SECONDS` to an integer from 1 through 86400 for larger
+`TULPAR_QUALIFY_TIMEOUT_SECONDS` to an integer from 1 through 86400 for larger
 projects or emulated guests. Invalid values are rejected before output creation;
 `report.json` records the selected command budget. Expiry retires the owned
 process group and retains a failing command receipt. Automatic V compiler bug
@@ -42,7 +42,7 @@ uploads are disabled in project command environments.
 | SQLite | Commit and roll back transactions, reopen the database, check integrity and validate the retained row. |
 | HTTP | Start a pinned BusyBox server on an unprivileged loopback port; refuse missing/wrong credentials and traversal, serve GET/HEAD requests, execute an authenticated V CGI application, and retire the owned server group. |
 
-`--require-vinix` rejects a host OS before creating output. Without it, host
+`--require-tulpar` rejects a host OS before creating output. Without it, host
 checks are labelled `host-only`. An unsupported tool remains an open gate; a
 failing native debugger does too. This suite adds repeatable compiler/project
 coverage, not complete IDE, package ecosystem, profiler or production-server
@@ -51,7 +51,7 @@ qualification. Existing [Go](../../tests/go/README.md), [Java](../../tests/java/
 [Linux application](../../docs/linux-posix-qualification.md) suites provide
 additional coverage at their recorded revisions.
 
-Inside Vinix, the V profile explicitly selects the Vinix/musl target and the
+Inside Tulpar, the V profile explicitly selects the Tulpar/musl target and the
 native architecture, uses V3 with serial workers, and disables compilation
 retry. These match the installed compiler's defaults even when `v` resolves
 directly to the compiler rather than its shell wrapper. The profile still
@@ -68,8 +68,8 @@ Other profiles retain their own acceptance gates; supplying this SDK does not
 qualify the complete catalog or IDE workflows.
 
 The guest controller also accepts a separate prepared reference prefix through
-`VINIX_DEVELOPMENT_REFERENCE_SDK`, with an explicit comma-separated
-`VINIX_DEVELOPMENT_REFERENCE_PROFILES` selection from `make,cmake,ninja,sqlite,node,go,java,http`.
+`TULPAR_DEVELOPMENT_REFERENCE_SDK`, with an explicit comma-separated
+`TULPAR_DEVELOPMENT_REFERENCE_PROFILES` selection from `make,cmake,ninja,sqlite,node,go,java,http`.
 Its [reference-mode instructions](../../tests/development/README.md) describe the
 flat prefix, required tool entries and native runtime closure. Each selected
 workflow runs twice as UID/GID 1000 through a pinned build plan. The controller
@@ -107,16 +107,16 @@ class, JAR and readback hashes across fresh workspaces, plus all six exact
 version/compile/pack/run commands. The JAR tool must support the `--date` option;
 native qualification here used OpenJDK 25.0.4.
 
-`VINIX_QUALIFY_JIT=1` explicitly requests the existing Vinix W^X compatibility
+`TULPAR_QUALIFY_JIT=1` explicitly requests the existing Tulpar W^X compatibility
 mode for the Java-only profile. The standalone qualifier requires an already
 [administrator-approved runtime mount](../../docs/mount-execution-policy.md);
 it never grants approval itself. Invalid values, host contexts and other
 profile selections are rejected before creating output. Reports retain
-`jit_requested` and each actual `VINIX_ALLOW_WX` child-environment override.
+`jit_requested` and each actual `TULPAR_ALLOW_WX` child-environment override.
 Without this option, inherited W^X requests are omitted.
 
 The disposable guest controller's separate
-`VINIX_DEVELOPMENT_REFERENCE_JIT=1` option prepares the pinned JDK's
+`TULPAR_DEVELOPMENT_REFERENCE_JIT=1` option prepares the pinned JDK's
 `/opt/reference/share/jdk` as a read-only `nosuid,nodev,wxallowed` self-bind
 before dropping credentials. It proves UID 1000 requests fail before approval
 and outside that mount, refuses ordinary-user remount/writes, and revokes
@@ -128,12 +128,12 @@ Python and Python-based build tooling, including Meson, are not executed by this
 runner because the repository requires V tooling and forbids running Python.
 Their roadmap qualification remains open. Native ptrace/core dumping, kernel
 stack sampling, rootless user/network namespace semantics and hardware-backed
-Vinix VM hosting also remain open; this runner never changes authorization or
+Tulpar VM hosting also remain open; this runner never changes authorization or
 uses a sandbox-disable flag to turn one of those into a pass.
 
 Run host integration checks with `v -cc cc test tools/development/qualcore`.
 The host receipt is separate from a guest receipt and cannot satisfy an installed
-Vinix acceptance gate.
+Tulpar acceptance gate.
 
 The `http` profile uses the installed `busybox` HTTP/CGI applet and the exact
 qualifier binary as its V CGI fixture. Both server and fixture run under the

@@ -15,9 +15,9 @@ fn C.mkfifo(&char, u32) int
 
 fn health_progress(event pkgprotocol.Progress) {
 	if event.phase != 'resolve' { return }
-	path := os.getenv('VINIX_HEALTH_RESTORE')
+	path := os.getenv('TULPAR_HEALTH_RESTORE')
 	if path == '' { return }
-	os.unsetenv('VINIX_HEALTH_RESTORE')
+	os.unsetenv('TULPAR_HEALTH_RESTORE')
 	os.chmod(path, 0o755) or { panic(err) }
 }
 
@@ -95,12 +95,12 @@ fn damage(base string, kind string, outside string, entry_bytes string) ! {
 }
 
 fn check_case(work string, kind string, binary string, before bool) ! {
-	root := work + '/root'; os.mkdir_all(root + '/etc/vinix-packages')!
+	root := work + '/root'; os.mkdir_all(root + '/etc/tulpar-packages')!
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	key := pkgcore.keygen(work + '/seed')!
 	config := pkgcore.Config{ architecture: architecture, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	for id in ['app', 'runtime', 'assets'] {
 		source := work + '/source-' + id; os.mkdir_all(source + '/bin')!
 		os.write_file(source + '/bin/app', 'signed payload for ' + id)!; os.chmod(source + '/bin/app', if id == 'assets' { 0o644 } else { 0o755 })!
@@ -126,7 +126,7 @@ fn check_case(work string, kind string, binary string, before bool) ! {
 	}
 	client := Client{ root: root, binary: binary, operation: operation, deployment: deployment }
 	store := pkgcore.state_directory(root); base := store + '/generations/1'
-	entry := base + '/share/applications/vinix-app.desktop'; entry_bytes := os.read_file(entry)!
+	entry := base + '/share/applications/tulpar-app.desktop'; entry_bytes := os.read_file(entry)!
 	outside := work + '/outside'; os.write_file(outside, entry_bytes)!; os.chmod(outside, 0o640)!
 	state := os.read_file(store + '/current/state.json')!; catalog := os.read_file(store + '/catalog.json')!; history := os.read_file(store + '/trust-history.json')!
 	mut healthy := client.review()!; defer { healthy.close() }
@@ -153,18 +153,18 @@ fn check_case(work string, kind string, binary string, before bool) ! {
 	if _ := client.apply(review) { assert false } else { assert err.msg().contains('stale') }
 	damage(base, kind, outside, entry_bytes)!
 	if binary == '' && kind == 'app-mode' {
-		os.setenv('VINIX_HEALTH_RESTORE', base + '/apps/app/bin/app', true)
+		os.setenv('TULPAR_HEALTH_RESTORE', base + '/apps/app/bin/app', true)
 		if _ := client.apply(review) { assert false } else { assert err.msg().contains('stale') }
-		os.unsetenv('VINIX_HEALTH_RESTORE'); assert os.is_dir(sentinel)
+		os.unsetenv('TULPAR_HEALTH_RESTORE'); assert os.is_dir(sentinel)
 		damage(base, kind, outside, entry_bytes)!
 	}
 	os.rename(work + '/repository/objects', work + '/hidden-objects')!
-	personal := root + '/home/user/.local/share/vinix-apps/app'; os.mkdir_all(personal)!; os.write_file(personal + '/memo', 'private notes')!
+	personal := root + '/home/user/.local/share/tulpar-apps/app'; os.mkdir_all(personal)!; os.write_file(personal + '/memo', 'private notes')!
 	repaired := with_umask(client, review)!
 	assert repaired.generation == 2 && repaired.previous == 1 && repaired.packages == initial.packages && repaired.requested == initial.requested
 	assert client.state(true)!.generation == 2
-	assert os.read_file(store + '/current/share/applications/vinix-app.desktop')! == entry_bytes
-	assert !os.is_link(store + '/current/share/applications/vinix-app.desktop') && os.lstat(store + '/current/share/applications/vinix-app.desktop')!.mode & 0o7777 == 0o644
+	assert os.read_file(store + '/current/share/applications/tulpar-app.desktop')! == entry_bytes
+	assert !os.is_link(store + '/current/share/applications/tulpar-app.desktop') && os.lstat(store + '/current/share/applications/tulpar-app.desktop')!.mode & 0o7777 == 0o644
 	for installed in repaired.packages { for file in installed.package.files {
 		assert os.lstat(store + '/current/apps/' + installed.package.id + '/' + file.path)!.mode & 0o7777 == if file.executable { u32(0o755) } else { u32(0o644) }
 	} }
@@ -180,7 +180,7 @@ fn check_case(work string, kind string, binary string, before bool) ! {
 	if binary == '' { assert setup.rollback('')!.generation == 3 } else { client.command(['rollback'])!; assert client.state(false)!.generation == 3 }
 	assert client.state(true)!.generation == 3 && client.state(false)!.previous == 2
 	setup.transact('remove', ['app'], pkgcore.TransactionOptions{})!
-	assert setup.state()!.packages.len == 0 && !os.exists(store + '/current/share/applications/vinix-app.desktop')
+	assert setup.state()!.packages.len == 0 && !os.exists(store + '/current/share/applications/tulpar-app.desktop')
 	assert os.read_file(personal + '/memo')! == 'private notes'
 	println('INSTALLED NAMESPACE ' + kind + ': reviewed offline namespace repair, stale approvals, preserved outside/data/history, rollback refusal/restoration and uninstall PASS')
 }

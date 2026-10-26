@@ -12,37 +12,37 @@ struct LaunchProcessLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 struct LaunchObservation { arguments []string directory string environment string uid int gid int }
 
 fn testsuite_begin() {
-	if os.getenv('VINIX_PACKAGE_LAUNCH_CHILD') != '' { return }
-	path := os.real_path(os.temp_dir()) + '/vinix-launch-child-' + os.getpid().str()
+	if os.getenv('TULPAR_PACKAGE_LAUNCH_CHILD') != '' { return }
+	path := os.real_path(os.temp_dir()) + '/tulpar-launch-child-' + os.getpid().str()
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
 	mut compiler := os.new_process(v)
 	compiler.set_args(['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-o', path, 'tests/packages/launch-process-child.v'])
 	compiler.wait(); code := compiler.code; compiler.close(); assert code == 0
-	os.setenv('VINIX_PACKAGE_LAUNCH_CHILD', path, true)
-	os.setenv('VINIX_PACKAGE_LAUNCH_CHILD_CLEANUP', path, true)
+	os.setenv('TULPAR_PACKAGE_LAUNCH_CHILD', path, true)
+	os.setenv('TULPAR_PACKAGE_LAUNCH_CHILD_CLEANUP', path, true)
 }
 
 fn testsuite_end() {
-	path := os.getenv('VINIX_PACKAGE_LAUNCH_CHILD_CLEANUP')
+	path := os.getenv('TULPAR_PACKAGE_LAUNCH_CHILD_CLEANUP')
 	if path != '' { os.rm(path)! }
 }
 
 fn launch_process_child() string {
-	path := os.getenv('VINIX_PACKAGE_LAUNCH_CHILD')
+	path := os.getenv('TULPAR_PACKAGE_LAUNCH_CHILD')
 	assert path.starts_with('/') && os.is_executable(path)
 	return path
 }
 
 fn launch_process_cycles() int { return $if track_heap ? { 1000 } $else { 16 } }
 
-fn launch_process_work() string { return os.real_path(os.temp_dir()) + '/vinix-child-' + os.getpid().str() + '-' + time.now().unix_micro().str() }
+fn launch_process_work() string { return os.real_path(os.temp_dir()) + '/tulpar-child-' + os.getpid().str() + '-' + time.now().unix_micro().str() }
 
 fn launch_process_refusal(launch Launch, stage string) {
 	if _ := run_launch_process(launch) { assert false }
@@ -56,7 +56,7 @@ fn launch_process_unused_fd() int {
 
 fn launch_process_no_children() {
 	mut status := i32(0)
-	assert C.vinix_package_waitpid(-1, unsafe { &status }, C.WNOHANG) == -1 && C.errno == C.ECHILD
+	assert C.tulpar_package_waitpid(-1, unsafe { &status }, C.WNOHANG) == -1 && C.errno == C.ECHILD
 }
 
 fn test_launch_process_literal_argv_environment_working_directory_and_identity() {
@@ -66,7 +66,7 @@ fn test_launch_process_literal_argv_environment_working_directory_and_identity()
 	program := work + '/literal child'; os.symlink(child, program)!
 	path := work + '/observation.json'
 	literal := ['', 'a space', 'é🚀', '$HOME', '$(literal)', '--uid', '0', 'quote"', 'new\nline', '@APP@']
-	os.setenv('VINIX_LAUNCH_PROCESS_LITERAL', 'space é🚀; $HOME=literal\nnext', true)
+	os.setenv('TULPAR_LAUNCH_PROCESS_LITERAL', 'space é🚀; $HOME=literal\nnext', true)
 	launch := Launch{ program: program, directory: work + '/cwd with spaces', arguments: ['observe', path, ...literal] }
 	assert run_launch_process(launch)! == 37
 	observed := json2.decode[LaunchObservation](os.read_file(path)!)!
@@ -85,9 +85,9 @@ fn test_launch_process_waits_retire_all_parent_scratch() {
 		expected := if mode != 'signal' { mode.int() } else { 143 }
 		assert run_launch_process(launch)! == expected
 		unused := launch_process_unused_fd()
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. launch_process_cycles() { assert run_launch_process(launch)! == expected }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, mode + ' retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, mode + ' retained ' + kept.str() }
 		assert launch_process_unused_fd() == unused
 		launch_process_no_children()
 	}
@@ -119,9 +119,9 @@ fn test_launch_process_failures_refuse_before_execution_and_retire_storage() {
 			else if i < 9 { 'absolute executable and working-directory paths' } else { 'argument contains NUL' }
 		launch_process_refusal(launch, stage)
 		unused := launch_process_unused_fd()
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. launch_process_cycles() { launch_process_refusal(launch, stage) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, stage + ' retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, stage + ' retained ' + kept.str() }
 		assert launch_process_unused_fd() == unused
 		launch_process_no_children()
 	}
@@ -180,9 +180,9 @@ fn test_launch_process_keeps_parent_lease_and_retires_setup_failures() {
 		mut fds := []int{cap: 32}
 		for { fd := C.open(c'/dev/null', C.O_RDONLY); if fd < 0 { break }; fds << fd }
 		launch := Launch{ program: child, directory: work, arguments: ['exit', '0'] }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. launch_process_cycles() { launch_process_refusal(launch, 'cannot create application launch status pipe') }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		for fd in fds { C.close(fd) }
 		assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		assert run_launch_process(launch)! == 0

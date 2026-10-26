@@ -27,7 +27,7 @@ fn profile_export_chunk() int {
 
 fn profile_export_grace() {
 	$if linux {
-		// Vinix retires unlinked nodes after a five-second lookup grace period.
+		// Tulpar retires unlinked nodes after a five-second lookup grace period.
 		// Separate bounded stress cohorts so their reservations can return.
 		if os.exists('/proc/kernel-resources') { C.sleep(6) }
 	}
@@ -40,7 +40,7 @@ fn profile_export_native_fixture_elf(architecture string, interpreter bool) []u8
 }
 
 fn profile_export_native_profile_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-native-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-native-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		os.mkdir_all(root + '/bin')!
@@ -59,16 +59,16 @@ fn profile_export_sqlite_fixture_elf(architecture string, pie bool, shared bool)
 }
 
 fn profile_export_sqlite_profile_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-sqlite-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-sqlite-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		for directory in ['bin', 'lib', 'licenses'] { os.mkdir_all(root + '/' + directory)! }
-		for path, kind in {'bin/sqlite3': 'pie', 'bin/vinix-linux-runner': 'static',
+		for path, kind in {'bin/sqlite3': 'pie', 'bin/tulpar-linux-runner': 'static',
 			'lib/libc.so': 'shared', 'lib/libsqlite3.so.0': 'shared'} {
 			os.write_file_array(root + '/' + path, profile_export_sqlite_fixture_elf(architecture, kind == 'pie', kind == 'shared'))!
 			os.chmod(root + '/' + path, 0o755)!
 		}
-		for name in ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'vinix-COPYING'] { os.write_file(root + '/licenses/' + name, 'notice ' + name)! }
+		for name in ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'tulpar-COPYING'] { os.write_file(root + '/licenses/' + name, 'notice ' + name)! }
 	}
 	return work
 }
@@ -78,11 +78,11 @@ fn profile_export_ffmpeg_test_elf(architecture string, kind string) []u8 {
 }
 
 fn profile_export_ffmpeg_test_roots() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-ffmpeg-profile-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-ffmpeg-profile-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		for directory in ['bin', 'lib', 'licenses', 'sources'] { os.mkdir_all(root + '/' + directory)! }
-		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/vinix-linux-runner', 'lib/libc.so', ...ffmpeg_libraries] {
+		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/tulpar-linux-runner', 'lib/libc.so', ...ffmpeg_libraries] {
 			os.write_file_array(root + '/' + path, profile_export_ffmpeg_test_elf(architecture, ffmpeg_elf_kind(path)))!
 			os.chmod(root + '/' + path, 0o755)!
 		}
@@ -143,7 +143,7 @@ fn profile_export_wine_fixture_recipe(architecture string, application bool) Roo
 }
 
 fn profile_export_wine_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-wine-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-wine-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		for directory in ['app', 'runtime', 'licenses'] { os.mkdir_all(root + '/' + directory)! }
@@ -171,7 +171,7 @@ fn profile_export_fixture(kind string) !string {
 		else { return error('unsupported profile') }
 	}
 	if kind == 'ffmpeg' {
-		archive := os.getenv_opt('VINIX_PROFILE_EXPORT_SOURCE') or { '/usr/share/package-fixtures/ffmpeg.tar.xz' }
+		archive := os.getenv_opt('TULPAR_PROFILE_EXPORT_SOURCE') or { '/usr/share/package-fixtures/ffmpeg.tar.xz' }
 		// Early refusal baselines need only the ordinary source size. Complete
 		// publication tests require the retained, hash-verified upstream bytes.
 		if os.is_file(archive) {
@@ -228,16 +228,16 @@ fn profile_export_snapshot(directory string) !string {
 }
 
 fn profile_export_substitute(phase string, stage string) ! {
-	if phase != os.getenv('VINIX_PROFILE_EXPORT_PHASE') { return }
-	work := os.getenv('VINIX_PROFILE_EXPORT_CASE')
+	if phase != os.getenv('TULPAR_PROFILE_EXPORT_PHASE') { return }
+	work := os.getenv('TULPAR_PROFILE_EXPORT_CASE')
 	if os.exists(work + '/stage-path') { return }
 	os.write_file(work + '/stage-path', stage)!
-	site := os.getenv('VINIX_PROFILE_EXPORT_SITE')
+	site := os.getenv('TULPAR_PROFILE_EXPORT_SITE')
 	path := stage + if site == 'root' { '' } else { '/' + site }
 	os.write_file(work + '/replaced-path', path)!
 	os.write_file(work + '/inode', os.stat(path)!.inode.str())!
 	os.write_file(work + '/snapshot', profile_export_snapshot(path)!)!
-	kind := os.getenv('VINIX_PROFILE_EXPORT_KIND')
+	kind := os.getenv('TULPAR_PROFILE_EXPORT_KIND')
 	if kind == 'parent' { os.rename(os.dir(stage), work + '/saved-parent')!; os.mkdir(os.dir(stage))! }
 	else { os.rename(path, work + '/saved-tree')! }
 	match kind {
@@ -250,7 +250,7 @@ fn profile_export_substitute(phase string, stage string) ! {
 		'clone' { os.cp_all(work + '/saved-tree', path, true)! }
 		else { panic(kind) }
 	}
-	if os.getenv('VINIX_PROFILE_EXPORT_FAIL') == 'yes' { return error('injected profile refusal') }
+	if os.getenv('TULPAR_PROFILE_EXPORT_FAIL') == 'yes' { return error('injected profile refusal') }
 }
 
 fn profile_export_assert_recovery(work string, kind string) ! {
@@ -281,7 +281,7 @@ fn test_profile_export_captured_roots_children_parent_and_exact_retry() {
 	limit := ProfileExportLimit{ current: 32, maximum: original.maximum }
 	assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 	defer { assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0 }
-	defer { for name in ['CASE', 'PHASE', 'SITE', 'KIND', 'FAIL']! { os.unsetenv('VINIX_PROFILE_EXPORT_' + name) } }
+	defer { for name in ['CASE', 'PHASE', 'SITE', 'KIND', 'FAIL']! { os.unsetenv('TULPAR_PROFILE_EXPORT_' + name) } }
 	mut cases := 0
 	mut executed := 0
 	for profile in profile_export_profiles() {
@@ -299,7 +299,7 @@ fn test_profile_export_captured_roots_children_parent_and_exact_retry() {
 						case := work + '/case-' + current.str()
 						os.mkdir_all(case + '/output')!; os.mkdir(case + '/outside')!; os.chmod(case + '/outside', 0o700)!
 						os.write_file(case + '/outside/keep', 'preserved')!; os.chmod(case + '/outside/keep', 0o600)!
-						for name, value in {'CASE': case, 'PHASE': phase, 'SITE': site, 'KIND': replacement, 'FAIL': fail} { os.setenv('VINIX_PROFILE_EXPORT_' + name, value, true) }
+						for name, value in {'CASE': case, 'PHASE': phase, 'SITE': site, 'KIND': replacement, 'FAIL': fail} { os.setenv('TULPAR_PROFILE_EXPORT_' + name, value, true) }
 						mut message := ''
 						profile_export_run(profile, work, case + '/output/export', CatalogOptions{ checkpoint: profile_export_substitute }) or { message = err.msg() }
 						assert message != '' && !os.exists(case + '/output/export'), profile + '/' + site + '/' + phase + '/' + replacement + '/' + fail
@@ -323,7 +323,7 @@ fn test_profile_export_captured_roots_children_parent_and_exact_retry() {
 			}
 		}
 		assert profile_export_snapshot(work + '/roots')! == inputs
-		assert os.ls(work)!.all(!it.starts_with('.vinix-'))
+		assert os.ls(work)!.all(!it.starts_with('.tulpar-'))
 		if profile_export_chunk() < 0 {
 			println('PROFILE EXPORT ' + profile + ' 64 root/inventory/lock/parent substitutions preserve recovery, source pins and exact retry under 32 descriptors PASS')
 		} else { println('PROFILE EXPORT ' + profile + ' cohort ' + profile_export_chunk().str() + ' 16 substitutions recovery source pins exact retry 32 descriptors PASS') }
@@ -333,12 +333,12 @@ fn test_profile_export_captured_roots_children_parent_and_exact_retry() {
 }
 
 fn profile_export_observe(phase string, stage string) ! {
-	if phase == 'ready' { os.write_file(os.getenv('VINIX_PROFILE_EXPORT_SAVED') + '/stage-path', stage)! }
+	if phase == 'ready' { os.write_file(os.getenv('TULPAR_PROFILE_EXPORT_SAVED') + '/stage-path', stage)! }
 }
 
 fn profile_export_saved_failure(fd int) int {
-	work := os.getenv('VINIX_PROFILE_EXPORT_SAVED')
-	mode := os.getenv('VINIX_PROFILE_EXPORT_SAVED_MODE')
+	work := os.getenv('TULPAR_PROFILE_EXPORT_SAVED')
+	mode := os.getenv('TULPAR_PROFILE_EXPORT_SAVED_MODE')
 	if mode == 'flush' { return -1 }
 	if mode == 'parent' {
 		os.rename(work + '/output', work + '/saved-parent') or { return -1 }
@@ -355,7 +355,7 @@ fn profile_export_saved_failure(fd int) int {
 
 fn test_profile_export_saved_output_survives_flush_parent_and_inventory_cleanup_failure() {
 	if profile_export_chunk() > 0 { return }
-	defer { os.unsetenv('VINIX_PROFILE_EXPORT_SAVED'); os.unsetenv('VINIX_PROFILE_EXPORT_SAVED_MODE') }
+	defer { os.unsetenv('TULPAR_PROFILE_EXPORT_SAVED'); os.unsetenv('TULPAR_PROFILE_EXPORT_SAVED_MODE') }
 	for profile in profile_export_profiles() {
 		profile_export_grace()
 		work := profile_export_fixture(profile)!; defer { os.rmdir_all(work) or {} }
@@ -363,7 +363,7 @@ fn test_profile_export_saved_output_survives_flush_parent_and_inventory_cleanup_
 		expected := os.read_file(work + '/baseline/catalog.json')!
 		for mode in ['flush', 'parent', 'cleanup']! {
 			case := work + '/' + mode; os.mkdir_all(case + '/output')!
-			os.setenv('VINIX_PROFILE_EXPORT_SAVED', case, true); os.setenv('VINIX_PROFILE_EXPORT_SAVED_MODE', mode, true)
+			os.setenv('TULPAR_PROFILE_EXPORT_SAVED', case, true); os.setenv('TULPAR_PROFILE_EXPORT_SAVED_MODE', mode, true)
 			mut message := ''
 			profile_export_run(profile, work, case + '/output/export', CatalogOptions{ checkpoint: profile_export_observe, flush: profile_export_saved_failure }) or { message = err.msg() }
 			assert message.contains('published') && message.contains(match mode { 'flush' { 'directory flush failed' } 'parent' { 'parent path changed' } else { 'cleanup refused' } })

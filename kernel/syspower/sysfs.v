@@ -6,17 +6,17 @@
 //	/sys/power/state              freeze mem, and disk where an image can be
 //	                              kept; write one to sleep
 //	/sys/power/mem_sleep          what mem means: [s2idle] deep
-//	/sys/power/deep_sleep         whether deep is offered, and why not (Vinix's)
+//	/sys/power/deep_sleep         whether deep is offered, and why not (Tulpar's)
 //	/sys/power/disk               what disk does once the image is written:
 //	                              [shutdown], the only way there is
 //	/sys/power/hibernate          whether disk is offered and why not, the
 //	                              device, and what the last image and the
-//	                              last boot came to (Vinix's)
+//	                              last boot came to (Tulpar's)
 //	/sys/power/pm_test            [none] devices platform: rehearse instead of
 //	                              sleeping
-//	/sys/power/pm_test_delay_ms   how long a rehearsal stays down (Vinix's)
+//	/sys/power/pm_test_delay_ms   how long a rehearsal stays down (Tulpar's)
 //	/sys/power/suspend_stats/     success fail last_failed_dev last_failed_step,
-//	                              and Vinix's last_failed_reason, last_wake,
+//	                              and Tulpar's last_failed_reason, last_wake,
 //	                              last_depth, deep, disk, last_*_ms,
 //	                              security_checks, security_changes,
 //	                              security_cpus, and screen_dark and
@@ -25,7 +25,7 @@
 //	                              profile follows the power source
 //	/sys/power/lid/               state (open, closed, unknown), closes, and
 //	                              action: suspend or ignore
-//	/sys/class/wakeup/wakeupN/    name event_count wakeup_count, and Vinix's
+//	/sys/class/wakeup/wakeupN/    name event_count wakeup_count, and Tulpar's
 //	                              enabled, which may be written
 //	/sys/class/rtc/rtc0/wakealarm seconds since the epoch, or +seconds from
 //	                              now, at which to wake; 0 cancels
@@ -102,7 +102,7 @@ pub fn publish() {
 	// is not the nil a file with no context has.
 	for index in 0 .. wakesrc.source_count {
 		context := voidptr(u64(index) + 1)
-		mut base := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+		mut base := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 		unsafe { *base = lib.new_text(40) }
 		base.add('class/wakeup/wakeup')
 		base.add_decimal(i64(index))
@@ -129,7 +129,7 @@ pub fn publish() {
 }
 
 fn wakeup_file(directory string, name string, mode u32, show fs.SysfsShow, store fs.SysfsStore, context voidptr) {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(directory.len + name.len) }
 	text.add(directory)
 	text.add(name)

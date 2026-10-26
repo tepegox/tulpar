@@ -8,7 +8,7 @@ module taskfixture
 struct C.task_struct {
 	__state      u32
 	flags        u32
-	vinix_thread voidptr
+	tulpar_thread voidptr
 }
 
 @[typedef]
@@ -16,7 +16,7 @@ struct C.pthread_t {}
 
 type TaskWorker = fn (voidptr) voidptr
 
-fn C.vinix_linuxkpi_fixture_task_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_task_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, TaskWorker, voidptr) i32
 fn C.pthread_detach(C.pthread_t) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
@@ -30,9 +30,9 @@ fn C.schedule()
 fn C.cond_resched() i32
 fn C.wake_up_state(&C.task_struct, u32) i32
 fn C.wake_up_process(&C.task_struct) i32
-fn C.vinix_linuxkpi_task_queued(voidptr) bool
-fn C.vinix_linuxkpi_task_is_dead(voidptr) bool
-fn C.vinix_linuxkpi_test_task_signal(voidptr, u64)
+fn C.tulpar_linuxkpi_task_queued(voidptr) bool
+fn C.tulpar_linuxkpi_task_is_dead(voidptr) bool
+fn C.tulpar_linuxkpi_test_task_signal(voidptr, u64)
 fn C.__atomic_fetch_or(&u32, u32, i32) u32
 fn C.__atomic_store_n(&u32, u32, i32)
 fn C.__atomic_load_n(&u32, i32) u32
@@ -70,7 +70,7 @@ mut:
 	result i32
 }
 
-@[export: 'vinix_linuxkpi_fixture_task_worker']
+@[export: 'tulpar_linuxkpi_fixture_task_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut test := &NativeWaitTest(argument)
@@ -97,7 +97,7 @@ pub fn worker(argument voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_task_native_selftest']
+@[export: 'tulpar_linuxkpi_task_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		mut held := [70]&C.task_struct{}
@@ -105,18 +105,18 @@ pub fn selftest() i32 {
 		for i in 0 .. 70 {
 			mut test := NativeWaitTest{ early: (i & 1) != 0 }
 			mut worker_id := C.pthread_t{}
-			C.BUG_ON(C.pthread_create(&worker_id, nil, C.vinix_linuxkpi_fixture_task_worker, &test) != 0)
+			C.BUG_ON(C.pthread_create(&worker_id, nil, C.tulpar_linuxkpi_fixture_task_worker, &test) != 0)
 			for C.__atomic_load_n(&test.phase, 2) < 1 { C.cond_resched() }
 			held[i] = test.task
 			if C.wake_up_state(held[i], C.TASK_INTERRUPTIBLE) != 0 { result = -C.EIO }
 			if !test.early {
-				for C.vinix_linuxkpi_task_queued(held[i].vinix_thread) { C.cond_resched() }
-				C.vinix_linuxkpi_test_task_signal(held[i].vinix_thread, u64(1) << 14)
-				for C.vinix_linuxkpi_task_queued(held[i].vinix_thread) { C.cond_resched() }
+				for C.tulpar_linuxkpi_task_queued(held[i].tulpar_thread) { C.cond_resched() }
+				C.tulpar_linuxkpi_test_task_signal(held[i].tulpar_thread, u64(1) << 14)
+				for C.tulpar_linuxkpi_task_queued(held[i].tulpar_thread) { C.cond_resched() }
 				if C.__atomic_load_n(&held[i].__state, 0) != C.TASK_UNINTERRUPTIBLE {
 					result = -C.EIO
 				}
-				C.vinix_linuxkpi_test_task_signal(held[i].vinix_thread, 0)
+				C.tulpar_linuxkpi_test_task_signal(held[i].tulpar_thread, 0)
 			}
 			if C.wake_up_process(held[i]) != 1 { result = -C.EIO }
 			if test.early { C.__atomic_store_n(&test.phase, 2, 3) }
@@ -129,7 +129,7 @@ pub fn selftest() i32 {
 				if uint(value) != uint(0x1234) { result = -C.EIO }
 			}
 			if test.result != 0 { result = -C.EIO }
-			for !C.vinix_linuxkpi_task_is_dead(held[i].vinix_thread) { C.cond_resched() }
+			for !C.tulpar_linuxkpi_task_is_dead(held[i].tulpar_thread) { C.cond_resched() }
 			if C.wake_up_process(held[i]) != 0 { result = -C.EIO }
 		}
 		task_test_flags := C.PF_VCPU | u32(0x40000000)

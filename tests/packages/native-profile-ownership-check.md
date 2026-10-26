@@ -32,7 +32,7 @@ retains zero; the complete build still includes unqualified import, packing and
 filesystem helper scratch. No kernel code changes or complete-profile allocation
 freedom are claimed. The test preserves the original canonical SHA-256
 `249d6bfb150918c4586f86d68da6b6394800d150f7385c3654fadb7ab19a3fce` and can also compare
-the exact pre-change bytes using `VINIX_NATIVE_OWNERSHIP_GOLDEN`.
+the exact pre-change bytes using `TULPAR_NATIVE_OWNERSHIP_GOLDEN`.
 
 The [host controller](native-profile-ownership-check.v) performs 31 build/test
 checks: production CLI, ten core suites, literal CLI maintenance, tracked
@@ -74,7 +74,7 @@ V=/path/to/reviewed/v /tmp/native-profile-ownership-check /build/new-native-owne
 
 v -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/native-profile-ownership-runtime-check tests/packages/native-profile-ownership-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/native-profile-ownership-runtime-check --arch aarch64 \
   --kernel /build/aarch64-kernel --state-dir /build/new-native-owner-arm
 ```

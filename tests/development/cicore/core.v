@@ -7,7 +7,7 @@ import json2
 pub const account_proof = '{"schema":1,"uid":1000,"gid":1000,"credential_absent":true}\n'
 
 pub fn options(value string, profiles []string) !bool {
-	if value !in ['', '0', '1'] { return error('VINIX_DEVELOPMENT_REFERENCE_CI must be 0 or 1') }
+	if value !in ['', '0', '1'] { return error('TULPAR_DEVELOPMENT_REFERENCE_CI must be 0 or 1') }
 	if value == '1' && profiles != ['go'] { return error('reference CI requires only the prepared native Go profile') }
 	return value == '1'
 }
@@ -73,7 +73,7 @@ pub fn verify(plan_text string, completed string, failed string, builder_sha str
 	plan := json2.decode[Plan](plan_text, strict: true)!
 	if plan.schema != 1 || plan.uid != 1000 || plan.jobs.len != 1 { return error('CI plan identity changed') }
 	job := plan.jobs[0]
-	if job.id != 'ci' || job.executable != Pin{'/usr/bin/vinix-build', builder_sha}
+	if job.id != 'ci' || job.executable != Pin{'/usr/bin/tulpar-build', builder_sha}
 		|| !job.expand_attempt || job.arguments != ['build', '/home/developer/reference-build.json', '/home/developer/ci-{attempt}']
 		|| job.directory != '/home/developer' || job.interval_seconds != 1 || job.timeout_seconds != 1800
 		|| job.environment.len != 0 || job.credential_files != {'CI_TOKEN': '/home/developer/token'} {

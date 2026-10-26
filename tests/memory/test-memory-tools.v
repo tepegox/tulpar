@@ -24,7 +24,7 @@ fn signal_child(pid int, pointer voidptr) ! {
 }
 
 fn blocked() ! {
-	work := os.getenv('VINIX_MEMORY_TEST_BLOCKED')
+	work := os.getenv('TULPAR_MEMORY_TEST_BLOCKED')
 	mut child := os.new_process('/bin/sleep')
 	child.set_args(['600'])
 	child.run()
@@ -81,16 +81,16 @@ fn cases(work string) ! {
 	os.mkdir(bin)!
 	os.symlink(os.executable(), bin + '/blocked-cc')!
 	previous := os.getenv_opt('CC')
-	defer { if value := previous { os.setenv('CC', value, true) } else { os.unsetenv('CC') }; os.unsetenv('VINIX_MEMORY_TEST_BLOCKED') }
+	defer { if value := previous { os.setenv('CC', value, true) } else { os.unsetenv('CC') }; os.unsetenv('TULPAR_MEMORY_TEST_BLOCKED') }
 	os.setenv('CC', bin + '/blocked-cc', true)
 	for tool in ['runtime', 'bigio'] {
 		for signal in [2, 15] {
 			directory := work + '/' + tool + '-' + signal.str()
 			os.mkdir(directory)!
-			os.setenv('VINIX_MEMORY_TEST_BLOCKED', directory, true)
+			os.setenv('TULPAR_MEMORY_TEST_BLOCKED', directory, true)
 			data := SignalCase{directory, signal}
 			mut argv := [os.executable(), '--tool', tool, '--state-dir', directory + '/build']
-			if tool == 'bigio' { argv << ['--original-reference', os.getenv('VINIX_MEMORY_TEST_C_BIGIO')] }
+			if tool == 'bigio' { argv << ['--original-reference', os.getenv('TULPAR_MEMORY_TEST_C_BIGIO')] }
 			result := sourcecommand.capture_owned(argv, os.environ(), 45, 4 * 1024 * 1024, unsafe { nil }, unsafe { nil }, signal_child, unsafe { &data }, 0)!
 			assert result.status == 128 + signal, result.str()
 			retired(directory)!
@@ -103,7 +103,7 @@ fn cases(work string) ! {
 fn main() {
 	if os.base(os.args[0]) == 'blocked-cc' { blocked() or { panic(err) }; return }
 	args := os.args[1..]
-	if args.len == 2 && args[0] == '--blocked-guest' { os.setenv('VINIX_MEMORY_TEST_BLOCKED', args[1], true); blocked() or { panic(err) }; return }
+	if args.len == 2 && args[0] == '--blocked-guest' { os.setenv('TULPAR_MEMORY_TEST_BLOCKED', args[1], true); blocked() or { panic(err) }; return }
 	if args.len == 2 && args[0] == '--guest-owner' { exit(guest_owner(args[1]) or { eprintln(err); 1 }) }
 	if args.len >= 2 && args[0] == '--tool' { exit(memorytools.cli(args[2..], args[1] == 'runtime')) }
 	if args.len != 1 { eprintln('usage: test-memory-tools NEW_STATE'); exit(2) }

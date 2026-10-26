@@ -35,7 +35,7 @@ fn persistence_suite(image string) hwhost.Suite {
 		scenarios << hwhost.Scenario{
 			name:         name
 			arches:       ['aarch64', 'x86_64']
-			cmdline:      'vinix.qemu_persist=1'
+			cmdline:      'tulpar.qemu_persist=1'
 			about:        'SIGKILL QEMU after ' + phase + ', reboot the same ext2 disk and recover packages'
 			disks:        [hwhost.Disk{ name: 'packages.ext2', size_mib: 64, image: image }]
 			qemu_aarch64: ['-drive',
@@ -53,7 +53,7 @@ fn persistence_suite(image string) hwhost.Suite {
 		name:         'package-persistence'
 		guest:        'tests/accounts/guest'
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
-		programs:     [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' }]
+		programs:     [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' }]
 		scenarios:    scenarios
 	}
 }
@@ -90,7 +90,7 @@ fn persistence_check() !int {
 	}
 	if keygen && options.state_dir == '' { return error('--keygen requires --state-dir to compare both serial public keys') }
 	if !os.is_file(options.kernel) { return error('--kernel is not a file: ${options.kernel}') }
-	work := os.temp_dir() + '/vinix-package-persistence-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-package-persistence-' + os.getpid().str()
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or {} }
 	kernel := work + '/kernel'
@@ -98,7 +98,7 @@ fn persistence_check() !int {
 	image := work + '/packages.ext2'
 	os.write_file(image, '')!
 	os.truncate(image, u64(64) << 20)!
-	tool := os.getenv_opt('VINIX_MKE2FS') or {
+	tool := os.getenv_opt('TULPAR_MKE2FS') or {
 		os.find_abs_path_of_executable('mke2fs') or { '/opt/homebrew/opt/e2fsprogs/sbin/mke2fs' }
 	}
 	hwhost.run_tool([tool, '-q', '-F', '-t', 'ext2', '-b', '4096', '-I', '128', '-m', '0', '-O',
@@ -113,7 +113,7 @@ fn persistence_check() !int {
 		mut artifacts := [persistence_artifact('kernel', kernel)!,
 			persistence_artifact('initial-ext2', image)!,
 			persistence_artifact('guest', options.state_dir + '/guest/init')!,
-			persistence_artifact('package-service', options.state_dir + '/guest/root/usr/bin/vinix-package')!]
+			persistence_artifact('package-service', options.state_dir + '/guest/root/usr/bin/tulpar-package')!]
 		for scenario in selected {
 			for name in ['serial.log', 'serial-2.log'] {
 				artifacts << persistence_artifact(scenario.name + '/' + name, options.state_dir + '/' + scenario.name + '/' + name)!

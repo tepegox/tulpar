@@ -23,8 +23,8 @@
 #define MIB (1024ULL * 1024ULL)
 #define GIB (1024ULL * MIB)
 /* <linux/kd.h>: take the console's screen for drawing. */
-#define VINIX_KDSETMODE 0x4b3a
-#define VINIX_KD_GRAPHICS 1
+#define TULPAR_KDSETMODE 0x4b3a
+#define TULPAR_KD_GRAPHICS 1
 /* Past the size below which arm64 fills an anonymous mapping in at mmap(). */
 #define LAZY (128 * MIB)
 
@@ -343,7 +343,7 @@ static void screen_owner_spared(unsigned long long free_bytes) {
 	if (desktop == 0) {
 		close(ready[0]);
 		int console = open("/dev/console", O_RDWR | O_NOCTTY);
-		if (console < 0 || ioctl(console, VINIX_KDSETMODE, VINIX_KD_GRAPHICS) != 0) _exit(10);
+		if (console < 0 || ioctl(console, TULPAR_KDSETMODE, TULPAR_KD_GRAPHICS) != 0) _exit(10);
 		size_t length = (size_t)(free_bytes / 100 * 60);
 		volatile unsigned char *pages = hog_mapping(length);
 		for (size_t offset = 0; offset < length; offset += 4096) pages[offset] = 1;

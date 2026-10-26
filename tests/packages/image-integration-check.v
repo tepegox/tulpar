@@ -46,7 +46,7 @@ fn qualify() ! {
 	}
 	checks << task('cli-run', [work + '/cli', work + '/stage', work + '/compiler', work + '/cli-cases'], work, work + '/cli', false)!
 	checks << task('tools-cli-run', [work + '/tools-cli', work + '/stage', work + '/compiler', work + '/tools-cli-cases'], work, work + '/tools-cli', false)!
-	os.setenv('VINIX_PACKAGE_STAGE_CHECK_CLI', work + '/stage', true)
+	os.setenv('TULPAR_PACKAGE_STAGE_CHECK_CLI', work + '/stage', true)
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	for name in ['image_integration', 'sanitize', 'image_tools', 'image_configuration', 'atomic_new']! {
 		mut argv := [v, ...flags]

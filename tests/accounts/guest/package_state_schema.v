@@ -27,10 +27,10 @@ fn qualify_package_state_schema(mut t Test) ! {
 	os.write_file(source + '/COPYING', 'MIT redistribution fixture')!
 	os.mkdir_all('/tmp/package-publisher', mode: 0o700)!
 	key := pkgcore.keygen('/tmp/package-publisher/stored-seed')!
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
 		policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	for i, version in ['1.0.0', '2.0.0'] {
 		os.write_file('/tmp/stored-manifest.json', json2.encode(pkgcore.Package{ id: 'stored-data', version: version,
 			architecture: 'all', name: 'Stored-state fixture', license: 'MIT', kind: 'data' }))!
@@ -41,7 +41,7 @@ fn qualify_package_state_schema(mut t Test) ! {
 		package_success(if i == 0 { ['install', 'stored-data'] } else { ['upgrade'] })!
 		t.say('PACKAGE STORED STATE installed ' + version)
 	}
-	directory := '/var/lib/vinix-packages'
+	directory := '/var/lib/tulpar-packages'
 	os.mkdir(directory + '/generations/3')!
 	os.write_file(directory + '/generations/3/lease', '')!
 	os.mkdir(directory + '/generations/.stage-sentinel')!
@@ -49,7 +49,7 @@ fn qualify_package_state_schema(mut t Test) ! {
 	service := pkgcore.Service{}
 	mut review := service.review('remove', ['stored-data'])!
 	defer { review.close() }
-	configuration := os.read_file('/etc/vinix-packages/config.json')!
+	configuration := os.read_file('/etc/tulpar-packages/config.json')!
 	for generation in ['2', '1'] {
 		t.say('PACKAGE STORED STATE checking generation ' + generation)
 		path := directory + '/generations/' + generation + '/state.json'
@@ -66,12 +66,12 @@ fn qualify_package_state_schema(mut t Test) ! {
 					['remove', 'stored-data'], ['apply', review.fingerprint, 'remove', 'stored-data']]
 			}
 			for arguments in operations {
-				failed := run(['/usr/bin/vinix-package', ...arguments], '', none, none)
+				failed := run(['/usr/bin/tulpar-package', ...arguments], '', none, none)
 				assert failed.status == 1 && !failed.output.contains('V panic:'), failed.output
 				assert failed.output.contains('missing required signed package field') || failed.output.contains('invalid metadata document field type')
 					|| failed.output.contains('Expected number, but got string'), failed.output
 				assert stored_guest_inventory(directory)! == before
-				assert os.read_file('/etc/vinix-packages/config.json')! == configuration
+				assert os.read_file('/etc/tulpar-packages/config.json')! == configuration
 			}
 		}
 		os.write_file(path, original)!

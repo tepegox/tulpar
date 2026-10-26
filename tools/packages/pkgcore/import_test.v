@@ -7,7 +7,7 @@ import os
 fn C.mkfifo(&char, u32) int
 
 fn import_scratch(label string) !string {
-	path := os.temp_dir() + '/vinix-import-' + label + '-' + os.getpid().str()
+	path := os.temp_dir() + '/tulpar-import-' + label + '-' + os.getpid().str()
 	os.mkdir_all(path)!
 	return path
 }

@@ -9,9 +9,9 @@ import tools.packages.pkgprotocol
 #include <poll.h>
 #include <sys/wait.h>
 #include <signal.h>
-#define vinix_package_poll poll
-#define vinix_package_waitpid waitpid
-fn C.vinix_package_poll(voidptr, uint, int) int
+#define tulpar_package_poll poll
+#define tulpar_package_waitpid waitpid
+fn C.tulpar_package_poll(voidptr, uint, int) int
 fn C.pipe(&i32) int
 fn C.pipe2(&i32, int) int
 fn C.fcntl(int, int, ...int) int
@@ -19,7 +19,7 @@ fn C.fork() int
 fn C.dup2(int, int) int
 fn C._exit(int)
 fn C.kill(int, int) int
-fn C.vinix_package_waitpid(int, &i32, int) int
+fn C.tulpar_package_waitpid(int, &i32, int) int
 
 struct HttpsOutputOptions {
 	program string = '/usr/bin/curl'
@@ -76,7 +76,7 @@ fn output_pipe() ![2]i32 {
 fn reap_output(pid int) !int {
 	mut status := i32(0)
 	for {
-		waited := C.vinix_package_waitpid(pid, &status, 0)
+		waited := C.tulpar_package_waitpid(pid, &status, 0)
 		if waited < 0 && C.errno == C.EINTR { continue }
 		if waited != pid { return error('cannot collect download process status') }
 		return if status & 0x7f == 0 { (status >> 8) & 0xff } else { 128 + (status & 0x7f) }
@@ -118,7 +118,7 @@ fn pump_https_output(output HttpsOutput, path string, maximum u64, offset u64, a
 	check_https_output(output, path, output.bytes)!
 	for {
 		mut polling := OutputPoll{ fd: fds[0], events: i16(C.POLLIN) }
-		ready := C.vinix_package_poll(unsafe { voidptr(&polling) }, 1, 200)
+		ready := C.tulpar_package_poll(unsafe { voidptr(&polling) }, 1, 200)
 		if ready < 0 && C.errno == C.EINTR { continue }
 		if ready < 0 { return error('cannot monitor download output') }
 		if ready > 0 {

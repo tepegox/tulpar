@@ -11,8 +11,8 @@ fn C.usleep(u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn frame_cycles() int { return 1000 }
@@ -49,19 +49,19 @@ fn test_owned_frames_preserve_binary_fields_and_retire_storage() {
 	labels := ['packages-launch', '', 'secret', 'nonce', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 	defer { unsafe { labels.free() } }
 	for count in 0 .. max_fields + 1 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. frame_cycles() {
 			mut frame := text_frame(op_run, ...unsafe { labels[..count] })
 			assert frame.fields.len == count
 			frame.close(); frame.close()
 			assert frame.code == 0 && frame.fields.len == 0
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	}
 	mut maximum := frame_maximum(); defer { maximum.close() }
 	bytes := encode(maximum)!; defer { unsafe { bytes.free() } }
 	assert bytes.len == max_frame
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. frame_cycles() {
 		encoded := encode(maximum)!
 		mut first := decode(encoded)!; mut sibling := decode(encoded)!
@@ -70,7 +70,7 @@ fn test_owned_frames_preserve_binary_fields_and_retire_storage() {
 		assert sibling.code == maximum.code && sibling.fields == maximum.fields
 		sibling.close(); sibling.close()
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	// wipe preserves borrowed containers and lengths; callers still own them.
 	mut borrowed := Frame{ code: op_verify, fields: unsafe { maximum.fields } }
 	borrowed.wipe()
@@ -99,20 +99,20 @@ fn test_partial_and_invalid_frames_retire_every_owned_field() {
 	mut trailing := encoded.clone(); unsafe { trailing.flags |= .noslices }; trailing << u8(0)
 	unsafe { bad.push_many(&trailing, 1) }
 	for data in bad {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. frame_cycles() { frame_reject(data) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	}
 	mut oversized := frame_maximum(); defer { oversized.close() }
 	unsafe { oversized.fields[11].flags |= .noslices }; oversized.fields[11] << u8(0)
 	mut many := Frame{ fields: [][]u8{len: max_fields + 1} }; defer { many.close() }
 	for invalid in [oversized, many] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. frame_cycles() {
 			if bytes := encode(invalid) { unsafe { bytes.free() }; assert false }
 			else { frame_error(err) }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	}
 	println('AUTH FRAME every prefix and 16 malformed/trailing cases, oversized late field and excess count x1000 retained 0 bytes PASS')
 }
@@ -121,14 +121,14 @@ fn test_stream_roundtrips_retire_encoded_and_received_storage() {
 	mut frame := frame_maximum(); defer { frame.close() }
 	before := frame_fds()
 	pair := frame_pair()
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. frame_cycles() {
 		write_frame(pair[0], frame)!
 		mut received := read_frame(pair[1])!
 		assert received.code == frame.code && received.fields == frame.fields
 		received.close(); received.close()
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	C.close(pair[0]); C.close(pair[1])
 	assert frame_fds() == before
 	frame_settle()
@@ -142,7 +142,7 @@ fn test_interrupted_streams_and_io_errors_retire_partial_frames() {
 	encoded := encode(frame)!; defer { unsafe { encoded.free() } }
 	before := frame_fds()
 	for cut in [0, 4, 12, 14, 18, 23, 28, encoded.len - 1]! {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. frame_cycles() {
 			pair := frame_pair()
 			if cut != 0 { assert C.write(pair[0], encoded.data, uint(cut)) == cut }
@@ -151,7 +151,7 @@ fn test_interrupted_streams_and_io_errors_retire_partial_frames() {
 			else { frame_error(err) }
 			C.close(pair[0]); C.close(pair[1])
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 		assert frame_fds() == before
 		frame_settle()
 	}
@@ -160,7 +160,7 @@ fn test_interrupted_streams_and_io_errors_retire_partial_frames() {
 	mut bad_field := encoded.clone(); bad_field[33] = 255
 	defer { unsafe { bad_magic.free(); bad_count.free(); bad_field.free() } }
 	for data in [bad_magic, bad_count, bad_field] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. frame_cycles() {
 			pair := frame_pair()
 			assert C.write(pair[0], data.data, uint(data.len)) == data.len
@@ -169,17 +169,17 @@ fn test_interrupted_streams_and_io_errors_retire_partial_frames() {
 			else { frame_error(err) }
 			C.close(pair[0]); C.close(pair[1])
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 		assert frame_fds() == before
 		frame_settle()
 	}
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. frame_cycles() {
 		if mut received := read_frame(-1) { received.close(); assert false }
 		else { frame_error(err) }
 		write_frame(-1, frame) or { frame_error(err); continue }
 		assert false
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, kept.str() }
 	println('AUTH FRAME eight interrupted stream positions, three malformed wire paths and invalid-descriptor reads/writes x1000 retained 0 bytes and no descriptors PASS')
 }

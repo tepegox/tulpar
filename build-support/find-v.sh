@@ -9,10 +9,10 @@
 #   . "$SCRIPT_DIR/build-support/find-v.sh"
 #
 # $V is honoured if already set, so a caller can point at a particular build.
-# VINIX_V_COMPILER is the equivalent project-specific setting.  Either may be
+# TULPAR_V_COMPILER is the equivalent project-specific setting.  Either may be
 # an executable or a V checkout directory, whose `v` is used.
 #
-# Vinix builds with a checkout's `v` (~/code/v/v here), never with the `vnew`
+# Tulpar builds with a checkout's `v` (~/code/v/v here), never with the `vnew`
 # a V developer's tree may also hold: those go stale and stop building the
 # desktop. A `vnew` named explicitly is swapped for the `v` beside it.
 # Each candidate must report a V version before a build can use it: another
@@ -71,8 +71,8 @@ find_v() {
         return
     fi
 
-    if [ -n "${VINIX_V_COMPILER:-}" ]; then
-        select_v "$VINIX_V_COMPILER"
+    if [ -n "${TULPAR_V_COMPILER:-}" ]; then
+        select_v "$TULPAR_V_COMPILER"
         return
     fi
 
@@ -95,9 +95,9 @@ find_v() {
 }
 
 find_v "$@" || {
-    echo "Set V/VINIX_V_COMPILER to a V programming language compiler:" >&2
+    echo "Set V/TULPAR_V_COMPILER to a V programming language compiler:" >&2
     echo "    V=~/code/v/v $0 $*" >&2
-    echo "    VINIX_V_COMPILER=~/code/v $0 $*" >&2
+    echo "    TULPAR_V_COMPILER=~/code/v $0 $*" >&2
     exit 1
 }
 export V

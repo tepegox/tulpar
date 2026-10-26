@@ -6,7 +6,7 @@ module timefixture
 #include "linuxkpi_time_fixture_v_contract.h"
 struct C.task_struct {
 	__state      u32
-	vinix_thread voidptr
+	tulpar_thread voidptr
 }
 
 struct C.swait_queue_head {}
@@ -23,7 +23,7 @@ struct C.pthread_t {}
 
 type TimeWorker = fn (voidptr) voidptr
 
-fn C.vinix_linuxkpi_fixture_time_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_time_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, TimeWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
@@ -44,12 +44,12 @@ fn C.init_completion(&C.completion)
 fn C.complete(&C.completion)
 fn C.wait_for_completion_timeout(&C.completion, uint) uint
 fn C.wait_for_completion_interruptible_timeout(&C.completion, uint) int
-fn C.vinix_linuxkpi_test_task_signal(voidptr, u64)
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_clock_ns() u64
-fn C.vinix_linuxkpi_test_task_time_waiters(&C.task_struct) uint
-fn C.vinix_linuxkpi_test_thread_reap_ready(voidptr) bool
-fn C.vinix_linuxkpi_test_reap_quiescent() bool
+fn C.tulpar_linuxkpi_test_task_signal(voidptr, u64)
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_clock_ns() u64
+fn C.tulpar_linuxkpi_test_task_time_waiters(&C.task_struct) uint
+fn C.tulpar_linuxkpi_test_thread_reap_ready(voidptr) bool
+fn C.tulpar_linuxkpi_test_reap_quiescent() bool
 fn C.__atomic_load_n(&u32, i32) u32
 fn C.BUG_ON(bool)
 fn C.BUG()
@@ -90,7 +90,7 @@ mut:
 	failures [8]TimeFailure
 }
 
-@[export: 'vinix_linuxkpi_fixture_time_worker']
+@[export: 'tulpar_linuxkpi_fixture_time_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut test_worker := &NativeTimeWorker(argument)
@@ -119,14 +119,14 @@ pub fn worker(argument voidptr) voidptr {
 			C.complete(&completion)
 			failure.completed = int(C.wait_for_completion_timeout(&completion, 0))
 			if failure.completed != 1 { failure.reasons |= 32 }
-			C.vinix_linuxkpi_test_task_signal(test_worker.task.vinix_thread, u64(1) << 14)
+			C.tulpar_linuxkpi_test_task_signal(test_worker.task.tulpar_thread, u64(1) << 14)
 			failure.interrupted = C.wait_for_completion_interruptible_timeout(&completion, 5)
 			if failure.interrupted != -C.ERESTARTSYS { failure.reasons |= 64 }
 			failure.killable = C.schedule_timeout_killable(2)
 			if failure.killable != 0 { failure.reasons |= 128 }
-			C.vinix_linuxkpi_test_task_signal(test_worker.task.vinix_thread, 0)
+			C.tulpar_linuxkpi_test_task_signal(test_worker.task.tulpar_thread, 0)
 			if !C.task_is_running(C.current) { failure.reasons |= 256 }
-			if !C.vinix_linuxkpi_may_sleep() { failure.reasons |= 512 }
+			if !C.tulpar_linuxkpi_may_sleep() { failure.reasons |= 512 }
 			if failure.reasons != 0 {
 				test_worker.result = -C.EIO
 				test_worker.failures[i] = failure
@@ -137,17 +137,17 @@ pub fn worker(argument voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_time_native_selftest']
+@[export: 'tulpar_linuxkpi_time_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		mut workers := [4]NativeTimeWorker{}
 		mut threads := [4]C.pthread_t{}
 		mut result := i32(0)
 		for i in 0 .. 4 {
-			C.BUG_ON(C.pthread_create(&threads[i], nil, C.vinix_linuxkpi_fixture_time_worker, &workers[i]) != 0)
+			C.BUG_ON(C.pthread_create(&threads[i], nil, C.tulpar_linuxkpi_fixture_time_worker, &workers[i]) != 0)
 		}
 		for i in 0 .. 4 { C.BUG_ON(C.pthread_join(threads[i], nil) != 0) }
-		retirement_started := C.vinix_linuxkpi_clock_ns()
+		retirement_started := C.tulpar_linuxkpi_clock_ns()
 		for i in 0 .. 4 {
 			if workers[i].result != 0 { result = -C.EIO }
 			for round in 0 .. 8 {
@@ -159,21 +159,21 @@ pub fn selftest() i32 {
 					failure.interrupted, failure.killable)
 			}
 			for C.__atomic_load_n(&workers[i].task.__state, 2) != C.TASK_DEAD {
-				if C.vinix_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
+				if C.tulpar_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
 					C.kprintf(c'linuxkpi: time test worker=%u did not publish TASK_DEAD\n', u32(i))
 					C.BUG()
 				}
 				C.cond_resched()
 			}
-			retained := C.vinix_linuxkpi_test_task_time_waiters(workers[i].task)
+			retained := C.tulpar_linuxkpi_test_task_time_waiters(workers[i].task)
 			if retained != 0 {
 				C.kprintf(c'linuxkpi: time test worker=%u retained %zu timeout records after join\n', u32(i), retained)
 				C.BUG()
 			}
 		}
 		for i in 0 .. 4 {
-			for !C.vinix_linuxkpi_test_thread_reap_ready(workers[i].task.vinix_thread) {
-				if C.vinix_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
+			for !C.tulpar_linuxkpi_test_thread_reap_ready(workers[i].task.tulpar_thread) {
+				if C.tulpar_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
 					C.kprintf(c'linuxkpi: time test worker=%u did not reach off-stack reaper\n', u32(i))
 					C.BUG()
 				}
@@ -181,8 +181,8 @@ pub fn selftest() i32 {
 			}
 		}
 		for i in 0 .. 4 { C.put_task_struct(workers[i].task) }
-		for !C.vinix_linuxkpi_test_reap_quiescent() {
-			if C.vinix_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
+		for !C.tulpar_linuxkpi_test_reap_quiescent() {
+			if C.tulpar_linuxkpi_clock_ns() - retirement_started >= 1000000000 {
 				C.kprintf(c'linuxkpi: time test deferred frees did not finish\n')
 				C.BUG()
 			}

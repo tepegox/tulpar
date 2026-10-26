@@ -14,7 +14,7 @@ fn C.usleep(u32) int
 fn check() ! {
 	for name in ['cleanup-core', 'cleanup-protocol', 'cleanup-probe'] {
 		mut child := os.new_process('/usr/share/package-fixtures/' + name)
-		if name == 'cleanup-probe' { child.set_args(['/tmp/reviewed-cleanup', '/usr/bin/vinix-package']) }
+		if name == 'cleanup-probe' { child.set_args(['/tmp/reviewed-cleanup', '/usr/bin/tulpar-package']) }
 		child.set_redirect_stdio_merged(); child.run()
 		output := child.stdout_slurp(); child.wait(); code := child.code; child.close()
 		print(output)

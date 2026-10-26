@@ -1,10 +1,10 @@
 #include "varargs.inc"
 .text
-VINIX_VARIADIC ABI_SYMBOL(printf), ABI_SYMBOL(vinix_printf_entry), 1
-VINIX_VARIADIC ABI_SYMBOL(printf_panic), ABI_SYMBOL(vinix_panic_entry), 1
-VINIX_VARIADIC ABI_SYMBOL(kprintf), ABI_SYMBOL(vinix_kprintf_entry), 1
-VINIX_VARIADIC ABI_SYMBOL(printf_benchmark), ABI_SYMBOL(vinix_benchmark_entry), 1
-VINIX_VARIADIC ABI_SYMBOL(fprintf), ABI_SYMBOL(vinix_fprintf_entry), 2
+TULPAR_VARIADIC ABI_SYMBOL(printf), ABI_SYMBOL(tulpar_printf_entry), 1
+TULPAR_VARIADIC ABI_SYMBOL(printf_panic), ABI_SYMBOL(tulpar_panic_entry), 1
+TULPAR_VARIADIC ABI_SYMBOL(kprintf), ABI_SYMBOL(tulpar_kprintf_entry), 1
+TULPAR_VARIADIC ABI_SYMBOL(printf_benchmark), ABI_SYMBOL(tulpar_benchmark_entry), 1
+TULPAR_VARIADIC ABI_SYMBOL(fprintf), ABI_SYMBOL(tulpar_fprintf_entry), 2
 
 // AAPCS64 passes va_list by value through an indirect copy. Darwin passes
 // its stack cursor by value. Keep those consumption rules at the ABI edge.

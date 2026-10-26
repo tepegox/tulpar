@@ -7,7 +7,7 @@ fn pool_members_batch(path &char, pool &char, first &char, first_start &char, fi
 		command := if remove {
 			if preview { &char(c'pool-preview-remove-batch') } else { &char(c'pool-remove-batch') }
 		} else { if preview { &char(c'pool-preview-add-batch') } else { &char(c'pool-add-batch') } }
-		mut args := [&char(c'/usr/sbin/vinix-volume'), command, path, pool, first, first_start,
+		mut args := [&char(c'/usr/sbin/tulpar-volume'), command, path, pool, first, first_start,
 			first_end, &char(c'4096'), second, second_start, second_end, &char(c'4096'), &char(nil)]!
 		if remove { args[5] = second; args[6] = &char(nil) }
 		if output == nil { run_utility(&args[0], expected); return }
@@ -34,8 +34,8 @@ fn planned_pool_members_batch(parent &char, other &char) {
 		mut original := [8768]u8{}
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'membership batch baseline')
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9')
-		held := C.open(c'/dev/mapper/vinix2', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9')
+		held := C.open(c'/dev/mapper/tulpar2', C.O_RDONLY)
 		check(held >= 0, c'hold view across membership batch')
 		mut output := [4096]char{}
 		for preview in [false, true]! {
@@ -84,7 +84,7 @@ fn planned_pool_members_batch(parent &char, other &char) {
 		check(contains(&output[0], c'request=0 disk=0 action=keep') && contains(&output[0], c'request=1 disk=1 action=remove'), c'mixed absent/present removal')
 		simple(c'plan-remove', c'/root/saved.vset', c'14', 0)
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
-		check(status(c'/dev/mapper/vinix2').generation == first.generation && status(c'/dev/mapper/vinix9').generation == second.generation
+		check(status(c'/dev/mapper/tulpar2').generation == first.generation && status(c'/dev/mapper/tulpar9').generation == second.generation
 			&& first.disk_id == status(parent).disk_id && second.disk_id == status(other).disk_id, c'membership batches preserve live identity and generations')
 		mut data := [4096]u8{}
 		check(C.pread(held, &data[0], 4096, 0) == 4096 && C.close(held) == 0, c'held view survives membership batch')
@@ -94,14 +94,14 @@ fn planned_pool_members_batch(parent &char, other &char) {
 }
 
 fn pool_members_batch_boot_check() {
-	fd := C.open(c'/etc/vinix/volumes.vset', C.O_RDONLY)
+	fd := C.open(c'/etc/tulpar/volumes.vset', C.O_RDONLY)
 	mut original := [8768]u8{}
 	size := C.read(fd, &original[0], 8768)
 	check(fd >= 0 && size == 536 && C.close(fd) == 0, c'membership batch persisted bundle')
 	mut output := [4096]char{}
-	pool_members_batch(c'/etc/vinix/volumes.vset', c'3', c'1', c'6291456', c'6303744', c'0', c'6291456', c'6295552', false, true, 0, &output[0])
+	pool_members_batch(c'/etc/tulpar/volumes.vset', c'3', c'1', c'6291456', c'6303744', c'0', c'6291456', c'6295552', false, true, 0, &output[0])
 	check(contains(&output[0], c'request=0 disk=1 action=keep') && contains(&output[0], c'request=1 disk=0 action=keep'), c'persistent membership bounds match exact reverse retry')
-	pool_members_batch(c'/etc/vinix/volumes.vset', c'3', c'1', c'6291456', c'6303744', c'0', c'6291456', c'6295552', false, false, 0, unsafe { nil })
-	bundle_unchanged(c'/etc/vinix/volumes.vset', &original[0], size)
+	pool_members_batch(c'/etc/tulpar/volumes.vset', c'3', c'1', c'6291456', c'6303744', c'0', c'6291456', c'6295552', false, false, 0, unsafe { nil })
+	bundle_unchanged(c'/etc/tulpar/volumes.vset', &original[0], size)
 	C.printf(c'PLAN POOL MEMBERSHIP BATCH BOOT PRESERVED\n')
 }

@@ -15,7 +15,7 @@ fn check() ! {
 	for name in ['command-ownership', 'command', 'session', 'context']! {
 		run_fixture(name, [])!; println('COMMAND PROCESS ' + name + ' PASS')
 	}
-	run_fixture('command-cli', ['/usr/bin/vinix-package'])!; println('COMMAND PROCESS command-cli PASS')
+	run_fixture('command-cli', ['/usr/bin/tulpar-package'])!; println('COMMAND PROCESS command-cli PASS')
 }
 
 fn run_fixture(name string, args []string) ! {

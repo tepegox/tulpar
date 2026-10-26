@@ -330,7 +330,7 @@ fn remaining_test_invalid() bool {
 	}
 	// The public raw-call chain makes V promote an addressed fixed array.
 	// This synchronous borrowed scratch must stay on the current stack.
-	ptr := C.vinix_stack_alloc(32)
+	ptr := C.tulpar_stack_alloc(32)
 	unsafe { C.memset(ptr, 0xcc, 32) }
 	limit := memory.user_address_limit()
 	if !remaining_test_require(raw_copy_from_user(ptr, limit - 1, 2) == 2

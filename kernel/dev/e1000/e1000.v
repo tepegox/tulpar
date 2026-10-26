@@ -510,7 +510,7 @@ fn reclaim_tx() {
 // Called by the C IP shim's Ethernet output callback, with the stack's lock
 // held. Returns zero when the frame was queued and a negative value when it
 // was not; lwIP treats that as a lost frame, which TCP recovers from.
-@[export: 'vinix_e1000_send']
+@[export: 'tulpar_e1000_send']
 pub fn send(frame voidptr, length u64) int {
 	if !e1000_ready || frame == unsafe { nil } || length == 0 || length > frame_buffer_bytes {
 		return -1

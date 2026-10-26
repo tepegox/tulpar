@@ -12,7 +12,7 @@ fn C.reboot(int) int
 fn C.usleep(u32) int
 
 fn check() ! {
-	os.setenv('VINIX_PACKAGE_STAGE_CHECK_CLI', '/usr/share/package-fixtures/stage-check', true)
+	os.setenv('TULPAR_PACKAGE_STAGE_CHECK_CLI', '/usr/share/package-fixtures/stage-check', true)
 	for name in ['image-applications', 'image-check', 'image-repositories', 'image-configuration', 'release', 'catalog', 'deployment', 'resolve']! {
 		mut child := os.new_process('/usr/share/package-fixtures/' + name)
 		child.set_redirect_stdio_merged(); child.run()

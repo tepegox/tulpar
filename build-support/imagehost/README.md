@@ -1,6 +1,6 @@
 # Native guest image and size tools
 
-`scripts/build-vinix-guest-disk.sh [OUTPUT [INITRAMFS]]` builds a raw FAT32
+`scripts/build-tulpar-guest-disk.sh [OUTPUT [INITRAMFS]]` builds a raw FAT32
 AArch64 UEFI image. V checks the input files and mtools, computes the original
 payload-plus-128-MiB ceiling, creates a sparse private output and installs the
 unchanged firmware, Limine configuration, kernel and initramfs. Publication

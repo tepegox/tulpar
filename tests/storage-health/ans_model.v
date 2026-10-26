@@ -268,7 +268,7 @@ fn health_model_require(condition bool) {
 	if !condition { panic('ANS health model oracle failed') }
 }
 
-@[export: 'vinix_account_disk_transfer']
+@[export: 'tulpar_account_disk_transfer']
 fn account(index u32, bytes u64, writing i32) {
 	mut model := unsafe { &HealthModel(ans_controller.cookie) }
 	health_model_require(index < 2 && model.io_commands > 0)

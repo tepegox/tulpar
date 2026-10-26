@@ -1,6 +1,6 @@
 # Privileged operation policy
 
-Vinix uses a small part of [SBP's selector-based design](https://github.com/okTurtles/sbp): privileged operations have stable, human-readable `domain/action` names. The kernel's [policy](../kernel/security/policy.v) lists the selectors it recognizes and denies unknown selectors. Syscall handlers check permission before reading userspace arguments or changing system state.
+Tulpar uses a small part of [SBP's selector-based design](https://github.com/okTurtles/sbp): privileged operations have stable, human-readable `domain/action` names. The kernel's [policy](../kernel/security/policy.v) lists the selectors it recognizes and denies unknown selectors. Syscall handlers check permission before reading userspace arguments or changing system state.
 
 | Selector | Syscall operations | Current rule |
 | --- | --- | --- |
@@ -37,7 +37,7 @@ which login session the display and the input devices belong to.
 
 ## Desktop selector worlds
 
-The desktop compositor has a separate selector boundary for pointer actions. It records whether each hit target came from compositor UI or a decoded application tree. The compositor interprets its own selectors only for compositor targets; application selectors are opaque and are routed to the app window under the pointer through that app's RPC pipe. An app can use any action name, including one that resembles a window or Start-menu command, without gaining that command. This is a per-application dynamic fallback similar to SBP's star selector, not a shared global selector registry. The optional `vinix-desktop --trace-selectors` switch logs routed pointer selectors with their world for runtime inspection.
+The desktop compositor has a separate selector boundary for pointer actions. It records whether each hit target came from compositor UI or a decoded application tree. The compositor interprets its own selectors only for compositor targets; application selectors are opaque and are routed to the app window under the pointer through that app's RPC pipe. An app can use any action name, including one that resembles a window or Start-menu command, without gaining that command. This is a per-application dynamic fallback similar to SBP's star selector, not a shared global selector registry. The optional `tulpar-desktop --trace-selectors` switch logs routed pointer selectors with their world for runtime inspection.
 
 The compositor has narrow, explicit bridges to the Files context menu and Capture service. Other application selectors do not trigger desktop commands. This boundary applies to desktop UI actions; it does not mediate arbitrary system calls or provide per-process capabilities.
 
@@ -144,7 +144,7 @@ signing infrastructure remain deployment choices.
 
 ## Application confinement
 
-[`vinix-sandbox`](../tools/sandbox/README.md) launches a command only after
+[`tulpar-sandbox`](../tools/sandbox/README.md) launches a command only after
 installing its required restrictions. It sets `no_new_privs`, drops capability
 sets and privileged identities, restricts inherited descriptors/environment,
 locks explicitly unveiled paths, and installs pledge exec promises. Setup
@@ -162,8 +162,8 @@ launcher installs mandatory filesystem policy.
 
 ## Mandatory filesystem domains
 
-[`vinix-mac`](../tools/security-mac/README.md) configures a fixed matrix of
-15 confined domains and 32 object types. Inode labels use the `security.vinix`
+[`tulpar-mac`](../tools/security-mac/README.md) configures a fixed matrix of
+15 confined domains and 32 object types. Inode labels use the `security.tulpar`
 xattr; anonymous pipes/sockets, devices and other kernel resources have fixed
 types. Policy and manual labels become immutable after sealing. Installation
 requires trusted domain 0, effective root, `CAP_MAC_ADMIN` and the initial user
@@ -196,7 +196,7 @@ header includes a stable 128-bit
 boot identity to distinguish sequence domains across collector restarts.
 That identifier is not an authentication token.
 
-[`vinix-security-audit`](../tools/security-audit/README.md) collects snapshots
+[`tulpar-security-audit`](../tools/security-audit/README.md) collects snapshots
 into a root-owned append log, fsyncs changed batches, records delayed syscall
 completions separately, and reports exact missing sequence ranges. It refuses
 unsafe log ownership, writable ancestors, symlinks and hardlinks. Userland and
@@ -220,7 +220,7 @@ their own decisions, which the authentication service does for every one.
 Each record names the process, its ids, and the login it belongs to, which
 no later change of ids alters.
 
-[`vinix-security-events`](../tools/security-events/README.md) keeps the
+[`tulpar-security-events`](../tools/security-events/README.md) keeps the
 stream in an append log synced before a record counts as kept, writes a gap
 as a gap with its exact numbers, and sets logs aside and deletes them by
 three settings an administrator can read. The same page lists what is not
@@ -278,6 +278,6 @@ checks the authenticated root and read-only mapping lifetimes;
 policy, retained descriptors, executable loaders and process controls. These
 complement the existing OpenBSD security regressions on both architectures.
 
-Vinix remains pre-alpha. These tested mechanisms narrow specific gaps; they
+Tulpar remains pre-alpha. These tested mechanisms narrow specific gaps; they
 do not establish security parity with a maintained, well-configured Linux
 system or prove every kernel and application path secure.

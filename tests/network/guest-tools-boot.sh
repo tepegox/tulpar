@@ -7,7 +7,7 @@ export TERM=linux
 export SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 export XBPS_ARCH=aarch64
 
-echo "VINIX NETWORK CLIENT INTEGRATION TEST"
+echo "TULPAR NETWORK CLIENT INTEGRATION TEST"
 
 i=0
 while [ ! -s /etc/resolv.conf ] && [ "$i" -lt 100 ]; do
@@ -19,7 +19,7 @@ if [ ! -s /etc/resolv.conf ]; then
     exit 1
 fi
 
-VINIX_NETWORK_SMOKE_URL=http://10.0.2.2:18080/ok \
+TULPAR_NETWORK_SMOKE_URL=http://10.0.2.2:18080/ok \
     /root/network-tools-smoke.sh
 
 curl --fail --silent --show-error --max-time 30 \
@@ -49,9 +49,9 @@ apk update
 echo "PASS APK repository sync"
 pkg search gtk+3.0 >/tmp/pkg-search
 grep -q 'gtk+3.0' /tmp/pkg-search
-echo "PASS Vinix package search"
+echo "PASS Tulpar package search"
 xbps-install -S
 echo "PASS XBPS repository sync"
 
-echo "VINIX NETWORK CLIENT INTEGRATION TEST: PASS"
+echo "TULPAR NETWORK CLIENT INTEGRATION TEST: PASS"
 exec /bin/sh

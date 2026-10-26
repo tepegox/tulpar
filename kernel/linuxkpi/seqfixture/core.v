@@ -35,13 +35,13 @@ struct C.mutex {}
 struct C.completion {}
 
 type SeqWorker = fn (voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_seq_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_seq_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, SeqWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
 fn C.preempt_disable()
 fn C.preempt_enable()
 fn C.preempt_count() u32
@@ -97,9 +97,9 @@ fn C.complete(&C.completion)
 fn C.complete_all(&C.completion)
 fn C.wait_for_completion(&C.completion)
 fn C.wait_for_completion_timeout(&C.completion, uint) uint
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_percpu_count() u32
 fn C.cond_resched() i32
 fn C.msleep(u32)
 fn C.__atomic_load_n(&u32, i32) u32
@@ -115,7 +115,7 @@ __global (
 
 __global native_seq_static_lock C.seqlock_t
 
-fn irqs_enabled() bool { return C.vinix_linuxkpi_irq_flags() & (uint(1) << 9) != 0 }
+fn irqs_enabled() bool { return C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9) != 0 }
 
 struct Pair {
 mut:
@@ -201,13 +201,13 @@ fn basic() i32 {
 		if C.need_seqretry(&native_seq_static_lock, exclusive) { result = -C.EIO }
 		C.done_seqretry(&native_seq_static_lock, exclusive)
 		if !(!C.spin_is_locked(&native_seq_static_lock.@lock) && C.preempt_count() == 0) { result = -C.EIO }
-		outer_irq := C.vinix_linuxkpi_irq_save()
+		outer_irq := C.tulpar_linuxkpi_irq_save()
 		exclusive = -1
 		irq = C.read_seqbegin_or_lock_irqsave(&native_seq_static_lock, &exclusive)
 		if !(!irqs_enabled() && C.preempt_count() == 1) { result = -C.EIO }
 		C.done_seqretry_irqrestore(&native_seq_static_lock, exclusive, irq)
 		if !(!irqs_enabled() && C.preempt_count() == 0) { result = -C.EIO }
-		C.vinix_linuxkpi_irq_restore(outer_irq)
+		C.tulpar_linuxkpi_irq_restore(outer_irq)
 
 		mut latch := C.seqcount_latch_t{}
 		C.seqcount_latch_init(&latch)
@@ -330,11 +330,11 @@ fn read(test &Shared, kind u32) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_seq_worker']
+@[export: 'tulpar_linuxkpi_fixture_seq_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut worker := &Worker(argument)
-		worker.result = C.vinix_linuxkpi_worker_bind(worker.cpu)
+		worker.result = C.tulpar_linuxkpi_worker_bind(worker.cpu)
 		C.complete(&worker.entered)
 		C.wait_for_completion(&worker.go)
 		limit := if worker.index < 2 { u32(128) } else { u32(256) }
@@ -347,7 +347,7 @@ pub fn worker(argument voidptr) voidptr {
 			}
 			C.cond_resched()
 			if round % 16 == 0 { C.msleep(1) }
-			if !irqs_enabled() || C.preempt_count() != 0 || C.vinix_linuxkpi_cpu_id() != worker.cpu {
+			if !irqs_enabled() || C.preempt_count() != 0 || C.tulpar_linuxkpi_cpu_id() != worker.cpu {
 				worker.result = -C.EIO
 			}
 		}
@@ -357,7 +357,7 @@ pub fn worker(argument voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_seqcount_native_selftest']
+@[export: 'tulpar_linuxkpi_seqcount_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		mut result := basic()
@@ -373,7 +373,7 @@ pub fn selftest() i32 {
 		for i in 0 .. 4 { store(&test.values[i], 0) }
 		for i in 0 .. 2 { store(&test.copies[i], 0) }
 		mut workers := [4]Worker{}
-		cpus := C.vinix_linuxkpi_percpu_count()
+		cpus := C.tulpar_linuxkpi_percpu_count()
 		if cpus == 0 || cpus > 64 { result = -C.EOPNOTSUPP }
 		else {
 			for i in 0 .. 4 {
@@ -384,7 +384,7 @@ pub fn selftest() i32 {
 				C.init_completion(&workers[i].go)
 				C.init_completion(&workers[i].done)
 				workers[i].initialized = true
-				if C.pthread_create(&workers[i].thread, nil, C.vinix_linuxkpi_fixture_seq_worker, &workers[i]) != 0 {
+				if C.pthread_create(&workers[i].thread, nil, C.tulpar_linuxkpi_fixture_seq_worker, &workers[i]) != 0 {
 					result = -C.ENOMEM; break
 				}
 				workers[i].started = true

@@ -17,9 +17,9 @@ fn software_snapshot_export_review(path string, changed bool) pkgprotocol.Deploy
 }
 
 fn check_software_snapshot_export() ! {
-	receipt := os.temp_dir() + '/vinix-software-snapshot-export-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_MIRROR_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_MIRROR_FIXTURE') }
+	receipt := os.temp_dir() + '/tulpar-software-snapshot-export-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_MIRROR_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_MIRROR_FIXTURE') }
 	mut app := SoftwareApp{ service_path: os.executable(), administration_required: true,
 		output: []u8{cap: 8192}, query: []u8{cap: 256}, selected: -1, filter: 1 }
 	defer { app.close_app() }
@@ -120,7 +120,7 @@ fn check_software_snapshot_export_memory() ! {
 		app.initialize_mirror_field()
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for mismatched in [false, true]! {
 					app.snapshot_ready = true; app.snapshot_mode = true
@@ -148,7 +148,7 @@ fn check_software_snapshot_export_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'saved deployment export retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'saved deployment export retained ${kept} bytes'
 		println('Software saved deployment export: 1000 handoff, decode, path/package render, digest mismatch and retirement cycles retain zero tracked bytes')
 		println('Software saved export reader: 1000 frozen-source/read/page/resize/ignored-publish/Back/cache-retirement cycles retain zero tracked bytes')
 	}

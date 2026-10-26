@@ -38,7 +38,7 @@ pub const dontneed = 4
 pub type IO = fn (voidptr, voidptr, u64, u64) ?i64
 pub type Flush = fn (context voidptr) ?
 
-fn C.vinix_stack_alloc(size u64) voidptr
+fn C.tulpar_stack_alloc(size u64) voidptr
 
 struct Page {
 mut:
@@ -639,7 +639,7 @@ pub fn (mut this Cache) prefetch(context voidptr, load IO, store IO, loc u64, co
 	mut budget := this.capacity
 	// One bounded slot per invocation, outside the loop. The cache owns a
 	// page only after the entire clustered transfer succeeds.
-	pages := unsafe { &voidptr(C.vinix_stack_alloc(max_run_pages * sizeof(voidptr))) }
+	pages := unsafe { &voidptr(C.tulpar_stack_alloc(max_run_pages * sizeof(voidptr))) }
 	for index <= last && budget > 0 {
 		mut resident := this.resident_page(index)
 		if resident != unsafe { nil } {

@@ -29,7 +29,7 @@ fn main() {
 		if mode == 'ignore-term' { unsafe { C.signal(C.SIGTERM, C.SIG_IGN) } }
 		for { time.sleep(time.second) }
 	}
-	work := hosttest.work_dir('', 'vinix-regression-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-regression-check-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	for mode in ['zero', 'late-fail', 'partial', 'timeout'] {
 		os.mkdir(work + '/' + mode) or { panic(err) }

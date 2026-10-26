@@ -7,7 +7,7 @@ import tools.packages.pkgadmin
 
 fn test_both_login_paths_refuse_ordinary_authentication_service_before_sending_password() {
 	if os.geteuid() == 0 { return }
-	directory := os.temp_dir() + '/vinix-session-root-peer-' + os.getpid().str()
+	directory := os.temp_dir() + '/tulpar-session-root-peer-' + os.getpid().str()
 	os.mkdir(directory, mode: 0o700)!
 	defer { os.rmdir_all(directory) or {} }
 	mut listener := pkgadmin.listen_private(directory, u32(os.geteuid()), 'a'.repeat(32))!

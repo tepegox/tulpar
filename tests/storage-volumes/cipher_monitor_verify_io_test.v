@@ -79,7 +79,7 @@ fn cipher_bind_input(state int) []u8 {
 }
 fn cipher_bind_expected(state int) string {
 	zero := '0'.repeat(64)
-	return 'format=VINIXCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=${int(state == 0)} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(cipher_bind_input(state).bytestr()) + '\n' +
+	return 'format=TULPARCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=${int(state == 0)} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(cipher_bind_input(state).bytestr()) + '\n' +
 		'disk_bytes=1048576 sector=512 identity=mbr:00000001 slot=63 offset=8192 bytes=73728 readonly=1 result=${if state == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} actual_sha256=${if state == 0 { zero } else { '0'.repeat(63) + state.str() }}\n'
 }
 
@@ -87,11 +87,11 @@ fn cipher_bind_check(first string, second string, mode int, expected i32) string
 	capture := os.dir(first) + '/history-capture'; assert C.fflush(C.stdout) == 0
 	saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	cipher_bind_io = CipherBindIO{active: true, mode: mode}
-	unsafe { args := [&char(c'vinix-volume'), &char(c'verify-volume-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'verify-volume-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert cipher_bind_io.opened == cipher_bind_io.closed; cipher_bind_io.active = false
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }
-	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=VINIXCS1') && !text.contains('disk_bytes=') }; return text
+	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=TULPARCS1') && !text.contains('disk_bytes=') }; return text
 }
 
 __global cipher_verify_io_fd i32 = -1
@@ -117,23 +117,23 @@ fn cipher_verify_io_encode(reference &u8, history &CipherMonitorHistory, digest 
 fn cipher_verify_io_input(states []int) string {
 	zero := '0'.repeat(64); mut text := ''; mut changed := 0
 	for i, state in states { if state != 0 { changed++ }; actual := if state == 0 { zero } else { '0'.repeat(63) + state.str() }
-		text += 'format=VINIXCM1 operation=monitored-ciphertext source=${if cipher_verify_io_recovery { 'recovery' } else { 'volume' }} sample=${i + 1} changed_samples=${changed} session_changed=${int(changed != 0)}\nformat=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(state == 0)} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + '\ndisk_bytes=1048576 sector=512 identity=mbr:00000001 slot=63 offset=8192 bytes=73728 readonly=1 result=${if state == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} actual_sha256=${actual}\n'
+		text += 'format=TULPARCM1 operation=monitored-ciphertext source=${if cipher_verify_io_recovery { 'recovery' } else { 'volume' }} sample=${i + 1} changed_samples=${changed} session_changed=${int(changed != 0)}\nformat=TULPARCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(state == 0)} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + '\ndisk_bytes=1048576 sector=512 identity=mbr:00000001 slot=63 offset=8192 bytes=73728 readonly=1 result=${if state == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} actual_sha256=${actual}\n'
 	}; return text
 }
 fn cipher_verify_io_wanted(states []int) string {
 	zero := '0'.repeat(64); mut changed := 0; mut classes := [4]int{}; table := [[0, 1, 1]!, [2, 0, 3]!, [2, 3, 0]!]!
 	for i, state in states { if state != 0 { changed++ }; if i != 0 { classes[table[states[i - 1]][state]]++ } }; final := states.last(); actual := if final == 0 { zero } else { '0'.repeat(63) + final.str() }
-	return 'format=VINIXCM1 operation=verified-ciphertext-monitor source=${if cipher_verify_io_recovery { 'recovery' } else { 'volume' }} mappings=1 samples=${states.len} changed_samples=${changed} session_changed=${int(changed != 0)} final_changed=${int(final != 0)} stable=${classes[0]} new_changes=${classes[1]} restored=${classes[2]} changed_again=${classes[3]} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + ' transcript_sha256=' + sha256.hexhash(cipher_verify_io_input(states)) + '\ndisk_bytes=1048576 sector=512 identity=mbr:00000001 slot=63 offset=8192 bytes=73728 readonly=1 result=${if final == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} final_sha256=${actual}\n'
+	return 'format=TULPARCM1 operation=verified-ciphertext-monitor source=${if cipher_verify_io_recovery { 'recovery' } else { 'volume' }} mappings=1 samples=${states.len} changed_samples=${changed} session_changed=${int(changed != 0)} final_changed=${int(final != 0)} stable=${classes[0]} new_changes=${classes[1]} restored=${classes[2]} changed_again=${classes[3]} algorithm=sha256 reference_sha256=' + sha256.hexhash(cipher_bind_manifest().bytestr()) + ' transcript_sha256=' + sha256.hexhash(cipher_verify_io_input(states)) + '\ndisk_bytes=1048576 sector=512 identity=mbr:00000001 slot=63 offset=8192 bytes=73728 readonly=1 result=${if final == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} final_sha256=${actual}\n'
 }
 fn cipher_verify_io_check(first string, second string, mode int, expected i32) string {
 	capture := os.dir(first) + '/capture'; assert C.fflush(C.stdout) == 0; saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	cipher_bind_io = CipherBindIO{active: true, mode: mode}; cipher_verify_io_fd = -1; cipher_verify_io_reads = 0; cipher_verify_io_eof = false
-	unsafe { args := [&char(c'vinix-volume'), &char(c'verify-volume-monitor'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'verify-volume-monitor'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert cipher_bind_io.opened == cipher_bind_io.closed; cipher_bind_io.active = false; assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }; if expected == 1 && mode !in [8, 9] { assert !text.contains('operation=verified-ciphertext-monitor') && !text.contains('disk_bytes=') }; return text
 }
 fn test_cipher_verify_real_cli_buffering_private_reference_full_frames_owners_faults_and_no_partial_findings() {
-	work := os.join_path(os.temp_dir(), 'vinix-cipher-verify-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/reference'; second := work + '/transcript'; manifest := cipher_bind_manifest(); os.write_file_array(first, manifest)!; os.chmod(first, 0o600)!
+	work := os.join_path(os.temp_dir(), 'tulpar-cipher-verify-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/reference'; second := work + '/transcript'; manifest := cipher_bind_manifest(); os.write_file_array(first, manifest)!; os.chmod(first, 0o600)!
 	for recovery in [false, true] { cipher_verify_io_recovery = recovery
 		for sequence in 0 .. 27 { states := [sequence % 3, (sequence / 3) % 3, sequence / 9]; transcript := cipher_verify_io_input(states); os.write_file(second, transcript)!; os.chmod(second, 0o644)!
 			for mode in 0 .. 23 { result := if mode in [0, 1, 11] { if states.all(it == 0) { 0 } else { 2 } } else { 1 }; actual := cipher_verify_io_check(first, second, mode, result); if result != 1 { assert actual == cipher_verify_io_wanted(states) }; assert os.read_bytes(first)! == manifest && os.read_file(second)! == transcript }
@@ -147,7 +147,7 @@ fn test_cipher_verify_real_cli_buffering_private_reference_full_frames_owners_fa
 	for size in 0 .. transcript.len { os.write_file(second, transcript[..size])!; count := boundaries[size]; actual := cipher_verify_io_check(first, second, 0, if count > 0 { 2 } else { 1 }); if count > 0 { assert actual == cipher_verify_io_wanted(states[..count]) } }; os.write_file(second, transcript)!
 	for pair in [['sample=2', 'sample=3'], ['sample=2', 'sample=02'], ['changed_samples=2', 'changed_samples=1'], ['session_changed=1', 'session_changed=0'], ['slot=63', 'slot=62'], ['readonly=1', 'readonly=0'], ['identity=mbr:00000001', 'identity=mbr:00000002'], ['sector=512', 'sector=4096']] { os.write_file(second, transcript.replace(pair[0], pair[1]))!; cipher_verify_io_check(first, second, 0, 1) }
 	mixed := cipher_verify_io_input([1]) + transcript.all_after(cipher_verify_io_input([1])).replace('source=recovery', 'source=volume'); os.write_file(second, mixed)!; cipher_verify_io_check(first, second, 0, 1)
-	for suffix in ['\x00', 'vinix-volume: late physical error\n', '\n', 'format=VINIXCM1 operation=monitored-ciphertext source=recovery sample=4'] { os.write_file(second, transcript + suffix)!; cipher_verify_io_check(first, second, 0, 1) }
+	for suffix in ['\x00', 'tulpar-volume: late physical error\n', '\n', 'format=TULPARCM1 operation=monitored-ciphertext source=recovery sample=4'] { os.write_file(second, transcript + suffix)!; cipher_verify_io_check(first, second, 0, 1) }
 	for at in 0 .. manifest.len { mut bad := manifest.clone(); bad[at] ^= 1; os.write_file_array(first, bad)!; os.write_file(second, transcript)!; cipher_verify_io_check(first, second, 0, 1) }; os.write_file_array(first, manifest)!
 	os.chmod(first, 0o644)!; cipher_verify_io_check(first, second, 0, 1); os.chmod(first, 0o600)!
 	for path in [first, second] { bytes := os.read_bytes(path)!; os.mv(path, path + '.saved')!; os.symlink(path + '.saved', path)!; cipher_verify_io_check(first, second, 0, 1); os.rm(path)!; os.mkdir(path)!; cipher_verify_io_check(first, second, 0, 1); os.rmdir(path)!; assert C.mkfifo(path.str, 0o600) == 0; cipher_verify_io_check(first, second, 0, 1); os.rm(path)!; cipher_verify_io_check(first, second, 0, 1); os.mv(path + '.saved', path)!; assert os.read_bytes(path)! == bytes }

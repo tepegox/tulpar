@@ -1,8 +1,8 @@
 # Logical block volumes and storage counters
 
-Vinix can expose up to 64 linear views of physical AHCI, NVMe and ARM VirtIO
+Tulpar can expose up to 64 linear views of physical AHCI, NVMe and ARM VirtIO
 block devices (including their partitions). A view maps a sector-aligned byte
-range to `/dev/mapper/vinix0` through `/dev/mapper/vinix63`. Creating, growing or
+range to `/dev/mapper/tulpar0` through `/dev/mapper/tulpar63`. Creating, growing or
 removing a view changes kernel mappings only; it does not format the device or
 move its contents. Kernel mappings last until reboot. Saved volume plans retain
 their geometry and disk identity for explicit or configured restore after boot;
@@ -12,20 +12,20 @@ Saved desired extents can also be hashed into a separate SHA-256 manifest and
 verified later, including after physical device reordering. See
 [data checksum manifests](#data-checksum-manifests).
 
-The native V utility is installed as `/usr/sbin/vinix-volume` by both userland
+The native V utility is installed as `/usr/sbin/tulpar-volume` by both userland
 and desktop image builders. Commands require a trusted MAC domain,
 `CAP_SYS_ADMIN`, and the initial user namespace for management; status requires
 ordinary read access to the device.
 
 ```sh
 # Example only: choose an unused physical extent before creating a writable view.
-vinix-volume status /dev/vda
-vinix-volume create /dev/vda 0 1048576 8388608
-vinix-volume status /dev/mapper/vinix0
-vinix-volume grow /dev/mapper/vinix0 16777216
-vinix-volume remove /dev/mapper/vinix0
+tulpar-volume status /dev/vda
+tulpar-volume create /dev/vda 0 1048576 8388608
+tulpar-volume status /dev/mapper/tulpar0
+tulpar-volume grow /dev/mapper/tulpar0 16777216
+tulpar-volume remove /dev/mapper/tulpar0
 # A read-only view:
-vinix-volume create /dev/vda 1 33554432 8388608 ro
+tulpar-volume create /dev/vda 1 33554432 8388608 ro
 ```
 
 Lengths and offsets are decimal bytes. Creation requires an aligned nonempty
@@ -71,12 +71,12 @@ status, reports or saved plans.
 umask 077
 dd if=/dev/urandom of=/root/data.key bs=64 count=1
 chmod 600 /root/data.key
-vinix-volume open-crypt /dev/vda 0 1048576 8388608 /root/data.key
-vinix-volume status /dev/mapper/vinix0
-vinix-volume grow /dev/mapper/vinix0 16777216
-vinix-volume remove /dev/mapper/vinix0
+tulpar-volume open-crypt /dev/vda 0 1048576 8388608 /root/data.key
+tulpar-volume status /dev/mapper/tulpar0
+tulpar-volume grow /dev/mapper/tulpar0 16777216
+tulpar-volume remove /dev/mapper/tulpar0
 # Reopen after removal or reboot; geometry and key must match.
-vinix-volume open-crypt /dev/vda 0 1048576 16777216 /root/data.key ro
+tulpar-volume open-crypt /dev/vda 0 1048576 16777216 /root/data.key ro
 ```
 
 The resulting block node uses the same privileges, extent protection, resource
@@ -129,10 +129,10 @@ The recovery key's two 32-byte halves must differ, as must the XTS key halves.
 umask 077
 dd if=/dev/urandom of=/root/recovery.key bs=64 count=1
 chmod 600 /root/recovery.key
-vinix-volume backup-key /root/data.key /root/recovery.key /root/data.backup
+tulpar-volume backup-key /root/data.key /root/recovery.key /root/data.backup
 # Restore into an absent filename, then reopen using the original geometry.
-vinix-volume recover-key /root/data.backup /root/recovery.key /root/restored.key
-vinix-volume open-crypt /dev/vda 0 1048576 16777216 /root/restored.key ro
+tulpar-volume recover-key /root/data.backup /root/recovery.key /root/restored.key
+tulpar-volume open-crypt /dev/vda 0 1048576 16777216 /root/restored.key ro
 ```
 
 Both commands create mode-0600 output through a temporary file in a pinned,
@@ -149,11 +149,11 @@ different absent filename; retries never overwrite it. Failed pre-publication
 operations remove only the temporary file they created, and report cleanup
 failure if that file cannot be removed.
 
-The fixed 160-byte `VINIXKR1` envelope uses little-endian header fields:
+The fixed 160-byte `TULPARKR1` envelope uses little-endian header fields:
 
 | Offset | Bytes | Value |
 | --- | --- | --- |
-| 0 | 8 | ASCII `VINIXKR1` |
+| 0 | 8 | ASCII `TULPARKR1` |
 | 8 | 4 | Version 1 |
 | 12 | 4 | Algorithm 1: ChaCha20 with HMAC-SHA256 |
 | 16 | 4 | Total bytes 160 |
@@ -194,10 +194,10 @@ rewrite disk data.
 ```sh
 # The passphrase file already contains your private credential bytes.
 chmod 600 /root/volume.pass
-vinix-volume seal-key /root/data.key /root/volume.pass /root/data.sealed
-vinix-volume open-sealed /dev/vda 0 1048576 16777216 /root/data.sealed /root/volume.pass ro
+tulpar-volume seal-key /root/data.key /root/volume.pass /root/data.sealed
+tulpar-volume open-sealed /dev/vda 0 1048576 16777216 /root/data.sealed /root/volume.pass ro
 # Optional explicit recovery into an absent private filename.
-vinix-volume unseal-key /root/data.sealed /root/volume.pass /root/restored.key
+tulpar-volume unseal-key /root/data.sealed /root/volume.pass /root/restored.key
 ```
 
 Passphrase files must contain 1–1024 bytes, be owned regular files with no
@@ -219,12 +219,12 @@ The work cost is deliberate; it cannot make a weak passphrase safe against
 offline guessing. Store persistent passphrase files with the protection their
 contents require, and retain an independent key backup/recovery path.
 
-The exact 192-byte `VINIXKP1` format is separate from `VINIXKR1` recovery files.
+The exact 192-byte `TULPARKP1` format is separate from `TULPARKR1` recovery files.
 Header fields are little-endian:
 
 | Offset | Bytes | Value |
 | --- | --- | --- |
-| 0 | 8 | ASCII `VINIXKP1` |
+| 0 | 8 | ASCII `TULPARKP1` |
 | 8 | 4 | Version 1 |
 | 12 | 4 | Algorithm 1: scrypt, ChaCha20, HMAC-SHA256 |
 | 16 | 4 | Total bytes 192 |
@@ -276,10 +276,10 @@ native sector size and ciphertext stay exact. No volume device is opened.
 
 ```sh
 # Both credential files already contain private bytes and have mode 0600.
-vinix-volume rewrap-key /root/data.sealed /root/old.pass /root/new.pass /root/data-next.sealed
+tulpar-volume rewrap-key /root/data.sealed /root/old.pass /root/new.pass /root/data-next.sealed
 # Verify the new envelope against the original extent before retiring old copies.
-vinix-volume open-sealed /dev/vda 0 1048576 16777216 /root/data-next.sealed /root/new.pass ro
-vinix-volume remove /dev/mapper/vinix0
+tulpar-volume open-sealed /dev/vda 0 1048576 16777216 /root/data-next.sealed /root/new.pass ro
+tulpar-volume remove /dev/mapper/tulpar0
 ```
 
 The input envelope and both credential files use the same private-file policy,
@@ -322,11 +322,11 @@ volume key into a new private file without accessing a disk.
 
 ```sh
 # The key and private credential files already exist; choose the exact extent.
-vinix-volume seal-volume /dev/vda 0 1048576 16777216 /root/data.key /root/volume.pass /root/data.vcrypt
-vinix-volume open-volume /dev/vda /root/data.vcrypt /root/volume.pass ro
-vinix-volume remove /dev/mapper/vinix0
+tulpar-volume seal-volume /dev/vda 0 1048576 16777216 /root/data.key /root/volume.pass /root/data.vcrypt
+tulpar-volume open-volume /dev/vda /root/data.vcrypt /root/volume.pass ro
+tulpar-volume remove /dev/mapper/tulpar0
 # Explicit offline key recovery, only into an absent filename.
-vinix-volume unseal-volume-key /root/data.vcrypt /root/volume.pass /root/restored.key
+tulpar-volume unseal-volume-key /root/data.vcrypt /root/volume.pass /root/restored.key
 ```
 
 Sealing reads the physical parent through one retained read-only descriptor. It
@@ -351,12 +351,12 @@ writable configuration. Slot and extent come only from authenticated metadata.
 Kernel privilege, extent protection and conflict checks still govern import.
 Reporting failure after a successful import can leave the mapping active.
 
-The private `VINIXVC1` envelope is exactly 320 bytes. Header fields are
+The private `TULPARVC1` envelope is exactly 320 bytes. Header fields are
 little-endian; metadata is readable and authenticated:
 
 | Offset | Bytes | Value |
 | --- | --- | --- |
-| 0 | 8 | ASCII `VINIXVC1` |
+| 0 | 8 | ASCII `TULPARVC1` |
 | 8 | 4 | Version 1 |
 | 12 | 4 | Algorithm 1: scrypt, ChaCha20, HMAC-SHA256 |
 | 16 | 4 | Total bytes 320 |
@@ -399,7 +399,7 @@ the final check. Physical capacity and extent growth can use `plan-grow-volume`
 below. Sector-size, slot, start or mode changes require a fresh configuration.
 Existing configurations
 remain usable with their saved credentials and matching geometry. The separate
-`rewrap-key` command accepts `VINIXKP1` key envelopes; use `rewrap-volume` below
+`rewrap-key` command accepts `TULPARKP1` key envelopes; use `rewrap-volume` below
 for this configuration format. Keep an independent key backup and retain the
 sealed-key limits for persistent credentials, process termination, caches and
 hibernation. Volume
@@ -416,9 +416,9 @@ reboots. The stored slot, extent, key and mode remain authoritative; optional
 `ro` restricts a writable configuration and never elevates a saved readonly one.
 
 ```sh
-vinix-volume open-volume-auto /root/data.vcrypt /root/volume.pass
-vinix-volume remove /dev/mapper/vinix0
-vinix-volume open-volume-auto /root/data.vcrypt /root/volume.pass ro
+tulpar-volume open-volume-auto /root/data.vcrypt /root/volume.pass
+tulpar-volume remove /dev/mapper/tulpar0
+tulpar-volume open-volume-auto /root/data.vcrypt /root/volume.pass ro
 ```
 
 Canonical input validation and full authentication finish before the device
@@ -461,8 +461,8 @@ identity, mapper slot, offset, byte length and saved read-only mode offline.
 whole physical disk through pinned read-only descriptors:
 
 ```sh
-vinix-volume show-volume /root/data.vcrypt /root/volume.pass
-vinix-volume discover-volume /root/data.vcrypt /root/volume.pass
+tulpar-volume show-volume /root/data.vcrypt /root/volume.pass
+tulpar-volume discover-volume /root/data.vcrypt /root/volume.pass
 ```
 
 Offline success starts with `operation=authenticated-volume`. Online success
@@ -504,8 +504,8 @@ partial authenticated reports. See [inspection qualification](../tests/storage-v
 
 The existing `boot-restore` startup hook can unlock an authenticated encrypted
 volume after restoring the plain saved set. Enable it with
-`/etc/vinix/boot-volume.vcrypt`, a private `VINIXVC1` configuration, and
-`/etc/vinix/boot-volume.pass`, its private credential file. The saved disk
+`/etc/tulpar/boot-volume.vcrypt`, a private `TULPARVC1` configuration, and
+`/etc/tulpar/boot-volume.pass`, its private credential file. The saved disk
 identity, exact capacity/native sectors, key, slot, start, length and readonly
 mode remain authoritative. Device reordering is handled by the existing bounded
 identity scanner. No raw keyfile is created. Multiple configurations can form
@@ -513,15 +513,15 @@ one [encrypted boot set](#multiple-encrypted-boot-volumes).
 
 ```sh
 # Install the credential first; the configuration enables automatic unlock.
-install -m 600 /root/volume.pass /etc/vinix/boot-volume.pass
-install -m 600 /root/data.vcrypt /etc/vinix/boot-volume.vcrypt
+install -m 600 /root/volume.pass /etc/tulpar/boot-volume.pass
+install -m 600 /root/data.vcrypt /etc/tulpar/boot-volume.vcrypt
 # Test encrypted unlock alone without applying plain saved plans.
-vinix-volume boot-unlock
+tulpar-volume boot-unlock
 # Removing the configuration disables automatic unlock.
-rm /etc/vinix/boot-volume.vcrypt
+rm /etc/tulpar/boot-volume.vcrypt
 ```
 
-The directories `/etc` and `/etc/vinix` must be owned by root and not writable
+The directories `/etc` and `/etc/tulpar` must be owned by root and not writable
 by group or others. Both inputs must be root-owned private regular files; the
 credential retains the existing 1–1024 exact binary byte policy. All directory
 and input opens use no-follow and close-on-exec, and input opens are nonblocking.
@@ -568,7 +568,7 @@ installed. See [boot-unlock qualification](../tests/storage-volumes/volume-boot.
 ## Multiple encrypted boot volumes
 
 `boot-restore` and `boot-unlock` combine the legacy pair above with visible
-`NAME.vcrypt` configurations in `/etc/vinix/boot-volumes.d`. Each configuration
+`NAME.vcrypt` configurations in `/etc/tulpar/boot-volumes.d`. Each configuration
 uses the exact binary credential in `NAME.pass` in that same retained directory.
 The directory must be root-owned without group/world write permission; both
 files retain the private root-owned regular-file policy. Different configurations
@@ -576,10 +576,10 @@ can use independent keys and credentials, different physical disks, or disjoint
 extents on the same disk. Saved readonly modes remain authoritative.
 
 ```sh
-mkdir -m 700 /etc/vinix/boot-volumes.d
-install -m 600 /root/archive.pass /etc/vinix/boot-volumes.d/archive.pass
-install -m 600 /root/archive.vcrypt /etc/vinix/boot-volumes.d/archive.vcrypt
-vinix-volume boot-unlock
+mkdir -m 700 /etc/tulpar/boot-volumes.d
+install -m 600 /root/archive.pass /etc/tulpar/boot-volumes.d/archive.pass
+install -m 600 /root/archive.vcrypt /etc/tulpar/boot-volumes.d/archive.vcrypt
+tulpar-volume boot-unlock
 ```
 
 There are at most 64 encrypted configurations in total, including the legacy
@@ -616,7 +616,7 @@ offline credential-storage and encrypted-root limits. See
 ## Encrypted-volume configuration recovery
 
 `backup-volume CONFIG PASSPHRASE_FILE RECOVERY_KEYFILE BACKUP` authenticates a
-`VINIXVC1` configuration and backs up its exact disk identity, capacity, native
+`TULPARVC1` configuration and backs up its exact disk identity, capacity, native
 sectors, slot, extent, readonly mode and volume key under an independent private
 64-byte recovery key. `recover-volume BACKUP RECOVERY_KEYFILE
 NEW_PASSPHRASE_FILE CONFIG` restores that metadata and key into a new ordinary
@@ -625,10 +625,10 @@ or creates a plaintext keyfile. The old configuration and credential are not
 required for recovery once the backup exists.
 
 ```sh
-vinix-volume backup-volume /root/data.vcrypt /root/volume.pass /root/recovery.key /root/data.vrecover
+tulpar-volume backup-volume /root/data.vcrypt /root/volume.pass /root/recovery.key /root/data.vrecover
 # After losing the original configuration or its credential:
-vinix-volume recover-volume /root/data.vrecover /root/recovery.key /root/new.pass /root/recovered.vcrypt
-vinix-volume open-volume-auto /root/recovered.vcrypt /root/new.pass
+tulpar-volume recover-volume /root/data.vrecover /root/recovery.key /root/new.pass /root/recovered.vcrypt
+tulpar-volume open-volume-auto /root/recovered.vcrypt /root/new.pass
 ```
 
 Backups authenticate the source configuration before reading the recovery key.
@@ -640,9 +640,9 @@ exact sizes, retained descriptors and symlink refusal apply to every input.
 New credentials use the existing 1–1024-byte binary credential policy and fixed
 production scrypt profile. Every recovery generates a fresh salt and nonce.
 
-The private recovery format `VINIXVR1` is exactly 320 bytes. It has version 1,
+The private recovery format `TULPARVR1` is exactly 320 bytes. It has version 1,
 algorithm 1 (direct ChaCha20 and HMAC-SHA256), total size 320 and key size 64 at
-the same offsets 8, 12, 16 and 20 as `VINIXVC1`. Bytes 24–55 are zero, with a
+the same offsets 8, 12, 16 and 20 as `TULPARVC1`. Bytes 24–55 are zero, with a
 fresh 12-byte nonce at 56. All disk/mapping fields, ciphertext, authentication
 tag and other reserved bytes retain the configuration layout above. The first
 32 recovery-key bytes encrypt the key with ChaCha20 counter 1. The second 32
@@ -669,12 +669,12 @@ AES-XTS data. See [configuration recovery qualification](../tests/storage-volume
 ## Direct recovery-key unlock
 
 `open-recovery-volume-auto BACKUP RECOVERY_KEYFILE [ro]` opens the encrypted
-mapping directly from its authenticated `VINIXVR1` backup and independent
+mapping directly from its authenticated `TULPARVR1` backup and independent
 64-byte recovery key. It needs no original passphrase/configuration, new
 passphrase or writable configuration destination. For example:
 
 ```sh
-vinix-volume open-recovery-volume-auto /root/data.vrecover /root/recovery.key ro
+tulpar-volume open-recovery-volume-auto /root/data.vrecover /root/recovery.key ro
 ```
 
 Both inputs must be exact-size private owned regular files opened without
@@ -702,13 +702,13 @@ remain separate work. See [direct unlock qualification](../tests/storage-volumes
 ## Changing recovery-backup credentials
 
 `rewrap-recovery-volume BACKUP OLD_RECOVERY_KEYFILE NEW_RECOVERY_KEYFILE
-NEW_BACKUP` changes the credential protecting an authenticated `VINIXVR1`
+NEW_BACKUP` changes the credential protecting an authenticated `TULPARVR1`
 backup. It preserves the exact volume key, disk identity, capacity, native
 sectors, slot, extent and saved read-only mode, with a fresh random nonce:
 
 ```sh
-vinix-volume rewrap-recovery-volume /root/data.vrecover /root/old-recovery.key /root/new-recovery.key /root/new-data.vrecover
-vinix-volume open-recovery-volume-auto /root/new-data.vrecover /root/new-recovery.key ro
+tulpar-volume rewrap-recovery-volume /root/data.vrecover /root/old-recovery.key /root/new-recovery.key /root/new-data.vrecover
+tulpar-volume open-recovery-volume-auto /root/new-data.vrecover /root/new-recovery.key ro
 ```
 
 The source header and geometry validate before the old key is read. The backup
@@ -744,8 +744,8 @@ and saved read-only mode. Original passphrases and ordinary configurations are
 not required:
 
 ```sh
-vinix-volume plan-grow-recovery-volume /dev/vda /root/data.vrecover /root/recovery.key 33554432 12288 /root/grown.vrecover
-vinix-volume open-recovery-volume-auto /root/grown.vrecover /root/recovery.key
+tulpar-volume plan-grow-recovery-volume /dev/vda /root/data.vrecover /root/recovery.key 33554432 12288 /root/grown.vrecover
+tulpar-volume open-recovery-volume-auto /root/grown.vrecover /root/recovery.key
 ```
 
 Capacity and length are explicit byte counts. Capacity cannot shrink and must
@@ -787,8 +787,8 @@ BACKUP RECOVERY_KEYFILE` additionally locates the unique matching whole physical
 disk and reports its current `/dev` name:
 
 ```sh
-vinix-volume show-recovery-volume /root/data.vrecover /root/recovery.key
-vinix-volume discover-recovery-volume /root/data.vrecover /root/recovery.key
+tulpar-volume show-recovery-volume /root/data.vrecover /root/recovery.key
+tulpar-volume discover-recovery-volume /root/data.vrecover /root/recovery.key
 ```
 
 Offline success begins with `operation=authenticated-recovery`. Online success
@@ -829,12 +829,12 @@ printed on failure; output failure can leave a partial report. See
 ## Offline ciphertext reference inspection and comparison
 
 `show-volume-reference REFERENCE` validates and displays a complete private
-`VINIXCH1` checksum reference. `compare-volume-references BEFORE_REFERENCE
+`TULPARCH1` checksum reference. `compare-volume-references BEFORE_REFERENCE
 AFTER_REFERENCE` compares two valid references for the same saved mapping:
 
 ```sh
-vinix-volume show-volume-reference /root/data.vchash
-vinix-volume compare-volume-references /root/before.vchash /root/after.vchash
+tulpar-volume show-volume-reference /root/data.vchash
+tulpar-volume compare-volume-references /root/before.vchash /root/after.vchash
 ```
 
 Both inputs must be exact 128-byte private owned regular files. The existing
@@ -850,7 +850,7 @@ operational failure rather than a digest finding.
 Inspection reports the saved mapping, recorded extent digest and SHA-256
 fingerprint of all 128 reference bytes. Comparison reports the same geometry,
 both recorded extent digests and both complete reference fingerprints. The
-two-line inspection header is `format=VINIXCH1 operation=show-ciphertext-reference
+two-line inspection header is `format=TULPARCH1 operation=show-ciphertext-reference
 mappings=1 algorithm=sha256 reference_sha256=HEX`, followed by `disk_bytes=N
 sector=N identity=ID slot=N offset=N bytes=N readonly=0|1 sha256=HEX`.
 The comparison header uses `operation=compared-ciphertext-references`,
@@ -886,8 +886,8 @@ ciphertext checksum reference after discovering the saved physical disk.
 and verify its complete extent against an existing reference:
 
 ```sh
-vinix-volume hash-volume-auto /root/data.vcrypt /root/volume.pass /root/data.vchash
-vinix-volume verify-recovery-volume-auto /root/data.vrecover /root/recovery.key /root/data.vchash
+tulpar-volume hash-volume-auto /root/data.vcrypt /root/volume.pass /root/data.vchash
+tulpar-volume verify-recovery-volume-auto /root/data.vrecover /root/recovery.key /root/data.vchash
 ```
 
 Both credential domains authenticate the saved geometry and erase passwords,
@@ -906,7 +906,7 @@ The first recheck retains discovery's physical ID and read-only state. Two
 additional pre-read rechecks and one post-read recheck detect changes, with a
 final recheck under the destination lock when recording.
 
-The fixed 64-KiB reader, exact `VINIXCH1` reference bytes, two-line output and
+The fixed 64-KiB reader, exact `TULPARCH1` reference bytes, two-line output and
 private no-overwrite publication are identical to explicit-device checksum
 commands. Either credential domain can verify manual or automatic references
 for the same metadata. Verification scans the complete extent, returns failure
@@ -928,8 +928,8 @@ discovery provides no snapshot or ciphertext authentication. See
 complete ciphertext scrub without requiring a current physical device path:
 
 ```sh
-vinix-volume scrub-volume-auto /root/data.vcrypt /root/volume.pass /root/data.vchash /root/auto-1.vcscrub
-vinix-volume scrub-recovery-volume-auto /root/data.vrecover /root/recovery.key /root/data.vchash /root/auto-2.vcscrub
+tulpar-volume scrub-volume-auto /root/data.vcrypt /root/volume.pass /root/data.vchash /root/auto-1.vcscrub
+tulpar-volume scrub-recovery-volume-auto /root/data.vrecover /root/recovery.key /root/data.vchash /root/auto-2.vcscrub
 ```
 
 Authentication, full secret erasure and exact reference validation happen
@@ -947,7 +947,7 @@ physical ID and mode selected by discovery. Two further pre-read rechecks,
 one post-read recheck and one recheck after destination locking follow the
 existing scrub rules. Changes or incomplete reads publish no report.
 
-Reports and output are exactly the same `VINIXCS1` findings as an explicit-device
+Reports and output are exactly the same `TULPARCS1` findings as an explicit-device
 scrub against the same reference and ciphertext. Matching/changed findings
 return 0/2; authentication, reference, discovery, scan, publication and output
 failures return 1, with operational errors taking precedence. Invalid syntax
@@ -964,14 +964,14 @@ repair or encrypted-root boot integration. See
 ## Comparing encrypted ciphertext scrub history
 
 `compare-volume-scrubs BEFORE_REPORT AFTER_REPORT` compares two completed
-`VINIXCS1` findings offline. Both exact private reports must validate in full,
+`TULPARCS1` findings offline. Both exact private reports must validate in full,
 and their embedded 128-byte references must be identical, including saved
 geometry/mode, expected digest and CRC. Reports produced through passphrase and
 recovery credentials are comparable when they used that same reference.
 Different references are refused even if their observed digests agree.
 
 ```sh
-vinix-volume compare-volume-scrubs /root/scan-1.vcscrub /root/scan-2.vcscrub
+tulpar-volume compare-volume-scrubs /root/scan-1.vcscrub /root/scan-2.vcscrub
 ```
 
 | Observed digests | Before / after finding | Comparison result | Exit status |
@@ -988,7 +988,7 @@ reference mismatch or output failure returns 1 and overrides these findings;
 invalid syntax returns 2 without a comparison. Both files validate before any
 successful output. Output failure can leave a partial comparison on stdout.
 
-The two-record output header is `format=VINIXCS1 operation=compared-ciphertext
+The two-record output header is `format=TULPARCS1 operation=compared-ciphertext
 mappings=1 stable=0|1 changed=0|1 algorithm=sha256 reference_sha256=HEX`. Its row
 contains `disk_bytes=N sector=N identity=ID slot=N offset=N bytes=N readonly=0|1
 before=match|changed after=match|changed result=stable|new-change|restored|changed-again
@@ -1016,15 +1016,15 @@ extent, then publish a private finding. A SHA mismatch is a complete finding,
 so scanning continues through the entire extent before reporting it:
 
 ```sh
-vinix-volume scrub-volume /dev/vda /root/data.vcrypt /root/volume.pass /root/data.vchash /root/scan-1.vcscrub
-vinix-volume show-volume-scrub /root/scan-1.vcscrub
-vinix-volume scrub-recovery-volume /dev/vdb /root/data.vrecover /root/recovery.key /root/data.vchash /root/scan-2.vcscrub
+tulpar-volume scrub-volume /dev/vda /root/data.vcrypt /root/volume.pass /root/data.vchash /root/scan-1.vcscrub
+tulpar-volume show-volume-scrub /root/scan-1.vcscrub
+tulpar-volume scrub-recovery-volume /dev/vdb /root/data.vrecover /root/recovery.key /root/data.vchash /root/scan-2.vcscrub
 ```
 
-Each report preserves the exact `VINIXCH1` reference, the observed full-extent
+Each report preserves the exact `TULPARCH1` reference, the observed full-extent
 SHA-256 digest and SHA-256 of every reference byte. Metadata, saved mode,
 expected digest, observed digest and reference fingerprint appear in two output
-records. The header is `format=VINIXCS1 operation=scrubbed-ciphertext mappings=1
+records. The header is `format=TULPARCS1 operation=scrubbed-ciphertext mappings=1
 matched=0|1 changed=0|1 algorithm=sha256 reference_sha256=HEX`; the row has
 `disk_bytes=N sector=N identity=ID slot=N offset=N bytes=N readonly=0|1
 result=match|changed expected_sha256=HEX actual_sha256=HEX`. Reports are identical
@@ -1058,7 +1058,7 @@ successful finding. Viewing a valid clean or changed historical report returns
 0; input/output failure returns 1. Viewing opens no disk, reads no credential,
 performs no KDF, acquires no writer lock and publishes nothing.
 
-`VINIXCS1` version 1 is little endian: magic at 0; version/224-byte size at
+`TULPARCS1` version 1 is little endian: magic at 0; version/224-byte size at
 8/12; result (0 match, 1 changed) at 16; algorithm (1 SHA-256) at 20; four zero
 reserved bytes at 24; whole CRC-32 at 28 with that field zero; the exact 128-byte
 reference at 32; observed digest at 160; reference fingerprint at 192. It
@@ -1079,8 +1079,8 @@ extent. `verify-volume` and `verify-recovery-volume` take the same arguments and
 compare that extent against an existing reference:
 
 ```sh
-vinix-volume hash-volume /dev/vda /root/data.vcrypt /root/volume.pass /root/data.vchash
-vinix-volume verify-recovery-volume /dev/vdb /root/data.vrecover /root/recovery.key /root/data.vchash
+tulpar-volume hash-volume /dev/vda /root/data.vcrypt /root/volume.pass /root/data.vchash
+tulpar-volume verify-recovery-volume /dev/vdb /root/data.vrecover /root/recovery.key /root/data.vchash
 ```
 
 The reference binds exact physical capacity, native sector size, MBR/GPT
@@ -1113,7 +1113,7 @@ are preserved, including aliases. Temporary ownership and cleanup follow the
 key-recovery publisher. A post-publication directory-flush or output failure
 can leave the complete reference present while returning failure.
 
-`VINIXCH1` version 1 is little endian: magic at 0; version/size at 8/12;
+`TULPARCH1` version 1 is little endian: magic at 0; version/size at 8/12;
 capacity/sector at 16/24; identity kind/slot at 32/36; offset/length/mode at
 40/48/56; 16 identity bytes at 64; 32 digest bytes at 80; twelve zero reserved
 bytes at 112; CRC-32 at 124 computed with that field zero. References contain
@@ -1145,8 +1145,8 @@ check a complete proposed capacity/extent against a pinned read-only physical
 disk, then report the candidate without publishing it:
 
 ```sh
-vinix-volume plan-preview-grow-volume /dev/vda /root/data.vcrypt /root/volume.pass 33554432 12288
-vinix-volume plan-preview-grow-recovery-volume /dev/vda /root/data.vrecover /root/recovery.key 33554432 12288
+tulpar-volume plan-preview-grow-volume /dev/vda /root/data.vcrypt /root/volume.pass 33554432 12288
+tulpar-volume plan-preview-grow-recovery-volume /dev/vda /root/data.vrecover /root/recovery.key 33554432 12288
 ```
 
 Capacity and extent length are explicit byte counts. Neither can shrink;
@@ -1208,12 +1208,12 @@ for capacity adoption or a fresh wrapping salt/nonce.
 
 ```sh
 # Plan against the current whole physical disk, without a raw keyfile.
-vinix-volume plan-grow-volume /dev/vda /root/data.vcrypt /root/volume.pass 16777216 /root/data-grown.vcrypt
+tulpar-volume plan-grow-volume /dev/vda /root/data.vcrypt /root/volume.pass 16777216 /root/data-grown.vcrypt
 # Apply separately to an already active view; held descriptors keep working.
-vinix-volume grow /dev/mapper/vinix0 16777216
-vinix-volume remove /dev/mapper/vinix0
+tulpar-volume grow /dev/mapper/tulpar0 16777216
+tulpar-volume remove /dev/mapper/tulpar0
 # Reopen with the new saved capacity/length after removal or reboot.
-vinix-volume open-volume-auto /root/data-grown.vcrypt /root/volume.pass
+tulpar-volume open-volume-auto /root/data-grown.vcrypt /root/volume.pass
 ```
 
 Planning authenticates before opening the physical parent or output directory.
@@ -1228,7 +1228,7 @@ and nonce; the old derived key is erased before reuse. After encoding, both
 credential buffers and the plaintext volume key are erased before publication
 I/O. Normal returns erase the complete workspace and close retained descriptors.
 
-The unchanged 320-byte `VINIXVC1` format authenticates the new geometry and
+The unchanged 320-byte `TULPARVC1` format authenticates the new geometry and
 wrapped key. Publication uses the same directory lock, mode-0600 temporary,
 no-overwrite hardlink, cleanup and durability rules. Source, credential and
 existing destination entries remain intact. A post-publication cleanup,
@@ -1252,15 +1252,15 @@ above. See [growth qualification](../tests/storage-volumes/volume-growth.md).
 ## Changing encrypted-volume configuration credentials
 
 `rewrap-volume CONFIG OLD_PASSPHRASE_FILE NEW_PASSPHRASE_FILE NEW_CONFIG`
-authenticates a `VINIXVC1` configuration and publishes a new private configuration
+authenticates a `TULPARVC1` configuration and publishes a new private configuration
 protecting the same volume key with new credential bytes, a fresh salt and a
 fresh nonce. The authenticated whole-disk identity, physical byte/sector geometry,
 mapping slot, offset, length and saved readonly mode remain exact. It needs no
 raw keyfile, opens no physical disk and changes no mapping or volume ciphertext.
 
 ```sh
-vinix-volume rewrap-volume /root/data.vcrypt /root/old.pass /root/new.pass /root/data-next.vcrypt
-vinix-volume open-volume /dev/vda /root/data-next.vcrypt /root/new.pass ro
+tulpar-volume rewrap-volume /root/data.vcrypt /root/old.pass /root/new.pass /root/data-next.vcrypt
+tulpar-volume open-volume /dev/vda /root/data-next.vcrypt /root/new.pass ro
 ```
 
 The original configuration's canonical format, bounded work profile and complete
@@ -1292,8 +1292,8 @@ limitations remain as above. See [configuration rewrap qualification](../tests/s
 ```sh
 # Use a whole physical disk with a nonzero MBR signature or GPT disk GUID.
 # Store the plan on a persistent filesystem available before restoration.
-vinix-volume save /dev/vda /root/volumes.vmap
-vinix-volume restore /dev/vda /root/volumes.vmap
+tulpar-volume save /dev/vda /root/volumes.vmap
+tulpar-volume restore /dev/vda /root/volumes.vmap
 ```
 
 `save` records every managed mapping on the selected physical disk, including
@@ -1315,7 +1315,7 @@ views retain their generation and open descriptors, making repeated restore
 idempotent. Creates retain the kernel's ordinary management privileges, extent
 protection and resource limits.
 
-Plans use a bounded little-endian format: a 64-byte `VINIXVM1` version-1 header
+Plans use a bounded little-endian format: a 64-byte `TULPARVM1` version-1 header
 with geometry, identity, record count, CRC32 and zero reserved bytes, followed
 by up to 64 32-byte version-1 create records. CRC32 detects accidental
 corruption; it does not authenticate a plan. MBR signatures and GPT GUIDs can
@@ -1342,14 +1342,14 @@ must be made available before that view can be restored.
 ## Discovery and boot restore
 
 ```sh
-vinix-volume discover /root/volumes.vmap
-vinix-volume restore-auto /root/volumes.vmap
+tulpar-volume discover /root/volumes.vmap
+tulpar-volume restore-auto /root/volumes.vmap
 # Opt in to restore before the desktop or interactive shell starts:
-mkdir -p /etc/vinix
-chown root:root /etc/vinix
-chmod 755 /etc/vinix
-vinix-volume save /dev/vda /etc/vinix/volumes.vmap
-vinix-volume boot-restore
+mkdir -p /etc/tulpar
+chown root:root /etc/tulpar
+chmod 755 /etc/tulpar
+tulpar-volume save /dev/vda /etc/tulpar/volumes.vmap
+tulpar-volume boot-restore
 ```
 
 `discover` validates a plan and scans the top level of `/dev` for its physical
@@ -1365,11 +1365,11 @@ matching identities on distinct physical disks fail before creating any view.
 
 The packaged ARM desktop init and both architectures' Alpine init scripts, plus
 the AMD64 desktop init, run `boot-restore` once before starting applications or
-the interactive shell. It loads `/etc/vinix/volumes.vmap` when present, together
-with visible `.vmap` files in `/etc/vinix/volumes.d` as one plan set. Missing
+the interactive shell. It loads `/etc/tulpar/volumes.vmap` when present, together
+with visible `.vmap` files in `/etc/tulpar/volumes.d` as one plan set. Missing
 configuration or an empty set is a successful no-op. An optional
-`/etc/vinix/volumes.vset` bundle joins the same preflighted set. The opened `/etc`,
-`/etc/vinix`, enabled plans directory and every enabled file must be owned by
+`/etc/tulpar/volumes.vset` bundle joins the same preflighted set. The opened `/etc`,
+`/etc/tulpar`, enabled plans directory and every enabled file must be owned by
 root and not writable by group or others; none of those path components may be
 a symlink. Plans must also satisfy the regular-file and checksum rules.
 Directory-relative operations pin the configuration and device directories;
@@ -1387,13 +1387,13 @@ As an alternative to the single default file, enable one plan per disk in a
 directory. Do not also leave the same disk's plan enabled as `volumes.vmap`.
 
 ```sh
-mkdir -p /etc/vinix/volumes.d
-chown root:root /etc/vinix /etc/vinix/volumes.d
-chmod 755 /etc/vinix /etc/vinix/volumes.d
-vinix-volume save /dev/vda /etc/vinix/volumes.d/main.vmap
-vinix-volume save /dev/vdb /etc/vinix/volumes.d/data.vmap
-vinix-volume restore-set /etc/vinix/volumes.d
-vinix-volume boot-restore
+mkdir -p /etc/tulpar/volumes.d
+chown root:root /etc/tulpar /etc/tulpar/volumes.d
+chmod 755 /etc/tulpar /etc/tulpar/volumes.d
+tulpar-volume save /dev/vda /etc/tulpar/volumes.d/main.vmap
+tulpar-volume save /dev/vdb /etc/tulpar/volumes.d/data.vmap
+tulpar-volume restore-set /etc/tulpar/volumes.d
+tulpar-volume boot-restore
 ```
 
 `restore-set DIRECTORY` reads visible files ending in `.vmap`, without recursion.
@@ -1427,11 +1427,11 @@ separate work.
 
 ```sh
 # Capture all managed views on these explicitly selected physical disks.
-vinix-volume save-set /root/volumes.vset /dev/vda /dev/vdb
-vinix-volume restore-bundle /root/volumes.vset
+tulpar-volume save-set /root/volumes.vset /dev/vda /dev/vdb
+tulpar-volume restore-bundle /root/volumes.vset
 # To enable the same bundle before applications start:
-vinix-volume save-set /etc/vinix/volumes.vset /dev/vda /dev/vdb
-vinix-volume boot-restore
+tulpar-volume save-set /etc/tulpar/volumes.vset /dev/vda /dev/vdb
+tulpar-volume boot-restore
 ```
 
 `save-set BUNDLE DEVICE [DEVICE ...]` accepts 1–64 whole physical disks. Each
@@ -1451,9 +1451,9 @@ reports failure with the new file already published and durability unconfirmed.
 These guarantees depend on the backing filesystem's existing flush/recovery
 guarantees; a checksum does not make an unjournaled filesystem crash-safe.
 
-The bounded `VINIXVS1` version-1 format has a 64-byte header containing version,
+The bounded `TULPARVS1` version-1 format has a 64-byte header containing version,
 disk count, total byte count, total mapping count, CRC32 and zero reserved bytes,
-followed by complete `VINIXVM1` disk plans in command-line order. Both inner and
+followed by complete `TULPARVM1` disk plans in command-line order. Both inner and
 outer checksums are validated, together with global identity/slot uniqueness.
 At most 64 mappings are stored across all disks, so the largest version-1 bundle
 is 6208 bytes. Bundles with allocation pools use version 2 as described below.
@@ -1481,11 +1481,11 @@ work.
 
 ```sh
 # Slot 2 already exists and has unused physical space immediately after it.
-vinix-volume save-set /root/capacity.vset /dev/vda /dev/vdb
-vinix-volume plan-grow /root/capacity.vset 2 16777216
-vinix-volume restore-bundle /root/capacity.vset grow
+tulpar-volume save-set /root/capacity.vset /dev/vda /dev/vdb
+tulpar-volume plan-grow /root/capacity.vset 2 16777216
+tulpar-volume restore-bundle /root/capacity.vset grow
 # Enroll the resulting live geometry for ordinary boot replay.
-vinix-volume save-set /etc/vinix/volumes.vset /dev/vda /dev/vdb
+tulpar-volume save-set /etc/tulpar/volumes.vset /dev/vda /dev/vdb
 ```
 
 `plan-grow BUNDLE SLOT LENGTH_BYTES` edits one existing mapping's desired length
@@ -1524,11 +1524,11 @@ to resume a live view that is still smaller than its saved plan.
 ## Bundle inspection and preflight
 
 ```sh
-vinix-volume show-bundle /root/capacity.vset
-vinix-volume check-bundle /root/capacity.vset
+tulpar-volume show-bundle /root/capacity.vset
+tulpar-volume check-bundle /root/capacity.vset
 # Preview a plan that explicitly allows existing smaller views to grow:
-vinix-volume check-bundle /root/capacity.vset grow
-vinix-volume restore-bundle /root/capacity.vset grow
+tulpar-volume check-bundle /root/capacity.vset grow
+tulpar-volume restore-bundle /root/capacity.vset grow
 ```
 
 `show-bundle BUNDLE` validates the complete checksummed configuration and prints
@@ -1566,14 +1566,14 @@ See [inspection and preflight qualification](../tests/storage-volumes/check-bund
 
 ```sh
 # Save identities first; disks with no managed views are valid participants.
-vinix-volume save-set /root/layout.vset /dev/sd0 /dev/sd1
-vinix-volume show-bundle /root/layout.vset
+tulpar-volume save-set /root/layout.vset /dev/sd0 /dev/sd1
+tulpar-volume show-bundle /root/layout.vset
 # Add slot 12 on saved disk index 1, at an absolute physical byte offset:
-vinix-volume plan-add /root/layout.vset 1 12 4194304 1048576 ro
-vinix-volume check-bundle /root/layout.vset
-vinix-volume restore-bundle /root/layout.vset
+tulpar-volume plan-add /root/layout.vset 1 12 4194304 1048576 ro
+tulpar-volume check-bundle /root/layout.vset
+tulpar-volume restore-bundle /root/layout.vset
 # Stop replaying slot 12 without changing a live mapping:
-vinix-volume plan-remove /root/layout.vset 12
+tulpar-volume plan-remove /root/layout.vset 12
 ```
 
 `plan-add BUNDLE DISK_INDEX SLOT OFFSET_BYTES LENGTH_BYTES [ro]` adds one desired
@@ -1617,12 +1617,12 @@ filesystem resize and encryption remain separate work. See
 ## Atomic explicit mapping additions
 
 ```sh
-vinix-volume plan-preview-add-batch /root/layout.vset \
+tulpar-volume plan-preview-add-batch /root/layout.vset \
   mbr:12345678 19 8388608 4096 rw mbr:12345679 20 8388608 4096 ro
-vinix-volume plan-add-batch /root/layout.vset \
+tulpar-volume plan-add-batch /root/layout.vset \
   mbr:12345678 19 8388608 4096 rw mbr:12345679 20 8388608 4096 ro
-vinix-volume check-bundle /root/layout.vset
-vinix-volume restore-bundle /root/layout.vset
+tulpar-volume check-bundle /root/layout.vset
+tulpar-volume restore-bundle /root/layout.vset
 ```
 
 `plan-add-batch BUNDLE IDENTITY SLOT OFFSET_BYTES LENGTH_BYTES MODE [...]`
@@ -1670,12 +1670,12 @@ V1/V2 formats and boot replay persist the rows. See
 ## Atomic explicit mapping growth
 
 ```sh
-vinix-volume plan-preview-grow-batch /root/layout.vset \
+tulpar-volume plan-preview-grow-batch /root/layout.vset \
   mbr:12345679 9 8192 mbr:12345678 2 8192
-vinix-volume plan-grow-batch /root/layout.vset \
+tulpar-volume plan-grow-batch /root/layout.vset \
   mbr:12345679 9 8192 mbr:12345678 2 8192
-vinix-volume check-bundle /root/layout.vset grow
-vinix-volume restore-bundle /root/layout.vset grow
+tulpar-volume check-bundle /root/layout.vset grow
+tulpar-volume restore-bundle /root/layout.vset grow
 ```
 
 `plan-grow-batch BUNDLE IDENTITY SLOT LENGTH_BYTES [...]` grows 1–64 existing
@@ -1723,10 +1723,10 @@ lengths in the unchanged V1/V2 formats. See
 ## Atomic pool eligibility contraction
 
 ```sh
-vinix-volume pool-space /root/layout.vset 5
-vinix-volume pool-preview-contract-batch /root/layout.vset 5 \
+tulpar-volume pool-space /root/layout.vset 5
+tulpar-volume pool-preview-contract-batch /root/layout.vset 5 \
   mbr:12345678 12591104 mbr:12345679 12591104
-vinix-volume pool-contract-batch /root/layout.vset 5 \
+tulpar-volume pool-contract-batch /root/layout.vset 5 \
   mbr:12345678 12591104 mbr:12345679 12591104
 ```
 
@@ -1776,9 +1776,9 @@ contracted windows. See
 
 ```sh
 # Transfer an unused 4 KiB boundary region from pool 5 to adjacent pool 6.
-vinix-volume pool-preview-resize-batch /root/layout.vset \
+tulpar-volume pool-preview-resize-batch /root/layout.vset \
   mbr:12345679 6 12587008 12599296 mbr:12345679 5 12582912 12587008
-vinix-volume pool-resize-batch /root/layout.vset \
+tulpar-volume pool-resize-batch /root/layout.vset \
   mbr:12345679 6 12587008 12599296 mbr:12345679 5 12582912 12587008
 ```
 
@@ -1826,9 +1826,9 @@ windows. See [cross-pool resizing qualification](../tests/storage-volumes/pool-r
 
 ```sh
 # Adopt an already observed 20 MiB disk after reducing unused pool eligibility.
-vinix-volume plan-preview-contract-capacity-batch /root/layout.vset \
+tulpar-volume plan-preview-contract-capacity-batch /root/layout.vset \
   mbr:12345678 /dev/sd0 20971520 mbr:12345679 /dev/sd1 16777216
-vinix-volume plan-contract-capacity-batch /root/layout.vset \
+tulpar-volume plan-contract-capacity-batch /root/layout.vset \
   mbr:12345678 /dev/sd0 20971520 mbr:12345679 /dev/sd1 16777216
 ```
 
@@ -1878,9 +1878,9 @@ require exact adopted geometry. V1/V2 formats are unchanged. See
 ## Atomic desired mapping removal batches
 
 ```sh
-vinix-volume plan-preview-remove-batch /root/layout.vset 13 12
-vinix-volume plan-remove-batch /root/layout.vset 13 12
-vinix-volume check-bundle /root/layout.vset
+tulpar-volume plan-preview-remove-batch /root/layout.vset 13 12
+tulpar-volume plan-remove-batch /root/layout.vset 13 12
+tulpar-volume check-bundle /root/layout.vset
 ```
 
 `plan-remove-batch BUNDLE SLOT [...]` removes 1–64 distinct desired mapping
@@ -1925,13 +1925,13 @@ boot replay persist the omissions. See
 ```sh
 # Capture another whole disk, then append its saved plan to the existing bundle.
 # This example assumes disk 2 has no managed views and the bundle has two disks.
-vinix-volume save /dev/sd2 /root/disk2.vmap
-vinix-volume plan-enroll /root/layout.vset /root/disk2.vmap
-vinix-volume show-bundle /root/layout.vset
-vinix-volume check-bundle /root/layout.vset
-vinix-volume restore-bundle /root/layout.vset
+tulpar-volume save /dev/sd2 /root/disk2.vmap
+tulpar-volume plan-enroll /root/layout.vset /root/disk2.vmap
+tulpar-volume show-bundle /root/layout.vset
+tulpar-volume check-bundle /root/layout.vset
+tulpar-volume restore-bundle /root/layout.vset
 # An empty participant can stop taking part in subsequent replay:
-vinix-volume plan-forget /root/layout.vset 2
+tulpar-volume plan-forget /root/layout.vset 2
 ```
 
 `plan-enroll BUNDLE PLAN` imports one complete checksummed single-disk `.vmap`
@@ -1973,9 +1973,9 @@ and RAID are still separate work. See
 ## Atomic disk enrollment batches
 
 ```sh
-vinix-volume plan-preview-enroll-batch /root/layout.vset /root/disk2.vmap /root/disk3.vmap
-vinix-volume plan-enroll-batch /root/layout.vset /root/disk2.vmap /root/disk3.vmap
-vinix-volume check-bundle /root/layout.vset
+tulpar-volume plan-preview-enroll-batch /root/layout.vset /root/disk2.vmap /root/disk3.vmap
+tulpar-volume plan-enroll-batch /root/layout.vset /root/disk2.vmap /root/disk3.vmap
+tulpar-volume check-bundle /root/layout.vset
 ```
 
 `plan-enroll-batch BUNDLE PLAN [...]` imports 1–64 complete single-disk snapshots
@@ -2023,9 +2023,9 @@ formats and boot replay persist the imports. See
 ## Atomic disk forgetting
 
 ```sh
-vinix-volume show-bundle /root/layout.vset
-vinix-volume plan-preview-forget-batch /root/layout.vset mbr:1234567b mbr:1234567c
-vinix-volume plan-forget-batch /root/layout.vset mbr:1234567b mbr:1234567c
+tulpar-volume show-bundle /root/layout.vset
+tulpar-volume plan-preview-forget-batch /root/layout.vset mbr:1234567b mbr:1234567c
+tulpar-volume plan-forget-batch /root/layout.vset mbr:1234567b mbr:1234567c
 ```
 
 `plan-forget-batch BUNDLE IDENTITY [...]` removes 1–64 distinct empty enrolled
@@ -2070,10 +2070,10 @@ and boot replay persist omissions and remapped pool references. See
 
 ```sh
 # Choose a region reserved for managed raw volumes on saved disk index 0.
-vinix-volume plan-space /root/layout.vset 0 8388608 16777216 1048576
-vinix-volume plan-allocate /root/layout.vset 0 20 2097152 8388608 16777216 1048576
-vinix-volume check-bundle /root/layout.vset
-vinix-volume restore-bundle /root/layout.vset
+tulpar-volume plan-space /root/layout.vset 0 8388608 16777216 1048576
+tulpar-volume plan-allocate /root/layout.vset 0 20 2097152 8388608 16777216 1048576
+tulpar-volume check-bundle /root/layout.vset
+tulpar-volume restore-bundle /root/layout.vset
 ```
 
 `plan-space BUNDLE DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES` reports
@@ -2117,11 +2117,11 @@ regions below. Spanning volumes and RAID remain separate work. See
 
 ```sh
 # Disk index 0 still identifies this whole disk after its backing capacity grows.
-vinix-volume plan-capacity /root/layout.vset 0 /dev/vda 25165824
-vinix-volume plan-space /root/layout.vset 0 16777216 25165824 4096
-vinix-volume plan-allocate /root/layout.vset 0 20 8192 16777216 25165824 4096
-vinix-volume check-bundle /root/layout.vset
-vinix-volume restore-bundle /root/layout.vset
+tulpar-volume plan-capacity /root/layout.vset 0 /dev/vda 25165824
+tulpar-volume plan-space /root/layout.vset 0 16777216 25165824 4096
+tulpar-volume plan-allocate /root/layout.vset 0 20 8192 16777216 25165824 4096
+tulpar-volume check-bundle /root/layout.vset
+tulpar-volume restore-bundle /root/layout.vset
 ```
 
 Saved plans normally match the exact physical capacity. If a virtual backing
@@ -2170,9 +2170,9 @@ cloned signatures/GUIDs do not establish physical provenance. See
 
 ```sh
 # Both physical disks already expose these exact capacities.
-vinix-volume plan-preview-capacity-batch /root/layout.vset 0 /dev/vda 25165824 1 /dev/vdb 33554432
-vinix-volume plan-capacity-batch /root/layout.vset 0 /dev/vda 25165824 1 /dev/vdb 33554432
-vinix-volume show-bundle /root/layout.vset
+tulpar-volume plan-preview-capacity-batch /root/layout.vset 0 /dev/vda 25165824 1 /dev/vdb 33554432
+tulpar-volume plan-capacity-batch /root/layout.vset 0 /dev/vda 25165824 1 /dev/vdb 33554432
+tulpar-volume show-bundle /root/layout.vset
 ```
 
 `plan-capacity-batch BUNDLE DISK_INDEX DEVICE EXPECTED_BYTES [...]` adopts
@@ -2228,16 +2228,16 @@ existing provenance limitation. See
 
 ```sh
 # Save each disk's identity first, then enroll explicitly eligible regions.
-vinix-volume save-set /root/layout.vset /dev/vda /dev/vdb
-vinix-volume pool-add /root/layout.vset 3 0 8388608 16777216 4096
-vinix-volume pool-add /root/layout.vset 3 1 8388608 16777216 4096
-vinix-volume pool-space /root/layout.vset 3
-vinix-volume pool-allocate /root/layout.vset 3 20 2097152 ro
-vinix-volume show-bundle /root/layout.vset
-vinix-volume check-bundle /root/layout.vset
-vinix-volume restore-bundle /root/layout.vset
+tulpar-volume save-set /root/layout.vset /dev/vda /dev/vdb
+tulpar-volume pool-add /root/layout.vset 3 0 8388608 16777216 4096
+tulpar-volume pool-add /root/layout.vset 3 1 8388608 16777216 4096
+tulpar-volume pool-space /root/layout.vset 3
+tulpar-volume pool-allocate /root/layout.vset 3 20 2097152 ro
+tulpar-volume show-bundle /root/layout.vset
+tulpar-volume check-bundle /root/layout.vset
+tulpar-volume restore-bundle /root/layout.vset
 # Remove disk 1 from pool 3 while retaining its desired and live mappings.
-vinix-volume pool-remove /root/layout.vset 3 1
+tulpar-volume pool-remove /root/layout.vset 3 1
 ```
 
 `pool-add BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES`
@@ -2277,7 +2277,7 @@ mapping snapshot and emits a pool-free bundle, replacing prior desired edits
 and pool configuration. Use bundle edits to retain that configuration.
 
 Pool regions and mappings share one checksummed atomic publication. Pool-bearing
-files use a 64-byte `VINIXVS2` version-2 header: the existing counts and CRC remain
+files use a 64-byte `TULPARVS2` version-2 header: the existing counts and CRC remain
 at their version-1 offsets, region count is a little-endian u32 at byte 28, and
 bytes 32–63 are zero. Complete version-1 disk plans are followed by up to 64
 40-byte records: pool u32, saved disk index u32, start u64, exclusive end u64,
@@ -2305,10 +2305,10 @@ separate work. See [pool qualification](../tests/storage-volumes/pool-bundle.md)
 ## Atomic pool membership batches
 
 ```sh
-vinix-volume pool-preview-add-batch /root/layout.vset 3 0 6291456 6295552 4096 1 6291456 6303744 4096
-vinix-volume pool-add-batch /root/layout.vset 3 0 6291456 6295552 4096 1 6291456 6303744 4096
-vinix-volume pool-preview-remove-batch /root/layout.vset 3 0 1
-vinix-volume pool-remove-batch /root/layout.vset 3 0 1
+tulpar-volume pool-preview-add-batch /root/layout.vset 3 0 6291456 6295552 4096 1 6291456 6303744 4096
+tulpar-volume pool-add-batch /root/layout.vset 3 0 6291456 6295552 4096 1 6291456 6303744 4096
+tulpar-volume pool-preview-remove-batch /root/layout.vset 3 0 1
+tulpar-volume pool-remove-batch /root/layout.vset 3 0 1
 ```
 
 `pool-add-batch BUNDLE POOL_ID DISK_INDEX START_BYTES END_BYTES ALIGNMENT_BYTES
@@ -2353,9 +2353,9 @@ existing behavior. See [membership batch qualification](../tests/storage-volumes
 ## Explicit pool allocation priority
 
 ```sh
-vinix-volume pool-preview-order /root/layout.vset 3 1 0
-vinix-volume pool-order /root/layout.vset 3 1 0
-vinix-volume pool-space /root/layout.vset 3
+tulpar-volume pool-preview-order /root/layout.vset 3 1 0
+tulpar-volume pool-order /root/layout.vset 3 1 0
+tulpar-volume pool-space /root/layout.vset 3
 ```
 
 `pool-order BUNDLE POOL_ID DISK_INDEX [...]` sets the first-fit allocation
@@ -2394,12 +2394,12 @@ replay remain separate. See [priority qualification](../tests/storage-volumes/po
 ```sh
 # Pool 3 already includes saved disk 0, and slot 20 fits inside that member.
 # Adopt the larger observed disk first when extending past its saved capacity.
-vinix-volume plan-capacity /root/layout.vset 0 /dev/vda 25165824
-vinix-volume pool-expand /root/layout.vset 3 0 25165824
-vinix-volume pool-grow /root/layout.vset 3 20 4194304
-vinix-volume pool-space /root/layout.vset 3
-vinix-volume check-bundle /root/layout.vset grow
-vinix-volume restore-bundle /root/layout.vset grow
+tulpar-volume plan-capacity /root/layout.vset 0 /dev/vda 25165824
+tulpar-volume pool-expand /root/layout.vset 3 0 25165824
+tulpar-volume pool-grow /root/layout.vset 3 20 4194304
+tulpar-volume pool-space /root/layout.vset 3
+tulpar-volume check-bundle /root/layout.vset grow
+tulpar-volume restore-bundle /root/layout.vset grow
 ```
 
 `pool-expand BUNDLE POOL_ID DISK_INDEX END_BYTES` increases an existing member's
@@ -2451,10 +2451,10 @@ serialized. See
 
 ```sh
 # Every request has a slot, decimal byte length and explicit rw/ro mode.
-vinix-volume pool-preview-batch /root/layout.vset 3 20 4194304 rw 21 1048576 ro
-vinix-volume pool-allocate-batch /root/layout.vset 3 20 4194304 rw 21 1048576 ro
-vinix-volume check-bundle /root/layout.vset
-vinix-volume restore-bundle /root/layout.vset
+tulpar-volume pool-preview-batch /root/layout.vset 3 20 4194304 rw 21 1048576 ro
+tulpar-volume pool-allocate-batch /root/layout.vset 3 20 4194304 rw 21 1048576 ro
+tulpar-volume check-bundle /root/layout.vset
+tulpar-volume restore-bundle /root/layout.vset
 ```
 
 `pool-allocate-batch BUNDLE POOL_ID SLOT LENGTH_BYTES MODE [...]` plans 1–64
@@ -2503,9 +2503,9 @@ filesystem resizing remain open. See
 ## Atomic multi-pool allocation batches
 
 ```sh
-vinix-volume pool-preview-set-batch /root/layout.vset \
+tulpar-volume pool-preview-set-batch /root/layout.vset \
   8 19 4096 ro 7 20 4096 rw
-vinix-volume pool-allocate-set-batch /root/layout.vset \
+tulpar-volume pool-allocate-set-batch /root/layout.vset \
   8 19 4096 ro 7 20 4096 rw
 ```
 
@@ -2545,12 +2545,12 @@ planning. The V1/V2 formats and production boot restore are unchanged. See
 ## Atomic multi-pool growth batches
 
 ```sh
-vinix-volume pool-preview-grow-set-batch /root/layout.vset \
+tulpar-volume pool-preview-grow-set-batch /root/layout.vset \
   8 19 8192 7 20 8192
-vinix-volume pool-grow-set-batch /root/layout.vset \
+tulpar-volume pool-grow-set-batch /root/layout.vset \
   8 19 8192 7 20 8192
-vinix-volume check-bundle /root/layout.vset grow
-vinix-volume restore-bundle /root/layout.vset grow
+tulpar-volume check-bundle /root/layout.vset grow
+tulpar-volume restore-bundle /root/layout.vset grow
 ```
 
 `pool-grow-set-batch BUNDLE POOL SLOT LENGTH_BYTES [...]` plans 1–64
@@ -2588,10 +2588,10 @@ are unchanged. See [multi-pool growth qualification](../tests/storage-volumes/mu
 
 ```sh
 # Slots 20 and 21 already fit inside pool 3's members on their current disks.
-vinix-volume pool-preview-grow-batch /root/layout.vset 3 20 8388608 21 2097152
-vinix-volume pool-grow-batch /root/layout.vset 3 20 8388608 21 2097152
-vinix-volume check-bundle /root/layout.vset grow
-vinix-volume restore-bundle /root/layout.vset grow
+tulpar-volume pool-preview-grow-batch /root/layout.vset 3 20 8388608 21 2097152
+tulpar-volume pool-grow-batch /root/layout.vset 3 20 8388608 21 2097152
+tulpar-volume check-bundle /root/layout.vset grow
+tulpar-volume restore-bundle /root/layout.vset grow
 ```
 
 `pool-grow-batch BUNDLE POOL_ID SLOT LENGTH_BYTES [...]` plans 1–64 existing
@@ -2637,9 +2637,9 @@ work. See [growth batch qualification](../tests/storage-volumes/pool-grow-batch.
 
 ```sh
 # Both disks already belong to pool 3. Adopt any larger physical capacity first.
-vinix-volume pool-preview-expand-batch /root/layout.vset 3 0 25165824 1 33554432
-vinix-volume pool-expand-batch /root/layout.vset 3 0 25165824 1 33554432
-vinix-volume pool-space /root/layout.vset 3
+tulpar-volume pool-preview-expand-batch /root/layout.vset 3 0 25165824 1 33554432
+tulpar-volume pool-expand-batch /root/layout.vset 3 0 25165824 1 33554432
+tulpar-volume pool-space /root/layout.vset 3
 ```
 
 `pool-expand-batch BUNDLE POOL_ID DISK_INDEX END_BYTES [...]` extends 1–64
@@ -2761,9 +2761,9 @@ real-hardware qualification remain future work. Unsupported status backends retu
 
 ```sh
 # Poll once a minute until interrupted.
-vinix-volume monitor /dev/sd0 60
+tulpar-volume monitor /dev/sd0 60
 # Collect ten samples for a script, with one second between samples.
-vinix-volume monitor /dev/sd0 1 10
+tulpar-volume monitor /dev/sd0 1 10
 ```
 
 `monitor` opens one read-only descriptor and combines block status with the
@@ -2829,7 +2829,7 @@ failure prediction remain open. See [monitor qualification](../tests/storage-mon
 ## ATA SMART health
 
 ```sh
-vinix-volume health /dev/sd0
+tulpar-volume health /dev/sd0
 ```
 
 Whole AHCI ATA disks expose a read-only SMART query through ioctl `0x56560005`.
@@ -2877,7 +2877,7 @@ See [native host and guest qualification](../tests/storage-health/README.md).
 ## NVMe SMART/Health
 
 ```sh
-vinix-volume health /dev/nvme0n0
+tulpar-volume health /dev/nvme0n0
 ```
 
 Whole native PCI NVMe namespaces support the same read-only health ioctl and
@@ -2929,7 +2929,7 @@ See [native health qualification](../tests/storage-health/README.md).
 ## Apple ANS SMART/Health
 
 ```sh
-vinix-volume health /dev/ans0n1
+tulpar-volume health /dev/ans0n1
 ```
 
 Whole namespaces published by the opt-in base-M1 ANS2 driver support protocol 2
@@ -2968,8 +2968,8 @@ layout follows the [Linux Apple NVMe driver](https://github.com/torvalds/linux/b
 ## Apple ANS block status
 
 ```sh
-vinix-volume status /dev/ans0n1
-vinix-volume status /dev/ans0n1p1
+tulpar-volume status /dev/ans0n1
+tulpar-volume status /dev/ans0n1p1
 ```
 
 Published ANS namespaces and GPT partitions expose the version-one, 128-byte
@@ -3006,7 +3006,7 @@ required as described in [ANS acceptance](apple-ans-rw-root.md).
 
 ## TRIM/discard
 
-`vinix-volume discard DEVICE OFFSET_BYTES LENGTH_BYTES` submits Linux
+`tulpar-volume discard DEVICE OFFSET_BYTES LENGTH_BYTES` submits Linux
 `BLKDISCARD` (`0x1277`), whose argument is two `uint64_t` byte values: offset
 and length. Status flag 32 advertises backend discard support. Length must be
 nonzero; both values must align to the logical sector size, and the full range
@@ -3106,9 +3106,9 @@ partitions, offline devices, repeated physical IDs and ambiguous saved
 identities fail. All devices are rechecked before and after streaming reads.
 
 ```sh
-vinix-volume hash-bundle /etc/vinix/volumes.vset /root/data.vhash 0 /dev/vda 1 /dev/vdb
-vinix-volume verify-data /root/data.vhash 1 /dev/vda 0 /dev/vdb
-vinix-volume show-data /root/data.vhash
+tulpar-volume hash-bundle /etc/tulpar/volumes.vset /root/data.vhash 0 /dev/vda 1 /dev/vdb
+tulpar-volume verify-data /root/data.vhash 1 /dev/vda 0 /dev/vdb
+tulpar-volume show-data /root/data.vhash
 ```
 
 The verification example assumes the two physical devices have been reordered.
@@ -3142,7 +3142,7 @@ single 64-KiB stack workspace for all rows, accepts interrupted and positive
 sector-aligned short reads, and rejects zero/failed/oversized/unaligned
 transfers. Extents must fit signed file offsets and SHA-256's byte limit.
 
-The little-endian `VINIXDH1` format is separate from existing V1/V2 bundles.
+The little-endian `TULPARDH1` format is separate from existing V1/V2 bundles.
 Its 64-byte header stores magic at 0, u32 version 1 at 8, header bytes 64 at
 12, total file bytes at 16, embedded bundle bytes at 20, digest record count
 at 24 and CRC32 at 28 (computed with that field zero); bytes 32–63 are zero.
@@ -3156,16 +3156,16 @@ retain the ordinary bundle validation. See
 
 ## Offline ciphertext monitor transcript verification
 
-`verify-volume-monitor REFERENCE TRANSCRIPT` checks a saved `VINIXCM1` session
-against its entire trusted `VINIXCH1` ciphertext reference. Both `source=volume`
+`verify-volume-monitor REFERENCE TRANSCRIPT` checks a saved `TULPARCM1` session
+against its entire trusted `TULPARCH1` ciphertext reference. Both `source=volume`
 and `source=recovery` sessions are supported without credentials or device access.
 
 ```sh
-vinix-volume verify-volume-monitor /root/volume.vchash /root/monitor.txt
+tulpar-volume verify-volume-monitor /root/volume.vchash /root/monitor.txt
 ```
 
 Every sample must contain exactly the canonical monitor prefix and the complete
-two-line `VINIXCS1` ASCII scrub view. Samples start at 1 and advance consecutively;
+two-line `TULPARCS1` ASCII scrub view. Samples start at 1 and advance consecutively;
 the source label must stay unchanged. Changed-sample counts and the session latch
 must agree with every expected/actual digest, including restoration. All native
 identity/capacity/sector and slot/offset/length/read-only fields, findings and
@@ -3188,7 +3188,7 @@ imports no mapping and performs no KDF, authentication or physical I/O.
 The bounded two-line summary starts with:
 
 ```text
-format=VINIXCM1 operation=verified-ciphertext-monitor source=volume|recovery mappings=1 samples=N changed_samples=C session_changed=0|1 final_changed=0|1 stable=S new_changes=A restored=R changed_again=G algorithm=sha256 reference_sha256=HEX transcript_sha256=HEX
+format=TULPARCM1 operation=verified-ciphertext-monitor source=volume|recovery mappings=1 samples=N changed_samples=C session_changed=0|1 final_changed=0|1 stable=S new_changes=A restored=R changed_again=G algorithm=sha256 reference_sha256=HEX transcript_sha256=HEX
 ```
 
 Its mapping line includes complete native geometry, saved mode, final match or
@@ -3214,11 +3214,11 @@ concurrent snapshot or repair data. See
 ## Offline data monitor transcript verification
 
 `verify-data-monitor MANIFEST TRANSCRIPT` validates a saved plain-data monitor
-session against its complete trusted `VINIXDH1` checksum reference. It reads
-ordinary files and summarizes every canonical `VINIXDM1`/`VINIXSR1` frame.
+session against its complete trusted `TULPARDH1` checksum reference. It reads
+ordinary files and summarizes every canonical `TULPARDM1`/`TULPARSR1` frame.
 
 ```sh
-vinix-volume verify-data-monitor /root/data.vhash /root/monitor.txt
+tulpar-volume verify-data-monitor /root/data.vhash /root/monitor.txt
 ```
 
 The transcript must be a nonempty regular file of at most 64 MiB. Samples start
@@ -3242,7 +3242,7 @@ transcript validates; output failures can leave a partial write and return 1.
 The bounded complete summary begins with:
 
 ```text
-format=VINIXDM1 operation=verified-data-monitor disks=D mappings=M samples=N changed_samples=C session_changed=0|1 final_changed=F algorithm=sha256 reference_sha256=HEX transcript_sha256=HEX
+format=TULPARDM1 operation=verified-data-monitor disks=D mappings=M samples=N changed_samples=C session_changed=0|1 final_changed=F algorithm=sha256 reference_sha256=HEX transcript_sha256=HEX
 ```
 
 Native disk geometry lines precede each disk's mapping rows. Every row includes
@@ -3277,12 +3277,12 @@ supply a concurrent snapshot or repair. See
 `monitor-volume-auto CONFIG PASSPHRASE_FILE REFERENCE INTERVAL_SECONDS COUNT`
 and `monitor-recovery-volume-auto BACKUP RECOVERY_KEYFILE REFERENCE
 INTERVAL_SECONDS COUNT` repeatedly hash one encrypted extent's physical
-ciphertext against a trusted `VINIXCH1` reference. They use the existing
+ciphertext against a trusted `TULPARCH1` reference. They use the existing
 authenticated configuration/recovery formats and automatic read-only discovery.
 
 ```sh
-vinix-volume monitor-volume-auto /root/volume.sealed /root/volume.pass /root/volume.vchash 60 10
-vinix-volume monitor-recovery-volume-auto /root/volume.vrecover /root/recovery.key /root/volume.vchash 60 0
+tulpar-volume monitor-volume-auto /root/volume.sealed /root/volume.pass /root/volume.vchash 60 10
+tulpar-volume monitor-recovery-volume-auto /root/volume.vrecover /root/recovery.key /root/volume.vchash 60 0
 ```
 
 A session authenticates exactly once. Passphrase configuration uses one bounded
@@ -3312,12 +3312,12 @@ numbers start at 1; sample and changed-sample counters saturate at the unsigned
 64-bit maximum. Invalid CLI syntax returns usage status 2.
 
 Each privately encoded sample contains this newline-terminated prefix, then
-the ordinary complete two-line ASCII `VINIXCS1 operation=scrubbed-ciphertext`
+the ordinary complete two-line ASCII `TULPARCS1 operation=scrubbed-ciphertext`
 view with native geometry, mapping mode, original reference fingerprint and
 full expected/observed ciphertext digests:
 
 ```text
-format=VINIXCM1 operation=monitored-ciphertext source=volume|recovery sample=N changed_samples=C session_changed=0|1
+format=TULPARCM1 operation=monitored-ciphertext source=volume|recovery sample=N changed_samples=C session_changed=0|1
 ```
 
 `source` records the initial authentication domain. `changed_samples` counts
@@ -3343,15 +3343,15 @@ concurrent snapshot. See [qualification](../tests/storage-volumes/cipher-monitor
 ## Periodic pinned data checksum monitoring
 
 `monitor-data-auto MANIFEST INTERVAL_SECONDS COUNT` repeatedly checks every
-desired extent in a trusted plain-data `VINIXDH1` reference. The complete
+desired extent in a trusted plain-data `TULPARDH1` reference. The complete
 bounded reference is validated once before identity-based read-only discovery.
 The source file, parent directory and original selected physical descriptors
 remain open through all samples, sleeps and final stdout checks. Replacing the
 reference pathname does not change the session's reference or trigger discovery.
 
 ```sh
-vinix-volume monitor-data-auto /root/data.vhash 60 10
-vinix-volume monitor-data-auto /root/data.vhash 60 0
+tulpar-volume monitor-data-auto /root/data.vhash 60 10
+tulpar-volume monitor-data-auto /root/data.vhash 60 0
 ```
 
 The interval is a decimal integer from 0 through 86400 seconds, measured after
@@ -3371,18 +3371,18 @@ independent of physical read-only status. The monitor uses the ordinary plain
 reference-file policy and takes no directory writer lock.
 
 A complete privately constructed sample starts with this newline-terminated
-prefix, followed immediately by the canonical full `VINIXSR1` scrub header and
+prefix, followed immediately by the canonical full `TULPARSR1` scrub header and
 every row in saved disk/row order:
 
 ```text
-format=VINIXDM1 operation=monitored-data sample=N changed_samples=C session_changed=0|1
+format=TULPARDM1 operation=monitored-data sample=N changed_samples=C session_changed=0|1
 ```
 
 `changed_samples` counts completed scans containing any changed row;
 `session_changed` stays 1 once any scan has changed. Each scrub retains the
 full original reference fingerprint, geometry, mapping modes and both digests.
 The fixed 33024-byte sample buffer covers all 64 rows. The combined stream is
-a monitor transcript; extract one complete `VINIXSR1` sample for an offline
+a monitor transcript; extract one complete `TULPARSR1` sample for an offline
 scrub query. No successful sample is printed for an incomplete read or failed
 final pin check. A stdout failure can leave a partial write and returns 1.
 
@@ -3400,12 +3400,12 @@ a concurrent snapshot nor repair. See
 
 ## Binding ciphertext scrubs to checksum references
 
-`verify-volume-scrub-reference REFERENCE REPORT` checks a saved `VINIXCS1`
-ciphertext scrub against a supplied `VINIXCH1` checksum reference. It requires
+`verify-volume-scrub-reference REFERENCE REPORT` checks a saved `TULPARCS1`
+ciphertext scrub against a supplied `TULPARCH1` checksum reference. It requires
 no passphrase, recovery key, device discovery or disk access.
 
 ```sh
-vinix-volume verify-volume-scrub-reference /root/volume.vchash /root/changed-volume.vcscrub
+tulpar-volume verify-volume-scrub-reference /root/volume.vchash /root/changed-volume.vcscrub
 ```
 
 Both complete binary records are strictly validated before any finding is
@@ -3417,7 +3417,7 @@ complete record checksum must also be valid. A structurally valid unrelated
 reference takes precedence over a recorded changed finding.
 
 The bounded complete output starts with
-`format=VINIXCS1 operation=verified-ciphertext-scrub-reference`, matched/changed
+`format=TULPARCS1 operation=verified-ciphertext-scrub-reference`, matched/changed
 counts and SHA-256 fingerprints of both original binary inputs. Its second
 line includes every saved disk/mapping field, `match` or `changed`, and full
 expected/actual digests. The output is a historical view, not a binary CS1
@@ -3446,12 +3446,12 @@ checks remain available through `verify-volume-auto` and
 
 ## Binding data scrub reports to checksum references
 
-`verify-data-scrub-reference MANIFEST REPORT` checks a saved `VINIXSR1`
-plain-data scrub against its complete `VINIXDH1` checksum reference. It reads
+`verify-data-scrub-reference MANIFEST REPORT` checks a saved `TULPARSR1`
+plain-data scrub against its complete `TULPARDH1` checksum reference. It reads
 ordinary files without opening disks, discovering devices or changing mappings.
 
 ```sh
-vinix-volume verify-data-scrub-reference /root/data.vhash /root/scrub.txt
+tulpar-volume verify-data-scrub-reference /root/data.vhash /root/scrub.txt
 ```
 
 Both inputs receive complete strict validation before any findings are printed.
@@ -3464,7 +3464,7 @@ Any malformed input or incompatible reference takes precedence over recorded
 data changes, including a mismatch in the last row.
 
 The complete bounded output begins with
-`format=VINIXSR1 operation=verified-data-scrub-reference`, counts all matched
+`format=TULPARSR1 operation=verified-data-scrub-reference`, counts all matched
 and changed observations, and includes `reference_sha256` and `report_sha256`
 for the entire reference and original scrub report. Each saved disk, including
 an empty disk, prints its native capacity, sector and identity, followed by its
@@ -3494,14 +3494,14 @@ remain available through `verify-data-auto` and `scrub-data-auto`. See
 ## Comparing multi-disk data scrub history
 
 `compare-data-scrubs BEFORE_REPORT AFTER_REPORT` compares complete historical
-plain-data `VINIXSR1` reports from `scrub-data` or `scrub-data-auto`. Both reports
+plain-data `TULPARSR1` reports from `scrub-data` or `scrub-data-auto`. Both reports
 must have the same reference fingerprint, saved disk count, complete ordered
 mapping rows and expected digests. Every recorded disk index, global slot,
 offset, length and read-only flag must agree. A valid later incompatible row
 causes an operational error even when earlier observed digests differ.
 
 ```sh
-vinix-volume compare-data-scrubs /root/before-scrub.txt /root/after-scrub.txt
+tulpar-volume compare-data-scrubs /root/before-scrub.txt /root/after-scrub.txt
 ```
 
 Both complete bounded ordinary files receive the strict SR1 syntax and semantic
@@ -3524,7 +3524,7 @@ Every mapping receives one result, with counts covering the complete report:
 | `changed-again` | Both differ from the expected digest and from each other. |
 
 The complete ASCII output fits a fixed 32768-byte stack workspace. Its header
-contains `format=VINIXSR1 operation=compared-data-scrubs`, `disks`, `mappings`,
+contains `format=TULPARSR1 operation=compared-data-scrubs`, `disks`, `mappings`,
 `stable`, `changed`, `new_changes`, `restored`, `changed_again`, `algorithm=sha256`,
 `reference_sha256`, `before_report_sha256` and `after_report_sha256`. The two
 report fingerprints cover every canonical input byte, including header counts,
@@ -3552,7 +3552,7 @@ or concurrent snapshot guarantee. See
 
 ## Offline multi-disk scrub report inspection
 
-`show-data-scrub REPORT` validates and displays a saved plain-data `VINIXSR1`
+`show-data-scrub REPORT` validates and displays a saved plain-data `TULPARSR1`
 report from `scrub-data` or `scrub-data-auto`. It reads no devices or credentials,
 takes no writer lock and creates no output file. The complete report is
 validated before any report bytes reach stdout; the original canonical text is
@@ -3560,7 +3560,7 @@ then printed exactly, including every clean or changed row and the reference
 SHA-256 fingerprint.
 
 ```sh
-vinix-volume show-data-scrub /root/scrub.txt
+tulpar-volume show-data-scrub /root/scrub.txt
 ```
 
 The input must be an ordinary regular file of 1–32767 bytes. Read-only,
@@ -3591,7 +3591,7 @@ or scrubbing to check current disk contents. See
 ## Offline multi-disk data reference comparison
 
 `compare-data-references BEFORE_MANIFEST AFTER_MANIFEST` compares the recorded
-digests in two complete plain-data `VINIXDH1` references without discovering or
+digests in two complete plain-data `TULPARDH1` references without discovering or
 reading physical devices. Both inputs must contain exactly the same canonical
 saved bundle: disk identities/capacities/native sectors, ordered mapping slots,
 offsets/lengths/read-only flags, and all pool windows and allocation priorities.
@@ -3599,7 +3599,7 @@ A metadata change is an operational error, even if some recorded digests differ.
 For compatible references the command reports every stable or changed row.
 
 ```sh
-vinix-volume compare-data-references /root/before.vhash /root/after.vhash
+tulpar-volume compare-data-references /root/before.vhash /root/after.vhash
 ```
 
 Both complete bounded regular files are decoded and validated before any
@@ -3614,7 +3614,7 @@ unchanged. These inputs retain plain-data file rules, without acquiring the
 encrypted formats' private ownership or authentication requirements.
 
 The complete ASCII report fits a fixed 32768-byte stack workspace. Its header
-contains `format=VINIXDH1 operation=compared-data-references`, `disks`, `mappings`,
+contains `format=TULPARDH1 operation=compared-data-references`, `disks`, `mappings`,
 `stable`, `changed`, `algorithm=sha256`, `before_reference_sha256` and
 `after_reference_sha256`. Each disk record contains `disk`, `disk_bytes`,
 `sector` and canonical MBR/GPT `identity`; every mapping row contains `disk`,
@@ -3644,14 +3644,14 @@ detection without authentication or repair. See
 `hash-bundle-auto BUNDLE MANIFEST`, `verify-data-auto MANIFEST` and
 `scrub-data-auto MANIFEST REPORT` select all saved physical disks without
 disk-index/device arguments. They use the same validated desired extents,
-SHA-256 streaming, canonical `VINIXDH1` references and complete ASCII `VINIXSR1`
+SHA-256 streaming, canonical `TULPARDH1` references and complete ASCII `TULPARSR1`
 reports as the explicit-device commands. Saved disk order and read-only mapping
 flags remain exact, including when device names change after reboot.
 
 ```sh
-vinix-volume hash-bundle-auto /etc/vinix/volumes.vset /root/data.vhash
-vinix-volume verify-data-auto /root/data.vhash
-vinix-volume scrub-data-auto /root/data.vhash /root/scrub.txt
+tulpar-volume hash-bundle-auto /etc/tulpar/volumes.vset /root/data.vhash
+tulpar-volume verify-data-auto /root/data.vhash
+tulpar-volume scrub-data-auto /root/data.vhash /root/scrub.txt
 ```
 
 The complete bounded bundle or manifest is decoded before discovery. It must
@@ -3707,7 +3707,7 @@ identity/geometry checks, pre/post-read rechecks and 64-KiB streaming rules as
 `verify-data` apply.
 
 ```sh
-vinix-volume scrub-data /root/data.vhash /root/scrub.txt 1 /dev/vda 0 /dev/vdb
+tulpar-volume scrub-data /root/data.vhash /root/scrub.txt 1 /dev/vda 0 /dev/vdb
 ```
 
 The command returns **0** for a complete clean report, **2** for a complete
@@ -3721,7 +3721,7 @@ detection against a trusted reference, without authentication, snapshots or
 repair.
 
 The stable newline-delimited ASCII format starts with
-`format=VINIXSR1 operation=scrubbed-data disks=N mappings=N matched=N changed=N
+`format=TULPARSR1 operation=scrubbed-data disks=N mappings=N matched=N changed=N
 algorithm=sha256 reference_sha256=HEX`. The fingerprint is SHA-256 of the exact
 canonical encoded reference, binding findings to its disk identities,
 geometry, desired rows, pool configuration and saved digests. Every subsequent

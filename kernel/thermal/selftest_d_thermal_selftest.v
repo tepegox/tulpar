@@ -12,7 +12,7 @@
 //	    1 while the zone is registered. Write 0 to unregister it and 1 to
 //	    register it again.
 //
-// The zone is `vinix_selftest`: passive at 80 C, hot at 95 C, critical at
+// The zone is `tulpar_selftest`: passive at 80 C, hot at 95 C, critical at
 // 105 C. It carries a second sensor five degrees below the first and a fan
 // that runs at whatever it is set to, so that the hwmon files have something
 // behind them too.
@@ -87,7 +87,7 @@ fn selftest_register() bool {
 		context:     unsafe { nil }
 	}
 	mut zone := Zone{
-		name:         'vinix_selftest'
+		name:         'tulpar_selftest'
 		label:        'Selftest'
 		read:         selftest_read
 		alarm:        selftest_alarm
@@ -183,7 +183,7 @@ fn store_selftest_zone(_ voidptr, data &u8, length u64) u64 {
 // ── A processor's sensors, made up ──────────────────────────────────────────
 //
 // QEMU's processors have no temperature sensor and no energy counter, so the
-// x86-64 drivers would never run under it. vinix.thermal_fake=intel or =amd
+// x86-64 drivers would never run under it. tulpar.thermal_fake=intel or =amd
 // on the command line gives them registers to read: the drivers ask here
 // before they ask the processor, and find a Sky Lake with a package sensor,
 // a sensor in each core and RAPL counters, or a Ryzen 7 2700X with Tctl, two
@@ -225,7 +225,7 @@ const fake_tjmax = i64(100000)
 fn selftest_fake_kind() u32 {
 	if katomic.load(&thermal_fake_parsed) == 0 {
 		mut kind := fake_none
-		if word := devcore.boot_option('vinix.thermal_fake=') {
+		if word := devcore.boot_option('tulpar.thermal_fake=') {
 			if word == 'intel' {
 				kind = fake_intel
 			} else if word == 'amd' {

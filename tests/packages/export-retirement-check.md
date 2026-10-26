@@ -42,7 +42,7 @@ handling, unsafe roots and root-only foreign ownership refusals before unlinking
 It injects a post-publication flush failure and verifies that complete output
 survives; existing file/directory/alias/dangling/FIFO destinations remain intact.
 The measured component excludes fixture setup and complete signing/export calls.
-On Vinix the fixture allows the kernel's five-second unlinked-node grace period
+On Tulpar the fixture allows the kernel's five-second unlinked-node grace period
 between the flat allocation cycles and the 6,144-directory stress burst. It
 records kernel-resource accounting around that interval. This keeps separate
 component checks from exhausting one process's deferred kernel-resource budget;
@@ -55,7 +55,7 @@ reviewed compiler and supply a new work directory. The existing
 [image export controller](image-export-check.v) exercises shared package and
 real CLI behavior. The expanded [mirror target controller](mirror-ownership-runtime-check.v)
 runs both ownership fixtures and mirror/deployment/release suites on each target.
-Use the normal cross-toolchain environment, `VINIX_HWTEST_TCG=1`, `--arch`,
+Use the normal cross-toolchain environment, `TULPAR_HWTEST_TCG=1`, `--arch`,
 `--kernel` and a new short `--state-dir`.
 
 These checks bind exercised checkpoint boundaries and cleanup/publication
@@ -73,7 +73,7 @@ undefined behavior is fatal. The separately tracked guard component retained
 zero bytes over 1,000 complete cycles.
 
 The first two x86_64 runs failed in the combined stress fixture. The diagnostic
-retry reported `ENOMEM` at flat cycle 663 after deep-tree stress. Vinix defers
+retry reported `ENOMEM` at flat cycle 663 after deep-tree stress. Tulpar defers
 unlinked kernel nodes for five seconds and charges them to kernel-resource
 budgets. The final fixture runs the flat cycles first, records resource usage
 around a six-second grace interval, then performs the unchanged deep stress.

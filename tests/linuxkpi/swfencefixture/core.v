@@ -67,11 +67,11 @@ fn C.vkr_kmalloc(usize, u32) voidptr
 fn C.kfree(voidptr)
 fn C.memcpy(voidptr, voidptr, usize) voidptr
 fn C.strcmp(&char, &char) i32
-fn C.vinix_linuxkpi_time_tick(u64)
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_timer_tick()
-fn C.vinix_linuxkpi_timer_dispatch() u32
-fn C.vinix_linuxkpi_timer_active() usize
+fn C.tulpar_linuxkpi_time_tick(u64)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_timer_tick()
+fn C.tulpar_linuxkpi_timer_dispatch() u32
+fn C.tulpar_linuxkpi_timer_active() usize
 fn C.vkiw_bootstrap(u32) i32
 fn C.vkiw_drain(u32)
 fn C.dma_resv_init(&C.dma_resv)
@@ -164,7 +164,7 @@ fn same(a voidptr, b voidptr) bool { return usize(a) == usize(b) }
 
 fn page_should_fail() bool { return false }
 
-@[export:'vinix_linuxkpi_bug'; noreturn]
+@[export:'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(reason C.rcuh_const_charp, line i32) {
 	unsafe {
 		C.fprintf(C.stderr, c'SW host invariant: %s:%d\n', reason, line)
@@ -172,7 +172,7 @@ pub fn bug(reason C.rcuh_const_charp, line i32) {
 	}
 }
 
-@[export:'vinix_linuxkpi_irqwork_send_ipi']
+@[export:'tulpar_linuxkpi_irqwork_send_ipi']
 pub fn send_ipi(cpu u32) { check(cpu < 4, @LINE) }
 
 @[export:'swh_printk']
@@ -303,7 +303,7 @@ fn actor_main(argument voidptr) voidptr {
 			.dma {
 				a.result = C.i915_sw_fence_await_dma_fence(&a.node.fence, &a.dma.fence, a.timeout, a.gfp)
 			}
-			.timer { a.result = i32(C.vinix_linuxkpi_timer_dispatch()) }
+			.timer { a.result = i32(C.tulpar_linuxkpi_timer_dispatch()) }
 			.irq {
 				saved := irq_save()
 				lock_context()
@@ -402,7 +402,7 @@ fn immediate_dma_tests() {
 					usize(0)
 				}, 3264)
 			}
-			check(ret == 0 && C.rcuh_load32(&page_calls) == calls && C.swh_pending(&node.fence) == 1 && C.swh_error(&node.fence) == -19 && C.dfh_refcount(&dma.fence) == 1 && C.vinix_linuxkpi_timer_active() == 0, @LINE)
+			check(ret == 0 && C.rcuh_load32(&page_calls) == calls && C.swh_pending(&node.fence) == 1 && C.swh_error(&node.fence) == -19 && C.dfh_refcount(&dma.fence) == 1 && C.tulpar_linuxkpi_timer_active() == 0, @LINE)
 			C.i915_sw_fence_commit(&node.fence)
 			check(ledger.complete == 1 && ledger.freed == 1, @LINE)
 			C.dma_fence_put(&dma.fence)
@@ -430,11 +430,11 @@ fn immediate_dma_tests() {
 			C.i915_sw_fence_commit(&node.fence)
 			check(ledger.complete == 1 && ledger.freed == 1, @LINE)
 			if mode == 2 {
-				check(C.vinix_linuxkpi_timer_active() == 1 && C.dfh_refcount(&dma.fence) == 2, @LINE)
+				check(C.tulpar_linuxkpi_timer_active() == 1 && C.dfh_refcount(&dma.fence) == 2, @LINE)
 				drain_all()
 				C.rcu_barrier()
 			}
-			check(C.vinix_linuxkpi_timer_active() == 0 && C.dfh_refcount(&dma.fence) == 1, @LINE)
+			check(C.tulpar_linuxkpi_timer_active() == 0 && C.dfh_refcount(&dma.fence) == 1, @LINE)
 			C.dma_fence_put(&dma.fence)
 			C.rcu_barrier()
 			check(C.rcuh_load32(&page_live) == baseline, @LINE)
@@ -504,7 +504,7 @@ fn dma_tests() {
 		mut actor := Actor{ node: &node, dma: dma, action: .dma, timeout: 7 }
 		start(&actor)
 		for C.rcuh_load32(&actor.ctx.parks) == 0 { C.sched_yield() }
-		check(C.vinix_linuxkpi_timer_active() == 0 && C.swh_pending(&node.fence) == 1, @LINE)
+		check(C.tulpar_linuxkpi_timer_active() == 0 && C.swh_pending(&node.fence) == 1, @LINE)
 		C.dma_fence_signal(&dma.fence)
 		join(&actor)
 		C.rcuh_store32(&page_fail, 0)
@@ -524,11 +524,11 @@ fn timed_tests() {
 			mut node := SwNode{}
 			init_sw(&node, &ledger)
 			dma := new_dma(20)
-			check(C.i915_sw_fence_await_dma_fence(&node.fence, &dma.fence, 5, 3264) == 1 && C.dfh_refcount(&dma.fence) == 2 && C.vinix_linuxkpi_timer_active() == 1, @LINE)
+			check(C.i915_sw_fence_await_dma_fence(&node.fence, &dma.fence, 5, 3264) == 1 && C.dfh_refcount(&dma.fence) == 2 && C.tulpar_linuxkpi_timer_active() == 1, @LINE)
 			C.i915_sw_fence_commit(&node.fence)
 			if timeout_first {
 				advance(2000)
-				check(C.vinix_linuxkpi_timer_dispatch() == 1 && ledger.error == -110 && ledger.complete == 1, @LINE)
+				check(C.tulpar_linuxkpi_timer_dispatch() == 1 && ledger.error == -110 && ledger.complete == 1, @LINE)
 				check(C.dfh_refcount(&dma.fence) == 2 && C.rcuh_load32(&page_live) > baseline, @LINE)
 			}
 			check(C.rcuh_load32(&notices) == notice_before + if timeout_first {
@@ -542,7 +542,7 @@ fn timed_tests() {
 			C.dma_fence_signal(&dma.fence)
 			check(ledger.complete == 1 && ledger.freed == 1, @LINE)
 			drain_all()
-			check(C.vinix_linuxkpi_timer_active() == 0 && C.dfh_refcount(&dma.fence) == 1, @LINE)
+			check(C.tulpar_linuxkpi_timer_active() == 0 && C.dfh_refcount(&dma.fence) == 1, @LINE)
 			C.dma_fence_put(&dma.fence)
 			C.rcu_barrier()
 			check(C.rcuh_load32(&page_live) == baseline, @LINE)
@@ -646,11 +646,11 @@ fn timer_shutdown_race() {
 		mut irq := Actor{ action: .irq, exit_release: 0 }
 		start(&irq)
 		for C.vkiw_running_count(work) == 0 { C.sched_yield() }
-		check(C.rcuh_load32(&irq.done) == 0 && C.vinix_linuxkpi_timer_active() == 1 && C.dfh_refcount(&dma.fence) == 2, @LINE)
+		check(C.rcuh_load32(&irq.done) == 0 && C.tulpar_linuxkpi_timer_active() == 1 && C.dfh_refcount(&dma.fence) == 2, @LINE)
 		C.rcuh_store32(&ledger.release, 1)
 		join(&timer)
 		await32(&irq.exit_entered, 1)
-		check(ledger.complete == 1 && ledger.freed == 1 && ledger.error == -110 && C.dfh_refcount(&dma.fence) == 1 && C.vinix_linuxkpi_timer_active() == 0, @LINE)
+		check(ledger.complete == 1 && ledger.freed == 1 && ledger.error == -110 && C.dfh_refcount(&dma.fence) == 1 && C.tulpar_linuxkpi_timer_active() == 0, @LINE)
 		check(C.rcuh_load32(&page_live) == baseline + 2, @LINE)
 		C.rcuh_store32(&reader.release, 1)
 		join(&reader)
@@ -766,7 +766,7 @@ pub fn main(argc i32, argv &&char) i32 {
 		reservation_rcu_retry_test()
 		C.rcu_barrier()
 		C.vkr_rcu_shutdown_for_test()
-		check(C.rcuh_load32(&page_live) == 0 && C.vinix_linuxkpi_timer_active() == 0 && C.vinix_linuxkpi_time_waiters() == 0, @LINE)
+		check(C.rcuh_load32(&page_live) == 0 && C.tulpar_linuxkpi_timer_active() == 0 && C.tulpar_linuxkpi_time_waiters() == 0, @LINE)
 		check(C.rcuh_load32(&ctx.refs) == 1 && C.pthread_setspecific(context_key, nil) == 0, @LINE)
 		context_destructor(ctx)
 		check(C.rcuh_load32(&context_live) == 0 && C.pthread_key_delete(context_key) == 0, @LINE)

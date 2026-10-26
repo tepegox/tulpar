@@ -2,7 +2,7 @@
 // Copyright (c) 2026 Alexander Medvednikov
 // /dev/processes — one read, one picture of every process on the machine.
 //
-// Vinix has no procfs, and a monitor that had to open a file per process would
+// Tulpar has no procfs, and a monitor that had to open a file per process would
 // race every exit it walked past. This node answers instead with a single
 // snapshot taken under the process table's own lock: a short header, then one
 // fixed-size record per process. Everything in it is a running total or an
@@ -40,7 +40,7 @@ pub const name_len = 64
 pub const table_version = u32(1)
 
 // A cap on how much of one snapshot a single read can produce, so a reader
-// asking for a gigabyte does not get one. Vinix's pid space is far larger than
+// asking for a gigabyte does not get one. Tulpar's pid space is far larger than
 // the number of processes it will ever run at once.
 pub const max_records = 512
 

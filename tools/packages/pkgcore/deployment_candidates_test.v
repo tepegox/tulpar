@@ -5,8 +5,8 @@ import crypto.sha256
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn locked_candidates_fixture(total int, selected int) (Catalog, DeploymentLock) {
@@ -116,7 +116,7 @@ fn test_locked_candidate_matching_retires_its_own_storage_and_preserves_borrowed
 		ambiguous := Catalog{packages: [...catalog.packages, catalog.packages[0]]}
 		large := Package{ ...catalog.packages[0].package, description: 'd'.repeat(4096), arguments: ['literal', 'a'.repeat(4096)] }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				candidates := locked_deployment_candidates(catalog, document)!
 				assert candidates.len == 16 && candidates[0].package.files[0].path == 'z/data'
@@ -132,7 +132,7 @@ fn test_locked_candidate_matching_retires_its_own_storage_and_preserves_borrowed
 				digest := package_metadata_digest(large)!; unsafe { digest.free() }
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('Deployment candidates: 1000 exact/absent/digest/sequence/ambiguous matching and growing digest cycles retained ${kept} bytes')
 		assert kept == 0
 	}

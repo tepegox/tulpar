@@ -2,9 +2,9 @@
 set -eu
 
 repo=$(cd "$(dirname "$0")/../.." && pwd)
-sysroot=${VINIX_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
+sysroot=${TULPAR_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
 cc=${CC:-clang}
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-qemu-core.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-qemu-core.XXXXXX")
 
 cleanup() {
 	rm -rf "$work"
@@ -27,16 +27,16 @@ if [ "${1:-}" = amd64 ]; then
 		"$work/signalfixture.o" "$work/touchfixture.o" "$work/restartfixture.o" "$work/nanosleepfixture.o" "$work/blockedfixture.o" "$work/pollfixture.o" "$work/epollfixture.o" "$work/intfixture.o" \
 		-o "$work/rootfs/sbin/init" -lpthread
 	COPYFILE_DISABLE=1 tar --format=ustar -cf "$work/initramfs.tar" -C "$work/rootfs" .
-	VINIX_AMD64_KERNEL="${VINIX_AMD64_KERNEL:-$repo/build-amd64-kernel/bin/vinix}" \
-	VINIX_AMD64_INITRAMFS="$work/initramfs.tar" \
-	VINIX_AMD64_ISO="$work/test.iso" \
-	VINIX_AMD64_ISO_BUILD_DIR="$work/iso" \
+	TULPAR_AMD64_KERNEL="${TULPAR_AMD64_KERNEL:-$repo/build-amd64-kernel/bin/tulpar}" \
+	TULPAR_AMD64_INITRAMFS="$work/initramfs.tar" \
+	TULPAR_AMD64_ISO="$work/test.iso" \
+	TULPAR_AMD64_ISO_BUILD_DIR="$work/iso" \
 		"$repo/build-support/build-amd64-iso.sh" >/dev/null
-	qemu=$(command -v "${VINIX_QEMU_X86_64:-qemu-system-x86_64}")
-	firmware=${VINIX_OVMF_CODE:-"$(cd "$(dirname "$qemu")/.." && pwd)/share/qemu/edk2-x86_64-code.fd"}
+	qemu=$(command -v "${TULPAR_QEMU_X86_64:-qemu-system-x86_64}")
+	firmware=${TULPAR_OVMF_CODE:-"$(cd "$(dirname "$qemu")/.." && pwd)/share/qemu/edk2-x86_64-code.fd"}
 	"$repo/tests/qemu-core/run-vm" --arch amd64 --iso "$work/test.iso" \
-		--qemu "$qemu" --firmware "$firmware" --timeout "${VINIX_QEMU_TIMEOUT:-900}" \
-		--cpus "${VINIX_QEMU_CORE_CPUS:-4}"
+		--qemu "$qemu" --firmware "$firmware" --timeout "${TULPAR_QEMU_TIMEOUT:-900}" \
+		--cpus "${TULPAR_QEMU_CORE_CPUS:-4}"
 	exit
 fi
 
@@ -47,7 +47,7 @@ for input in \
 	"$sysroot/lib/libgcc.a"; do
 	if [ ! -e "$input" ]; then
 		echo "ERROR: AArch64 test sysroot input is missing: $input" >&2
-		echo "       Run ./scripts/build-userland-aarch64.sh first or set VINIX_AARCH64_SYSROOT." >&2
+		echo "       Run ./scripts/build-userland-aarch64.sh first or set TULPAR_AARCH64_SYSROOT." >&2
 		exit 1
 	fi
 done
@@ -83,4 +83,4 @@ COPYFILE_DISABLE=1 tar --format=ustar -cf "$work/initramfs.tar" \
 	--init "$work/init" \
 	--initramfs "$work/initramfs.tar" \
 	--state-dir "$work/vm" \
-	--timeout "${VINIX_QEMU_TIMEOUT:-300}"
+	--timeout "${TULPAR_QEMU_TIMEOUT:-300}"

@@ -24,16 +24,16 @@ fn artifact(role string, path string) !Artifact {
 }
 
 fn suite(repository string, architecture string, sandbox string) !hwhost.Suite {
-	input := os.getenv('VINIX_WINDOW_INPUT') == '1'
+	input := os.getenv('TULPAR_WINDOW_INPUT') == '1'
 	example_name := if input { 'memo' } else { 'counter' }
 	manifest := if repository == '' { '' } else { os.read_file(repository + '/examples/package-' + example_name + '/manifest-' + architecture + '.json')! }
 	mut programs := [
-		hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-		hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-		hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+		hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+		hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+		hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 	]
-	mut binaries := [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
-	example := os.getenv('VINIX_WINDOW_EXAMPLE')
+	mut binaries := [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
+	example := os.getenv('TULPAR_WINDOW_EXAMPLE')
 	if example == '' { programs << hwhost.Program{ source: 'examples/package-' + example_name + '/main.v', path: 'usr/share/window-fixtures/' + example_name } }
 	else { binaries << hwhost.RootBinary{ source: example, path: 'usr/share/window-fixtures/' + example_name } }
 	scenario_name := if input { 'packages-window-input' } else { 'packages-window' }
@@ -46,7 +46,7 @@ fn suite(repository string, architecture string, sandbox string) !hwhost.Suite {
 		files: [
 			hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
 			hwhost.RootFile{ path: 'usr/share/window-fixtures/manifest.json', text: manifest },
 		]
 		directories: ['run', 'home', 'var/log', 'tmp:1777']
@@ -73,9 +73,9 @@ fn check() !int {
 	if options.help || options.list { return hwhost.run_suite(suite('', 'aarch64', '')!, os.args[1..], @FILE) }
 	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir)
 		|| os.is_link(options.state_dir) { return error('provide --kernel and a new --state-dir') }
-	if os.getenv('VINIX_HWTEST_TCG') != '1' { return error('this qualification requires VINIX_HWTEST_TCG=1') }
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' { return error('this qualification requires TULPAR_HWTEST_TCG=1') }
 	repository := hwhost.find_root(@FILE)!
-	definition := suite(repository, options.arch, os.getenv('VINIX_WINDOW_SANDBOX'))!
+	definition := suite(repository, options.arch, os.getenv('TULPAR_WINDOW_SANDBOX'))!
 	hwhost.validate_scenarios(definition.scenarios)!
 	selection := hwhost.select_scenarios(definition.scenarios, options.arch, options.scenarios)!
 	if selection.run.len != 1 { return error('select the native-window scenario') }
@@ -89,9 +89,9 @@ fn check() !int {
 	guest := hwhost.build_program(host, repository + '/' + definition.guest, guest_dir, 'init', definition.module_paths)!
 	root := hwhost.build_extras(host, definition, guest_dir)!
 	mut artifacts := []Artifact{}
-	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/vinix-sandbox', 'guest-init': guest,
-		'package-service': root + '/usr/bin/vinix-package', 'account-manager': root + '/usr/sbin/vinix-account',
-		'session-runner': root + '/usr/sbin/vinix-session', 'native-window-example': root + '/usr/share/window-fixtures/' + if os.getenv('VINIX_WINDOW_INPUT') == '1' { 'memo' } else { 'counter' },
+	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/tulpar-sandbox', 'guest-init': guest,
+		'package-service': root + '/usr/bin/tulpar-package', 'account-manager': root + '/usr/sbin/tulpar-account',
+		'session-runner': root + '/usr/sbin/tulpar-session', 'native-window-example': root + '/usr/share/window-fixtures/' + if os.getenv('TULPAR_WINDOW_INPUT') == '1' { 'memo' } else { 'counter' },
 		'example-manifest': root + '/usr/share/window-fixtures/manifest.json'} { artifacts << artifact(role, path)! }
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: kernel, guest: guest, extras: root,
 		state: work + '/' + selection.run[0].name, timeout: if options.timeout > 300 { options.timeout } else { 300 }, keep: true,

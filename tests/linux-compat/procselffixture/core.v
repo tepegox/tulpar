@@ -471,7 +471,7 @@ fn stopped_zombie(bank &Handles, ordinary bool) bool {
 				if C.kill(child, C.SIGCONT) != 0 || C.kill(child, C.SIGKILL) != 0 || C.waitid(C.P_PID, u32(child), &info, C.WEXITED | C.WNOWAIT) != 0 { return false }
 			}
 			mut failures := i32(0); mut records := i32(0)
-			// Vinix removes zombie Thread objects before wait publishes; only
+			// Tulpar removes zombie Thread objects before wait publishes; only
 			// the process path remains. Zombie task-directory support is separate.
 			for view in 0 .. 3 { for task in 0 .. if code == `Z` { 1 } else { 2 } { for format in 0 .. 2 {
 				mut path := [96]char{}; suffix := if format == 0 { &char(c'stat') } else { &char(c'status') }

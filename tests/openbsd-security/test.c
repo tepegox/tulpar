@@ -3,7 +3,7 @@
 // that can be found in the LICENSE file.
 
 /* SPDX-License-Identifier: BSD-2-Clause
- * In-guest regression coverage for Vinix's OpenBSD security features:
+ * In-guest regression coverage for Tulpar's OpenBSD security features:
  * pledge(2), unveil(2), signed signal frames, random process ids, a
  * random program break, minherit(2), the network stack's random ports,
  * sequence numbers and IP IDs, memory layouts kept from other users, and
@@ -40,15 +40,15 @@
 #include <unistd.h>
 
 #if defined(__aarch64__)
-#define SYS_vinix_mimmutable 247
-#define SYS_vinix_pledge 248
-#define SYS_vinix_unveil 249
-#define SYS_vinix_minherit 250
+#define SYS_tulpar_mimmutable 247
+#define SYS_tulpar_pledge 248
+#define SYS_tulpar_unveil 249
+#define SYS_tulpar_minherit 250
 #elif defined(__x86_64__)
-#define SYS_vinix_mimmutable 500
-#define SYS_vinix_pledge 501
-#define SYS_vinix_unveil 502
-#define SYS_vinix_minherit 503
+#define SYS_tulpar_mimmutable 500
+#define SYS_tulpar_pledge 501
+#define SYS_tulpar_unveil 502
+#define SYS_tulpar_minherit 503
 #else
 #error "unsupported architecture"
 #endif
@@ -73,12 +73,12 @@ static char *self_path = "/sbin/init";
 
 static int pledge(const char *promises, const char *execpromises)
 {
-	return (int)syscall(SYS_vinix_pledge, promises, execpromises);
+	return (int)syscall(SYS_tulpar_pledge, promises, execpromises);
 }
 
 static int unveil(const char *path, const char *permissions)
 {
-	return (int)syscall(SYS_vinix_unveil, path, permissions);
+	return (int)syscall(SYS_tulpar_unveil, path, permissions);
 }
 
 #define CHECK(expression) do {                                               \
@@ -701,7 +701,7 @@ static int run_break_tests(void)
 
 static int minherit(void *address, size_t length, int inherit)
 {
-	return (int)syscall(SYS_vinix_minherit, address, length, inherit);
+	return (int)syscall(SYS_tulpar_minherit, address, length, inherit);
 }
 
 static size_t page;
@@ -836,7 +836,7 @@ static int run_inherit_tests(void)
 	/* mimmutable(2) fixes how a range is inherited too. */
 	p = mmap(NULL, page, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 	CHECK(p != MAP_FAILED);
-	CHECK(syscall(SYS_vinix_mimmutable, p, page) == 0);
+	CHECK(syscall(SYS_tulpar_mimmutable, p, page) == 0);
 	CHECK(refused(minherit(p, page, MAP_INHERIT_ZERO), EPERM));
 	CHECK(refused(madvise(p, page, MADV_DONTFORK), EPERM));
 
@@ -928,7 +928,7 @@ static void send_to_host(void)
 		}
 		int datagram = socket(AF_INET, SOCK_DGRAM, 0);
 		if (datagram >= 0) {
-			sendto(datagram, "vinix", 5, 0, (struct sockaddr *)&host, sizeof(host));
+			sendto(datagram, "tulpar", 5, 0, (struct sockaddr *)&host, sizeof(host));
 			close(datagram);
 		}
 	}
@@ -1088,8 +1088,8 @@ static int run_layout_tests(void)
 }
 
 /* A root-owned file uid 1000 may only read, and one of uid 1000's own. */
-static const char read_only_path[] = "/tmp/vinix-read-only";
-static const char own_path[] = "/tmp/vinix-own";
+static const char read_only_path[] = "/tmp/tulpar-read-only";
+static const char own_path[] = "/tmp/tulpar-own";
 
 static int read_only_writer(void)
 {
@@ -1195,8 +1195,8 @@ static int write_securelevel(int level)
 
 static int run_attribute_tests(void)
 {
-	const char *file = "/tmp/vinix-immutable";
-	const char *dir = "/tmp/vinix-immutable-dir";
+	const char *file = "/tmp/tulpar-immutable";
+	const char *dir = "/tmp/tulpar-immutable-dir";
 	CHECK(write_file(file, "sealed") == 0);
 	CHECK(mkdir(dir, 0755) == 0);
 	int flags = -1;
@@ -1208,9 +1208,9 @@ static int run_attribute_tests(void)
 	CHECK(open(file, O_WRONLY) == -1 && errno == EPERM);
 	CHECK(truncate(file, 0) == -1 && errno == EPERM);
 	CHECK(chmod(file, 0600) == -1 && errno == EPERM);
-	CHECK(rename(file, "/tmp/vinix-moved") == -1 && errno == EPERM);
+	CHECK(rename(file, "/tmp/tulpar-moved") == -1 && errno == EPERM);
 	CHECK(unlink(file) == -1 && errno == EPERM);
-	CHECK(link(file, "/tmp/vinix-link") == -1 && errno == EPERM);
+	CHECK(link(file, "/tmp/tulpar-link") == -1 && errno == EPERM);
 	/* Cleared again, it is an ordinary file. */
 	CHECK(setflags(file, 0) == 0);
 	CHECK(open(file, O_WRONLY) >= 0);
@@ -1225,20 +1225,20 @@ static int run_attribute_tests(void)
 	CHECK(pwrite(afd, "zz", 2, 0) == -1 && errno == EPERM);
 	CHECK(fallocate(afd, 0, 0, 4096) == -1 && errno == EPERM);
 	close(afd);
-	CHECK(link(file, "/tmp/vinix-append-link") == -1 && errno == EPERM);
+	CHECK(link(file, "/tmp/tulpar-append-link") == -1 && errno == EPERM);
 	CHECK(unlink(file) == -1 && errno == EPERM);
 	/* chmod is allowed on an append-only file, as on Linux. */
 	CHECK(chmod(file, 0640) == 0);
 	CHECK(setflags(file, 0) == 0);
 
 	/* Immutable directory: nothing made or removed in it. */
-	CHECK(write_file("/tmp/vinix-immutable-dir/keep", "x") == 0);
+	CHECK(write_file("/tmp/tulpar-immutable-dir/keep", "x") == 0);
 	CHECK(setflags(dir, FS_IMMUTABLE_FL) == 0);
-	CHECK(open("/tmp/vinix-immutable-dir/new", O_WRONLY | O_CREAT, 0644) == -1 && errno == EPERM);
-	CHECK(mkdir("/tmp/vinix-immutable-dir/sub", 0755) == -1 && errno == EPERM);
-	CHECK(unlink("/tmp/vinix-immutable-dir/keep") == -1 && errno == EPERM);
+	CHECK(open("/tmp/tulpar-immutable-dir/new", O_WRONLY | O_CREAT, 0644) == -1 && errno == EPERM);
+	CHECK(mkdir("/tmp/tulpar-immutable-dir/sub", 0755) == -1 && errno == EPERM);
+	CHECK(unlink("/tmp/tulpar-immutable-dir/keep") == -1 && errno == EPERM);
 	CHECK(setflags(dir, 0) == 0);
-	CHECK(unlink("/tmp/vinix-immutable-dir/keep") == 0);
+	CHECK(unlink("/tmp/tulpar-immutable-dir/keep") == 0);
 	CHECK(rmdir(dir) == 0);
 
 	/* securelevel: a set bit cannot be cleared above 0, even by root. */
@@ -1591,7 +1591,7 @@ static int run_tests(void)
 	    || run_network_tests() != 0 || run_transfer_tests() != 0 || run_layout_tests() != 0
 	    || run_read_only_tests() != 0 || run_attribute_tests() != 0)
 		return 1;
-	puts("VINIX OPENBSD SECURITY: PASS");
+	puts("TULPAR OPENBSD SECURITY: PASS");
 	return 0;
 }
 
@@ -1620,12 +1620,12 @@ int main(int argc, char **argv)
 		close(console);
 	}
 	mkdir("/tmp", 01777);
-	puts("VINIX OPENBSD SECURITY: START");
+	puts("TULPAR OPENBSD SECURITY: START");
 	pid_t worker = fork();
 	if (worker == 0)
 		_exit(run_tests());
 	if (worker < 0 || !exited_ok(reap(worker)))
-		puts("VINIX OPENBSD SECURITY: FAIL");
+		puts("TULPAR OPENBSD SECURITY: FAIL");
 	for (;;)
 		sleep(1);
 }

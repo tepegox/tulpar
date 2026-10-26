@@ -58,22 +58,22 @@ fn parent_loop(seed u64) u64 {
 }
 
 fn main() {
-	emit('VINIX QEMU FORK NOEXEC START\n')
+	emit('TULPAR QEMU FORK NOEXEC START\n')
 	for index in 0 .. 32 {
 		pid := C.fork()
-		if pid < 0 { emit('VINIX QEMU FORK NOEXEC FAIL fork\n'); exit(1) }
+		if pid < 0 { emit('TULPAR QEMU FORK NOEXEC FAIL fork\n'); exit(1) }
 		if pid == 0 {
 			if child_loop(u64(index + 1)) != child_expected[index] { C._exit(91) }
-			emit('VINIX QEMU FORK NOEXEC CHILD PASS\n')
+			emit('TULPAR QEMU FORK NOEXEC CHILD PASS\n')
 			C._exit(0)
 		}
 		parent_ok := parent_loop(u64(index + 1)) == parent_expected[index]
 		mut status := int(0)
 		if C.waitpid(pid, unsafe { &status }, 0) != pid || status != 0 {
-			emit('VINIX QEMU FORK NOEXEC FAIL child status\n')
+			emit('TULPAR QEMU FORK NOEXEC FAIL child status\n')
 			exit(1)
 		}
-		if !parent_ok { emit('VINIX QEMU FORK NOEXEC FAIL parent\n'); exit(1) }
+		if !parent_ok { emit('TULPAR QEMU FORK NOEXEC FAIL parent\n'); exit(1) }
 	}
-	emit('VINIX QEMU FORK NOEXEC 32 CHILDREN REAPED PASS\n')
+	emit('TULPAR QEMU FORK NOEXEC 32 CHILDREN REAPED PASS\n')
 }

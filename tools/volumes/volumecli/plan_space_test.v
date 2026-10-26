@@ -180,7 +180,7 @@ fn test_maximum_gaps_global_slots_sector_sizes_and_overflow_rounding() {
 }
 
 fn test_space_files_are_offline_and_atomic_and_bad_inputs_do_not_replace_bytes() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-space-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-space-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -215,7 +215,7 @@ fn test_space_files_are_offline_and_atomic_and_bad_inputs_do_not_replace_bytes()
 
 fn test_space_cli_rejects_syntax_before_opening_files() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-allocate'), &char(c'/unused'), &char(c'0'),
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-allocate'), &char(c'/unused'), &char(c'0'),
 			&char(c'9'), &char(c'1024'), &char(c'0'), &char(c'4096'), &char(c'1024'), &char(c'bad'),
 			&char(nil)]!
 		assert run(8, &args[0]) == 2 && run(11, &args[0]) == 2 && run(10, &args[0]) == 2

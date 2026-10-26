@@ -3,9 +3,9 @@ module main
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn check_display(calculator &Calculator, expected string) {
@@ -91,7 +91,7 @@ fn test_calculator_format_extremes() {
 }
 
 fn test_calculator_repeated_buttons_retain_no_v_allocations() {
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 10000 {
 		check_sequence('12+30=', '42')
 		check_sequence('7/2=', '3.5')
@@ -99,7 +99,7 @@ fn test_calculator_repeated_buttons_retain_no_v_allocations() {
 		check_format_extremes()
 	}
 	$if track_heap ? {
-		if C.vinix_heap_end() != 0 || C.vinix_heap_count() != 0 { panic('calculator retains V allocations') }
+		if C.tulpar_heap_end() != 0 || C.tulpar_heap_count() != 0 { panic('calculator retains V allocations') }
 	}
 	println('WIN64 CALCULATOR 10000 arithmetic/clear button cycles retain zero tracked V bytes PASS')
 }

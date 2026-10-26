@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_AUDIT_COLLECTOR_V_H
-#define VINIX_AUDIT_COLLECTOR_V_H
+#ifndef TULPAR_AUDIT_COLLECTOR_V_H
+#define TULPAR_AUDIT_COLLECTOR_V_H
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -16,7 +16,7 @@ struct collector {
 };
 struct output { char bytes[OUTPUT_BYTES]; size_t used; };
 struct vka_stat { uint64_t mode, owner, links, device, inode; int regular, directory; };
-#ifndef VINIX_V_RUNTIME
+#ifndef TULPAR_V_RUNTIME
 int vka_stat(int, struct vka_stat *);
 size_t vka_path_max(void);
 char *vka_token(char *, const char *, char **);

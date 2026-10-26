@@ -98,9 +98,9 @@ fn C.dfh_lock_held(&C.dma_fence) u32
 fn C.vdf_init(voidptr, voidptr, voidptr, u64, u64)
 fn C.vkiw_bootstrap(u32) i32
 fn C.vkiw_drain(u32)
-fn C.vinix_linuxkpi_time_tick(u64)
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_set_task_state(u32)
+fn C.tulpar_linuxkpi_time_tick(u64)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_set_task_state(u32)
 fn C.wake_up_process(&C.task_struct) i32
 fn C.kmalloc_size_roundup(usize) usize
 fn C.krealloc_array(voidptr, usize, usize, u32) voidptr
@@ -294,7 +294,7 @@ fn clear_gate() {
 	}
 }
 
-@[export:'vinix_linuxkpi_irqwork_send_ipi']
+@[export:'tulpar_linuxkpi_irqwork_send_ipi']
 pub fn send_ipi(cpu u32) { check(cpu < 4, @LINE) }
 
 fn drain_all() {
@@ -317,7 +317,7 @@ fn drain_all() {
 	}
 }
 
-@[export:'vinix_linuxkpi_bug'; noreturn]
+@[export:'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(reason C.rcuh_const_charp, line i32) {
 	unsafe {
 		if fatal_watched {
@@ -927,26 +927,26 @@ fn wait_deadline_tests() {
 		check(C.dma_resv_wait_timeout(&obj, 3, false, 0) == 0, @LINE)
 		mut timed := Actor{ obj: &obj, op: .wait, timeout: 5 }
 		start(&timed)
-		for C.vinix_linuxkpi_time_waiters() == 0 { C.sched_yield() }
+		for C.tulpar_linuxkpi_time_waiters() == 0 { C.sched_yield() }
 		advance(2)
 		C.dma_fence_signal(&a.fence)
-		for b.enables == 0 || C.vinix_linuxkpi_time_waiters() == 0 { C.sched_yield() }
+		for b.enables == 0 || C.tulpar_linuxkpi_time_waiters() == 0 { C.sched_yield() }
 		advance(3)
 		join(&timed)
-		check(timed.result == 0 && C.vinix_linuxkpi_time_waiters() == 0, @LINE)
+		check(timed.result == 0 && C.tulpar_linuxkpi_time_waiters() == 0, @LINE)
 		mut interrupted := Actor{ obj: &obj, op: .wait, timeout: 20, intr: true }
 		start(&interrupted)
-		for C.vinix_linuxkpi_time_waiters() == 0 { C.sched_yield() }
+		for C.tulpar_linuxkpi_time_waiters() == 0 { C.sched_yield() }
 		C.rcuh_store32(&interrupted.ctx.pending, 1)
 		C.wake_up_process(&interrupted.ctx.task)
 		join(&interrupted)
-		check(interrupted.result == -512 && C.vinix_linuxkpi_time_waiters() == 0, @LINE)
+		check(interrupted.result == -512 && C.tulpar_linuxkpi_time_waiters() == 0, @LINE)
 		mut infinite := Actor{ obj: &obj, op: .wait, timeout: usize(0x7fffffffffffffff) }
 		start(&infinite)
 		for C.rcuh_load32(&infinite.ctx.parks) == 0 { C.sched_yield() }
 		C.dma_fence_signal(&b.fence)
 		join(&infinite)
-		check(infinite.result == isize(0x7fffffffffffffff) && C.vinix_linuxkpi_time_waiters() == 0 && C.dma_resv_wait_timeout(&obj, 3, false, 0) == 1 && C.dma_resv_test_signaled(&obj, 3), @LINE)
+		check(infinite.result == isize(0x7fffffffffffffff) && C.tulpar_linuxkpi_time_waiters() == 0 && C.dma_resv_wait_timeout(&obj, 3, false, 0) == 1 && C.dma_resv_test_signaled(&obj, 3), @LINE)
 		C.dma_resv_fini(&obj)
 		C.dma_fence_put(&a.fence)
 		C.dma_fence_put(&b.fence)
@@ -1039,7 +1039,7 @@ pub fn main(argc i32, argv &&char) i32 {
 		wait_deadline_tests()
 		C.rcu_barrier()
 		C.vkr_rcu_shutdown_for_test()
-		check(C.rcuh_load32(&page_live) == 0 && C.vinix_linuxkpi_time_waiters() == 0 && C.rcuh_load32(&ctx.refs) == 1, @LINE)
+		check(C.rcuh_load32(&page_live) == 0 && C.tulpar_linuxkpi_time_waiters() == 0 && C.rcuh_load32(&ctx.refs) == 1, @LINE)
 		check(C.pthread_setspecific(context_key, nil) == 0, @LINE)
 		context_destructor(ctx)
 		check(C.rcuh_load32(&context_live) == 0 && C.pthread_key_delete(context_key) == 0, @LINE)

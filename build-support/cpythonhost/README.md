@@ -26,7 +26,7 @@ used by that command. The retained host backend supports historical adapter
 qualification while the remaining repository callers are migrated.
 
 The library must match the Python interpreter's architecture. `V` and
-`VINIX_V_COMPILER` follow the existing compiler discovery; `VINIX_HOST_PYTHON`
+`TULPAR_V_COMPILER` follow the existing compiler discovery; `TULPAR_HOST_PYTHON`
 selects the interpreter whose public development headers are used. Compiler
 flags can follow the output argument. Qualification covers ARM, Rosetta x86,
 sanitized native libraries, actual tamper FD exchanges, weak aliases, nested

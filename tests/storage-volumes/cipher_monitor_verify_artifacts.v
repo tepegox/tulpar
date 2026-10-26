@@ -17,7 +17,7 @@ fn scrub_crc(bytes []u8, skipped int) u32 {
 
 fn monitor_frame(reference []u8, observed []u8, recovery bool, readonly bool, sample int, changed_samples int) string {
 	changed := observed != reference[80..112]
-	return 'format=VINIXCM1 operation=monitored-ciphertext source=${if recovery { 'recovery' } else { 'volume' }} sample=${sample} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\nformat=VINIXCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + sha256.hexhash(reference.bytestr()) + '\n' + 'disk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=${int(readonly)} result=${if changed { 'changed' } else { 'match' }} expected_sha256=' + reference[80..112].hex() + ' actual_sha256=' + observed.hex() + '\n'
+	return 'format=TULPARCM1 operation=monitored-ciphertext source=${if recovery { 'recovery' } else { 'volume' }} sample=${sample} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\nformat=TULPARCS1 operation=scrubbed-ciphertext mappings=1 matched=${int(!changed)} changed=${int(changed)} algorithm=sha256 reference_sha256=' + sha256.hexhash(reference.bytestr()) + '\n' + 'disk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=${int(readonly)} result=${if changed { 'changed' } else { 'match' }} expected_sha256=' + reference[80..112].hex() + ' actual_sha256=' + observed.hex() + '\n'
 }
 fn monitor_artifact(work string, output string, debugfs string, name string, wanted []u8) !string {
 	r := os.exec([debugfs, '-R', 'dump /root/' + name + ' ' + output + '/' + name, work + '/config.ext2']); assert r.exit_code == 0, r.output; actual := os.read_bytes(output + '/' + name)!; assert actual == wanted, name
@@ -25,7 +25,7 @@ fn monitor_artifact(work string, output string, debugfs string, name string, wan
 }
 
 fn verified_ciphertext_history(reference []u8, transcript string, recovery bool, readonly bool, count int, changed bool) string {
-	return 'format=VINIXCM1 operation=verified-ciphertext-monitor source=${if recovery { 'recovery' } else { 'volume' }} mappings=1 samples=${count} changed_samples=${int(changed)} session_changed=${int(changed)} final_changed=0 stable=${if changed { 0 } else { count - 1 }} new_changes=${int(changed)} restored=${int(changed)} changed_again=0 algorithm=sha256 reference_sha256=' + sha256.hexhash(reference.bytestr()) + ' transcript_sha256=' + sha256.hexhash(transcript) + '\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=${int(readonly)} result=match expected_sha256=' + reference[80..112].hex() + ' final_sha256=' + reference[80..112].hex() + '\n'
+	return 'format=TULPARCM1 operation=verified-ciphertext-monitor source=${if recovery { 'recovery' } else { 'volume' }} mappings=1 samples=${count} changed_samples=${int(changed)} session_changed=${int(changed)} final_changed=0 stable=${if changed { 0 } else { count - 1 }} new_changes=${int(changed)} restored=${int(changed)} changed_again=0 algorithm=sha256 reference_sha256=' + sha256.hexhash(reference.bytestr()) + ' transcript_sha256=' + sha256.hexhash(transcript) + '\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=${int(readonly)} result=match expected_sha256=' + reference[80..112].hex() + ' final_sha256=' + reference[80..112].hex() + '\n'
 }
 
 fn main() {
@@ -33,8 +33,8 @@ fn main() {
 	work := os.abs_path(os.args[1]); output := os.abs_path(os.args[2]); assert !os.exists(output)
 	os.mkdir(output)!; os.chmod(output, 0o700)!
 	for marker in ['first-boot.log', 'second-boot.log'] { log := os.read_file(work + '/' + marker)!; assert log.contains('PLAN DONE') && !log.contains('PLAN FAIL') && !log.contains('KERNEL PANIC'); assert log.contains(if marker == 'first-boot.log' { 'PLAN CIPHER MONITOR VERIFY PASSED:' } else { 'PLAN CIPHER MONITOR VERIFY REORDERED BOOT PRESERVED' }) }
-	debugfs := os.getenv_opt('VINIX_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
-	openssl := os.getenv_opt('VINIX_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
+	debugfs := os.getenv_opt('TULPAR_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
+	openssl := os.getenv_opt('TULPAR_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
 	mut physical := os.open(work + '/volume.raw')!; physical.seek(15728640, .start)!
 	mut raw := []u8{len: 4096}; assert physical.read(mut raw)! == 4096; physical.close()
 	assert sha256.hexhash(raw[..512].bytestr()) == '58d4a23c8dc7380e7069da904b7be35a5a844a9d6d1c744d531c960258cbbd22' && raw[512..].all(it == 0)
@@ -47,7 +47,7 @@ fn main() {
 	}
 	mut evidence := ''
 	for readonly in [false, true] {
-		mut reference := []u8{len: 128}; copy(mut reference, 'VINIXCH1'.bytes())
+		mut reference := []u8{len: 128}; copy(mut reference, 'TULPARCH1'.bytes())
 		for field in [[8, 4, 1], [12, 4, 128], [16, 8, 16777216], [24, 8, 512], [32, 4, 1], [36, 4, 60], [40, 8, 15728640], [48, 8, 4096], [64, 4, 0x12345678]] { scrub_put(mut reference, field[0], field[1], u64(field[2])) }
 		scrub_put(mut reference, 56, 8, u64(readonly)); copy(mut reference[80..112], sums[0]); scrub_put(mut reference, 124, 4, u64(scrub_crc(reference, 124)))
 		ref_name := if readonly { 'volume-ro.vchash' } else { 'volume.vchash' }
@@ -57,7 +57,7 @@ fn main() {
 		os.write_file_array(output + '/' + ref_name + '.reference', reference)!
 		r := os.exec([openssl, 'dgst', '-sha256', '-binary', '-out', output + '/' + ref_name + '.fingerprint', output + '/' + ref_name + '.reference']); assert r.exit_code == 0 && os.read_bytes(output + '/' + ref_name + '.fingerprint')! == fp[..]
 		for changed in [false, true] { for domain in ['volume', 'recovery'] {
-			mut expected := []u8{len: 224}; copy(mut expected, 'VINIXCS1'.bytes())
+			mut expected := []u8{len: 224}; copy(mut expected, 'TULPARCS1'.bytes())
 			scrub_put(mut expected, 8, 4, 1); scrub_put(mut expected, 12, 4, 224); scrub_put(mut expected, 16, 4, u64(changed)); scrub_put(mut expected, 20, 4, 1)
 			copy(mut expected[32..160], reference); copy(mut expected[160..192], sums[int(changed)]); copy(mut expected[192..224], fp[..]); scrub_put(mut expected, 28, 4, u64(scrub_crc(expected, 28)))
 			name := (if changed { 'changed-' } else { 'clean-' }) + domain + if readonly { '-ro.vcscrub' } else { '.vcscrub' }
@@ -67,7 +67,7 @@ fn main() {
 			full := os.exec([openssl, 'dgst', '-sha256', '-binary', '-out', output + '/' + name + '.sha256', output + '/' + name]); assert full.exit_code == 0 && os.read_bytes(output + '/' + name + '.sha256')! == sha256.sum(expected)[..]
 			view := 'bound-' + domain + (if readonly { '-ro' } else { '' }) + '-' + (if changed { 'changed' } else { 'clean' }) + '.txt'
 			found_view := os.exec([debugfs, '-R', 'dump /root/' + view + ' ' + output + '/' + view, work + '/config.ext2']); assert found_view.exit_code == 0, found_view.output
-			wanted := 'format=VINIXCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=' + int(!changed).str() + ' changed=' + int(changed).str() + ' algorithm=sha256 reference_sha256=' + sha256.hexhash(reference.bytestr()) + ' report_sha256=' + sha256.hexhash(expected.bytestr()) + '\n' + 'disk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=' + int(readonly).str() + ' result=' + (if changed { 'changed' } else { 'match' }) + ' expected_sha256=' + sums[0].hex() + ' actual_sha256=' + sums[int(changed)].hex() + '\n'
+			wanted := 'format=TULPARCS1 operation=verified-ciphertext-scrub-reference mappings=1 matched=' + int(!changed).str() + ' changed=' + int(changed).str() + ' algorithm=sha256 reference_sha256=' + sha256.hexhash(reference.bytestr()) + ' report_sha256=' + sha256.hexhash(expected.bytestr()) + '\n' + 'disk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=' + int(readonly).str() + ' result=' + (if changed { 'changed' } else { 'match' }) + ' expected_sha256=' + sums[0].hex() + ' actual_sha256=' + sums[int(changed)].hex() + '\n'
 			assert os.read_file(output + '/' + view)! == wanted
 			evidence += view + ' sha256=' + sha256.hexhash(wanted) + ' exact independent full bound view and V/OpenSSL input fingerprints\n'
 		} }
@@ -81,7 +81,7 @@ fn main() {
 			evidence += monitor_artifact(work, output, debugfs, 'monitor-sequence.txt', sequence.bytes())!
 			mut long := ''; for sample in 1 .. 513 { long += monitor_frame(reference, sums[0], false, true, sample, 0) }; evidence += monitor_artifact(work, output, debugfs, 'monitor-long.txt', long.bytes())!
 		} else {
-			late := monitor_frame(reference, sums[1], true, false, 1, 1) + 'vinix-volume: volume disk identity or geometry changed before publication or import\n'; evidence += monitor_artifact(work, output, debugfs, 'monitor-late-error.txt', late.bytes())!
+			late := monitor_frame(reference, sums[1], true, false, 1, 1) + 'tulpar-volume: volume disk identity or geometry changed before publication or import\n'; evidence += monitor_artifact(work, output, debugfs, 'monitor-late-error.txt', late.bytes())!
 		}
 
 		for recovery in [false, true] { for count in 1 .. 4 {

@@ -4,7 +4,7 @@ module planguest
 fn planning_allocate(path &char, disk &char, slot &char, length &char, start &char, end &char,
 	alignment &char, readonly bool, expected i32) {
 	unsafe {
-		arguments := [&char(c'/usr/sbin/vinix-volume'), &char(c'plan-allocate'), path, disk, slot,
+		arguments := [&char(c'/usr/sbin/tulpar-volume'), &char(c'plan-allocate'), path, disk, slot,
 			length, start, end, alignment, if readonly { &char(c'ro') } else { &char(nil) },
 			&char(nil)]!
 		run_utility(&arguments[0], expected)
@@ -15,7 +15,7 @@ fn space_preview(disk &char, start &char, end &char, alignment &char, expected i
 	fd := C.open(c'/root/space-output', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	check(fd >= 0, c'open space preview')
 	unsafe {
-		arguments := [&char(c'/usr/sbin/vinix-volume'), &char(c'plan-space'),
+		arguments := [&char(c'/usr/sbin/tulpar-volume'), &char(c'plan-space'),
 			&char(c'/root/saved.vset'), disk, start, end, alignment, &char(nil)]!
 		child := C.fork()
 		check(child >= 0, c'fork space preview')
@@ -37,7 +37,7 @@ fn space_preview(disk &char, start &char, end &char, alignment &char, expected i
 @[direct_array_access]
 fn planned_space(parent &char) {
 	unsafe {
-		first := status(c'/dev/mapper/vinix2').generation
+		first := status(c'/dev/mapper/tulpar2').generation
 		fd := C.open(c'/root/saved.vset', C.O_RDONLY)
 		mut original := [6208]u8{}
 		size := C.read(fd, &original[0], 6208)
@@ -53,7 +53,7 @@ fn planned_space(parent &char) {
 			&& C.close(raw) == 0, c'prepare allocated raw data')
 		planning_allocate(c'/root/saved.vset', c'0', c'14', c'4096', c'1048576', c'1064960',
 			c'8192', true, 0)
-		missing(c'/dev/mapper/vinix14')
+		missing(c'/dev/mapper/tulpar14')
 		preview(c'show-bundle', false, 0, &output[0])
 		check(contains(&output[0], c'slot=14 offset=1056768 bytes=4096 readonly=1'), c'first-fit saved geometry')
 		added_fd := C.open(c'/root/saved.vset', C.O_RDONLY)
@@ -75,14 +75,14 @@ fn planned_space(parent &char) {
 		preview(c'check-bundle', false, 1, &output[0])
 		check(!contains(&output[0], c'action='), c'unlisted extent blocks allocated actions')
 		simple(c'restore-bundle', c'/root/saved.vset', &char(nil), 1)
-		missing(c'/dev/mapper/vinix14')
-		check(status(c'/dev/mapper/vinix2').generation == first, c'failed application keeps old generation')
-		simple(c'remove', c'/dev/mapper/vinix15', &char(nil), 0)
+		missing(c'/dev/mapper/tulpar14')
+		check(status(c'/dev/mapper/tulpar2').generation == first, c'failed application keeps old generation')
+		simple(c'remove', c'/dev/mapper/tulpar15', &char(nil), 0)
 		simple(c'restore-bundle', c'/root/saved.vset', &char(nil), 0)
-		allocated := status(c'/dev/mapper/vinix14')
+		allocated := status(c'/dev/mapper/tulpar14')
 		check(allocated.start == 1056768 && allocated.bytes == 4096 && allocated.flags & 1 == 1,
 			c'allocated mapping geometry and mode')
-		held := C.open(c'/dev/mapper/vinix14', C.O_RDONLY)
+		held := C.open(c'/dev/mapper/tulpar14', C.O_RDONLY)
 		check(held >= 0, c'hold allocated mapping')
 		simple(c'plan-remove', c'/root/saved.vset', c'14', 0)
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
@@ -90,11 +90,11 @@ fn planned_space(parent &char) {
 		check(C.pread(held, &bytes[0], 4096, 0) == 4096 && C.close(held) == 0,
 			c'allocated data survives omission')
 		for byte in bytes { check(byte == 0xf2, c'allocation preserves raw data') }
-		check(status(c'/dev/mapper/vinix14').generation == allocated.generation,
+		check(status(c'/dev/mapper/tulpar14').generation == allocated.generation,
 			c'omission preserves allocated generation')
-		simple(c'remove', c'/dev/mapper/vinix14', &char(nil), 0)
-		missing(c'/dev/mapper/vinix14')
-		copy_plan(c'/root/saved.vset', c'/etc/vinix/volumes.vset')
+		simple(c'remove', c'/dev/mapper/tulpar14', &char(nil), 0)
+		missing(c'/dev/mapper/tulpar14')
+		copy_plan(c'/root/saved.vset', c'/etc/tulpar/volumes.vset')
 		C.printf(c'PLAN SPACE PASSED: bounded aligned gaps, first-fit allocation, complete preflight, preserved data and descriptors\n')
 	}
 }

@@ -115,7 +115,7 @@ fn test_later_identity_geometry_row_and_slot_conflicts_preserve_all_caller_state
 }
 
 fn test_maximum_cli_imports_64_sources_preserves_full_v2_pool_table_and_all_keep_priority() {
-	work := os.join_path(os.temp_dir(), 'vinix-enrollment-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-enrollment-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut sources := []string{cap: 64}
@@ -137,7 +137,7 @@ fn test_maximum_cli_imports_64_sources_preserves_full_v2_pool_table_and_all_keep
 	assert publish_bundle(path.str, &set); original := os.read_bytes(path)!
 	unsafe {
 		mut args := [68]&char{}
-		args[0] = &char(c'vinix-volume'); args[2] = path.str
+		args[0] = &char(c'tulpar-volume'); args[2] = path.str
 		for i in 0 .. 64 { args[3 + i] = sources[63 - i].str }
 		args[1] = &char(c'plan-preview-enroll-batch'); assert run(67, &args[0]) == 0 && os.read_bytes(path)! == original
 		args[1] = &char(c'plan-enroll-batch'); assert run(67, &args[0]) == 0
@@ -156,7 +156,7 @@ fn test_maximum_cli_imports_64_sources_preserves_full_v2_pool_table_and_all_keep
 }
 
 fn test_later_bad_source_alias_corruption_and_cli_counts_never_publish_a_prefix() {
-	work := os.join_path(os.temp_dir(), 'vinix-enrollment-input-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-enrollment-input-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; first := work + '/first.vmap'; second := work + '/second.vmap'
 	mut set := PlanSet{}; enrollment_fixture(mut set, 0, 1)
@@ -176,7 +176,7 @@ fn test_later_bad_source_alias_corruption_and_cli_counts_never_publish_a_prefix(
 			assert enroll_batch_bundle_plan(path.str, 2, &inputs[0], preview) == 1 && os.read_bytes(path)! == original
 			assert publish_plan(second.str, &other)
 		}
-		mut args := [&char(c'vinix-volume'), &char(c'plan-enroll-batch'), path.str, first.str, &char(c''), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-enroll-batch'), path.str, first.str, &char(c''), &char(nil)]!
 		for command in [c'plan-enroll-batch', c'plan-preview-enroll-batch'] {
 			args[1] = &char(command)
 			for count in [2, 3, 68, 260] { assert run(count, &args[0]) == 2 }

@@ -2,10 +2,10 @@
 module hwhost
 
 fn test_options_take_values_either_way() {
-	options := parse_options(['--arch', 'x86_64', '--kernel=/k/vinix', '--scenario', 'ahci',
+	options := parse_options(['--arch', 'x86_64', '--kernel=/k/tulpar', '--scenario', 'ahci',
 		'--scenario=devices', '--timeout', '30', '--state-dir=/tmp/s', '--qemu', '/q'])!
 	assert options.arch == 'x86_64'
-	assert options.kernel == '/k/vinix'
+	assert options.kernel == '/k/tulpar'
 	assert options.scenarios == ['ahci', 'devices']
 	assert options.timeout == 30
 	assert options.state_dir == '/tmp/s'

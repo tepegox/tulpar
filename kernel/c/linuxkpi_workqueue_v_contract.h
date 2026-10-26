@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUXKPI_WORKQUEUE_V_CONTRACT_H
-#define VINIX_LINUXKPI_WORKQUEUE_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_WORKQUEUE_V_CONTRACT_H
+#define TULPAR_LINUXKPI_WORKQUEUE_V_CONTRACT_H
 #include "linuxkpi_task_v_contract.h"
 #include <linux/sched/task.h>
 #include "linuxkpi_workqueue_v_primitives.h"
@@ -9,20 +9,20 @@ _Static_assert(WORK_STRUCT_NO_POOL == 0xfffffffe0UL && WORK_OFFQ_CANCELING == 16
 _Static_assert(WORK_CPU_UNBOUND == 256 && WQ_UNBOUND_MAX_ACTIVE == 512 && WQ_MAX_ACTIVE == 512 && WQ_DFL_ACTIVE == 256, "V pool limits");
 _Static_assert(WQ_UNBOUND == 2 && WQ_HIGHPRI == 16 && __WQ_ORDERED == 131072 && __WQ_ORDERED_EXPLICIT == 524288, "V queue policies");
 _Static_assert(sizeof(pthread_t) == sizeof(uint64_t), "V worker thread ABI");
-void *vinix_linuxkpi_work_worker(void *);
-void *vinix_linuxkpi_pool_manager(void *);
-void vinix_linuxkpi_work_barrier(struct work_struct *);
-_Static_assert(_Generic(&vinix_linuxkpi_work_barrier, work_func_t: 1, default: 0), "registered work callback type");
+void *tulpar_linuxkpi_work_worker(void *);
+void *tulpar_linuxkpi_pool_manager(void *);
+void tulpar_linuxkpi_work_barrier(struct work_struct *);
+_Static_assert(_Generic(&tulpar_linuxkpi_work_barrier, work_func_t: 1, default: 0), "registered work callback type");
 _Static_assert(_Generic(&delayed_work_timer_fn, __typeof__(((struct timer_list *)0)->function): 1, default: 0), "registered delayed timer callback type");
-void *vinix_linuxkpi_workqueue_allocate(unsigned int, int);
-char *vinix_linuxkpi_workqueue_name(void *);
-void *vinix_linuxkpi_workqueue_start(void *);
+void *tulpar_linuxkpi_workqueue_allocate(unsigned int, int);
+char *tulpar_linuxkpi_workqueue_name(void *);
+void *tulpar_linuxkpi_workqueue_start(void *);
 int vkr_format_entry(char *, size_t, char *, void *, unsigned int *);
 int vp_snprintf(char *, size_t, const char *, void *);
-#ifdef VINIX_LINUXKPI_HOST_TEST
-void vinix_linuxkpi_host_worker_enter(void);
-void vinix_linuxkpi_host_worker_leave(void);
-void vinix_linuxkpi_host_delayed_timer_gate(struct timer_list *);
-void vinix_linuxkpi_host_pool_publish_gate(struct workqueue_struct *, unsigned int);
+#ifdef TULPAR_LINUXKPI_HOST_TEST
+void tulpar_linuxkpi_host_worker_enter(void);
+void tulpar_linuxkpi_host_worker_leave(void);
+void tulpar_linuxkpi_host_delayed_timer_gate(struct timer_list *);
+void tulpar_linuxkpi_host_pool_publish_gate(struct workqueue_struct *, unsigned int);
 #endif
 #endif

@@ -258,7 +258,7 @@ pub fn (mut z Zone) zone_element_resolve(addr u64) &ZoneChunk {
 		}
 		return unsafe { nil }
 	}
-	// Portable/test fallback. A Vinix resolver avoids this list traversal.
+	// Portable/test fallback. A Tulpar resolver avoids this list traversal.
 	mut p := z.zone_element_resolve_from(z.full, addr)
 	if p != unsafe { nil } {
 		return p

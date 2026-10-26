@@ -81,8 +81,8 @@ fn elf_closure(source string, destination string, roots []string, mut copied map
 fn assemble(repository string, state string) !string {
 	guest := '${state}/rootfs'
 	os.mkdir_all(guest)!
-	stable := os.getenv_opt('VINIX_USERLAND_STAGING') or { '${repository}/build-aarch64-userland/staging' }
-	x11 := os.getenv_opt('VINIX_X11_STAGING') or { '${repository}/build-aarch64-x11/staging' }
+	stable := os.getenv_opt('TULPAR_USERLAND_STAGING') or { '${repository}/build-aarch64-userland/staging' }
+	x11 := os.getenv_opt('TULPAR_X11_STAGING') or { '${repository}/build-aarch64-x11/staging' }
 	emacs := '${repository}/build/emacs/staging'
 	roots := [x11, stable]
 	mut copied := map[string]bool{}
@@ -90,7 +90,7 @@ fn assemble(repository string, state string) !string {
 		println('Guest binary: ${name}')
 		elf_closure('${stable}/${name}', '${guest}/${name}', roots, mut copied)!
 	}
-	for name in ['usr/bin/Xvfb', 'usr/bin/vinix-wine-host', 'usr/bin/vinix-xinput', 'usr/bin/xkbcomp'] {
+	for name in ['usr/bin/Xvfb', 'usr/bin/tulpar-wine-host', 'usr/bin/tulpar-xinput', 'usr/bin/xkbcomp'] {
 		println('Guest binary: ${name}')
 		source := if os.is_file('${x11}/${name}') { '${x11}/${name}' } else { '${stable}/${name}' }
 		elf_closure(source, '${guest}/${name}', roots, mut copied)!
@@ -105,12 +105,12 @@ fn assemble(repository string, state string) !string {
 	println('Guest directory: private Emacs runtime')
 	copy_tree('${emacs}/usr/libexec', '${guest}/usr/libexec')!
 	copy_file('${emacs}/usr/bin/run-emacs', '${guest}/usr/bin/run-emacs')!
-	copy_file('${repository}/build/emacs/build/vinix-desktop', '${guest}/usr/bin/vinix-desktop')!
+	copy_file('${repository}/build/emacs/build/tulpar-desktop', '${guest}/usr/bin/tulpar-desktop')!
 	copy_file('${repository}/build/emacs/build/init', '${guest}/sbin/init')!
 	for name in ['sh', 'mkdir', 'sleep', 'cat', 'rm', 'env'] {
 		os.symlink('/bin/busybox', '${guest}/bin/${name}') or {}
 	}
-	os.symlink('vinix-desktop', '${guest}/usr/bin/vinix-emacs') or {}
+	os.symlink('tulpar-desktop', '${guest}/usr/bin/tulpar-emacs') or {}
 	os.mkdir_all('${guest}/etc')!
 	os.write_file('${guest}/etc/passwd', 'root:x:0:0:root:/root:/bin/zsh\n')!
 	os.write_file('${guest}/etc/group', 'root:x:0:\n')!
@@ -126,22 +126,22 @@ fn main() {
 	state := '${repository}/build/emacs/vm'
 	os.mkdir_all(state)!
 	if os.args.len > 1 && os.args[1] == 'shot' {
-		mut monitor := qmpclient.connect('/tmp/vinix-emacs-qmp')!
+		mut monitor := qmpclient.connect('/tmp/tulpar-emacs-qmp')!
 		defer { monitor.close() }
 		monitor.command('screendump', {
-			'filename': json2.Any('${repository}/docs/screenshots/emacs-vinix-qemu.png')
+			'filename': json2.Any('${repository}/docs/screenshots/emacs-tulpar-qemu.png')
 			'format':   json2.Any('png')
 		})!
 		return
 	}
 	if os.args.len > 1 && os.args[1] == 'quit' {
-		mut monitor := qmpclient.connect('/tmp/vinix-emacs-qmp')!
+		mut monitor := qmpclient.connect('/tmp/tulpar-emacs-qmp')!
 		monitor.command('quit', {})!
 		monitor.close()
 		return
 	}
 	if os.args.len == 3 && os.args[1] == 'key' {
-		mut monitor := qmpclient.connect('/tmp/vinix-emacs-qmp')!
+		mut monitor := qmpclient.connect('/tmp/tulpar-emacs-qmp')!
 		defer { monitor.close() }
 		monitor.command('human-monitor-command', {
 			'command-line': json2.Any('sendkey ' + os.args[2])
@@ -150,7 +150,7 @@ fn main() {
 		return
 	}
 	if os.args.len == 3 && os.args[1] == 'type' {
-		mut monitor := qmpclient.connect('/tmp/vinix-emacs-qmp')!
+		mut monitor := qmpclient.connect('/tmp/tulpar-emacs-qmp')!
 		defer { monitor.close() }
 		for character in os.args[2].bytes() {
 			monitor.command('human-monitor-command', {
@@ -171,13 +171,13 @@ fn main() {
 		firmware:      '${repository}/boot-image/edk2-aarch64-code-2048x1536.fd'
 		firmware_vars: '/opt/homebrew/share/qemu/edk2-arm-vars.fd'
 	}
-	kernel := os.getenv_opt('VINIX_EMACS_KERNEL') or { '${repository}/build/emacs/kernel-aarch64' }
+	kernel := os.getenv_opt('TULPAR_EMACS_KERNEL') or { '${repository}/build/emacs/kernel-aarch64' }
 	copy_file(kernel, '${state}/kernel')!
 	media := hwhost.boot_media(host, '${state}/kernel', archive, 'quiet', state)!
-	println('Booting native ARM64 Emacs and Vinix; QMP /tmp/vinix-emacs-qmp')
+	println('Booting native ARM64 Emacs and Tulpar; QMP /tmp/tulpar-emacs-qmp')
 	run(host.qemu, ['-machine', 'virt,gic-version=3', '-accel', 'hvf', '-cpu', 'host', '-m', '8192',
 		'-smp', '4', ...media, '-object', 'rng-random,filename=/dev/urandom,id=rng0', '-device',
 		'virtio-rng-device,rng=rng0', '-device', 'virtio-keyboard-device', '-device',
 		'virtio-tablet-device', '-device', 'ramfb', '-display', 'none', '-serial', 'mon:stdio',
-		'-qmp', 'unix:/tmp/vinix-emacs-qmp,server=on,wait=off', '-no-reboot'])!
+		'-qmp', 'unix:/tmp/tulpar-emacs-qmp,server=on,wait=off', '-no-reboot'])!
 }

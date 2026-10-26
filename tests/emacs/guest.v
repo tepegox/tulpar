@@ -12,19 +12,19 @@ fn main() {
 	os.setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin', true)
 	os.setenv('TERM', 'linux', true)
 	os.setenv('LD_LIBRARY_PATH', '/usr/lib:/lib:/usr/lib/xorg/modules', true)
-	os.write_file('/root/.vinix-user', 'version=1\nname=56696e6978\nkdf=scrypt\nn=16384\nr=8\np=1\nsalt=00112233445566778899aabbccddeeff\nhash=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n')!
-	os.chmod('/root/.vinix-user', 0o600)!
+	os.write_file('/root/.tulpar-user', 'version=1\nname=56696e6978\nkdf=scrypt\nn=16384\nr=8\np=1\nsalt=00112233445566778899aabbccddeeff\nhash=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n')!
+	os.chmod('/root/.tulpar-user', 0o600)!
 	// Also exercise the portable dump, Lisp evaluator and real guest file I/O.
 	mut check := os.new_process('/usr/bin/run-emacs')
-	check.set_args(['--batch', '-Q', '--eval', '(progn (with-temp-file "/root/emacs-check.txt" (insert "Emacs on Vinix\\n")) (with-temp-buffer (insert-file-contents "/root/emacs-check.txt") (unless (equal (buffer-string) "Emacs on Vinix\\n") (kill-emacs 2))) (message "EMACS CHECK: Lisp evaluation and file round trip PASS"))'])
+	check.set_args(['--batch', '-Q', '--eval', '(progn (with-temp-file "/root/emacs-check.txt" (insert "Emacs on Tulpar\\n")) (with-temp-buffer (insert-file-contents "/root/emacs-check.txt") (unless (equal (buffer-string) "Emacs on Tulpar\\n") (kill-emacs 2))) (message "EMACS CHECK: Lisp evaluation and file round trip PASS"))'])
 	check.run()
 	check.wait()
 	assert check.code == 0
 	check.close()
-	os.write_file('/root/hello.el', ";; GNU Emacs running on Vinix\n;; Native ARM64 / musl, in a Vinix desktop window.\n\n(defun hello-vinix ()\n  (interactive)\n  (message \"Hello from Emacs on Vinix!\"))\n\n(hello-vinix)\n")!
+	os.write_file('/root/hello.el', ";; GNU Emacs running on Tulpar\n;; Native ARM64 / musl, in a Tulpar desktop window.\n\n(defun hello-tulpar ()\n  (interactive)\n  (message \"Hello from Emacs on Tulpar!\"))\n\n(hello-tulpar)\n")!
 	os.write_file('/root/.emacs', '(setq inhibit-startup-screen t initial-scratch-message nil)\n(tool-bar-mode -1)\n(setq default-frame-alist (quote ((width . 100) (height . 36) (font . "DejaVu Sans Mono-13"))))\n(find-file "/root/hello.el")\n')!
-	println('EMACS GUEST: starting Vinix desktop with Emacs')
-	mut desktop := os.new_process('/usr/bin/vinix-desktop')
+	println('EMACS GUEST: starting Tulpar desktop with Emacs')
+	mut desktop := os.new_process('/usr/bin/tulpar-desktop')
 	desktop.set_args(['--open=Emacs'])
 	desktop.run()
 	mut seen := map[string]int{}
@@ -32,7 +32,7 @@ fn main() {
 	for {
 		time.sleep(time.second)
 		for name in os.ls('/tmp') or { []string{} } {
-			if !name.starts_with('vinix-emacs-') || !name.ends_with('.log') { continue }
+			if !name.starts_with('tulpar-emacs-') || !name.ends_with('.log') { continue }
 			path := '/tmp/${name}'
 			log := os.read_file(path) or { continue }
 			if log.len > seen[path] {

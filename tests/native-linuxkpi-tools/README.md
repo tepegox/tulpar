@@ -1,7 +1,7 @@
 The LinuxKPI audit, fixture, golden-data and native host build commands run in
 V. Public entrypoints live under `kernel/linuxkpi` and `tests/linuxkpi`; the
 PCI configuration runner also uses this module. Select the compiler with `V`
-or `VINIX_V_COMPILER`. No Python wrapper is required.
+or `TULPAR_V_COMPILER`. No Python wrapper is required.
 
 Examples:
 
@@ -52,7 +52,7 @@ checkout; this is orchestration evidence, not full i915 readiness. A real ARM
 musl host build stops at an existing `memdup` emitted for `PrintRecord` in the
 production logging worker. Strict compilation and allocator guards remain;
 controlled recipe tests do not establish a successful native host ELF or
-runtime workload. No Python or Vinix guest was executed for this batch.
+runtime workload. No Python or Tulpar guest was executed for this batch.
 
 The thirteen retired originals total 54,042 bytes and 1,127 lines at
 `3678edd591db0173eb139f44d671a54a4f736887`. The concurrently edited

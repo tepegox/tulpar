@@ -7,9 +7,9 @@ import os
 import time
 
 fn administration_root(label string) !string {
-	root := os.real_path(os.temp_dir()) + '/vinix-repository-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
-	os.chmod(root + '/etc/vinix-packages', 0o755)!
+	root := os.real_path(os.temp_dir()) + '/tulpar-repository-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
+	os.chmod(root + '/etc/tulpar-packages', 0o755)!
 	config := Config{
 		architecture: 'aarch64'
 		launch_user:  'alex'
@@ -22,8 +22,8 @@ fn administration_root(label string) !string {
 			licenses:      ['Vendor-EULA']
 		}
 	}
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
-	os.chmod(root + '/etc/vinix-packages/config.json', 0o644)!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
+	os.chmod(root + '/etc/tulpar-packages/config.json', 0o644)!
 	return root
 }
 
@@ -48,7 +48,7 @@ fn test_enrollment_authenticates_before_trusting_and_preserves_policy() {
 	assert result.repositories == [repository]
 	assert result.policy == before.policy && result.launch_user == 'alex'
 	assert result.architecture == before.architecture && result.format == before.format
-	assert os.stat(root + '/etc/vinix-packages/config.json')!.mode & 0o777 == 0o644
+	assert os.stat(root + '/etc/tulpar-packages/config.json')!.mode & 0o777 == 0o644
 	status := repository_status(root)!
 	assert status.format == 1 && status.architecture == 'aarch64'
 	assert status.repositories == [repository] && status.history.len == 1
@@ -74,7 +74,7 @@ fn test_rejected_enrollment_keeps_configuration_and_history_unchanged() {
 	expires := time.now().unix() + 3600
 	text := administration_index(path, secret, 10, expires, '')!
 	enroll_repository(root, repository, false)!
-	configuration := os.read_file(root + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(root + '/etc/tulpar-packages/config.json')!
 	history := os.read_file(state_directory(root) + '/trust-history.json')!
 	for bad in [Repository{ ...repository, public_key: other_key.hex() },
 		Repository{ ...repository, id: 'other' }, Repository{ ...repository, id: '../escape' },
@@ -83,7 +83,7 @@ fn test_rejected_enrollment_keeps_configuration_and_history_unchanged() {
 		if _ := enroll_repository(root, bad, false) {
 			assert false, 'accepted unauthenticated repository'
 		}
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == configuration
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration
 		assert os.read_file(state_directory(root) + '/trust-history.json')! == history
 	}
 	for invalid in ['00'.repeat(64), 'not-hex'] {
@@ -105,7 +105,7 @@ fn test_rejected_enrollment_keeps_configuration_and_history_unchanged() {
 			assert false, 'accepted invalid authenticated metadata'
 		}
 	}
-	assert os.read_file(root + '/etc/vinix-packages/config.json')! == configuration
+	assert os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration
 	assert os.read_file(state_directory(root) + '/trust-history.json')! == history
 	assert !os.exists(state_directory(root) + '/enrollment')
 }
@@ -276,7 +276,7 @@ fn test_administration_rejects_unsafe_configuration_and_ignores_predictable_temp
 	key, secret := ed25519.generate_key()!
 	repository := Repository{ id: 'fixture', url: 'file://' + root + '/repo', public_key: key.hex() }
 	administration_index(root + '/repo', secret, 1, time.now().unix() + 3600, '')!
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	original := os.read_file(path)!
 	os.chmod(path, 0o666)!
 	if _ := enroll_repository(root, repository, false) {
@@ -357,18 +357,18 @@ fn test_repository_review_is_read_only_and_apply_binds_catalog_and_configuration
 	repository := Repository{ id: 'fixture', url: 'file://' + path, public_key: key.hex() }
 	expires := time.now().unix() + 3600
 	first := administration_index(path, secret, 1, expires, '')!
-	configuration := os.read_file(root + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(root + '/etc/tulpar-packages/config.json')!
 	mut review := review_repository(root, 'enroll', repository, false)!
 	defer { review.close() }
 	assert review.sequence == 1 && review.expires == expires && review.package_count == 0
 	assert review.previous_public_key == '' && review.remembered_sequence == 0
-	assert os.read_file(root + '/etc/vinix-packages/config.json')! == configuration
+	assert os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration
 	assert !os.exists(state_directory(root))
 	// Even same-sequence changed bytes cannot consume the old review.
 	administration_index(path, secret, 1, expires, ' ')!
 	mut refused := false
 	enroll_repository_reviewed(root, repository, false, review.fingerprint) or { refused = err.msg().contains('stale') }
-	assert refused && os.read_file(root + '/etc/vinix-packages/config.json')! == configuration
+	assert refused && os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration
 	assert !os.exists(state_directory(root) + '/trust-history.json')
 	os.write_file(path + '/index.json', first)!
 	os.write_file(path + '/index.sig', ed25519.sign(secret, first.bytes())!.hex())!
@@ -381,7 +381,7 @@ fn test_repository_review_is_read_only_and_apply_binds_catalog_and_configuration
 	mut revocation := review_repository(root, 'revoke', Repository{ id: repository.id }, false)!
 	defer { revocation.close() }
 	current := load_config(root)!
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(Config{ ...current, launch_user: 'bob' }))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(Config{ ...current, launch_user: 'bob' }))!
 	refused = false
 	revoke_repository_reviewed(root, repository.id, revocation.fingerprint) or { refused = err.msg().contains('stale') }
 	assert refused && load_config(root)!.repositories.len == 1

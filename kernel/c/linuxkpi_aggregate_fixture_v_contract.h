@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native fixture metadata only; all checks and operations are implemented in V. */
-#ifndef VINIX_LINUXKPI_AGGREGATE_FIXTURE_V_CONTRACT_H
-#define VINIX_LINUXKPI_AGGREGATE_FIXTURE_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_AGGREGATE_FIXTURE_V_CONTRACT_H
+#define TULPAR_LINUXKPI_AGGREGATE_FIXTURE_V_CONTRACT_H
 
 #include <stdint.h>
 #include <stddef.h>
@@ -44,6 +44,6 @@ VAF_LAYOUT(pte_t, 8);
 VAF_LAYOUT(pmd_t, 8);
 #undef VAF_LAYOUT
 
-int vinix_linuxkpi_aggregate_fixture_queries(void);
+int tulpar_linuxkpi_aggregate_fixture_queries(void);
 
 #endif

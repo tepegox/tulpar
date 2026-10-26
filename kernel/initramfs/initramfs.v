@@ -152,7 +152,7 @@ fn unpack(initramfs_begin voidptr, initramfs_size u64, module_index u64) bool {
 		}
 
 		if installing {
-			if full_name == './.vinix-image-id' || full_name == '.vinix-image-id' {
+			if full_name == './.tulpar-image-id' || full_name == '.tulpar-image-id' {
 				unsafe {
 					goto next
 				}
@@ -246,7 +246,7 @@ pub fn initialise() {
 // Unpack the image onto a disk that is now the root, for sysdisk: onto a
 // blank volume, or over a system installed from an earlier image, leaving the
 // entries under `keep` (the user's home; '' for none) that it already has.
-// The image's own /.vinix-image-id is left out; the installer writes it last.
+// The image's own /.tulpar-image-id is left out; the installer writes it last.
 @[manualfree]
 pub fn install(keep string) {
 	installing = true
@@ -321,7 +321,7 @@ fn clear_for_update(name string, filetype u8, link_name string) bool {
 	return true
 }
 
-// The image's identity: the contents of its /.vinix-image-id, or '' when it
+// The image's identity: the contents of its /.tulpar-image-id, or '' when it
 // has none. Only the archive's headers are read, which takes a moment where
 // unpacking takes seconds. A system installed on a disk from this image keeps
 // the same file, which is how a boot tells whether the disk is up to date.
@@ -348,7 +348,7 @@ pub fn image_id() string {
 	return archive_image_id(archive.address, archive.size)
 }
 
-// The id in the archive's own /.vinix-image-id entry, or empty.
+// The id in the archive's own /.tulpar-image-id entry, or empty.
 fn archive_image_id(address voidptr, archive_size u64) string {
 	end := u64(address) + archive_size
 	mut header := unsafe { &USTARHeader(address) }
@@ -356,7 +356,7 @@ fn archive_image_id(address voidptr, archive_size u64) string {
 		size := octal_to_int(ustar_field_string(&header.size[0], header.size.len))
 		name := ustar_field_string(&header.name[0], header.name.len)
 		if header.filetype == u8(USTARFileType.regular_file)
-			&& (name == './.vinix-image-id' || name == '.vinix-image-id')
+			&& (name == './.tulpar-image-id' || name == '.tulpar-image-id')
 			&& u64(header) + 512 + size <= end && size > 0 && size < 256 {
 			text := unsafe { &u8(u64(header) + 512) }
 			mut length := int(size)
@@ -460,11 +460,11 @@ fn module_archive(module_index u64) Archive {
 }
 
 // The image id a release ISO's scripts put in its gzip header's comment, as
-// `vinix-image-id=<id>`, so that a machine booting its installed system does
+// `tulpar-image-id=<id>`, so that a machine booting its installed system does
 // not inflate the whole image to learn it. Empty when there is none.
 fn gzip_image_id(data &u8, size u64) string {
 	member := gzip_member(data, size) or { return '' }
-	prefix := 'vinix-image-id='
+	prefix := 'tulpar-image-id='
 	if member.comment_length <= u64(prefix.len) || member.comment_length > 256 {
 		return ''
 	}

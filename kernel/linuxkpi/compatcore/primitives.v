@@ -9,7 +9,7 @@ fn C.kmalloc(uint, u32) voidptr
 fn C.kzalloc(uint, u32) voidptr
 fn C.kmalloc_array(uint, uint, u32) voidptr
 fn C.kfree(voidptr)
-fn C.vinix_linuxkpi_bug(&char, i32)
+fn C.tulpar_linuxkpi_bug(&char, i32)
 fn C.memcpy(voidptr, voidptr, uint) voidptr
 fn C.memset(voidptr, i32, uint) voidptr
 fn C.strcmp(&char, &char) i32
@@ -39,11 +39,11 @@ fn C.vkp_exchange32(&u32, u32, i32) u32
 @[c: '__atomic_compare_exchange_n']
 fn C.vkp_compare_signed(&i32, &i32, i32, bool, i32, i32) bool
 
-fn C.vinix_linuxkpi_page_size() uint
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_gfp_supported(u32) bool
-fn C.vinix_linuxkpi_alloc_gfp_pages(uint, u32) voidptr
-fn C.vinix_linuxkpi_free_pages(voidptr, uint)
+fn C.tulpar_linuxkpi_page_size() uint
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_gfp_supported(u32) bool
+fn C.tulpar_linuxkpi_alloc_gfp_pages(uint, u32) voidptr
+fn C.tulpar_linuxkpi_free_pages(voidptr, uint)
 fn C.vkp_spin_init(voidptr)
 fn C.vkp_spin_lock(voidptr)
 fn C.vkp_spin_unlock(voidptr)
@@ -60,7 +60,7 @@ fn C.vkp_schedule_timeout(i64) i64
 fn C.vkp_signal_pending(i32) bool
 fn C.vkp_jiffies() u64
 fn C.vkp_bit_timeout(voidptr) u64
-fn C.vinix_linuxkpi_iowait_count(u32) u32
+fn C.tulpar_linuxkpi_iowait_count(u32) u32
 fn C.vkp_warn(&char, i32)
 fn C.vkp_refcount_warning(i32)
 fn C.vkp_warn_note(&char, i32)
@@ -87,6 +87,6 @@ fn native_test_bit(bit u32, bits &u64) bool {
 	 }
 }
 
-fn require(ok bool) { if !ok { C.vinix_linuxkpi_bug(c'V LinuxKPI helper invariant', 0) } }
+fn require(ok bool) { if !ok { C.tulpar_linuxkpi_bug(c'V LinuxKPI helper invariant', 0) } }
 
 fn is_null(p voidptr) bool { return uint(p) == 0 }

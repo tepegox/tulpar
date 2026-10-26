@@ -8,8 +8,8 @@ import os
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn collection_request_cycles() int {
 	$if collection_request_baseline ? { return 2 }
@@ -87,17 +87,17 @@ fn collection_request_check(directory string, mode string, refused bool) ! {
 
 fn collection_request_scope(arch string, service Service, config Config, directory string, snapshot bool, mode string, expected string) ! {
 	label := arch + (if snapshot { ' explicit ' } else { ' service ' }) + mode
-	selection := os.getenv('VINIX_COLLECTION_CASE')
+	selection := os.getenv('TULPAR_COLLECTION_CASE')
 	defer { unsafe { label.free(); selection.free() } }
 	if selection != '' && selection != label { return }
-	config_path := service.root + '/etc/vinix-packages/config.json'
+	config_path := service.root + '/etc/tulpar-packages/config.json'
 	mut total := u64(0)
 	for pass in 0 .. 2 {
 		loops := if pass == 0 { collection_request_warmups() } else { collection_request_cycles() }
 		for _ in 0 .. loops {
 			if mode == 'fresh' { os.rmdir_all(directory)! }
 			lease := collection_request_prepare(directory, mode)!
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			mut refused := false
 			if snapshot {
 				collect(config, directory) or {
@@ -112,7 +112,7 @@ fn collection_request_scope(arch string, service Service, config Config, directo
 					unsafe { message.free(); err.free() }
 				}
 			}
-			mut kept := u64(0); $if track_heap ? { kept = C.vinix_heap_end() }
+			mut kept := u64(0); $if track_heap ? { kept = C.tulpar_heap_end() }
 			if pass == 1 { total += kept }
 			assert refused == (expected != ''), mode
 			collection_request_check(directory, mode, refused)!
@@ -137,14 +137,14 @@ fn collection_request_scope(arch string, service Service, config Config, directo
 }
 
 fn test_complete_collection_requests_retire_success_and_refusal_storage() {
-	selection := os.getenv('VINIX_COLLECTION_CASE')
+	selection := os.getenv('TULPAR_COLLECTION_CASE')
 	defer { unsafe { selection.free() } }
 	for arch in ['aarch64', 'x86_64']! {
 		if selection != '' && !selection.starts_with(arch) { continue }
-		work := os.temp_dir() + '/vinix-collection-request-' + arch + '-' + os.getpid().str()
+		work := os.temp_dir() + '/tulpar-collection-request-' + arch + '-' + os.getpid().str()
 		defer { os.rmdir_all(work) or {} }
-		root := work + '/root'; directory := state_directory(root); path := root + '/etc/vinix-packages/config.json'
-		os.mkdir_all(root + '/etc/vinix-packages')!
+		root := work + '/root'; directory := state_directory(root); path := root + '/etc/tulpar-packages/config.json'
+		os.mkdir_all(root + '/etc/tulpar-packages')!
 		config := Config{architecture: arch, repositories: [], policy: Policy{offline: true, reserve_bytes: 0}}
 		borrowed := json2.encode(config)
 		save_configuration(path, config)!; service := Service{root: root, offline: true}

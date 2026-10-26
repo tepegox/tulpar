@@ -51,9 +51,9 @@ pub:
 	throttle accountcore.Throttle
 	// Where the action files are, the file naming the uid of the person at
 	// the machine, and the log.
-	actions string = '/usr/share/vinix/actions'
-	session string = '/run/vinix/session/active'
-	log     string = '/var/log/vinix/auth.log'
+	actions string = '/usr/share/tulpar/actions'
+	session string = '/run/tulpar/session/active'
+	log     string = '/var/log/tulpar/auth.log'
 	// Where the kernel takes reports of a service's decisions, so that they
 	// are in one stream with its own (kernel/security/events.v); '' for none.
 	events  string = '/proc/security_events'

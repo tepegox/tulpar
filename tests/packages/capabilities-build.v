@@ -59,7 +59,7 @@ fn cross(v string, source string, repository string, output string, arch string)
 	directory := output + '/' + arch
 	os.mkdir(directory, mode: 0o700)!
 	path := '@vlib|@vmodules|' + source + '|' + source + '/tools/accounts'
-	cfile := directory + '/vinix-package.c'
+	cfile := directory + '/tulpar-package.c'
 	invoke([v, '-backend', 'c', '-path', path, '-enable-globals', '-gc', 'none', '-manualfree',
 		'-d', 'no_backtrace', '-d', 'no_segfault_handler', '-os', 'linux', '-arch',
 		if arch == 'aarch64' { 'arm64' } else { 'amd64' }, '-o', cfile, source + '/tools/packages/main.v'], directory + '/v.log')!
@@ -76,9 +76,9 @@ fn cross(v string, source string, repository string, output string, arch string)
 		'-Wno-error=incompatible-pointer-types', '-D_GNU_SOURCE',
 		'-L' + sysroot + '/lib', '-L' + sysroot + '/usr/lib',
 		'-Wl,-rpath-link,' + sysroot + '/lib', '-Wl,-rpath-link,' + sysroot + '/usr/lib',
-		output + '/runtime.c', '-O2', '-std=gnu11', '-static', '-o', directory + '/vinix-package',
+		output + '/runtime.c', '-O2', '-std=gnu11', '-static', '-o', directory + '/tulpar-package',
 		cfile, '-lm', '-lpthread'], directory + '/cc.log')!
-	elf(directory + '/vinix-package', arch)!
+	elf(directory + '/tulpar-package', arch)!
 }
 
 fn check() ! {

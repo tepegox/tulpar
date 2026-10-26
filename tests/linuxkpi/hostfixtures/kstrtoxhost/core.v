@@ -255,12 +255,12 @@ fn C.sysconf(i32) isize
 fn C.mmap(voidptr,usize,i32,i32,i32,isize) voidptr
 fn C.mprotect(voidptr,usize,i32) i32
 fn C.munmap(voidptr,usize) i32
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_irq_flags() usize
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable_no_resched()
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable_no_resched()
 fn check_guards(before &u8,after &u8) { unsafe { for i:=u32(0); i<8; i++ { C.assert(before[i]==0xa5); C.assert(after[i]==0x5a) } } }
 fn check_kstrtou8(values voidptr,count usize) { unsafe {
  cases:=&NumericCase(values)
@@ -425,9 +425,9 @@ pub fn kstrtox_tests() { unsafe {
   C.assert(C.mprotect(mapping+page_size,usize(page_size),C.PROT_READ)==0); borrowed[i].mapping=mapping; borrowed[i].text=text
  }
  C.assert(sizeof(usize)==8 && sizeof(isize)==8)
- pages:=C.vmh_live_pages; original_depth:=C.vinix_linuxkpi_preempt_count(); original_cpu:=C.vmh_current_cpu; original_irq:=C.vinix_linuxkpi_irq_flags()
- allocation_failure:=C.vmh_fail_allocation; C.vmh_fail_allocation=true; flags:=C.vinix_linuxkpi_irq_save(); C.vinix_linuxkpi_preempt_disable(); C.vinix_linuxkpi_preempt_disable()
- depth:=C.vinix_linuxkpi_preempt_count(); irq:=C.vinix_linuxkpi_irq_flags()
+ pages:=C.vmh_live_pages; original_depth:=C.tulpar_linuxkpi_preempt_count(); original_cpu:=C.vmh_current_cpu; original_irq:=C.tulpar_linuxkpi_irq_flags()
+ allocation_failure:=C.vmh_fail_allocation; C.vmh_fail_allocation=true; flags:=C.tulpar_linuxkpi_irq_save(); C.tulpar_linuxkpi_preempt_disable(); C.tulpar_linuxkpi_preempt_disable()
+ depth:=C.tulpar_linuxkpi_preempt_count(); irq:=C.tulpar_linuxkpi_irq_flags()
  check_kstrtou8(voidptr(&unsigned_common[0]),unsigned_common.len)
  check_kstrtou16(voidptr(&unsigned_common[0]),unsigned_common.len)
  check_kstrtou32(voidptr(&unsigned_common[0]),unsigned_common.len)
@@ -462,9 +462,9 @@ pub fn kstrtox_tests() { unsafe {
  check__kstrtol(voidptr(&s64_limits[0]),s64_limits.len)
  for i:=usize(0); i<booleans.len; i++ { check_bool(booleans[i].text,booleans[i].error,booleans[i].value) }
  for i:=usize(0); i<guarded.len; i++ { test:=[NumericCase{borrowed[i].text,guarded[i].base,guarded[i].value,guarded[i].error}]!; check_kstrtoull(voidptr(&test[0]),test.len); check_bool(borrowed[i].text,guarded[i].bool_error,guarded[i].boolean) }
- C.assert(C.vmh_live_pages==pages && C.vinix_linuxkpi_preempt_count()==depth && C.vinix_linuxkpi_irq_flags()==irq && C.vmh_current_cpu==original_cpu)
- C.vinix_linuxkpi_preempt_enable_no_resched(); C.vinix_linuxkpi_preempt_enable_no_resched(); C.vinix_linuxkpi_irq_restore(flags); C.vmh_fail_allocation=allocation_failure
- C.assert(C.vinix_linuxkpi_preempt_count()==original_depth && C.vinix_linuxkpi_irq_flags()==original_irq && C.vmh_live_pages==pages)
+ C.assert(C.vmh_live_pages==pages && C.tulpar_linuxkpi_preempt_count()==depth && C.tulpar_linuxkpi_irq_flags()==irq && C.vmh_current_cpu==original_cpu)
+ C.tulpar_linuxkpi_preempt_enable_no_resched(); C.tulpar_linuxkpi_preempt_enable_no_resched(); C.tulpar_linuxkpi_irq_restore(flags); C.vmh_fail_allocation=allocation_failure
+ C.assert(C.tulpar_linuxkpi_preempt_count()==original_depth && C.tulpar_linuxkpi_irq_flags()==original_irq && C.vmh_live_pages==pages)
  for i:=usize(0); i<guarded.len; i++ { C.assert(C.munmap(borrowed[i].mapping,mapping_size)==0) }
  mut pci_token:=u16(0); C.assert(C.kstrtou16(c'9a49',16,&pci_token)==0 && pci_token==39497)
 } }

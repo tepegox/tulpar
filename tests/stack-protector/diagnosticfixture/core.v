@@ -11,8 +11,8 @@ fn C.memcmp(voidptr, voidptr, usize) i32
 fn C.memcpy(voidptr, voidptr, usize) voidptr
 fn C.snprintf(&char, usize, &char, ...) i32
 fn C.puts(&char) i32
-fn C.vinix_stack_guard_message(&char)
-fn C.vinix_stack_guard_diagnostic(u64, u64, u64)
+fn C.tulpar_stack_guard_message(&char)
+fn C.tulpar_stack_guard_diagnostic(u64, u64, u64)
 
 __global (
 	diag_fixture_captured [1024]char
@@ -43,7 +43,7 @@ fn diagnostic(sp u64, pc u64, address u64) {
 		count := C.snprintf(&expected[0], sizeof(expected), c'STACK-GUARD state sp=0x%016llx pc=0x%016llx address=0x%016llx\n', native_sp, native_pc, native_address)
 		C.assert(count > 0 && usize(count) < sizeof(expected))
 		diag_fixture_length = 0
-		C.vinix_stack_guard_diagnostic(sp, pc, address)
+		C.tulpar_stack_guard_diagnostic(sp, pc, address)
 		C.assert(diag_fixture_length == usize(count) && C.memcmp(&diag_fixture_captured[0], &expected[0], diag_fixture_length) == 0)
 	}
 }
@@ -53,9 +53,9 @@ pub fn run() i32 {
 	unsafe {
 		bytes := [char(`a`), char(0x80), char(0xff), char(`\n`), char(0), char(`x`), char(0)]!
 		diag_fixture_length = 0
-		C.vinix_stack_guard_message(c'')
+		C.tulpar_stack_guard_message(c'')
 		C.assert(diag_fixture_length == 0)
-		C.vinix_stack_guard_message(&bytes[0])
+		C.tulpar_stack_guard_message(&bytes[0])
 		C.assert(diag_fixture_length == 4 && C.memcmp(&diag_fixture_captured[0], &bytes[0], 4) == 0)
 		diagnostic(0, 0, 0)
 		diagnostic(~u64(0), ~u64(0), ~u64(0))

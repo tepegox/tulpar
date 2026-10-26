@@ -26,13 +26,13 @@ fn prepare(profile string, roots string) ! {
 		root := roots + '/' + architecture
 		for directory in ['bin', 'lib', 'licenses'] { os.mkdir_all(root + '/' + directory)! }
 		files := if profile == 'native' { {'bin/package-hello': 'static', 'bin/counter': 'static', 'bin/memo': 'static'} }
-			else { {'bin/sqlite3': 'pie', 'bin/vinix-linux-runner': 'static', 'lib/libc.so': 'shared', 'lib/libsqlite3.so.0': 'shared'} }
+			else { {'bin/sqlite3': 'pie', 'bin/tulpar-linux-runner': 'static', 'lib/libc.so': 'shared', 'lib/libsqlite3.so.0': 'shared'} }
 		for path, kind in files {
 			os.write_file_array(root + '/' + path, elffixture.image(architecture, kind))!
 			os.chmod(root + '/' + path, 0o755)!
 		}
 		notices := if profile == 'native' { ['application-sdk-MIT.txt', 'v-MIT.txt', 'musl-MIT.txt'] }
-			else { ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'vinix-COPYING'] }
+			else { ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'tulpar-COPYING'] }
 		for name in notices { os.write_file(root + '/licenses/' + name, 'structural fixture notice ' + name)! }
 	}
 }
@@ -81,7 +81,7 @@ fn check() ! {
 				status, diagnostic := invoke(cli, command(profile, roots, destination))!
 				assert status == if before { 0 } else { 1 }, diagnostic
 				assert os.exists(destination) == before
-				assert os.ls(os.dir(roots))!.all(!it.starts_with('.vinix-'))
+				assert os.ls(os.dir(roots))!.all(!it.starts_with('.tulpar-'))
 				println('${profile}/${architecture}/${field}: exit=${status} published=${before}')
 				if !before {
 					assert diagnostic.contains('ELF profile'), diagnostic

@@ -110,12 +110,12 @@ pub fn execute(path &char, argv &&char, env &&char) i32 {
 @[export: 'vksb_errno']
 pub fn error_number() i32 { unsafe { return C.errno } }
 @[export: 'vksb_error']
-pub fn error(operation &char) { unsafe { C.fprintf(C.stderr, c'vinix-sandbox: %s: %s\n', operation, C.strerror(C.errno)) } }
+pub fn error(operation &char) { unsafe { C.fprintf(C.stderr, c'tulpar-sandbox: %s: %s\n', operation, C.strerror(C.errno)) } }
 @[export: 'vksb_bad']
-pub fn print_bad(message &char) { C.fprintf(C.stderr, c'vinix-sandbox: %s\n', message) }
+pub fn print_bad(message &char) { C.fprintf(C.stderr, c'tulpar-sandbox: %s\n', message) }
 @[export: 'vksb_help']
 pub fn print_help(text &char) { C.puts(text) }
-@[export: 'vinix_sandbox_main']
+@[export: 'tulpar_sandbox_main']
 pub fn sandbox_main(argc i32, argv &&char) i32 { return run(argc, argv) }
 $if !security_no_main ? {
  @[export: 'main']

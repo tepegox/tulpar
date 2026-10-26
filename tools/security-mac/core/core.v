@@ -74,7 +74,7 @@ pub fn permissions(text &char, mask &u32) i32 {
 
 fn failed(operation &char) i32 { C.vm_error(operation); return 1 }
 fn usage() i32 {
- C.vm_usage(c'usage: vinix-mac status\n       vinix-mac rule DOMAIN TYPE inspect,read,write,execute,search,create,remove,metadata,ioctl|none\n       vinix-mac label TYPE PATH...\n       vinix-mac seal\n       vinix-mac run DOMAIN PROGRAM [ARG...]\n')
+ C.vm_usage(c'usage: tulpar-mac status\n       tulpar-mac rule DOMAIN TYPE inspect,read,write,execute,search,create,remove,metadata,ioctl|none\n       tulpar-mac label TYPE PATH...\n       tulpar-mac seal\n       tulpar-mac run DOMAIN PROGRAM [ARG...]\n')
  return 2
 }
 
@@ -104,7 +104,7 @@ pub fn run(argc i32, argv &&char) i32 {
   if argc >= 4 && C.strcmp(argv[1], c'label') == 0 {
    if number(argv[2], 29, &kind) != 0 { return usage() }
    for i := i32(3); i < argc; i++ {
-    if C.vm_lsetxattr(argv[i], c'security.vinix', argv[2], C.strlen(argv[2]), 0) != 0 { return failed(argv[i]) }
+    if C.vm_lsetxattr(argv[i], c'security.tulpar', argv[2], C.strlen(argv[2]), 0) != 0 { return failed(argv[i]) }
    }
    return 0
   }

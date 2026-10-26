@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_RCU_CALL_HOST_CONTRACT_H
-#define VINIX_RCU_CALL_HOST_CONTRACT_H
+#ifndef TULPAR_RCU_CALL_HOST_CONTRACT_H
+#define TULPAR_RCU_CALL_HOST_CONTRACT_H
 /* Original records and compiler primitives only. Host transport and tests are
  * V; the production module alone implements queues and grace periods. */
 #include <pthread.h>

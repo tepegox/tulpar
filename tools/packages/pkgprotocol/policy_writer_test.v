@@ -5,9 +5,9 @@ $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
 
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn policy_writer_require(ok bool) {
 	// These checks must remain effective in -prod consumers too.
@@ -213,11 +213,11 @@ fn test_policy_writer_bounds_all_fields_counts_and_escaped_wire_size() {
 	 }
 	oversized := PolicyDocument{ format: 1, policy: PolicySettings{ allowed: escaped_ids, licenses: escaped_licenses } }
 	$if track_heap ? {
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 	}
 	for _ in 0 .. 8 { policy_writer_refused(&oversized) }
 	$if track_heap ? {
-		policy_writer_require(C.vinix_heap_end() == 0 && C.vinix_heap_count() == 0)
+		policy_writer_require(C.tulpar_heap_end() == 0 && C.tulpar_heap_count() == 0)
 	}
 	println('POLICY WRITER UTF-8, every field/count boundary and escaped 8 MiB refusal PASS')
 }
@@ -246,7 +246,7 @@ fn test_policy_writer_repeated_success_refusal_and_double_close_retires_allocati
 		bad := PolicyDocument{ format: 2 }
 		bad_utf8 := PolicyDocument{ format: 1, architecture: '\xff' }
 		semantic := PolicyDocument{ format: 1, architecture: 'unsupported' }
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			policy_writer_roundtrip(&document)
 			policy_writer_refused(&bad)
@@ -263,7 +263,7 @@ fn test_policy_writer_repeated_success_refusal_and_double_close_retires_allocati
 			unsafe { text.free() }
 			panic('semantic response accepted')
 		}
-		policy_writer_require(C.vinix_heap_end() == 0 && C.vinix_heap_count() == 0)
+		policy_writer_require(C.tulpar_heap_end() == 0 && C.tulpar_heap_count() == 0)
 		println('POLICY WRITER 1000 encode/decode/refusal/double-close cycles with 256 pins retain zero tracked bytes PASS')
 	}
 }

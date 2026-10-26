@@ -6,7 +6,7 @@ import os
 fn test_fast_exit_and_failed_exec_keep_reserved_identity_and_retire_descriptors() {
 	baseline := os.ls('/dev/fd') or { panic(err) }
 	for index in 0 .. 1000 {
-		command := if index % 2 == 0 { '/usr/bin/true' } else { '/vinix-nonexistent-pty-program' }
+		command := if index % 2 == 0 { '/usr/bin/true' } else { '/tulpar-nonexistent-pty-program' }
 		mut child := spawn_pty([command], os.environ(), '') or { panic(err) }
 		assert child.settle(2) or { panic(err) }
 		assert (child.poll() or { panic(err) }).return_code == if index % 2 == 0 { 0 } else { 127 }

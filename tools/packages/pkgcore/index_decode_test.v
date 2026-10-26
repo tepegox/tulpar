@@ -8,8 +8,8 @@ import tools.packages.signing
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn index_decode_package(id string, architecture string) Package {
@@ -62,7 +62,7 @@ fn test_index_decode_retires_empty_and_growing_results_and_keeps_independent_fie
 			defer { unsafe { text.free() } }
 			last_id := 'app-' + (count - 1).str()
 			tracked := count != 4096 // Full declarations exceed the tracker's live-record table.
-			$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+			$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 			for _ in 0 .. if tracked { cycles } else { 1 } {
 				value := decode_signed_index('fixture', text, 1900000000)!
 				assert value.packages.len == count && value.sequence == ~u64(0) && value.expires == max_i64
@@ -75,7 +75,7 @@ fn test_index_decode_retires_empty_and_growing_results_and_keeps_independent_fie
 				close_decoded_index(value)
 			}
 			$if track_heap ? { if tracked {
-				kept := C.vinix_heap_end(); assert kept == 0
+				kept := C.tulpar_heap_end(); assert kept == 0
 				println('INDEX DECODE ' + architecture + ' ' + count.str() + ' packages: 1000 cycles retained ' + kept.str() + ' bytes')
 			} }
 			if count == 4096 { continue }
@@ -114,10 +114,10 @@ fn test_index_decode_retires_partial_schema_numeric_utf8_and_validation_refusals
 		text.replace('"repository":"fixture"', '"repository":"other"'), text.replace('"path":"bin/app"', '"path":"../app"'),
 		text.replace('"files":[', '"files":[null,'), duplicate]
 	for number, input in inputs {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { index_decode_refusal(input) }
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0, 'signed index refusal retained ' + kept.str()
+			kept := C.tulpar_heap_end(); assert kept == 0, 'signed index refusal retained ' + kept.str()
 			println('INDEX DECODE refusal ' + number.str() + ': 1000 cycles retained ' + kept.str() + ' bytes')
 		}
 	}
@@ -162,7 +162,7 @@ fn test_index_decode_authenticates_original_bytes_and_retires_signed_refusals() 
 		tampered := original + ' '
 		malformed := original.replace('"firmware":false,', '')
 		malformed_signature := index_decode_signature(private, malformed)!
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 64 {
 			value := verify_index(repository, original, signature, 1900000000)!; assert value.sequence == 7; close_decoded_index(value)
 			for invalid in ['not JSON', tampered, malformed]! {
@@ -173,7 +173,7 @@ fn test_index_decode_authenticates_original_bytes_and_retires_signed_refusals() 
 			else { message := err.msg(); assert message.contains('missing required signed package field'); unsafe { message.free(); err.free() } }
 		}
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0
+			kept := C.tulpar_heap_end(); assert kept == 0
 			println('INDEX DECODE signed original/legacy: 64 cycles retained ' + kept.str() + ' bytes')
 		}
 		assert index_decode_signature(private, original)! == signature

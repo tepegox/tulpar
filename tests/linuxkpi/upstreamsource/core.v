@@ -214,7 +214,7 @@ pub fn fetch(base string, pin map[string]json2.Any) !string {
 	temporary := unsafe { cstring_to_vstring(pointer) }
 	defer { if os.exists(temporary) { os.rmdir_all(temporary) or {} } }
 	files := extract(archive, temporary, os.file_name(root) + '/', pin)!
-	os.write_file(os.join_path(temporary, '.vinix-upstream.json'), hosttest.bounds_json(map[string]json2.Any{
+	os.write_file(os.join_path(temporary, '.tulpar-upstream.json'), hosttest.bounds_json(map[string]json2.Any{
 		'archive_sha256': json2.Any(checksum)
 		'files':          hosttest.string_map(files)
 	}))!

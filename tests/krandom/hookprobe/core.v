@@ -12,26 +12,26 @@ fn C.strtold(&char, &&char) C.vkrandom_host_ld
 fn C.kprintf(&char, ...) i32
 fn C.printf(&char, ...) i32
 fn C.memcpy(voidptr, voidptr, usize) voidptr
-fn C.vinix_hw_random64(&u64) i32
-fn C.vinix_test_set_hardware(i32)
+fn C.tulpar_hw_random64(&u64) i32
+fn C.tulpar_test_set_hardware(i32)
 
 @[export: 'main']
 pub fn run() i32 {
 	unsafe {
 		mut word := u64(0x12345678)
-		if C.vinix_hw_random64(&word) != 0 || word != 0x12345678 { return 1 }
-		C.vinix_test_set_hardware(-7)
+		if C.tulpar_hw_random64(&word) != 0 || word != 0x12345678 { return 1 }
+		C.tulpar_test_set_hardware(-7)
 		for _ in 0 .. 512 {
-			if C.vinix_hw_random64(&word) != 1 { return 2 }
+			if C.tulpar_hw_random64(&word) != 1 { return 2 }
 			mut native := C.vkrandom_host_ull{}
 			C.memcpy(&native, &word, sizeof(u64))
 			C.printf(c'HW %016llx\n', native)
 		}
-		C.vinix_test_set_hardware(0)
+		C.tulpar_test_set_hardware(0)
 		old := word
-		if C.vinix_hw_random64(&word) != 0 || old != word { return 3 }
-		C.vinix_test_set_hardware(2)
-		if C.vinix_hw_random64(&word) != 1 { return 4 }
+		if C.tulpar_hw_random64(&word) != 0 || old != word { return 3 }
+		C.tulpar_test_set_hardware(2)
+		if C.tulpar_hw_random64(&word) != 1 { return 4 }
 		mut final := C.vkrandom_host_ull{}
 		C.memcpy(&final, &word, sizeof(u64))
 		C.printf(c'RESUME %016llx\n', final)

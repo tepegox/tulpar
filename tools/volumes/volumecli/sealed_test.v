@@ -7,7 +7,7 @@ import crypto.hmac
 import crypto.sha256
 
 fn scrypt_oracle(password []u8, salt []u8, n int, r int, p int) []u8 {
-	openssl := os.getenv_opt('VINIX_OPENSSL') or {
+	openssl := os.getenv_opt('TULPAR_OPENSSL') or {
 		if os.exists('/opt/homebrew/opt/openssl@3/bin/openssl') { '/opt/homebrew/opt/openssl@3/bin/openssl' }
 		else { os.find_abs_path_of_executable('openssl') or { panic('OpenSSL 3 is required for the independent scrypt oracle') } }
 	}
@@ -91,7 +91,7 @@ fn test_sealed_default_work_profile_matches_openssl_and_authenticates_complete_f
 }
 
 fn test_passphrase_reader_binary_boundaries_private_policy_and_exact_rechecks() {
-	work := os.join_path(os.temp_dir(), 'vinix-sealed-input-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-sealed-input-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/pass'; mut output := [1026]u8{init: 0xa1}
 	assert !read_recovery_file(path.str, &output[1], 0)
@@ -112,7 +112,7 @@ fn test_passphrase_reader_binary_boundaries_private_policy_and_exact_rechecks() 
 }
 
 fn test_sealed_file_roundtrip_wrong_passphrase_fresh_salt_and_no_replacement() {
-	work := os.join_path(os.temp_dir(), 'vinix-sealed-files-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-sealed-files-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	key := []u8{len: 64, init: u8(index * 13 + 7)}
 	for pair in [['key', hex.encode(key)], ['pass', hex.encode('a long private fixture passphrase'.bytes())], ['wrong', hex.encode('another private fixture passphrase'.bytes())]] {
@@ -129,12 +129,12 @@ fn test_sealed_file_roundtrip_wrong_passphrase_fresh_salt_and_no_replacement() {
 	assert sealed_key_file((work + '/sealed').str, (work + '/pass').str, (work + '/restored').str, false) == 1
 	assert sealed_key_file((work + '/key').str, (work + '/pass').str, (work + '/sealed').str, true) == 1
 	assert os.read_bytes(work + '/key')! == key && os.read_bytes(work + '/restored')! == key
-	assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 }
 
 fn test_sealed_cli_syntax_without_input_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'open-sealed'), &char(c'/unused'), &char(c'0'), &char(c'0'), &char(c'512'), &char(c'/unused'), &char(c'/unused'), &char(c'ro'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'open-sealed'), &char(c'/unused'), &char(c'0'), &char(c'0'), &char(c'512'), &char(c'/unused'), &char(c'/unused'), &char(c'ro'), &char(nil)]!
 		assert run(7, &args[0]) == 2 && run(10, &args[0]) == 2
 		args[3] = &char(c'64'); assert run(8, &args[0]) == 2
 		args[3] = &char(c'0'); args[5] = &char(c'0'); assert run(8, &args[0]) == 2

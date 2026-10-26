@@ -10,7 +10,7 @@ import verityimage
 
 #flag -iquote @DIR/../../../kernel/c
 #include "verity.h"
-struct C.vinix_verity {
+struct C.tulpar_verity {
 mut:
 	data_blocks  u64
 	total_blocks u64
@@ -20,7 +20,7 @@ mut:
 }
 
 type ShaFunction = fn (voidptr, usize, voidptr)
-type InitFunction = fn (&C.vinix_verity, u64, &char, usize) i32
+type InitFunction = fn (&C.tulpar_verity, u64, &char, usize) i32
 
 // Stable local xorshift stream. Its inputs are independent of production SHA/geometry.
 struct Random {
@@ -38,8 +38,8 @@ fn (mut state Random) word() u64 {
 fn independent(library string) ! {
 	handle := dl.open_opt(library, dl.rtld_now)!
 	defer { dl.close(handle) }
-	hash := unsafe { ShaFunction(dl.sym_opt(handle, 'vinix_verity_sha256')!) }
-	init := unsafe { InitFunction(dl.sym_opt(handle, 'vinix_verity_init')!) }
+	hash := unsafe { ShaFunction(dl.sym_opt(handle, 'tulpar_verity_sha256')!) }
+	init := unsafe { InitFunction(dl.sym_opt(handle, 'tulpar_verity_init')!) }
 	mut seed := Random{ state: 734 }
 	mut lengths := []int{}
 	for n in 0 .. 130 { lengths << n }
@@ -68,7 +68,7 @@ fn independent(library string) ! {
 	for _ in 0 .. 128 { counts << 1 + seed.word() % ((u64(1) << 51) - 1) }
 	digest := '0'.repeat(64)
 	for count in counts {
-		mut actual := C.vinix_verity{}
+		mut actual := C.tulpar_verity{}
 		result := init(&actual, count, digest.str, 64)
 		expected := verityimage.layout(count) or {
 			assert result == -1
@@ -94,9 +94,9 @@ fn root_host(args []string) ! {
 			return error('The native host test uses the shared verityimage builder; --builder must select its native entry point')
 		}
 	}
-	work := temporary('vinix-verity-host-')!
+	work := temporary('tulpar-verity-host-')!
 	defer { bh.retire(work) }
-	os.write_file(work + '/v.mod', "Module {name:'vinix_verity_host_tests'}\n")!
+	os.write_file(work + '/v.mod', "Module {name:'tulpar_verity_host_tests'}\n")!
 	bh.mkdirs(work + '/verity')!
 	bh.mkdirs(work + '/krandom')!
 	os.cp(bh.root() + '/kernel/block/verity/primitives.v', work + '/verity/primitives.v')!
@@ -118,7 +118,7 @@ fn root_host(args []string) ! {
 	$if macos {
 		common << ['-arch', if policyhost.caller_arch() == 'amd64' { 'x86_64' } else { 'arm64' }]
 	}
-	flags := ['-DVINIX_V_RUNTIME', '-I', bh.root() + '/kernel/c', '-Wno-unused-function',
+	flags := ['-DTULPAR_V_RUNTIME', '-I', bh.root() + '/kernel/c', '-Wno-unused-function',
 		'-ffreestanding', '-fno-builtin', '-fno-strict-aliasing']
 	normal, sanitized := work + '/host', work + '/host-sanitized'
 	for binary in [normal, sanitized] {

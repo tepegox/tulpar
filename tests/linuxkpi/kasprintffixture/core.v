@@ -122,13 +122,13 @@ pub fn rodata_start() voidptr {
 @[export:'kph_rodata_end']
 pub fn rodata_end() voidptr { return unsafe { voidptr(image_last) } }
 
-@[export:'vinix_linuxkpi_page_size']
+@[export:'tulpar_linuxkpi_page_size']
 pub fn page_size() usize { return 4096 }
 
-@[export:'vinix_linuxkpi_may_sleep']
+@[export:'tulpar_linuxkpi_may_sleep']
 pub fn may_sleep() bool { return unsafe { sleepable } }
 
-@[export:'vinix_linuxkpi_alloc_pages']
+@[export:'tulpar_linuxkpi_alloc_pages']
 pub fn allocate(pages usize, reclaim bool) voidptr {
 	unsafe {
 		check(pages != 0 && (!reclaim || sleepable))
@@ -154,7 +154,7 @@ pub fn allocate(pages usize, reclaim bool) voidptr {
 	}
 }
 
-@[export:'vinix_linuxkpi_free_pages']
+@[export:'tulpar_linuxkpi_free_pages']
 pub fn release(base voidptr, pages usize) {
 	unsafe {
 		mut slot := 0
@@ -168,7 +168,7 @@ pub fn release(base voidptr, pages usize) {
 	}
 }
 
-@[export:'vinix_linuxkpi_bug'; noreturn]
+@[export:'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(reason &C.vks_const_char, line i32) {
 	C.printf(c'KASPRINTF unexpected invariant %s:%d\n', reason, line)
 	C.fflush(unsafe { nil })
@@ -232,7 +232,7 @@ fn origin(flags u32, fmt &C.vks_const_char, ...) {
 			else { C.vkf_kvasprintf_const(flags, voidptr(fmt), cursor) }
 		}
 		// Genuine public va_list has by-value pointer/struct semantics outside SysV.
-		if preserved || (call_mode < 2 && C.VINIX_VA_ABI != 3) {
+		if preserved || (call_mode < 2 && C.TULPAR_VA_ABI != 3) {
 			check(C.memcmp(&before[0], cursor, abiargs.native_size()) == 0)
 		} else {
 			check(abiargs.integer(cursor) == 0x425a6719)
@@ -434,6 +434,6 @@ pub fn main(_argc i32, _argv &&char) i32 {
 			check(page_bases[slot] == nil && page_counts[slot] == 0)
 		}
 	}
-	C.printf(c'PASS: original formatted allocation; genuine va_start typed public lists, named2 capture, ownership, GFP/OOM, checked counts and real WARN; ABI=%d scenarios=%u assertions=%u warnings=%u live_pages=%zu\n', C.VINIX_VA_ABI, unsafe { scenarios }, unsafe { assertions }, unsafe { warnings }, unsafe { live_pages })
+	C.printf(c'PASS: original formatted allocation; genuine va_start typed public lists, named2 capture, ownership, GFP/OOM, checked counts and real WARN; ABI=%d scenarios=%u assertions=%u warnings=%u live_pages=%zu\n', C.TULPAR_VA_ABI, unsafe { scenarios }, unsafe { assertions }, unsafe { warnings }, unsafe { live_pages })
 	return 0
 }

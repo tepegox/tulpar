@@ -16,12 +16,12 @@ import x86.hpet as smp_hpet_clock
 
 type SmpProbeCallback = fn (voidptr)
 type SmpProbeCondition = fn (i32, voidptr) bool
-fn C.vinix_linuxkpi_smp_fixture_csd_bytes() u32
-fn C.vinix_linuxkpi_smp_fixture_single(i32, SmpProbeCallback, voidptr, i32) i32
-fn C.vinix_linuxkpi_smp_fixture_many(SmpProbeCallback, voidptr, bool, SmpProbeCondition)
+fn C.tulpar_linuxkpi_smp_fixture_csd_bytes() u32
+fn C.tulpar_linuxkpi_smp_fixture_single(i32, SmpProbeCallback, voidptr, i32) i32
+fn C.tulpar_linuxkpi_smp_fixture_many(SmpProbeCallback, voidptr, bool, SmpProbeCondition)
 fn C.vks_smp_async(i32, voidptr) i32
 fn C.vks_smp_csd_set_callback(voidptr, SmpProbeCallback, voidptr)
-fn C.vinix_linuxkpi_workirq_native_selftest() i32
+fn C.tulpar_linuxkpi_workirq_native_selftest() i32
 
 const smp_probe_cpus = 4
 const smp_probe_timeout_ns = u64(10000000000)
@@ -179,9 +179,9 @@ fn smp_probe_many_calls() bool {
 	for mode in u32(0) .. u32(3) {
 		smp_many_probe = SmpManyProbe{ mode: mode, count: u32(cpu_locals.len) }
 		if mode == 2 {
-			C.vinix_linuxkpi_smp_fixture_many(smp_probe_many_callback, unsafe { nil }, true, smp_probe_many_condition)
+			C.tulpar_linuxkpi_smp_fixture_many(smp_probe_many_callback, unsafe { nil }, true, smp_probe_many_condition)
 		} else {
-			C.vinix_linuxkpi_smp_fixture_many(smp_probe_many_callback, unsafe { nil }, mode == 1, unsafe { nil })
+			C.tulpar_linuxkpi_smp_fixture_many(smp_probe_many_callback, unsafe { nil }, mode == 1, unsafe { nil })
 		}
 		for target := u32(0); target < u32(cpu_locals.len); target++ {
 			expected := if mode == 0 { target != 0 } else if mode == 1 { true } else { target & 1 == 0 }
@@ -243,7 +243,7 @@ fn smp_probe_lifecycle() bool {
 		state.sequence = 1
 		state.expected_cpu = target
 		state.expected_depth = if target == 0 { u32(0) } else { u32(1) }
-		if C.vinix_linuxkpi_smp_fixture_single(i32(target), smp_probe_callback, state, 1) != 0
+		if C.tulpar_linuxkpi_smp_fixture_single(i32(target), smp_probe_callback, state, 1) != 0
 			|| !smp_probe_wait(target, 1, false) || !smp_probe_task(0) { return false }
 	}
 	if !smp_probe_many_calls() { return false }
@@ -332,7 +332,7 @@ fn smp_probe_lifecycle() bool {
 }
 
 fn smp_calls_native_selftest() bool {
-	if cpu_locals.len < smp_probe_cpus || C.vinix_linuxkpi_smp_fixture_csd_bytes() != 32 { return false }
+	if cpu_locals.len < smp_probe_cpus || C.tulpar_linuxkpi_smp_fixture_csd_bytes() != 32 { return false }
 	for round in 0 .. 3 {
 		before := selftest_free_baseline()
 		if !smp_probe_lifecycle() { return false }
@@ -355,13 +355,13 @@ fn smp_calls_native_selftest() bool {
 fn work_irq_native_selftest() bool {
 	for round in 0 .. 3 {
 		before := selftest_free_baseline()
-		if C.vinix_linuxkpi_workirq_native_selftest() != 0 { return false }
+		if C.tulpar_linuxkpi_workirq_native_selftest() != 0 { return false }
 		C.kprintf(c'linuxkpi: work IRQ identity warmup %d free-byte baseline=%llu after=%llu\n', round + 1, before, selftest_free_baseline())
 	}
 	mut before := CPUFeatureHeapSnapshot{}
 	mut after := CPUFeatureHeapSnapshot{}
 	free_before := selftest_free_baseline()
-	if !cpu_feature_test_heap(unsafe { &before }) || C.vinix_linuxkpi_workirq_native_selftest() != 0 { return false }
+	if !cpu_feature_test_heap(unsafe { &before }) || C.tulpar_linuxkpi_workirq_native_selftest() != 0 { return false }
 	free_after := selftest_free_baseline()
 	if !cpu_feature_test_heap(unsafe { &after }) { return false }
 	mut equal := before.count == after.count

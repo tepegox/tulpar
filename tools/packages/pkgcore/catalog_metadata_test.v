@@ -6,9 +6,9 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn cache_snapshot() Snapshot {
 	return Snapshot{ repository: Repository{ id: 'trusted', url: 'file:///srv/packages', public_key: 'a'.repeat(64) },
@@ -73,10 +73,10 @@ fn test_repeated_snapshot_encoding_retires_accepted_and_rejected_buffers() {
 		rejected := [cache_boundary_snapshot(), base]
 		for snapshots in [accepted, rejected] {
 			for _ in 0 .. 16 {
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 				if encoded := encode_cache_fixture(snapshots) { unsafe { encoded.free() } }
 				else { message := err.msg(); unsafe { message.free(); err.free() } }
-				kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained'
 			}
 		}

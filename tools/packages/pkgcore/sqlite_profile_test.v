@@ -10,16 +10,16 @@ fn sqlite_fixture_elf(architecture string, pie bool, shared bool) []u8 {
 }
 
 fn sqlite_profile_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-sqlite-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-sqlite-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		for directory in ['bin', 'lib', 'licenses'] { os.mkdir_all(root + '/' + directory)! }
-		for path, kind in {'bin/sqlite3': 'pie', 'bin/vinix-linux-runner': 'static',
+		for path, kind in {'bin/sqlite3': 'pie', 'bin/tulpar-linux-runner': 'static',
 			'lib/libc.so': 'shared', 'lib/libsqlite3.so.0': 'shared'} {
 			os.write_file_array(root + '/' + path, sqlite_fixture_elf(architecture, kind == 'pie', kind == 'shared'))!
 			os.chmod(root + '/' + path, 0o755)!
 		}
-		for name in ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'vinix-COPYING'] { os.write_file(root + '/licenses/' + name, 'notice ' + name)! }
+		for name in ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'tulpar-COPYING'] { os.write_file(root + '/licenses/' + name, 'notice ' + name)! }
 	}
 	return work
 }
@@ -52,7 +52,7 @@ fn test_sqlite_profile_emits_complete_canonical_pins_and_separate_runtime_with_n
 	new_recipe := catalog_recipe(read_metadata(updated.catalog)!)!
 	assert recipe.packages.filter(it.recipe.manifest.id == sqlite_application_id)
 		== new_recipe.packages.filter(it.recipe.manifest.id == sqlite_application_id)
-	assert os.ls(work)!.all(!it.starts_with('.vinix-sqlite-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-sqlite-profile-'))
 }
 
 fn test_sqlite_profile_rejects_wrong_targets_interpreters_and_missing_notices_without_publication() {
@@ -75,7 +75,7 @@ fn test_sqlite_profile_rejects_wrong_targets_interpreters_and_missing_notices_wi
 	mut refused := false
 	sqlite_catalog('3.53.4', '1.0.0', work + '/roots', work + '/notice') or { refused = err.msg().contains('redistribution notice') }
 	assert refused && !os.exists(work + '/notice')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-sqlite-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-sqlite-profile-'))
 }
 
 fn test_sqlite_profile_requires_both_targets_compatible_versions_and_new_destination() {
@@ -132,7 +132,7 @@ fn test_sqlite_profile_rechecks_imported_interpreter_and_allows_exact_retry() {
 		refused = err.msg().contains('imported') && err.msg().contains('NUL-terminated interpreter')
 	}
 	assert refused && !os.exists(work + '/refused')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-sqlite-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-sqlite-profile-'))
 	os.write_file_array(work + '/roots/x86_64/bin/sqlite3', elffixture.image('x86_64', 'pie'))!
 	assert sqlite_catalog('3.53.4', '1.0.0', work + '/roots', work + '/refused')!.catalog_sha256 == baseline.catalog_sha256
 }
@@ -149,7 +149,7 @@ fn test_sqlite_profile_rechecks_imported_notices_cleans_failure_and_allows_exact
 			denied = err.msg().contains('unexpected payload path') || err.msg().contains('invalid redistribution/build notice')
 		}
 		assert denied && !os.exists(work + '/refused')
-		assert os.ls(work)!.all(!it.starts_with('.vinix-sqlite-profile-'))
+		assert os.ls(work)!.all(!it.starts_with('.tulpar-sqlite-profile-'))
 		if os.is_dir(path) { os.rmdir_all(path)! } else { os.rm(path)! }
 		os.write_file(path, original)!
 		assert sqlite_catalog('3.53.4', '1.0.0', work + '/roots', work + '/refused')!.catalog_sha256 == baseline.catalog_sha256
@@ -160,5 +160,5 @@ fn test_sqlite_profile_rechecks_imported_notices_cleans_failure_and_allows_exact
 	sqlite_catalog_with('3.53.4', '1.0.0', work + '/roots', work + '/refused', CatalogOptions{ available_space: sqlite_profile_zero_space }) or {
 		full = err.msg().contains('insufficient disk space')
 	}
-	assert full && !os.exists(work + '/refused') && os.ls(work)!.all(!it.starts_with('.vinix-sqlite-profile-'))
+	assert full && !os.exists(work + '/refused') && os.ls(work)!.all(!it.starts_with('.tulpar-sqlite-profile-'))
 }

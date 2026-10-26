@@ -29,7 +29,7 @@
 
 static void fail(const char *what)
 {
-	printf("VINIX NO SYNC: FAIL %s errno=%d\n", what, errno);
+	printf("TULPAR NO SYNC: FAIL %s errno=%d\n", what, errno);
 	fflush(stdout);
 	for (;;)
 		pause();
@@ -37,7 +37,7 @@ static void fail(const char *what)
 
 static void done(const char *step, unsigned long ino)
 {
-	printf("VINIX NO SYNC: DONE %s ino=%lu\n", step, ino);
+	printf("TULPAR NO SYNC: DONE %s ino=%lu\n", step, ino);
 	fflush(stdout);
 	for (;;)
 		pause();
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
 		fail("reading /no-sync-step");
 	close(fd);
 	step[strcspn(step, "\n")] = 0;
-	printf("VINIX NO SYNC: START %s\n", step);
+	printf("TULPAR NO SYNC: START %s\n", step);
 
 	if (strcmp(step, "mkdir") == 0) {
 		if (mkdir("/root/made", 0755) != 0)

@@ -3,7 +3,7 @@ module volumecli
 
 fn scrub_view_fixture(mask int) string {
 	zero := '0'.repeat(64); mut changed := 0; for i in 0 .. 3 { if mask & (1 << i) != 0 { changed++ } }
-	mut text := 'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=3 matched=${3 - changed} changed=${changed} algorithm=sha256 reference_sha256=${zero}\n'
+	mut text := 'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=3 matched=${3 - changed} changed=${changed} algorithm=sha256 reference_sha256=${zero}\n'
 	for i in 0 .. 3 {
 		different := mask & (1 << i) != 0
 		text += 'disk=${if i == 2 { 1 } else { 0 }} slot=${63 - i} offset=${i * 4096} bytes=512 readonly=${i & 1} result=${if different { 'changed' } else { 'match' }} expected_sha256=${zero} actual_sha256=${if different { 'f'.repeat(64) } else { zero }}\n'
@@ -24,7 +24,7 @@ fn test_scrub_view_all_change_masks_truncations_embedded_nuls_and_trailing_bytes
 fn test_scrub_view_rejects_noncanonical_or_inconsistent_headers_and_later_rows() {
 	text := scrub_view_fixture(5)
 	for pair in [
-		['VINIXSR1', 'VINIXSR2'], ['scrubbed-data', 'scrubbed-ciphertext'], ['disks=2', 'disks=0'], ['disks=2', 'disks=65'],
+		['TULPARSR1', 'TULPARSR2'], ['scrubbed-data', 'scrubbed-ciphertext'], ['disks=2', 'disks=0'], ['disks=2', 'disks=65'],
 		['disks=2', 'disks=02'], ['disks=2', 'disks=+2'], ['disks=2', 'disks=18446744073709551616'],
 		['mappings=3', 'mappings=2'], ['mappings=3', 'mappings=4'], ['mappings=3', 'mappings=65'],
 		['matched=1', 'matched=2'], ['changed=2', 'changed=1'], ['algorithm=sha256', 'algorithm=sha512'],
@@ -50,10 +50,10 @@ fn test_scrub_view_rejects_noncanonical_or_inconsistent_headers_and_later_rows()
 fn test_scrub_view_maximum_and_empty_saved_sets_and_producer_compatibility() {
 	zero := '0'.repeat(64)
 	for disks in 1 .. 65 {
-		empty := 'format=VINIXSR1 operation=scrubbed-data disks=${disks} mappings=0 matched=0 changed=0 algorithm=sha256 reference_sha256=${zero}\n'
+		empty := 'format=TULPARSR1 operation=scrubbed-data disks=${disks} mappings=0 matched=0 changed=0 algorithm=sha256 reference_sha256=${zero}\n'
 		assert scrub_report_valid(empty.str, empty.len)
 	}
-	mut text := 'format=VINIXSR1 operation=scrubbed-data disks=64 mappings=64 matched=0 changed=64 algorithm=sha256 reference_sha256=${zero}\n'
+	mut text := 'format=TULPARSR1 operation=scrubbed-data disks=64 mappings=64 matched=0 changed=64 algorithm=sha256 reference_sha256=${zero}\n'
 	for disk in 0 .. 64 { text += 'disk=${disk} slot=${63 - disk} offset=9223372036854774784 bytes=512 readonly=${disk & 1} result=changed expected_sha256=${zero} actual_sha256=' + 'f'.repeat(64) + '\n' }
 	assert text.len > 12000 && scrub_report_valid(text.str, text.len)
 	assert !scrub_report_valid(text.str, 32768) && !scrub_report_valid(text.str, -1)
@@ -69,7 +69,7 @@ fn test_scrub_view_maximum_and_empty_saved_sets_and_producer_compatibility() {
 
 fn test_scrub_view_cli_exact_arity_and_empty_path() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'show-data-scrub'), &char(c'/missing'), &char(c'extra'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'show-data-scrub'), &char(c'/missing'), &char(c'extra'), &char(nil)]!
 		for count in [2, 4, 5] { assert run(count, &args[0]) == 2 }
 		args[2] = &char(c''); assert run(3, &args[0]) == 2
 		args[2] = &char(c'/missing'); assert run(3, &args[0]) == 1

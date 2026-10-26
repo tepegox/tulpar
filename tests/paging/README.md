@@ -4,7 +4,7 @@ Run production codec, crypto, backing-store and mapping functions with host
 fixtures:
 
 ```sh
-V=/path/to/v VINIX_HOST_SANITIZE=1 sh tests/paging/run-host.sh
+V=/path/to/v TULPAR_HOST_SANITIZE=1 sh tests/paging/run-host.sh
 ```
 
 The suite checks 4 KiB/16 KiB compression, malformed streams, RFC 8439 ChaCha20
@@ -36,7 +36,7 @@ tests/paging/run --arch x86_64 --kernel-dir /work/x86/kernel \
 
 The runner creates its own 256 MiB raw swap image and static init, attaches the
 device and requires both encrypted-disk/swapoff and final success verdicts.
-The AArch64 build uses `VINIX_AARCH64_SYSROOT` (default
+The AArch64 build uses `TULPAR_AARCH64_SYSROOT` (default
 `build-aarch64-userland/sysroot`); x86-64 uses `CC_AMD64` (default
 `x86_64-linux-musl-gcc`). QEMU and the existing boot-image tools are required.
 The V runner owns QEMU directly and copies the selected prebuilt kernel into

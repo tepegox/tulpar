@@ -9,7 +9,7 @@ module accountcore
 import time
 
 // Names an account may not take: they are, or read as, something else.
-const reserved_names = ['root', 'admin', 'administrator', 'daemon', 'nobody', 'system', 'vinix',
+const reserved_names = ['root', 'admin', 'administrator', 'daemon', 'nobody', 'system', 'tulpar',
 	'wheel', 'users', 'guest', 'operator', 'sudo', 'bin', 'sys', 'adm', 'tty', 'disk', 'audio',
 	'video', 'input', 'kmem', 'shadow']
 
@@ -322,7 +322,7 @@ pub fn (mut db Database) set_gecos(name string, gecos string) ! {
 	return error('no user ${name}')
 }
 
-// The accounts and groups every Vinix system has, added to a database that
+// The accounts and groups every Tulpar system has, added to a database that
 // lacks them and left alone where they exist. `greeter` is what the login
 // screen runs as: it must be able to draw and read the keyboard, and must
 // not be able to do anything else.
@@ -368,7 +368,7 @@ pub fn (mut db Database) ensure_system_accounts() ! {
 			uid:   id
 			gid:   id
 			gecos: 'Login screen'
-			home:  '/run/vinix/greeter'
+			home:  '/run/tulpar/greeter'
 			shell: '/sbin/nologin'
 		}
 		db.shadows << Shadow{

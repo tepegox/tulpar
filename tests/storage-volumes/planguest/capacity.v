@@ -7,10 +7,10 @@ fn planning_capacity(path &char, disk &char, device &char, expected_bytes &char,
 
 @[direct_array_access]
 fn capacity_view_data() {
-	info := status(c'/dev/mapper/vinix14')
+	info := status(c'/dev/mapper/tulpar14')
 	check(info.start == 16777216 && info.bytes == 8192 && info.flags & 1 == 0,
 		c'new physical tail mapping geometry')
-	fd := C.open(c'/dev/mapper/vinix14', C.O_RDONLY)
+	fd := C.open(c'/dev/mapper/tulpar14', C.O_RDONLY)
 	mut bytes := [4096]u8{}
 	for offset in [i64(0), 4096]! {
 		check(fd >= 0 && C.pread(fd, &bytes[0], 4096, offset) == 4096,
@@ -48,23 +48,23 @@ fn physical_capacity_phase(parent &char, other &char) {
 			forget_boot_check()
 			addition_boot_check()
 			explicit_growth_boot_check()
-			check(status(c'/dev/mapper/vinix14').disk_id == status(parent).disk_id
-				&& status(c'/dev/mapper/vinix9').disk_id == status(other).disk_id,
+			check(status(c'/dev/mapper/tulpar14').disk_id == status(parent).disk_id
+				&& status(c'/dev/mapper/tulpar9').disk_id == status(other).disk_id,
 				c'capacity boot maps the correct physical disks')
-			first := status(c'/dev/mapper/vinix2').generation
-			tail := status(c'/dev/mapper/vinix14').generation
-			capacity_batch(c'/etc/vinix/volumes.vset', c'1', other, c'16777216', c'0', parent, c'25165824', false, 0, unsafe { nil })
+			first := status(c'/dev/mapper/tulpar2').generation
+			tail := status(c'/dev/mapper/tulpar14').generation
+			capacity_batch(c'/etc/tulpar/volumes.vset', c'1', other, c'16777216', c'0', parent, c'25165824', false, 0, unsafe { nil })
 			simple(c'boot-restore', &char(nil), &char(nil), 0)
-			check(status(c'/dev/mapper/vinix2').generation == first
-				&& status(c'/dev/mapper/vinix14').generation == tail, c'capacity boot replay is idempotent')
+			check(status(c'/dev/mapper/tulpar2').generation == first
+				&& status(c'/dev/mapper/tulpar14').generation == tail, c'capacity boot replay is idempotent')
 			C.printf(c'PLAN CAPACITY BOOT RESTORED: exact enlarged identity, old data and new physical tail\n')
 			C.printf(c'PLAN CAPACITY BATCH BOOT PRESERVED\n')
 			capacity_contract_boot_prepare()
 			return
 		}
-		missing(c'/dev/mapper/vinix2'); missing(c'/dev/mapper/vinix5'); missing(c'/dev/mapper/vinix9')
-		missing(c'/dev/mapper/vinix12'); missing(c'/dev/mapper/vinix13'); missing(c'/dev/mapper/vinix14')
-		copy_plan(c'/etc/vinix/volumes.vset', c'/root/saved.vset')
+		missing(c'/dev/mapper/tulpar2'); missing(c'/dev/mapper/tulpar5'); missing(c'/dev/mapper/tulpar9')
+		missing(c'/dev/mapper/tulpar12'); missing(c'/dev/mapper/tulpar13'); missing(c'/dev/mapper/tulpar14')
+		copy_plan(c'/etc/tulpar/volumes.vset', c'/root/saved.vset')
 		fd := C.open(c'/root/saved.vset', C.O_RDONLY)
 		mut original := [6208]u8{}
 		size := C.read(fd, &original[0], 6208)
@@ -98,8 +98,8 @@ fn physical_capacity_phase(parent &char, other &char) {
 		capacity_batch(c'/root/saved.vset', c'1', other, c'16777216', c'0', c'/dev/volume-plan-alias', c'25165824', false, 0, nil)
 		capacity_batch(c'/root/saved.vset', c'1', other, c'16777216', c'0', parent, c'25165824', false, 0, &output[0])
 		check(contains(&output[0], c'request=0 disk=1 action=keep') && contains(&output[0], c'request=1 disk=0 action=keep'), c'durable complete capacity retry')
-		missing(c'/dev/mapper/vinix2')
-		missing(c'/dev/mapper/vinix14')
+		missing(c'/dev/mapper/tulpar2')
+		missing(c'/dev/mapper/tulpar14')
 		preview(c'show-bundle', false, 0, &output[0])
 		check(contains(&output[0], c'disk=0 bytes=25165824 sector=512 identity=mbr:12345678')
 			&& contains(&output[0], c'disk=1 bytes=16777216 sector=512 identity=mbr:12345679')
@@ -107,8 +107,8 @@ fn physical_capacity_phase(parent &char, other &char) {
 		simple(c'restore-bundle', c'/root/saved.vset', &char(nil), 0)
 		grown_view_data()
 		edited_view_data()
-		first := status(c'/dev/mapper/vinix2').generation
-		old := C.open(c'/dev/mapper/vinix2', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar2').generation
+		old := C.open(c'/dev/mapper/tulpar2', C.O_RDONLY)
 		check(old >= 0, c'hold old descriptor across capacity planning')
 		pool_members_batch(c'/root/saved.vset', c'4', c'0', c'16777216', c'16781312', nil, nil, nil, false, true, 0, &output[0])
 		check(contains(&output[0], c'request=0 disk=0 action=add start=16777216 end=16781312 alignment=4096'), c'preview admission on newly adopted physical tail')
@@ -119,11 +119,11 @@ fn physical_capacity_phase(parent &char, other &char) {
 		pool_expand_batch(c'/root/saved.vset', c'4', c'0', c'25165824', nil, nil, false, 0, &output[0])
 		check(contains(&output[0], c'action=keep start=16777216 previous_end=25165824 end=25165824 alignment=4096'), c'durable tail eligibility retry')
 		pool_allocate(c'/root/saved.vset', c'4', c'14', c'4096', false, 0)
-		missing(c'/dev/mapper/vinix14')
+		missing(c'/dev/mapper/tulpar14')
 		planning_capacity(c'/root/saved.vset', c'0', parent, c'25165824', 0)
 		simple(c'restore-bundle', c'/root/saved.vset', &char(nil), 0)
-		tail := status(c'/dev/mapper/vinix14').generation
-		held := C.open(c'/dev/mapper/vinix14', C.O_RDWR)
+		tail := status(c'/dev/mapper/tulpar14').generation
+		held := C.open(c'/dev/mapper/tulpar14', C.O_RDWR)
 		mut bytes := [4096]u8{init: 0xc1}
 		check(held >= 0 && C.pwrite(held, &bytes[0], 4096, 0) == 4096, c'write new physical tail')
 		pool_growth(c'/root/saved.vset', c'pool-grow', c'4', c'14', c'8192', 0)
@@ -134,8 +134,8 @@ fn physical_capacity_phase(parent &char, other &char) {
 			&& C.close(held) == 0, c'held descriptor writes grown physical tail')
 		check(C.pread(old, &bytes[0], 4096, 0) == 4096 && C.close(old) == 0, c'old descriptor remains readable')
 		for byte in bytes { check(byte == 0x6d, c'old descriptor data unchanged') }
-		check(status(c'/dev/mapper/vinix2').generation == first
-			&& status(c'/dev/mapper/vinix14').generation == tail, c'adoption and growth preserve live generations')
+		check(status(c'/dev/mapper/tulpar2').generation == first
+			&& status(c'/dev/mapper/tulpar14').generation == tail, c'adoption and growth preserve live generations')
 		grown_view_data()
 		edited_view_data()
 		capacity_view_data()
@@ -147,9 +147,9 @@ fn physical_capacity_phase(parent &char, other &char) {
 		pool_batch(c'/root/saved.vset', c'4', c'14', c'8192', c'rw', c'18', c'4096', c'ro', true, 0, &output[0])
 		check(contains(&output[0], c'slot=14 action=keep') && contains(&output[0], c'slot=18 action=allocate'), c'mixed existing/new batch preview')
 		pool_batch(c'/root/saved.vset', c'4', c'14', c'8192', c'rw', c'18', c'4096', c'ro', false, 0, nil)
-		missing(c'/dev/mapper/vinix18')
+		missing(c'/dev/mapper/tulpar18')
 		simple(c'restore-bundle', c'/root/saved.vset', nil, 0)
-		check(status(c'/dev/mapper/vinix14').generation == tail, c'mixed batch retains existing tail generation')
+		check(status(c'/dev/mapper/tulpar14').generation == tail, c'mixed batch retains existing tail generation')
 		capacity_growth_batch(parent)
 		pool_batch_boot_check(parent)
 		pool_order(c'/root/saved.vset', c'3', c'1', c'0', false, 0, nil)
@@ -160,7 +160,7 @@ fn physical_capacity_phase(parent &char, other &char) {
 		explicit_growth_boot_prepare()
 		contraction_boot_prepare()
 		resize_boot_prepare()
-		copy_plan(c'/root/saved.vset', c'/etc/vinix/volumes.vset')
+		copy_plan(c'/root/saved.vset', c'/etc/tulpar/volumes.vset')
 		check(C.unlink(c'/dev/volume-plan-alias') == 0 && C.unlink(c'/dev/volume-plan-link') == 0,
 			c'capacity aliases cleanup')
 		marker := C.open(c'/capacity-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))

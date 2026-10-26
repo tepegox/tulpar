@@ -28,7 +28,7 @@
 //
 // Where this reaches nothing: a panel whose _BCM asks the graphics driver
 // to do the work (Intel's, through the OpRegion) is listed and takes levels
-// that change nothing, since there is no such driver. `vinix.acpi_backlight=off`
+// that change nothing, since there is no such driver. `tulpar.acpi_backlight=off`
 // leaves all of it alone.
 @[has_globals]
 module acpipm
@@ -257,7 +257,7 @@ fn video_found(_context voidptr, node uacpi.Node) {
 // Find the panels firmware can dim. After the embedded controller and the
 // other power devices are on the list, so that a sleep reaches these first.
 pub fn initialise_backlight() {
-	if !devcore.boot_flag('vinix.acpi_backlight=', true) {
+	if !devcore.boot_flag('tulpar.acpi_backlight=', true) {
 		return
 	}
 	acpipm_video_driver = devcore.register_driver(devcore.Driver{

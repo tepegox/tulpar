@@ -15,9 +15,9 @@ fn data_scrub_history_digest(row int, state int) &char {
 @[direct_array_access]
 fn data_scrub_history_tool(first &char, second &char, before int, after int, expected i32) {
 	mut actual := [4096]char{}; data_auto_tool(c'compare-data-scrubs', first, second, expected, &actual[0])
-	if expected == 1 { check(C.strstr(&actual[0], c'format=VINIXSR1') == unsafe { nil } && C.strstr(&actual[0], c'disk=') == unsafe { nil }, c'invalid history emits no partial comparison'); return }
+	if expected == 1 { check(C.strstr(&actual[0], c'format=TULPARSR1') == unsafe { nil } && C.strstr(&actual[0], c'disk=') == unsafe { nil }, c'invalid history emits no partial comparison'); return }
 	mut text := [4096]char{}; different := before != after
-	mut length := int(C.snprintf(&text[0], 4096, c'format=VINIXSR1 operation=compared-data-scrubs disks=2 mappings=3 stable=%d changed=%d new_changes=%d restored=%d changed_again=%d algorithm=sha256 reference_sha256=a54001cd53e073d1214f5c2ed19a0d4f14c18f6408ac69a4c65a6cf75f4d3d0a before_report_sha256=%s after_report_sha256=%s\n', if different { 1 } else { 3 }, if different { 2 } else { 0 }, if different && before == 0 { 2 } else { 0 }, if different && after == 0 { 2 } else { 0 }, if different && before != 0 && after != 0 { 2 } else { 0 }, data_scrub_history_hash(before), data_scrub_history_hash(after)))
+	mut length := int(C.snprintf(&text[0], 4096, c'format=TULPARSR1 operation=compared-data-scrubs disks=2 mappings=3 stable=%d changed=%d new_changes=%d restored=%d changed_again=%d algorithm=sha256 reference_sha256=a54001cd53e073d1214f5c2ed19a0d4f14c18f6408ac69a4c65a6cf75f4d3d0a before_report_sha256=%s after_report_sha256=%s\n', if different { 1 } else { 3 }, if different { 2 } else { 0 }, if different && before == 0 { 2 } else { 0 }, if different && after == 0 { 2 } else { 0 }, if different && before != 0 && after != 0 { 2 } else { 0 }, data_scrub_history_hash(before), data_scrub_history_hash(after)))
 	for row in 0 .. 3 {
 		result := if row == 1 || !different { &char(c'stable') } else if after == 0 { &char(c'restored') } else if before == 0 { &char(c'new-change') } else { &char(c'changed-again') }
 		length += int(C.snprintf(unsafe { &text[length] }, usize(4096 - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu before=%s after=%s result=%s expected_sha256=%s before_sha256=%s after_sha256=%s\n', if row == 2 { u32(1) } else { u32(0) }, if row == 0 { u32(2) } else if row == 1 { u32(5) } else { u32(9) }, if row == 1 { u64(2097152) } else { u64(1048576) }, if row == 1 { u64(12288) } else { u64(8192) }, if row == 1 { u64(1) } else { u64(0) }, if row == 1 || before == 0 { &char(c'match') } else { &char(c'changed') }, if row == 1 || after == 0 { &char(c'match') } else { &char(c'changed') }, result, data_reference_digest(row, false), data_scrub_history_digest(row, before), data_scrub_history_digest(row, after)))
@@ -68,18 +68,18 @@ fn data_scrub_history_entry() i32 {
 		check(bad >= 0 && C.fstat(bad, &info) == 0 && C.pwrite(bad, &nul, 1, info.st_size - 2) == 1 && C.fsync(bad) == 0 && C.close(bad) == 0, c'persist malformed last history digest')
 		data_scrub_history_tool(data_scrub_history_path(1), c'/root/invalid-history.txt', 1, 2, 1)
 		copy_scrub_report(data_scrub_history_path(2), c'/root/invalid-history.txt'); bad = C.open(c'/root/invalid-history.txt', C.O_RDWR); mut digit := u8(`b`)
-		at := C.strlen(c'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=3 matched=1 changed=2 algorithm=sha256 reference_sha256=')
+		at := C.strlen(c'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=3 matched=1 changed=2 algorithm=sha256 reference_sha256=')
 		check(bad >= 0 && C.pwrite(bad, &digit, 1, i64(at)) == 1 && C.fsync(bad) == 0 && C.close(bad) == 0, c'persist valid incompatible history reference')
 		data_scrub_history_tool(data_scrub_history_path(1), c'/root/invalid-history.txt', 1, 2, 1); check(C.unlink(c'/root/invalid-history.txt') == 0, c'reclaim invalid history fixture')
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9'); readonly := status(c'/dev/mapper/vinix5'); held := C.open(c'/dev/mapper/vinix9', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9'); readonly := status(c'/dev/mapper/tulpar5'); held := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY)
 		check(held >= 0, c'hold history live mapping'); root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold history writer lock')
-		data_scrub_history_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/vinix2') && second == status(c'/dev/mapper/vinix9') && readonly == status(c'/dev/mapper/vinix5'), c'offline history preserves all live status under writer contention')
+		data_scrub_history_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/tulpar2') && second == status(c'/dev/mapper/tulpar9') && readonly == status(c'/dev/mapper/tulpar5'), c'offline history preserves all live status under writer contention')
 		check(C.pread(held, &change[0], 4096, 0) == 4096 && C.close(held) == 0, c'read held history mapping'); for value in change { check(value == 0x9c, c'preserved history mapping content') }
-		data_scrub_history_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/vinix/volumes.vset'); check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'remove invalid history boot plan')
+		data_scrub_history_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/tulpar/volumes.vset'); check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'remove invalid history boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600)); check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist history phase')
 		C.printf(c'PLAN DATA SCRUB HISTORY PASSED: complete stable/new-change/restored/changed-again findings, full fingerprints, failure precedence and bounded lifetimes\n')
 	} else { check(C.close(phase) == 0, c'close history phase'); data_auto_matrix(other, parent, false); data_scrub_view_matrix(); data_scrub_history_matrix(); C.printf(c'PLAN DATA SCRUB HISTORY REORDERED BOOT PRESERVED\n') }
 	for file in [&char(c'/root/data-output'), &char(c'/root/scrub-output'), &char(c'/root/auto-data-output')]! { if C.unlink(file) != 0 { check(C.errno == C.ENOENT, c'reclaim history captures') } }
-	for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist history artifacts and boot phase') }
+	for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist history artifacts and boot phase') }
 	C.printf(c'PLAN DONE\n'); for { C.pause() }; return 0
 }

@@ -31,7 +31,7 @@ fn stop_child(mut child os.Process, name string) ! {
 }
 
 fn stop_desktop(mut child os.Process, compositor int) ! {
-	// vinix-session supervises the compositor. End the real application first
+	// tulpar-session supervises the compositor. End the real application first
 	// so its supervisor can release the seat and reap it through the normal path.
 	if compositor > 0 && compositor != child.pid && child.is_alive() {
 		if C.kill(compositor, C.SIGKILL) != 0 { return error('cannot stop the ordinary compositor') }
@@ -50,8 +50,8 @@ fn counter_child_present() !bool {
 		defer { unsafe { path.free() } }
 		line := os.read_file(path) or { continue }
 		defer { unsafe { line.free() } }
-		if line.starts_with('/usr/bin/vinix-package\x00') &&
-			line.contains('\x00run-window\x00org.vinix.counter\x00') {
+		if line.starts_with('/usr/bin/tulpar-package\x00') &&
+			line.contains('\x00run-window\x00org.tulpar.counter\x00') {
 			return true
 		}
 		program := line.all_before('\x00')
@@ -88,7 +88,7 @@ fn command(arguments []string, input string) ! {
 fn check_compositor_identity() !int {
 	for pid in os.ls('/proc')! {
 		line := os.read_file('/proc/' + pid + '/cmdline') or { continue }
-		if !line.starts_with('/usr/bin/vinix-desktop\x00') ||
+		if !line.starts_with('/usr/bin/tulpar-desktop\x00') ||
 			!line.contains('--open=Software') {
 			continue
 		}
@@ -117,11 +117,11 @@ fn check_compositor_identity() !int {
 			!folders.contains('XDG_DOCUMENTS_DIR="/home/alex/Documents"') {
 			return error('compositor prepared folders outside the account home')
 		}
-		if os.exists('/root/.vinix-user') || os.exists('/home/alex/.vinix-user') {
+		if os.exists('/root/.tulpar-user') || os.exists('/home/alex/.tulpar-user') {
 			return error('ordinary compositor created a legacy registration record')
 		}
 		{
-			marker := os.lstat('/run/user/1000/vinix-desktop-ready')!
+			marker := os.lstat('/run/user/1000/tulpar-desktop-ready')!
 			if marker.uid != 1000 || marker.mode & 0o170000 != 0o100000 || marker.mode & 0o022 != 0 {
 				return error('ordinary compositor did not publish an account-owned ready marker')
 			}
@@ -142,7 +142,7 @@ fn run() ! {
 	os.chmod('/tmp', 0o1777)!
 	os.setenv('PATH', '/usr/sbin:/usr/bin:/sbin:/bin', true)
 	os.setenv('HOME', '/root', true)
-	os.setenv('VINIX_SYSTEM_SESSION', '1', true)
+	os.setenv('TULPAR_SYSTEM_SESSION', '1', true)
 	if !os.exists('/etc/software-maintenance-installed') ||
 		os.read_file('/etc/software-maintenance-mode')! != 'ordinary\n' {
 		return error('requires an installed ordinary-account fixture')
@@ -151,10 +151,10 @@ fn run() ! {
 	if fresh {
 		require_uninstalled()!
 		println('SOFTWARE MAINTENANCE preparing ordinary administrator account')
-		command(['/usr/sbin/vinix-account', 'init'], '')!
-		command(['/usr/sbin/vinix-account', 'add', 'alex', 'Alex Example', 'admin'], 'graphical acceptance password\n')!
+		command(['/usr/sbin/tulpar-account', 'init'], '')!
+		command(['/usr/sbin/tulpar-account', 'add', 'alex', 'Alex Example', 'admin'], 'graphical acceptance password\n')!
 		println('SOFTWARE MAINTENANCE ordinary administrator account prepared')
-		command(['/usr/bin/vinix-package', 'update'], '')!
+		command(['/usr/bin/tulpar-package', 'update'], '')!
 		require_uninstalled()!
 	}
 	if fresh {
@@ -168,13 +168,13 @@ fn run() ! {
 			if os.exists(path) { return error('home acceptance artifact already existed: ' + path) }
 		}
 	}
-	mut authentication := os.new_process('/usr/sbin/vinix-authd')
+	mut authentication := os.new_process('/usr/sbin/tulpar-authd')
 	defer {
 		stop_child(mut authentication, 'authentication service') or { eprintln('SOFTWARE MAINTENANCE FAIL: ' + err.msg()) }
 	}
 	authentication.set_args(['--foreground'])
 	authentication.run()
-	for !os.exists('/run/vinix/auth.sock') {
+	for !os.exists('/run/tulpar/auth.sock') {
 		if !authentication.is_alive() { return error('authentication service exited') }
 		time.sleep(50 * time.millisecond)
 	}
@@ -182,28 +182,28 @@ fn run() ! {
 	// Holding its inode open prevents unlink/recreate from reusing that inode.
 	mut previous_marker := os.File{}
 	mut previous_inode := u64(0)
-	if os.exists('/run/user/1000/vinix-desktop-ready') {
-		previous_marker = os.open('/run/user/1000/vinix-desktop-ready')!
-		previous_inode = (os.lstat('/run/user/1000/vinix-desktop-ready')!).inode
+	if os.exists('/run/user/1000/tulpar-desktop-ready') {
+		previous_marker = os.open('/run/user/1000/tulpar-desktop-ready')!
+		previous_inode = (os.lstat('/run/user/1000/tulpar-desktop-ready')!).inode
 	}
 	defer { if previous_marker.is_opened { previous_marker.close() } }
-	mut desktop := os.new_process('/usr/sbin/vinix-session')
+	mut desktop := os.new_process('/usr/sbin/tulpar-session')
 	mut compositor_pid := 0
 	defer {
 		stop_desktop(mut desktop, compositor_pid) or { eprintln('SOFTWARE MAINTENANCE FAIL: ' + err.msg()) }
 	}
-	desktop.set_args(['run', '--seat', 'alex', '/usr/bin/vinix-desktop', '--open=Software'])
+	desktop.set_args(['run', '--seat', 'alex', '/usr/bin/tulpar-desktop', '--open=Software'])
 	desktop.run()
 	println('SOFTWARE MAINTENANCE waiting for real Counter pointer input')
 	deadline := time.sys_mono_now() + 1200 * time.second
 	for {
 		if !desktop.is_alive() || time.sys_mono_now() >= deadline { return error('ordinary maintenance desktop did not become ready') }
-		marker := os.lstat('/run/user/1000/vinix-desktop-ready') or { os.Stat{} }
+		marker := os.lstat('/run/user/1000/tulpar-desktop-ready') or { os.Stat{} }
 		if marker.inode != 0 && marker.inode != previous_inode &&
-			(os.read_file('/run/user/1000/vinix-desktop-ready') or { '' }) == 'ready\n' {
+			(os.read_file('/run/user/1000/tulpar-desktop-ready') or { '' }) == 'ready\n' {
 			compositor_pid = check_compositor_identity()!
 			if previous_marker.is_opened { previous_marker.close() }
-			println('vinix-desktop: ready')
+			println('tulpar-desktop: ready')
 			break
 		}
 		time.sleep(100 * time.millisecond)

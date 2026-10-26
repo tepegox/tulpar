@@ -27,7 +27,7 @@ fn C.memcpy(voidptr, voidptr, usize) voidptr
 @[export: 'test_sparse_tmpfs_shared_mapping']
 pub fn test_sparse_tmpfs_shared_mapping() i32 {
 	unsafe {
-		path := &char(c'/dev/shm/vinix-qemu-core-sparse')
+		path := &char(c'/dev/shm/tulpar-qemu-core-sparse')
 		size := usize(64 * 1024 * 1024)
 		mut before := C.vqc_sysinfo{}
 		mut sized := C.vqc_sysinfo{}

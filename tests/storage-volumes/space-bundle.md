@@ -4,13 +4,13 @@ Run the maintained V controller in private work directories:
 
 ```sh
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --host --work /tmp/vinix-plan-space-host
+  --host --work /tmp/tulpar-plan-space-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm/kernel/bin/vinix \
-  --work /tmp/vinix-plan-space-arm
+  --arch aarch64 --kernel /path/to/arm/kernel/bin/tulpar \
+  --work /tmp/tulpar-plan-space-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86/kernel/bin/vinix \
-  --work /tmp/vinix-plan-space-x86
+  --arch amd64 --kernel /path/to/x86/kernel/bin/tulpar \
+  --work /tmp/tulpar-plan-space-x86
 ```
 
 `plan_space_test.v` runs with the existing plan tests under ASan/UBSan. An

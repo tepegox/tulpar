@@ -42,7 +42,7 @@ fn main() {
 	os.mkdir_all(os.args[1])!
 	output := os.real_path(os.args[1])
 	cache := '${output}/downloads'
-	root := '${output}/staging/usr/libexec/vinix-emacs/root'
+	root := '${output}/staging/usr/libexec/tulpar-emacs/root'
 	os.mkdir_all(root)!
 	mut packages := []alpinecore.Package{}
 	for repository in ['main', 'community'] {

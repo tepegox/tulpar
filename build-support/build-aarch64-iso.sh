@@ -1,16 +1,16 @@
 #!/bin/bash
 # Assemble an aarch64 UEFI ISO around an already-built kernel and initramfs.
 # Limine's EFI boot image comes from its pinned release; the loader inside it
-# is that release built with Vinix's base revision patch
+# is that release built with Tulpar's base revision patch
 # (scripts/build-limine-aarch64.v), since upstream Limine refuses the
 # kernel's base revision 2 on arm64.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-BUILD_DIR="${VINIX_AARCH64_ISO_BUILD_DIR:-$SCRIPT_DIR/build-aarch64-iso}"
-KERNEL="${VINIX_AARCH64_KERNEL:-$SCRIPT_DIR/build-aarch64-kernel/bin/vinix}"
-INITRAMFS="${VINIX_AARCH64_INITRAMFS:-$SCRIPT_DIR/build-support/init-aarch64/initramfs.tar}"
-OUTPUT_ISO="${VINIX_AARCH64_ISO:-$SCRIPT_DIR/vinix-aarch64.iso}"
+BUILD_DIR="${TULPAR_AARCH64_ISO_BUILD_DIR:-$SCRIPT_DIR/build-aarch64-iso}"
+KERNEL="${TULPAR_AARCH64_KERNEL:-$SCRIPT_DIR/build-aarch64-kernel/bin/tulpar}"
+INITRAMFS="${TULPAR_AARCH64_INITRAMFS:-$SCRIPT_DIR/build-support/init-aarch64/initramfs.tar}"
+OUTPUT_ISO="${TULPAR_AARCH64_ISO:-$SCRIPT_DIR/tulpar-aarch64.iso}"
 . "$SCRIPT_DIR/build-support/limine-binary.sh"
 
 case "$BUILD_DIR" in
@@ -68,7 +68,7 @@ chmod u+w "$UEFI_CD"
 MTOOLS_SKIP_CHECK=1 mcopy -o -i "$UEFI_CD" "$BOOTAA64" ::/EFI/BOOT/BOOTAA64.EFI
 
 mkdir -p "$ISO_ROOT/boot" "$ISO_ROOT/EFI/BOOT"
-install -m644 "$KERNEL" "$ISO_ROOT/boot/vinix"
+install -m644 "$KERNEL" "$ISO_ROOT/boot/tulpar"
 install -m644 "$INITRAMFS" "$ISO_ROOT/boot/initramfs.tar"
 # The image goes in compressed (below); Limine loads it as it is.
 sed 's#^\(    module_path: boot():/boot/initramfs\.tar\)$#\1.gz#' \
@@ -80,14 +80,14 @@ grep -q 'module_path: boot():/boot/initramfs\.tar\.gz$' "$ISO_ROOT/boot/limine.c
 # A machine booted from the ISO keeps its system on a blank disk if it has
 # one, installing it there on the first boot (kernel/sysdisk). The entry is the
 # file's last, so the option goes at the end.
-printf '    cmdline: vinix.disk=auto\n' >> "$ISO_ROOT/boot/limine.conf"
+printf '    cmdline: tulpar.disk=auto\n' >> "$ISO_ROOT/boot/limine.conf"
 # The image's identity, which a system installed from it keeps in
-# /.vinix-image-id: an ISO with a different image updates that system. Taken
+# /.tulpar-image-id: an ISO with a different image updates that system. Taken
 # from the image's contents, so an unchanged image rebuilt is no update.
 mkdir -p "$IMAGE_ID_DIR"
-sha256_file "$INITRAMFS" | cut -c1-16 > "$IMAGE_ID_DIR/.vinix-image-id"
+sha256_file "$INITRAMFS" | cut -c1-16 > "$IMAGE_ID_DIR/.tulpar-image-id"
 COPYFILE_DISABLE=1 tar --format=ustar -rf "$ISO_ROOT/boot/initramfs.tar" \
-    -C "$IMAGE_ID_DIR" ./.vinix-image-id
+    -C "$IMAGE_ID_DIR" ./.tulpar-image-id
 # Ship the image gzip-compressed, as Ubuntu, Debian and Arch ship their
 # initramfs compressed: the bootloader reads about a third of the bytes and the
 # kernel inflates them (kernel/initramfs/gzip.v). The header's comment field
@@ -102,7 +102,7 @@ fi
 {
     # ID1 ID2, deflate, FCOMMENT, no mtime, maximum compression, Unix.
     printf '\037\213\010\020\000\000\000\000\002\003'
-    printf 'vinix-image-id=%s\000' "$(cat "$IMAGE_ID_DIR/.vinix-image-id")"
+    printf 'tulpar-image-id=%s\000' "$(cat "$IMAGE_ID_DIR/.tulpar-image-id")"
     tail -c +11 "$ISO_ROOT/boot/initramfs.plain.gz"
 } > "$ISO_ROOT/boot/initramfs.tar.gz"
 rm -f "$ISO_ROOT/boot/initramfs.tar" "$ISO_ROOT/boot/initramfs.plain.gz"
@@ -110,7 +110,7 @@ install -m644 "$UEFI_CD" "$ISO_ROOT/boot/limine-uefi-cd.bin"
 install -m644 "$BOOTAA64" "$ISO_ROOT/EFI/BOOT/BOOTAA64.EFI"
 
 mkdir -p "$(dirname "$OUTPUT_ISO")"
-OUTPUT_ISO_TMP="$(mktemp "$(dirname "$OUTPUT_ISO")/.vinix-aarch64.iso.XXXXXX")"
+OUTPUT_ISO_TMP="$(mktemp "$(dirname "$OUTPUT_ISO")/.tulpar-aarch64.iso.XXXXXX")"
 echo "==> Assembling $OUTPUT_ISO..."
 xorriso -as mkisofs -R -r -J \
     --efi-boot boot/limine-uefi-cd.bin \

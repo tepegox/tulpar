@@ -52,7 +52,7 @@ fn mount_flags_checks(writable int, readonly int) {
 			check(C.setgroups(0, nil) == 0 && C.setgid(1000) == 0 && C.setuid(1000) == 0, 443)
 			for wanted in [0x20, 0x10, 0x30, 0]! {
 				mount_flags_set(writable, wanted, C.EPERM)
-				// Existing Vinix capability admission precedes mount policy.
+				// Existing Tulpar capability admission precedes mount policy.
 				mount_flags_set(readonly, wanted, C.EPERM)
 				check(mount_flags_get(writable) == 0 && mount_flags_get(readonly) == 0, 443)
 			}

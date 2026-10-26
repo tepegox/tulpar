@@ -127,7 +127,7 @@ fn check(ok bool, line i32) bool {
 			183 { &char(c'open_log_at(dir, "../escape", owner, -1) == -1') }
 			184 { &char(c'fchmod(dir, 0770) == 0 && open_log_at(dir, "bad.log", owner, -1) == -1') }
 			185 { &char(c'fchmod(dir, 0700) == 0') }
-			187 { &char(c'open_log("/tmp/should-not-be-created-vinix-audit.log", -1) == -1') }
+			187 { &char(c'open_log("/tmp/should-not-be-created-tulpar-audit.log", -1) == -1') }
 			188 { &char(c'renameat(dir, "audit.log", dir, "rotated.log") == 0') }
 			190 { &char(c'rotated >= 0 && append(rotated, &o, owner) == 0') }
 			192 { &char(c'unlinkat(dir, "rotated.log", 0) == 0 && append(fd, &o, owner) == -1') }
@@ -286,7 +286,7 @@ fn parsing_tests() i32 {
 fn storage_tests() i32 {
 	unsafe {
 		path := &char(C.__builtin_alloca(30))
-		C.strcpy(path, c'/tmp/vinix-audit-tests.XXXXXX')
+		C.strcpy(path, c'/tmp/tulpar-audit-tests.XXXXXX')
 		if !check(C.mkdtemp(path) != nil, 157) { return 1 }
 		dir := C.open(path, C.O_RDONLY | C.O_DIRECTORY)
 		if !check(dir >= 0, 159) { return 1 }
@@ -318,7 +318,7 @@ fn storage_tests() i32 {
 		if !check(C.vka_open_log_at(dir, c'../escape', owner, -1) == -1, 183) { return 1 }
 		if !check(C.fchmod(dir, u32(0o770)) == 0 && C.vka_open_log_at(dir, c'bad.log', owner, -1) == -1, 184) { return 1 }
 		if !check(C.fchmod(dir, u32(0o700)) == 0, 185) { return 1 }
-		if !check(C.vka_open_log(c'/tmp/should-not-be-created-vinix-audit.log', -1) == -1, 187) { return 1 }
+		if !check(C.vka_open_log(c'/tmp/should-not-be-created-tulpar-audit.log', -1) == -1, 187) { return 1 }
 		if !check(C.renameat(dir, c'audit.log', dir, c'rotated.log') == 0, 188) { return 1 }
 		rotated := C.vka_open_log_at(dir, c'audit.log', owner, fd)
 		if !check(rotated >= 0 && C.vka_append(rotated, o, owner) == 0, 190) { return 1 }

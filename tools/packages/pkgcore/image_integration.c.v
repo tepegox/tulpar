@@ -7,10 +7,10 @@ fn C.symlinkat(&char, int, &char) int
 
 const image_integration_sources = ['tools/packages/signing/LICENSE', 'tools/packages/appsdk/LICENSE',
 	'tools/accounts/actions/packages-change', 'tools/accounts/actions/packages-launch']!
-const image_integration_parents = ['usr/share/licenses/vinix-packages', 'usr/share/licenses/vinix-packages',
-	'usr/bin', 'usr/share/vinix/actions', 'usr/share/vinix/actions', 'usr/share/applications']!
-const image_integration_names = ['ed25519-MIT.txt', 'application-sdk-MIT.txt', 'vinix-software',
-	'packages-change', 'packages-launch', 'vinix-packages']!
+const image_integration_parents = ['usr/share/licenses/tulpar-packages', 'usr/share/licenses/tulpar-packages',
+	'usr/bin', 'usr/share/tulpar/actions', 'usr/share/tulpar/actions', 'usr/share/applications']!
+const image_integration_names = ['ed25519-MIT.txt', 'application-sdk-MIT.txt', 'tulpar-software',
+	'packages-change', 'packages-launch', 'tulpar-packages']!
 
 // Captured source bytes and image identity, independent of subsequent compiler
 // activity. No destination directories are created during preparation.
@@ -241,7 +241,7 @@ fn (plan &ImageIntegration) publish_with(options ImageIntegrationOptions) ! {
 		else {
 			if present && info.st_mode & 0o170000 !in [0o100000, 0o120000]! { return error('image integration destination must be a file or leaf alias: ' + image_integration_names[i]) }
 			if i in [2, 5]! {
-				link := if i == 2 { '/usr/bin/vinix-desktop' } else { '/var/lib/vinix-packages/current/share/applications' }
+				link := if i == 2 { '/usr/bin/tulpar-desktop' } else { '/var/lib/tulpar-packages/current/share/applications' }
 				output = ImageIntegrationOutput{ ...output, leaf: image_integration_link(parent, link)!, link: link }
 			} else {
 				fd, leaf := create_atomic_file(parent)!
@@ -269,11 +269,11 @@ fn (plan &ImageIntegration) publish_with(options ImageIntegrationOptions) ! {
 		pointer := unsafe { &output }; unsafe { outputs.push_many(pointer, 1) }
 		accepted = true
 	}
-	state := image_integration_parent(plan.fd, 'var/lib/vinix-packages', plan.device, true)!
+	state := image_integration_parent(plan.fd, 'var/lib/tulpar-packages', plan.device, true)!
 	defer { C.close(state) }
 	mut state_info := C.stat{}
 	if C.fstat(state, unsafe { &state_info }) != 0 { return error('cannot capture image package state directory') }
-	state_output := ImageIntegrationOutput{ relative: 'var/lib/vinix-packages', device: u64(state_info.st_dev), inode: u64(state_info.st_ino), keep: true }
+	state_output := ImageIntegrationOutput{ relative: 'var/lib/tulpar-packages', device: u64(state_info.st_dev), inode: u64(state_info.st_ino), keep: true }
 	options.checkpoint('ready', plan.root)!
 	for output in outputs { plan.check_output(unsafe { &output })! }
 	// Recheck package state too; a substituted alias must not survive a reported

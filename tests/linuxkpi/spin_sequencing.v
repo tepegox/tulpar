@@ -35,7 +35,7 @@ fn run_profile() ! {
 	machine := os.uname().machine.to_lower()
 	if machine !in ['arm64', 'aarch64', 'x86_64', 'amd64'] { return error('Unsupported native host: ' + machine) }
 	arch := if machine in ['arm64', 'aarch64'] { 'arm64' } else { 'amd64' }
-	work := hosttest.work_dir('', 'vinix-spin-sequencing-')!
+	work := hosttest.work_dir('', 'tulpar-spin-sequencing-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	fixture := os.join_path(work, 'spinfixture')
 	os.mkdir(fixture)!
@@ -46,7 +46,7 @@ fn run_profile() ! {
 		'-ffreestanding', '-fno-builtin', '-fwrapv', '-fno-strict-aliasing', '-ffunction-sections',
 		'-fdata-sections', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
 		'-D_FORTIFY_SOURCE=0', '-D__sputc=vhst_sputc', '-fsanitize=address,undefined', '-fno-omit-frame-pointer',
-		'-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include', os.join_path(root, 'tests/linuxkpi/host_types.h'),
+		'-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include', os.join_path(root, 'tests/linuxkpi/host_types.h'),
 		'-include', 'linux/kconfig.h', '-include', os.join_path(linux, 'include/linux/compiler_types.h'),
 		'-iquote', os.join_path(root, 'kernel/c'), '-I' + os.join_path(root, 'kernel/linuxkpi/include'),
 		'-I' + os.join_path(linux, 'include'), '-I' + os.join_path(linux, 'include/uapi'),
@@ -63,13 +63,13 @@ fn run_profile() ! {
 			'#include "processor-original.h"\n#undef cpu_relax\nvoid cpu_relax(void);\n')!
 		for schema, header in {'atomic-exchange': 'atomic_exchange', 'overflow': 'integer_policy'} {
 			hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema + '.json'), os.join_path(root, 'kernel/linuxkpi'),
-				os.join_path(overlay, 'vinix', header + '.h'))!
+				os.join_path(overlay, 'tulpar', header + '.h'))!
 		}
 		mut header := git_header(original_path)!
 		if kind == 'V' {
 			header = os.read_file(os.join_path(root, original_path))!
 			hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi/spinlock.json'), os.join_path(root, 'kernel/linuxkpi'),
-				os.join_path(overlay, 'vinix/spinlock_adapters.h'))!
+				os.join_path(overlay, 'tulpar/spinlock_adapters.h'))!
 		}
 		os.write_file(os.join_path(overlay, 'linux/spinlock.h'), header)!
 		source_flags := [flags[0], '-I' + overlay, ...flags[1..]]

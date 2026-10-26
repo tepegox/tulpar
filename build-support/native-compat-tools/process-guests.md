@@ -54,8 +54,8 @@ eight commands on both architectures and the ARM-only signal command. Use a
 fresh profile name to preserve prior evidence. The local qualification helper
 uses the private V compiler and prepared kernel snapshots under `/tmp`; the
 maintained commands select their normal compiler/environment defaults. `V`,
-`VINIX_PROCESS_TEST_ARM_KERNEL`, `VINIX_PROCESS_TEST_X86_KERNEL` and
-`VINIX_PROCESS_TEST_BUILD_PREFIX` select durable qualification inputs and output
+`TULPAR_PROCESS_TEST_ARM_KERNEL`, `TULPAR_PROCESS_TEST_X86_KERNEL` and
+`TULPAR_PROCESS_TEST_BUILD_PREFIX` select durable qualification inputs and output
 locations when `/tmp` cannot retain them.
 
 `process_test.v` independently exercises the original report requirements on
@@ -69,7 +69,7 @@ ARM, Rosetta x86 and ARM ASan/UBSan controller builds and report/atomic unit
 tests pass. Sanitizer qualification instruments the host controller;
 Linux guest fixtures retain their original native recipes. macOS qualification
 uses `detect_leaks=0`; it makes no LeakSanitizer claim. Nine cold fronts are
-checked outside the checkout. Local evidence is under `/tmp/vinix-process-*`.
+checked outside the checkout. Local evidence is under `/tmp/tulpar-process-*`.
 No Python is executed and no Linguist classification is changed.
 
 Real ARM guests pass all seven backlog cases, both original/V proc-thread-lock,

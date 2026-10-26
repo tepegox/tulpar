@@ -4,7 +4,7 @@ import hosttest
 import os
 
 fn test_atomic_stage_permissions_bytes_and_failed_publish_cleanup() {
-	work := hosttest.work_dir('', 'vinix-stage-atomic-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-stage-atomic-check-') or { panic(err) }
 	defer { retire(work) }
 	data := []u8{len: 200003, init: u8(index % 256)}
 	os.write_file_array(work + '/source', data) or { panic(err) }
@@ -26,7 +26,7 @@ fn test_atomic_stage_permissions_bytes_and_failed_publish_cleanup() {
 }
 
 fn test_disposable_volume_disk_mbr_bounds_and_physical_sentinels() {
-	work := hosttest.work_dir('', 'vinix-stage-disk-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-stage-disk-check-') or { panic(err) }
 	defer { retire(work) }
 	for arch in ['aarch64', 'x86_64'] {
 		path := work + '/' + arch

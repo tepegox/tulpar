@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_SPARSE_FIXTURE_NATIVE_ABI_H
-#define VINIX_SPARSE_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_SPARSE_FIXTURE_NATIVE_ABI_H
+#define TULPAR_SPARSE_FIXTURE_NATIVE_ABI_H
 #include <errno.h>
 #include <fcntl.h>
 #include <stddef.h>

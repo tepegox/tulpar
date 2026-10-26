@@ -21,13 +21,13 @@ struct LauncherLimit { current u64 maximum u64 }
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
-fn C.vinix_heap_size_at(u32) u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
+fn C.tulpar_heap_size_at(u32) u64
 
 fn registration_parent_fixture() !(string, State, Plan) {
-	work := os.temp_dir() + '/vinix-launcher-parent-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-launcher-parent-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	root := work + '/store/generations/1'
 	os.mkdir_all(root + '/share/applications')!
 	os.mkdir_all(root + '/apps/app/bin')!
@@ -35,8 +35,8 @@ fn registration_parent_fixture() !(string, State, Plan) {
 	p := Package{ id: 'app', name: 'App', version: '1.0.0', architecture: 'aarch64', kind: 'native',
 		license: 'MIT', entrypoint: 'bin/app', associations: ['text/plain'],
 		files: [Payload{ path: 'bin/app', bytes: 7, executable: true, sha256: sha256.hexhash('payload') }] }
-	os.write_file(root + '/share/applications/vinix-app.desktop', desktop_entry(p))!
-	os.chmod(root + '/share/applications/vinix-app.desktop', 0o644)!
+	os.write_file(root + '/share/applications/tulpar-app.desktop', desktop_entry(p))!
+	os.chmod(root + '/share/applications/tulpar-app.desktop', 0o644)!
 	installed := Installed{ package: p, repository: 'trusted', public_key: 'd75a980182b10ab7d54bfed3c964073a0ee172f3daa62325af021a68f707511a', sequence: 1 }
 	state := State{ generation: 1, architecture: 'aarch64', requested: ['app'], packages: [installed] }
 	return work, state, Plan{ requested: state.requested, packages: state.packages }
@@ -65,7 +65,7 @@ fn test_launcher_parent_aliases_refuse_identical_canonical_entries() {
 fn test_launcher_parent_modes_special_entries_and_legacy_hard_links() {
 	work, state, _ := registration_parent_fixture()!; defer { os.rmdir_all(work) or {} }
 	generation := work + '/store/generations/1'; p := state.packages[0].package
-	entry := generation + '/share/applications/vinix-app.desktop'
+	entry := generation + '/share/applications/tulpar-app.desktop'
 	for part in ['', '/share', '/share/applications'] {
 		path := generation + part
 		for mode in [0o700, 0o777, 0o2755] {
@@ -99,27 +99,27 @@ fn test_launcher_parent_modes_special_entries_and_legacy_hard_links() {
 }
 
 fn launcher_parent_mutate(phase string, _ string) ! {
-	if phase != os.getenv('VINIX_LAUNCHER_PHASE') { return }
-	path := os.getenv('VINIX_LAUNCHER_PATH')
-	if os.getenv('VINIX_LAUNCHER_CHANGE') == 'mode' { os.chmod(path, 0o700)!; return }
+	if phase != os.getenv('TULPAR_LAUNCHER_PHASE') { return }
+	path := os.getenv('TULPAR_LAUNCHER_PATH')
+	if os.getenv('TULPAR_LAUNCHER_CHANGE') == 'mode' { os.chmod(path, 0o700)!; return }
 	os.rename(path, path + '.saved')!
 	os.symlink(path + '.saved', path)!
 }
 
 fn test_launcher_captured_parent_and_file_identities_rechecked_after_reads() {
 	for phase in ['captured', 'opened', 'read'] {
-		for part in ['', '/share', '/share/applications', '/share/applications/vinix-app.desktop'] {
+		for part in ['', '/share', '/share/applications', '/share/applications/tulpar-app.desktop'] {
 			work, state, _ := registration_parent_fixture()!; defer { os.rmdir_all(work) or {} }
 			generation := work + '/store/generations/1'; path := generation + part
 			for kind in ['alias', 'mode'] {
-				os.setenv('VINIX_LAUNCHER_PHASE', phase, true); os.setenv('VINIX_LAUNCHER_PATH', path, true); os.setenv('VINIX_LAUNCHER_CHANGE', kind, true)
+				os.setenv('TULPAR_LAUNCHER_PHASE', phase, true); os.setenv('TULPAR_LAUNCHER_PATH', path, true); os.setenv('TULPAR_LAUNCHER_CHANGE', kind, true)
 				assert !verified_registration_with(generation, state.packages[0].package, RegistrationOptions{ checkpoint: launcher_parent_mutate }), phase + part + kind
 				if kind == 'alias' { os.rm(path)!; os.rename(path + '.saved', path)! }
 				else { os.chmod(path, if part.ends_with('.desktop') { 0o644 } else { 0o755 })! }
 			}
 		}
 	}
-	for key in ['VINIX_LAUNCHER_PHASE', 'VINIX_LAUNCHER_PATH', 'VINIX_LAUNCHER_CHANGE'] { os.unsetenv(key) }
+	for key in ['TULPAR_LAUNCHER_PHASE', 'TULPAR_LAUNCHER_PATH', 'TULPAR_LAUNCHER_CHANGE'] { os.unsetenv(key) }
 	println('LAUNCHER PARENTS 24 captured/opened/read root, parent and leaf identity/mode mutations refuse PASS')
 }
 
@@ -147,7 +147,7 @@ fn test_launcher_ordinary_account_rejects_damaged_registration_before_private_da
 		os.rm(path)!; os.rename(work + '/outside', path)!
 	}
 	if os.geteuid() == 0 {
-		for part in ['/share', '/share/applications', '/share/applications/vinix-app.desktop'] {
+		for part in ['/share', '/share/applications', '/share/applications/tulpar-app.desktop'] {
 			path := generation + part; assert C.chown(path.str, 1001, 1001) == 0
 			assert !verified_registration(generation, state.packages[0].package)
 			assert C.chown(path.str, 0, 0) == 0
@@ -171,11 +171,11 @@ fn test_launcher_parent_checks_retire_descriptors_and_owned_scratch() {
 	defer { assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0 }
 	for damaged in [false, true]! {
 		if damaged { os.rename(path, work + '/outside')!; os.symlink(work + '/outside', path)! }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 128 { assert verified_registration(generation, state.packages[0].package) != damaged }
 		$if track_heap ? {
-			kept := C.vinix_heap_end()
-			if kept != 0 { for index in 0 .. 12 { println('LAUNCHER ALLOCATION ' + C.vinix_heap_size_at(u32(index)).str()) } }
+			kept := C.tulpar_heap_end()
+			if kept != 0 { for index in 0 .. 12 { println('LAUNCHER ALLOCATION ' + C.tulpar_heap_size_at(u32(index)).str()) } }
 			assert kept == 0, 'launcher checks retained ${kept} bytes'
 		}
 	}

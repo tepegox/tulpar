@@ -13,7 +13,7 @@ const scratch_allocations = ['memdup', 'malloc', 'array_new', 'new_array_from_c_
 
 pub fn procfs_scratch_check(generated Generated, name string) !string {
 	function := generated.selected(name, 'word')!
-	if !function.contains('vinix_stack_alloc(') {
+	if !function.contains('tulpar_stack_alloc(') {
 		return error('missing caller stack scratch: ${name}')
 	}
 	for line in function.split('\n') {
@@ -31,7 +31,7 @@ pub fn procfs_scratch_check(generated Generated, name string) !string {
 			return error('heap allocation in directory entry loop')
 		}
 		at := required_index(function, 'while (')!
-		if function[..at].count('vinix_stack_alloc(') != 2 || function[at..].contains('vinix_stack_alloc(') {
+		if function[..at].count('tulpar_stack_alloc(') != 2 || function[at..].contains('tulpar_stack_alloc(') {
 			return error('directory scratch must be bounded once per call')
 		}
 	}
@@ -44,7 +44,7 @@ pub fn ipv6_check(generated Generated, name string) !string {
 		return error('heap-promoted scratch in ${name}')
 	}
 	if name == 'inet__InetSocket__recvfrom' && function.contains('inet__InetSocket__recvfrom_flags(') {
-		if function.contains('vinix_stack_alloc(') {
+		if function.contains('tulpar_stack_alloc(') {
 			return error('receive wrapper must not allocate scratch')
 		}
 		checked_delegate(function, 'inet__InetSocket__recvfrom_flags',
@@ -52,11 +52,11 @@ pub fn ipv6_check(generated Generated, name string) !string {
 		ipv6_check(generated, 'inet__InetSocket__recvfrom_flags')!
 		return 'PASS ${name}: endpoint/Text scratch stays on caller stack'
 	}
-	if name != 'inet__fill_endpoint' && !function.contains('vinix_stack_alloc(') {
+	if name != 'inet__fill_endpoint' && !function.contains('tulpar_stack_alloc(') {
 		return error('missing caller stack scratch: ${name}')
 	}
 	loops := word_calls(function, ['for'], true)
-	if loops.len > 0 && function[loops[0]..].contains('vinix_stack_alloc(') {
+	if loops.len > 0 && function[loops[0]..].contains('tulpar_stack_alloc(') {
 		return error('scratch allocated repeatedly inside loop: ${name}')
 	}
 	return 'PASS ${name}: endpoint/Text scratch stays on caller stack'
@@ -64,7 +64,7 @@ pub fn ipv6_check(generated Generated, name string) !string {
 
 pub fn timer_check(generated Generated) !string {
 	sleep := generated.timer_body('userland__sleep_for_signal')!
-	if sleep.count('vinix_stack_alloc(') != 1 {
+	if sleep.count('tulpar_stack_alloc(') != 1 {
 		return error('wait list must use one caller-stack pointer slot')
 	}
 	if !sleep.contains('Array events = event__stack_list(storage, count);') {
@@ -90,7 +90,7 @@ pub const socket_slots = [2, 3, 1, 1, 2, 4, 1, 2, 1, 1, 1]
 
 pub fn socket_check(generated Generated, name string, count int) !string {
 	body := generated.selected('socket__' + name, 'socket')!
-	if body.count('vinix_stack_alloc(') != count {
+	if body.count('tulpar_stack_alloc(') != count {
 		return error('unexpected scratch count: ${name}')
 	}
 	if name != 'receive_into' && body.contains('memdup(') {
@@ -108,7 +108,7 @@ pub fn socket_check(generated Generated, name string, count int) !string {
 			if !body[at..].starts_with('for (') { continue }
 			opening := body.index_after('{', at) or { return error('substring not found') }
 			end := balanced_end(body, opening)!
-			if body[opening..end].contains('vinix_stack_alloc(') {
+			if body[opening..end].contains('tulpar_stack_alloc(') {
 				return error('scratch allocated inside loop: ${name}')
 			}
 		}
@@ -118,7 +118,7 @@ pub fn socket_check(generated Generated, name string, count int) !string {
 
 pub fn unix_socket_check(generated Generated, name string) !string {
 	body := generated.selected('unix__UnixSocket__' + name, 'socket')!
-	if body.count('vinix_stack_alloc(sizeof(unix__PendingFdGroup))') != 1 {
+	if body.count('tulpar_stack_alloc(sizeof(unix__PendingFdGroup))') != 1 {
 		return error('queued FD record must use one caller-stack slot: ${name}')
 	}
 	if body.count('array__push_many(&group->fds, fds.data, fds.len);') != 1 {
@@ -140,7 +140,7 @@ pub fn unix_socket_check(generated Generated, name string) !string {
 
 pub fn churn_check(generated Generated) !string {
 	body := generated.selected('fs__slabinfo_text', 'churn')!
-	if body.count('vinix_stack_alloc(') != 1 || body.contains('memdup(') {
+	if body.count('tulpar_stack_alloc(') != 1 || body.contains('memdup(') {
 		return error('slabinfo Text metadata must use one caller-stack slot')
 	}
 	if body.count('array__free(&classes);') != 1 || !body.contains('return lib__finish_text(*text);') {
@@ -155,7 +155,7 @@ pub fn churn_check(generated Generated) !string {
 
 pub fn select_check(generated Generated) !string {
 	body := generated.selected('file__do_select', 'churn')!
-	if body.count('vinix_stack_alloc(') != 1 || body.contains('memdup(') {
+	if body.count('tulpar_stack_alloc(') != 1 || body.contains('memdup(') {
 		return error('do_select scratch must use one caller-stack slot')
 	}
 	if !body.contains('array__free(&polls);') || !body.contains('array__free(&indexes);') {

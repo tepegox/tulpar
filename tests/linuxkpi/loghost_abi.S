@@ -5,8 +5,8 @@
 #include "../../kernel/asm/x86_64/varargs.inc"
 #endif
 .text
-VINIX_VARIADIC ABI_SYMBOL(vml_logger_emit), ABI_SYMBOL(vml_logger_emit_entry), 4
-VINIX_VARIADIC ABI_SYMBOL(vml_logger_nested), ABI_SYMBOL(vml_logger_nested_entry), 1
+TULPAR_VARIADIC ABI_SYMBOL(vml_logger_emit), ABI_SYMBOL(vml_logger_emit_entry), 4
+TULPAR_VARIADIC ABI_SYMBOL(vml_logger_nested), ABI_SYMBOL(vml_logger_nested_entry), 1
 #ifndef __APPLE__
 #if defined(__aarch64__)
 .section .note.GNU-stack,"",%progbits

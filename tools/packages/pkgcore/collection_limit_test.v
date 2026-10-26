@@ -16,7 +16,7 @@ fn C.getrlimit(int, voidptr) int
 fn C.setrlimit(int, voidptr) int
 
 fn collection_limit_fixture() !string {
-	work := os.temp_dir() + '/vinix-collection-limit-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-collection-limit-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/generations')!
 	os.mkdir(work + '/objects')!
 	for generation in 1 .. 131 {

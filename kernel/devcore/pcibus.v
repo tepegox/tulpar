@@ -10,7 +10,7 @@ import pci
 
 // "0000:00:1f.2": domain, bus, device and function, as lspci prints them.
 fn pci_name(bus u8, slot u8, function u8) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(16) }
 	text.add('0000:')
 	text.add_radix(u64(bus), 16, 2)

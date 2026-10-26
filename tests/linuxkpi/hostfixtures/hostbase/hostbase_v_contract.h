@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_HOSTBASE_V_CONTRACT_H
-#define VINIX_LINUXKPI_HOSTBASE_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_HOSTBASE_V_CONTRACT_H
+#define TULPAR_LINUXKPI_HOSTBASE_V_CONTRACT_H
 #include "host_model_v_contract.h"
 #include "host_percpu_abi.h"
 #include <linux/limits.h>
@@ -32,11 +32,11 @@ void *vmh_message_reader(void *);
 void vmh_release_object(struct kref *);
 void *vmh_reference_worker(void *);
 #ifdef __APPLE__
-extern const unsigned char vmh_host_percpu_start __asm__("section$start$__DATA$vinixpcpu");
-extern const unsigned char vmh_host_percpu_end __asm__("section$end$__DATA$vinixpcpu");
+extern const unsigned char vmh_host_percpu_start __asm__("section$start$__DATA$tulparpcpu");
+extern const unsigned char vmh_host_percpu_end __asm__("section$end$__DATA$tulparpcpu");
 #else
-extern const unsigned char vmh_host_percpu_start __asm__("__start_vinixpcpu");
-extern const unsigned char vmh_host_percpu_end __asm__("__stop_vinixpcpu");
+extern const unsigned char vmh_host_percpu_start __asm__("__start_tulparpcpu");
+extern const unsigned char vmh_host_percpu_end __asm__("__stop_tulparpcpu");
 #endif
 typedef struct hostbase__CpuRecord vmh_cpu_record_type;
 extern uint8_t vmh_cpu_byte __PCPU_ATTRS("");
@@ -46,9 +46,9 @@ extern uint64_t vmh_cpu_wide __PCPU_ATTRS("");
 extern struct hostbase__CpuRecord vmh_cpu_record __PCPU_ATTRS("");
 void *vmh_percpu_worker(void *);
 void vmh_percpu_tests(void);
-void vinix_linuxkpi_percpu_destroy_for_test(void);
+void tulpar_linuxkpi_percpu_destroy_for_test(void);
 #include <linux/delay.h>
-int vinix_linuxkpi_host_original_main(int, char **);
+int tulpar_linuxkpi_host_original_main(int, char **);
 void vmh_format_tests(void);
 void vmh_taint_initial_tests(void);
 void vmh_i915_config_tests(void);

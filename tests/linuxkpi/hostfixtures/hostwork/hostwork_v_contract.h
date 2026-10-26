@@ -1,16 +1,16 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_HOSTWORK_V_CONTRACT_H
-#define VINIX_LINUXKPI_HOSTWORK_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_HOSTWORK_V_CONTRACT_H
+#define TULPAR_LINUXKPI_HOSTWORK_V_CONTRACT_H
 #include "host_model_v_contract.h"
 #include <sched.h>
 #include <linux/workqueue.h>
 #include <linux/completion.h>
 #define u64 vmh_linux_u64
 #include <linux/srcu.h>
-#define timespec vinix_linux_timespec
-#define timeval vinix_linux_timeval
-#define itimerspec vinix_linux_itimerspec
-#define timezone vinix_linux_timezone
+#define timespec tulpar_linux_timespec
+#define timeval tulpar_linux_timeval
+#define itimerspec tulpar_linux_itimerspec
+#define timezone tulpar_linux_timezone
 #include <linux/delay.h>
 #undef timespec
 #undef timeval
@@ -35,16 +35,16 @@ void *vmh_delayed_dispatch_thread(void *);
 void vmh_delayed_work_tests(void);
 void vmh_unbound_nested_callback(struct work_struct *);
 void vmh_unbound_work_tests(void);
-bool vinix_linuxkpi_host_workqueue_stopped(struct workqueue_struct *);
-void vinix_linuxkpi_workqueue_shutdown_for_test(void);
+bool tulpar_linuxkpi_host_workqueue_stopped(struct workqueue_struct *);
+void tulpar_linuxkpi_workqueue_shutdown_for_test(void);
 void vmh_bound_callback(struct work_struct *);
 void vmh_bound_delayed_callback(struct work_struct *);
 void vmh_bound_irq_cpu_switch(void);
 void vmh_bound_work_tests(void);
-void vinix_linuxkpi_srcu_static_quiesce_for_test(struct srcu_struct *);
-int vinix_linuxkpi_srcu_bootstrap_limit_for_test(unsigned int);
-void vinix_linuxkpi_srcu_shutdown_for_test(void);
-struct workqueue_struct *vinix_linuxkpi_srcu_queue_for_test(void);
+void tulpar_linuxkpi_srcu_static_quiesce_for_test(struct srcu_struct *);
+int tulpar_linuxkpi_srcu_bootstrap_limit_for_test(unsigned int);
+void tulpar_linuxkpi_srcu_shutdown_for_test(void);
+struct workqueue_struct *tulpar_linuxkpi_srcu_queue_for_test(void);
 void *vmh_srcu_clock_thread(void *);
 void *vmh_srcu_waiter_thread(void *);
 void vmh_srcu_callback(struct rcu_head *);

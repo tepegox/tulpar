@@ -27,7 +27,7 @@ artifact hashes, then verifies that inputs have stayed unchanged.
 
 ```sh
 v -nocache -o /tmp/software-progress-memory tests/packages/software-progress-memory-check.v
-V=/path/to/reviewed/v VINIX_PACKAGE_TEST_UI2=/path/to/modules \
+V=/path/to/reviewed/v TULPAR_PACKAGE_TEST_UI2=/path/to/modules \
   /tmp/software-progress-memory /build/new-software-progress-memory
 ```
 

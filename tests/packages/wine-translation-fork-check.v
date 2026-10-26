@@ -100,10 +100,10 @@ fn check() ! {
 	os.setenv('V_MACOS_V3_NO_FALLBACK', '1', true)
 	os.setenv('V_C_ERROR_BUG_REPORT_DISABLED', '1', true)
 	host := hwhost.find_host(root, 'aarch64', '')!
-	loader := os.getenv_opt('VINIX_LIMINE_BOOTAA64') or {
+	loader := os.getenv_opt('TULPAR_LIMINE_BOOTAA64') or {
 		hwhost.shared_path(root, 'boot-image/limine-bin/BOOTAA64.EFI')
 	}
-	os.setenv('VINIX_LIMINE_BOOTAA64', loader, true)
+	os.setenv('TULPAR_LIMINE_BOOTAA64', loader, true)
 	mut files := [os.executable(), @FILE, v, kernel, translator, clang, linker,
 		host.qemu, host.firmware, root + '/build-support/limine.conf',
 		root + '/tests/packages/wine-fork-probe/main.v',
@@ -148,7 +148,7 @@ fn check() ! {
 	outcome := hwhost.run_scenario(host, hwhost.Scenario{
 		name: 'translator-fork', arches: ['aarch64'],
 		required: ['TRANSLATOR FORK ordinary uid/gid=1000 groups=0 no-WX-exception PASS',
-			'VINIX QEMU FORK NOEXEC 32 CHILDREN REAPED PASS', 'HWTEST PASS translator-fork'],
+			'TULPAR QEMU FORK NOEXEC 32 CHILDREN REAPED PASS', 'HWTEST PASS translator-fork'],
 		forbidden: ['HWTEST FAIL', 'QEMU internal SIGSEGV', 'FATAL EXCEPTION', 'KERNEL PANIC'],
 		ending: .running
 	}, hwhost.Run{kernel: kernel, guest: guest, extras: work + '/extras',

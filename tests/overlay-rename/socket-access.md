@@ -33,7 +33,7 @@ On 14 October 2026 the following results were retained under
 | `socketaccess-arm-before-e`, `socketaccess-x86-before-e` | Prior metadata-release kernels accept `listen` through `O_PATH`: site 440 returns 0 and the fixture fails. |
 | `socketaccess-arm-after-d`, `socketaccess-x86-after-d` | Persistent ext2 and overlay socket checks pass, including all refusals, descriptor transfer, live connections, hardlinks, moves, remount and permission checks. |
 | `socketaccess-arm-all-d`, `socketaccess-x86-all-d` | Existing atomic rename, failure rollback, mixed lifetime, persistence, whiteout and opacity checks pass. |
-| `socketaccess-arm-basic-c`, `socketaccess-x86-basic-c` | Disk-free socket authorization probe passes in native Vinix. |
+| `socketaccess-arm-basic-c`, `socketaccess-x86-basic-c` | Disk-free socket authorization probe passes in native Tulpar. |
 | `socketaccess-arm-linux-b`, `socketaccess-x86-linux-b` | The identical probe ELF from each native run passes on Linux 6.12.51-0-virt. |
 
 Each persistent socket batch performs 32 cycles on direct ext2 and 32 on the
@@ -56,7 +56,7 @@ was not changed.
 | Linux ARM reference kernel | `c8d8cdec004d425903745ffae5c94f62d1e0bad3c05cf7b1e411cf6a35224e8f` |
 | Linux x86 reference kernel | `ec9073e710b26f5907024476c084188a01610a5a48a948bd1664ac42faaadbd4` |
 
-Both Vinix kernels were built in the existing isolated `9b01dbca2` worktrees with
+Both Tulpar kernels were built in the existing isolated `9b01dbca2` worktrees with
 the preceding filesystem/socket fixes and this guard, using preserved V compiler
 `f6358ec` and link seed 17. The assertion-enabled V evidence checker verifies
 the source and receipt hashes, controls, complete memory samples, native/Linux
@@ -67,14 +67,14 @@ independent review is retained as `socketaccess-lifetime-review.md`.
 
 The Linux reference uses a real device number (1:3) for denied unprivileged
 device creation because [Linux exempts 0/0 whiteouts from CAP_MKNOD](https://github.com/torvalds/linux/blob/v6.12/fs/namei.c#L3865).
-Vinix disk cases still test their separate 0/0 refusal. Early native ABI
+Tulpar disk cases still test their separate 0/0 refusal. Early native ABI
 compilation failures, reference attempts using 0/0 and host disk exhaustion
 attempts remain separate from completed verdicts. Cleanup reclaimed only
 completed owned firmware/image staging; identical immutable kernel copies were
 consolidated without changing their paths or bytes.
 
 See [the controller instructions](README.md) to repeat the checks. The Linux
-reference qualifies these socket semantics only; it does not measure Vinix
+reference qualifies these socket semantics only; it does not measure Tulpar
 retention. Broader syscall error precedence, power-loss recovery, tracing,
 rootless OCI runtime acceptance and complete server qualification remain open.
 

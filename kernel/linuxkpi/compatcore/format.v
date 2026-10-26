@@ -39,7 +39,7 @@ mut:
 pub fn vkr_format_key(key &u64) i32 {
 	unsafe {
 		if uint(key) == 0 { return -22 }
-		if !C.vinix_linuxkpi_may_sleep() { return -11 }
+		if !C.tulpar_linuxkpi_may_sleep() { return -11 }
 		mut expected := u32(0)
 		if !C.vkr_compare32(&vkr_pointer_key_state, &expected, 1, false, 4, 2) {
 			return if expected == 2 { i32(-114) } else { i32(-11) }

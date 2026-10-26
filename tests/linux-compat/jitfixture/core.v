@@ -74,7 +74,7 @@ fn child_result(path &char, request bool) i32 {
 			arguments[0] = path
 			arguments[1] = if request { c'--wx' } else { c'--default' }
 			mut environment := [2]&char{}
-			if request { environment[0] = c'VINIX_ALLOW_WX=1' }
+			if request { environment[0] = c'TULPAR_ALLOW_WX=1' }
 			C.execve(path, &arguments[0], &environment[0])
 			C._exit(*C.__errno_location())
 		}

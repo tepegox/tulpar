@@ -20,7 +20,7 @@ fn qualify(binary string) ! {
 	check(compathost.diagnostic_declarations()! == declarations, 'Production diagnostic imports differ')!
 	check(compathost.office_exports('[Ordinal/Name Pointer] Table\n [ 2] Zeta\n [0] Alpha\n[ 3] +base[ 9] ab12 Beta\nThe Function Table\n[4] Ignore\n')! == ['Alpha', 'Beta', 'Zeta'], 'PE export table boundaries differ')!
 	check(compathost.shared_libraries('  (NEEDED) Shared library: [libc.so]\nOther [ignore]\n (NEEDED) Shared library: [libwine.so]\n') == ['libc.so', 'libwine.so'], 'ELF dependency names differ')!
-	work := hosttest.work_dir('', 'vinix-compat-qualification-')!
+	work := hosttest.work_dir('', 'tulpar-compat-qualification-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	// Byte/stat copying follows links and retains executable mode and timestamps.
 	os.write_file(work + '/source', 'native runtime\x00\xff')!
@@ -41,10 +41,10 @@ fn qualify(binary string) ! {
 		bad := fixturehost.capture_both_preferred([binary, family, '--unknown'], env, policyhost.caller_arch())!
 		check(bad.status == 2, family + ' unknown option accepted')!
 	}
-	before := owners('vinix-net-random-')!
+	before := owners('tulpar-net-random-')!
 	for _ in 0 .. 12 {
 		failed := fixturehost.capture_both_preferred([binary, 'net-random'], env, policyhost.caller_arch())!
-		check(failed.status == 1 && owners('vinix-net-random-')! == before, 'Failed random build retained a private owner')!
+		check(failed.status == 1 && owners('tulpar-net-random-')! == before, 'Failed random build retained a private owner')!
 	}
 	// A retained directory is never overwritten, including on compilation failure.
 	os.mkdir(work + '/keep')!

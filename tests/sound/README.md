@@ -1,6 +1,6 @@
 # AArch64 QEMU sound regression
 
-This test boots a freshly built Vinix kernel with a static test program as PID
+This test boots a freshly built Tulpar kernel with a static test program as PID
 1 and a VirtIO sound card whose output QEMU records to a WAV file. The guest
 opens `/dev/dsp` the way SDL's OSS backend does and plays 2 s of a 440 Hz tone
 at 44.1 kHz stereo. A child process then starts a 660 Hz tone and is killed
@@ -25,7 +25,7 @@ Build the AArch64 userland once to provide the musl test sysroot, then run:
 tests/sound/run.sh
 ```
 
-Set `VINIX_SOUND_NO_BUILD=1` to reuse `kernel/bin/vinix`,
-`VINIX_SOUND_ROOT` to boot another checkout's kernel and runner,
-`VINIX_SOUND_KEEP=1` to keep the VM state and recording, or
-`VINIX_QEMU_TIMEOUT` to change the default 300-second deadline.
+Set `TULPAR_SOUND_NO_BUILD=1` to reuse `kernel/bin/tulpar`,
+`TULPAR_SOUND_ROOT` to boot another checkout's kernel and runner,
+`TULPAR_SOUND_KEEP=1` to keep the VM state and recording, or
+`TULPAR_QEMU_TIMEOUT` to change the default 300-second deadline.

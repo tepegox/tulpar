@@ -3,7 +3,7 @@
 //
 // mknod(2)/mknodat(2): the special files a container runtime makes in the
 // rootfs it is building. A device node leads to the real device of the same
-// name -- Vinix names its devices rather than numbering them, so /dev/null a
+// name -- Tulpar names its devices rather than numbering them, so /dev/null a
 // container makes is the /dev/null the kernel already has -- and a FIFO is a
 // named pipe.
 module fs
@@ -189,7 +189,7 @@ fn find_device_number(directory &VFSNode, kind u32, rdev u64, depth int) &resour
 }
 
 // A node leads to the device of its name, as the ones a runtime makes in
-// every container do. A name Vinix has no device by -- `docker run --device
+// every container do. A name Tulpar has no device by -- `docker run --device
 // /dev/zero:/dev/myzero` -- leads to the device with its number instead,
 // which the runtime took from the host's node.
 fn make_device_node(mut parent VFSNode, name string, mode u32, rdev u64) ?&VFSNode {
@@ -199,7 +199,7 @@ fn make_device_node(mut parent VFSNode, name string, mode u32, rdev u64) ?&VFSNo
 		backing = device_by_number(mode & stat.ifmt, rdev)
 	}
 	if backing == unsafe { nil } {
-		// A device Vinix does not have. /dev/null stands in: writes are
+		// A device Tulpar does not have. /dev/null stands in: writes are
 		// discarded and reads give EOF, which is what an unbacked device node
 		// in a container is least likely to be harmed by.
 		fallback := device_by_name('null')
@@ -306,7 +306,7 @@ pub fn syscall_mknodat(_ voidptr, dirfd int, _path charptr, mode u32, dev u64) (
 		return errno.err, errno.eperm
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(dirfd, path, identity) or { return errno.err, errno.get() }
 	vfs_lock.acquire()
 	defer { vfs_lock.release() }

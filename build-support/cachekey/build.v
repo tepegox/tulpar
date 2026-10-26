@@ -31,8 +31,8 @@ fn path_exists(path string) !bool {
 
 fn path_kind(path string, expected u32) !bool {
 	if path.contains('\x00') { return false }
-	mut state := C.vinix_cache_stat{}
-	if C.vinix_cache_stat_path(&char(path.str), &state) != 0 {
+	mut state := C.tulpar_cache_stat{}
+	if C.tulpar_cache_stat_path(&char(path.str), &state) != 0 {
 		if C.errno in [C.ENOENT, C.ENOTDIR, C.EBADF, C.ELOOP] { return false }
 		return file_error(path)
 	}
@@ -45,8 +45,8 @@ fn build_hash_path(mut digest sha256.Digest, path string, label string, metadata
 	policy string, mut active map[string]bool) ! {
 	add_field(mut digest, label)
 	if path.contains('\x00') { return error('embedded null byte') }
-	mut state := C.vinix_cache_stat{}
-	if C.vinix_cache_lstat(&char(path.str), &state) != 0 {
+	mut state := C.tulpar_cache_stat{}
+	if C.tulpar_cache_lstat(&char(path.str), &state) != 0 {
 		if C.errno == C.ENOENT {
 			add_field(mut digest, 'missing')
 			return
@@ -117,7 +117,7 @@ fn native_inputs(mut digest sha256.Digest, root string, mut active map[string]bo
 
 pub fn staging_key(root string, values []string, sources []string, metadata []string, vlib []string) !string {
 	mut digest := sha256.new()
-	add_field(mut digest, 'vinix-staging-cache-v3-native')
+	add_field(mut digest, 'tulpar-staging-cache-v3-native')
 	mut active := map[string]bool{}
 	build_hash_path(mut digest, join_path(root, 'build-support/staging-cache.v'), 'staging-helper', false, '', mut active)!
 	build_hash_path(mut digest, join_path(root, 'build-support/cachecli'), 'hash-helper', false, '', mut active)!
@@ -228,14 +228,14 @@ pub fn office_modules(office string, app string) ![]string {
 
 pub fn office_shared(input OfficeInputs) !string {
 	mut digest := sha256.new()
-	add_field(mut digest, 'vinix-voffice-cache-v3-native')
+	add_field(mut digest, 'tulpar-voffice-cache-v3-native')
 	compiler := resolved_tool(input.v)!
 	for value in ['arch', input.arch, 'target', input.target] { add_field(mut digest, value) }
 	mut active := map[string]bool{}
 	for item in [BuildInput{input.builder, 'builder', false, ''},
 		BuildInput{join_path(input.repo, 'build-support/cachecli'), 'cache-helper', false, ''},
 		BuildInput{join_path(input.repo, 'desktop/tools/stage_ui2'), 'stager', false, ''},
-		BuildInput{join_path(input.repo, 'desktop/tools/ui2_vinix_backend.v'), 'backend', false, ''},
+		BuildInput{join_path(input.repo, 'desktop/tools/ui2_tulpar_backend.v'), 'backend', false, ''},
 		BuildInput{join_path(input.ui2, 'v.mod'), 'ui2-manifest', false, ''},
 		BuildInput{join_path(input.office, 'v.mod'), 'office-manifest', false, ''},
 		BuildInput{join_path(input.office, 'VERSION'), 'office-version', false, ''},
@@ -286,7 +286,7 @@ pub fn office_shared(input OfficeInputs) !string {
 
 pub fn office_key(office string, shared string, app string) !string {
 	mut digest := sha256.new()
-	add_field(mut digest, 'vinix-voffice-app-v2')
+	add_field(mut digest, 'tulpar-voffice-app-v2')
 	add_field(mut digest, shared)
 	mut active := map[string]bool{}
 	app_path := office_app(app)!

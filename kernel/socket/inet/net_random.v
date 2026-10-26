@@ -6,7 +6,7 @@ module inet
 // These hooks also let host tests compile this file without the kernel.
 fn C.krandom__fill(buf voidptr, count u64, allow_insecure bool) bool
 fn C.time__monotonic_ns() u64
-fn C.vinix_explicit_bzero(buf voidptr, len uint)
+fn C.tulpar_explicit_bzero(buf voidptr, len uint)
 fn C.memcpy(dest voidptr, src voidptr, length uint) voidptr
 
 __global (
@@ -60,7 +60,7 @@ fn net_refill() {
 
 // Batch small requests, clearing every byte as it leaves the pool, as
 // arc4random does. No caller can recover earlier output from the pool.
-@[export: 'vinix_net_random_bytes']
+@[export: 'tulpar_net_random_bytes']
 fn net_random_bytes(out voidptr, length uint) {
 	mut remaining := length
 	mut target := uint(out)
@@ -72,7 +72,7 @@ fn net_random_bytes(out voidptr, length uint) {
 		unsafe {
 			from := &net_pool[uint(net_pool.len) - net_pool_left]
 			C.memcpy(voidptr(target), from, take)
-			C.vinix_explicit_bzero(from, take)
+			C.tulpar_explicit_bzero(from, take)
 		}
 		target += take
 		remaining -= take
@@ -80,7 +80,7 @@ fn net_random_bytes(out voidptr, length uint) {
 	}
 }
 
-@[export: 'vinix_net_random']
+@[export: 'tulpar_net_random']
 fn net_random() u32 {
 	mut value := u32(0)
 	net_random_bytes(unsafe { &value }, sizeof(value))
@@ -88,7 +88,7 @@ fn net_random() u32 {
 }
 
 // arc4random_uniform(3): reject the biased portion of the 32-bit range.
-@[export: 'vinix_net_random_uniform']
+@[export: 'tulpar_net_random_uniform']
 fn net_random_uniform(upper_bound u32) u32 {
 	if upper_bound < 2 {
 		return 0
@@ -106,7 +106,7 @@ fn net_random_uniform(upper_bound u32) u32 {
 // OpenBSD's ip_randomid(): shuffle every ID once, then swap each draw into
 // a random slot among the preceding 32768. Skip zero, and never reuse an ID
 // within 32768 datagrams, so fragments of different datagrams stay apart.
-@[export: 'vinix_ip_randomid']
+@[export: 'tulpar_ip_randomid']
 fn net_ip_randomid() u16 {
 	if !net_id_shuffled {
 		// Knuth's inside-out shuffle fills the table as it goes.
@@ -157,21 +157,21 @@ fn net_tuple_isn(now_ns u64, local voidptr, local_port u16, remote voidptr,
 	}
 }
 
-@[export: 'vinix_tcp_isn_at']
+@[export: 'tulpar_tcp_isn_at']
 fn net_tcp_isn_at(now_ns u64, local_address u32, local_port u16,
 	remote_address u32, remote_port u16) u32 {
 	return net_tuple_isn(now_ns, unsafe { &local_address }, local_port,
 		unsafe { &remote_address }, remote_port, 4)
 }
 
-@[export: 'vinix_tcp_isn']
+@[export: 'tulpar_tcp_isn']
 fn net_tcp_isn(local_address u32, local_port u16, remote_address u32,
 	remote_port u16) u32 {
 	return net_tcp_isn_at(C.time__monotonic_ns(), local_address, local_port,
 		remote_address, remote_port)
 }
 
-@[export: 'vinix_tcp_isn_bytes']
+@[export: 'tulpar_tcp_isn_bytes']
 fn net_tcp_isn_bytes(local voidptr, local_port u16, remote voidptr,
 	remote_port u16, length u32) u32 {
 	if length != 4 && length != 16 {
@@ -181,13 +181,13 @@ fn net_tcp_isn_bytes(local voidptr, local_port u16, remote voidptr,
 		remote_port, uint(length))
 }
 
-@[export: 'vinix_tcp_isn6_at']
+@[export: 'tulpar_tcp_isn6_at']
 fn net_tcp_isn6_at(now_ns u64, local_address &u32, local_port u16,
 	remote_address &u32, remote_port u16) u32 {
 	return net_tuple_isn(now_ns, local_address, local_port, remote_address, remote_port, 16)
 }
 
-@[export: 'vinix_tcp_isn6']
+@[export: 'tulpar_tcp_isn6']
 fn net_tcp_isn6(local_address &u32, local_port u16, remote_address &u32,
 	remote_port u16) u32 {
 	return net_tcp_isn6_at(C.time__monotonic_ns(), local_address, local_port,
@@ -198,7 +198,7 @@ type NetPortTaken = fn (u16, voidptr) i32
 
 // OpenBSD's in_pcbpickport(): random starting port, then probe the inclusive
 // range with wraparound. Zero means every port is already bound.
-@[export: 'vinix_pick_port']
+@[export: 'tulpar_pick_port']
 fn net_pick_port(first u16, last u16, taken NetPortTaken, context voidptr) u16 {
 	count := u32(last) - u32(first) + 1
 	mut candidate := u32(first) + net_random_uniform(count)
@@ -249,7 +249,7 @@ fn (mut state NetSipState) round() {
 
 // SipHash-2-4 (Aumasson and Bernstein), with a 64-bit result and borrowed
 // buffers. Unaligned input and the final short block use byte loads only.
-@[export: 'vinix_siphash24']
+@[export: 'tulpar_siphash24']
 fn net_siphash24(key &u8, data voidptr, length uint) u64 {
 	k0 := net_load64(key)
 	k1 := net_load64(unsafe { key + 8 })

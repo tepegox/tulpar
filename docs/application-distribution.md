@@ -1,19 +1,19 @@
 # Application distribution
 
-Vinix has a native V application package service, `vinix-package`, and a
+Tulpar has a native V application package service, `tulpar-package`, and a
 **Software** desktop application. They manage signed repositories and immutable
 application generations on AArch64 and x86_64. The desktop security-tools stage
 installs the service, sandbox launcher, Software process link and XDG registration
 directory. It preserves existing configuration; a fresh image enrolls no keys
 unless its builder supplies an explicit reviewed release configuration.
 
-The read-only [`vinix-package capabilities` query](../tools/packages/CAPABILITIES.md)
+The read-only [`tulpar-package capabilities` query](../tools/packages/CAPABILITIES.md)
 reports accepted package, application SDK, native window and deployment interface
 versions without configuration or package-state access. Host decoder, allocation,
 sanitizer and actual CLI checks pass, with both target CLI builds retained.
 Interface support does not establish runtime availability or publisher trust.
 
-Release image staging accepts `--config FILE` or `VINIX_PACKAGE_IMAGE_CONFIG` to
+Release image staging accepts `--config FILE` or `TULPAR_PACKAGE_IMAGE_CONFIG` to
 seed the normal repository keys, policy and launch account before first boot.
 It captures and validates the input before compiling, checks new publisher keys,
 and publishes configuration exclusively without changing existing configuration
@@ -86,7 +86,7 @@ boot, other root/volume configurations and broader catalog/device acceptance
 remain separate gates.
 
 Release staging also accepts `--repositories DIRECTORY` or
-`VINIX_PACKAGE_IMAGE_REPOSITORIES` for a complete signed offline bundle. It
+`TULPAR_PACKAGE_IMAGE_REPOSITORIES` for a complete signed offline bundle. It
 captures reviewed publisher exports before compilation and publishes them at the
 configuration's fixed target URLs after signature, dependency, policy and payload
 verification. Existing bundles are preserved or refused, and consumer package
@@ -107,7 +107,7 @@ catalog admission gate; production publisher/catalog migration and real graphica
 runtime acceptance remain open. See [qualification](../tests/packages/image-applications-check.md).
 
 Desktop builds can carry that advertised set in a reviewed format-1 deployment
-root manifest selected by `VINIX_PACKAGE_IMAGE_APPLICATIONS` or direct
+root manifest selected by `TULPAR_PACKAGE_IMAGE_APPLICATIONS` or direct
 `--applications FILE`. The stager resolves those exact captured requirements
 before compiling or publishing, reports their source digest, and refuses exact
 format-2 locks rather than dropping their pins. The native desktop cache tracks
@@ -121,7 +121,7 @@ policy and changes are checked again. Existing output files and the target image
 remain intact. See [qualification](../tests/packages/image-export-check.md).
 
 Normal staging with advertised requirements now saves the exact resolved lock
-inside the image at `/usr/share/vinix-packages/applications.json`. Software's
+inside the image at `/usr/share/tulpar-packages/applications.json`. Software's
 **Deployment → Review release apps** discovers it and reviews the full set
 without typing a filename or installing anything automatically. Confirmation
 and administrator approval still apply. The stager captures the lock before
@@ -595,7 +595,7 @@ and broader installed-system acceptance remain separate boundaries.
 
 ## Trust and configuration
 
-The image stage creates `/etc/vinix-packages/config.json` with an empty
+The image stage creates `/etc/tulpar-packages/config.json` with an empty
 repository list and the target architecture. An administrator can review and save
 organization policy with the commands below; the launch account remains selected
 in that file:
@@ -622,11 +622,11 @@ Enroll a publisher using its public key obtained through your organization's
 authenticated channel:
 
 ```sh
-vinix-package repo-list
-vinix-package repo-enroll company https://software.example.org/vinix PUBLISHER_PUBLIC_KEY_HEX
-vinix-package update
-vinix-package --json repo-list
-vinix-package repo-revoke company
+tulpar-package repo-list
+tulpar-package repo-enroll company https://software.example.org/tulpar PUBLISHER_PUBLIC_KEY_HEX
+tulpar-package update
+tulpar-package --json repo-list
+tulpar-package repo-revoke company
 ```
 
 Software's **Repositories** screen offers the same administration workflow.
@@ -745,7 +745,7 @@ signing and verification operations, including hash padding boundaries.
 An unbounded publisher lifetime and all package-service allocations remain
 separate qualification work.
 The service checks repository identity, format, expiry, increasing sequence and same-sequence
-equivocation. `/var/lib/vinix-packages/trust-history.json` retains the highest
+equivocation. `/var/lib/tulpar-packages/trust-history.json` retains the highest
 authenticated sequence and exact index digest for each repository ID/key,
 including revoked and replaced keys. Empty refreshes, garbage collection and
 re-enrollment never reset it. Authenticated legacy cached indexes migrate into
@@ -944,17 +944,17 @@ or the runtime-update approval process. See
 [installed payload qualification](../tests/packages/software-payload-check.md).
 
 ```sh
-vinix-package update
-vinix-package search editor
-vinix-package info editor
-vinix-package plan install editor
-vinix-package install editor
-vinix-package updates
-vinix-package upgrade
-vinix-package rollback
-vinix-package remove editor
-vinix-package verify
-vinix-package gc
+tulpar-package update
+tulpar-package search editor
+tulpar-package info editor
+tulpar-package plan install editor
+tulpar-package install editor
+tulpar-package updates
+tulpar-package upgrade
+tulpar-package rollback
+tulpar-package remove editor
+tulpar-package verify
+tulpar-package gc
 ```
 
 When an installed dependency blocks uninstall, the refusal identifies one
@@ -967,7 +967,7 @@ metadata; it does not authorize removing a required package. See
 [removal guidance qualification](../tests/packages/removal-guidance-check.md).
 
 Command-line applications can receive literal flags through
-`vinix-package run-args ID [--file ABSOLUTE_FILE]... -- ARGUMENT...`.
+`tulpar-package run-args ID [--file ABSOLUTE_FILE]... -- ARGUMENT...`.
 `run-terminal-args` uses the same syntax in a terminal. Package-declared arguments
 come first. Each `--file` grants an existing document under the application's
 declared `files` permission; it does not append that path to the command.
@@ -989,7 +989,7 @@ cleared before running. The ordinary service checks the actual file access;
 the desktop's administrator identity grants no additional access.
 
 The form defaults to **Working folder: private app data**, where relative output
-names are saved in the ordinary account's `~/.local/share/vinix-apps/ID`.
+names are saved in the ordinary account's `~/.local/share/tulpar-apps/ID`.
 Switch to **installed app** when an application needs packaged assets relative
 to its working folder. **Run** captures diagnostics, while **Run in Terminal**
 opens the same command in Software's terminal. Input freezes during execution;
@@ -1045,7 +1045,7 @@ Install, upgrade and managed deployment also verify unchanged target payloads.
 Missing, corrupt or nonregular files require a fresh generation from verified
 cache or approved repository objects, even when versions stay the same. Software's
 **Repair installed** opens a dedicated review of the complete installed closure,
-including dependencies. `vinix-package repair` provides the same operation for
+including dependencies. `tulpar-package repair` provides the same operation for
 administrator scripts; `review repair` and `apply FINGERPRINT repair` provide
 reviewed automation. It preserves installed manifests, publisher/sequence records,
 versions, permissions and requested applications even when updates are available.
@@ -1080,7 +1080,7 @@ The report remains available without usable cached catalogs or currently trusted
 publishers, and writes no
 package state. **Review all repairs** obtains a fresh authenticated repair review
 for the complete installed set, including packages hidden by report filters;
-the observation itself authorizes no change. `vinix-package health` provides the
+the observation itself authorizes no change. `tulpar-package health` provides the
 same inspection, with `--json health` for scripts. A complete report returns zero
 even when rows contain issues; `verify` retains its failure exit behavior. See
 [health report qualification](../tests/packages/health-report-check.md).
@@ -1284,7 +1284,7 @@ then use the existing reviewed deployment flow. Current signatures, replay
 history, policy, permissions, licenses and firmware admission still apply. See
 [qualification](../tests/packages/deployment-snapshot-check.md).
 
-Use `vinix-package deployment-snapshot-save /path/to/new-lock.json` to save that
+Use `tulpar-package deployment-snapshot-save /path/to/new-lock.json` to save that
 installed set directly. Optional installed IDs select a subset and its complete
 runtime/data closure. The file is published atomically with mode 0644 and never
 replaces an existing name, including a dangling symlink or a destination created
@@ -1326,7 +1326,7 @@ locked-mirror flow and bundles `_deployment.json`; no payloads are acquired by
 opening the destination form. See [saved export qualification](../tests/packages/software-snapshot-export-check.md).
 
 For read-only organization drift checks, run
-`vinix-package --json deployment-audit /path/to/approved-lock.json`. It compares
+`tulpar-package --json deployment-audit /path/to/approved-lock.json`. It compares
 exact installed manifests and provenance with a format-2 lock, including the
 requested application set and minimum publisher sequences. The report lists
 missing, extra and changed packages even without catalogs or after revocation.
@@ -1512,7 +1512,7 @@ after encoding or presentation. This lifetime contract preserves the existing
 wire fields, reader locking and read-only behavior. See
 [catalog observation ownership](../tests/packages/software-view-owner-check.md).
 
-Personal data under `~/.local/share/vinix-apps/ID` survives uninstall/rollback.
+Personal data under `~/.local/share/tulpar-apps/ID` survives uninstall/rollback.
 Launch captures the account home and each data-parent directory without following
 links, and requires caller ownership without write access for other accounts.
 Missing data parents are created privately. App data and its `tmp` child are
@@ -1522,7 +1522,7 @@ prevents creation or permission changes through a planted app-data alias.
 Existing contents survive a corrected-entry retry. See
 [launch-data qualification](../tests/packages/launch-data-check.md).
 After uninstall an ordinary user can explicitly erase it with
-`vinix-package purge-data ID`. No package owns arbitrary home files. Data/schema
+`tulpar-package purge-data ID`. No package owns arbitrary home files. Data/schema
 compatibility across rollback remains the developer's responsibility.
 
 Purge holds the package reader lock through cleanup, refuses an installed app,
@@ -1531,7 +1531,7 @@ check is conservative: another app using that same generation also prevents
 purge. Stop those apps and retry. Reinstall and collection cannot race the
 deletion. Missing personal data is a successful no-op.
 
-The home and each `.local/share/vinix-apps` component must be ordinary directories
+The home and each `.local/share/tulpar-apps` component must be ordinary directories
 owned by the caller and not writable by other accounts. The deletion walk uses
 directory descriptors, never follows links, checks directory identity before
 removal and refuses filesystem crossings. Nested symlinks are removed as links;
@@ -1576,7 +1576,7 @@ same inventory or confirmation. Pending inventory reads and approved deletions
 cannot enter the reader. Confirmation remains on the full screen. See
 [personal-data reader checks](../tests/packages/software-data-reader-check.md).
 
-`vinix-package --json data-list` provides the same bounded, read-only inventory;
+`tulpar-package --json data-list` provides the same bounded, read-only inventory;
 it uses installed state without refreshing repositories and works offline. The
 inventory is an observation; deletion rechecks current installation, leases and
 filesystem safety. Names that are not valid package IDs are outside this view.
@@ -1800,7 +1800,7 @@ full page; shrinking restores the current short page. Both views draw individual
 monospace lines so native single-line labels cannot hide later diagnostic lines.
 Smaller windows retain Back. See [compact diagnostic checks](../tests/packages/software-failure-navigation-check.md).
 
-The Updates filter and `vinix-package updates` use the same complete dependency
+The Updates filter and `tulpar-package updates` use the same complete dependency
 resolution as `review upgrade`. They show runtime/data changes even when the
 application's version stays unchanged, dependencies added or removed by an
 update, same-version manifest/key changes and any version change required by
@@ -1820,8 +1820,8 @@ entries for new applications show publisher metadata and still require full
 installation review. Reading the view holds a package reader lock and neither
 downloads objects nor activates a generation.
 
-`vinix-package run ID [ABSOLUTE_DOCUMENT...]` executes as an ordinary user through
-`vinix-sandbox`, failing closed if confinement is unavailable. Apps have private
+`tulpar-package run ID [ABSOLUTE_DOCUMENT...]` executes as an ordinary user through
+`tulpar-sandbox`, failing closed if confinement is unavailable. Apps have private
 data, temporary directories and Wine prefixes. Package/runtime paths come from
 one immutable generation, with no implicit host Wine/Linux/Apple installation.
 The environment is explicit and arguments are literal. `files` authorizes only
@@ -1830,7 +1830,7 @@ supplied documents. Display/audio paths are granted only when declared. See
 
 For a legacy root desktop, an administrator can set `launch_user` to an existing
 ordinary account in the root-owned configuration. Software shows **Launch as
-NAME**. The service starts `vinix-session run --isolated NAME` and re-executes
+NAME**. The service starts `tulpar-session run --isolated NAME` and re-executes
 itself after the session tool has verified all user/group IDs, cleared account
 memberships and capabilities, and set `no_new_privs`. The ordinary service then
 re-reads current trust/policy, acquires the generation lease, verifies payloads
@@ -1849,7 +1849,7 @@ Root/system/greeter accounts cannot be selected, and an ordinary caller cannot
 use the setting to change identity. Create the account with the account tools
 first; staging installs the session runner but does not invent an account or
 enroll a publisher. Direct unprivileged launches need empty supplementary groups;
-`vinix-session run --isolated USER /usr/bin/vinix-package run ID` supplies that
+`tulpar-session run --isolated USER /usr/bin/tulpar-package run ID` supplies that
 profile when invoked by an administrator. Documents must be accessible to that
 account, including their parent directories.
 
@@ -1934,7 +1934,7 @@ and session document requests. Removal or loss of the MIME/file grant uses the
 built-in fallback while retaining that preference for rollback or reinstall.
 
 Each package launch opens a Software window and passes literal arguments to
-`vinix-package run`; the service rechecks the current package/dependency closure,
+`tulpar-package run`; the service rechecks the current package/dependency closure,
 publisher policy and payloads before sandbox execution. The window shows output
 and launch failures, including missing or invalid launch-account configuration.
 Closing it while the application runs is prevented to retain the generation
@@ -1960,16 +1960,16 @@ and SDK clients, and administrator access is still required. Failed dependency
 resolution and unsupported review responses leave Confirm unavailable.
 
 Non-data/non-runtime packages also get `.desktop` launchers with MIME types,
-package ID and runtime provenance. `/usr/share/applications/vinix-packages` points
+package ID and runtime provenance. `/usr/share/applications/tulpar-packages` points
 through activation, so XDG registration removal/rollback follows package state.
 Ordinary sessions can execute packages using the CLI or an XDG-aware launcher.
 
 ## Offline and organization deployment
 
 ```sh
-vinix-package mirror /media/new-mirror editor browser
-vinix-package --offline install editor
-vinix-package deploy /etc/company/applications.json
+tulpar-package mirror /media/new-mirror editor browser
+tulpar-package --offline install editor
+tulpar-package deploy /etc/company/applications.json
 ```
 
 Mirror exports signed indexes and the resolved payload closure. On the offline
@@ -2056,7 +2056,7 @@ for measured preparation components, signed export regressions and scope limits.
 Export requires a new destination. The service checks space for unique objects,
 metadata and policy reserves on the destination disk and for missing source-cache
 objects; when both paths share a disk it budgets both copies together. It builds
-an exclusive `.vinix-mirror-*` sibling directory, verifies copied sizes/hashes,
+an exclusive `.tulpar-mirror-*` sibling directory, verifies copied sizes/hashes,
 sets readable metadata/object modes, flushes the tree and publishes it with an
 atomic rename that refuses to replace any existing name. Filesystems without
 exclusive atomic rename support report a failure and leave the final name absent.
@@ -2092,9 +2092,9 @@ Use the supported policy commands to serialize administration with package
 operations:
 
 ```sh
-vinix-package policy
-vinix-package policy-review /etc/company/package-policy.json
-vinix-package policy-apply REVIEW_FINGERPRINT /etc/company/package-policy.json
+tulpar-package policy
+tulpar-package policy-review /etc/company/package-policy.json
+tulpar-package policy-apply REVIEW_FINGERPRINT /etc/company/package-policy.json
 ```
 
 A format-1 policy document declares the host architecture and all seven policy
@@ -2274,9 +2274,9 @@ To reproduce an approved application/runtime set across machines, export a
 format-2 deployment lock rather than resolve names again on every installation:
 
 ```sh
-vinix-package deployment-lock editor browser > /etc/company/deployment.json
-vinix-package deployment-review /etc/company/deployment.json
-vinix-package deployment-apply REVIEW_FINGERPRINT /etc/company/deployment.json
+tulpar-package deployment-lock editor browser > /etc/company/deployment.json
+tulpar-package deployment-review /etc/company/deployment.json
+tulpar-package deployment-apply REVIEW_FINGERPRINT /etc/company/deployment.json
 ```
 
 Without IDs, `deployment-lock` exports the current requested roots, preferring
@@ -2423,7 +2423,7 @@ observes the exec boundary; it does not qualify pledge/unveil or GUI runtimes.
 
 The [production-sandbox guest check](../tests/packages/runtime-check.md) signs
 native applications and an explicit runtime dependency, installs them with the
-real CLI and launches through the staged native `vinix-sandbox`. It checks
+real CLI and launches through the staged native `tulpar-sandbox`. It checks
 private-data writes, literal document grants, denied reads outside those grants,
 read-only application/runtime files, network and process permission enforcement,
 and rejection of modified application/runtime payloads. While an app is running,
@@ -2437,7 +2437,7 @@ runtime does not qualify Linux, Wine, Mach-O or graphical API compatibility.
 The guest root is an initramfs, so these runs do not qualify persistent-device
 power-cut durability.
 
-Publishers can now use `vinix-package pack-root` with explicit source/destination
+Publishers can now use `tulpar-package pack-root` with explicit source/destination
 selectors to import a verified prepared guest root. It materializes library and
 directory symlinks within the captured guest namespace, rejects escapes/cycles
 and special files, and emits the same canonical regular-file package inventory.

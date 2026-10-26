@@ -303,7 +303,7 @@
       },
       "complete_support_export": {
         "path": "/tmp/vmh-source",
-        "provenance": "immutable committed e29 source plus exact reviewed own-host96 and committed0fe dependency; manifest /tmp/vinix-host-model-probe/native-source-snapshot.json",
+        "provenance": "immutable committed e29 source plus exact reviewed own-host96 and committed0fe dependency; manifest /tmp/tulpar-host-model-probe/native-source-snapshot.json",
         "symlink_handling": "existing identical read-only dependency symlink retained; copy restored and exact overlays reverified before execution"
       }
     },

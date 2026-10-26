@@ -28,20 +28,20 @@ pub fn C.vkp_percpu_offsets() voidptr
 pub fn C.vkp_percpu_begin() voidptr
 pub fn C.vkp_percpu_end() voidptr
 
-@[export: 'vinix_linuxkpi_percpu_count']
+@[export: 'tulpar_linuxkpi_percpu_count']
 pub fn percpu_count() u32 {
 	unsafe {
 		return C.vkp_load32(&compat_cpu_count, 2)
 	}
 }
 
-@[export: 'vinix_linuxkpi_percpu_init']
+@[export: 'tulpar_linuxkpi_percpu_init']
 pub fn percpu_init(count u32, begin voidptr, end voidptr) i32 {
 	unsafe {
 		if percpu_count() != 0 { return -16 }
 		if count == 0 || count > 256 || uint(end) < uint(begin) { return -22 }
 		size := uint(end) - uint(begin)
-		page := C.vinix_linuxkpi_page_size()
+		page := C.tulpar_linuxkpi_page_size()
 		if size > uint(-1) - (page - 1) { return -75 }
 		stride := (size + page - 1) & ~(page - 1)
 		if stride != 0 && uint(count) > uint(-1) / stride { return -75 }
@@ -66,14 +66,14 @@ pub fn percpu_init(count u32, begin voidptr, end voidptr) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_percpu_bootstrap']
+@[export: 'tulpar_linuxkpi_percpu_bootstrap']
 pub fn percpu_bootstrap(count u32) i32 {
 	unsafe {
 		return percpu_init(count, C.vkp_percpu_begin(), C.vkp_percpu_end())
 	}
 }
 
-@[export: 'vinix_linuxkpi_percpu_ptr']
+@[export: 'tulpar_linuxkpi_percpu_ptr']
 pub fn percpu_ptr(ptr voidptr, cpu u32) voidptr {
 	unsafe {
 		if uint(ptr) == 0 { return nil }
@@ -101,7 +101,7 @@ pub fn percpu_ptr(ptr voidptr, cpu u32) voidptr {
 pub fn alloc_percpu_gfp(size uint, align uint, flags u32) voidptr {
 	unsafe {
 		count := percpu_count()
-		page := C.vinix_linuxkpi_page_size()
+		page := C.tulpar_linuxkpi_page_size()
 		if count == 0 || size == 0 || align == 0 || (align & (align - 1)) != 0 || align > page {
 			return nil
 		}
@@ -156,7 +156,7 @@ pub fn free_percpu(ptr voidptr) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_percpu_destroy_for_test']
+@[export: 'tulpar_linuxkpi_percpu_destroy_for_test']
 pub fn percpu_destroy_for_test() {
 	unsafe {
 		require(uint(compat_allocations) == 0)

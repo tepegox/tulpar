@@ -32,9 +32,9 @@ fn offline_disk_plan() {
 @[direct_array_access]
 fn planned_disks(other &char) {
 	unsafe {
-		first := status(c'/dev/mapper/vinix2').generation
-		second := status(c'/dev/mapper/vinix9').generation
-		third := status(c'/dev/mapper/vinix13').generation
+		first := status(c'/dev/mapper/tulpar2').generation
+		second := status(c'/dev/mapper/tulpar9').generation
+		third := status(c'/dev/mapper/tulpar13').generation
 		fd := C.open(c'/root/saved.vset', C.O_RDONLY)
 		mut original := [6208]u8{}
 		size := C.read(fd, &original[0], 6208)
@@ -53,14 +53,14 @@ fn planned_disks(other &char) {
 		preview(c'check-bundle', false, 1, &output[0])
 		check(!contains(&output[0], c'action='), c'missing participant prevents all actions')
 		simple(c'restore-bundle', c'/root/saved.vset', &char(nil), 1)
-		check(status(c'/dev/mapper/vinix2').generation == first
-			&& status(c'/dev/mapper/vinix9').generation == second,
+		check(status(c'/dev/mapper/tulpar2').generation == first
+			&& status(c'/dev/mapper/tulpar9').generation == second,
 			c'missing participant keeps generations')
 		simple(c'plan-forget', c'/root/saved.vset', c'2', 0)
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
 		// Remove desired rows before dropping membership; live views and their
 		// descriptors survive, even when the remaining set is explicitly replayed.
-		held := C.open(c'/dev/mapper/vinix9', C.O_RDONLY)
+		held := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY)
 		check(held >= 0, c'hold view across disk omission')
 		simple(c'plan-remove', c'/root/saved.vset', c'9', 0)
 		simple(c'plan-remove', c'/root/saved.vset', c'13', 0)
@@ -88,13 +88,13 @@ fn planned_disks(other &char) {
 		check(contains(&output[0], c'checked disks=2 create=0 keep=5 grow=0'),
 			c'reenrollment restores complete replay set')
 		simple(c'restore-bundle', c'/root/saved.vset', &char(nil), 0)
-		check(status(c'/dev/mapper/vinix2').generation == first
-			&& status(c'/dev/mapper/vinix9').generation == second
-			&& status(c'/dev/mapper/vinix13').generation == third,
+		check(status(c'/dev/mapper/tulpar2').generation == first
+			&& status(c'/dev/mapper/tulpar9').generation == second
+			&& status(c'/dev/mapper/tulpar13').generation == third,
 			c'membership roundtrip preserves live generations')
 		second_view_data()
 		edited_view_data()
-		copy_plan(c'/root/saved.vset', c'/etc/vinix/volumes.vset')
+		copy_plan(c'/root/saved.vset', c'/etc/tulpar/volumes.vset')
 		C.printf(c'PLAN DISKS PASSED: offline enrollment, empty removal, missing identity, preserved data and live descriptors\n')
 	}
 }

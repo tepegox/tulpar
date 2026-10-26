@@ -22,15 +22,15 @@ fn test_unsupported_architecture_rejected_before_work_or_commands() {
 }
 
 fn test_real_command_success_failures_and_cleanup() {
-	tool := os.getenv('VINIX_BOUNDARY_TOOL')
-	compiler := os.getenv('VINIX_BOUNDARY_COMPILER_FIXTURE')
+	tool := os.getenv('TULPAR_BOUNDARY_TOOL')
+	compiler := os.getenv('TULPAR_BOUNDARY_COMPILER_FIXTURE')
 	if tool == '' || compiler == '' { return }
-	work := hosttest.work_dir('', 'vinix-boundary-qualification-')!
+	work := hosttest.work_dir('', 'tulpar-boundary-qualification-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	mut env := os.environ()
 	env['CC'] = compiler
 	env['TMPDIR'] = work
-	env['VINIX_BOUNDARY_REAL_CC'] = hosttest.tool('clang')
+	env['TULPAR_BOUNDARY_REAL_CC'] = hosttest.tool('clang')
 	for mode, diagnostic in {
 		'pass':            ''
 		'compile-failure': 'forced compiler failure'
@@ -38,7 +38,7 @@ fn test_real_command_success_failures_and_cleanup() {
 		'mismatch':        'native boundary differential output mismatch:'
 		'fixture-failure': 'v fixture failed:'
 	} {
-		env['VINIX_BOUNDARY_CASE'] = mode
+		env['TULPAR_BOUNDARY_CASE'] = mode
 		result := hosttest.capture_in([tool], '', 120, env, work)!
 		if mode == 'pass' {
 			assert result.code == 0 && result.stderr == ''

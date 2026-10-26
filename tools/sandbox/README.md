@@ -1,6 +1,6 @@
 # Application sandbox launcher
 
-`vinix-sandbox` applies a process policy before executing an application. It
+`tulpar-sandbox` applies a process policy before executing an application. It
 sets and verifies `no_new_privs`, removes effective, permitted, inheritable and
 ambient capabilities, clears supplementary groups, closes descriptors above
 stderr, locks an `unveil` filesystem view, and installs explicit pledge
@@ -18,7 +18,7 @@ build-support/security-tools/stage --arch x86_64 \
 For example, a static file reader can be launched with:
 
 ```sh
-vinix-sandbox --uid 1000 --gid 1000 --promises 'stdio rpath' \
+tulpar-sandbox --uid 1000 --gid 1000 --promises 'stdio rpath' \
   --unveil /home/user/input r -- /usr/bin/reader /home/user/input
 ```
 
@@ -45,9 +45,9 @@ The native Calculator applies its own narrower policy after initializing its
 model and translations: `stdio` only, a locked empty filesystem view, no
 capabilities or new privileges, and anonymous UID/GID 65534 when started as
 root. Its compositor protocol channels remain open. That profile is active
-when the running kernel identifies itself as Vinix, including its kernel-owned
-`-vinix` release suffix in a private UTS namespace. Host UI tests do not invoke
-Vinix syscall numbers.
+when the running kernel identifies itself as Tulpar, including its kernel-owned
+`-tulpar` release suffix in a private UTS namespace. Host UI tests do not invoke
+Tulpar syscall numbers.
 
 The launcher protects an application process after it starts. It does not
 authenticate boot artifacts or supply system-wide MAC, verified block devices,

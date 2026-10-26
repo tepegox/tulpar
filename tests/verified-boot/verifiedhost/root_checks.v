@@ -29,12 +29,12 @@ fn root_test(args []string) ! {
 		println('Linux compatibility skipped: supply an actual --veritysetup executable.')
 		return
 	}
-	work := temporary('vinix-veritysetup-')!
+	work := temporary('tulpar-veritysetup-')!
 	defer { bh.retire(work) }
 	executable := parsed.value('--veritysetup', '')
 	for blocks in [1, 2, 128, 129, 16384, 16385] {
 		fixture(work + '/data', blocks)!
-		metadata := verityimage.build(work + '/data', work + '/vinix', false)!
+		metadata := verityimage.build(work + '/data', work + '/tulpar', false)!
 		os.cp(work + '/data', work + '/linux')!
 		flags := ['--no-superblock', '--format=1', '--hash=sha256', '--salt=-', '--data-block-size=4096',
 			'--hash-block-size=4096', '--data-blocks=' + blocks.str(),
@@ -44,12 +44,12 @@ fn root_test(args []string) ! {
 		if roots.len != 1 || roots[0] != metadata.root_hash {
 			return error('Linux root hash mismatch for ' + blocks.str() + ' blocks: ' + output)
 		}
-		if hosttest.file_digest(work + '/linux')! != hosttest.file_digest(work + '/vinix')! {
+		if hosttest.file_digest(work + '/linux')! != hosttest.file_digest(work + '/tulpar')! {
 			return error('Linux hash tree differs for ' + blocks.str() + ' blocks')
 		}
-		bh.run(joined([executable, 'verify'], flags, [work + '/vinix', work + '/vinix',
+		bh.run(joined([executable, 'verify'], flags, [work + '/tulpar', work + '/tulpar',
 			metadata.root_hash]))!
-		os.rm(work + '/vinix')!
+		os.rm(work + '/tulpar')!
 		println('PASS real Linux veritysetup: ' + blocks.str() + ' blocks, matching complete tree and root')
 	}
 }

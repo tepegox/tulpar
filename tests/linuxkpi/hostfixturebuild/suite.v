@@ -95,7 +95,7 @@ pub fn build_suite(work string, arch string, sanitize bool, inherited_environmen
 		'-Wall', '-Wextra', '-Werror', '-Wno-unused-parameter', '-Wno-unused-function', '-Wno-unused-label',
 		'-Wno-deprecated-declarations', '-D_FORTIFY_SOURCE=0']
 	flags << if sanitize { ['-fsanitize=address,undefined', '-fno-omit-frame-pointer'] } else { ['-fno-stack-protector', '-D_GNU_SOURCE'] }
-	flags << ['-pthread', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-DVINIX_LINUXKPI_FORMAT_HOST_TEST', '-D__KERNEL__',
+	flags << ['-pthread', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-DTULPAR_LINUXKPI_FORMAT_HOST_TEST', '-D__KERNEL__',
 		'-include', tests + '/host_types.h', '-include', 'linux/kconfig.h', '-include', source_prefix + 'include/linux/compiler_types.h',
 		'-iquote', root + '/kernel/c', '-I' + contracts, '-I' + work_prefix + 'include', '-I' + root + '/kernel/linuxkpi/include',
 		'-I' + source_prefix + 'include', '-I' + source_prefix + 'include/uapi', '-I' + source_prefix + 'arch/x86/include',

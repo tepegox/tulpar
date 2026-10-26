@@ -117,7 +117,7 @@ fn test_readiness_policy_survives_rekey() {
 	assert generator.counter == 0
 }
 
-fn C.vinix_test_set_hardware(on int)
+fn C.tulpar_test_set_hardware(on int)
 
 fn test_events_change_the_pool() {
 	entropy_pool = [8]u64{}
@@ -138,12 +138,12 @@ fn test_stir_reseeds_and_trusts_only_hardware() {
 	defer {
 		unsafe { free(generator) }
 		generator_bits = 0
-		C.vinix_test_set_hardware(0)
+		C.tulpar_test_set_hardware(0)
 	}
 	assert !is_ready()
 	add_event(42)
 	before := generator.key
-	C.vinix_test_set_hardware(0)
+	C.tulpar_test_set_hardware(0)
 	stir()
 	assert generator.key != before
 	assert entropy_pool == [8]u64{}
@@ -152,7 +152,7 @@ fn test_stir_reseeds_and_trusts_only_hardware() {
 
 	add_event(43)
 	middle := generator.key
-	C.vinix_test_set_hardware(1)
+	C.tulpar_test_set_hardware(1)
 	stir()
 	assert generator.key != middle
 	assert is_ready()

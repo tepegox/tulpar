@@ -128,7 +128,7 @@ fn check() ! {
 	if host.firmware_vars != '' { inputs[host.firmware_vars] = digest(host.firmware_vars)! }
 	if arch == 'x86_64' { for _, path in plainiso.inputs(root)! { inputs[path] = digest(path)! } }
 	else {
-		loader := os.getenv_opt('VINIX_LIMINE_BOOTAA64') or { hwhost.shared_path(root, 'boot-image/limine-bin/BOOTAA64.EFI') }
+		loader := os.getenv_opt('TULPAR_LIMINE_BOOTAA64') or { hwhost.shared_path(root, 'boot-image/limine-bin/BOOTAA64.EFI') }
 		for path in [loader, root + '/build-support/limine.conf',
 			os.find_abs_path_of_executable('mformat')!, os.find_abs_path_of_executable('mmd')!, os.find_abs_path_of_executable('mcopy')!] {
 			inputs[path] = digest(path)!
@@ -149,22 +149,22 @@ fn check() ! {
 	verify(inputs)!
 	verify_sources(root, sources)!
 	extras := work + '/extras'
-	for directory in ['/usr/bin', '/usr/sbin', '/etc/vinix', '/etc/vinix-packages', '/var/lib/vinix-packages'] { os.mkdir_all(extras + directory)! }
-	os.write_file(extras + '/etc/vinix/auth.conf', 'scrypt_ln = 10\nscrypt_p = 1\n')!
-	os.cp(sandbox, extras + '/usr/bin/vinix-sandbox')!
+	for directory in ['/usr/bin', '/usr/sbin', '/etc/tulpar', '/etc/tulpar-packages', '/var/lib/tulpar-packages'] { os.mkdir_all(extras + directory)! }
+	os.write_file(extras + '/etc/tulpar/auth.conf', 'scrypt_ln = 10\nscrypt_p = 1\n')!
+	os.cp(sandbox, extras + '/usr/bin/tulpar-sandbox')!
 	os.mkdir_all(extras + '/usr/share/neovim-update')!
 	for name in ['index.json', 'index.sig'] { os.cp(update_repository + '/' + name, extras + '/usr/share/neovim-update/' + name)! }
 	os.write_file(extras + '/usr/share/neovim-update/public-key', key)!
-	account := build_program(host.v, clang, sysroot, gcc, source, source + '/tools/accounts/account.v', 'vinix-account', arch, work, false)!
-	os.cp(account, extras + '/usr/sbin/vinix-account')!
-	session := build_program(host.v, clang, sysroot, gcc, source, source + '/tools/accounts/session.v', 'vinix-session', arch, work, false)!
-	os.cp(session, extras + '/usr/sbin/vinix-session')!
-	package := build_program(host.v, clang, sysroot, gcc, source, source + '/tools/packages/main.v', 'vinix-package', arch, work, false)!
-	os.cp(package, extras + '/usr/bin/vinix-package')!
+	account := build_program(host.v, clang, sysroot, gcc, source, source + '/tools/accounts/account.v', 'tulpar-account', arch, work, false)!
+	os.cp(account, extras + '/usr/sbin/tulpar-account')!
+	session := build_program(host.v, clang, sysroot, gcc, source, source + '/tools/accounts/session.v', 'tulpar-session', arch, work, false)!
+	os.cp(session, extras + '/usr/sbin/tulpar-session')!
+	package := build_program(host.v, clang, sysroot, gcc, source, source + '/tools/packages/main.v', 'tulpar-package', arch, work, false)!
+	os.cp(package, extras + '/usr/bin/tulpar-package')!
 	guest := build_program(host.v, clang, sysroot, gcc, source, source + '/tests/packages/neovim-native/main.v', 'guest', arch, work, false)!
 	config := pkgcore.Config{architecture: arch, launch_user: 'alex', policy: pkgcore.Policy{offline: true, reserve_bytes: 0},
 		repositories: [pkgcore.Repository{id: 'neovim-fixture', url: 'file://' + repository, public_key: key}]}
-	os.write_file(extras + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(extras + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	service := pkgcore.Service{root: extras}
 	mut catalog := service.refresh()!; catalog.close()
 	mut state := service.transact('install', ['org.neovim.editor'], pkgcore.TransactionOptions{})!; state.close()

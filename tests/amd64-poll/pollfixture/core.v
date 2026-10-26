@@ -1,4 +1,4 @@
-// Independent Vinix poll fixture; original predicates and logical lines retained.
+// Independent Tulpar poll fixture; original predicates and logical lines retained.
 @[translated]
 module pollfixture
 

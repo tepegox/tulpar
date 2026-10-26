@@ -1,6 +1,6 @@
 # Offline plain multi-disk scrub inspection qualification
 
-`show-data-scrub REPORT` displays complete historical `VINIXSR1` findings only
+`show-data-scrub REPORT` displays complete historical `TULPARSR1` findings only
 after validating every field and row. Valid changed reports return 0; invalid
 input or stdout failure returns 1. See
 [the contract](../../docs/storage-volumes.md#offline-multi-disk-scrub-report-inspection).
@@ -9,10 +9,10 @@ input or stdout failure returns 1. See
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-data-scrub-view --work /tmp/data-scrub-view-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --data-scrub-view --work /tmp/data-scrub-view-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --data-scrub-view --work /tmp/data-scrub-view-x86
 ```
 

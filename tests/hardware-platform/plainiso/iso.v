@@ -8,12 +8,12 @@ import os
 pub fn source() string { return $embed_file('iso.v').to_string() }
 
 pub fn configuration() string {
-	return 'timeout: 0\nverbose: yes\n\n/Vinix\n    protocol: limine\n    kernel_path: boot():/boot/vinix\n    module_path: boot():/boot/initramfs.tar\n    resolution: 1024x768x32\n    kaslr: no\n'
+	return 'timeout: 0\nverbose: yes\n\n/Tulpar\n    protocol: limine\n    kernel_path: boot():/boot/tulpar\n    module_path: boot():/boot/initramfs.tar\n    resolution: 1024x768x32\n    kaslr: no\n'
 }
 
 pub fn inputs(root string) !map[string]string {
-	loader := if os.getenv('VINIX_PLAIN_ISO_LIMINE') != '' {
-		os.abs_path(os.getenv('VINIX_PLAIN_ISO_LIMINE'))
+	loader := if os.getenv('TULPAR_PLAIN_ISO_LIMINE') != '' {
+		os.abs_path(os.getenv('TULPAR_PLAIN_ISO_LIMINE'))
 	} else { root + '/build-amd64-iso/limine/limine-binary-12.9.3' }
 	return {
 		'iso-xorriso': os.find_abs_path_of_executable('xorriso')!
@@ -30,31 +30,31 @@ pub fn prepare(root string, work string) !string {
 	path := work + '/image-builder'
 	os.mkdir_all(path + '/build-support')!
 	os.symlink(os.executable(), path + '/build-support/build-amd64-iso.sh')!
-	os.setenv('VINIX_TEST_PLAIN_ISO', '1', true)
-	os.setenv('VINIX_TEST_PLAIN_ISO_XORRISO', tools['iso-xorriso'], true)
-	os.setenv('VINIX_TEST_PLAIN_ISO_LOADER', os.dir(tools['iso-BOOTX64.EFI']), true)
+	os.setenv('TULPAR_TEST_PLAIN_ISO', '1', true)
+	os.setenv('TULPAR_TEST_PLAIN_ISO_XORRISO', tools['iso-xorriso'], true)
+	os.setenv('TULPAR_TEST_PLAIN_ISO_LOADER', os.dir(tools['iso-BOOTX64.EFI']), true)
 	return path
 }
 
 pub fn requested() bool {
-	return os.getenv('VINIX_TEST_PLAIN_ISO') == '1' && os.getenv('VINIX_AMD64_INITRAMFS') != ''
+	return os.getenv('TULPAR_TEST_PLAIN_ISO') == '1' && os.getenv('TULPAR_AMD64_INITRAMFS') != ''
 }
 
 pub fn build() ! {
-	build_directory := os.getenv('VINIX_AMD64_ISO_BUILD_DIR')
-	output := os.getenv('VINIX_AMD64_ISO')
-	loader := os.getenv('VINIX_TEST_PLAIN_ISO_LOADER')
+	build_directory := os.getenv('TULPAR_AMD64_ISO_BUILD_DIR')
+	output := os.getenv('TULPAR_AMD64_ISO')
+	loader := os.getenv('TULPAR_TEST_PLAIN_ISO_LOADER')
 	if build_directory == '' || output == '' || loader == '' { return error('missing plain ISO fixture inputs') }
 	staging := build_directory + '/iso-root'
 	os.mkdir_all(staging + '/boot')!
 	os.mkdir_all(staging + '/EFI/BOOT')!
-	os.cp(os.getenv('VINIX_AMD64_KERNEL'), staging + '/boot/vinix')!
-	os.cp(os.getenv('VINIX_AMD64_INITRAMFS'), staging + '/boot/initramfs.tar')!
+	os.cp(os.getenv('TULPAR_AMD64_KERNEL'), staging + '/boot/tulpar')!
+	os.cp(os.getenv('TULPAR_AMD64_INITRAMFS'), staging + '/boot/initramfs.tar')!
 	os.cp(loader + '/BOOTX64.EFI', staging + '/EFI/BOOT/BOOTX64.EFI')!
 	os.cp(loader + '/limine-uefi-cd.bin', staging + '/boot/limine-uefi-cd.bin')!
 	os.write_file(staging + '/boot/limine.conf', configuration() +
-		'    cmdline: vinix.disk=auto ' + os.getenv('VINIX_CMDLINE') + '\n')!
-	program := os.getenv('VINIX_TEST_PLAIN_ISO_XORRISO')
+		'    cmdline: tulpar.disk=auto ' + os.getenv('TULPAR_CMDLINE') + '\n')!
+	program := os.getenv('TULPAR_TEST_PLAIN_ISO_XORRISO')
 	image_arguments := ['-as', 'mkisofs', '-iso-level', '3', '-R', '-r', '-J',
 		'--efi-boot', 'boot/limine-uefi-cd.bin', '-efi-boot-part', '--efi-boot-image',
 		'--protective-msdos-label', staging, '-o', output]

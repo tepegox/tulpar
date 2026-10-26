@@ -22,7 +22,7 @@ PxIS clear write exercises the error path. Successful hardware completion needs
 an emulator or real controller. The clock model advances while a kernel lock
 would have interrupts disabled, matching the drivers' HPET/ARM timer deadlines.
 
-`VINIX_KERNEL_DIR=/path/to/isolated/kernel VINIX_REBOOT_PERSISTENCE_NO_BUILD=1
+`TULPAR_KERNEL_DIR=/path/to/isolated/kernel TULPAR_REBOOT_PERSISTENCE_NO_BUILD=1
  tests/reboot-persistence/run.sh` checks the real AArch64 VirtIO path across a
 QEMU guest reboot. A passed reboot test verifies completion and restart
 behavior; power-cut testing with a volatile device-cache model remains separate.

@@ -1,12 +1,12 @@
 # Managed QEMU virtual machines
 
-`vinix-vm` imports a raw guest image into a private qcow2 disk and keeps a
+`tulpar-vm` imports a raw guest image into a private qcow2 disk and keeps a
 separate firmware-variable image, QMP socket, serial log and execution log per
 VM. It supports x86_64 and AArch64 QEMU machines, 64 MiB to 64 GiB of memory and
 1 to 64 virtual CPUs, subject to available host resources and QEMU support.
 
 ```
-v -enable-globals -gc none -cc gcc -o vinix-vm tools/development/vm.v
+v -enable-globals -gc none -cc gcc -o tulpar-vm tools/development/vm.v
 ./vinix-vm init vm.json /home/developer/vm-state
 ./vinix-vm start /home/developer/vm-state
 ```
@@ -39,7 +39,7 @@ while retaining the VM lease. Cancellation, child failure and spawn errors also
 release the query lease. An abandoned socket with an explicit connection
 refusal can still be removed during startup.
 
-Example configuration (supply actual hashes from `vinix-build hash`):
+Example configuration (supply actual hashes from `tulpar-build hash`):
 
 ```json
 {
@@ -64,9 +64,9 @@ Example configuration (supply actual hashes from `vinix-build hash`):
 
 Select `kvm` on a compatible Linux host or `hvf` on a compatible macOS host to
 request hardware acceleration. Failure to initialize that accelerator is an
-error; the manager does not select TCG as a fallback. Installed Vinix currently
+error; the manager does not select TCG as a fallback. Installed Tulpar currently
 needs `tcg`: `/dev/kvm` is absent and its small native Intel hypervisor cannot
-run QEMU. `jit: true` requests Vinix's existing `VINIX_ALLOW_WX` execution mode;
+run QEMU. `jit: true` requests Tulpar's existing `TULPAR_ALLOW_WX` execution mode;
 the kernel still requires an administrator-authorized executable mount. The
 manager never modifies mount policy, identities, capabilities or device access.
 
@@ -74,11 +74,11 @@ Network access is disabled unless `network` is true. User-mode networking needs
 no tap device or root. Optional SSH forwarding binds only to 127.0.0.1; SSH
 authentication and the guest server remain the guest's responsibility. The
 shared directory is explicitly selected and exposed read-only through virtio-9p.
-A guest needs a working 9p driver; Vinix's own 9p guest support is unqualified.
+A guest needs a working 9p driver; Tulpar's own 9p guest support is unqualified.
 The guest-agent option creates a private `agent.sock` endpoint connected to
 `org.qemu.guest_agent.0`; a Linux guest can run its packaged `qemu-ga` there.
 This command does not expose remote control, inject credentials, or install
-guest software. No guest-agent implementation for Vinix is claimed.
+guest software. No guest-agent implementation for Tulpar is claimed.
 
 With that transport enabled and a running guest agent, query it from the host:
 
@@ -210,8 +210,8 @@ and raw images can be removed after import.
 `v -enable-globals -cc cc test tools/development/vmcore` exercises real QEMU:
 two CPUs, pause/resume/status/quit, concurrent-start and live-snapshot refusal,
 disk write/restore, paired firmware restore and independent VM variables.
-Set `VINIX_VM_TEST_FIRMWARE` to the QEMU firmware directory if needed. These
-host tests do not qualify a guest OS, hardware virtualization or Vinix-hosted
+Set `TULPAR_VM_TEST_FIRMWARE` to the QEMU firmware directory if needed. These
+host tests do not qualify a guest OS, hardware virtualization or Tulpar-hosted
 QEMU. See QEMU's [QMP specification](https://www.qemu.org/docs/master/interop/qmp-spec.html)
 and [image tool documentation](https://www.qemu.org/docs/master/tools/qemu-img.html).
 
@@ -233,7 +233,7 @@ binding on the same QEMU/V versions. Refused operations preserve the exact
 disk hash, current variables, existing sidecars and manifest, and leave no
 new pending marker or temporary variable image. Legacy receipt restoration,
 numeric names, ordinary snapshot round trips and the existing QEMU lifecycle
-checks also pass. Power-loss atomicity and Vinix-hosted QEMU qualification
+checks also pass. Power-loss atomicity and Tulpar-hosted QEMU qualification
 remain separate work.
 
 The subsequent host recovery checks reproduced loss of the saved firmware
@@ -249,8 +249,8 @@ The complete host `vmcore` suite passed on the same QEMU/V versions. The
 updated CLI also cross-compiled and linked as static Linux ELF64 for AArch64
 and x86_64, with both machine IDs checked. Build logs, source/compiler/binary
 hashes and the receipt are retained locally in
-`/tmp/vinix-vm-recovery-build-51315`; those cross-builds do not establish
-installed-Vinix execution or guest OS qualification.
+`/tmp/tulpar-vm-recovery-build-51315`; those cross-builds do not establish
+installed-Tulpar execution or guest OS qualification.
 
 The monitor-liveness regression reproduced acceptance of a listening socket
 that never sent its QMP greeting. The corrected host VM and QMP suites passed
@@ -263,11 +263,11 @@ descriptor baseline. A real QEMU run kills its owning manager, confirms the
 record lock is released, and still refuses replacement and snapshots while
 preserving monitor control and disk/firmware hashes. It stops that VM through
 QMP and waits for the image lock to be released, without signaling a saved
-QEMU PID. These remain host lifecycle checks rather than Vinix-hosted QEMU
+QEMU PID. These remain host lifecycle checks rather than Tulpar-hosted QEMU
 acceptance.
 The updated CLI also builds as static Linux ELF64 for AArch64 and x86_64.
 The checked machine IDs, source/compiler/binary hashes and build logs are
-retained locally in `/tmp/vinix-vm-monitor-build-62727`.
+retained locally in `/tmp/tulpar-vm-monitor-build-62727`.
 
 Host guest-query checks use V protocol fixtures to exercise stale/partial
 output, wrong synchronization nonces, transaction correlation, exact 64-bit
@@ -277,13 +277,13 @@ while the VM lease is held, unchanged disk/firmware/pending files, disabled
 transport, nonprivate state/locks and unsafe endpoint paths. The real QEMU
 lifecycle fixture enables the virtio-serial agent channel and verifies its
 socket, alongside the existing lifecycle and snapshot checks. These fixtures
-do not qualify a packaged `qemu-ga` inside a guest or provide Vinix's missing
+do not qualify a packaged `qemu-ga` inside a guest or provide Tulpar's missing
 guest-side virtio-serial driver and agent.
 All eight host VM/QMP test files passed on 15 October 2026 with QEMU 11.1.1
 and V `be2eb40`. The updated CLI cross-compiled and linked as static Linux
 ELF64 for AArch64 and x86_64; both machine IDs were checked. Source/compiler/
 binary hashes, logs and the build receipt are retained locally in
-`/tmp/vinix-vm-guest-build-86620`.
+`/tmp/tulpar-vm-guest-build-86620`.
 
 The channel-lifetime regression reproduced acceptance of a reachable agent
 socket when `qmp.sock` was absent. Both endpoints now receive the same offline
@@ -294,8 +294,8 @@ It then exercises real QEMU readiness and verifies the query lease becomes
 available while QEMU remains alive. Early child exit, SIGTERM during
 startup and a nonexecutable emulator all release both leases. No saved QEMU
 PID is signaled. These remain host protocol and lifecycle checks; packaged
-guest-agent and installed-Vinix VM qualification are separate gates.
+guest-agent and installed-Tulpar VM qualification are separate gates.
 All nine host VM/QMP test files pass with QEMU 11.1.1 and V `be2eb40`.
 The updated CLI also builds as static Linux ELF64 for AArch64 and x86_64,
 with both machine IDs checked. Source/compiler/binary hashes, logs and the
-receipt are retained locally in `/tmp/vinix-vm-channels-build-29279`.
+receipt are retained locally in `/tmp/tulpar-vm-channels-build-29279`.

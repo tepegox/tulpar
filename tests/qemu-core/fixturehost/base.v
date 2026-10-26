@@ -62,7 +62,7 @@ pub fn prepare_base(output string, arch string) ! {
 	write(output + '/ported-test.c', ported)!
 	stage_pending(hosttest.root() + '/tests/qemu-core/baseoracle', output + '/baseoracle')!
 	header := rename_identifiers(read(output + '/basefixture-api.h')!, base_exports)
-		.replace('VINIX_GENERATED_BASEFIXTURE_API_H', 'VINIX_GENERATED_ORIGINAL_BASEFIXTURE_API_H')
+		.replace('TULPAR_GENERATED_BASEFIXTURE_API_H', 'TULPAR_GENERATED_ORIGINAL_BASEFIXTURE_API_H')
 	write(output + '/original-basefixture-api.h', header)!
 	// Paths are sorted just as the original recursive source receipt was.
 	mut paths := os.walk_ext(output, '')
@@ -91,7 +91,7 @@ pub fn prepare_base(output string, arch string) ! {
 pub fn host_base(output string, cc string, arch string, native_headers string) ! {
 	outside_checkout(output, 'Recover frozen C outside the maintained checkout')!
 	mkdir_all(os.dir(output))!
-	generator := hosttest.env_default('VINIX_QEMU_BASE_GENERATOR', hosttest.root() + '/tests/qemu-core/compile-basefixture')
+	generator := hosttest.env_default('TULPAR_QEMU_BASE_GENERATOR', hosttest.root() + '/tests/qemu-core/compile-basefixture')
 	command([generator, output, '--arch', arch], os.dir(output) + '/prepare.log')!
 	hosttest.generate_module(output + '/baseoracle', output + '/baseoracle.c', arch, []string{})!
 	target := target_flags(arch, false)

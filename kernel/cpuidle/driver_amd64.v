@@ -57,11 +57,11 @@
 //
 // On the command line
 //
-//	vinix.cpuidle=off     no driver: the scheduler idles as it did before
-//	vinix.cpuidle=halt    HLT even where MWAIT would be used
-//	vinix.cpuidle=mwait   MWAIT for C1 although CPUID enumerates no C1
+//	tulpar.cpuidle=off     no driver: the scheduler idles as it did before
+//	tulpar.cpuidle=halt    HLT even where MWAIT would be used
+//	tulpar.cpuidle=mwait   MWAIT for C1 although CPUID enumerates no C1
 //	                      sub-state; for trying the MWAIT path in an emulator
-//	vinix.max_cstate=N    offer only the first N states
+//	tulpar.max_cstate=N    offer only the first N states
 //
 // Under QEMU's emulation (-accel tcg) the default is HLT although MONITOR is
 // advertised, and has to be: its MWAIT does not wait when the machine has more
@@ -249,23 +249,23 @@ fn driver_start() {
 	}
 	cpuidle_started = true
 	cpuidle_driver_name = 'none'
-	if choice := devcore.boot_option('vinix.cpuidle=') {
+	if choice := devcore.boot_option('tulpar.cpuidle=') {
 		if choice == 'off' {
-			print('cpuidle: switched off by vinix.cpuidle=off\n')
+			print('cpuidle: switched off by tulpar.cpuidle=off\n')
 			return
 		}
 	}
 	hz := tsc_hz()
 
 	mut described := describe_cpu()
-	if choice := devcore.boot_option('vinix.cpuidle=') {
+	if choice := devcore.boot_option('tulpar.cpuidle=') {
 		if choice == 'halt' {
 			described.monitor = false
 		} else if choice == 'mwait' {
 			described.forced = true
 		}
 	}
-	if limit := devcore.boot_option('vinix.max_cstate=') {
+	if limit := devcore.boot_option('tulpar.max_cstate=') {
 		described.limit = small_number(limit)
 	}
 	table := mwait_table(described)

@@ -32,15 +32,15 @@ fn suite(sandbox string) hwhost.Suite {
 		guest: 'tests/accounts/guest'
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
 		programs: [
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 		]
-		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
+		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
 		files: [
 			hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
 		]
 		directories: ['run', 'home', 'var/log', 'tmp:1777']
 		scenarios: [hwhost.Scenario{
@@ -69,14 +69,14 @@ fn stage_profile(profile string, inputs string, root string) ![]Artifact {
 	for arch in ['aarch64', 'x86_64'] {
 		if profile == 'sqlite' {
 			for variant in ['base', 'math'] {
-				for path in ['bin/sqlite3', 'bin/vinix-linux-runner', 'lib/libc.so', 'lib/libsqlite3.so.0',
-					'licenses/sqlite-COPYRIGHT', 'licenses/musl-COPYRIGHT', 'licenses/vinix-COPYING'] { expected << variant + '/' + arch + '/' + path }
+				for path in ['bin/sqlite3', 'bin/tulpar-linux-runner', 'lib/libc.so', 'lib/libsqlite3.so.0',
+					'licenses/sqlite-COPYRIGHT', 'licenses/musl-COPYRIGHT', 'licenses/tulpar-COPYING'] { expected << variant + '/' + arch + '/' + path }
 			}
 		} else {
-			for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/vinix-linux-runner', 'lib/libc.so',
+			for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/tulpar-linux-runner', 'lib/libc.so',
 				'lib/libavcodec.so.62', 'lib/libavdevice.so.62', 'lib/libavfilter.so.11', 'lib/libavformat.so.62',
 				'lib/libavutil.so.60', 'lib/libswresample.so.6', 'lib/libswscale.so.9',
-				'licenses/ffmpeg-LICENSE.md', 'licenses/ffmpeg-COPYING.LGPLv2.1', 'licenses/musl-COPYRIGHT', 'licenses/vinix-COPYING', 'licenses/v-COPYRIGHT',
+				'licenses/ffmpeg-LICENSE.md', 'licenses/ffmpeg-COPYING.LGPLv2.1', 'licenses/musl-COPYRIGHT', 'licenses/tulpar-COPYING', 'licenses/v-COPYRIGHT',
 				'sources/ffmpeg.tar.xz', 'sources/build.json', 'sources/linux-runner.v', 'sources/ffmpeg-build.v', 'sources/ffmpeg-source.json'] { expected << 'roots/' + arch + '/' + path }
 		}
 	}
@@ -104,15 +104,15 @@ fn stage_profile(profile string, inputs string, root string) ![]Artifact {
 
 fn check() !int {
 	options := hwhost.parse_options(os.args[1..])!
-	definition := suite(os.getenv('VINIX_COMPOSITION_SANDBOX'))
+	definition := suite(os.getenv('TULPAR_COMPOSITION_SANDBOX'))
 	if options.help || options.list { return hwhost.run_suite(definition, os.args[1..], @FILE) }
 	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir)
 		|| os.is_link(options.state_dir) { return error('provide --kernel and a new --state-dir') }
-	if os.getenv('VINIX_HWTEST_TCG') != '1' { return error('this qualification requires VINIX_HWTEST_TCG=1') }
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' { return error('this qualification requires TULPAR_HWTEST_TCG=1') }
 	hwhost.validate_scenarios(definition.scenarios)!
 	selection := hwhost.select_scenarios(definition.scenarios, options.arch, options.scenarios)!
 	if selection.run.len != 1 { return error('select the packages-composition scenario') }
-	for variable in ['VINIX_SQLITE_INPUTS', 'VINIX_FFMPEG_INPUTS'] {
+	for variable in ['TULPAR_SQLITE_INPUTS', 'TULPAR_FFMPEG_INPUTS'] {
 		if os.getenv(variable) == '' { return error('${variable} is required') }
 	}
 	repository := hwhost.find_root(@FILE)!
@@ -125,11 +125,11 @@ fn check() !int {
 	guest_dir := work + '/guest'
 	guest := hwhost.build_program(host, repository + '/' + definition.guest, guest_dir, 'init', definition.module_paths)!
 	root := hwhost.build_extras(host, definition, guest_dir)!
-	mut artifacts := stage_profile('sqlite', os.abs_path(os.getenv('VINIX_SQLITE_INPUTS')), root)!
-	artifacts << stage_profile('media', os.abs_path(os.getenv('VINIX_FFMPEG_INPUTS')), root)!
-	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/vinix-sandbox',
-		'guest-init': guest, 'package-service': root + '/usr/bin/vinix-package',
-		'account-manager': root + '/usr/sbin/vinix-account', 'session-runner': root + '/usr/sbin/vinix-session'} { artifacts << artifact(role, path)! }
+	mut artifacts := stage_profile('sqlite', os.abs_path(os.getenv('TULPAR_SQLITE_INPUTS')), root)!
+	artifacts << stage_profile('media', os.abs_path(os.getenv('TULPAR_FFMPEG_INPUTS')), root)!
+	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/tulpar-sandbox',
+		'guest-init': guest, 'package-service': root + '/usr/bin/tulpar-package',
+		'account-manager': root + '/usr/sbin/tulpar-account', 'session-runner': root + '/usr/sbin/tulpar-session'} { artifacts << artifact(role, path)! }
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: kernel, guest: guest, extras: root,
 		state: work + '/packages-composition', timeout: if options.timeout > 600 { options.timeout } else { 600 },
 		keep: true, failures_only: options.failures_only })

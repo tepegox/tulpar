@@ -6,9 +6,9 @@ import json2
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn catalog_plan_fixture(count int, fault string) string {
@@ -53,10 +53,10 @@ fn test_catalog_workspace_planning_retires_budget_and_decoded_owners() {
 			mut maximum := u64(0); mut allocations := u32(0)
 			cycles := $if track_heap ? { 128 } $else { 4 }
 			for _ in 0 .. cycles {
-				$if track_heap ? { C.vinix_heap_begin() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				catalog_plan_attempt(text, refused)
 				$if track_heap ? {
-					kept := C.vinix_heap_end(); records := C.vinix_heap_count()
+					kept := C.tulpar_heap_end(); records := C.tulpar_heap_count()
 					if kept > maximum { maximum = kept }; if records > allocations { allocations = records }
 				}
 			}

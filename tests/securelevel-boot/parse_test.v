@@ -12,17 +12,17 @@ fn test_securelevel_values() {
 }
 
 fn test_securelevel_boot_tokens() {
- for value, expected in {'': -2, 'other=1': -2, 'vinix.securelevel=1': 1,
-  'other=1\tvinix.securelevel=2\nlast=3': 2, 'vinix.securelevel=-1': -1,
-  'vinix.securelevel=0': 0, 'xvinix.securelevel=2': -2,
-  'other=vinix.securelevel=2': -2, 'vinix.securelevel_extra=2': -2} {
+ for value, expected in {'': -2, 'other=1': -2, 'tulpar.securelevel=1': 1,
+  'other=1\ttulpar.securelevel=2\nlast=3': 2, 'tulpar.securelevel=-1': -1,
+  'tulpar.securelevel=0': 0, 'xtulpar.securelevel=2': -2,
+  'other=tulpar.securelevel=2': -2, 'tulpar.securelevel_extra=2': -2} {
   actual, valid := parse_securelevel_boot(value)
   assert valid && actual == expected
  }
- for value in ['vinix.securelevel', 'vinix.securelevel=', 'vinix.securelevel=3',
-  'vinix.securelevel=garbage', 'vinix.securelevel=1x', 'vinix.securelevel=+1',
-  'vinix.securelevel=1 vinix.securelevel=2', 'vinix.securelevel=1 vinix.securelevel=1',
-  'vinix.securelevel= 1'] {
+ for value in ['tulpar.securelevel', 'tulpar.securelevel=', 'tulpar.securelevel=3',
+  'tulpar.securelevel=garbage', 'tulpar.securelevel=1x', 'tulpar.securelevel=+1',
+  'tulpar.securelevel=1 tulpar.securelevel=2', 'tulpar.securelevel=1 tulpar.securelevel=1',
+  'tulpar.securelevel= 1'] {
   _, valid := parse_securelevel_boot(value)
   assert !valid
  }

@@ -99,7 +99,7 @@ patch and source exclusions against both isolated inputs.
 
 Initial `wr-0-before-a` probes failed compilation because `go` is reserved by
 V; the fixture variable is now `proceed`. The next `before-b` probes encountered
-Vinix's existing `EFAULT` for a null mount source. The final `before-c` probes
+Tulpar's existing `EFAULT` for a null mount source. The final `before-c` probes
 use `"none"`, matching the existing bind-remount fixture, without removing any
 assertions. Their ELFs/C are reused for every qualified control and corrected
 run. Older completed mount/overlay boot images may be losslessly archived as

@@ -58,15 +58,15 @@ fn stage_v() ! {
 	args := os.args[1..]
 	if args == ['--help'] || args.len == 0 {
 		println('Usage: v run stage-v.v aarch64|x86_64 V-SOURCE-CHECKOUT FRESH-STAGING [CC-ARGV-JSON]')
-		println('VINIX_V_COPT selects -O0, -O1 (default) or -O2 for the bootstrap compiler')
+		println('TULPAR_V_COPT selects -O0, -O1 (default) or -O2 for the bootstrap compiler')
 		return
 	}
 	if args.len !in [3, 4] || args[0] !in ['aarch64', 'x86_64'] {
 		return error('invalid arguments; use --help')
 	}
 	arch := args[0]
-	optimization := os.getenv_opt('VINIX_V_COPT') or { '-O1' }
-	if optimization !in ['-O0', '-O1', '-O2'] { return error('invalid VINIX_V_COPT') }
+	optimization := os.getenv_opt('TULPAR_V_COPT') or { '-O1' }
+	if optimization !in ['-O0', '-O1', '-O2'] { return error('invalid TULPAR_V_COPT') }
 	source := os.real_path(args[1])
 	commit := sourcecore.revision(source)!
 	mut cc := if args.len == 4 {
@@ -76,7 +76,7 @@ fn stage_v() ! {
 	}
 	if cc.len == 0 { return error('C compiler argv must not be empty') }
 	cc[0] = os.find_abs_path_of_executable(cc[0])!
-	v := os.find_abs_path_of_executable(os.getenv_opt('VINIX_V_COMPILER') or { @VEXE })!
+	v := os.find_abs_path_of_executable(os.getenv_opt('TULPAR_V_COMPILER') or { @VEXE })!
 	devcore.fresh_directory(args[2])!
 	output := os.real_path(args[2])
 	root := output + '/vlang'

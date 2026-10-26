@@ -73,7 +73,7 @@ pub fn desktop_ignore_broken_pipe() {
 // A development/test installation can keep the three helpers together. Normal
 // images use /usr/bin, including when the compositor lives in /usr/libexec.
 pub fn helper_path(name string) string {
-	if directory := os.getenv_opt('VINIX_SESSION_BIN_DIR') {
+	if directory := os.getenv_opt('TULPAR_SESSION_BIN_DIR') {
 		defer { unsafe { directory.free() } }
 		return directory + '/' + name
 	}

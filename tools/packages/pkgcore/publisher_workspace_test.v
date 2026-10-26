@@ -24,7 +24,7 @@ fn workspace_case(name string) bool {
 }
 
 fn publisher_workspace_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-publisher-workspace-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-publisher-workspace-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work, mode: 0o700)!; os.mkdir(work + '/source')!
 	println('PUBLISHER FIXTURE created')
 	os.write_file(work + '/source/data', 'payload')!

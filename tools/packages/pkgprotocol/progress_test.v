@@ -6,8 +6,8 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn test_progress_has_bounded_typed_counters_and_owned_decoded_fields() {
 	valid := Progress{ phase: 'download', package: 'app', repository: 'trusted', path: 'bin/app', current: 64, total: 128 }
@@ -59,7 +59,7 @@ fn test_progress_reader_retires_valid_invalid_and_partial_decoded_fields() {
 		partial := text.replace('"total":128', '"total":null')
 		invalid := text.replace('"phase":"copy"', '"phase":"unknown"')
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				mut event := decode_progress(text)!; event.close()
 				for bad in [partial, invalid]! {
@@ -68,7 +68,7 @@ fn test_progress_reader_retires_valid_invalid_and_partial_decoded_fields() {
 				}
 			}
 		}
-		kept := C.vinix_heap_end(); assert kept == 0, 'progress decoding retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'progress decoding retained ${kept} bytes'
 		println('PACKAGE PROGRESS 1000 valid, invalid and partial metadata decode/retirement cycles retain zero tracked bytes PASS')
 	}
 }

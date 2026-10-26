@@ -5,9 +5,9 @@ import hosttest
 import os
 
 fn test_real_archiver_command_and_failed_compiler_cleanup() {
-	tool := os.getenv('VINIX_ARCHIVER_CHECK')
+	tool := os.getenv('TULPAR_ARCHIVER_CHECK')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-ar-cleanup-')!
+	work := hosttest.work_dir('', 'tulpar-ar-cleanup-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	temporary := work + '/temporary'
 	os.mkdir(temporary)!

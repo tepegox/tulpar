@@ -36,7 +36,7 @@ VEOF
 cat > "$tmp/modules/pagecache/host.v" <<'VEOF'
 module pagecache
 #include <alloca.h>
-#define vinix_stack_alloc alloca
+#define tulpar_stack_alloc alloca
 const page_size = u64(4096)
 const higher_half = u64(0)
 VEOF

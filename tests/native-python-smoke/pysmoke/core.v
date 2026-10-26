@@ -305,7 +305,7 @@ fn (mut smoke Smoke) extensions(api &py.Api) ! {
 		smoke.check(true, 'import ' + name)
 	}
 	zlib := a.load('zlib')!
-	data := a.data('vinix'.repeat(1000).bytes())!
+	data := a.data('tulpar'.repeat(1000).bytes())!
 	smoke.check(a.equal(a.method(zlib, 'decompress', [a.method(zlib, 'compress', [data], {})!], {})!, data)!, 'zlib round trip')
 	hash := a.method(a.load('hashlib')!, 'sha256', [data], {})!
 	smoke.check(a.length(a.method(hash, 'hexdigest', [], {})!)! == 64, 'sha256')

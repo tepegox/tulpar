@@ -18,13 +18,13 @@ fn checked(argv []string, log string) ! {
 
 fn build() ! {
 	if os.args.len == 2 && os.args[1] == '--help' {
-		println('Usage: stage-trimmer OUTPUT\nBuild a static AArch64/Linux V CMake trimmer for the read-only KekVM share. VINIX_AARCH64_SYSROOT and CC select the existing musl SDK; no guest executes.')
+		println('Usage: stage-trimmer OUTPUT\nBuild a static AArch64/Linux V CMake trimmer for the read-only KekVM share. TULPAR_AARCH64_SYSROOT and CC select the existing musl SDK; no guest executes.')
 		return
 	}
 	if os.args.len != 2 { return error('expected OUTPUT') }
 	root := os.real_path(os.dir(@FILE) + '/../..')
 	compiler := os.getenv_opt('V') or { return error('set V to the qualified compiler') }
-	sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/staging' }
+	sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/staging' }
 	gcc := sdk + '/usr/lib/gcc/aarch64-alpine-linux-musl/14.2.0'
 	output := os.args[1]
 	os.mkdir_all(os.dir(output))!

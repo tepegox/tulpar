@@ -105,7 +105,7 @@ fn descriptor_wx_attempt(form int, fd int, path &char, approved bool, identity i
 			arguments := [&char(c'mount-wx'), &char(c'--mount-wx-child'),
 				if allowed { &char(c'allowed') } else { &char(c'default') },
 				if identity == 1 { &char(c'owner') } else { &char(c'root') }, &char(nil)]!
-			environment := [if request { &char(c'VINIX_ALLOW_WX=1') } else { &char(nil) }, &char(nil)]!
+			environment := [if request { &char(c'TULPAR_ALLOW_WX=1') } else { &char(nil) }, &char(nil)]!
 			location := C.__errno_location()
 			*location = 0
 			result := if form == 2 {

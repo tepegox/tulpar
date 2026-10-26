@@ -18,7 +18,7 @@ fn C.setrlimit(int, voidptr) int
 struct AtomicLimit { current u64 maximum u64 }
 
 fn atomic_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-atomic-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-atomic-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	return work
 }

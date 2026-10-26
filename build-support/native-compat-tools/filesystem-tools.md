@@ -12,10 +12,10 @@ All three also accept `--kernel DIR|ELF`, `--state-dir FRESH-DIR`,
 `--prebuilt-init ELF` and `--build-only`. Default private workspaces retire on
 success, interruption and failure; explicit fresh evidence remains available.
 Existing directories are refused before their contents can be overwritten.
-Kernel inputs retain `VINIX_KERNEL_DIR` on ARM and `VINIX_AMD64_KERNEL` on x86.
+Kernel inputs retain `TULPAR_KERNEL_DIR` on ARM and `TULPAR_AMD64_KERNEL` on x86.
 The commands snapshot an already-built kernel and never rebuild the checkout.
 This replaces the older ARM launcher's implicit build/package-server path.
-`VINIX_VM_RUNNER_ROOT` still selects the boot dependencies.
+`TULPAR_VM_RUNNER_ROOT` still selects the boot dependencies.
 
 The unchanged accounting C guest keeps its exact strict static/pthread recipe
 and retention-only define. Both maintained V fixtures use the native module

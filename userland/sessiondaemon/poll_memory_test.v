@@ -5,13 +5,13 @@ import userland.sessionipc
 
 #include "@VMODROOT/tests/support/heap_tracker.h"
 
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 fn C.socketpair(i32, i32, i32, &i32) i32
 fn C.dup(i32) i32
 fn C.dup2(i32, i32) i32
 
-fn broker_poll_kept(_ string) u64 { return C.vinix_heap_end() }
+fn broker_poll_kept(_ string) u64 { return C.tulpar_heap_end() }
 
 fn test_broker_denied_socket_requests_and_logging_keep_no_allocations() {
 	mut daemon := &SessionDaemon{}
@@ -27,7 +27,7 @@ fn test_broker_denied_socket_requests_and_logging_keep_no_allocations() {
 		C.close(saved_stderr)
 		C.close(sink)
 	}
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	for _ in 0 .. 200 {
 		for request in ['shutdown', 'settings.set\tzz', 'clipboard.read\tzz',
 			'sbp/selectors/register\tzz', 'ping\tzz', 'action\tzz']! {
@@ -45,9 +45,9 @@ fn test_broker_denied_socket_requests_and_logging_keep_no_allocations() {
 	}
 	// Unlike registry denials, ordinary handler errors own their text and box.
 	for _ in 0 .. 200 {
-		session_log_error('vinix-session: request rejected: ', error('owned diagnostic'.clone()))
+		session_log_error('tulpar-session: request rejected: ', error('owned diagnostic'.clone()))
 	}
-	kept := C.vinix_heap_end()
+	kept := C.tulpar_heap_end()
 	C.dup2(saved_stderr, 2)
 	assert kept == 0, 'broker rejection receive/authorize/decode/log/reply retained ${kept} bytes'
 }
@@ -63,7 +63,7 @@ fn test_private_control_reuses_frames_and_releases_transport_errors() {
 		C.close(pair[1])
 	}
 	assert sessionipc.desktop_set_nonblocking(pair[1], true)
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	for _ in 0 .. 200 {
 		for request in ['attach', 'ping', 'history', 'take']! {
 			assert sessionipc.session_send_message(pair[0], request)
@@ -77,7 +77,7 @@ fn test_private_control_reuses_frames_and_releases_transport_errors() {
 	header := [4]u8{}
 	assert sessionipc.session_send(pair[0], unsafe { tos(&header[0], 4) })
 	assert !daemon.serve_request(pair[1], peer, true)
-	assert C.vinix_heap_end() == 0
+	assert C.tulpar_heap_end() == 0
 }
 
 fn test_broker_idle_replies_keep_no_request_allocations() {
@@ -86,7 +86,7 @@ fn test_broker_idle_replies_keep_no_request_allocations() {
 	daemon.notifications.post('clock', 'timer', 'Tea', 'Ready', .normal, -1, '', 100) or { panic(err) }
 	daemon.notifications.schedule('clock', 'alarm', 'Wake', 200, 0, 0) or { panic(err) }
 	daemon.policy.bind('\x1b[110;9u', 'notifications') or { panic(err) }
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	for _ in 0 .. 100 {
 		assert !daemon.notifications.tick(100, 0)
 		for command in ['ping', 'policy', 'history', 'take']! {
@@ -113,7 +113,7 @@ fn test_broker_queues_copy_request_text_before_request_storage_is_freed() {
 	assert daemon.queue[3].fields[1].str() == 'dialog'
 	assert daemon.queue[3].fields[2].str() == 'file'
 	assert daemon.queue[0].fields[1].str() == 'help'
-	C.vinix_heap_begin()
+	C.tulpar_heap_begin()
 	for expected in ['68656c70', '7368656c6c', '636c6970626f6172642e72657175657374',
 		'746578742f706c61696e']! {
 		reply := daemon.handle(peer, 'take', true) or { panic(err) }

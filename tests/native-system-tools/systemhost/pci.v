@@ -78,7 +78,7 @@ fn pci_prepare(options guesthost.Options, state string, mut report map[string]js
 	}
 	cc := os.find_abs_path_of_executable(options.value('--cc', 'clang'))!
 	ld := os.find_abs_path_of_executable('ld.lld')!
-	sdk := resolve(options.value('--sysroot', os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }))!
+	sdk := resolve(options.value('--sysroot', os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }))!
 	diskhost.mkdir(state + '/rootfs/sbin')!
 	for directory in ['dev', 'proc', 'sys', 'root', 'tmp'] {
 		diskhost.mkdir(state + '/rootfs/' + directory)!
@@ -115,7 +115,7 @@ fn pci_prepare(options guesthost.Options, state string, mut report map[string]js
 	os.chmod(init, 0o755)!
 	archive := guesthost.archive_tree(state + '/rootfs', state + '/initramfs.tar')!
 	conf := state + '/limine.conf'
-	os.write_file(conf, 'timeout: 0\nverbose: yes\n\n/Vinix PCI configuration\n    protocol: limine\n    kernel_path: boot():/boot/vinix\n    module_path: boot():/boot/initramfs.tar\n    resolution: 1024x768x32\n    kaslr: no\n    cmdline: vinix.qemu_platform=1\n')!
+	os.write_file(conf, 'timeout: 0\nverbose: yes\n\n/Tulpar PCI configuration\n    protocol: limine\n    kernel_path: boot():/boot/tulpar\n    module_path: boot():/boot/initramfs.tar\n    resolution: 1024x768x32\n    kaslr: no\n    cmdline: tulpar.qemu_platform=1\n')!
 	disk := state + '/boot.img'
 	diskhost.sparse_file(disk, 256 * 1024 * 1024)!
 	mut populate := [[os.find_abs_path_of_executable('mformat')!, '-F', '-i', disk, '::']]
@@ -123,7 +123,7 @@ fn pci_prepare(options guesthost.Options, state string, mut report map[string]js
 		populate << [os.find_abs_path_of_executable('mmd')!, '-i', disk, directory]
 	}
 	for row in [[copies['bootloader'], '::/EFI/BOOT/BOOTAA64.EFI'],
-		[copies['kernel'], '::/boot/vinix'], [conf, '::/boot/limine.conf'],
+		[copies['kernel'], '::/boot/tulpar'], [conf, '::/boot/limine.conf'],
 		[archive, '::/boot/initramfs.tar']] {
 		populate << [os.find_abs_path_of_executable('mcopy')!, '-i', disk, row[0], row[1]]
 	}

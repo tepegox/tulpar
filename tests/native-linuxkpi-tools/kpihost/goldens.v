@@ -167,8 +167,8 @@ fn (mut reader NumberReader) unary() !Number {
 		'LLONG_MIN' { Number{ negative: true, magnitude: u64(0x8000000000000000) } }
 		'ERANGE' { Number{ magnitude: 34 } }
 		'EINVAL' { Number{ magnitude: 22 } }
-		'VINIX_PCI_CONFIG_BAD_REGISTER', 'bad', 'true' { Number{ magnitude: 1 } }
-		'VINIX_PCI_CONFIG_UNAVAILABLE', 'unavailable' { Number{ magnitude: 2 } }
+		'TULPAR_PCI_CONFIG_BAD_REGISTER', 'bad', 'true' { Number{ magnitude: 1 } }
+		'TULPAR_PCI_CONFIG_UNAVAILABLE', 'unavailable' { Number{ magnitude: 2 } }
 		'false' { Number{} }
 		else {
 			raw := value.token.trim_right('UL')

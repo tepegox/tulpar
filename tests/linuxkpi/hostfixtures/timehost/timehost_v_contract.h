@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_TIME_HOST_V_CONTRACT_H
-#define VINIX_LINUXKPI_TIME_HOST_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_TIME_HOST_V_CONTRACT_H
+#define TULPAR_LINUXKPI_TIME_HOST_V_CONTRACT_H
 #include "host_model_v_contract.h"
 #include <sched.h>
-#define timespec vinix_linux_timespec
-#define timeval vinix_linux_timeval
-#define itimerspec vinix_linux_itimerspec
-#define timezone vinix_linux_timezone
+#define timespec tulpar_linux_timespec
+#define timeval tulpar_linux_timeval
+#define itimerspec tulpar_linux_itimerspec
+#define timezone tulpar_linux_timezone
 #include <linux/ktime.h>
 #include <linux/delay.h>
 #undef timespec

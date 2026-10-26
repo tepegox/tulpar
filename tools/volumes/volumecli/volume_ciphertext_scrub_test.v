@@ -14,7 +14,7 @@ fn test_ciphertext_scrub_codec_exact_public_finding_fingerprint_and_transactiona
 			mut observed := digest; if changed { observed[0] ^= 1 }; mut bytes := [224]u8{}
 			assert encode_volume_ciphertext_scrub(&reference[0], &observed[0], &bytes[0])
 			mut expected := [224]u8{}
-			for i, byte in 'VINIXCS1'.bytes() { expected[i] = byte }
+			for i, byte in 'TULPARCS1'.bytes() { expected[i] = byte }
 			put_le(&expected[0], 8, 4, 1); put_le(&expected[0], 12, 4, 224)
 			put_le(&expected[0], 16, 4, u64(changed)); put_le(&expected[0], 20, 4, 1)
 			fingerprint := sha256.sum(reference[..])
@@ -54,11 +54,11 @@ fn test_ciphertext_scrub_codec_exact_public_finding_fingerprint_and_transactiona
 fn test_ciphertext_scrub_and_offline_show_reject_bad_arity_and_empty_paths_before_io() {
 	unsafe {
 		for verb in [&char(c'scrub-volume'), &char(c'scrub-recovery-volume')]! {
-			mut args := [&char(c'vinix-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+			mut args := [&char(c'tulpar-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 			for count in [2, 3, 4, 5, 6, 8] { assert run(count, &args[0]) == 2 }
 			for at in [2, 3, 4, 5, 6] { args[at] = &char(c''); assert run(7, &args[0]) == 2; args[at] = &char(c'/unused') }
 		}
-		mut show := [&char(c'vinix-volume'), &char(c'show-volume-scrub'), &char(c'/unused'), &char(nil)]!
+		mut show := [&char(c'tulpar-volume'), &char(c'show-volume-scrub'), &char(c'/unused'), &char(nil)]!
 		assert run(2, &show[0]) == 2 && run(4, &show[0]) == 2; show[2] = &char(c''); assert run(3, &show[0]) == 2
 	}
 }

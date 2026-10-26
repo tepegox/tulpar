@@ -75,10 +75,10 @@ fn fence_signaled(fence &C.vdf_fence) bool {
 	return unsafe { (C.vdf_load_flags(&fence.flags) & 1) != 0 }
 }
 fn fence_sleepable() bool {
-	return C.vinix_linuxkpi_may_sleep() && C.vinix_linuxkpi_smp_task_present()
-		&& C.vinix_linuxkpi_maskable_irq_depth() == 0
-		&& C.vinix_linuxkpi_preempt_count() == 0
-		&& (C.vinix_linuxkpi_irq_flags() & 512) != 0
+	return C.tulpar_linuxkpi_may_sleep() && C.tulpar_linuxkpi_smp_task_present()
+		&& C.tulpar_linuxkpi_maskable_irq_depth() == 0
+		&& C.tulpar_linuxkpi_preempt_count() == 0
+		&& (C.tulpar_linuxkpi_irq_flags() & 512) != 0
 }
 fn fence_is_signaled(fence &C.vdf_fence, locked bool) bool {
 	unsafe {

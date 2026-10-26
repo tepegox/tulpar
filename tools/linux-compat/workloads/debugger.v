@@ -108,10 +108,10 @@ fn (mut suite Suite) debug_runtime() ! {
  // A musl wrapper cannot expose its child's remote stub. Use the native
  // translator directly with the same private runtime and launch policy.
  if suite.path == 'translated-x86_64' && suite.runtime_libc == 'musl' {
-  emulator := os.getenv_opt('VINIX_X86_64_EMULATOR') or { '/usr/bin/qemu-x86_64' }
+  emulator := os.getenv_opt('TULPAR_X86_64_EMULATOR') or { '/usr/bin/qemu-x86_64' }
   if !os.is_executable(emulator) { return error('unsupported: missing native translator') }
-  argv = [emulator, '-B', os.getenv_opt('VINIX_X86_64_GUEST_BASE') or { '0x100000000' },
-   '-L', os.getenv_opt('VINIX_X86_64_ROOT') or { '/usr/libexec/vinix-x86_64/root' }, suite.runtime, '--once']
+  argv = [emulator, '-B', os.getenv_opt('TULPAR_X86_64_GUEST_BASE') or { '0x100000000' },
+   '-L', os.getenv_opt('TULPAR_X86_64_ROOT') or { '/usr/libexec/tulpar-x86_64/root' }, suite.runtime, '--once']
  }
  argv.insert(1, ['-g', '19016'])
  emulator_hash := sha256.sum(os.read_bytes(argv[0])!).hex()
@@ -119,7 +119,7 @@ fn (mut suite Suite) debug_runtime() ! {
  mut child := os.new_process(argv[0])
  child.set_args(argv[1..])
  mut environment := os.environ()
- environment['VINIX_ALLOW_WX'] = '1'
+ environment['TULPAR_ALLOW_WX'] = '1'
  for name in ['LD_LIBRARY_PATH', 'QEMU_LD_PREFIX', 'QEMU_SET_ENV'] { environment.delete(name) }
  child.set_environment(environment)
  child.set_work_folder(suite.work)

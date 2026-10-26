@@ -45,7 +45,7 @@
 // the arithmetic is tested on the host (tests/cpu-power).
 //
 // What can be run in a virtual machine is everything but the registers.
-// vinix.cpufreq=simulate starts a driver, "simulated", that goes the whole
+// tulpar.cpufreq=simulate starts a driver, "simulated", that goes the whole
 // way SpeedStep goes -- policies, worker, a value left for each CPU, each CPU
 // writing its own on its pass through the scheduler -- with a word of memory
 // per CPU in place of IA32_PERF_CTL and made-up ratios of 8 to 30. The
@@ -426,13 +426,13 @@ const settle_ns = 250 * devcore.millisecond
 // Which interface this processor has, by the conditions at the top of the
 // file. Read on the CPU that publishes /sys and taken to hold for all.
 fn detect() X86Control {
-	if choice := devcore.boot_option('vinix.cpufreq=') {
+	if choice := devcore.boot_option('tulpar.cpufreq=') {
 		if choice == 'off' {
-			print('cpufreq: switched off by vinix.cpufreq=off\n')
+			print('cpufreq: switched off by tulpar.cpufreq=off\n')
 			return .absent
 		}
 		if choice == 'simulate' {
-			print('cpufreq: simulated driver by vinix.cpufreq=simulate; its frequencies are not real\n')
+			print('cpufreq: simulated driver by tulpar.cpufreq=simulate; its frequencies are not real\n')
 			cpufreq_x86_aperf = false
 			cpufreq_x86_turbo = true
 			return .simulated

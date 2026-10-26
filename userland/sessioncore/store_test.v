@@ -4,7 +4,7 @@ module sessioncore
 import os
 
 fn test_atomic_snapshots_replace_sync_and_reject_oversized_reads() {
-	directory := os.join_path(os.temp_dir(), 'vinix-session-store-${os.getpid()}')
+	directory := os.join_path(os.temp_dir(), 'tulpar-session-store-${os.getpid()}')
 	os.mkdir(directory) or { panic(err) }
 	defer {
 		os.rmdir_all(directory) or {}

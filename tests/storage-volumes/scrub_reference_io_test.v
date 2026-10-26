@@ -72,13 +72,13 @@ fn scrub_ref_manifest() []u8 {
 }
 fn scrub_ref_input(state int) string {
 	zero := '0'.repeat(64)
-	return 'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + '\n' +
+	return 'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + '\n' +
 		'disk=0 slot=63 offset=0 bytes=512 readonly=1 result=match expected_sha256=${zero} actual_sha256=${zero}\n' +
 		'disk=1 slot=0 offset=512 bytes=4096 readonly=0 result=${if state == 0 { 'match' } else { 'changed' }} expected_sha256=${zero} actual_sha256=${if state == 0 { zero } else if state == 1 { 'f'.repeat(64) } else { 'a'.repeat(64) }}\n'
 }
 fn scrub_ref_expected(state int) string {
 	zero := '0'.repeat(64)
-	return 'format=VINIXSR1 operation=verified-data-scrub-reference disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(scrub_ref_input(state)) + '\n' +
+	return 'format=TULPARSR1 operation=verified-data-scrub-reference disks=2 mappings=2 matched=${if state == 0 { 2 } else { 1 }} changed=${int(state != 0)} algorithm=sha256 reference_sha256=' + sha256.hexhash(scrub_ref_manifest().bytestr()) + ' report_sha256=' + sha256.hexhash(scrub_ref_input(state)) + '\n' +
 		'disk=0 disk_bytes=1048576 sector=512 identity=mbr:00000001\n' +
 		'disk=0 slot=63 offset=0 bytes=512 readonly=1 result=match expected_sha256=${zero} actual_sha256=${zero}\n' +
 		'disk=1 disk_bytes=1048576 sector=512 identity=mbr:00000002\n' +
@@ -89,14 +89,14 @@ fn scrub_ref_check(first string, second string, mode int, expected i32) string {
 	capture := os.dir(first) + '/history-capture'; assert C.fflush(C.stdout) == 0
 	saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	scrub_ref_io = ScrubRefIO{active: true, mode: mode}
-	unsafe { args := [&char(c'vinix-volume'), &char(c'verify-data-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'verify-data-scrub-reference'), first.str, second.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert scrub_ref_io.opened == scrub_ref_io.closed; scrub_ref_io.active = false
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }
-	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=VINIXSR1') && !text.contains('disk=') }; return text
+	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=TULPARSR1') && !text.contains('disk=') }; return text
 }
 fn test_scrub_reference_real_cli_complete_binding_read_and_output_faults_pinned_owners() {
-	work := os.join_path(os.temp_dir(), 'vinix-scrub-reference-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/first'; second := work + '/second'; left := scrub_ref_manifest()
+	work := os.join_path(os.temp_dir(), 'tulpar-scrub-reference-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; first := work + '/first'; second := work + '/second'; left := scrub_ref_manifest()
 	for state in 0 .. 3 {
 		right := scrub_ref_input(state); os.write_file_array(first, left)!; os.write_file(second, right)!; os.chmod(first, 0o644)!; os.chmod(second, 0o644)!
 		for mode in 0 .. 15 {

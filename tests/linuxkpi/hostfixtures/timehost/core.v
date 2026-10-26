@@ -14,9 +14,9 @@ struct C.completion { mut: @wait C.swait_queue_head }
 fn C.vmh_host_time_advance(C.vmh_u64)
 fn C.vmh_time_expire_before_park()
 fn C.vmh_timed_wait_worker(voidptr) voidptr
-fn C.vinix_linuxkpi_time_tick(u64)
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_time_selftest() i32
+fn C.tulpar_linuxkpi_time_tick(u64)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_time_selftest() i32
 fn C.get_jiffies_64() u64
 fn C.ktime_get_ns() u64
 fn C.ktime_get_raw_ns() u64
@@ -110,7 +110,7 @@ pub fn host_time_advance(native_ticks C.vmh_u64) {
  mut ticks := u64(0)
  unsafe { C.memcpy(&ticks, &native_ticks, 8) }
  now := u64(C.__atomic_add_fetch(&C.vmh_u64(&C.vmh_host_clock_ns), ticks * C.TICK_NSEC, 4))
- C.vinix_linuxkpi_time_tick(now)
+ C.tulpar_linuxkpi_time_tick(now)
 }
 fn advance(ticks u64) { C.vmh_host_time_advance(native_word(ticks)) }
 // The compiler performs the original signed 128-bit reconstruction. Its native
@@ -136,7 +136,7 @@ fn conversions() {
   C.assert(C.jiffies == C.INITIAL_JIFFIES && C.get_jiffies_64() == C.INITIAL_JIFFIES)
   advance(3)
   C.assert(C.jiffies == C.INITIAL_JIFFIES + 3)
-  C.vinix_linuxkpi_time_tick(0)
+  C.tulpar_linuxkpi_time_tick(0)
   C.assert(C.jiffies == C.INITIAL_JIFFIES + 3)
   C.assert(C.ktime_get_ns() == 3 * C.TICK_NSEC && C.ktime_get_raw_ns() == C.ktime_get_ns())
   C.assert(C.ktime_get_coarse_ns() == 3 * C.TICK_NSEC)
@@ -223,7 +223,7 @@ struct TimedWait {
 pub fn expire_before_park() {
  unsafe {
   test := &TimedWait(C.vmh_expiry_test)
-  if C.vinix_linuxkpi_time_waiters() == 0 {
+  if C.tulpar_linuxkpi_time_waiters() == 0 {
    C.vmh_host_irq_restore_hook = C.vmh_time_expire_before_park
    return
   }
@@ -286,7 +286,7 @@ fn wait_init(test &TimedWait, kind Kind, state u32) {
 fn cleanup(test &TimedWait, worker C.pthread_t) {
  unsafe {
   C.assert(C.pthread_join(worker, nil) == 0)
-  C.assert(C.vinix_linuxkpi_time_waiters() == 0)
+  C.assert(C.tulpar_linuxkpi_time_waiters() == 0)
   C.assert(!C.waitqueue_active(&test.queue) && !C.swait_active(&test.simple))
   C.assert(!C.swait_active(&test.completion.@wait))
   C.vmh_sync_model_destroy(&test.model)
@@ -295,7 +295,7 @@ fn cleanup(test &TimedWait, worker C.pthread_t) {
 fn parked(test &TimedWait) {
  unsafe {
   for C.__atomic_load_n(&test.model.parked, 2) != 1 { C.sched_yield() }
-  C.assert(C.vinix_linuxkpi_time_waiters() == 1)
+  C.assert(C.tulpar_linuxkpi_time_waiters() == 1)
  }
 }
 fn timed_wait_tests() {
@@ -321,9 +321,9 @@ fn timed_wait_tests() {
        if kind == .completion { C.complete(&test.completion) }
       } else {
        C.__atomic_store_n(&C.vmh_u64(&test.model.pending), u64(1) << 14, 3)
-       C.assert(C.vinix_linuxkpi_task_enqueue(&test.model))
+       C.assert(C.tulpar_linuxkpi_task_enqueue(&test.model))
        if mode == 0 {
-        for C.vinix_linuxkpi_task_queued(&test.model) { C.sched_yield() }
+        for C.tulpar_linuxkpi_task_queued(&test.model) { C.sched_yield() }
         advance(7)
        }
       }
@@ -366,9 +366,9 @@ fn timed_wait_tests() {
    C.assert(C.pthread_create(&worker, nil, C.vmh_timed_wait_worker, &test) == 0)
    parked(&test)
    C.__atomic_store_n(&C.vmh_u64(&test.model.pending), u64(1) << if fatal != 0 { u32(8) } else { u32(14) }, 3)
-   C.assert(C.vinix_linuxkpi_task_enqueue(&test.model))
+   C.assert(C.tulpar_linuxkpi_task_enqueue(&test.model))
    if fatal == 0 {
-    for C.vinix_linuxkpi_task_queued(&test.model) { C.sched_yield() }
+    for C.tulpar_linuxkpi_task_queued(&test.model) { C.sched_yield() }
     advance(10)
    }
    cleanup(&test, worker)
@@ -378,7 +378,7 @@ fn timed_wait_tests() {
   test.timeout = C.MAX_SCHEDULE_TIMEOUT
   C.assert(C.pthread_create(&worker, nil, C.vmh_timed_wait_worker, &test) == 0)
   for C.__atomic_load_n(&test.model.parked, 2) != 1 { C.sched_yield() }
-  C.assert(C.vinix_linuxkpi_time_waiters() == 0)
+  C.assert(C.tulpar_linuxkpi_time_waiters() == 0)
   advance(100)
   C.assert(C.wake_up_process(&C.task_struct(&test.model.storage[0])) != 0)
   cleanup(&test, worker)
@@ -388,7 +388,7 @@ fn timed_wait_tests() {
   parked(&test)
   advance(3)
   C.assert(C.wake_up_process(&C.task_struct(&test.model.storage[0])) != 0)
-  for C.vinix_linuxkpi_task_queued(&test.model) { C.sched_yield() }
+  for C.tulpar_linuxkpi_task_queued(&test.model) { C.sched_yield() }
   advance(8)
   cleanup(&test, worker)
   wait_init(&test, .msleep, C.TASK_INTERRUPTIBLE)
@@ -396,7 +396,7 @@ fn timed_wait_tests() {
   parked(&test)
   advance(3)
   C.__atomic_store_n(&C.vmh_u64(&test.model.pending), u64(1) << 14, 3)
-  C.assert(C.vinix_linuxkpi_task_enqueue(&test.model))
+  C.assert(C.tulpar_linuxkpi_task_enqueue(&test.model))
   cleanup(&test, worker)
   C.assert(test.result == 8)
  }
@@ -407,7 +407,7 @@ pub fn time_tests() {
   mut controller := C.native_task_model{}
   C.vmh_sync_model_init(&controller, 20); C.vmh_native_task = &controller
   conversions()
-  C.assert(C.vinix_linuxkpi_time_selftest() == 0)
+  C.assert(C.tulpar_linuxkpi_time_selftest() == 0)
   C.DECLARE_WAIT_QUEUE_HEAD(C.vmh_time_queue)
   C.assert(C.wait_event_timeout(C.vmh_time_queue, true, isize(0)) == 1)
   C.assert(C.wait_event_timeout(C.vmh_time_queue, false, isize(0)) == 0)
@@ -422,7 +422,7 @@ pub fn time_tests() {
   C.complete(&C.vmh_time_completion)
   C.assert(C.wait_for_completion_timeout(&C.vmh_time_completion, 0) == 1 && !C.completion_done(&C.vmh_time_completion))
   timed_wait_tests()
-  C.assert(C.vinix_linuxkpi_time_waiters() == 0 && C.vmh_live_pages == C.vmh_permanent_pages)
+  C.assert(C.tulpar_linuxkpi_time_waiters() == 0 && C.vmh_live_pages == C.vmh_permanent_pages)
   C.vmh_native_task = nil
   C.vmh_sync_model_destroy(&controller)
  }

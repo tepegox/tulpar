@@ -15,10 +15,10 @@ fn (mut daemon SessionDaemon) migrate_clock_service() {
 			continue
 		}
 		name := os.file_name(service.executable.str())
-		legacy := name in ['vinix-desktop', 'vinix-desktop-gpu', 'vinix-desktop-system']
+		legacy := name in ['tulpar-desktop', 'tulpar-desktop-gpu', 'tulpar-desktop-system']
 		unsafe { name.free() }
 		if !legacy { continue }
-		path := sessionipc.helper_path('vinix-timesync')
+		path := sessionipc.helper_path('tulpar-timesync')
 		service.executable.set(path) or {
 			unsafe { path.free() }
 			continue

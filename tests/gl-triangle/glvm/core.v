@@ -50,11 +50,11 @@ fn checked(arguments []string) !int {
 	os.write_file(harness + '/scripts/run-aarch64.sh', text.replace_once(marker, 'SCRIPT_DIR=' + hosttest.shell_quote(glhost.root())))!
 	os.chmod(harness + '/scripts/run-aarch64.sh', 0o755)!
 	for key, value in {
-		'VINIX_KERNEL_DIR':       kernel
-		'VINIX_ASAHI_STAGING':    state + '/native'
-		'VINIX_INITRAMFS':        state + '/initramfs.tar'
-		'VINIX_QEMU_HOST_SOURCE': '0'
-		'VINIX_QEMU_AUDIO':       'off'
+		'TULPAR_KERNEL_DIR':       kernel
+		'TULPAR_ASAHI_STAGING':    state + '/native'
+		'TULPAR_INITRAMFS':        state + '/initramfs.tar'
+		'TULPAR_QEMU_HOST_SOURCE': '0'
+		'TULPAR_QEMU_AUDIO':       'off'
 	} {
 		os.setenv(key, value, true)
 	}
@@ -64,7 +64,7 @@ fn checked(arguments []string) !int {
 		'guest_exit_status':               json2.Any(status)
 		'original_implementation_lines':   json2.Any(557)
 		'retained_implementation_C_lines': json2.Any(0)
-		'kernel_sha256':                   json2.Any(sha256.sum(os.read_bytes(kernel + '/bin/vinix')!).hex())
+		'kernel_sha256':                   json2.Any(sha256.sum(os.read_bytes(kernel + '/bin/tulpar')!).hex())
 		'native_binary_sha256':            json2.Any(sha256.sum(os.read_bytes(state + '/native/usr/bin/gl-triangle-agx')!).hex())
 		'runtime_archive_sha256':          json2.Any(sha256.sum(os.read_bytes(state + '/initramfs.tar')!).hex())
 	}, prettify: true) + '\n')!
@@ -78,9 +78,9 @@ fn copy(source string, destination string) ! {
 pub fn prepare(state string) ! {
 	root := glhost.root()
 	llvm := os.getenv_opt('LLVM_BIN') or { '/opt/homebrew/opt/llvm/bin' }
-	sysroot := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/staging' }
-	gpu_sysroot := os.getenv_opt('VINIX_GPU_SYSROOT') or { root + '/build-aarch64-x11/sysroot' }
-	gpu := os.getenv_opt('VINIX_ASAHI_STAGING') or { root + '/build-aarch64-asahi/staging' }
+	sysroot := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/staging' }
+	gpu_sysroot := os.getenv_opt('TULPAR_GPU_SYSROOT') or { root + '/build-aarch64-x11/sysroot' }
+	gpu := os.getenv_opt('TULPAR_ASAHI_STAGING') or { root + '/build-aarch64-asahi/staging' }
 	gcc_dir := sysroot + '/usr/lib/gcc/aarch64-alpine-linux-musl'
 	versions := os.ls(gcc_dir)!
 	if versions.len == 0 { return error('no AArch64 GCC install directory') }
@@ -97,7 +97,7 @@ pub fn prepare(state string) ! {
 		'-Wall', '-Wextra', '-Werror', '-D__vinix__', '-fwrapv', '-fno-strict-aliasing',
 		'-I' + gpu + '/usr/include', examples + '/egl_triangle.c', '-L' + gpu + '/usr/lib',
 		'-Wl,-rpath-link,' + gpu + '/usr/lib', '-Wl,-dynamic-linker,/lib/ld-musl-aarch64.so.1',
-		'-o', binary, '-lEGL', '-lGLESv2', '-Wl,--no-as-needed', '-lvinix-agx-fault', '-Wl,--as-needed',
+		'-o', binary, '-lEGL', '-lGLESv2', '-Wl,--no-as-needed', '-ltulpar-agx-fault', '-Wl,--as-needed',
 		'-ldl', '-lpthread', '-lm'])!
 	stage := state + '/rootfs'
 	for dir in ['sbin', 'bin', 'dev', 'proc', 'sys', 'tmp', 'root', 'lib', 'usr/bin', 'usr/lib/dri'] {

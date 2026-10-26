@@ -56,17 +56,17 @@ fn prepare(state string, mut f Frame) !string {
  wav := f.named('wav', get(state, 'wav')!)!
  no_build := f.named('no_build', get(state, 'no_build')!)!
  environment := state_put(mut f, state, 'environment', temporary_method(global('os.environ')!, 'copy', [], {})!)!
- assign(environment, 'VINIX_INITRAMFS', call('str', o(initramfs))!)!
- for entry in [['VINIX_BOOT_DISK','boot.img'],['VINIX_EFIVARS','efivars.fd'],['VINIX_QEMU_PACKAGE_STORE','packages.tar'],['VINIX_QEMU_PERSIST_DISK','root.ext2']] {
+ assign(environment, 'TULPAR_INITRAMFS', call('str', o(initramfs))!)!
+ for entry in [['TULPAR_BOOT_DISK','boot.img'],['TULPAR_EFIVARS','efivars.fd'],['TULPAR_QEMU_PACKAGE_STORE','packages.tar'],['TULPAR_QEMU_PERSIST_DISK','root.ext2']] {
   assign(environment, entry[0], path_text(directory, entry[1])!)!
  }
- assign(environment, 'VINIX_QEMU_PERSIST_SIZE_MB', literal(ah.Value('64'))!)!
- perform_method(environment, 'pop', [v(ah.Value('VINIX_QEMU_PERSIST'))!, v(none_())!], {})!
- assign(environment, 'VINIX_KEEP_TEMP_BOOT_DISK', literal(ah.Value('1'))!)!
- assign(environment, 'VINIX_QEMU_AUDIO', concatenate([literal(ah.Value('wav:'))!, formatted(wav, false)!])!)!
+ assign(environment, 'TULPAR_QEMU_PERSIST_SIZE_MB', literal(ah.Value('64'))!)!
+ perform_method(environment, 'pop', [v(ah.Value('TULPAR_QEMU_PERSIST'))!, v(none_())!], {})!
+ assign(environment, 'TULPAR_KEEP_TEMP_BOOT_DISK', literal(ah.Value('1'))!)!
+ assign(environment, 'TULPAR_QEMU_AUDIO', concatenate([literal(ah.Value('wav:'))!, formatted(wav, false)!])!)!
  target := member(environment, 'setdefault')!
  port := call('available_port')!
- release([invoke_owned(target, [v(ah.Value('VINIX_QEMU_PACKAGE_STORE_PORT'))!, o(port)], {}, [port])!])!
+ release([invoke_owned(target, [v(ah.Value('TULPAR_QEMU_PACKAGE_STORE_PORT'))!, o(port)], {}, [port])!])!
  if compared('ne', call('platform.system')!, v(ah.Value('Darwin'))!)! {
   perform_method(environment, 'setdefault', [v(ah.Value('USE_TCG'))!, v(ah.Value('1'))!], {})!
  }

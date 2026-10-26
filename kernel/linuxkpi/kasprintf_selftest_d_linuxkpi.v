@@ -8,13 +8,13 @@ import x86.cpu.local as cpulocal
 
 #include "linuxkpi_kasprintf_fixture_v_primitives.h"
 
-fn C.vinix_linuxkpi_kasprintf_fixture_run(u32, u32, voidptr, &u32) voidptr
-fn C.vinix_linuxkpi_kasprintf_fixture_overflow(u32, &u32) bool
-fn C.vinix_linuxkpi_kasprintf_fixture_free(voidptr)
-fn C.vinix_linuxkpi_kasprintf_fixture_alloc(uint) voidptr
-fn C.vinix_linuxkpi_kasprintf_fixture_gfp() u32
-fn C.vinix_linuxkpi_kasprintf_fixture_literal() voidptr
-fn C.vinix_linuxkpi_kasprintf_fixture_rodata(voidptr) bool
+fn C.tulpar_linuxkpi_kasprintf_fixture_run(u32, u32, voidptr, &u32) voidptr
+fn C.tulpar_linuxkpi_kasprintf_fixture_overflow(u32, &u32) bool
+fn C.tulpar_linuxkpi_kasprintf_fixture_free(voidptr)
+fn C.tulpar_linuxkpi_kasprintf_fixture_alloc(uint) voidptr
+fn C.tulpar_linuxkpi_kasprintf_fixture_gfp() u32
+fn C.tulpar_linuxkpi_kasprintf_fixture_literal() voidptr
+fn C.tulpar_linuxkpi_kasprintf_fixture_rodata(voidptr) bool
 
 fn kasprintf_test_text(ptr voidptr, expected &char) bool {
 	unsafe {
@@ -33,9 +33,9 @@ fn kasprintf_test_borrowed(ptr voidptr) bool {
 	mut state := u32(0)
 	for which in u32(5) .. 10 {
 		if which == 7 { continue }
-		result := C.vinix_linuxkpi_kasprintf_fixture_run(which, u32(-1), ptr, &state)
+		result := C.tulpar_linuxkpi_kasprintf_fixture_run(which, u32(-1), ptr, &state)
 		// All results here either remain NULL or borrow real rodata.
-		C.vinix_linuxkpi_kasprintf_fixture_free(result)
+		C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 		expected := if which == 5 || which == 8 { u32(1) } else { u32(3) }
 		if result != ptr || state != expected { return false }
 	}
@@ -43,7 +43,7 @@ fn kasprintf_test_borrowed(ptr voidptr) bool {
 }
 
 fn kasprintf_test_fast_batch() bool {
-	literal := C.vinix_linuxkpi_kasprintf_fixture_literal()
+	literal := C.tulpar_linuxkpi_kasprintf_fixture_literal()
 	unsafe {
 		if (&u8(literal))[0] != `v` || (&u8(literal))[6] != `f` || (&u8(literal))[21] != 0 {
 			return false
@@ -56,11 +56,11 @@ fn kasprintf_test_fast_batch() bool {
 			return false
 		}
 		mut state := u32(0)
-		first := C.vinix_linuxkpi_kasprintf_fixture_run(5, u32(-1), unsafe { nil }, &state)
-		C.vinix_linuxkpi_kasprintf_fixture_free(first)
+		first := C.tulpar_linuxkpi_kasprintf_fixture_run(5, u32(-1), unsafe { nil }, &state)
+		C.tulpar_linuxkpi_kasprintf_fixture_free(first)
 		if first != unsafe { nil } || state != 1 { return false }
-		second := C.vinix_linuxkpi_kasprintf_fixture_run(8, u32(-1), unsafe { nil }, &state)
-		C.vinix_linuxkpi_kasprintf_fixture_free(second)
+		second := C.tulpar_linuxkpi_kasprintf_fixture_run(8, u32(-1), unsafe { nil }, &state)
+		C.tulpar_linuxkpi_kasprintf_fixture_free(second)
 		if second != unsafe { nil } || state != 1 { return false }
 	}
 	return true
@@ -112,20 +112,20 @@ fn kasprintf_test_owned_operation() bool {
 	stack_ptr := unsafe { voidptr(&stack[0]) }
 	defer {
 		if other != stack_ptr && other != source && other != result {
-			C.vinix_linuxkpi_kasprintf_fixture_free(other)
+			C.tulpar_linuxkpi_kasprintf_fixture_free(other)
 		}
 		if result != stack_ptr && result != source {
-			C.vinix_linuxkpi_kasprintf_fixture_free(result)
+			C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 		}
-		C.vinix_linuxkpi_kasprintf_fixture_free(source)
+		C.tulpar_linuxkpi_kasprintf_fixture_free(source)
 		owner.linuxkpi_alloc_fail_after = gate
 	}
 	owner.linuxkpi_alloc_fail_after = -1
-	flags := C.vinix_linuxkpi_kasprintf_fixture_gfp()
+	flags := C.tulpar_linuxkpi_kasprintf_fixture_gfp()
 	mut state := u32(0)
 	for which in u32(0) .. 4 {
-		result = C.vinix_linuxkpi_kasprintf_fixture_run(which, flags, stack_ptr, &state)
-		if result == unsafe { nil } || result == stack_ptr || C.vinix_linuxkpi_kasprintf_fixture_rodata(result) {
+		result = C.tulpar_linuxkpi_kasprintf_fixture_run(which, flags, stack_ptr, &state)
+		if result == unsafe { nil } || result == stack_ptr || C.tulpar_linuxkpi_kasprintf_fixture_rodata(result) {
 			return false
 		}
 		expected_state := if which == 1 {
@@ -146,96 +146,96 @@ fn kasprintf_test_owned_operation() bool {
 		stack[0] = `!`
 		if !kasprintf_test_text(result, text) { return false }
 		stack[0] = `a`
-		C.vinix_linuxkpi_kasprintf_fixture_free(result)
+		C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 		result = unsafe { nil }
 	}
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(7, flags, stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(7, flags, stack_ptr, &state)
 	if result == unsafe { nil } || result == stack_ptr || state != 1
 		|| !kasprintf_test_text(result, c'1/cursor/2/3/4/5/6/7') {
 		return false
 	}
-	C.vinix_linuxkpi_kasprintf_fixture_free(result)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 	result = unsafe { nil }
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(12, flags, stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(12, flags, stack_ptr, &state)
 	if result == unsafe { nil } || result == stack_ptr || state != 3
 		|| !kasprintf_test_text(result, c'outer<11/nested/22/33/44/55/66/77>tail') {
 		return false
 	}
-	C.vinix_linuxkpi_kasprintf_fixture_free(result)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 	result = unsafe { nil }
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(4, flags, unsafe { nil }, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(4, flags, unsafe { nil }, &state)
 	if result == unsafe { nil } || state != 1 || !kasprintf_test_text(result, c'(null)') {
 		return false
 	}
-	C.vinix_linuxkpi_kasprintf_fixture_free(result)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 	result = unsafe { nil }
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(5, flags, stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(5, flags, stack_ptr, &state)
 	if result == unsafe { nil } || result == stack_ptr || state != 1
-		|| C.vinix_linuxkpi_kasprintf_fixture_rodata(result) || !kasprintf_test_text(result, c'alphabet') {
+		|| C.tulpar_linuxkpi_kasprintf_fixture_rodata(result) || !kasprintf_test_text(result, c'alphabet') {
 		return false
 	}
 	stack[0] = `!`
 	if !kasprintf_test_text(result, c'alphabet') { return false }
 	stack[0] = `a`
-	C.vinix_linuxkpi_kasprintf_fixture_free(result)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 	result = unsafe { nil }
-	source = C.vinix_linuxkpi_kasprintf_fixture_alloc(9)
+	source = C.tulpar_linuxkpi_kasprintf_fixture_alloc(9)
 	if source == unsafe { nil } { return false }
 	unsafe {
 		for index in 0 .. 9 { (&u8(source))[index] = stack[index] }
 	}
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(8, flags, source, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(8, flags, source, &state)
 	if result == unsafe { nil } || result == source || result == stack_ptr || state != 1
-		|| C.vinix_linuxkpi_kasprintf_fixture_rodata(result) {
+		|| C.tulpar_linuxkpi_kasprintf_fixture_rodata(result) {
 		return false
 	}
 	unsafe { *&u8(source) = `!` }
-	C.vinix_linuxkpi_kasprintf_fixture_free(source)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(source)
 	source = unsafe { nil }
 	if !kasprintf_test_text(result, c'alphabet') { return false }
-	C.vinix_linuxkpi_kasprintf_fixture_free(result)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 	result = unsafe { nil }
 	owner.linuxkpi_alloc_fail_after = 0
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(10, flags, stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(10, flags, stack_ptr, &state)
 	if result != unsafe { nil } || state != 3 || owner.linuxkpi_alloc_fail_after != -1 {
 		return false
 	}
 	owner.linuxkpi_alloc_fail_after = 0
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(11, flags, stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(11, flags, stack_ptr, &state)
 	if result != unsafe { nil } || state != 3 || owner.linuxkpi_alloc_fail_after != -1 {
 		return false
 	}
 	owner.linuxkpi_alloc_fail_after = 1
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(10, u32(-1), stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(10, u32(-1), stack_ptr, &state)
 	if result != unsafe { nil } || state != 3 || owner.linuxkpi_alloc_fail_after != 1 {
 		return false
 	}
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(1, u32(-1), stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(1, u32(-1), stack_ptr, &state)
 	if result != unsafe { nil } || state != 0 || owner.linuxkpi_alloc_fail_after != 1 {
 		return false
 	}
-	if !kasprintf_test_borrowed(C.vinix_linuxkpi_kasprintf_fixture_literal()) || owner.linuxkpi_alloc_fail_after != 1 {
+	if !kasprintf_test_borrowed(C.tulpar_linuxkpi_kasprintf_fixture_literal()) || owner.linuxkpi_alloc_fail_after != 1 {
 		return false
 	}
-	if !C.vinix_linuxkpi_kasprintf_fixture_overflow(flags, &state) || state != 3 || owner.linuxkpi_alloc_fail_after != 1 {
+	if !C.tulpar_linuxkpi_kasprintf_fixture_overflow(flags, &state) || state != 3 || owner.linuxkpi_alloc_fail_after != 1 {
 		return false
 	}
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(0, flags, stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(0, flags, stack_ptr, &state)
 	if result == unsafe { nil } || result == stack_ptr || state != 1 || owner.linuxkpi_alloc_fail_after != 0 {
 		return false
 	}
-	C.vinix_linuxkpi_kasprintf_fixture_free(result)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 	result = unsafe { nil }
-	other = C.vinix_linuxkpi_kasprintf_fixture_run(10, flags, stack_ptr, &state)
+	other = C.tulpar_linuxkpi_kasprintf_fixture_run(10, flags, stack_ptr, &state)
 	if other != unsafe { nil } || state != 3 || owner.linuxkpi_alloc_fail_after != -1 {
 		return false
 	}
 	owner.linuxkpi_alloc_fail_after = 1
-	result = C.vinix_linuxkpi_kasprintf_fixture_run(1, flags, stack_ptr, &state)
+	result = C.tulpar_linuxkpi_kasprintf_fixture_run(1, flags, stack_ptr, &state)
 	if result == unsafe { nil } || result == stack_ptr || state != 0 || owner.linuxkpi_alloc_fail_after != 0 {
 		return false
 	}
-	C.vinix_linuxkpi_kasprintf_fixture_free(result)
+	C.tulpar_linuxkpi_kasprintf_fixture_free(result)
 	result = unsafe { nil }
 	return owner.linuxkpi_alloc_fail_after == 0 && may_sleep()
 }

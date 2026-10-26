@@ -47,15 +47,15 @@ fn suite(sandbox string) hwhost.Suite {
 		guest: 'tests/accounts/guest'
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
 		programs: [
-			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+			hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 		]
-		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
+		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
 		files: [
 			hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
 		]
 		directories: ['run', 'home', 'var/log', 'tmp:1777']
 		scenarios: [hwhost.Scenario{
@@ -84,10 +84,10 @@ fn stage_inputs(inputs string, root string) ![]Artifact {
 	}
 	mut expected := []string{}
 	for arch in ['aarch64', 'x86_64'] {
-		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/vinix-linux-runner', 'lib/libc.so',
+		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/tulpar-linux-runner', 'lib/libc.so',
 			'lib/libavcodec.so.62', 'lib/libavdevice.so.62', 'lib/libavfilter.so.11', 'lib/libavformat.so.62',
 			'lib/libavutil.so.60', 'lib/libswresample.so.6', 'lib/libswscale.so.9',
-			'licenses/ffmpeg-LICENSE.md', 'licenses/ffmpeg-COPYING.LGPLv2.1', 'licenses/musl-COPYRIGHT', 'licenses/vinix-COPYING', 'licenses/v-COPYRIGHT',
+			'licenses/ffmpeg-LICENSE.md', 'licenses/ffmpeg-COPYING.LGPLv2.1', 'licenses/musl-COPYRIGHT', 'licenses/tulpar-COPYING', 'licenses/v-COPYRIGHT',
 			'sources/ffmpeg.tar.xz', 'sources/build.json', 'sources/linux-runner.v', 'sources/ffmpeg-build.v', 'sources/ffmpeg-source.json'] { expected << 'roots/' + arch + '/' + path }
 	}
 	mut artifacts := [artifact('input-build-record', inputs + '/build.json')!]
@@ -110,16 +110,16 @@ fn stage_inputs(inputs string, root string) ![]Artifact {
 
 fn check() !int {
 	options := hwhost.parse_options(os.args[1..])!
-	definition := suite(os.getenv('VINIX_FFMPEG_SANDBOX'))
+	definition := suite(os.getenv('TULPAR_FFMPEG_SANDBOX'))
 	if options.help || options.list { return hwhost.run_suite(definition, os.args[1..], @FILE) }
 	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir)
 		|| os.is_link(options.state_dir) { return error('provide --kernel and a new --state-dir') }
-	if os.getenv('VINIX_HWTEST_TCG') != '1' { return error('this qualification requires VINIX_HWTEST_TCG=1') }
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' { return error('this qualification requires TULPAR_HWTEST_TCG=1') }
 	hwhost.validate_scenarios(definition.scenarios)!
 	selection := hwhost.select_scenarios(definition.scenarios, options.arch, options.scenarios)!
 	if selection.run.len != 1 { return error('select the packages-ffmpeg scenario') }
-	inputs := os.abs_path(os.getenv('VINIX_FFMPEG_INPUTS'))
-	if !os.is_dir(inputs) || os.is_link(inputs) { return error('VINIX_FFMPEG_INPUTS must name the built inputs directory') }
+	inputs := os.abs_path(os.getenv('TULPAR_FFMPEG_INPUTS'))
+	if !os.is_dir(inputs) || os.is_link(inputs) { return error('TULPAR_FFMPEG_INPUTS must name the built inputs directory') }
 	repository := hwhost.find_root(@FILE)!
 	host := hwhost.find_host(repository, options.arch, options.qemu)!
 	os.mkdir_all(options.state_dir)!
@@ -131,9 +131,9 @@ fn check() !int {
 	guest := hwhost.build_program(host, repository + '/' + definition.guest, guest_dir, 'init', definition.module_paths)!
 	root := hwhost.build_extras(host, definition, guest_dir)!
 	mut artifacts := stage_inputs(inputs, root)!
-	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/vinix-sandbox',
-		'guest-init': guest, 'package-service': root + '/usr/bin/vinix-package',
-		'account-manager': root + '/usr/sbin/vinix-account', 'session-runner': root + '/usr/sbin/vinix-session'} {
+	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/tulpar-sandbox',
+		'guest-init': guest, 'package-service': root + '/usr/bin/tulpar-package',
+		'account-manager': root + '/usr/sbin/tulpar-account', 'session-runner': root + '/usr/sbin/tulpar-session'} {
 		artifacts << artifact(role, path)!
 	}
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: kernel, guest: guest, extras: root,

@@ -79,7 +79,7 @@ fn root_runtime(args []string) ! {
 		initramfs:     [archive]
 		output:        bundle
 		cmdline:       if runtime.arch == 'aarch64' {
-			'vinix.qemu_platform=1'
+			'tulpar.qemu_platform=1'
 		} else {
 			''
 		}
@@ -151,8 +151,8 @@ fn negatives(runtime Runtime, debugfs string, bundle string, attached string, im
 	enroll(runtime, bundle, config.replace(digest, wrong))!
 	runtime_guest(runtime, bundle, 'wrong-root', 'verity: root integrity or filesystem check failed', attached, none)!
 	token := verityimage.command_line(device, root_blocks, digest)!
-	replacements := [token + ' ' + token, 'vinix.disk=auto ' + token,
-		token.replace('vinix.verity=1,', 'vinix.verity=2,')]
+	replacements := [token + ' ' + token, 'tulpar.disk=auto ' + token,
+		token.replace('tulpar.verity=1,', 'tulpar.verity=2,')]
 	for index, scenario in ['duplicate-policy', 'conflicting-policy', 'malformed-policy'] {
 		enroll(runtime, bundle, config.replace(token, replacements[index]))!
 		runtime_guest(runtime, bundle, scenario, 'verity: invalid, duplicate or conflicting root policy', attached, none)!

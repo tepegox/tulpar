@@ -13,7 +13,7 @@
 #endif
 SYM(mock_prctl):
 .cfi_startproc
- jmp SYM(vinix_mac_cli_capture)
+ jmp SYM(tulpar_mac_cli_capture)
 .cfi_endproc
 #ifndef __APPLE__
 .size mock_prctl,.-mock_prctl

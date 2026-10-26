@@ -1,6 +1,6 @@
 # OpenBSD security features
 
-Vinix borrows a number of OpenBSD's mitigations. They are on for every
+Tulpar borrows a number of OpenBSD's mitigations. They are on for every
 process on both architectures, unless noted otherwise. `tests/openbsd-security/run.sh [aarch64|amd64]`
 boots a kernel with a test program as PID 1 and checks the ones below.
 
@@ -16,7 +16,7 @@ the kernel logs the promise the call needed:
 
 The promise names and their meanings are OpenBSD's: `stdio rpath wpath cpath
 dpath tmppath inet mcast fattr chown flock unix dns getpw sendfd recvfd tty
-proc exec prot_exec settime id route unveil error`. Vinix also accepts `tape
+proc exec prot_exec settime id route unveil error`. Tulpar also accepts `tape
 ps vminfo pf wroute audio video bpf vmm drm disklabel`; the ones with no
 Linux counterpart grant nothing. Promises can only be narrowed. With `error`, a
 refused call fails with `ENOSYS` and the process keeps running. Children
@@ -25,7 +25,7 @@ the next program the process executes. If a process gave no `execpromises`,
 the program it executes starts unpledged.
 
 Because the syscalls are Linux's, deciding which promise a call needs is
-Vinix's work, in `kernel/syscall/table/pledge*.v`. Where the argument that
+Tulpar's work, in `kernel/syscall/table/pledge*.v`. Where the argument that
 decides it is in a register, it is checked at syscall entry: an ioctl request,
 a socket's family, `PROT_EXEC`, `CLONE_THREAD`, a kill target. Calls that name
 a file are judged once the file is resolved (`kernel/fs/policy.v`), as
@@ -45,7 +45,7 @@ OpenBSD's `namei` does:
 A few files are reachable without these promises, because libc opens them on
 its own: `/dev/null`, `/etc/localtime` and `/usr/share/zoneinfo/`, `/dev/tty`
 with `tty`, the password and group files with `getpw`, and the resolver's
-files with `dns`. Vinix adds the Linux files the libcs use instead:
+files with `dns`. Tulpar adds the Linux files the libcs use instead:
 `/etc/nsswitch.conf`, `/dev/urandom`, and `/sys/devices/system/cpu/online`.
 With `tmppath`, a process can create and remove files under `/tmp/`, as
 `mkstemp(3)` does.
@@ -107,7 +107,7 @@ returns through frames that were built for its parent's handlers.
 On amd64 the cookie is in the first word of `sigcontext.reserved1`, which
 Linux leaves zero and libc never reads. On arm64 it is in the kernel-private
 header at the start of the frame, and `rt_sigreturn` also refuses a
-ucontext pointer other than the one the kernel wrote. The native Vinix
+ucontext pointer other than the one the kernel wrote. The native Tulpar
 signal ABI on arm64 is covered too.
 
 A glibc program on arm64 returns from its handlers through a page the kernel
@@ -121,7 +121,7 @@ Once init has pid 1, process and thread IDs are random, as OpenBSD has
 made them since 1997, so the next process's pid is not a guess away from the
 last one. An ID released in the last 128 is not handed out again, like
 OpenBSD's `oldpids`. Neither is one that still names a live process group or
-session, which Vinix already checked. If random picks keep landing on
+session, which Tulpar already checked. If random picks keep landing on
 taken IDs in a nearly full table, allocation falls back to the old
 sequential scan. PID namespaces number their processes on their own, so
 container init is still pid 1 inside the container.
@@ -131,7 +131,7 @@ container init is still pid 1 inside the container.
 The heap `brk(2)` grows used to start at `0x60000000000` in every process.
 Now each program's break starts at a random page in the first 256 MiB of its
 arena, as OpenBSD randomizes the start of the data segment. This joins the
-randomized PIE base, interpreter base, stack top and `mmap` placement Vinix
+randomized PIE base, interpreter base, stack top and `mmap` placement Tulpar
 already had. On amd64, exec now resets the break and fork copies it, which
 arm64 already did.
 
@@ -146,7 +146,7 @@ whatever was written there. The guard is global (`-mstack-protector-guard=global
 because the x86-64 default reads it through `%fs`, which in the kernel
 belongs to userspace.
 
-`kmain()` calls `vinix_stack_guard_init()` (`kernel/lib/stack_protector.v`)
+`kmain()` calls `tulpar_stack_guard_init()` (`kernel/lib/stack_protector.v`)
 before anything that will return. It mixes RDRAND (amd64) or RNDR (arm64,
 where the CPU has FEAT_RNG) with the cycle counter and the boot stack's
 address. The M1 has no RNDR, so there the guard depends on the counter's
@@ -214,7 +214,7 @@ to rekey instead of repeating its parent.
 
 The kernel's IP stack, lwIP, made up the numbers in its packets the
 predictable way. OpenBSD has made each of them random for more than twenty
-years, and so does Vinix now (`kernel/socket/inet/net_random.v`):
+years, and so does Tulpar now (`kernel/socket/inet/net_random.v`):
 
 - **IP IDs.** lwIP numbered datagrams one after another, so anyone who saw
   two of them knew how much else the machine had sent in between, which is
@@ -356,7 +356,7 @@ securelevel 1 the bits can no longer be cleared.
 ## Checked copies to and from userspace
 
 OpenBSD never dereferences a pointer a process gave it: every transfer goes
-through `copyin`/`copyout`, which check the address. Vinix now does the same.
+through `copyin`/`copyout`, which check the address. Tulpar now does the same.
 `kernel/usercopy` resolves each page through the process's page tables and
 copies through the kernel's own mapping of the page, so a pointer that leads
 nowhere, to a page the process may not write, or into the kernel's half of the
@@ -411,7 +411,7 @@ arrive whole.
 
 With every transfer going through `usercopy`, the kernel has no reason to
 touch a page of a process at the process's own address, and the CPU can be
-told so. OpenBSD has run with SMAP since 5.3. Vinix turns on SMAP on amd64,
+told so. OpenBSD has run with SMAP since 5.3. Tulpar turns on SMAP on amd64,
 on any CPU that has it, and PAN on arm64 (ARMv8.1): while the bit is set, an
 access from the kernel to a page userspace can reach faults. A kernel bug
 that follows a pointer an attacker chose -- a null function table, a
@@ -423,7 +423,7 @@ userspace can set AC and an interrupt leaves it as it was. On arm64, clearing
 `SCTLR_EL1.SPAN` has every exception into the kernel set `PSTATE.PAN`, and
 kernel threads start with it set and keep it across a sleep.
 
-`vinix.user_access=` on the kernel command line chooses what a violation
+`tulpar.user_access=` on the kernel command line chooses what a violation
 does:
 
 | | |
@@ -434,7 +434,7 @@ does:
 
 An audit is how the conversion was done, and how to find a path it missed. The
 log has a `user-access:` line for each one, and
-`tests/user-access/sites kernel/bin/vinix < serial.log` names the function
+`tests/user-access/sites kernel/bin/tulpar < serial.log` names the function
 and what called it:
 
 ```
@@ -442,14 +442,14 @@ wrote memcpy < pipe__Pipe__read < resource__Resource__read < file__Handle__read 
 read  stubs__strlen < strlen < vstrlen < tos2 < cstring_to_vstring < fs__user_path < fs__syscall_openat
 ```
 
-`VINIX_CMDLINE=vinix.user_access=audit` passes the option through
+`TULPAR_CMDLINE=tulpar.user_access=audit` passes the option through
 `scripts/run-aarch64.sh` and the amd64 test ISO. A debug kernel (`PROD=false`) audits
 unless told otherwise, since it traces each syscall's path argument where the
 process has it.
 
 On Apple hardware the kernel runs at EL2. PAN works the same way there, but
 it has only been run at EL1, under QEMU, so on those machines it stays off
-until `vinix.user_access=audit` or `strict` asks for it.
+until `tulpar.user_access=audit` or `strict` asks for it.
 
 ## Already in place
 

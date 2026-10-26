@@ -24,7 +24,7 @@ import proc
 // it, as OpenBSD's init does on its way to single-user mode. At 0 or -1 it
 // can be set to -1. Root with CAP_SYS_ADMIN sets it, as it does the hostname,
 // in the initial user namespace, so that a container's root cannot. A
-// vinix.securelevel boot option additionally sets a floor which even init
+// tulpar.securelevel boot option additionally sets a floor which even init
 // cannot lower. The bootloader and command line are not authenticated here.
 //
 // One aligned word, read and written whole on both architectures.
@@ -64,7 +64,7 @@ pub fn initialise_boot_policy() {
 	text := unsafe { tos(bytes, length) }
 	level, valid := parse_securelevel_boot(text)
 	if !valid {
-		lib.kpanic(unsafe { nil }, c'security: invalid or duplicate vinix.securelevel boot policy')
+		lib.kpanic(unsafe { nil }, c'security: invalid or duplicate tulpar.securelevel boot policy')
 		return
 	}
 	if level >= lowest_securelevel {

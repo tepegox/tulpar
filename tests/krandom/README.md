@@ -17,7 +17,7 @@ tests/krandom/run-hooks --arch aarch64 \
 ```
 
 Set `CC_AMD64` to the native musl compiler for `--arch x86_64` and
-`VINIX_V_COMPILER` to a verified compiler. The 32-line original host model is
+`TULPAR_V_COMPILER` to a verified compiler. The 32-line original host model is
 recoverable at `e55f69e1c982708d8c9a256d897054b7fd229fb3:tests/krandom/host_stubs.c`.
 The optional `--c-reference` accepts that immutable materialized file for
 differential validation. The new ABI oracle is additional coverage and earns

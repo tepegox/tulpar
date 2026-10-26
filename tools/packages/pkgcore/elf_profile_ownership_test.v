@@ -13,9 +13,9 @@ struct ElfOwnershipLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn elf_owned_descriptors() int {
@@ -30,7 +30,7 @@ fn elf_owned_attempt(root int, architecture string, kind string, path string, ac
 }
 
 fn test_elf_checks_retire_valid_images_signature_header_segment_interpreter_and_file_refusals() {
-	fixture := os.real_path(os.temp_dir()) + '/vinix-elf-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	fixture := os.real_path(os.temp_dir()) + '/tulpar-elf-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(fixture)!; defer { os.rmdir_all(fixture) or {} }
 	root := capture_prepared_root(fixture, 'ELF owner test')!; defer { C.close(root) }
 	mut original := ElfOwnershipLimit{}; assert C.getrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
@@ -71,10 +71,10 @@ fn test_elf_checks_retire_valid_images_signature_header_segment_interpreter_and_
 				before := elf_owned_descriptors()
 				mut maximum := u64(0); mut records := u32(0)
 				for _ in 0 .. 8 {
-					$if track_heap ? { C.vinix_heap_begin() }
+					$if track_heap ? { C.tulpar_heap_begin() }
 					elf_owned_attempt(root, architecture, kind, 'image', accepted)
 					$if track_heap ? {
-						kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+						kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 						if kept > maximum { maximum = kept }; if count > records { records = count }
 					}
 					assert elf_owned_descriptors() == before

@@ -3,15 +3,15 @@
 // means the conduit is not implemented; the caller then tries the other one.
 .section .text
 
-.globl vinix_psci_hvc
-.type vinix_psci_hvc, %function
-vinix_psci_hvc:
+.globl tulpar_psci_hvc
+.type tulpar_psci_hvc, %function
+tulpar_psci_hvc:
     hvc #0
     ret
 
-.globl vinix_psci_smc
-.type vinix_psci_smc, %function
-vinix_psci_smc:
+.globl tulpar_psci_smc
+.type tulpar_psci_smc, %function
+tulpar_psci_smc:
     smc #0
     ret
 
@@ -36,8 +36,8 @@ vinix_psci_smc:
 .endm
 
 .align 11
-.globl vinix_early_fault_vectors
-vinix_early_fault_vectors:
+.globl tulpar_early_fault_vectors
+tulpar_early_fault_vectors:
     EARLY_FAULT_ENTRY   // EL1t: synchronous
     EARLY_FAULT_ENTRY   // EL1t: irq
     EARLY_FAULT_ENTRY   // EL1t: fiq
@@ -58,9 +58,9 @@ vinix_early_fault_vectors:
 // Report the exception level the kernel is running at. Apple Silicon has no
 // EL3 and m1n1 commonly leaves the kernel at EL2, which changes both of the
 // mechanisms below, so neither may assume EL1.
-.globl vinix_current_el
-.type vinix_current_el, %function
-vinix_current_el:
+.globl tulpar_current_el
+.type tulpar_current_el, %function
+tulpar_current_el:
     mrs x0, CurrentEL
     lsr x0, x0, #2
     ret
@@ -70,11 +70,11 @@ vinix_current_el:
 // would be taken to VBAR_EL2, the table would never run, and a deliberate
 // fault would look like PSCI being unavailable rather than a vector installed
 // at the wrong level.
-.globl vinix_install_early_fault_vectors
-.type vinix_install_early_fault_vectors, %function
-vinix_install_early_fault_vectors:
-    adrp x1, vinix_early_fault_vectors
-    add  x1, x1, :lo12:vinix_early_fault_vectors
+.globl tulpar_install_early_fault_vectors
+.type tulpar_install_early_fault_vectors, %function
+tulpar_install_early_fault_vectors:
+    adrp x1, tulpar_early_fault_vectors
+    add  x1, x1, :lo12:tulpar_early_fault_vectors
     mrs  x0, CurrentEL
     lsr  x0, x0, #2
     cmp  x0, #2
@@ -96,9 +96,9 @@ vinix_install_early_fault_vectors:
 // does: select SP_EL1 with SPSel, write it with `mov sp`, then switch back to
 // SP_EL0 (the running stack, left untouched). This leaf function spills nothing
 // to the stack, so it is safe across the SPSel change.
-.globl vinix_set_sp_el1
-.type vinix_set_sp_el1, %function
-vinix_set_sp_el1:
+.globl tulpar_set_sp_el1
+.type tulpar_set_sp_el1, %function
+tulpar_set_sp_el1:
     msr spsel, #1
     isb
     mov sp, x0

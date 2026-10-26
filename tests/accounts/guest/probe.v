@@ -42,7 +42,7 @@ fn probe_ids() int {
 	list.sort()
 	mut cwd := []u8{len: 256}
 	C.getcwd(&char(cwd.data), 256)
-	println('uid=${C.getuid()} euid=${C.geteuid()} gid=${C.getgid()} groups=${list.join(',')} caps=${status_field('CapEff')} permitted=${status_field('CapPrm')} bounding=${status_field('CapBnd')} nnp=${status_field('NoNewPrivs')} home=${os.getenv('HOME')} runtime=${os.getenv('XDG_RUNTIME_DIR')} user=${os.getenv('USER')} cwd=${unsafe { cstring_to_vstring(&char(cwd.data)) }} active=${read_text('/run/vinix/session/active').trim_space()} login=${read_text('/proc/self/loginuid').trim_space()}/${read_text('/proc/self/sessionid').trim_space()}')
+	println('uid=${C.getuid()} euid=${C.geteuid()} gid=${C.getgid()} groups=${list.join(',')} caps=${status_field('CapEff')} permitted=${status_field('CapPrm')} bounding=${status_field('CapBnd')} nnp=${status_field('NoNewPrivs')} home=${os.getenv('HOME')} runtime=${os.getenv('XDG_RUNTIME_DIR')} user=${os.getenv('USER')} cwd=${unsafe { cstring_to_vstring(&char(cwd.data)) }} active=${read_text('/run/tulpar/session/active').trim_space()} login=${read_text('/proc/self/loginuid').trim_space()}/${read_text('/proc/self/sessionid').trim_space()}')
 	return 0
 }
 
@@ -87,7 +87,7 @@ fn probe_list(path string) int {
 
 // Connect to the service and send bytes that are not a request.
 fn probe_garbage(kind string) int {
-	path := '/run/vinix/auth.sock'
+	path := '/run/tulpar/auth.sock'
 	fd := C.socket(C.AF_UNIX, C.SOCK_STREAM, 0)
 	mut address := C.sockaddr_un{}
 	address.sun_family = u16(C.AF_UNIX)
@@ -150,7 +150,7 @@ fn run_probe(what []string) int {
 			return 0
 		}
 		'who' {
-			println('asked by ${os.getenv('VINIX_AUTH_USER')} (${os.getenv('VINIX_AUTH_UID')}) as uid=${C.geteuid()} path=${os.getenv('PATH')} home=${os.getenv('HOME')}')
+			println('asked by ${os.getenv('TULPAR_AUTH_USER')} (${os.getenv('TULPAR_AUTH_UID')}) as uid=${C.geteuid()} path=${os.getenv('PATH')} home=${os.getenv('HOME')}')
 			return 0
 		}
 		'input' {

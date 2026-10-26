@@ -1,19 +1,19 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_TASK_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_TASK_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_TASK_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_TASK_V_PRIMITIVES_H
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "linuxkpi_callback_v_abi.h"
 /* Narrow ABI views checked against unmodified public Linux layouts. */
 struct vkt_task_view {
-    void *vinix_thread;
+    void *tulpar_thread;
     int32_t pid, tgid;
     uint32_t flags, state, wait_lock;
     char comm[16], initial_comm[16];
     uint32_t in_iowait;
 };
-#ifndef VINIX_V_RUNTIME
+#ifndef TULPAR_V_RUNTIME
 struct vkt_timespec64 { int64_t tv_sec, tv_nsec; };
 struct vkt_timer_view {
     struct vkt_timer_view *next;
@@ -24,42 +24,42 @@ struct vkt_timer_view {
 };
 #endif
 extern unsigned long volatile jiffies;
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 extern uint64_t jiffies_64;
 #else
 extern unsigned long long jiffies_64;
 #endif
-void vinix_linuxkpi_task_dequeue(void *);
-bool vinix_linuxkpi_task_enqueue(void *);
-#ifdef VINIX_V_RUNTIME
-bool vinix_linuxkpi_task_is_dead(void *);
+void tulpar_linuxkpi_task_dequeue(void *);
+bool tulpar_linuxkpi_task_enqueue(void *);
+#ifdef TULPAR_V_RUNTIME
+bool tulpar_linuxkpi_task_is_dead(void *);
 #else
-bool vinix_linuxkpi_task_is_dead(const void *);
+bool tulpar_linuxkpi_task_is_dead(const void *);
 #endif
-void vinix_linuxkpi_task_park(void);
-#ifdef VINIX_V_RUNTIME
-bool vinix_linuxkpi_task_signal_pending(void *, bool);
+void tulpar_linuxkpi_task_park(void);
+#ifdef TULPAR_V_RUNTIME
+bool tulpar_linuxkpi_task_signal_pending(void *, bool);
 #else
-bool vinix_linuxkpi_task_signal_pending(const void *, bool);
+bool tulpar_linuxkpi_task_signal_pending(const void *, bool);
 #endif
-void vinix_linuxkpi_iowait_block(void *);
-int vinix_linuxkpi_cond_resched(void);
-unsigned int vinix_linuxkpi_cpu_id(void);
-void vinix_linuxkpi_preempt_disable(void);
-void vinix_linuxkpi_preempt_enable(void);
-unsigned int vinix_linuxkpi_preempt_count(void);
-unsigned long vinix_linuxkpi_irq_save(void);
-unsigned long vinix_linuxkpi_irq_flags(void);
-void vinix_linuxkpi_irq_restore(unsigned long);
-void vinix_linuxkpi_spin_wait(void);
-#ifdef VINIX_V_RUNTIME
-uint64_t vinix_linuxkpi_clock_ns(void);
+void tulpar_linuxkpi_iowait_block(void *);
+int tulpar_linuxkpi_cond_resched(void);
+unsigned int tulpar_linuxkpi_cpu_id(void);
+void tulpar_linuxkpi_preempt_disable(void);
+void tulpar_linuxkpi_preempt_enable(void);
+unsigned int tulpar_linuxkpi_preempt_count(void);
+unsigned long tulpar_linuxkpi_irq_save(void);
+unsigned long tulpar_linuxkpi_irq_flags(void);
+void tulpar_linuxkpi_irq_restore(unsigned long);
+void tulpar_linuxkpi_spin_wait(void);
+#ifdef TULPAR_V_RUNTIME
+uint64_t tulpar_linuxkpi_clock_ns(void);
 #else
-unsigned long long vinix_linuxkpi_clock_ns(void);
+unsigned long long tulpar_linuxkpi_clock_ns(void);
 #endif
-unsigned int vinix_linuxkpi_clock_resolution_ns(void);
-void vinix_linuxkpi_timer_tick(void);
-void vinix_linuxkpi_task_get(void *);
+unsigned int tulpar_linuxkpi_clock_resolution_ns(void);
+void tulpar_linuxkpi_timer_tick(void);
+void tulpar_linuxkpi_task_get(void *);
 uintptr_t vkt_jiffies_address(void);
 void vkt_guest_enter(void);
 void vkt_guest_exit(void);

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_SRCU_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_SRCU_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_SRCU_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_SRCU_V_PRIMITIVES_H
 #include "linuxkpi_wait_v_primitives.h"
 /* Exact pinned ABI views. The binding checks every accessed field and type
  * alignment, while the main generated V blob avoids broad Linux headers. */
@@ -71,21 +71,21 @@ unsigned int vks_cpu_id(void);
 size_t vks_data_alignment(void);
 bool vks_queue_work(void *, void *);
 bool vks_queue_delayed_work(void *, void *, unsigned long);
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 void *alloc_workqueue(char *, unsigned int, int, ...);
 bool cancel_delayed_work_sync(void *);
 bool flush_work(void *);
 bool cancel_work_sync(void *);
 void destroy_workqueue(void *);
 void msleep(unsigned int);
-int vinix_linuxkpi_srcu_bootstrap(void);
+int tulpar_linuxkpi_srcu_bootstrap(void);
 void srcu_init(void);
 int init_srcu_struct(void *);
 int __srcu_read_lock(void *);
 void __srcu_read_unlock(void *, int);
 void call_srcu(void *, void *, void (*)(struct callback_head *));
-void vinix_linuxkpi_srcu_gp_work(struct work_struct *);
-void vinix_linuxkpi_srcu_callback_work(struct work_struct *);
+void tulpar_linuxkpi_srcu_gp_work(struct work_struct *);
+void tulpar_linuxkpi_srcu_callback_work(struct work_struct *);
 uint64_t get_state_synchronize_srcu(void *);
 uint64_t start_poll_synchronize_srcu(void *);
 bool poll_state_synchronize_srcu(void *, uint64_t);
@@ -93,9 +93,9 @@ void synchronize_srcu(void *);
 void synchronize_srcu_expedited(void *);
 void srcu_barrier(void *);
 void cleanup_srcu_struct(void *);
-int vinix_linuxkpi_srcu_bootstrap_limit_for_test(unsigned int);
-void *vinix_linuxkpi_srcu_queue_for_test(void);
-void vinix_linuxkpi_srcu_shutdown_for_test(void);
-void vinix_linuxkpi_srcu_static_quiesce_for_test(void *);
+int tulpar_linuxkpi_srcu_bootstrap_limit_for_test(unsigned int);
+void *tulpar_linuxkpi_srcu_queue_for_test(void);
+void tulpar_linuxkpi_srcu_shutdown_for_test(void);
+void tulpar_linuxkpi_srcu_static_quiesce_for_test(void *);
 #endif
 #endif

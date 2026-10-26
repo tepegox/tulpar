@@ -13,7 +13,7 @@ paths, and builds unmodified upstream sources with the target musl compilers.
 The archive was retrieved from the official upstream HTTPS release URL; the
 retained pin identifies those bytes and does not verify the upstream PGP
 signature. Public publishers must authenticate upstream delivery separately.
-The runtime includes that complete archive, FFmpeg/musl/V/Vinix notices, the V
+The runtime includes that complete archive, FFmpeg/musl/V/Tulpar notices, the V
 runner source, V build tool, source lock and build command vectors.
 
 The build disables automatic external libraries, network, hardware acceleration,

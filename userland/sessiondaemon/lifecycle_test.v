@@ -48,9 +48,9 @@ fn session_test_wait_exit(pid int) int {
 }
 
 fn test_only_inherited_connection_grants_compositor_authority() {
-	base := '${os.temp_dir()}/vinix-compositor-capability-${C.getpid()}'
+	base := '${os.temp_dir()}/tulpar-compositor-capability-${C.getpid()}'
 	os.mkdir(base, mode: 0o700)!
-	os.setenv('VINIX_SESSION_RUNTIME', base, true)
+	os.setenv('TULPAR_SESSION_RUNTIME', base, true)
 	defer {
 		os.rmdir_all(base) or {}
 		unsafe { base.free() }
@@ -78,14 +78,14 @@ fn test_only_inherited_connection_grants_compositor_authority() {
 	unsafe { snapshot.free() }
 	// Exec must not leak the capability to applications. Keep the child alive
 	// while closing the compositor endpoint to also detect inherited duplicates.
-	mut child := os.new_process(sessionipc.helper_path('vinix-session'))
+	mut child := os.new_process(sessionipc.helper_path('tulpar-session'))
 	child.set_args(['--session-control', 'attach'])
 	child.run()
 	child.wait()
 	assert child.code != 0
 	child.close()
 	for argument in ['--session-owner=${C.getpid()}', '--session-control-fd=999999'] {
-		mut invalid := os.new_process(sessionipc.helper_path('vinix-session'))
+		mut invalid := os.new_process(sessionipc.helper_path('tulpar-session'))
 		invalid.set_args(['--session-home=' + base, argument])
 		invalid.run()
 		invalid.wait()
@@ -122,14 +122,14 @@ fn test_only_inherited_connection_grants_compositor_authority() {
 }
 
 fn test_broker_credentials_durable_alarms_dialogs_exchange_and_shutdown() {
-	base := '${os.temp_dir()}/vinix-session-test-${C.getpid()}'
+	base := '${os.temp_dir()}/tulpar-session-test-${C.getpid()}'
 	os.mkdir(base) or { panic(err) }
 	os.chmod(base, 0o700) or { panic(err) }
 	defer { os.rmdir_all(base) or {} }
-	os.setenv('VINIX_SESSION_RUNTIME', base, true)
+	os.setenv('TULPAR_SESSION_RUNTIME', base, true)
 	home := '${base}/home'
 	os.mkdir(home) or { panic(err) }
-	binary := os.real_path('build/session-runtime/vinix-session')
+	binary := os.real_path('build/session-runtime/tulpar-session')
 	assert os.is_file(binary)
 	mut broker := session_test_start(home)
 	defer {
@@ -236,14 +236,14 @@ fn test_broker_credentials_durable_alarms_dialogs_exchange_and_shutdown() {
 }
 
 fn test_real_service_groups_restart_dependencies_and_broker_crash_cleanup() {
-	base := '${os.temp_dir()}/vinix-service-test-${C.getpid()}'
+	base := '${os.temp_dir()}/tulpar-service-test-${C.getpid()}'
 	os.mkdir(base) or { panic(err) }
 	os.chmod(base, 0o700) or { panic(err) }
 	defer {
 		os.rmdir_all(base) or {}
 		unsafe { base.free() }
 	}
-	os.setenv('VINIX_SESSION_RUNTIME', base, true)
+	os.setenv('TULPAR_SESSION_RUNTIME', base, true)
 	mut s := sessioncore.Supervisor{ count: 2 }
 	for i in 0 .. 2 {
 		mut service := sessioncore.Service{ name: sessioncore.text('test.${i}')!, executable: sessioncore.text('/bin/sleep')!, dependencies: u32(i), restart: .on_failure, restart_delay_ms: 100 }
@@ -254,8 +254,8 @@ fn test_real_service_groups_restart_dependencies_and_broker_crash_cleanup() {
 	s.validate() or { panic(err) }
 	config := s.encode()
 	defer { unsafe { config.free() } }
-	sessioncore.save('${base}/.vinix-services', config) or { panic(err) }
-	binary := os.real_path('build/session-runtime/vinix-session')
+	sessioncore.save('${base}/.tulpar-services', config) or { panic(err) }
+	binary := os.real_path('build/session-runtime/tulpar-session')
 	defer { unsafe { binary.free() } }
 	mut broker := session_test_start(base)
 	defer {
@@ -271,7 +271,7 @@ fn test_real_service_groups_restart_dependencies_and_broker_crash_cleanup() {
 	assert first[0] > 0 && first[1] > 0
 	for pid in first {
 		identity := os.exec(['ps', '-p', pid.str(), '-o', 'args='])
-		assert identity.exit_code == 0 && identity.output.contains('vinix-service-runner')
+		assert identity.exit_code == 0 && identity.output.contains('tulpar-service-runner')
 		unsafe { identity.output.free() }
 	}
 	C.kill(first[0], C.SIGKILL)

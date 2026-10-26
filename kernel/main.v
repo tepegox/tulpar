@@ -29,7 +29,7 @@ __global (
 
 fn C._vinit(argc int, argv voidptr)
 
-fn C.vinix_stack_guard_init()
+fn C.tulpar_stack_guard_init()
 
 pub fn main() {
 	kmain()

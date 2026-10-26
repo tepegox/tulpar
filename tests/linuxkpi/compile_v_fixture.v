@@ -19,7 +19,7 @@ const fixture_modules = ['cachefixture', 'i915policyfixture', 'pciconfigfixture'
 fn generate_fixture(name string, output string, arch string, host bool) ! {
 	// Keep the replacement on the destination filesystem. A failed compiler,
 	// metadata rewrite or rename must leave the previous artifact intact.
-	mut pattern := (output.all_before_last('/') + '/.vinix-fixture-XXXXXX\x00').bytes()
+	mut pattern := (output.all_before_last('/') + '/.tulpar-fixture-XXXXXX\x00').bytes()
 	work := unsafe {
 		pointer := C.mkdtemp(&char(pattern.data))
 		if pointer == nil {

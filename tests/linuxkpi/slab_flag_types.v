@@ -135,7 +135,7 @@ fn run_profile(keep string) ! {
 	hosttest.verify_upstream(linux, pin)!
 	require(hosttest.sha(archive)! == pin['sha256']!.str(), 'Pinned archive differs')!
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
-	work := hosttest.work_dir(keep, 'vinix-slab-flags-')!
+	work := hosttest.work_dir(keep, 'tulpar-slab-flags-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	types_path := os.join_path(here, 'include/linux/types.h')
 	slab_path := os.join_path(here, 'include/linux/slab.h')

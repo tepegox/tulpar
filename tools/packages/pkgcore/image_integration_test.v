@@ -15,24 +15,24 @@ fn integration_descriptors() int {
 }
 
 fn integration_write(fd int, bytes voidptr, count uint) int {
-	mode := os.getenv('VINIX_INTEGRATION_MODE')
+	mode := os.getenv('TULPAR_INTEGRATION_MODE')
 	if mode == 'write' { return 0 }
 	if mode == 'short' { return C.write(fd, bytes, if count > 3 { uint(3) } else { count }) }
-	if mode == 'eintr' && os.getenv('VINIX_INTEGRATION_INTERRUPTED') == '' {
-		os.setenv('VINIX_INTEGRATION_INTERRUPTED', '1', true); C.errno = C.EINTR; return -1
+	if mode == 'eintr' && os.getenv('TULPAR_INTEGRATION_INTERRUPTED') == '' {
+		os.setenv('TULPAR_INTEGRATION_INTERRUPTED', '1', true); C.errno = C.EINTR; return -1
 	}
 	return C.write(fd, bytes, count)
 }
 
 fn integration_space(_ string) !u64 {
-	mode := os.getenv('VINIX_INTEGRATION_MODE')
+	mode := os.getenv('TULPAR_INTEGRATION_MODE')
 	if mode == 'disk' { return 0 }
 	if mode == 'query' { return error('injected image integration space query refusal') }
 	return ~u64(0)
 }
 
 fn integration_flush(fd int) int {
-	mode := os.getenv('VINIX_INTEGRATION_MODE')
+	mode := os.getenv('TULPAR_INTEGRATION_MODE')
 	mut info := C.stat{}
 	assert C.fstat(fd, unsafe { &info }) == 0
 	if (mode == 'flush-file' && info.st_mode & 0o170000 == 0o100000)
@@ -41,7 +41,7 @@ fn integration_flush(fd int) int {
 }
 
 fn integration_checkpoint(phase string, path string) ! {
-	mode := os.getenv('VINIX_INTEGRATION_MODE'); work := os.getenv('VINIX_INTEGRATION_WORK')
+	mode := os.getenv('TULPAR_INTEGRATION_MODE'); work := os.getenv('TULPAR_INTEGRATION_WORK')
 	if phase == 'created' {
 		if path.contains('/licenses/') {
 			if mode == 'temp-alias' { os.rm(path)!; os.symlink(work + '/outside/keep', path)!; os.write_file(work + '/replacement-path', path)! }
@@ -64,17 +64,17 @@ fn integration_checkpoint(phase string, path string) ! {
 		if mode == 'parent-alias' { os.symlink(work + '/saved-licenses', path + '/usr/share/licenses')! }
 		else { os.mkdir(path + '/usr/share/licenses')!; os.write_file(path + '/usr/share/licenses/keep', 'replacement parent')! }
 	}
-	if mode == 'parent-writable' { os.chmod(path + '/usr/share/licenses/vinix-packages', 0o777)! }
+	if mode == 'parent-writable' { os.chmod(path + '/usr/share/licenses/tulpar-packages', 0o777)! }
 	if mode == 'ancestor-writable' { os.chmod(path + '/usr', 0o777)! }
 	if mode == 'ancestor-alias' { os.rename(path + '/usr', work + '/saved-usr')!; os.symlink(work + '/saved-usr', path + '/usr')! }
 	if mode in ['state-replaced', 'state-alias']! {
-		os.rename(path + '/var/lib/vinix-packages', work + '/saved-state')!
-		if mode == 'state-alias' { os.symlink(work + '/saved-state', path + '/var/lib/vinix-packages')! }
-		else { os.mkdir(path + '/var/lib/vinix-packages')!; os.write_file(path + '/var/lib/vinix-packages/keep', 'replacement state')! }
+		os.rename(path + '/var/lib/tulpar-packages', work + '/saved-state')!
+		if mode == 'state-alias' { os.symlink(work + '/saved-state', path + '/var/lib/tulpar-packages')! }
+		else { os.mkdir(path + '/var/lib/tulpar-packages')!; os.write_file(path + '/var/lib/tulpar-packages/keep', 'replacement state')! }
 	}
-	if mode == 'late-override' { os.symlink(work + '/outside/keep', path + '/usr/share/vinix/actions/packages-change')! }
+	if mode == 'late-override' { os.symlink(work + '/outside/keep', path + '/usr/share/tulpar/actions/packages-change')! }
 	if mode in ['temp-mode', 'temp-truncated']! {
-		parent := path + '/usr/share/licenses/vinix-packages'
+		parent := path + '/usr/share/licenses/tulpar-packages'
 		for entry in os.ls(parent)! {
 			if !entry.starts_with('.package-') { continue }
 			if mode == 'temp-mode' { os.chmod(parent + '/' + entry, 0o666)! }
@@ -96,11 +96,11 @@ fn integration_fixture(root string, source string, fresh bool) ! {
 		if i < 3 { os.write_file(root + '/' + relative + '/' + image_integration_names[i], 'previous ' + i.str())! }
 		os.write_file(root + '/' + relative + '/' + image_integration_names[i] + '.new', 'unrelated temporary')!
 	}
-	os.mkdir_all(root + '/var/lib/vinix-packages')!
+	os.mkdir_all(root + '/var/lib/tulpar-packages')!
 }
 
 fn integration_case(architecture string, mode string) ! {
-	work := os.real_path(os.temp_dir()) + '/vinix-image-integration-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-image-integration-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	defer { os.rmdir_all(work) or {} }
 	root := work + '/image'; source := work + '/repository'
 	integration_fixture(root, source, mode == 'umask')!
@@ -130,11 +130,11 @@ fn integration_case(architecture string, mode string) ! {
 	defer { plan.close() }
 	assert !os.exists(root + '/etc')
 	if mode == 'captured-sources' { os.rmdir_all(source)! }
-	if mode == 'state-private' { os.chmod(root + '/var/lib/vinix-packages', 0o700)! }
+	if mode == 'state-private' { os.chmod(root + '/var/lib/tulpar-packages', 0o700)! }
 	if mode == 'overrides' {
-		os.write_file(root + '/usr/share/vinix/actions/packages-change', 'administrator action')!
-		os.symlink(work + '/outside/keep', root + '/usr/share/vinix/actions/packages-launch')!
-		os.mkdir(root + '/usr/share/applications/vinix-packages')!
+		os.write_file(root + '/usr/share/tulpar/actions/packages-change', 'administrator action')!
+		os.symlink(work + '/outside/keep', root + '/usr/share/tulpar/actions/packages-launch')!
+		os.mkdir(root + '/usr/share/applications/tulpar-packages')!
 	}
 	if mode == 'leaf-alias' || mode == 'leaf-hardlink' {
 		for i in 0 .. 3 {
@@ -144,8 +144,8 @@ fn integration_case(architecture string, mode string) ! {
 			else { assert C.link((work + '/outside/keep').str, path.str) == 0 }
 		}
 	}
-	if mode == 'destination-directory' { os.rm(root + '/usr/bin/vinix-software')!; os.mkdir(root + '/usr/bin/vinix-software')! }
-	os.setenv('VINIX_INTEGRATION_MODE', mode, true); os.setenv('VINIX_INTEGRATION_WORK', work, true); os.unsetenv('VINIX_INTEGRATION_INTERRUPTED')
+	if mode == 'destination-directory' { os.rm(root + '/usr/bin/tulpar-software')!; os.mkdir(root + '/usr/bin/tulpar-software')! }
+	os.setenv('TULPAR_INTEGRATION_MODE', mode, true); os.setenv('TULPAR_INTEGRATION_WORK', work, true); os.unsetenv('TULPAR_INTEGRATION_INTERRUPTED')
 	mask := C.umask(if mode == 'umask' { u32(0o077) } else { u32(0o022) })
 	mut problem := ''
 	unsafe { &plan }.publish_with(ImageIntegrationOptions{ checkpoint: integration_checkpoint, available_space: integration_space,
@@ -156,7 +156,7 @@ fn integration_case(architecture string, mode string) ! {
 	if mode == 'late-flush' { assert problem.contains('entry saved'), problem }
 	image := if mode in ['root-replaced', 'post-root-replaced']! { work + '/saved-image' } else { root }
 	for i, relative in image_integration_parents {
-		parent := if i < 2 && mode in ['parent-replaced', 'parent-alias', 'post-parent-replaced']! { work + '/saved-licenses/vinix-packages' }
+		parent := if i < 2 && mode in ['parent-replaced', 'parent-alias', 'post-parent-replaced']! { work + '/saved-licenses/tulpar-packages' }
 			else { image + '/' + relative }
 		path := parent + '/' + image_integration_names[i]
 		published := success || (mode in ['late-flush', 'post-root-replaced', 'post-parent-replaced']! && i == 0) || (mode == 'late-override' && i < 3)
@@ -165,7 +165,7 @@ fn integration_case(architecture string, mode string) ! {
 				assert os.is_link(path)
 				mut bytes := [128]u8{}
 				count := C.readlinkat(C.AT_FDCWD, path.str, unsafe { &bytes[0] }, uint(bytes.len))
-				target := if i == 2 { '/usr/bin/vinix-desktop' } else { '/var/lib/vinix-packages/current/share/applications' }
+				target := if i == 2 { '/usr/bin/tulpar-desktop' } else { '/var/lib/tulpar-packages/current/share/applications' }
 				assert count == target.len && unsafe { tos(&bytes[0], int(count)) } == target
 			} else {
 				assert !os.is_link(path) && os.read_file(path)! == 'captured integration input ' + (if i < 2 { i } else { i - 1 }).str()
@@ -179,13 +179,13 @@ fn integration_case(architecture string, mode string) ! {
 		if mode !in ['temp-alias', 'temp-hardlink', 'link-replaced']! { assert !os.ls(parent)!.any(it.starts_with('.package-')), mode }
 	}
 	if mode in ['temp-alias', 'link-replaced']! { assert os.is_link(os.read_file(work + '/replacement-path')!) }
-	if mode == 'overrides' { assert os.read_file(root + '/usr/share/vinix/actions/packages-change')! == 'administrator action'; assert os.is_link(root + '/usr/share/vinix/actions/packages-launch'); assert os.is_dir(root + '/usr/share/applications/vinix-packages') }
-	if mode == 'late-override' { assert os.is_link(root + '/usr/share/vinix/actions/packages-change') }
+	if mode == 'overrides' { assert os.read_file(root + '/usr/share/tulpar/actions/packages-change')! == 'administrator action'; assert os.is_link(root + '/usr/share/tulpar/actions/packages-launch'); assert os.is_dir(root + '/usr/share/applications/tulpar-packages') }
+	if mode == 'late-override' { assert os.is_link(root + '/usr/share/tulpar/actions/packages-change') }
 	assert os.read_file(work + '/outside/keep')! == 'outside preserved' && os.stat(work + '/outside/keep')!.mode & 0o7777 == 0o644
-	if mode == 'state-private' { assert os.stat(root + '/var/lib/vinix-packages')!.mode & 0o7777 == 0o700 }
-	if success { assert os.ls(root + '/var/lib/vinix-packages')!.len == 0 && !os.exists(root + '/etc') }
+	if mode == 'state-private' { assert os.stat(root + '/var/lib/tulpar-packages')!.mode & 0o7777 == 0o700 }
+	if success { assert os.ls(root + '/var/lib/tulpar-packages')!.len == 0 && !os.exists(root + '/etc') }
 	if mode == 'umask' { for relative in image_integration_parents { assert os.stat(root + '/' + relative)!.mode & 0o7777 == 0o755 } }
-	if mode == 'state-replaced' { assert os.read_file(root + '/var/lib/vinix-packages/keep')! == 'replacement state' }
+	if mode == 'state-replaced' { assert os.read_file(root + '/var/lib/tulpar-packages/keep')! == 'replacement state' }
 	if mode in ['root-replaced', 'post-root-replaced']! { assert os.read_file(root + '/keep')! == 'replacement image' }
 	if mode in ['parent-replaced', 'post-parent-replaced']! { assert os.read_file(root + '/usr/share/licenses/keep')! == 'replacement parent' }
 	plan.close(); plan.close()
@@ -193,7 +193,7 @@ fn integration_case(architecture string, mode string) ! {
 }
 
 fn test_image_integration_captures_sources_and_publishes_through_controlled_directories() {
-	defer { for name in ['MODE', 'WORK', 'INTERRUPTED']! { os.unsetenv('VINIX_INTEGRATION_' + name) } }
+	defer { for name in ['MODE', 'WORK', 'INTERRUPTED']! { os.unsetenv('TULPAR_INTEGRATION_' + name) } }
 	mut cases := 0
 	for architecture in ['aarch64', 'x86_64']! {
 		for mode in ['complete', 'captured-sources', 'overrides', 'leaf-alias', 'leaf-hardlink', 'state-private', 'short', 'eintr', 'umask',

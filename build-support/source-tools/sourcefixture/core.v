@@ -15,7 +15,7 @@ pub fn read(path string) !string {
 }
 
 pub fn trim_cmake(text string) string {
-	return text.all_before('# Vinix execinfo compatibility')
+	return text.all_before('# Tulpar execinfo compatibility')
 }
 
 fn index(text string, marker string, start int) !int {

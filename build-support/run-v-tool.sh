@@ -14,7 +14,7 @@ support_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 # V's default output name is the source's basename, which can also be the
 # maintained shell entry point. Compile outside the source tree instead.
-tool_temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/vinix-v-tool.XXXXXX")
+tool_temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-v-tool.XXXXXX")
 trap 'rm -rf "$tool_temp_dir"' 0
 trap 'exit 129' HUP
 trap 'exit 130' INT

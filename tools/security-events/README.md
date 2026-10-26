@@ -2,7 +2,7 @@
 
 The kernel records what it decided about who may do what
 ([`kernel/security/events.v`](../../kernel/security/events.v)), and
-`vinix-security-events` keeps that record on disk. This is beside the
+`tulpar-security-events` keeps that record on disk. This is beside the
 [seccomp record](../security-audit/README.md), which holds system calls a
 filter asked to have recorded; the two share a boot identity and nothing
 else.
@@ -50,11 +50,11 @@ A service reports by writing one line, `<pid> <0|1> <label>`, as root with
 
 ## The collector
 
-    vinix-security-events            # until stopped
-    vinix-security-events --once     # one pass
+    tulpar-security-events            # until stopped
+    tulpar-security-events --once     # one pass
 
 Four times a second it reads the snapshot and appends what is new to
-`/var/log/vinix-audit/events.log`, one line a record, and syncs the file
+`/var/log/tulpar-audit/events.log`, one line a record, and syncs the file
 before it counts a record as kept:
 
     event boot=<id> seq=412 ns=<since boot> collected=<unix time> kind=network result=denied pid=311 tid=311 uid=1001 euid=1001 login=1001 session=4 arg=80 label=bind
@@ -76,7 +76,7 @@ before it counts a record as kept:
 
 ### Retention
 
-`/etc/vinix/audit.conf`, root's:
+`/etc/tulpar/audit.conf`, root's:
 
     max_bytes = 4194304     # set the log aside when it has grown past this
     keep_files = 8          # how many set-aside logs to keep
@@ -94,7 +94,7 @@ decision, and these three numbers are the only place it is made.
 - Between two passes the kernel keeps 256 records. A burst larger than that
   is partly lost, and said to be.
 - Nothing starts the collector at boot yet: a system that wants the record
-  starts `vinix-security-events` beside `vinix-authd`.
+  starts `tulpar-security-events` beside `tulpar-authd`.
 - The log's lines are this tool's own format, not Linux's audit format;
   `ausearch` and its like do not read it.
 

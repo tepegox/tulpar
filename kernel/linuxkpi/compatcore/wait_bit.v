@@ -109,7 +109,7 @@ pub fn wake_bit_function(entry &C.wait_queue_entry, mode u32, sync i32, argument
 	}
 }
 
-@[export: 'vinix_linuxkpi_var_wake_function']
+@[export: 'tulpar_linuxkpi_var_wake_function']
 pub fn var_wake_function(entry &C.wait_queue_entry, mode u32, sync i32, argument voidptr) i32 {
 	unsafe {
 		key := &C.vkw_wait_key(argument)

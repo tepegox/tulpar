@@ -9,7 +9,7 @@ import tools.packages.pkgcore
 fn digest(text string) string { return sha256.sum(text.bytes()).hex() }
 
 fn exercise(root string, revoke bool, before bool) ! {
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	os.mkdir(root + '/source')!
 	os.write_file(root + '/source/payload', 'publisher recovery payload')!
 	os.write_file(root + '/manifest.json', json2.encode(pkgcore.Package{ id: 'data', name: 'Data',
@@ -17,7 +17,7 @@ fn exercise(root string, revoke bool, before bool) ! {
 	os.write_file(root + '/seed', '9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60\n')!
 	os.chmod(root + '/seed', 0o600)!
 	initial := pkgcore.Config{ architecture: 'aarch64', policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }
-	config_path := root + '/etc/vinix-packages/config.json'
+	config_path := root + '/etc/tulpar-packages/config.json'
 	os.write_file(config_path, json2.encode(initial))!
 	os.chmod(config_path, 0o644)!
 	pkgcore.pack(root + '/manifest.json', root + '/source', root + '/repository')!
@@ -42,7 +42,7 @@ fn exercise(root string, revoke bool, before bool) ! {
 	state := pkgcore.State{ ...installed, packages: [pkgcore.Installed{ ...installed.packages[0], public_key: weak.public_key }] }
 	os.write_file(directory + '/generations/' + state.generation.str() + '/state.json', json2.encode(state))!
 	os.write_file(directory + '/catalog.json', json2.encode([pkgcore.Snapshot{ repository: weak, text: text, signature: '01' + '00'.repeat(63) }]))!
-	personal := root + '/home/user/.local/share/vinix-apps/data'
+	personal := root + '/home/user/.local/share/tulpar-apps/data'
 	os.mkdir_all(personal)!
 	os.write_file(personal + '/note', 'keep this note')!
 	retained := os.read_file(history_path)!

@@ -56,8 +56,8 @@ fn source_text(path string) !string {
 	if path.contains('\x00') { return error('embedded null byte') }
 	mut stream := os.open(path) or { return file_error(path) }
 	defer { stream.close() }
-	mut state := C.vinix_cache_stat{}
-	if C.vinix_cache_fstat(i32(stream.fd), &state) != 0 { return file_error('') }
+	mut state := C.tulpar_cache_stat{}
+	if C.tulpar_cache_fstat(i32(stream.fd), &state) != 0 { return file_error('') }
 	if state.st_mode & u32(C.S_IFMT) == u32(C.S_IFDIR) { return FileError{int(C.EISDIR), path} }
 	mut text := strings.new_builder(8192)
 	mut buffer := []u8{len: 8192}

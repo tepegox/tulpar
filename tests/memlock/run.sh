@@ -7,13 +7,13 @@ set -eu
 
 repo=$(cd "$(dirname "$0")/../.." && pwd)
 arch=${1:-aarch64}
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-memlock.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-memlock.XXXXXX")
 trap 'rm -rf "$work"' EXIT INT TERM
 
 mkdir -p "$work/rootfs/root" "$work/rootfs/sbin" "$work/rootfs/tmp"
 case "$arch" in
 aarch64)
-	sysroot=${VINIX_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
+	sysroot=${TULPAR_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
 	"${CC:-clang}" --target=aarch64-linux-musl --sysroot="$sysroot" \
 		-static -O2 -Wall -Wextra -Werror -pthread \
 		"$repo/tests/memlock/test.c" -L"$sysroot/lib" -fuse-ld=lld \
@@ -23,23 +23,23 @@ aarch64)
 	"$repo/tests/memlock/run-vm" --arch aarch64 \
 		--init "$work/init" --initramfs "$work/initramfs.tar" \
 		--state-dir "$work/vm" --capture "$work/net.pcap" \
-		--timeout "${VINIX_QEMU_TIMEOUT:-600}"
+		--timeout "${TULPAR_QEMU_TIMEOUT:-600}"
 	;;
 amd64)
 	"${CC_AMD64:-x86_64-linux-musl-gcc}" -static -O2 -Wall -Wextra -Werror \
 		"$repo/tests/memlock/test.c" -o "$work/rootfs/sbin/init" -lpthread
 	mkdir -p "$work/rootfs/dev"
 	COPYFILE_DISABLE=1 tar --format=ustar -cf "$work/initramfs.tar" -C "$work/rootfs" .
-	VINIX_AMD64_KERNEL="${VINIX_AMD64_KERNEL:-$repo/build-amd64-kernel/bin/vinix}" \
-	VINIX_AMD64_INITRAMFS="$work/initramfs.tar" \
-	VINIX_AMD64_ISO="$work/test.iso" \
-	VINIX_AMD64_ISO_BUILD_DIR="$work/iso" \
+	TULPAR_AMD64_KERNEL="${TULPAR_AMD64_KERNEL:-$repo/build-amd64-kernel/bin/tulpar}" \
+	TULPAR_AMD64_INITRAMFS="$work/initramfs.tar" \
+	TULPAR_AMD64_ISO="$work/test.iso" \
+	TULPAR_AMD64_ISO_BUILD_DIR="$work/iso" \
 		"$repo/build-support/build-amd64-iso.sh" >/dev/null
-	qemu=$(command -v "${VINIX_QEMU_X86_64:-qemu-system-x86_64}")
-	firmware=${VINIX_OVMF_CODE:-"$(cd "$(dirname "$qemu")/.." && pwd)/share/qemu/edk2-x86_64-code.fd"}
+	qemu=$(command -v "${TULPAR_QEMU_X86_64:-qemu-system-x86_64}")
+	firmware=${TULPAR_OVMF_CODE:-"$(cd "$(dirname "$qemu")/.." && pwd)/share/qemu/edk2-x86_64-code.fd"}
 	"$repo/tests/memlock/run-vm" --arch amd64 \
 		--iso "$work/test.iso" --qemu "$qemu" --firmware "$firmware" \
-		--capture "$work/net.pcap" --timeout "${VINIX_QEMU_TIMEOUT:-600}"
+		--capture "$work/net.pcap" --timeout "${TULPAR_QEMU_TIMEOUT:-600}"
 	;;
 *)
 	echo "usage: $0 [aarch64|amd64]" >&2

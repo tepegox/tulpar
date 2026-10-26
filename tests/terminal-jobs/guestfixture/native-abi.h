@@ -1,6 +1,6 @@
 /* Native libc declarations and storage layouts only; job-control policy is V. */
-#ifndef VINIX_TERMINAL_JOBS_NATIVE_ABI_H
-#define VINIX_TERMINAL_JOBS_NATIVE_ABI_H
+#ifndef TULPAR_TERMINAL_JOBS_NATIVE_ABI_H
+#define TULPAR_TERMINAL_JOBS_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -51,8 +51,8 @@ _Static_assert(sizeof(struct stat)==144 && offsetof(struct stat,st_mode)==24 && 
 #else
 #error This independent fixture supports the two kernel LP64 architectures.
 #endif
-void vinix_terminal_acquire_foreground(int);
-void vinix_terminal_caught(int);
-void vinix_terminal_transition_signal(int);
-void *vinix_terminal_race_open(void *);
+void tulpar_terminal_acquire_foreground(int);
+void tulpar_terminal_caught(int);
+void tulpar_terminal_transition_signal(int);
+void *tulpar_terminal_race_open(void *);
 #endif

@@ -114,7 +114,7 @@ fn source_snapshot(root string, extras string, ui2_arg string) !string {
 
 fn snapshot_archive(root string, relative string, ui2 string, snapshot string) ! {
 	manager := invoke('tempfile.TemporaryDirectory', [], {
-		'prefix': v(ah.Value('vinix-desktop-stage.'))
+		'prefix': v(ah.Value('tulpar-desktop-stage.'))
 	})!
 	temporary := enter(manager)!
 	snapshot_temporary(root, relative, ui2, snapshot, temporary) or {
@@ -171,7 +171,7 @@ fn snapshot_members(root string, relative string, staged string, archive string)
 		'name': ah.Value('normalize_staged_member')
 	})!.text()
 	method(archive, 'add', [o(staged)], {
-		'arcname':   v(ah.Value('.vinix-build'))
+		'arcname':   v(ah.Value('.tulpar-build'))
 		'recursive': v(ah.Value(true))
 		'filter':    o(filter)
 	})!

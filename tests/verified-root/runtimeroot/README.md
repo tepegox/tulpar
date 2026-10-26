@@ -23,5 +23,5 @@ guest C fixture for both architectures and builds/verifies ext2 and Merkle image
 It does not claim a new kernel build, QEMU enforcement, physical
 storage operation or enabled firmware Secure Boot.
 
-`VINIX_VERIFIED_ROOT_RUNTIME_QUERY` overrides the executable; default builds
+`TULPAR_VERIFIED_ROOT_RUNTIME_QUERY` overrides the executable; default builds
 follow the repository's compiler discovery and native host installer.

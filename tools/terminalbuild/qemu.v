@@ -83,7 +83,7 @@ pub fn check_guest(arch string, requested string) ! {
 	os.write_file(selected + '/source-revision.txt', capture('git', ['-C', root(), 'rev-parse', 'HEAD'])! + '\n')!
 	os.write_file(selected + '/guest-files.txt', capture('tar', ['-tf', directory(arch) + '/initramfs.tar'])! + '\n')!
 	mut hashes := ''
-	for path in [image(arch), directory(arch) + '/kernel/bin/vinix', directory(arch) + '/initramfs.tar'] {
+	for path in [image(arch), directory(arch) + '/kernel/bin/tulpar', directory(arch) + '/initramfs.tar'] {
 		hashes += sha256.sum(os.read_bytes(path)!).hex() + '  ' + path + '\n'
 	}
 	os.write_file(selected + '/image-checksums.txt', hashes)!
@@ -106,6 +106,7 @@ pub fn check_guest(arch string, requested string) ! {
 	mut transcript := Transcript{}
 	defer { os.write_file(selected + '/serial.log', transcript.text) or {} }
 	receive(mut connection, mut transcript, 'tulpar# ', 120)!
+	if transcript.text.to_lower().contains('vinix') { return error('Old branding in kernel boot output') }
 	for unwanted in ['>+', ' sz=', 'no ustar sig', 'initramfs: invalid', 'initramfs: truncated'] {
 		if transcript.text.contains(unwanted) { return error('Unexpected boot output: ' + unwanted) }
 	}
@@ -115,6 +116,12 @@ pub fn check_guest(arch string, requested string) ! {
 	if arch == 'amd64' && (!transcript.text.contains('vendor=8086 device=100e') || !transcript.text.contains('class=02:00')) {
 		return error('Missing PCI Ethernet device identity')
 	}
+	connection.write_string("uname -a; cat /proc/version; cat /proc/sys/kernel/ostype; cat /proc/sys/kernel/hostname; cat /etc/os-release; if test \"$(uname -s)\" = Tulpar && test \"$(hostname)\" = tulpar && test \"$(cat /proc/sys/kernel/ostype)\" = Tulpar && test \"$(cat /proc/sys/kernel/hostname)\" = tulpar && grep -q '^Tulpar version' /proc/version && grep -q '^NAME=Tulpar' /etc/os-release; then printf 'IDENTITY_%s\\n' PASS; fi; printf 'IDENTITY_%s\\n' DONE\n")!
+	receive(mut connection, mut transcript, 'IDENTITY_DONE', 15)!
+	if !transcript.text.contains('IDENTITY_PASS\r\n') && !transcript.text.contains('IDENTITY_PASS\n') {
+		return error('Guest OS identity is not consistently Tulpar')
+	}
+	receive(mut connection, mut transcript, 'tulpar# ', 10)!
 	connection.write_string("printf 'ARCH=%s\\n' \"$(uname -m)\"; printf 'ARITH=%s\\n' \"$((20+26))\"; echo tulpar > /tmp/probe; cat /tmp/probe | grep -q tulpar && printf 'PIPE_%s\\n' PASS; (sleep 1; exit 7) & wait $!; test $? -eq 7 && printf 'WAIT_%s\\n' PASS; stty -a; cat /proc/meminfo; printf 'COMMANDS_%s\\n' DONE\n")!
 	receive(mut connection, mut transcript, 'COMMANDS_DONE', 30)!
 	for expected in ['ARCH=' + target(arch), 'ARITH=46', 'PIPE_PASS', 'WAIT_PASS'] {

@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 /* Unchanged Linux framebuffer structures for the independent native fixture. */
-#ifndef VINIX_TEST_FRAMEBUFFER_ABI_H
-#define VINIX_TEST_FRAMEBUFFER_ABI_H
+#ifndef TULPAR_TEST_FRAMEBUFFER_ABI_H
+#define TULPAR_TEST_FRAMEBUFFER_ABI_H
 #include <stdint.h>
 typedef uint16_t __u16; typedef uint32_t __u32;
 struct fb_fix_screeninfo {

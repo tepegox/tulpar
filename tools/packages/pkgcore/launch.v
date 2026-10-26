@@ -184,7 +184,7 @@ fn application_launch_plan(config Config, directory string, state State, id stri
 	defer { appsdk.free_values(mut environment) }
 	for value in environment { launch_environment(mut args, value.clone()) }
 	if input.terminal { launch_environment(mut args, 'TERM=linux') }
-	if input.window { launch_environment(mut args, if p.window_protocol == 1 { 'VINIX_WINDOW_PROTOCOL=1' } else { 'VINIX_WINDOW_PROTOCOL=2' }) }
+	if input.window { launch_environment(mut args, if p.window_protocol == 1 { 'TULPAR_WINDOW_PROTOCOL=1' } else { 'TULPAR_WINDOW_PROTOCOL=2' }) }
 	if 'display' in p.permissions && !input.window {
 		launch_x11(mut args, uid, '/', 0)!
 	}
@@ -204,7 +204,7 @@ fn application_launch_plan(config Config, directory string, state State, id stri
 	for argument in input.arguments { args << argument.clone() }
 	if !input.command { for document in input.documents { args << document.clone() } }
 	accepted = true
-	return Launch{ program: '/usr/bin/vinix-sandbox', arguments: args, directory: if input.command && input.data_cwd { data.clone() } else { app.clone() } }
+	return Launch{ program: '/usr/bin/tulpar-sandbox', arguments: args, directory: if input.command && input.data_cwd { data.clone() } else { app.clone() } }
 }
 
 pub fn run_application(config Config, directory string, id string, documents []string) !int {
@@ -259,7 +259,7 @@ fn run_leased_mode(config Config, directory string, state State, id string, inpu
 	defer { unsafe { home.free() } }
 	if home == '' || !home.starts_with('/') { return error('user home directory is unavailable') }
 	home_prefix := home.trim_right('/')
-	data := home_prefix + '/.local/share/vinix-apps/' + id
+	data := home_prefix + '/.local/share/tulpar-apps/' + id
 	defer { unsafe { data.free(); home_prefix.free() } }
 	mut launch := application_launch_plan(config, directory, state, id, data, uid, gid, input)!
 	defer { launch.close() }
@@ -283,7 +283,7 @@ fn run_leased_mode(config Config, directory string, state State, id string, inpu
 		}
 		registration_valid := verified_registration(generation, installed.package)
 		if !registration_valid {
-			return error('${installed.package.id}: installed application registration verification failed; use Repair installed or vinix-package repair')
+			return error('${installed.package.id}: installed application registration verification failed; use Repair installed or tulpar-package repair')
 		}
 	}
 	prepare_launch_data(home, id, u32(uid))!

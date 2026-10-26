@@ -66,7 +66,7 @@ V=/path/to/reviewed/v /tmp/catalog-builder-check /build/new-catalog-host
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/catalog-builder-runtime tests/packages/catalog-builder-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/catalog-builder-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-catalog-arm
 ```

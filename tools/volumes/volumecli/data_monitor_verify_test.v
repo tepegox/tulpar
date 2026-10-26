@@ -15,7 +15,7 @@ fn monitor_verify_frame(manifest &DataManifest, states [2]int, sample u64, chang
 fn monitor_verify_expected(manifest &DataManifest, transcript string, states [3][2]int) string {
 	mut reference := [11392]u8{}; size := encode_data_manifest(manifest, &reference[0]); mut changed_samples := 0; mut final_changed := 0
 	for sample in states { if sample[0] != 0 || sample[1] != 0 { changed_samples++ } }; for value in states[2] { if value != 0 { final_changed++ } }
-	mut text := 'format=VINIXDM1 operation=verified-data-monitor disks=2 mappings=2 samples=3 changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)} final_changed=${final_changed} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference[..size])) + ' transcript_sha256=' + sha256.hexhash(transcript) + '\n'
+	mut text := 'format=TULPARDM1 operation=verified-data-monitor disks=2 mappings=2 samples=3 changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)} final_changed=${final_changed} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference[..size])) + ' transcript_sha256=' + sha256.hexhash(transcript) + '\n'
 	// Independent transition classification table: clean, corruption A/B.
 	classes := [[0, 1, 1]!, [2, 0, 3]!, [2, 3, 0]!]!
 	for disk in 0 .. 2 { key := manifest.set.plans[disk].key; identity := if key.kind == 1 { 'mbr:0000000${disk + 1}' } else { 'gpt:0000000${disk + 1}-0000-0000-0000-000000000083' }; row := manifest.set.plans[disk].rows[0]; mut counts := [4]int{}; mut changed := 0
@@ -49,5 +49,5 @@ fn test_monitor_verify_maximum_summary_width_empty_rows_and_cli() {
 	mut digest := [32]u8{}; mut output := [49152]char{}; n := encode_data_monitor_history(&manifest, &history, &digest, &output[0]); assert n > 32768 && n < data_monitor_history_max && output[n] == 0
 	history.restored[63] = history.samples - 1; assert encode_data_monitor_history(&manifest, &history, &digest, &output[0]) == 0
 	for disk in 0 .. 64 { manifest.set.plans[disk].count = 0 }; manifest.set.slots = 0; manifest.digests = DataDigests{}; history = DataMonitorHistory{samples: 1}; assert encode_data_monitor_history(&manifest, &history, &digest, &output[0]) > 0
-	unsafe { mut args := [&char(c'vinix-volume'), &char(c'verify-data-monitor'), &char(c'/missing-reference'), &char(c'/missing-transcript'), &char(c'extra'), &char(nil)]!; for count in [2, 3, 5, 6] { assert run(count, &args[0]) == 2 }; for at in [2, 3] { saved := args[at]; args[at] = &char(c''); assert run(4, &args[0]) == 2; args[at] = saved }; assert run(4, &args[0]) == 1 }
+	unsafe { mut args := [&char(c'tulpar-volume'), &char(c'verify-data-monitor'), &char(c'/missing-reference'), &char(c'/missing-transcript'), &char(c'extra'), &char(nil)]!; for count in [2, 3, 5, 6] { assert run(count, &args[0]) == 2 }; for at in [2, 3] { saved := args[at]; args[at] = &char(c''); assert run(4, &args[0]) == 2; args[at] = saved }; assert run(4, &args[0]) == 1 }
 }

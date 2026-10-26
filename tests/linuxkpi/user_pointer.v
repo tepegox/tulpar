@@ -36,7 +36,7 @@ fn run_profile(keep string) ! {
 	if definition != pointer_macro(os.read_file(original)!)! {
 		return error('u64_to_user_ptr differs from the pinned original')
 	}
-	work := hosttest.work_dir(keep, 'vinix-user-pointer-')!
+	work := hosttest.work_dir(keep, 'tulpar-user-pointer-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or {} } }
 	include := os.join_path(work, 'include')
 	os.mkdir_all(os.join_path(include, 'linux'))!
@@ -49,7 +49,7 @@ fn run_profile(keep string) ! {
 	common := [hosttest.env_default('CC', 'clang'), '-O1', '-g', '-ffreestanding',
 		'-fno-builtin', '-fwrapv', '-fno-strict-aliasing', '-Wall', '-Wextra',
 		'-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
-		'-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
+		'-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
 		'-include', preload, '-include', 'linux/kconfig.h', '-include',
 		os.join_path(linux, 'include/linux/compiler_types.h'),
 		'-I' + include, '-I' + os.join_path(root, 'kernel/linuxkpi/include'),

@@ -1,6 +1,6 @@
 /* Volatile native boot-response and MMIO layouts, without helper algorithms. */
-#ifndef VINIX_VERIFIED_BOOT_FIXTURE_ABI_H
-#define VINIX_VERIFIED_BOOT_FIXTURE_ABI_H
+#ifndef TULPAR_VERIFIED_BOOT_FIXTURE_ABI_H
+#define TULPAR_VERIFIED_BOOT_FIXTURE_ABI_H
 #include <stdint.h>
 struct vvb_response { volatile uint64_t revision, count; void *modules; };
 struct vvb_uart_word { volatile uint32_t value; };

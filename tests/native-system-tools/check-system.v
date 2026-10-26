@@ -252,14 +252,14 @@ fn verdict_checks() ! {
 		}
 		assert systemhost.security_verdict(text, family, 'amd64', false).len > 0
 	}
-	numa := systemhost.features('numa').join('\n') + '\n' + systemhost.numa_kernel_markers().join('\n') + '\nVINIX QEMU NUMA: PASS'
+	numa := systemhost.features('numa').join('\n') + '\n' + systemhost.numa_kernel_markers().join('\n') + '\nTULPAR QEMU NUMA: PASS'
 	assert systemhost.numa_verdict(guesthost.SessionResult{ text: numa }).len == 0
 	assert systemhost.numa_verdict(guesthost.SessionResult{ text: numa, forced: true }).len > 0
 	assert systemhost.numa_verdict(guesthost.SessionResult{ text: numa, status: 137 }).len > 0
 	for marker in systemhost.numa_kernel_markers() {
 		assert systemhost.numa_verdict(guesthost.SessionResult{ text: numa.replace(marker, '') }).len > 0
 	}
-	root := ['VINIX DISK ROOT: START', 'VINIX DISK ROOT: ON VOLUME', 'VINIX DISK ROOT: LARGE FILE OK'].join('\n').repeat(2) + '\nVINIX DISK ROOT: WROTE /etc MARKER, REBOOTING\nVINIX DISK ROOT: PASS'
+	root := ['TULPAR DISK ROOT: START', 'TULPAR DISK ROOT: ON VOLUME', 'TULPAR DISK ROOT: LARGE FILE OK'].join('\n').repeat(2) + '\nTULPAR DISK ROOT: WROTE /etc MARKER, REBOOTING\nTULPAR DISK ROOT: PASS'
 	systemhost.root_verdict(root, 'disk-root')!
 	for bad in [root + 'Loading saved package overlay', root.replace('ON VOLUME', ''),
 		root.replace('LARGE FILE OK', '')] {
@@ -268,8 +268,8 @@ fn verdict_checks() ! {
 		assert failed
 	}
 	assert systemhost.securelevel_cases().len == 8
-	assert systemhost.securelevel_verdict('security: invalid or duplicate vinix.securelevel boot policy\nKERNEL PANIC', 0, false)
-	assert !systemhost.securelevel_verdict('security: invalid or duplicate vinix.securelevel boot policy\nKERNEL PANIC\nSECURELEVEL BOOT TEST ENTERED', 0, false)
+	assert systemhost.securelevel_verdict('security: invalid or duplicate tulpar.securelevel boot policy\nKERNEL PANIC', 0, false)
+	assert !systemhost.securelevel_verdict('security: invalid or duplicate tulpar.securelevel boot policy\nKERNEL PANIC\nSECURELEVEL BOOT TEST ENTERED', 0, false)
 	header := systemhost.swap_header()
 	assert header[1024..1036].hex() == '01000000ffff000000000000'
 	assert header[4086..].bytestr() == 'SWAPSPACE2' && header[..1024].all(it == 0) && header[1036..4086].all(it == 0)
@@ -277,7 +277,7 @@ fn verdict_checks() ! {
 }
 
 fn checked() ! {
-	work := hosttest.work_dir('', 'vinix-system-check-')!
+	work := hosttest.work_dir('', 'tulpar-system-check-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	verdict_checks()!
 	packet_checks(work)!

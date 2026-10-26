@@ -6,7 +6,7 @@ module hostbase
 #include "hostbase_v_contract.h"
 fn C.type_max(i32) u64
 fn C.GENMASK_ULL(i32,i32) u64
-fn C.vinix_linuxkpi_selftest() i32
+fn C.tulpar_linuxkpi_selftest() i32
 fn C.kmalloc(usize,u32) voidptr
 fn C.kmalloc_array(usize,usize,u32) voidptr
 fn C.kcalloc(usize,usize,u32) voidptr
@@ -44,7 +44,7 @@ struct C.vmh_string_calls { mut: scan fn(voidptr,i32,usize) voidptr bounded_leng
 pub fn allocation_tests() { unsafe {
  C.assert(C.type_max(C.s8)==127 && C.type_max(C.u8)==255)
  C.assert(C.type_max(C.s64)==u64(0x7fffffffffffffff) && C.type_max(C.u64)==~u64(0))
- C.assert(C.GENMASK_ULL(39,21)==u64(0x000000ffffe00000));C.assert(C.vinix_linuxkpi_selftest()==0)
+ C.assert(C.GENMASK_ULL(39,21)==u64(0x000000ffffe00000));C.assert(C.tulpar_linuxkpi_selftest()==0)
  C.assert(C.vmh_live_pages==C.vmh_permanent_pages);C.assert(C.kmalloc(0,C.GFP_KERNEL)==voidptr(C.ZERO_SIZE_PTR))
  C.assert(C.ksize(voidptr(C.ZERO_SIZE_PTR))==0);C.kfree(nil);C.kfree(voidptr(C.ZERO_SIZE_PTR))
  C.assert(C.kmalloc(~usize(0),C.GFP_KERNEL)==nil);C.assert(C.kmalloc_array(~usize(0),2,C.GFP_KERNEL)==nil)

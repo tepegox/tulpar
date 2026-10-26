@@ -131,7 +131,7 @@ $if windows {
 				context.closed = true
 				C.SetWindowLongPtrA(window, -21, 0)
 			}
-			output('VINIX WIN64 CALCULATOR CLOSED\n')
+			output('TULPAR WIN64 CALCULATOR CLOSED\n')
 			C.PostQuitMessage(0)
 			return 0
 		}
@@ -143,7 +143,7 @@ $if windows {
 				if id <= 255 && context.calculator.press(u8(id)) {
 					C.SetWindowTextA(context.display, &char(&context.calculator.text[0]))
 					if id == `=` {
-						output('VINIX WIN64 CALCULATOR RESULT ')
+						output('TULPAR WIN64 CALCULATOR RESULT ')
 						output(unsafe { tos(&context.calculator.text[0], context.calculator.length) })
 						output('\n')
 					}
@@ -161,11 +161,11 @@ $if windows {
 			hInstance: instance
 			hCursor: C.LoadCursorA(unsafe { nil }, unsafe { &char(usize(32512)) })
 			hbrBackground: voidptr(usize(16)) // COLOR_BTNFACE + 1
-			lpszClassName: c'VinixVWineCalculator'
+			lpszClassName: c'TulparVWineCalculator'
 		}
 		if C.RegisterClassA(unsafe { &class }) == 0 { return error('calculator window class failed') }
-		defer { C.UnregisterClassA(c'VinixVWineCalculator', instance) }
-		window := C.CreateWindowExA(0, c'VinixVWineCalculator', c'Calculator', 0x00ca0000,
+		defer { C.UnregisterClassA(c'TulparVWineCalculator', instance) }
+		window := C.CreateWindowExA(0, c'TulparVWineCalculator', c'Calculator', 0x00ca0000,
 			100, 100, 326, 430, unsafe { nil }, unsafe { nil }, instance, unsafe { nil })
 		if window == unsafe { nil } { return error('calculator window failed') }
 		mut context := CalculatorWindow{calculator: new_calculator()}
@@ -191,7 +191,7 @@ $if windows {
 		}
 		C.ShowWindow(window, 1)
 		C.UpdateWindow(window)
-		output('VINIX WIN64 CALCULATOR READY\n')
+		output('TULPAR WIN64 CALCULATOR READY\n')
 		mut message := C.MSG{}
 		for {
 			status := C.GetMessageA(unsafe { &message }, unsafe { nil }, 0, 0)

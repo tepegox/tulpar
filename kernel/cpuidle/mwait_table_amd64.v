@@ -63,10 +63,10 @@ pub mut:
 	// CPUID.6:EAX[2] and CPUID.80000007:EDX[8].
 	arat        bool
 	nonstop_tsc bool
-	// vinix.cpuidle=mwait: use MWAIT for C1 although CPUID enumerates no C1
+	// tulpar.cpuidle=mwait: use MWAIT for C1 although CPUID enumerates no C1
 	// sub-state. See mwait_table().
 	forced bool
-	// vinix.max_cstate=N: keep the first N states. Zero is no limit.
+	// tulpar.max_cstate=N: keep the first N states. Zero is no limit.
 	limit int
 }
 
@@ -230,7 +230,7 @@ pub fn mwait_table(c MwaitCpu) MwaitTable {
 		// MWAIT as it was first defined, no hints and no extensions, entered
 		// as HLT is: `sti; mwait`.
 		t.reason = if c.forced && extensions && c1_substates == 0 {
-			'forced by vinix.cpuidle=mwait'
+			'forced by tulpar.cpuidle=mwait'
 		} else {
 			'MWAIT without interrupt-break'
 		}

@@ -14,14 +14,14 @@
 set -eu
 
 tool_repo=$(cd "$(dirname "$0")/../.." && pwd)
-repo=${VINIX_KERNEL_ALLOCS_ROOT:-$tool_repo}
+repo=${TULPAR_KERNEL_ALLOCS_ROOT:-$tool_repo}
 kernel=$repo/kernel
 allowed=$repo/tests/kernel-allocs/allowed.txt
-copy_tool=${VINIX_KERNEL_ALLOCS_COPY_TOOL:-"$tool_repo/tests/kernel-allocs/copy-sources"}
+copy_tool=${TULPAR_KERNEL_ALLOCS_COPY_TOOL:-"$tool_repo/tests/kernel-allocs/copy-sources"}
 
 . "$tool_repo/build-support/find-v.sh"
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-kernel-allocs.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-kernel-allocs.XXXXXX")
 trap 'rm -rf "$work"' EXIT INT TERM
 
 for arch in aarch64 x86_64; do
@@ -71,7 +71,7 @@ for arch in aarch64 x86_64; do
 	site_count=$(grep -c 'allocation (' "$work/$arch.log")
 	echo "$arch: $source_count source files, $site_count allocation sites (V exit $compiler_status)" >&2
 	grep 'allocation (' "$work/$arch.log" |
-		sed -E 's|^.*vinix-kernel-allocs\.[^/]+/[^/]+/||; s|: warning: allocation \((.*)\)| \1|' \
+		sed -E 's|^.*tulpar-kernel-allocs\.[^/]+/[^/]+/||; s|: warning: allocation \((.*)\)| \1|' \
 		>> "$work/sites"
 done
 

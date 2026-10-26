@@ -31,7 +31,7 @@ module-owned dictionary. Identifier and keyword names retain their interned
 identity. The PE zero field is a folded byte constant, as in the original
 Python implementation. Caller-provided values stay outside this literal pool.
 
-`VINIX_BOOT_TEST_QUERY` selects an already built controller. Normal discovery
+`TULPAR_BOOT_TEST_QUERY` selects an already built controller. Normal discovery
 uses `build-support/run-v-tool.sh`, with a private executable cleaned at process
 exit. Query children use the existing bundle controller's process factory and
 run in their own process groups. The package and boot SDK libraries must match the invoking interpreter.

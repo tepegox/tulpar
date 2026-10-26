@@ -30,8 +30,8 @@ cleanup checks; both standalone host commands passed. No new guest boot is
 claimed for these pending fixture bodies.
 
 Run `v -cc cc test tests/qemu-core/fixturecli tests/qemu-core/fixturehost`.
-Set `VINIX_QEMU_FIXTURE_TOOL` to a prebuilt `test-intfixture` and
-`VINIX_QEMU_FIXTURE_GENERATOR` to a prebuilt `compile-fixtures` to include command
+Set `TULPAR_QEMU_FIXTURE_TOOL` to a prebuilt `test-intfixture` and
+`TULPAR_QEMU_FIXTURE_GENERATOR` to a prebuilt `compile-fixtures` to include command
 checks for validation order and refusal to stage into the maintained checkout.
 
 Qualification passed the five command/controller test files on ARM64, Rosetta

@@ -96,9 +96,9 @@ fn stage_sources(work string) ![]string {
 		'struct C.vkw_swait_head { lock u32, task_list C.vkw_list }\n' +
 		'struct C.vkw_completion { done u32, @wait C.vkw_swait_head }\n' +
 		'fn C.kzalloc(usize,u32) voidptr\nfn C.kfree(voidptr)\nfn C.memset(voidptr,i32,usize) voidptr\nfn C.memcpy(voidptr,voidptr,usize) voidptr\n' +
-		'fn C.vinix_linuxkpi_bug(&char,i32)\nfn C.vinix_linuxkpi_irq_flags() usize\n' +
-		'fn C.vinix_linuxkpi_may_sleep() bool\nfn C.vinix_linuxkpi_spin_wait()\nfn C.vinix_linuxkpi_cond_resched() i32\n' +
-		'fn C.vinix_linuxkpi_preempt_disable()\nfn C.vinix_linuxkpi_preempt_enable()\n' +
+		'fn C.tulpar_linuxkpi_bug(&char,i32)\nfn C.tulpar_linuxkpi_irq_flags() usize\n' +
+		'fn C.tulpar_linuxkpi_may_sleep() bool\nfn C.tulpar_linuxkpi_spin_wait()\nfn C.tulpar_linuxkpi_cond_resched() i32\n' +
+		'fn C.tulpar_linuxkpi_preempt_disable()\nfn C.tulpar_linuxkpi_preempt_enable()\n' +
 		'fn C.vkp_spin_init(voidptr)\nfn C.vkp_spin_lock_irqsave(voidptr) usize\n' +
 		'fn C.vkp_spin_unlock_irqrestore(voidptr,usize)\nfn C.msleep(u32)\n' +
 		'fn C.rcuh_completion_init(voidptr)\nfn C.rcuh_completion_complete(voidptr)\nfn C.rcuh_completion_wait(voidptr)\n' +
@@ -111,7 +111,7 @@ fn stage_sources(work string) ![]string {
 	os.write_file(os.join_path(work, 'headercore/bindings.v'), '@[translated]\nmodule headercore\n' +
 		'#include "linuxkpi_header_primitive_v_contract.h"\n@[typedef]\nstruct C.atomic_t { counter i32 }\n' +
 		'@[typedef]\nstruct C.vhp_const_atomicp {}\nfn C.test_bit(i32,voidptr) bool\n' +
-		'@[typedef]\nstruct C.vhp_const_voidp {}\nstruct C.callback_head {}\nstruct C.task_struct { vinix_thread voidptr, __state u32 }\n' +
+		'@[typedef]\nstruct C.vhp_const_voidp {}\nstruct C.callback_head {}\nstruct C.task_struct { tulpar_thread voidptr, __state u32 }\n' +
 		'@[typedef]\nstruct C.pthread_t {}\ntype HeaderThreadFn = fn(voidptr) voidptr\n' +
 		'fn C.pthread_create(voidptr,voidptr,HeaderThreadFn,voidptr) i32\nfn C.pthread_join(C.pthread_t,voidptr) i32\n' +
 		'fn C.pthread_exit(voidptr)\nfn C.memcpy(voidptr,voidptr,usize) voidptr\n' +
@@ -131,7 +131,7 @@ fn profile(work string, linux string, compiler []string, standard string) []stri
 		'-fno-strict-aliasing', '-ffunction-sections', '-fdata-sections', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-sign-compare',
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-D_FORTIFY_SOURCE=0',
-		'-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__',
+		'-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__',
 		'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h')]
 	for directory in [os.join_path(work, 'include'), os.join_path(root, 'tests/linuxkpi/rcucallfixture'),
@@ -148,7 +148,7 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
-	work := hosttest.work_dir(keep, 'vinix-rcu-callbacks-')!
+	work := hosttest.work_dir(keep, 'tulpar-rcu-callbacks-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut env := os.environ()
 	env['VCACHE'] = os.join_path(work, 'vcache')
@@ -183,7 +183,7 @@ fn run_profile(keep string) ! {
 	include := os.join_path(work, 'include')
 	for schema, name in {'atomic-exchange': 'atomic_exchange', 'overflow': 'integer_policy', 'spinlock': 'spinlock_adapters'} {
 		hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema + '.json'),
-			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'vinix', name + '.h'))!
+			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'tulpar', name + '.h'))!
 	}
 	mut proofs := []json2.Any{}
 	for name in ['compatcore', 'headercore'] {

@@ -59,10 +59,10 @@ pub fn prepare(root string, work string, port int) !map[string]string {
 	os.mkdir_all(app)!; os.mkdir_all(overlay + '/usr/bin')!
 	os.write_file(app + '/url', 'http://10.0.2.2:${port}/clipboard\n')!
 	os.write_file(app + '/expected', sample)!
-	for name in ['vinix-desktop', 'vinix-editor', 'vinix-terminal', 'vinix-firefox'] {
-		hosttest.module_copy_file_preserving_stat(root + '/build/vinix-desktop', overlay + '/usr/bin/' + name)!
+	for name in ['tulpar-desktop', 'tulpar-editor', 'tulpar-terminal', 'tulpar-firefox'] {
+		hosttest.module_copy_file_preserving_stat(root + '/build/tulpar-desktop', overlay + '/usr/bin/' + name)!
 	}
-	hosttest.module_copy_file_preserving_stat(root + '/build/vinix-wine-host-clipboard', overlay + '/usr/bin/vinix-wine-host')!
+	hosttest.module_copy_file_preserving_stat(root + '/build/tulpar-wine-host-clipboard', overlay + '/usr/bin/tulpar-wine-host')!
 	os.write_file(overlay + '/usr/bin/run-firefox', '#!/bin/sh\nexec /opt/clipboard/x11-client\n')!
 	os.chmod(overlay + '/usr/bin/run-firefox', 0o755)!
 	sysroot := root + '/build-aarch64-x11/sysroot'
@@ -75,9 +75,9 @@ pub fn prepare(root string, work string, port int) !map[string]string {
 		'-lX11', '-lxcb', '-o', app + '/x11-client'], os.environ(), -1, 64 * 1024 * 1024, packageserver.cancelled)!
 	if result.status != 0 { return error('clipboard X11 client build failed: ' + result.stderr) }
 	mut env := os.environ()
-	for key, value in {'VINIX_QEMU_OVERLAY': overlay, 'VINIX_QEMU_AUDIO': 'off', 'VINIX_QEMU_EXTRA': '-qmp unix:' + work + '/qmp.sock,server=on,wait=off',
-		'VINIX_QEMU_HOST_SOURCE': '0', 'VINIX_QEMU_PACKAGE_PERSIST': '0', 'VINIX_QEMU_RESOLUTION': '1024x768x32',
-		'VINIX_OVMF_CODE': root + '/boot-image/edk2-aarch64-code-2048x1536.fd'} { env[key] = value }
+	for key, value in {'TULPAR_QEMU_OVERLAY': overlay, 'TULPAR_QEMU_AUDIO': 'off', 'TULPAR_QEMU_EXTRA': '-qmp unix:' + work + '/qmp.sock,server=on,wait=off',
+		'TULPAR_QEMU_HOST_SOURCE': '0', 'TULPAR_QEMU_PACKAGE_PERSIST': '0', 'TULPAR_QEMU_RESOLUTION': '1024x768x32',
+		'TULPAR_OVMF_CODE': root + '/boot-image/edk2-aarch64-code-2048x1536.fd'} { env[key] = value }
 	return env
 }
 
@@ -93,7 +93,7 @@ pub fn drive(argv []string, env map[string]string, work string, log string, time
 
 pub fn run(root string) ! {
 	guard := packageserver.own_service(); defer { guard.close() }
-	work := sourcecommand.temporary('vinix-clipboard-vm')!; defer { os.rmdir_all(work) or { eprintln(err) } }
+	work := sourcecommand.temporary('tulpar-clipboard-vm')!; defer { os.rmdir_all(work) or { eprintln(err) } }
 	os.write_file(work + '/clipboard', sample)!
 	mut server := packageserver.start(packageserver.Config{store: work + '/packages.tar', port: 0, maximum: 1024, clipboard: true})!
 	server.clipboard_context = work + '/clipboard'

@@ -39,7 +39,7 @@ struct Profile {
 }
 
 fn run_profile(keep string) ! {
-	work := hosttest.work_dir(keep, 'vinix-smp-types-')!
+	work := hosttest.work_dir(keep, 'tulpar-smp-types-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	root := hosttest.root()
 	here := hosttest.upstream_here()

@@ -66,7 +66,7 @@ The 2026-10-13 [host receipt](results/2026-10-13/signing-toolchain.json) records
 both desktop typechecks, source checks and the three passing sanitizer runners.
 An additional `--software-only --cross` run verifies that both binary staging
 targets retain the exact MIT notice at
-`/usr/share/licenses/vinix-packages/ed25519-MIT.txt`.
+`/usr/share/licenses/tulpar-packages/ed25519-MIT.txt`.
 The guest receipts retain the new `PACKAGE SIGNING` marker with all existing
 package/runtime markers:
 

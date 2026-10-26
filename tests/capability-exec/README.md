@@ -31,12 +31,12 @@ ordinary nonroot exec can regain a capability that the program dropped.
 Build both tracked kernels in an isolated worktree, then run:
 
 ```sh
-export VINIX_VM_RUNNER_ROOT=/path/to/main-checkout
-export VINIX_KERNEL_DIR=/path/to/worktree/kernel
-export VINIX_AARCH64_SYSROOT=/path/to/main-checkout/build-aarch64-userland/sysroot
-export VINIX_QEMU_RT_NO_BUILD=1 VINIX_QEMU_AUDIO=off
+export TULPAR_VM_RUNNER_ROOT=/path/to/main-checkout
+export TULPAR_KERNEL_DIR=/path/to/worktree/kernel
+export TULPAR_AARCH64_SYSROOT=/path/to/main-checkout/build-aarch64-userland/sysroot
+export TULPAR_QEMU_RT_NO_BUILD=1 TULPAR_QEMU_AUDIO=off
 tests/capability-exec/run
-VINIX_AMD64_KERNEL=/path/to/worktree/build-amd64-kernel/bin/vinix \
+TULPAR_AMD64_KERNEL=/path/to/worktree/build-amd64-kernel/bin/tulpar \
   tests/capability-exec/run --arch=amd64
 ```
 
@@ -51,9 +51,9 @@ The exec helper's generated C uses only scalar capability records; this fix
 adds no allocation, pointer ownership or retirement rule. Its security
 transitions and test cases received an independent review.
 
-Local evidence: `/tmp/vinix-capability-exec-{arm,amd64}-guest.log`,
-`/tmp/vinix-capability-exec-arm-baseline.log`, and
-`/tmp/vinix-capability-exec-{arm,amd64}-build.log`.
+Local evidence: `/tmp/tulpar-capability-exec-{arm,amd64}-guest.log`,
+`/tmp/tulpar-capability-exec-arm-baseline.log`, and
+`/tmp/tulpar-capability-exec-{arm,amd64}-build.log`.
 This closes the capability-ceiling bug. SEC4 still needs executable set-ID
 and file-capability transitions, nosuid integration and descriptor hygiene.
 

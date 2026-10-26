@@ -3,19 +3,19 @@
 //
 // Thermal zones as /sys shows them, in Linux's layout, so that sensors(1), a
 // desktop's temperature applet or a script that reads thermal_zone0/temp
-// needs nothing written for Vinix:
+// needs nothing written for Tulpar:
 //
 //	/sys/class/thermal/thermal_zoneN/
 //	    type temp                     what it is; millidegrees Celsius, read now
 //	    mode                          enabled or disabled; root may write either
 //	    policy                        step_wise
 //	    trip_point_M_type _temp _hyst
-//	    read_failures                 Vinix's: readings that failed, ever
+//	    read_failures                 Tulpar's: readings that failed, ever
 //	/sys/class/thermal/cooling_device0/
 //	    type max_state cur_state      the limit on CPU performance, in steps
-//	/sys/class/thermal/thermal_limit      Vinix's: that limit, in percent
-//	/sys/class/thermal/critical_count     Vinix's: critical trips acted on
-//	/sys/class/thermal/poll_count         Vinix's: passes of the polling thread
+//	/sys/class/thermal/thermal_limit      Tulpar's: that limit, in percent
+//	/sys/class/thermal/critical_count     Tulpar's: critical trips acted on
+//	/sys/class/thermal/poll_count         Tulpar's: passes of the polling thread
 //	/sys/class/hwmon/hwmonN/
 //	    name
 //	    temp1_input _label _max _crit _crit_alarm    the zone itself
@@ -40,7 +40,7 @@ import lib
 // on the stack, as procfs has it: one made as a local value is moved to the
 // heap by the compiler and left there.
 fn numbered(base string, n int, middle string, m int, tail string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(96) }
 	text.add(base)
 	if n >= 0 {

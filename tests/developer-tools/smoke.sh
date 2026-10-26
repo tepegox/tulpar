@@ -6,12 +6,12 @@ export HOME=/root
 export TERM=linux
 export CC=gcc
 
-work=/tmp/vinix-developer-tools
+work=/tmp/tulpar-developer-tools
 rm -rf "$work"
 mkdir -p "$work"
 cd "$work"
 
-echo "VINIX NATIVE DEVELOPER TOOLS TEST"
+echo "TULPAR NATIVE DEVELOPER TOOLS TEST"
 
 git --version
 make --version
@@ -23,7 +23,7 @@ automake --version
 file --version
 /root/python3-smoke --fcntl-only
 
-test "$(printf '%s\n' vinix | sed 's/vinix/pipe-ok/')" = pipe-ok
+test "$(printf '%s\n' tulpar | sed 's/tulpar/pipe-ok/')" = pipe-ok
 echo "PASS shell pipeline EOF"
 
 libtool --version
@@ -32,17 +32,17 @@ strace --version
 
 cat > hello.c <<'EOF'
 #include <stdio.h>
-int main(void) { puts("hello from a Vinix native build"); return 0; }
+int main(void) { puts("hello from a Tulpar native build"); return 0; }
 EOF
 cat > Makefile <<'EOF'
 hello: hello.c
 	$(CC) -g -o $@ $<
 EOF
 make
-test "$(./hello)" = "hello from a Vinix native build"
+test "$(./hello)" = "hello from a Tulpar native build"
 echo "PASS GNU make native C build"
 
-# Exercise radare2 against a binary produced inside Vinix. Version output only
+# Exercise radare2 against a binary produced inside Tulpar. Version output only
 # proves that the loader can start it; analysis also covers its architecture
 # plugins, memory maps and random-access file I/O.
 r2 -v
@@ -51,8 +51,8 @@ r2 -q -c 'aaa;afl~main' ./hello | grep -q main
 echo "PASS radare2 native binary analysis"
 
 git init -q
-git config user.name Vinix
-git config user.email developer@vinix.local
+git config user.name Tulpar
+git config user.email developer@tulpar.local
 git add hello.c Makefile
 git commit -qm initial
 test "$(git rev-parse --is-inside-work-tree)" = true
@@ -63,46 +63,46 @@ mkdir cmake-src
 cp hello.c cmake-src/
 cat > cmake-src/CMakeLists.txt <<'EOF'
 cmake_minimum_required(VERSION 3.16)
-project(vinix_cmake C)
+project(tulpar_cmake C)
 add_executable(cmake-hello hello.c)
 EOF
 cmake -S cmake-src -B cmake-build -G Ninja
 cmake --build cmake-build
-test "$(cmake-build/cmake-hello)" = "hello from a Vinix native build"
+test "$(cmake-build/cmake-hello)" = "hello from a Tulpar native build"
 ctest --test-dir cmake-build
 echo "PASS CMake and Ninja native build"
 
 mkdir meson-src
 cp hello.c meson-src/
 cat > meson-src/meson.build <<'EOF'
-project('vinix-meson', 'c')
-executable('vinix-meson-hello', 'hello.c')
+project('tulpar-meson', 'c')
+executable('tulpar-meson-hello', 'hello.c')
 EOF
 meson setup meson-build meson-src
 meson compile -C meson-build
-test "$(meson-build/vinix-meson-hello)" = "hello from a Vinix native build"
+test "$(meson-build/tulpar-meson-hello)" = "hello from a Tulpar native build"
 echo "PASS Meson and Ninja native build"
 
 mkdir -p pkg/lib/pkgconfig
-cat > pkg/lib/pkgconfig/vinix-smoke.pc <<EOF
+cat > pkg/lib/pkgconfig/tulpar-smoke.pc <<EOF
 prefix=$work/pkg
-Name: vinix-smoke
+Name: tulpar-smoke
 Description: pkg-config smoke package
 Version: 1.2.3
-Libs: -L\${prefix}/lib -lvinix-smoke
+Libs: -L\${prefix}/lib -ltulpar-smoke
 Cflags: -I\${prefix}/include
 EOF
 PKG_CONFIG_PATH="$work/pkg/lib/pkgconfig" pkg-config \
-    --atleast-version=1.2.0 vinix-smoke
+    --atleast-version=1.2.0 tulpar-smoke
 test "$(PKG_CONFIG_PATH="$work/pkg/lib/pkgconfig" \
-    pkg-config --modversion vinix-smoke)" = 1.2.3
+    pkg-config --modversion tulpar-smoke)" = 1.2.3
 echo "PASS pkg-config metadata lookup"
 
 mkdir autotools
 cd autotools
 cp ../hello.c .
 cat > configure.ac <<'EOF'
-AC_INIT([vinix-autotools], [1.0])
+AC_INIT([tulpar-autotools], [1.0])
 AC_PROG_CC
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
@@ -118,15 +118,15 @@ cd ..
 cp hello.c hello.patched.c
 printf '%s\n' '--- hello.patched.c' '+++ hello.patched.c' \
     '@@ -1,2 +1,2 @@' ' #include <stdio.h>' \
-    '-int main(void) { puts("hello from a Vinix native build"); return 0; }' \
-    '+int main(void) { puts("patched on Vinix"); return 0; }' > hello.patch
+    '-int main(void) { puts("hello from a Tulpar native build"); return 0; }' \
+    '+int main(void) { puts("patched on Tulpar"); return 0; }' > hello.patch
 patch < hello.patch
-grep -q 'patched on Vinix' hello.patched.c
+grep -q 'patched on Tulpar' hello.patched.c
 diff -u hello.c hello.patched.c > hello.diff || test $? -eq 1
 test -s hello.diff
 echo "PASS patch and diffutils"
 
-tmux_socket=vinix-smoke-$$
+tmux_socket=tulpar-smoke-$$
 tmux -L "$tmux_socket" -f /dev/null new-session -d -s smoke \
     'printf "tmux pane ready\\n"; exec sleep 30'
 
@@ -155,4 +155,4 @@ echo "PASS tmux server, UNIX socket, and PTY pane"
 
 echo "PASS file, GDB, strace, and radare2 startup"
 
-echo "VINIX NATIVE DEVELOPER TOOLS TEST: PASS"
+echo "TULPAR NATIVE DEVELOPER TOOLS TEST: PASS"

@@ -25,7 +25,7 @@ fn software_health_fixture() pkgprotocol.HealthReport {
 
 fn software_health_service_fixture(args []string) bool {
 	if args.len != 4 || args[1..] != ['--json', '--progress', 'health'] { return false }
-	mode := os.getenv('VINIX_SOFTWARE_HEALTH_MODE')
+	mode := os.getenv('TULPAR_SOFTWARE_HEALTH_MODE')
 	defer { unsafe { mode.free() } }
 	if mode == 'failed' { eprintln('Installed state is unavailable; restore storage before retrying.'); exit(23) }
 	report := if mode == 'empty' { pkgprotocol.HealthReport{ architecture: 'aarch64' } } else { software_health_fixture() }
@@ -88,13 +88,13 @@ fn check_software_health_navigation() ! {
 		query: 'catalog-search'.bytes(), output: []u8{cap: 8192}, matching: [0], selected: 0, filter: 1,
 		health_query: 'APP-02'.bytes(), health_issues_only: true,
 		catalog_error: 'catalog unavailable'.clone(), rows: [SoftwareRow{ id: 'editor', name: 'Editor', installed_version: '1.0.0' }] }
-	defer { os.unsetenv('VINIX_SOFTWARE_HEALTH_MODE'); app.close_app() }
-	os.setenv('VINIX_SOFTWARE_HEALTH_MODE', 'failed', true)
+	defer { os.unsetenv('TULPAR_SOFTWARE_HEALTH_MODE'); app.close_app() }
+	os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', 'failed', true)
 	app.handle('software.health')!; wait_for_software(mut app)
 	assert !app.health_ready && app.failure_pages.len > 0 && app.status.contains('restore storage')
 	for mode in ['barrier-partial', 'barrier-live', 'barrier-complete']! {
 		for action in ['software.health.stop', 'software.cancel', 'escape']! {
-			os.setenv('VINIX_SOFTWARE_HEALTH_MODE', mode, true)
+			os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', mode, true)
 			app.handle('software.health.reload')!; wait_for_health_barrier(mut app, mode)
 			pid := app.worker.pid
 			assert app.worker_health && app.worker_view && app.prepare_close() && !app.admin_prompt
@@ -133,7 +133,7 @@ fn check_software_health_navigation() ! {
 		}
 	}
 	for mode in ['barrier-late-failure', 'barrier-complete']! {
-		os.setenv('VINIX_SOFTWARE_HEALTH_MODE', mode, true)
+		os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', mode, true)
 		app.handle('software.health.reload')!; wait_for_health_barrier(mut app, mode)
 		assert !app.health_ready && app.status.contains('waiting for the service to exit')
 		app.worker.stdin_write('x'); wait_for_software(mut app)
@@ -172,7 +172,7 @@ fn check_software_health_navigation() ! {
 		assert app.health_focus && app.health_select_all && app.health_query.len == 0 && !app.health_issues_only
 	}
 	app.key_input('\x1b'); assert app.health_mode && !app.health_focus && !app.health_select_all
-	os.setenv('VINIX_SOFTWARE_HEALTH_MODE', 'empty', true)
+	os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', 'empty', true)
 	app.handle('software.health.reload')!; wait_for_software(mut app)
 	assert app.health_ready && app.health_snapshot.rows.len == 0
 	compact := app.build(ui2.rect(0, 0, 320, 240))!
@@ -230,11 +230,11 @@ fn check_health_filters(mut app SoftwareApp) ! {
 	assert !empty.children.any(it.id.starts_with('software.row.'))
 	free_window_tree(empty)
 	app.handle('software.row.0')!; assert app.health_selected == -1
-	os.setenv('VINIX_SOFTWARE_HEALTH_MODE', 'duplicate', true)
+	os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', 'duplicate', true)
 	app.handle('software.health.reload')!; wait_for_software(mut app)
 	assert !app.health_ready && app.health_snapshot.rows.len == 0 && app.details_pages.len == 0
 	assert app.health_issues_only && editor_bytes_text(app.health_query) == 'no such package'
-	os.unsetenv('VINIX_SOFTWARE_HEALTH_MODE')
+	os.unsetenv('TULPAR_SOFTWARE_HEALTH_MODE')
 	app.handle('software.health.reload')!; wait_for_software(mut app)
 	assert app.health_ready && app.health_matching.len == 0
 	app.handle('software.health.issues')!
@@ -262,7 +262,7 @@ fn check_software_health() ! {
 	mut app := SoftwareApp{ service_path: os.executable(), administration_required: true,
 		query: 'catalog-search'.bytes(), output: []u8{cap: 8192}, matching: [0], selected: 0, filter: 1,
 		catalog_error: 'catalog unavailable'.clone(), rows: [SoftwareRow{ id: 'editor', name: 'Editor', installed_version: '1.0.0' }] }
-	defer { os.unsetenv('VINIX_SOFTWARE_HEALTH_MODE'); app.close_app() }
+	defer { os.unsetenv('TULPAR_SOFTWARE_HEALTH_MODE'); app.close_app() }
 	tree := app.build(ui2.rect(0, 0, 640, 610))!
 	assert tree.children.any(it.id == 'software.health' && it.text == 'Health report'); free_window_tree(tree)
 	app.handle('software.health')!
@@ -299,7 +299,7 @@ fn check_software_health() ! {
 	assert !app.health_mode && app.health_snapshot.rows.len == 0 && app.health_query.len == 0 && !app.health_issues_only
 	assert app.selected == 0 && app.filter == 1 && app.query == 'catalog-search'.bytes() && app.catalog_error == 'catalog unavailable'
 	for mode in ['missing', 'duplicate', 'type', 'trailing', 'failed', 'incomplete', 'no-progress', 'malformed-progress', 'partial-progress', 'wrong-count', 'reordered', 'duplicate-complete', 'oversized-progress', 'flood', 'late-failure'] {
-		os.setenv('VINIX_SOFTWARE_HEALTH_MODE', mode, true)
+		os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', mode, true)
 		app.handle('software.health')!; wait_for_software(mut app)
 		assert app.health_mode && !app.health_ready && app.health_snapshot.rows.len == 0
 		failed := app.build(ui2.rect(0, 0, 640, 610))!
@@ -310,17 +310,17 @@ fn check_software_health() ! {
 		app.handle('software.health.repair')!; assert app.worker == unsafe { nil } && app.review == ''
 		app.handle('software.health.back')!
 	}
-	os.setenv('VINIX_SOFTWARE_HEALTH_MODE', 'empty', true)
+	os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', 'empty', true)
 	app.handle('software.health')!; wait_for_software(mut app)
 	assert app.health_ready && app.health_snapshot.rows.len == 0 && app.health_progress_packages == 0
 	app.handle('software.health.back')!
-	os.unsetenv('VINIX_SOFTWARE_HEALTH_MODE')
+	os.unsetenv('TULPAR_SOFTWARE_HEALTH_MODE')
 	app.handle('software.health')!; wait_for_software(mut app)
 	health_fixture_query(mut app, 'no matching package')!
 	app.handle('software.health.repair')!
 	assert !app.health_mode && app.health_snapshot.rows.len == 0 && app.worker.args == ['review', 'repair'] && !app.admin_prompt
 	wait_for_software(mut app); assert app.review_ready; app.handle('software.cancel')!
-	os.setenv('VINIX_SOFTWARE_HEALTH_MODE', 'slow', true)
+	os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', 'slow', true)
 	for escape in [false, true]! {
 		app.handle('software.health')!; slow := app.worker.pid
 		for _ in 0 .. 500 { app.poll(); if app.health_progress_packages > 0 { break }; time.sleep(time.millisecond) }
@@ -337,10 +337,10 @@ fn check_software_health() ! {
 		assert C.kill(slow, 0) != 0
 		app.handle('software.health.back')!
 	}
-	os.unsetenv('VINIX_SOFTWARE_HEALTH_MODE')
+	os.unsetenv('TULPAR_SOFTWARE_HEALTH_MODE')
 	app.handle('software.health')!; wait_for_software(mut app); assert app.health_ready
 	app.handle('software.health.back')!
-	os.setenv('VINIX_SOFTWARE_HEALTH_MODE', 'slow', true)
+	os.setenv('TULPAR_SOFTWARE_HEALTH_MODE', 'slow', true)
 	app.handle('software.health')!; slow := app.worker.pid
 	assert app.prepare_close(); app.close_app(); assert C.kill(slow, 0) != 0
 	mut missing := SoftwareApp{ service_path: '/missing-package-health-service'.clone(), query: []u8{cap: 256}, output: []u8{cap: 8192} }
@@ -367,7 +367,7 @@ fn check_software_health_progress_memory() ! {
 		unsafe { app.output.flags |= .noslices }
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.health_mode = true; app.worker_health = true; app.worker_failed = false
 				metadata_fixture_output(mut app, text)
@@ -409,7 +409,7 @@ fn check_software_health_progress_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'health progress retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'health progress retained ${kept} bytes'
 		println('Software health progress: 1000 fragmented/report/admission/full/compact/failure/partial/complete/oversized/stop/descriptor-retirement cycles retain zero tracked bytes PASS')
 	}
 }
@@ -421,7 +421,7 @@ fn check_software_health_memory() ! {
 		mut app := SoftwareApp{ query: []u8{cap: 256}, output: text.bytes() }
 		defer { app.close_app(); unsafe { text.free() } }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.health_mode = true; app.load_health()
 				assert app.health_ready && app.health_matching[0] == 1
@@ -446,7 +446,7 @@ fn check_software_health_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'health views retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'health views retained ${kept} bytes'
 		println('Software health: 1000 decode/order/page/render/select/search/filter/empty/compact/retire cycles retain zero tracked bytes PASS')
 	}
 }

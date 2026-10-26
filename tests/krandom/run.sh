@@ -10,7 +10,7 @@ cc=${CC:-cc}
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT HUP INT TERM
 mkdir -p "$work/krandom" "$work/klock" "$work/katomic"
-printf "Module {\n name: 'vinix_krandom_host_tests'\n}\n" > "$work/v.mod"
+printf "Module {\n name: 'tulpar_krandom_host_tests'\n}\n" > "$work/v.mod"
 cp "$root/kernel/krandom/random.v" "$root/kernel/krandom/sha256.v" "$root/kernel/krandom/erase.v" "$root/tests/krandom/krandom_test.v" \
 	"$root/tests/krandom/sha256_test.v" \
 	"$root/tests/krandom/erase_test.v" \

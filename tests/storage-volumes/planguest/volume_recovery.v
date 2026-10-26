@@ -3,7 +3,7 @@ module planguest
 
 fn volume_recovery_tool(input &char, a &char, b &char, output &char, backup bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), if backup { &char(c'backup-volume') } else { &char(c'recover-volume') }, input, a, b, output, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), if backup { &char(c'backup-volume') } else { &char(c'recover-volume') }, input, a, b, output, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
@@ -28,9 +28,9 @@ fn volume_recovery_fixture(parent &char) {
 			check(fd >= 0 && C.write(fd, bytes, usize(length)) == length && C.fsync(fd) == 0 && C.close(fd) == 0, c'private recovery fixtures')
 		}
 		crypt_tool(parent, c'/root/crypt.key', false, 0)
-		fd := C.open(c'/dev/mapper/vinix60', C.O_RDWR); mut data := [512]u8{init: 0x73}
+		fd := C.open(c'/dev/mapper/tulpar60', C.O_RDWR); mut data := [512]u8{init: 0x73}
 		check(fd >= 0 && C.pwrite(fd, &data[0], 512, 0) == 512 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist recovery ciphertext')
-		simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		volume_seal_tool(parent, c'/root/volume.sealed', false, 0); volume_seal_tool(parent, c'/root/volume-ro.sealed', true, 0)
 		check(C.unlink(c'/root/crypt.key') == 0, c'raw key deleted before every configuration recovery')
 	}
@@ -38,13 +38,13 @@ fn volume_recovery_fixture(parent &char) {
 
 fn volume_recovery_view(parent &char, config &char, readonly bool) {
 	volume_seal_open_tool(parent, config, c'/root/next.pass', false, 0)
-	info := status(c'/dev/mapper/vinix60')
+	info := status(c'/dev/mapper/tulpar60')
 	check(info.flags & 64 != 0 && (info.flags & 1 != 0) == readonly && info.bytes == 4096
 		&& info.start == 15728640 && info.disk_id == status(parent).disk_id, c'recovered exact disk, extent and mode')
-	fd := C.open(c'/dev/mapper/vinix60', if readonly { C.O_RDONLY } else { C.O_RDWR })
+	fd := C.open(c'/dev/mapper/tulpar60', if readonly { C.O_RDONLY } else { C.O_RDWR })
 	check(fd >= 0, c'open recovered view'); crypt_data(fd, 0, 0x73)
-	if readonly { check(C.open(c'/dev/mapper/vinix60', C.O_RDWR) < 0 && unsafe { C.errno == C.EROFS }, c'recovered readonly cannot escalate') }
-	check(C.close(fd) == 0, c'close recovered view'); unsafe { simple(c'remove', c'/dev/mapper/vinix60', nil, 0) }
+	if readonly { check(C.open(c'/dev/mapper/tulpar60', C.O_RDWR) < 0 && unsafe { C.errno == C.EROFS }, c'recovered readonly cannot escalate') }
+	check(C.close(fd) == 0, c'close recovered view'); unsafe { simple(c'remove', c'/dev/mapper/tulpar60', nil, 0) }
 }
 
 @[direct_array_access]
@@ -88,8 +88,8 @@ fn volume_recovery_first(parent &char, wrong &char) {
 			volume_rewrap_read(output, &result[0])
 			check(C.memcmp(&original[80], &saved[80], 112) == 0 && C.memcmp(&original[80], &result[80], 112) == 0, c'exact recovery disk/mapping metadata')
 			check(C.memcmp(&original[40], &result[40], 28) != 0, c'fresh recovery salt and nonce')
-			volume_seal_open_tool(parent, output, c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/vinix60')
-			volume_seal_open_tool(wrong, output, c'/root/next.pass', true, 1); missing(c'/dev/mapper/vinix60')
+			volume_seal_open_tool(parent, output, c'/root/crypt.pass', true, 1); missing(c'/dev/mapper/tulpar60')
+			volume_seal_open_tool(wrong, output, c'/root/next.pass', true, 1); missing(c'/dev/mapper/tulpar60')
 			volume_recovery_view(parent, output, readonly)
 			volume_recovery_tool(config, c'/root/crypt.pass', c'/root/recovery.key', backup, true, 1)
 			volume_recovery_tool(backup, c'/root/recovery.key', c'/root/next.pass', output, false, 1)
@@ -107,11 +107,11 @@ fn volume_recovery_first(parent &char, wrong &char) {
 		// Only recovery material and the new credential survive the reboot.
 		check(C.unlink(c'/root/volume.sealed') == 0 && C.unlink(c'/root/volume-ro.sealed') == 0
 			&& C.unlink(c'/root/crypt.pass') == 0 && C.unlink(c'/root/recovered.vcrypt') == 0, c'simulate original credential/configuration loss')
-		check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'disable initial invalid plain boot plan')
-		boot_copy(c'/root/next.pass', c'/etc/vinix/boot-volume.pass'); boot_copy(c'/root/recovered-ro.vcrypt', c'/etc/vinix/boot-volume.vcrypt')
+		check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'disable initial invalid plain boot plan')
+		boot_copy(c'/root/next.pass', c'/etc/tulpar/boot-volume.pass'); boot_copy(c'/root/recovered-ro.vcrypt', c'/etc/tulpar/boot-volume.vcrypt')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist recovery reboot phase')
-		for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! {
+		for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! {
 			fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist recovery inputs and boot configuration')
 		}
 		C.printf(c'PLAN VOLUME RECOVERY PASSED: lost-credential recovery, exact authenticated metadata/key, private no-overwrite publication, RW/RO ciphertext unlock and full-cost lifetimes\n')
@@ -129,14 +129,14 @@ fn volume_recovery_entry() i32 {
 		check(C.close(phase) == 0, c'close recovery phase')
 		parent := $if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') }
 		wrong := $if amd64 { &char(c'/dev/sd0') } $else { &char(c'/dev/vda') }
-		info := status(c'/dev/mapper/vinix60')
+		info := status(c'/dev/mapper/tulpar60')
 		check(info.flags & 65 == 65 && info.bytes == 4096 && info.start == 15728640
 			&& info.disk_id == status(parent).disk_id, c'production init restores recovered readonly mapping after reorder')
-		fd := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); check(fd >= 0, c'open production recovered view')
+		fd := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); check(fd >= 0, c'open production recovered view')
 		crypt_data(fd, 0, 0x73); check(C.close(fd) == 0, c'close production recovered view')
-		unsafe { simple(c'remove', c'/dev/mapper/vinix60', nil, 0) }
+		unsafe { simple(c'remove', c'/dev/mapper/tulpar60', nil, 0) }
 		volume_recovery_tool(c'/root/volume.vrecover', c'/root/recovery.key', c'/root/next.pass', c'/root/recovered.vcrypt', false, 0)
-		volume_seal_open_tool(wrong, c'/root/recovered.vcrypt', c'/root/next.pass', true, 1); missing(c'/dev/mapper/vinix60')
+		volume_seal_open_tool(wrong, c'/root/recovered.vcrypt', c'/root/next.pass', true, 1); missing(c'/dev/mapper/tulpar60')
 		volume_recovery_view(parent, c'/root/recovered.vcrypt', false)
 		check(C.open(c'/root/crypt.key', C.O_RDONLY) < 0 && unsafe { C.errno == C.ENOENT }, c'recovery and boot create no raw keyfile')
 		C.printf(c'PLAN VOLUME RECOVERY REORDERED BOOT PRESERVED\n')

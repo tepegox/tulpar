@@ -10,12 +10,12 @@ import tools.packages.signing
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn history_ownership_fixture() !(string, []Snapshot) {
-	directory := os.temp_dir() + '/vinix-history-ownership-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-history-ownership-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory)!
 	private := signing.new_key_from_seed([]u8{len: 32, init: 7})
 	repository := Repository{ id: 'trusted', url: 'file:///unused-history-source', public_key: private.public_key().hex() }
@@ -50,11 +50,11 @@ fn test_repeated_history_migration_and_retirement_bound_reader_scratch() {
 	warm := history_with_snapshots(config, directory, snapshots)!; close_decoded_history(warm)
 	mut maximum := u64(0); mut maximum_count := u32(0)
 	for _ in 0 .. 64 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		history := history_with_snapshots(config, directory, snapshots)!
 		close_decoded_history(history)
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+			kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			assert kept <= 512 && count <= 5, '${kept} bytes / ${count} allocations retained'
 			if kept > maximum { maximum = kept }; if count > maximum_count { maximum_count = count }
 		}
@@ -87,13 +87,13 @@ fn test_later_signature_and_equivocation_failures_retire_partial_history_without
 	bad_digest := Snapshot{ ...snapshots[0], text: changed, signature: signing.sign(private, changed.bytes())!.hex() }
 	for bad in [bad_signature, bad_digest] {
 		entries := [snapshots[0], bad]
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		if result := history_with_snapshots(config, directory, entries) { close_decoded_history(result); assert false } else {
 			message := err.msg()
 			assert message.contains(if bad.signature == bad_signature.signature { 'signature verification failed' } else { 'sequence equivocation' })
 			unsafe { message.free(); err.free() }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept <= 1024 && C.vinix_heap_count() <= 10 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept <= 1024 && C.tulpar_heap_count() <= 10 }
 		assert !os.exists(directory + '/trust-history.json')
 	}
 	println('HISTORY OWNERSHIP later signature/equivocation failures retire partial results without publishing history PASS')
@@ -108,11 +108,11 @@ fn test_retained_newer_floors_are_not_replaced_by_older_authenticated_snapshots(
 	before := os.read_file(directory + '/trust-history.json')!
 	config := Config{ architecture: 'aarch64' }
 	for _ in 0 .. 8 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		result := history_with_snapshots(config, directory, snapshots)!
 		assert result.repositories[0].sequence == 8 && result.repositories[0].index_sha256 == history.repositories[0].index_sha256
 		close_decoded_history(result)
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept <= 512 && C.vinix_heap_count() <= 5 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept <= 512 && C.tulpar_heap_count() <= 5 }
 	}
 	assert os.read_file(directory + '/trust-history.json')! == before
 	println('HISTORY OWNERSHIP newer retained floors survive authenticated older cache migration with bounded lifetimes PASS')
@@ -129,7 +129,7 @@ fn test_full_history_replacement_and_identity_limit_failure_release_scratch() {
 	defer { close_decoded_history(input) }
 	for id in ['new-identity', input.repositories[0].id] {
 		repository := Repository{ id: id, public_key: input.repositories[0].public_key }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		if result := remember_index(input, repository, Index{ sequence: 10 }, 'authenticated index bytes') {
 			assert id != 'new-identity' && result.repositories.len == 4096
 			assert result.repositories[0].id == input.repositories[0].id && result.repositories[0].sequence == 10
@@ -138,7 +138,7 @@ fn test_full_history_replacement_and_identity_limit_failure_release_scratch() {
 			message := err.msg(); assert id == 'new-identity' && message == 'repository trust history exceeds its supported identity limit'
 			unsafe { message.free(); err.free() }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 && C.vinix_heap_count() == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 && C.tulpar_heap_count() == 0 }
 		assert input.repositories.len == 4096 && input.repositories[0].sequence == 9
 	}
 	println('HISTORY OWNERSHIP full 4096-identity replacement and overflow refusal release scratch without mutating source floors PASS')
@@ -150,11 +150,11 @@ fn test_index_digest_preserves_sha256_vectors_and_block_boundaries_without_scrat
 	for length in [55, 56, 63, 64, 65, 127, 128, 129, 4096] {
 		text := 'x'.repeat(length) + '\x00é/文件'
 		expected := sha256.hexhash(text)
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		actual := index_digest(text)
 		assert actual == expected
 		unsafe { actual.free() }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 && C.vinix_heap_count() == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 && C.tulpar_heap_count() == 0 }
 	}
 	println('HISTORY OWNERSHIP SHA256 vectors, binary/Unicode bytes and block boundaries preserve replay digests with zero hashing scratch PASS')
 }

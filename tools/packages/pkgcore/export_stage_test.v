@@ -13,12 +13,12 @@ struct ExportRetirementLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn export_retirement_work(label string) !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-export-retirement-' + label + '-' + os.getpid().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-export-retirement-' + label + '-' + os.getpid().str()
 	os.mkdir(work)!
 	return work
 }
@@ -34,7 +34,7 @@ fn export_retirement_file(directory int, name string) ! {
 }
 
 fn export_retirement_cycle(parent string, depth int) ! {
-	mut stage := create_export_stage(parent, '.vinix-test', 'fixture export')!
+	mut stage := create_export_stage(parent, '.tulpar-test', 'fixture export')!
 	defer { stage.close() }
 	stage.check()!
 	mut fd := C.openat(stage.root, c'.', C.O_RDONLY | C.O_DIRECTORY | C.O_CLOEXEC)
@@ -60,19 +60,19 @@ fn test_export_retirement_uses_bounded_descriptors_and_retires_owned_scratch() {
 	assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 	defer { assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0 }
 	$if track_heap ? {
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for i in 0 .. 1000 {
 			export_retirement_cycle(work, 0) or {
-				C.vinix_heap_end()
+				C.tulpar_heap_end()
 				panic('export retirement cycle ${i}: ${err}')
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('EXPORT RETIREMENT 1000 create/check/retire/close cycles retained ${kept} bytes')
 		assert kept == 0
 	}
 	$if linux {
-		// Vinix retains unlinked kernel nodes for a five-second lookup grace
+		// Tulpar retains unlinked kernel nodes for a five-second lookup grace
 		// period. Isolate heap cycles from the following 6,144-directory stress
 		// instead of combining both bursts under one owner's kernel budget.
 		if os.exists('/proc/kernel-resources') {
@@ -93,7 +93,7 @@ fn test_export_retirement_unlinks_special_leaves_without_following_or_chmod() {
 	work := export_retirement_work('leaves')!; defer { os.rmdir_all(work) or {} }
 	os.mkdir(work + '/outside')!; os.chmod(work + '/outside', 0o700)!
 	os.write_file(work + '/outside/keep', 'preserved')!; os.chmod(work + '/outside/keep', 0o600)!
-	mut stage := create_export_stage(work, '.vinix-test', 'fixture export')!
+	mut stage := create_export_stage(work, '.tulpar-test', 'fixture export')!
 	defer { stage.close() }
 	os.symlink(work + '/outside', stage.path + '/alias')!
 	os.symlink(work + '/absent', stage.path + '/dangling')!
@@ -109,7 +109,7 @@ fn export_retirement_no_flush(_ int) int { return -1 }
 
 fn test_export_publication_failure_preserves_complete_saved_tree_and_exclusive_destinations() {
 	work := export_retirement_work('publish')!; defer { os.rmdir_all(work) or {} }
-	mut stage := create_export_stage(work, '.vinix-test', 'fixture export')!
+	mut stage := create_export_stage(work, '.tulpar-test', 'fixture export')!
 	defer { stage.close(); stage.close() }
 	export_retirement_file(stage.root, 'keep')!
 	mut message := ''
@@ -127,7 +127,7 @@ fn test_export_publication_failure_preserves_complete_saved_tree_and_exclusive_d
 			'dangling' { os.symlink(work + '/absent', path)! }
 			else { assert C.mkfifo(path.str, 0o600) == 0 }
 		}
-		mut collision := create_export_stage(work, '.vinix-test', 'fixture export')!
+		mut collision := create_export_stage(work, '.tulpar-test', 'fixture export')!
 		mut refused := false
 		collision.publish(path) or { cause := collision.failure(err); refused = cause.msg().contains('without replacing'); unsafe { cause.free() } }
 		assert refused && !collision.published && !os.exists(collision.path)
@@ -140,7 +140,7 @@ fn test_export_publication_failure_preserves_complete_saved_tree_and_exclusive_d
 
 fn test_export_retirement_refuses_unsafe_root_and_foreign_directory_before_unlinking() {
 	work := export_retirement_work('refusal')!; defer { os.rmdir_all(work) or {} }
-	mut stage := create_export_stage(work, '.vinix-test', 'fixture export')!; defer { stage.close() }
+	mut stage := create_export_stage(work, '.tulpar-test', 'fixture export')!; defer { stage.close() }
 	export_retirement_file(stage.root, 'keep')!
 	os.chmod(stage.path, 0o777)!
 	mut refused := false

@@ -35,7 +35,7 @@ VMODULES="$(pwd)/kernel" "$v_host" -cc gcc -gc none test tests/xnualloc/*_test.v
 VMODULES="$(pwd)/kernel" "$v_host" -prod -cc gcc -gc none test tests/xnualloc/*_test.v
 ```
 
-On a normal Linux x86-64 Vinix build machine, with a compatible V compiler:
+On a normal Linux x86-64 Tulpar build machine, with a compatible V compiler:
 
 ```sh
 cd kernel
@@ -48,7 +48,7 @@ make PROD=false V=/absolute/path/to/v \
 
 Use the repository's architecture-specific tooling for ARM64. Also build
 flag-off and `-d xnu_bitmap` configurations. For each architecture boot the
-resulting image using its normal Vinix deployment procedure, and require the
+resulting image using its normal Tulpar deployment procedure, and require the
 serial marker `heap: self-test passed`. This boot test executes before SMP, so
 separate interrupt-heavy, cross-CPU allocation/free/trim and OOM tests are still
 required.

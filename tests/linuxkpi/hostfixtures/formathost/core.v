@@ -27,9 +27,9 @@ fn C.scnprintf(&char,usize,&char,...) i32
 fn C.sprintf(&char,&char,...) i32
 fn C.ERR_PTR(isize) voidptr
 fn C.set_bit(u32,&usize)
-fn C.vinix_linuxkpi_format_set_key(voidptr) i32
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_format_set_key(voidptr) i32
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
 fn C.preempt_disable()
 fn C.preempt_enable()
 fn C.preempt_count() u32
@@ -40,7 +40,7 @@ fn ull(bits u64) C.vmf_ull { unsafe { mut value:=C.vmf_ull{}; C.memcpy(&value,&b
 pub fn golden_entry(expected &char,length usize,fmt &char,args voidptr) { unsafe {
  C.assert(length<480)
  for size:=usize(0); size<=length+2; size++ { mut guard:=[512]u8{}; C.memset(&guard[0],0xa5,sizeof(guard)); mut status:=~u32(0); mut copy:=[4]u64{}; C.memcpy(&copy[0],args,abiargs.native_size())
-  count:=C.vkr_format_entry(&char(&guard[8]),size,fmt,&copy[0],&status); C.assert(count==i32(length)); C.assert(status==(if length!=0 && length>=size { u32(C.VINIX_FORMAT_TRUNCATED) } else { u32(0) }))
+  count:=C.vkr_format_entry(&char(&guard[8]),size,fmt,&copy[0],&status); C.assert(count==i32(length)); C.assert(status==(if length!=0 && length>=size { u32(C.TULPAR_FORMAT_TRUNCATED) } else { u32(0) }))
   for i:=usize(0); i<8; i++ { C.assert(guard[i]==0xa5) }
   if size!=0 { retained:=if length<size { length } else { size-1 }; C.assert(C.memcmp(&guard[8],expected,retained)==0); C.assert(guard[8+retained]==0) }
   for i:=8+size; i<sizeof(guard); i++ { C.assert(guard[i]==0xa5) }
@@ -153,7 +153,7 @@ pub fn metadata_entry(buf &char,size usize,status &u32,fmt &char,args voidptr) i
 @[export:'vmf_nested_invalid_entry']
 pub fn nested_invalid_entry(fmt &char,args voidptr) { unsafe {
  inner:=VaDescriptor{fmt,args}; mut buf:=[64]char{}; mut status:=u32(0)
- C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'%pV/tail',&inner)==9); C.assert(C.strcmp(&buf[0],c'head/tail')==0 && status==u32(C.VINIX_FORMAT_INVALID))
+ C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'%pV/tail',&inner)==9); C.assert(C.strcmp(&buf[0],c'head/tail')==0 && status==u32(C.TULPAR_FORMAT_INVALID))
  untouched:=&i32(usize(abiargs.word(args))); C.assert(*untouched==0x13579bdf)
 } }
 @[export:'vmf_public_entry']
@@ -165,13 +165,13 @@ pub fn public_entry(fmt &char,args voidptr) { unsafe {
 } }
 fn errors_lengths() { unsafe {
  mut buf:=[64]char{}; mut status:=u32(0); mut untouched:=i32(0x13579bdf)
- C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%n%s',&untouched,c'ignored')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.VINIX_FORMAT_INVALID) && untouched==0x13579bdf)
- C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%f%s',f64(1.0),c'ignored')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.VINIX_FORMAT_INVALID))
- C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%b%s',u32(1),c'ignored')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.VINIX_FORMAT_INVALID))
- C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.VINIX_FORMAT_INVALID))
+ C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%n%s',&untouched,c'ignored')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.TULPAR_FORMAT_INVALID) && untouched==0x13579bdf)
+ C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%f%s',f64(1.0),c'ignored')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.TULPAR_FORMAT_INVALID))
+ C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%b%s',u32(1),c'ignored')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.TULPAR_FORMAT_INVALID))
+ C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'prefix%')==6); C.assert(C.strcmp(&buf[0],c'prefix')==0 && status==u32(C.TULPAR_FORMAT_INVALID))
  C.vmf_nested_invalid(c'head%nignored',&untouched)
- C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'%pI4 %s',voidptr(1),&char(1))==18); C.assert(C.strcmp(&buf[0],c'(unsupported %pI4)')==0 && status==u32(C.VINIX_FORMAT_UNSUPPORTED))
- C.memset(&buf[0],0xa5,sizeof(buf)); C.assert(C.vmf_metadata(&buf[0],usize(2147483647)+1,&status,c'%s',c'untouched')==0); C.assert(u8(buf[0])==0xa5 && status==u32(C.VINIX_FORMAT_INVALID))
+ C.assert(C.vmf_metadata(&buf[0],sizeof(buf),&status,c'%pI4 %s',voidptr(1),&char(1))==18); C.assert(C.strcmp(&buf[0],c'(unsupported %pI4)')==0 && status==u32(C.TULPAR_FORMAT_UNSUPPORTED))
+ C.memset(&buf[0],0xa5,sizeof(buf)); C.assert(C.vmf_metadata(&buf[0],usize(2147483647)+1,&status,c'%s',c'untouched')==0); C.assert(u8(buf[0])==0xa5 && status==u32(C.TULPAR_FORMAT_INVALID))
  C.assert(C.snprintf(&buf[0],sizeof(buf),c'%u/%s',u32(42),c'yes')==6 && C.strcmp(&buf[0],c'42/yes')==0); C.assert(C.scnprintf(&buf[0],4,c'%u/%s',u32(42),c'yes')==3 && C.strcmp(&buf[0],c'42/')==0); C.assert(C.scnprintf(nil,0,c'%u',u32(42))==0); C.assert(C.sprintf(&buf[0],c'%u/%s',u32(42),c'yes')==6 && C.strcmp(&buf[0],c'42/yes')==0)
  C.vmf_public_va(c'%u/%s',u32(42),c'yes'); C.assert(C.snprintf(nil,0,c'%*d',i32(-2147483647)-1,i32(1))==((i32(1)<<23)-1)); C.assert(C.snprintf(nil,0,c'%.*d',i32(2147483647),i32(1))==((i32(1)<<15)-1))
 } }
@@ -197,13 +197,13 @@ pub fn format_tests() { unsafe {
  C.vmf_libc(c'%lld|%llu|%zx|%td',sll(i64(-9223372036854775807)-1),ull(~u64(0)),~usize(0),isize(-12)); C.vmf_libc(c'[%12.3s][%-9s][%3c]',c'long-string',c'test',i32(81))
  key_bits:=[u64(0x0706050403020100),u64(0x0f0e0d0c0b0a0908)]!
  mut key:=[2]C.vmh_u64{};C.memcpy(&key[0],&key_bits[0],sizeof(key))
- C.assert(C.vinix_linuxkpi_format_set_key(nil)==-i32(C.EINVAL)); irq:=C.vinix_linuxkpi_irq_save(); C.assert(C.vinix_linuxkpi_format_set_key(&key[0])==-i32(C.EWOULDBLOCK)); C.vinix_linuxkpi_irq_restore(irq)
- C.preempt_disable(); C.assert(C.vinix_linuxkpi_format_set_key(&key[0])==-i32(C.EWOULDBLOCK)); C.preempt_enable()
+ C.assert(C.tulpar_linuxkpi_format_set_key(nil)==-i32(C.EINVAL)); irq:=C.tulpar_linuxkpi_irq_save(); C.assert(C.tulpar_linuxkpi_format_set_key(&key[0])==-i32(C.EWOULDBLOCK)); C.tulpar_linuxkpi_irq_restore(irq)
+ C.preempt_disable(); C.assert(C.tulpar_linuxkpi_format_set_key(&key[0])==-i32(C.EWOULDBLOCK)); C.preempt_enable()
  mut control:=KeyControl{}; mut readers:=[4]C.pthread_t{}
  for i:=u32(0); i<readers.len; i++ { C.assert(C.pthread_create(&readers[i],nil,C.vmf_key_reader,&control)==0) }
  for C.__atomic_load_n(&control.ready,2)!=readers.len { C.sched_yield() }
- C.assert(C.vinix_linuxkpi_format_set_key(&key[0])==0); C.__atomic_store_n(&control.published,u32(1),3)
- for i:=u32(0); i<readers.len; i++ { C.assert(C.pthread_join(readers[i],nil)==0) }; C.assert(C.vinix_linuxkpi_format_set_key(&key[0])==-i32(C.EALREADY))
+ C.assert(C.tulpar_linuxkpi_format_set_key(&key[0])==0); C.__atomic_store_n(&control.published,u32(1),3)
+ for i:=u32(0); i<readers.len; i++ { C.assert(C.pthread_join(readers[i],nil)==0) }; C.assert(C.tulpar_linuxkpi_format_set_key(&key[0])==-i32(C.EALREADY))
  C.vmf_golden_bytes(c'000000009a932462|000000009a932462|000000009a932462',50,c'%p|%pK|%pe',voidptr(0x0706050403020100),voidptr(0x0706050403020100),voidptr(0x0706050403020100))
  C.vmf_golden_bytes(c'9a932462|  9a932462|9a932462  ',30,c'%8p|%10p|%-10p',voidptr(0x0706050403020100),voidptr(0x0706050403020100),voidptr(0x0706050403020100))
  C.assert(C.vmh_live_pages==before && C.vmh_interrupts && C.preempt_count()==0)

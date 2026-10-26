@@ -6,7 +6,7 @@ import os
 import time
 
 fn test_removal_space_follows_verified_active_sources_and_deduplicates_fallback_objects() {
-	directory := os.temp_dir() + '/vinix-removal-estimate-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-removal-estimate-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory + '/generations/7/apps/retained/bin')!
 	os.mkdir_all(directory + '/objects')!
 	defer { os.rmdir_all(directory) or {} }

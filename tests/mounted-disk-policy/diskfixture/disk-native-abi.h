@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native declarations and scalar constraints; fixture operations are V. */
-#ifndef VINIX_MOUNTED_DISK_FIXTURE_NATIVE_ABI_H
-#define VINIX_MOUNTED_DISK_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_MOUNTED_DISK_FIXTURE_NATIVE_ABI_H
+#define TULPAR_MOUNTED_DISK_FIXTURE_NATIVE_ABI_H
 #define _GNU_SOURCE
 #include <errno.h>
 #include <dirent.h>

@@ -15,14 +15,14 @@ import x86.hpet as irqwork_clock
 #include "linuxkpi_irq_work_v_primitives.h"
 
 struct C.irq_work {}
-struct C.vinix_irqwork_fixture {}
-fn C.vinix_linuxkpi_irqwork_fixture_bytes() u32
-fn C.vinix_linuxkpi_irqwork_fixture_init(voidptr, fn (&C.irq_work), u32) i32
-fn C.vinix_linuxkpi_irqwork_fixture_queue(voidptr, i32) bool
-fn C.vinix_linuxkpi_irqwork_fixture_sync(voidptr)
-fn C.vinix_linuxkpi_irqwork_fixture_pending(voidptr) bool
-fn C.vinix_linuxkpi_irqwork_fixture_busy(voidptr) bool
-fn C.vinix_linuxkpi_irqwork_fixture_defer(voidptr, voidptr)
+struct C.tulpar_irqwork_fixture {}
+fn C.tulpar_linuxkpi_irqwork_fixture_bytes() u32
+fn C.tulpar_linuxkpi_irqwork_fixture_init(voidptr, fn (&C.irq_work), u32) i32
+fn C.tulpar_linuxkpi_irqwork_fixture_queue(voidptr, i32) bool
+fn C.tulpar_linuxkpi_irqwork_fixture_sync(voidptr)
+fn C.tulpar_linuxkpi_irqwork_fixture_pending(voidptr) bool
+fn C.tulpar_linuxkpi_irqwork_fixture_busy(voidptr) bool
+fn C.tulpar_linuxkpi_irqwork_fixture_defer(voidptr, voidptr)
 fn C.vkiw_running_count(voidptr) u32
 fn C.vkiw_sync_wait_count() u64
 
@@ -31,8 +31,8 @@ const irqwork_test_deferred_count = 9
 
 struct IrqWorkTestNode {
 mut:
-	work C.vinix_irqwork_fixture
-	rcu C.vinix_rcu_fixture_head
+	work C.tulpar_irqwork_fixture
+	rcu C.tulpar_rcu_fixture_head
 	mode u32
 	remaining u32
 	target u32
@@ -97,13 +97,13 @@ fn irq_work_test_actor(argument voidptr) {
 		katomic.store(mut &irqwork_test_ledger.started[index], true)
 		if index == 0 {
 			test_alloc_oom(0)
-			accepted := C.vinix_linuxkpi_irqwork_fixture_queue(irqwork_test_ledger.borrowed, -1)
+			accepted := C.tulpar_linuxkpi_irqwork_fixture_queue(irqwork_test_ledger.borrowed, -1)
 			ints := cpu.interrupt_toggle(false)
 			allocation_free := proc.current_thread().linuxkpi_alloc_fail_after == 0
 			cpu.interrupt_toggle(ints)
 			test_alloc_oom(-1)
 			if !accepted || !allocation_free { irq_work_test_fail(2) }
-		} else { C.vinix_linuxkpi_irqwork_fixture_sync(irqwork_test_ledger.borrowed) }
+		} else { C.tulpar_linuxkpi_irqwork_fixture_sync(irqwork_test_ledger.borrowed) }
 		if !irq_work_test_task(index + 1) { irq_work_test_fail(4) }
 		katomic.store(mut &irqwork_test_ledger.command[index], u32(0))
 		katomic.store(mut &irqwork_test_ledger.done[index], true)
@@ -116,8 +116,8 @@ fn irq_work_test_callback(argument &C.irq_work) {
 	index := u32(local.cpu_number)
 	mode := node.mode
 	if cpu.interrupt_state() || local.maskable_irq_depth == 0 || index >= 4
-		|| C.vinix_linuxkpi_irqwork_fixture_pending(node)
-		|| !C.vinix_linuxkpi_irqwork_fixture_busy(node) || may_sleep()
+		|| C.tulpar_linuxkpi_irqwork_fixture_pending(node)
+		|| !C.tulpar_linuxkpi_irqwork_fixture_busy(node) || may_sleep()
 		|| node.magic != 0x6972712d776f726b { irq_work_test_fail(8) }
 	if mode != 3 && index != node.target { irq_work_test_fail(16) }
 	katomic.inc(mut &irqwork_test_ledger.calls)
@@ -132,13 +132,13 @@ fn irq_work_test_callback(argument &C.irq_work) {
 			}
 		}
 	} else if mode == 4 {
-		C.vinix_linuxkpi_irqwork_fixture_defer(node, unsafe { &node.rcu })
+		C.tulpar_linuxkpi_irqwork_fixture_defer(node, unsafe { &node.rcu })
 		// Actual outer IRQ return protects the backend's required postcallback
 		// flag operation. Only this permanent scalar is touched after enqueue.
 		katomic.inc(mut &irqwork_test_ledger.deferred)
 	} else if node.remaining > 1 {
 		node.remaining--
-		if !C.vinix_linuxkpi_irqwork_fixture_queue(node, i32(node.target)) { irq_work_test_fail(64) }
+		if !C.tulpar_linuxkpi_irqwork_fixture_queue(node, i32(node.target)) { irq_work_test_fail(64) }
 	} else { katomic.store(mut &irqwork_test_ledger.observed_tick, irqwork_tick_count()) }
 }
 fn irq_work_test_init(node &IrqWorkTestNode, mode u32, target u32, remaining u32, flags u32) bool {
@@ -147,7 +147,7 @@ fn irq_work_test_init(node &IrqWorkTestNode, mode u32, target u32, remaining u32
 	owner.target = target
 	owner.remaining = remaining
 	owner.magic = 0x6972712d776f726b
-	return C.vinix_linuxkpi_irqwork_fixture_init(owner, irq_work_test_callback, flags) == 0
+	return C.tulpar_linuxkpi_irqwork_fixture_init(owner, irq_work_test_callback, flags) == 0
 }
 fn irq_work_test_lazy() bool {
 	mut node := IrqWorkTestNode{}
@@ -156,12 +156,12 @@ fn irq_work_test_lazy() bool {
 	ints := cpu.interrupt_toggle(false)
 	ticks := irqwork_tick_count()
 	ipis := irqwork_ipi_count(0)
-	accepted := C.vinix_linuxkpi_irqwork_fixture_queue(unsafe { &node }, -1)
-	quiet := C.vinix_linuxkpi_irqwork_fixture_pending(unsafe { &node })
-		&& C.vinix_linuxkpi_irqwork_fixture_busy(unsafe { &node }) && irqwork_ipi_count(0) == ipis
+	accepted := C.tulpar_linuxkpi_irqwork_fixture_queue(unsafe { &node }, -1)
+	quiet := C.tulpar_linuxkpi_irqwork_fixture_pending(unsafe { &node })
+		&& C.tulpar_linuxkpi_irqwork_fixture_busy(unsafe { &node }) && irqwork_ipi_count(0) == ipis
 		&& irqwork_tick_count() == ticks && katomic.load(&irqwork_test_ledger.calls) == before
 	cpu.interrupt_toggle(ints)
-	C.vinix_linuxkpi_irqwork_fixture_sync(unsafe { &node })
+	C.tulpar_linuxkpi_irqwork_fixture_sync(unsafe { &node })
 	return accepted && quiet && irq_work_test_wait_calls(before + 1, false)
 		&& katomic.load(&irqwork_test_ledger.observed_tick) > ticks
 }
@@ -180,19 +180,19 @@ fn irq_work_test_basic(controller &proc.Thread, flags u32, target i32, repeats u
 	test_alloc_oom(0)
 	preempt_disable()
 	ints := cpu.interrupt_toggle(false)
-	accepted := C.vinix_linuxkpi_irqwork_fixture_queue(unsafe { &node }, target)
+	accepted := C.tulpar_linuxkpi_irqwork_fixture_queue(unsafe { &node }, target)
 	// A remote target may already have completed. Duplicate-pending is tested
 	// on the CLI-protected local CPU, where delivery cannot race the witness.
-	duplicate := if target < 0 { C.vinix_linuxkpi_irqwork_fixture_queue(unsafe { &node }, target) } else { false }
+	duplicate := if target < 0 { C.tulpar_linuxkpi_irqwork_fixture_queue(unsafe { &node }, target) } else { false }
 	valid := !cpu.interrupt_state() && preempt_depth[0] == 1
 		&& controller.linuxkpi_alloc_fail_after == 0
 	cpu.interrupt_toggle(ints)
 	preempt_enable()
 	test_alloc_oom(-1)
-	C.vinix_linuxkpi_irqwork_fixture_sync(unsafe { &node })
+	C.tulpar_linuxkpi_irqwork_fixture_sync(unsafe { &node })
 	return accepted && !duplicate && valid && irq_work_test_wait_calls(before + repeats, false)
-		&& !C.vinix_linuxkpi_irqwork_fixture_pending(unsafe { &node })
-		&& !C.vinix_linuxkpi_irqwork_fixture_busy(unsafe { &node })
+		&& !C.tulpar_linuxkpi_irqwork_fixture_pending(unsafe { &node })
+		&& !C.tulpar_linuxkpi_irqwork_fixture_busy(unsafe { &node })
 }
 fn irq_work_test_parallel() bool {
 	// This fixture record has boot lifetime. Reset occurs only after the prior
@@ -214,7 +214,7 @@ fn irq_work_test_parallel() bool {
 				}
 				sched.reschedule()
 			}
-			C.vinix_linuxkpi_irqwork_fixture_sync(node)
+			C.tulpar_linuxkpi_irqwork_fixture_sync(node)
 			for sync_started && !katomic.load(&irqwork_test_ledger.done[1]) {
 				if irqwork_clock.nanoseconds() - started >= irqwork_test_timeout_ns {
 					lib.kpanic(unsafe { nil }, c'linuxkpi: IRQ work borrowed sync cleanup deadline')
@@ -233,7 +233,7 @@ fn irq_work_test_parallel() bool {
 			|| irqwork_clock.nanoseconds() - started >= irqwork_test_timeout_ns { return false }
 		sched.reschedule()
 	}
-	if !C.vinix_linuxkpi_irqwork_fixture_queue(node, 3) { return false }
+	if !C.tulpar_linuxkpi_irqwork_fixture_queue(node, 3) { return false }
 	for katomic.load(&irqwork_test_ledger.entered[3]) != 1 {
 		if katomic.load(&irqwork_test_ledger.failures) != 0
 			|| irqwork_clock.nanoseconds() - started >= irqwork_test_timeout_ns { return false }
@@ -250,7 +250,7 @@ fn irq_work_test_parallel() bool {
 	}
 	katomic.store(mut &irqwork_test_ledger.release[1], true)
 	for C.vkiw_running_count(node) != 1
-		|| C.vinix_linuxkpi_irqwork_fixture_busy(node) {
+		|| C.tulpar_linuxkpi_irqwork_fixture_busy(node) {
 		if katomic.load(&irqwork_test_ledger.failures) != 0
 			|| irqwork_clock.nanoseconds() - started >= irqwork_test_timeout_ns { return false }
 		sched.reschedule()
@@ -283,7 +283,7 @@ fn irq_work_test_deferred(controller &proc.Thread) bool {
 				}
 				sched.reschedule()
 			}
-			C.vinix_linuxkpi_rcu_fixture_barrier()
+			C.tulpar_linuxkpi_rcu_fixture_barrier()
 		}
 	}
 	for index in 0 .. irqwork_test_deferred_count {
@@ -296,7 +296,7 @@ fn irq_work_test_deferred(controller &proc.Thread) bool {
 	test_alloc_oom(0)
 	ints := cpu.interrupt_toggle(false)
 	for index in 0 .. allocated {
-		if !C.vinix_linuxkpi_irqwork_fixture_queue(nodes[index], i32(index % 3 + 1)) {
+		if !C.tulpar_linuxkpi_irqwork_fixture_queue(nodes[index], i32(index % 3 + 1)) {
 			irq_work_test_fail(128)
 			break
 		}
@@ -353,7 +353,7 @@ fn irq_work_test_lifecycle() bool {
 	return irq_work_test_parallel() && irq_work_test_deferred(controller)
 }
 fn irq_work_native_selftest() bool {
-	if cpu_locals.len < 4 || cpu_locals.len > 64 || C.vinix_linuxkpi_irqwork_fixture_bytes() != 32 { return false }
+	if cpu_locals.len < 4 || cpu_locals.len > 64 || C.tulpar_linuxkpi_irqwork_fixture_bytes() != 32 { return false }
 	for round in 0 .. 3 {
 		before := selftest_free_baseline()
 		if !irq_work_test_lifecycle() { return false }

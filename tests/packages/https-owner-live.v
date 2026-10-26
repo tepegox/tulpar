@@ -8,8 +8,8 @@ import tools.packages.pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn command(args []string, log string) ! {
 	mut child := os.new_process(args[0]); child.set_args(args[1..]); child.set_redirect_stdio_merged()
@@ -19,7 +19,7 @@ fn command(args []string, log string) ! {
 fn certificate(work string) ! {
 	os.mkdir_all(work)!
 	os.write_file(work + '/certificate.cnf', '[req]\nprompt=no\ndistinguished_name=subject\nx509_extensions=extensions\n'
-		+ '[subject]\nCN=Vinix HTTPS owner fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\n'
+		+ '[subject]\nCN=Tulpar HTTPS owner fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\n'
 		+ 'keyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\nextendedKeyUsage=serverAuth\nsubjectAltName=IP:127.0.0.1\n')!
 	command(['openssl', 'req', '-new', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1', '-config',
 		work + '/certificate.cnf', '-keyout', work + '/key.pem', '-out', work + '/ca.pem'], work + '/certificate.txt')!
@@ -68,14 +68,14 @@ fn scope(f Live, arch string, mode string) ! {
 	mut history := ''
 	os.setenv('CURL_CA_BUNDLE', f.work + '/ca.pem', true)
 	if !mode.starts_with('fetch-') {
-		os.mkdir_all(root + '/etc/vinix-packages')!
+		os.mkdir_all(root + '/etc/tulpar-packages')!
 		config := pkgcore.Config{architecture: arch, repositories: [pkgcore.Repository{id: 'tls-owner', public_key: f.key, url: f.base + '/ranges'}],
 			policy: pkgcore.Policy{reserve_bytes: 0}}
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 		mut catalog := service.refresh()!; catalog.close()
 		history = os.read_file(store + '/trust-history.json')!
 		repository := pkgcore.Repository{...config.repositories[0], url: url}
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{...config, repositories: [repository]}))!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{...config, repositories: [repository]}))!
 		os.write_file(store + '/catalog.json', json2.encode([pkgcore.Snapshot{repository: repository, text: f.index, signature: f.signature}]))!
 	}
 	cache := if mode.starts_with('refresh-') { os.read_file(store + '/catalog.json')! } else { '' }
@@ -96,7 +96,7 @@ fn scope(f Live, arch string, mode string) ! {
 			}
 			if mode == 'refresh-signature' { os.write_file(f.work + '/repository/index.sig', '00'.repeat(64))! }
 			before := request_count(f.work)!
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			mut refused := false
 			mut message := ''
 			if mode.starts_with('fetch-') {
@@ -128,7 +128,7 @@ fn scope(f Live, arch string, mode string) ! {
 				assert message.contains(wanted), message
 			}
 			unsafe { message.free() }
-			$if track_heap ? { bytes := C.vinix_heap_end(); if pass == 1 { retained += bytes } }
+			$if track_heap ? { bytes := C.tulpar_heap_end(); if pass == 1 { retained += bytes } }
 			os.write_file(f.work + '/repository/index.sig', f.signature)!
 			if mode.starts_with('refresh-') && refused {
 				assert os.read_file(store + '/catalog.json')! == cache && os.read_file(store + '/trust-history.json')! == history

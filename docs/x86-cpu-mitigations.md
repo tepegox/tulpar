@@ -89,7 +89,7 @@ those lifecycles are not implemented here.
 - Intel CPUs with old microcode that lacks MD_CLEAR/RFDS_CLEAR do not gain
   OpenBSD's model-specific MDS clearing sequences. The absence of a control
   does not produce an enabled-mitigation report.
-- Vinix's VMX guest entry/exit paths in `kernel/c/vmx.c` have no corresponding
+- Tulpar's VMX guest entry/exit paths in `kernel/c/vmx.c` have no corresponding
   RSB, predictor-domain, or VERW transitions. This change does not claim guest
   isolation from transient attacks or handle guest SPEC_CTRL virtualization.
 - NMI and machine-check entry still use the existing CS-based interrupt path.

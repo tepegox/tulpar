@@ -5,13 +5,13 @@ preflight tests:
 
 ```sh
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --host --work /tmp/vinix-bundle-check-host
+  --host --work /tmp/tulpar-bundle-check-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm/kernel/bin/vinix \
-  --work /tmp/vinix-bundle-check-arm
+  --arch aarch64 --kernel /path/to/arm/kernel/bin/tulpar \
+  --work /tmp/tulpar-bundle-check-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86/kernel/bin/vinix \
-  --work /tmp/vinix-bundle-check-x86
+  --arch amd64 --kernel /path/to/x86/kernel/bin/tulpar \
+  --work /tmp/tulpar-bundle-check-x86
 ```
 
 Use fresh work directories. The controller owns disposable disk images and

@@ -134,29 +134,29 @@ fn await_word(word &u32, expected u32) {
 	check(false, @LINE)
 }
 
-@[export: 'vinix_linuxkpi_cpu_id']
+@[export: 'tulpar_linuxkpi_cpu_id']
 pub fn cpu_id() u32 { return context().cpu }
-@[export: 'vinix_linuxkpi_preempt_count']
+@[export: 'tulpar_linuxkpi_preempt_count']
 pub fn preempt_count() u32 { return context().pins }
-@[export: 'vinix_linuxkpi_preempt_disable']
+@[export: 'tulpar_linuxkpi_preempt_disable']
 pub fn preempt_disable() { unsafe { context().pins++ } }
-@[export: 'vinix_linuxkpi_preempt_enable']
+@[export: 'tulpar_linuxkpi_preempt_enable']
 pub fn preempt_enable() { unsafe { check(context().pins != 0, @LINE); context().pins-- } }
-@[export: 'vinix_linuxkpi_irq_flags']
+@[export: 'tulpar_linuxkpi_irq_flags']
 pub fn irq_flags() usize { return usize(context().flags) }
-@[export: 'vinix_linuxkpi_irq_save']
+@[export: 'tulpar_linuxkpi_irq_save']
 pub fn irq_save() usize { unsafe { old := context().flags; context().flags &= ~u64(512); return usize(old) } }
-@[export: 'vinix_linuxkpi_irq_restore']
+@[export: 'tulpar_linuxkpi_irq_restore']
 pub fn irq_restore(flags usize) { unsafe { context().flags = u64(flags) } }
-@[export: 'vinix_linuxkpi_maskable_irq_depth']
+@[export: 'tulpar_linuxkpi_maskable_irq_depth']
 pub fn irq_depth() u32 { return context().depth }
-@[export: 'vinix_linuxkpi_smp_boot_context']
+@[export: 'tulpar_linuxkpi_smp_boot_context']
 pub fn boot_context() bool { return context().constructor && context().pins == 0 && context().depth == 0 && (context().flags & 512) != 0 }
-@[export: 'vinix_linuxkpi_smp_task_present']
+@[export: 'tulpar_linuxkpi_smp_task_present']
 pub fn task_present() bool { return context().constructor }
-@[export: 'vinix_linuxkpi_spin_wait']
+@[export: 'tulpar_linuxkpi_spin_wait']
 pub fn spin_wait() { unsafe { C.smph_add32(&context().spins, 1) }; C.sched_yield() }
-@[export: 'vinix_linuxkpi_bug'; noreturn]
+@[export: 'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(reason C.smph_const_charp, line i32) { unsafe { C.fprintf(C.stderr, c'SMP invariant: %s:%d\n', reason, line) }; C.abort() }
 
 @[export: 'kmalloc']
@@ -191,7 +191,7 @@ fn deliver(cpu u32) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_smp_send_ipi']
+@[export: 'tulpar_linuxkpi_smp_send_ipi']
 pub fn send_ipi(cpu u32) {
 	unsafe {
 		check(cpu < 256, @LINE)

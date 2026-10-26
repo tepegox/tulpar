@@ -6,9 +6,9 @@ securelevel wall-step checks. It also runs the capability policy tests.
 
 `tests/clock-control/run` builds the independent V fixture as a
 static AArch64 guest and uses the native V ABI controller.
-Set `VINIX_AARCH64_SYSROOT` for its musl
-sysroot; `VINIX_VM_RUNNER_ROOT` can select the original checkout's cached boot
-tools while `VINIX_KERNEL_DIR` selects a separately built worktree kernel.
+Set `TULPAR_AARCH64_SYSROOT` for its musl
+sysroot; `TULPAR_VM_RUNNER_ROOT` can select the original checkout's cached boot
+tools while `TULPAR_KERNEL_DIR` selects a separately built worktree kernel.
 The native controller always uses that existing kernel binary.
 
 The guest checks Linux `clock_settime`, `settimeofday`, `adjtimex`, and

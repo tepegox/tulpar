@@ -50,7 +50,7 @@ fn test_retired_valid_keys_still_require_signatures_even_for_exact_recorded_byte
 		sequence: 42, index_sha256: index_digest(text) }] }
 	config := Config{ architecture: 'aarch64' }
 	assert !recorded_retired_snapshot(config, history, snapshot)
-	root := os.real_path(os.temp_dir()) + '/vinix-retirement-signature-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	root := os.real_path(os.temp_dir()) + '/tulpar-retirement-signature-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(root)!
 	defer { os.rmdir_all(root) or {} }
 	save_history(root, history)!
@@ -64,7 +64,7 @@ fn test_retired_valid_keys_still_require_signatures_even_for_exact_recorded_byte
 
 fn test_empty_refresh_retires_recorded_unusable_cache_without_dropping_any_floor() {
 	snapshot, recorded := retirement_fixture()
-	root := os.real_path(os.temp_dir()) + '/vinix-retirement-refresh-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	root := os.real_path(os.temp_dir()) + '/tulpar-retirement-refresh-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(root)!
 	defer { os.rmdir_all(root) or {} }
 	history := TrustHistory{ repositories: [recorded.repositories[0], RepositoryFloor{ id: 'other',

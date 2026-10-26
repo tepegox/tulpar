@@ -10,8 +10,8 @@ import tools.packages.signing
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn activation_request_cycles() int {
 	$if activation_request_baseline ? { return 2 }
@@ -41,15 +41,15 @@ fn activation_materialize(directory string, state State, content string) ! {
 	os.write_file(path + '/apps/app/bin/app', content)!; os.chmod(path + '/apps/app/bin/app', 0o755)!
 	os.write_file(path + '/apps/assets/share/data', 'asset data')!; os.chmod(path + '/apps/assets/share/data', 0o644)!
 	entry := desktop_entry(state.packages[0].package)
-	os.write_file(path + '/share/applications/vinix-app.desktop', entry)!
+	os.write_file(path + '/share/applications/tulpar-app.desktop', entry)!
 	encoded := encode_generation_state(state)!; os.write_file(path + '/state.json', encoded)!; flush_tree(path)!
 	unsafe { number.free(); path.free(); entry.free(); encoded.free() }
 }
 
 fn activation_fixture(arch string) !ActivationFixture {
-	work := os.temp_dir() + '/vinix-activation-request-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-activation-request-' + os.getpid().str()
 	root := work + '/root'; directory := state_directory(root)
-	os.mkdir_all(root + '/etc/vinix-packages')!; os.mkdir_all(work + '/repository/objects')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!; os.mkdir_all(work + '/repository/objects')!
 	private := signing.new_key_from_seed([]u8{len: 32, init: 7}); key := private.public_key().hex()
 	repository := Repository{id: 'fixture', url: 'file://' + work + '/repository', public_key: key}
 	config := Config{architecture: arch, repositories: [repository], policy: Policy{offline: true, reserve_bytes: 0}}
@@ -70,7 +70,7 @@ fn activation_fixture(arch string) !ActivationFixture {
 	snapshot := Snapshot{repository: repository, text: index, signature: signing.sign(private, index.bytes())!.hex()}
 	cache := json2.encode([snapshot]); history := json2.encode(TrustHistory{repositories: [RepositoryFloor{id: repository.id,
 		public_key: key, sequence: 7, index_sha256: index_digest(index)}]})
-	save_configuration(root + '/etc/vinix-packages/config.json', config)!
+	save_configuration(root + '/etc/tulpar-packages/config.json', config)!
 	guard := acquire(directory)!; guard.release()
 	activation_materialize(directory, first, 'old payload')!; activation_materialize(directory, second, 'new payload')!
 	for content in ['old payload', 'new payload', 'asset data']! {
@@ -126,8 +126,8 @@ fn activation_reset(f ActivationFixture, mode string) ! {
 		else if mode == 'rollback-revoked' || mode == 'empty-deploy' || mode == 'deployment-empty' { Config{...f.config, repositories: []} }
 		else if mode == 'disk-refusal' { Config{...f.config, policy: Policy{...f.config.policy, reserve_bytes: u64(1024) * 1024 * 1024 * 1024}} }
 		else { f.config }
-	save_configuration(f.root + '/etc/vinix-packages/config.json', configuration)!
-	if mode in ['busy', 'bad-config']! { os.write_file(f.root + '/etc/vinix-packages/config.json', '{broken configuration')! }
+	save_configuration(f.root + '/etc/tulpar-packages/config.json', configuration)!
+	if mode in ['busy', 'bad-config']! { os.write_file(f.root + '/etc/tulpar-packages/config.json', '{broken configuration')! }
 	if mode.starts_with('deployment-') {
 		document := match mode { 'deployment-empty' { json2.encode(DeploymentLock{architecture: f.config.architecture}) }
 			'deployment-legacy' { '{"format":1,"architecture":"' + f.config.architecture + '","packages":["app"]}' }
@@ -137,7 +137,7 @@ fn activation_reset(f ActivationFixture, mode string) ! {
 }
 
 fn activation_checkpoint(phase string) {
-	mode := os.getenv('VINIX_ACTIVATION_FAULT'); directory := os.getenv('VINIX_ACTIVATION_DIRECTORY')
+	mode := os.getenv('TULPAR_ACTIVATION_FAULT'); directory := os.getenv('TULPAR_ACTIVATION_DIRECTORY')
 	defer { unsafe { mode.free(); directory.free() } }
 	if (phase == 'prepared' && mode == 'prepare-damage') || (phase == 'published' && mode == 'published-damage') {
 		name := if phase == 'prepared' { '.stage-3' } else { '3' }
@@ -174,11 +174,11 @@ fn activation_call(f ActivationFixture, mode string, explicit bool, expected str
 
 fn activation_scope(arch string, mode string, explicit bool) ! {
 	label := arch + (if explicit { ' explicit ' } else { ' service ' }) + mode
-	selection := os.getenv('VINIX_ACTIVATION_CASE'); defer { unsafe { selection.free(); label.free() } }
+	selection := os.getenv('TULPAR_ACTIVATION_CASE'); defer { unsafe { selection.free(); label.free() } }
 	if selection != '' && selection != label { return }
 	f := activation_fixture(arch)!; defer { os.rmdir_all(f.work) or {} }
-	os.setenv('VINIX_ACTIVATION_DIRECTORY', f.directory, true); os.setenv('VINIX_ACTIVATION_FAULT', mode, true)
-	defer { os.unsetenv('VINIX_ACTIVATION_DIRECTORY'); os.unsetenv('VINIX_ACTIVATION_FAULT') }
+	os.setenv('TULPAR_ACTIVATION_DIRECTORY', f.directory, true); os.setenv('TULPAR_ACTIVATION_FAULT', mode, true)
+	defer { os.unsetenv('TULPAR_ACTIVATION_DIRECTORY'); os.unsetenv('TULPAR_ACTIVATION_FAULT') }
 	expected := if mode in ['stale-review', 'deployment-stale']! { 'f'.repeat(64) } else { '' }
 	mut total := u64(0)
 	for pass in 0 .. 2 {
@@ -187,7 +187,7 @@ fn activation_scope(arch string, mode string, explicit bool) ! {
 			activation_reset(f, mode)!
 			before := if os.is_link(f.directory + '/current') { os.readlink(f.directory + '/current')! } else { '' }
 			mut guard := Lock{fd: -1}; if mode == 'busy' { guard = acquire(f.directory)! }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			mut refused := false
 			mut state := activation_call(f, mode, explicit, expected) or {
 				refused = true; message := err.msg()
@@ -210,7 +210,7 @@ fn activation_scope(arch string, mode string, explicit bool) ! {
 				if state.packages.len != 0 { assert state.packages[0].package.arguments[1] == 'argument with spaces' }
 				retire_activation_reply(mut state)
 			}
-			mut kept := u64(0); $if track_heap ? { kept = C.vinix_heap_end() }
+			mut kept := u64(0); $if track_heap ? { kept = C.tulpar_heap_end() }
 			if pass == 1 { total += kept }
 			if guard.fd >= 0 { guard.release() }
 			fail := mode in ['blocked-remove', 'offline-missing', 'missing-source', 'stale-review', 'disk-refusal', 'interrupted',
@@ -241,7 +241,7 @@ fn test_complete_activation_requests_retire_success_refusal_and_owned_replies() 
 		}
 	}
 	$if !activation_request_baseline ? {
-		selection := os.getenv('VINIX_ACTIVATION_CASE'); defer { unsafe { selection.free() } }
+		selection := os.getenv('TULPAR_ACTIVATION_CASE'); defer { unsafe { selection.free() } }
 		println(if selection == '' { 'ACTIVATION REQUEST 92 cases with 64 measured calls preserve activation, rollback, deployment and owned replies PASS' }
 			else { 'ACTIVATION REQUEST selected case PASS' })
 	}

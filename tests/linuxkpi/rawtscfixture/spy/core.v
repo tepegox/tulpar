@@ -29,7 +29,7 @@ pub fn read() u64 {
 	return spy_timestamp
 }
 
-@[export: 'vinix_linuxkpi_cpu_has']
+@[export: 'tulpar_linuxkpi_cpu_has']
 pub fn feature(bit u32) bool {
 	require(bit == 4, 7)
 	spy_query_count++

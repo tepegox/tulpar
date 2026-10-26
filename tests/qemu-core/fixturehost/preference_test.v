@@ -24,12 +24,12 @@ fn test_sdk_preference_is_copied_and_default_is_unchanged() {
 fn test_universal_child_selects_explicit_preference_and_preserves_environment() {
 	$if darwin {
 		mut env := os.environ()
-		env['VINIX_PREFERENCE_CONTROL'] = 'owned environment'
+		env['TULPAR_PREFERENCE_CONTROL'] = 'owned environment'
 		for arch in ['arm64', 'x86_64'] {
 			value := capture_preferred(['/usr/bin/uname', '-m'], '', env, false, arch) or { panic(err) }
 			assert value == arch + '\n'
 			inherited_command_environment_preferred(['/bin/sh', '-c',
-				'test "$VINIX_PREFERENCE_CONTROL" = "owned environment"'], env, arch) or { panic(err) }
+				'test "$TULPAR_PREFERENCE_CONTROL" = "owned environment"'], env, arch) or { panic(err) }
 		}
 		assert capture(['/usr/bin/uname', '-m'], '', env, false) or { panic(err) } == os.uname().machine + '\n'
 	}
@@ -37,7 +37,7 @@ fn test_universal_child_selects_explicit_preference_and_preserves_environment() 
 
 fn test_preferred_raw_capture_preserves_directory_and_error_bytes() {
 	$if darwin {
-		work := os.temp_dir() + '/vinix-preference-' + os.getpid().str()
+		work := os.temp_dir() + '/tulpar-preference-' + os.getpid().str()
 		os.mkdir(work) or { panic(err) }
 		defer { os.rmdir(work) or { panic(err) } }
 		for arch in ['arm64', 'x86_64'] {

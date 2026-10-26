@@ -99,7 +99,7 @@ fn check(ok bool, line i32) bool {
 
 fn run_once(path &char) i32 {
 	unsafe {
-		mut args := [&char(c'vinix-security-audit'), &char(c'--once'), &char(c'--log'), path, &char(nil)]!
+		mut args := [&char(c'tulpar-security-audit'), &char(c'--once'), &char(c'--log'), path, &char(nil)]!
 		return C.vka_main(4, &args[0])
 	}
 }
@@ -180,7 +180,7 @@ fn tests() i32 {
 		if !check(fd >= 0, 93) { return 1 }
 		if !check(C.write(fd, buffer, usize(used)) == used, 94) { return 1 }
 		C.close(fd)
-		mut diagnostic_args := [&char(c'vinix-security-audit'), &char(c'--once'), &char(c'--log'), &char(path), &char(c'--source'), &char(source_path), &char(nil)]!
+		mut diagnostic_args := [&char(c'tulpar-security-audit'), &char(c'--once'), &char(c'--log'), &char(path), &char(c'--source'), &char(source_path), &char(nil)]!
 		if !check(C.vka_main(6, &diagnostic_args[0]) == 0, 97) { return 1 }
 		before := &C.stat(C.__builtin_alloca(sizeof(C.stat)))
 		after := &C.stat(C.__builtin_alloca(sizeof(C.stat)))

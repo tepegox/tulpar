@@ -48,8 +48,8 @@ fn workspace_job(job WorkspaceJob, compiler string, flags []string, work string)
 fn qualify() ! {
 	resume := os.args.len == 3 && os.args[1] == '--resume'
 	if !resume && os.args.len != 2 { return error('usage: sqlite-builder-check [--resume] WORK_DIRECTORY; set V to the reviewed compiler') }
-	archive := os.getenv('VINIX_PROFILE_EXPORT_SOURCE')
-	if !os.is_file(archive) || os.file_size(archive) != 11388848 || sha256.sum(os.read_bytes(archive)!).hex() != '05ee0b03119b45c0bdb4df654b96802e909e0a752f72e4fe3794f487229e5a41' { return error('provide VINIX_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive') }
+	archive := os.getenv('TULPAR_PROFILE_EXPORT_SOURCE')
+	if !os.is_file(archive) || os.file_size(archive) != 11388848 || sha256.sum(os.read_bytes(archive)!).hex() != '05ee0b03119b45c0bdb4df654b96802e909e0a752f72e4fe3794f487229e5a41' { return error('provide TULPAR_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive') }
 	work := os.abs_path(os.args[if resume { 2 } else { 1 }])
 	compiler := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
 	repository := os.dir(os.dir(os.dir(@FILE)))
@@ -80,7 +80,7 @@ fn qualify() ! {
 	}
 	flags := ['-nocache', '-gc', 'none', '-manualfree', '-cflags', '-O1', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	mut checks := []WorkspaceCheck{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	cli_record := work + '/cli.json'
 	if resume && os.is_file(cli_record) {
 		check := json2.decode[WorkspaceCheck](os.read_file(cli_record)!)!
@@ -90,7 +90,7 @@ fn qualify() ! {
 		check := workspace_task('cli-compile', [compiler, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work, cli)!
 		os.write_file(cli_record, json2.encode(check) + '\n')!; checks << check
 	}
-	os.setenv('VINIX_PACKAGE_PACK_CLI', cli, true); os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_PACK_CLI', cli, true); os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true)
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	mut pending := []WorkspaceJob{}
 	for job in jobs {

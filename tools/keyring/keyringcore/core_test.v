@@ -101,7 +101,7 @@ fn test_the_file_gives_nothing_away() ! {
 	for word in ['bank', 'example', 'alexander', 'correct', 'horse', 'login'] {
 		assert !text.contains(word), word
 	}
-	assert text.starts_with('vinix-keyring 1\nslot password ln=10,r=8,p=1 ')
+	assert text.starts_with('tulpar-keyring 1\nslot password ln=10,r=8,p=1 ')
 	// And reads back, to a store that opens with the same things.
 	back := parse(text)!
 	assert back.format() == text
@@ -203,7 +203,7 @@ fn test_parse_is_strict() ! {
 	for bad in [
 		'',
 		good[..good.len - 1],
-		good.replace('vinix-keyring 1', 'vinix-keyring 2'),
+		good.replace('tulpar-keyring 1', 'tulpar-keyring 2'),
 		good.replace('ln=10', 'ln=30'),
 		good.replace('ln=10', 'ln=010'),
 		good.replace('slot recovery', 'slot password'),

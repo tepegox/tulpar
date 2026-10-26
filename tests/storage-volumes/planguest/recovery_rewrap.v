@@ -3,7 +3,7 @@ module planguest
 
 fn recovery_rewrap_tool(input &char, old &char, next &char, output &char, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'rewrap-recovery-volume'), input, old, next, output, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'rewrap-recovery-volume'), input, old, next, output, &char(nil)]!
 		run_utility(&args[0], expected)
 	}
 }
@@ -56,14 +56,14 @@ fn recovery_rewrap_first(parent &char) {
 			recovery_rewrap_tool(input, c'/root/old-recovery.key', c'/root/recovery.key', output, 0)
 			volume_rewrap_read(output, &result[0])
 			check(C.memcmp(&original[80], &result[80], 112) == 0 && C.memcmp(&original[56], &result[56], 12) != 0, c'exact rewrapped metadata and fresh nonce')
-			recovery_unlock_tool(output, c'/root/old-recovery.key', false, 1); missing(c'/dev/mapper/vinix60')
+			recovery_unlock_tool(output, c'/root/old-recovery.key', false, 1); missing(c'/dev/mapper/tulpar60')
 			recovery_unlock_view(parent, output, false, readonly)
 			// Prior media is still an access path under its prior credential.
 			recovery_unlock_tool(input, c'/root/old-recovery.key', false, 0)
-			info := status(c'/dev/mapper/vinix60'); check((info.flags & 1 != 0) == readonly, c'original recovery mode unchanged')
-			data := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); check(data >= 0, c'open original recovery mapping')
+			info := status(c'/dev/mapper/tulpar60'); check((info.flags & 1 != 0) == readonly, c'original recovery mode unchanged')
+			data := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); check(data >= 0, c'open original recovery mapping')
 			crypt_data(data, 0, 0x73); check(C.close(data) == 0, c'close original recovery mapping')
-			simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+			simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 			for destination in [input, output, &char(c'/root/recovery.key')]! {
 				recovery_rewrap_tool(input, c'/root/old-recovery.key', c'/root/recovery.key', destination, 1)
 			}
@@ -73,10 +73,10 @@ fn recovery_rewrap_first(parent &char) {
 		recovery_rewrap_retention(parent)
 		check(C.unlink(c'/root/old-recovery.key') == 0, c'delete prior recovery credential before reboot')
 		recovery_unlock_missing_credentials()
-		check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'disable invalid initial plain boot plan')
+		check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'disable invalid initial plain boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist rewrap reboot phase')
-		for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! {
+		for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! {
 			file := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(file >= 0 && C.fsync(file) == 0 && C.close(file) == 0, c'persist rewrapped backups and new credential')
 		}
 		C.printf(c'PLAN RECOVERY REWRAP PASSED: authenticated credential changes, preserved metadata/key and readonly, old backup retained, no-overwrite publication and measured lifetimes\n')
@@ -94,7 +94,7 @@ fn recovery_rewrap_entry() i32 {
 		parent := $if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') }
 		recovery_unlock_missing_credentials()
 		check(C.open(c'/root/old-recovery.key', C.O_RDONLY) < 0 && unsafe { C.errno == C.ENOENT }, c'prior recovery key remains absent')
-		recovery_unlock_tool(c'/root/volume.vrecover', c'/root/recovery.key', false, 1); missing(c'/dev/mapper/vinix60')
+		recovery_unlock_tool(c'/root/volume.vrecover', c'/root/recovery.key', false, 1); missing(c'/dev/mapper/tulpar60')
 		recovery_unlock_view(parent, c'/root/rotated.vrecover', false, false)
 		recovery_unlock_view(parent, c'/root/rotated.vrecover', true, true)
 		recovery_unlock_view(parent, c'/root/rotated-ro.vrecover', false, true)

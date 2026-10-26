@@ -109,7 +109,7 @@ pub fn check(listing string) !int {
 			return error('FAIL: unresolved thunk ' + register)
 		}
 	}
-	if !listing.contains('<vinix_x86_resume_context>:') {
+	if !listing.contains('<tulpar_x86_resume_context>:') {
 		return error('FAIL: missing final scheduler mitigation stub')
 	}
 	count := thunk_branches(runes, values)

@@ -16,9 +16,9 @@ first, including TID allocation and PID namespace numbering.
 Build the requested kernel, then boot an isolated guest with:
 
 ```sh
-VINIX_QEMU_SMP=4 tests/kernel-gaps/run-native \
+TULPAR_QEMU_SMP=4 tests/kernel-gaps/run-native \
   --source tests/proc-thread-lock/lockfixture/core.v --arch aarch64 \
-  --kernel-dir kernel --expect 'VINIX PROC THREAD LOCK: PASS'
+  --kernel-dir kernel --expect 'TULPAR PROC THREAD LOCK: PASS'
 ```
 
 Repeat with `--arch x86_64` and the x86-64 kernel directory. The shared runner
@@ -35,14 +35,14 @@ builds strict native musl SDK C/V executables, and uses the same kernel, serial
 constructor and original 180-second outer budget for both:
 
 ```sh
-VINIX_QEMU_SMP=4 tests/proc-thread-lock/run --arch aarch64 \
+TULPAR_QEMU_SMP=4 tests/proc-thread-lock/run --arch aarch64 \
   --kernel-dir /absolute/isolated/kernel \
   --state-dir /absolute/new/evidence --guest-state-dir /tmp/proc-lock-arm
 ```
 
 Use `--arch x86_64` with its kernel and fresh directories for the other
 architecture. `--build-only` stops after strict SDK compilation and static
-linking. The full workload requires Vinix process clocks and procfs semantics.
+linking. The full workload requires Tulpar process clocks and procfs semantics.
 
 All four original/V native controls passed with the same validated production
 kernel per architecture: four ARM CPUs and two x86 CPUs. Both versions exceeded

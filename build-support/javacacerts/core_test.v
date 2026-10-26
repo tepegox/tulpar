@@ -59,7 +59,7 @@ fn test_password_utf16_including_astral_characters_and_invalid_utf8() {
 }
 
 fn test_jks_wire_format_and_independent_openssl_digest() {
-	work := hosttest.work_dir('', 'vinix-java-wire-')!
+	work := hosttest.work_dir('', 'tulpar-java-wire-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	store := build_jks(['abc'.bytes(), []u8{}], 'Aé猫💩')!
 	assert store[..12].hex() == 'feedfeed0000000200000002'
@@ -88,7 +88,7 @@ fn test_jks_wire_format_and_independent_openssl_digest() {
 }
 
 fn test_directory_sorting_file_filter_symlinks_and_read_errors() {
-	work := hosttest.work_dir('', 'vinix-java-pem-')!
+	work := hosttest.work_dir('', 'tulpar-java-pem-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for name, payload in {
 		'z.crt':       'YWJj'
@@ -118,9 +118,9 @@ fn test_directory_sorting_file_filter_symlinks_and_read_errors() {
 }
 
 fn test_cli_arguments_errors_and_output_preservation() {
-	tool := os.getenv('VINIX_JAVA_CACERTS_TOOL')
+	tool := os.getenv('TULPAR_JAVA_CACERTS_TOOL')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-java-cli-')!
+	work := hosttest.work_dir('', 'tulpar-java-cli-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	os.mkdir(work + '/certificates')!
 	os.write_file(work + '/certificates/one.crt', '${pem_begin}\nYWJj\n${pem_end}\n')!
@@ -171,9 +171,9 @@ fn test_cli_arguments_errors_and_output_preservation() {
 }
 
 fn test_guest_staging_rejects_wrong_target_and_cleans_failed_publication() {
-	tool := os.getenv('VINIX_JAVA_STAGE_TOOL')
+	tool := os.getenv('TULPAR_JAVA_STAGE_TOOL')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-java-stage-check-')!
+	work := hosttest.work_dir('', 'tulpar-java-stage-check-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for arguments in [['--arch', 'aarch64', '--staging', '/'],
 		['--arch', 'invalid', '--staging', work], ['--arch', 'aarch64', '--staging', work + '/absent'],
@@ -183,7 +183,7 @@ fn test_guest_staging_rejects_wrong_target_and_cleans_failed_publication() {
 		result := hosttest.capture(argv, '', 30, os.environ())!
 		assert result.code == 2 && result.stdout == '' && result.stderr != ''
 	}
-	directory := work + '/usr/libexec/vinix-minecraft'
+	directory := work + '/usr/libexec/tulpar-minecraft'
 	os.mkdir_all(directory + '/java-cacerts')!
 	os.write_file(directory + '/java-cacerts/sentinel', 'preserve')!
 	os.write_file(directory + '/java-cacerts.py', 'retired wrapper')!
@@ -198,16 +198,16 @@ fn test_guest_staging_rejects_wrong_target_and_cleans_failed_publication() {
 }
 
 fn test_frozen_production_store_and_java_password_verification() {
-	root := os.getenv('VINIX_JAVA_REPO')
+	root := os.getenv('TULPAR_JAVA_REPO')
 	if root == '' { return }
 	certificates := read_certificates(root + '/build-aarch64-java/staging/usr/share/ca-certificates/mozilla')!
 	assert certificates.len == 119
 	store := build_jks(certificates, 'changeit')!
 	assert sha256.sum(store).hex() == 'a25f4464a74cfba595a04f135b3ee2f6927479161baac152feef2161cc893bad'
 	assert store == os.read_bytes(root + '/build-aarch64-java/staging/etc/ssl/certs/java/cacerts')!
-	keytool := os.getenv('VINIX_JAVA_KEYTOOL')
+	keytool := os.getenv('TULPAR_JAVA_KEYTOOL')
 	if keytool == '' { return }
-	work := hosttest.work_dir('', 'vinix-java-keytool-')!
+	work := hosttest.work_dir('', 'tulpar-java-keytool-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for password in ['changeit', 'Aé猫💩𝄞'] {
 		os.write_file_array(work + '/cacerts', build_jks(certificates, password)!)!

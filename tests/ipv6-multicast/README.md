@@ -59,14 +59,14 @@ Build the isolated kernel with dependencies linked from the main checkout:
 ```sh
 make -C kernel ARCH=aarch64 CC=clang V=/path/to/v PROD=1 LIMINE_MP=1 ALLOC_TRACK=1
 V=/path/to/v PROD=1 ALLOC_TRACK=1 ./scripts/build-amd64.sh --no-userland --no-iso
-VINIX_AARCH64_SYSROOT=/path/to/main/build-aarch64-userland/sysroot \
+TULPAR_AARCH64_SYSROOT=/path/to/main/build-aarch64-userland/sysroot \
   ./tests/ipv6-multicast/run.sh aarch64
 ./tests/ipv6-multicast/run.sh amd64
 ```
 
 An isolated worktree can reuse a populated main checkout's boot assets with
-`VINIX_QEMU_RUNNER_ROOT=/path/to/main` and
-`VINIX_KERNEL_DIR=/path/to/worktree/kernel`. `VINIX_TEST_CAPTURE` saves the
+`TULPAR_QEMU_RUNNER_ROOT=/path/to/main` and
+`TULPAR_KERNEL_DIR=/path/to/worktree/kernel`. `TULPAR_TEST_CAPTURE` saves the
 packet capture. The runner opens only local TCP/UDP echo sockets on `::1`
 port 39066; run these guest tests sequentially to avoid sharing that port.
 

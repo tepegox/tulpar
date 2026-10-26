@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_HOSTIO_V_CONTRACT_H
-#define VINIX_LINUXKPI_HOSTIO_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_HOSTIO_V_CONTRACT_H
+#define TULPAR_LINUXKPI_HOSTIO_V_CONTRACT_H
 #include "host_model_v_contract.h"
 #include <sched.h>
 #include <linux/wait_bit.h>

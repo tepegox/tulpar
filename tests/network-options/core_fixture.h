@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later
  * Independent original C layouts and borrowed views of the production V core.
  * No adapter algorithms are reproduced here. */
-#ifndef VINIX_NET_CORE_FIXTURE_H
-#define VINIX_NET_CORE_FIXTURE_H
-#include "../../kernel/c/vinix_net.h"
+#ifndef TULPAR_NET_CORE_FIXTURE_H
+#define TULPAR_NET_CORE_FIXTURE_H
+#include "../../kernel/c/tulpar_net.h"
 #include "../../kernel/c/net_random.h"
 
 #include <lwip/dhcp.h>
@@ -52,7 +52,7 @@ struct membership {
 
 #define SOCKET_MEMBERSHIPS 16
 
-struct vinix_socket {
+struct tulpar_socket {
     int family;
     int v6only;
     int bound;
@@ -87,30 +87,30 @@ struct vinix_socket {
     uint16_t last_remote_port;
     struct packet *rx_head;
     struct packet *rx_tail;
-    struct vinix_socket *accept_head;
-    struct vinix_socket *accept_tail;
-    struct vinix_socket *accept_next;
+    struct tulpar_socket *accept_head;
+    struct tulpar_socket *accept_tail;
+    struct tulpar_socket *accept_next;
 };
 
 
-err_t vinix_net_core_tcp_received(void *, struct tcp_pcb *, struct pbuf *, err_t);
-err_t vinix_net_core_tcp_sent_data(void *, struct tcp_pcb *, uint16_t);
-err_t vinix_net_core_accept_callback(void *, struct tcp_pcb *, err_t);
-#define tcp_received(...) vinix_net_core_tcp_received(__VA_ARGS__)
-#define tcp_sent_data(...) vinix_net_core_tcp_sent_data(__VA_ARGS__)
+err_t tulpar_net_core_tcp_received(void *, struct tcp_pcb *, struct pbuf *, err_t);
+err_t tulpar_net_core_tcp_sent_data(void *, struct tcp_pcb *, uint16_t);
+err_t tulpar_net_core_accept_callback(void *, struct tcp_pcb *, err_t);
+#define tcp_received(...) tulpar_net_core_tcp_received(__VA_ARGS__)
+#define tcp_sent_data(...) tulpar_net_core_tcp_sent_data(__VA_ARGS__)
 typedef err_t (*fixture_accept_fn)(void *, struct tcp_pcb *, err_t);
-fixture_accept_fn vinix_net_core_accept_fn(void);
-#define accept_callback (*vinix_net_core_accept_fn())
-int vinix_net_core_endpoint_ip(struct vinix_socket *, const struct vinix_net_endpoint *, ip_addr_t *);
-void *vinix_net_core_mac(void);
-#define endpoint_ip(...) vinix_net_core_endpoint_ip(__VA_ARGS__)
-#define active_mac ((uint8_t *)vinix_net_core_mac())
-void *vinix_net_core_physical(void);
-uint64_t vinix_net_core_epoch(void);
-void vinix_net_core_udp_received(void *, struct udp_pcb *, struct pbuf *, ip_addr_t *, uint16_t);
-struct netif *vinix_net_core_interface_index(uint32_t);
-#define physical_netif (*(struct netif *)vinix_net_core_physical())
-#define link_epoch (vinix_net_core_epoch())
-#define udp_received(...) vinix_net_core_udp_received(__VA_ARGS__)
-#define interface_index(...) vinix_net_core_interface_index(__VA_ARGS__)
+fixture_accept_fn tulpar_net_core_accept_fn(void);
+#define accept_callback (*tulpar_net_core_accept_fn())
+int tulpar_net_core_endpoint_ip(struct tulpar_socket *, const struct tulpar_net_endpoint *, ip_addr_t *);
+void *tulpar_net_core_mac(void);
+#define endpoint_ip(...) tulpar_net_core_endpoint_ip(__VA_ARGS__)
+#define active_mac ((uint8_t *)tulpar_net_core_mac())
+void *tulpar_net_core_physical(void);
+uint64_t tulpar_net_core_epoch(void);
+void tulpar_net_core_udp_received(void *, struct udp_pcb *, struct pbuf *, ip_addr_t *, uint16_t);
+struct netif *tulpar_net_core_interface_index(uint32_t);
+#define physical_netif (*(struct netif *)tulpar_net_core_physical())
+#define link_epoch (tulpar_net_core_epoch())
+#define udp_received(...) tulpar_net_core_udp_received(__VA_ARGS__)
+#define interface_index(...) tulpar_net_core_interface_index(__VA_ARGS__)
 #endif

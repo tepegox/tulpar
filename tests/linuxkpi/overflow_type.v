@@ -138,7 +138,7 @@ fn run_profile(keep string) ! {
 	for declaration in ['size_t array_size(size_t, size_t);', 'size_t size_add(size_t, size_t);', 'size_t size_mul(size_t, size_t);'] {
 		if !production_text.contains(declaration) { return error('Existing V ABI declaration changed: ' + declaration) }
 	}
-	work := hosttest.work_dir(keep, 'vinix-overflow-type-')!
+	work := hosttest.work_dir(keep, 'tulpar-overflow-type-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or {} } }
 	preload := os.join_path(work, 'preload.h')
 	os.write_file(preload, '#include "' + os.join_path(root, 'tests/linuxkpi/host_types.h') + '"\n#include <stdio.h>\n#include <stdint.h>\n')!
@@ -146,10 +146,10 @@ fn run_profile(keep string) ! {
 	os.write_file(os.join_path(work, 'test.c'), source)!
 	os.write_file(os.join_path(work, 'probe.c'), probe)!
 	os.write_file(os.join_path(work, 'file-scope.c'), file_scope)!
-	hosttest.generate_abi(metadata_path, os.join_path(root, 'kernel/linuxkpi'), os.join_path(work, 'include/vinix/integer_policy.h'))!
+	hosttest.generate_abi(metadata_path, os.join_path(root, 'kernel/linuxkpi'), os.join_path(work, 'include/tulpar/integer_policy.h'))!
 	common := [hosttest.env_default('CC', 'clang'), '-O1', '-g', '-ffreestanding',
 		'-fno-builtin', '-fno-strict-aliasing', '-Wall', '-Wextra', '-Werror',
-		'-Wno-unused-function', '-Wno-unused-parameter', '-DVINIX_LINUXKPI_HOST_TEST',
+		'-Wno-unused-function', '-Wno-unused-parameter', '-DTULPAR_LINUXKPI_HOST_TEST',
 		'-D__KERNEL__', '-D_FORTIFY_SOURCE=0', '-include', preload, '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h'), '-I' + os.join_path(work, 'include'),
 		'-I' + os.join_path(root, 'kernel/linuxkpi/include'), '-I' + os.join_path(linux, 'include'),

@@ -44,15 +44,15 @@ V=/path/to/v /path/to/v -path '@vlib|@vmodules|.' run \
   examples/package-catalog/build.v 1.0.0 /build/new-native-inputs
 /path/to/v -path '@vlib|@vmodules|.|tests/hardware-platform' \
   -o /tmp/native-check tests/packages/native-catalog-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/v VFLAGS=-nocache \
-  VINIX_NATIVE_CATALOG_INPUTS=/build/new-native-inputs \
-  VINIX_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/vinix-sandbox \
+TULPAR_HWTEST_TCG=1 V=/path/to/v VFLAGS=-nocache \
+  TULPAR_NATIVE_CATALOG_INPUTS=/build/new-native-inputs \
+  TULPAR_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/tulpar-sandbox \
   /tmp/native-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-native-aarch64
 ```
 
 Repeat for x86_64 with its kernel/sandbox and a new short state path; select
-`VINIX_AMD64_LIMINE_DIR` when needed by the hardware-platform controller.
+`TULPAR_AMD64_LIMINE_DIR` when needed by the hardware-platform controller.
 
 This qualifies native stream/application maintenance, with headless Software
 metadata inspection. Full graphical login/display interaction, public publisher

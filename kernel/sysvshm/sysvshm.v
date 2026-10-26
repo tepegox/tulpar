@@ -30,7 +30,7 @@ const shm_remap = 0o40000
 const shm_exec = 0o100000
 
 // Keep bogus requests from pinning all RAM.  This is deliberately a per-
-// segment limit; Vinix does not yet expose the Linux SHM_INFO tuning knobs.
+// segment limit; Tulpar does not yet expose the Linux SHM_INFO tuning knobs.
 const shm_segment_max = u64(1024 * 1024 * 1024)
 
 @[packed]

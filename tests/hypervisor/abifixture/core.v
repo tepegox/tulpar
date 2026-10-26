@@ -5,7 +5,7 @@ module abifixture
 
 @[export: 'main']
 pub fn run() i32 {
-	return if usize(C.VINIX_HV_GET_API_VERSION) != 0x48560000
-		|| usize(C.VINIX_HV_CREATE_VM) != 0x48560001
-		|| usize(C.VINIX_HV_RUN) != 0x48560006 { i32(1) } else { i32(0) }
+	return if usize(C.TULPAR_HV_GET_API_VERSION) != 0x48560000
+		|| usize(C.TULPAR_HV_CREATE_VM) != 0x48560001
+		|| usize(C.TULPAR_HV_RUN) != 0x48560006 { i32(1) } else { i32(0) }
 }

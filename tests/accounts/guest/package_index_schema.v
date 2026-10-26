@@ -30,7 +30,7 @@ fn qualify_package_index_case(mut t Test, index int) ! {
 	state := service.state()!
 	catalog := os.read_file(directory + '/catalog.json')!
 	history := os.read_file(directory + '/trust-history.json')!
-	configuration := os.read_file('/etc/vinix-packages/config.json')!
+	configuration := os.read_file('/etc/tulpar-packages/config.json')!
 	workspace := '/tmp/admin-repository'
 	text := os.read_file(workspace + '/index.json')!
 	original_signature := os.read_file(workspace + '/index.sig')!
@@ -48,14 +48,14 @@ fn qualify_package_index_case(mut t Test, index int) ! {
 	unsafe { bytes.free(); signature.free() }
 	// Exercise the staged service executable, then the enrollment writer.
 	t.say('PACKAGE INDEX case ' + index.str() + ' update')
-	result := run(['/usr/bin/vinix-package', 'update'], '', none, none)
+	result := run(['/usr/bin/tulpar-package', 'update'], '', none, none)
 	assert result.status == 1 && !result.output.contains('V panic:'), result.output
 	t.say('PACKAGE INDEX case ' + index.str() + ' enrollment')
 	mut refused := false
 	pkgcore.enroll_repository('', repository, true) or { refused = true }
 	assert refused
 	assert os.read_file(directory + '/catalog.json')! == catalog && os.read_file(directory + '/trust-history.json')! == history
-	assert os.read_file('/etc/vinix-packages/config.json')! == configuration && service.state()! == state
+	assert os.read_file('/etc/tulpar-packages/config.json')! == configuration && service.state()! == state
 	assert !os.exists(directory + '/refresh') && !os.exists(directory + '/enrollment')
 	t.say('PACKAGE INDEX case ' + index.str() + ' verify')
 	assert service.verify()! == state

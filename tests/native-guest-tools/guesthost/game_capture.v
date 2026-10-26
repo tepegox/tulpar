@@ -16,7 +16,7 @@ pub fn game_capture_interrupted() bool {
 
 pub fn capture_game(command []string, env map[string]string, state string, socket string, seconds int, interval int, screenshot fn (string, string) bool, inherit bool) !GameCapture {
 	if seconds <= 0 || interval <= 0 { return error('Guest capture intervals must be positive') }
-	mut log := os.create(state + '/vinix.log')!
+	mut log := os.create(state + '/tulpar.log')!
 	defer { log.close() }
 	unsafe { C.__atomic_store_n(&interrupted, i32(0), C.__ATOMIC_RELAXED) }
 	previous := unsafe { C.signal(C.SIGINT, voidptr(interrupt)) }
@@ -70,8 +70,8 @@ pub fn capture_game(command []string, env map[string]string, state string, socke
 			}
 			tail := transcript[if transcript.len > 131072 { transcript.len - 131072 } else { 0 }..].bytestr()
 			if failure == '' {
-				for marker in ['VINIX-DOTA2-PROBE-FAIL', 'VINIX-DOTA2-GAME-EXIT:',
-					'VINIX-DOTA2-GAME-GONE', 'KERNEL PANIC', 'FATAL EXCEPTION', 'uncaught target signal',
+				for marker in ['TULPAR-DOTA2-PROBE-FAIL', 'TULPAR-DOTA2-GAME-EXIT:',
+					'TULPAR-DOTA2-GAME-GONE', 'KERNEL PANIC', 'FATAL EXCEPTION', 'uncaught target signal',
 					'LLVM ERROR:', 'lwip: assertion'] {
 					if tail.contains(marker) {
 						failure = marker

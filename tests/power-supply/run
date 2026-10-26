@@ -10,7 +10,7 @@ set -eu
 repo=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
 . "$repo/build-support/find-v.sh"
 
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-power-supply.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-power-supply.XXXXXX")
 trap 'rm -rf "$work"' 0
 trap 'exit 129' HUP
 trap 'exit 130' INT

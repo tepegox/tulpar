@@ -9,7 +9,7 @@ fn test_size_types_match_the_native_pointer_width() {
 }
 
 fn test_missing_compiler_is_reported_before_probing() {
-	work := os.join_path(os.temp_dir(), 'vinix-musl-missing-cc-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-musl-missing-cc-${os.getpid()}')
 	os.mkdir_all(work + '/stage/lib')!
 	defer { os.rmdir_all(work) or {} }
 	mut loader := []u8{len: 32}

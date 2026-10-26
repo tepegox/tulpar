@@ -13,7 +13,7 @@ fn C.exit(int)
 fn C.memset(voidptr, int, usize) voidptr
 fn C.memcpy(voidptr, voidptr, usize) voidptr
 fn C.memcmp(voidptr, voidptr, usize) int
-fn C.vinix_linuxkpi_worker_set_nice(i32) int
+fn C.tulpar_linuxkpi_worker_set_nice(i32) int
 fn C.wph_historical_identity(i32) int
 fn C.wph_historical_irq(i32) int
 fn C.wph_set_preempt(u32, u32)
@@ -164,7 +164,7 @@ fn unchanged(success bool) bool {
 fn invoke(nice i32, expected int, initial_if bool, toggles u32, queries u32) {
 	expected_nice = int(nice)
 	capture()
-	check(C.vinix_linuxkpi_worker_set_nice(nice) == expected, 7)
+	check(C.tulpar_linuxkpi_worker_set_nice(nice) == expected, 7)
 	check(irq_enabled == initial_if && toggle_count == toggles && task_queries == queries && unchanged(expected == 0) && C.wph_get_preempt(u32(cpu_state.cpu_number)) == preempt_value, 8)
 	check(store_count == if expected == 0 { 2 } else { 0 }, 9)
 	check(reschedules == if expected == 0 { 1 } else { 0 }, 10)

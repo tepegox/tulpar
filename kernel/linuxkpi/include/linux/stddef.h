@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_STDDEF_H
-#define VINIX_LINUX_STDDEF_H
+#ifndef TULPAR_LINUX_STDDEF_H
+#define TULPAR_LINUX_STDDEF_H
 #include <stddef.h>
 #include <uapi/linux/stddef.h>
 

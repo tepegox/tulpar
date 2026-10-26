@@ -37,7 +37,7 @@ fn qualify(binary string, profile string, cache string) ! {
 	for family in ['kernel-cpu', 'kernel-job-control', 'kernel-sysvmsg', 'kernel-retention', 'elf-text', 'userland-demo', 'uname'] {
 		arches := if family in ['kernel-cpu', 'kernel-job-control', 'kernel-sysvmsg', 'uname'] { ['aarch64'] } else { ['aarch64', 'x86_64'] }
 		for arch in arches {
-			kernel := os.getenv_opt(if arch == 'aarch64' { 'VINIX_PROCESS_TEST_ARM_KERNEL' } else { 'VINIX_PROCESS_TEST_X86_KERNEL' }) or {
+			kernel := os.getenv_opt(if arch == 'aarch64' { 'TULPAR_PROCESS_TEST_ARM_KERNEL' } else { 'TULPAR_PROCESS_TEST_X86_KERNEL' }) or {
 				hosttest.root() + if arch == 'aarch64' { '/build-aarch64-kernel' } else { '/build-amd64-kernel' }
 			}
 			work := cache + '/' + profile + '-' + family + '-' + arch
@@ -80,7 +80,7 @@ fn qualify(binary string, profile string, cache string) ! {
 						if os.read_bytes(before)! != os.read_bytes(before + '-recipe')! { return error('Original recipe replay bytes differ: ' + before) }
 					}
 				}
-				if family == 'userland-demo' && os.read_file(work + '/stdout')! != 'Hello world\nHello from Alpine GCC on Vinix!\nHello from Alpine GCC on Vinix/amd64!\nUSERLAND DEMO V PASS\n' { return error('Host greeting differs') }
+				if family == 'userland-demo' && os.read_file(work + '/stdout')! != 'Hello world\nHello from Alpine GCC on Tulpar!\nHello from Alpine GCC on Tulpar/amd64!\nUSERLAND DEMO V PASS\n' { return error('Host greeting differs') }
 			}
 			for name in programs { elf(work + '/' + name, arch, name == 'rootfs/elf-pie')! }
 			println('Native ELF/control and original recipe replay PASS: ' + profile + ' ' + family + ' ' + arch)

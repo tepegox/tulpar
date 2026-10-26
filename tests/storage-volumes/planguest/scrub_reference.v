@@ -4,9 +4,9 @@ module planguest
 @[direct_array_access]
 fn scrub_reference_tool(manifest &char, report &char, state int, expected i32) {
 	mut actual := [4096]char{}; data_auto_tool(c'verify-data-scrub-reference', manifest, report, expected, &actual[0])
-	if expected == 1 { check(C.strstr(&actual[0], c'format=VINIXSR1') == unsafe { nil } && C.strstr(&actual[0], c'disk=') == unsafe { nil }, c'invalid reference binding emits no findings'); return }
+	if expected == 1 { check(C.strstr(&actual[0], c'format=TULPARSR1') == unsafe { nil } && C.strstr(&actual[0], c'disk=') == unsafe { nil }, c'invalid reference binding emits no findings'); return }
 	mut text := [4096]char{}
-	mut length := int(C.snprintf(&text[0], 4096, c'format=VINIXSR1 operation=verified-data-scrub-reference disks=2 mappings=3 matched=%d changed=%d algorithm=sha256 reference_sha256=a54001cd53e073d1214f5c2ed19a0d4f14c18f6408ac69a4c65a6cf75f4d3d0a report_sha256=%s\n', if state == 0 { 3 } else { 1 }, if state == 0 { 0 } else { 2 }, data_scrub_history_hash(state)))
+	mut length := int(C.snprintf(&text[0], 4096, c'format=TULPARSR1 operation=verified-data-scrub-reference disks=2 mappings=3 matched=%d changed=%d algorithm=sha256 reference_sha256=a54001cd53e073d1214f5c2ed19a0d4f14c18f6408ac69a4c65a6cf75f4d3d0a report_sha256=%s\n', if state == 0 { 3 } else { 1 }, if state == 0 { 0 } else { 2 }, data_scrub_history_hash(state)))
 	for row in 0 .. 3 {
 		if row == 0 || row == 2 { length += int(C.snprintf(unsafe { &text[length] }, usize(4096 - length), c'disk=%u disk_bytes=16777216 sector=512 identity=mbr:123456%02x\n', if row == 0 { u32(0) } else { u32(1) }, if row == 0 { u32(0x78) } else { u32(0x79) })) }
 		length += int(C.snprintf(unsafe { &text[length] }, usize(4096 - length), c'disk=%u slot=%u offset=%lu bytes=%lu readonly=%lu result=%s expected_sha256=%s actual_sha256=%s\n', if row == 2 { u32(1) } else { u32(0) }, if row == 0 { u32(2) } else if row == 1 { u32(5) } else { u32(9) }, if row == 1 { u64(2097152) } else { u64(1048576) }, if row == 1 { u64(12288) } else { u64(8192) }, if row == 1 { u64(1) } else { u64(0) }, if row == 1 || state == 0 { &char(c'match') } else { &char(c'changed') }, data_reference_digest(row, false), data_scrub_history_digest(row, state)))
@@ -52,18 +52,18 @@ fn scrub_reference_entry() i32 {
 		check(bad >= 0 && C.fstat(bad, &info) == 0 && C.pwrite(bad, &nul, 1, info.st_size - 2) == 1 && C.fsync(bad) == 0 && C.close(bad) == 0, c'persist malformed last history digest')
 		data_scrub_history_tool(data_scrub_history_path(1), c'/root/invalid-history.txt', 1, 2, 1); scrub_reference_tool(c'/root/manual-data.vhash', c'/root/invalid-history.txt', 2, 1)
 		copy_scrub_report(data_scrub_history_path(2), c'/root/invalid-history.txt'); bad = C.open(c'/root/invalid-history.txt', C.O_RDWR); mut digit := u8(`b`)
-		at := C.strlen(c'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=3 matched=1 changed=2 algorithm=sha256 reference_sha256=')
+		at := C.strlen(c'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=3 matched=1 changed=2 algorithm=sha256 reference_sha256=')
 		check(bad >= 0 && C.pwrite(bad, &digit, 1, i64(at)) == 1 && C.fsync(bad) == 0 && C.close(bad) == 0, c'persist valid incompatible history reference')
 		data_scrub_history_tool(data_scrub_history_path(1), c'/root/invalid-history.txt', 1, 2, 1); scrub_reference_tool(c'/root/manual-data.vhash', c'/root/invalid-history.txt', 2, 1); check(C.unlink(c'/root/invalid-history.txt') == 0, c'reclaim invalid history fixture')
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9'); readonly := status(c'/dev/mapper/vinix5'); held := C.open(c'/dev/mapper/vinix9', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9'); readonly := status(c'/dev/mapper/tulpar5'); held := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY)
 		check(held >= 0, c'hold history live mapping'); root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold history writer lock')
-		data_scrub_history_matrix(); scrub_reference_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/vinix2') && second == status(c'/dev/mapper/vinix9') && readonly == status(c'/dev/mapper/vinix5'), c'offline history preserves all live status under writer contention')
+		data_scrub_history_matrix(); scrub_reference_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/tulpar2') && second == status(c'/dev/mapper/tulpar9') && readonly == status(c'/dev/mapper/tulpar5'), c'offline history preserves all live status under writer contention')
 		check(C.pread(held, &change[0], 4096, 0) == 4096 && C.close(held) == 0, c'read held history mapping'); for value in change { check(value == 0x9c, c'preserved history mapping content') }
-		scrub_reference_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/vinix/volumes.vset'); check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'remove invalid history boot plan')
+		scrub_reference_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/tulpar/volumes.vset'); check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'remove invalid history boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600)); check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist history phase')
 		C.printf(c'PLAN SCRUB REFERENCE PASSED: full checksum reference binding, exact native geometry, clean/changed findings and bounded lifetimes\n')
 	} else { check(C.close(phase) == 0, c'close history phase'); data_auto_matrix(other, parent, false); data_scrub_view_matrix(); data_scrub_history_matrix(); scrub_reference_matrix(); C.printf(c'PLAN SCRUB REFERENCE REORDERED BOOT PRESERVED\n') }
 	for file in [&char(c'/root/data-output'), &char(c'/root/scrub-output'), &char(c'/root/auto-data-output')]! { if C.unlink(file) != 0 { check(C.errno == C.ENOENT, c'reclaim history captures') } }
-	for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist history artifacts and boot phase') }
+	for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist history artifacts and boot phase') }
 	C.printf(c'PLAN DONE\n'); for { C.pause() }; return 0
 }

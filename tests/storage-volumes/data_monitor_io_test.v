@@ -142,7 +142,7 @@ fn C.dup(i32) i32
 fn scrub_io_expected(manifest &DataManifest, mask int) string {
 	changed := int(mask & 1 != 0) + int(mask & 2 != 0)
 	mut bytes := [11392]u8{}; size := encode_data_manifest(manifest, &bytes[0]); fingerprint := hex.encode(sha256.sum(bytes[..size]))
-	mut report := 'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=2 matched=${2 - changed} changed=${changed} algorithm=sha256 reference_sha256=${fingerprint}\n'
+	mut report := 'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=2 matched=${2 - changed} changed=${changed} algorithm=sha256 reference_sha256=${fingerprint}\n'
 	for disk in 0 .. 2 {
 		mut data := []u8{len: 73728, init: data_pattern(disk, u64(index) + 8192)}
 		if mask & (1 << disk) != 0 { data[0] ^= 1; data[65536] ^= 1 }
@@ -225,7 +225,7 @@ fn monitor_mock_sleep(remaining u32) u32 {
 }
 fn monitor_io_expected(manifest &DataManifest, masks []int) string {
 	mut result := ''; mut changed_samples := 0
-	for sample, mask in masks { if mask != 0 { changed_samples++ }; result += 'format=VINIXDM1 operation=monitored-data sample=${sample + 1} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\n' + scrub_io_expected(manifest, mask) }
+	for sample, mask in masks { if mask != 0 { changed_samples++ }; result += 'format=TULPARDM1 operation=monitored-data sample=${sample + 1} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\n' + scrub_io_expected(manifest, mask) }
 	return result
 }
 fn monitor_io_check(path string, masks [4]int, mode int, physical_mode int, reader_mode int, count u64, expected i32) string {
@@ -237,7 +237,7 @@ fn monitor_io_check(path string, masks [4]int, mode int, physical_mode int, read
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }; return text
 }
 fn test_monitor_real_stream_complete_histories_retries_source_replacement_and_session_owners() {
-	work := os.join_path(os.temp_dir(), 'vinix-data-monitor-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/reference'
+	work := os.join_path(os.temp_dir(), 'tulpar-data-monitor-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }; path := work + '/reference'
 	mut manifest := DataManifest{}; mut devices := DataDevices{}; data_io_fixture(mut manifest, mut devices); mut bytes := [11392]u8{}; size := encode_data_manifest(&manifest, &bytes[0]); os.write_file_array(path, bytes[..size])!; os.chmod(path, 0o644)!
 	for history in 0 .. 64 { masks := [history & 3, (history >> 2) & 3, (history >> 4) & 3, 0]!; expected := if history == 0 { i32(0) } else { i32(2) }
 		for retry in [0, 1] { text := monitor_io_check(path, masks, 0, retry, retry, 3, expected); assert text == monitor_io_expected(&manifest, masks[..3]) && data_io.opened == 2 && data_io.closed == 2 && data_monitor_io.discoveries == 2 && data_io.statuses == [10, 10]! && data_monitor_io.sleeps == 2 && data_io.delivered == [u64(73728 * 3), u64(73728 * 3)]! }
@@ -245,13 +245,13 @@ fn test_monitor_real_stream_complete_histories_retries_source_replacement_and_se
 	masks := [0, 3, 0, 0]!; assert monitor_io_check(path, masks, 30, 0, 0, 3, 2) == monitor_io_expected(&manifest, masks[..3]) && data_monitor_io.sleeps == 3
 	assert monitor_io_check(path, masks, 21, 0, 0, 3, 2) == monitor_io_expected(&manifest, masks[..3]) && os.read_file(path)! == 'invalid replacement reference'; os.write_file_array(path, bytes[..size])!
 	mut owner := PlanEdit{}; assert open_plan_edit(path.str, mut owner, true); assert monitor_io_check(path, masks, 0, 0, 0, 3, 2) == monitor_io_expected(&manifest, masks[..3]); close_plan_edit(mut owner)
-	for mode in [7, 8, 9, 14, 28] { text := monitor_io_check(path, [3, 0, 0, 0]!, mode, 0, 0, 3, 1); if mode !in [8, 9] { assert !text.contains('format=VINIXDM1') }; assert os.read_bytes(path)! == bytes[..size] }
-	for physical_mode in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20] { text := monitor_io_check(path, [0, 0, 0, 0]!, 0, physical_mode, 0, 3, 1); assert !text.contains('format=VINIXDM1') }
-	for mode in 22 .. 30 { if mode == 28 { continue }; text := monitor_io_check(path, [3, 0, 0, 0]!, mode, 0, 0, if mode == 29 { u64(0) } else { u64(3) }, 1); assert text.starts_with(monitor_io_expected(&manifest, [3])) && text.count('format=VINIXDM1') == 1 }
-	for mode in 2 .. 9 { text := monitor_io_check(path, [0, 0, 0, 0]!, 0, 0, mode, 3, 1); assert data_monitor_io.discoveries == 0 && data_io.opened == 0 && !text.contains('format=VINIXDM1') }
+	for mode in [7, 8, 9, 14, 28] { text := monitor_io_check(path, [3, 0, 0, 0]!, mode, 0, 0, 3, 1); if mode !in [8, 9] { assert !text.contains('format=TULPARDM1') }; assert os.read_bytes(path)! == bytes[..size] }
+	for physical_mode in [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20] { text := monitor_io_check(path, [0, 0, 0, 0]!, 0, physical_mode, 0, 3, 1); assert !text.contains('format=TULPARDM1') }
+	for mode in 22 .. 30 { if mode == 28 { continue }; text := monitor_io_check(path, [3, 0, 0, 0]!, mode, 0, 0, if mode == 29 { u64(0) } else { u64(3) }, 1); assert text.starts_with(monitor_io_expected(&manifest, [3])) && text.count('format=TULPARDM1') == 1 }
+	for mode in 2 .. 9 { text := monitor_io_check(path, [0, 0, 0, 0]!, 0, 0, mode, 3, 1); assert data_monitor_io.discoveries == 0 && data_io.opened == 0 && !text.contains('format=TULPARDM1') }
 	for input in [work, work + '/missing'] { monitor_io_check(input, [0, 0, 0, 0]!, 0, 0, 0, 3, 1); assert data_monitor_io.discoveries == 0 }
 	os.symlink(path, work + '/link')!; assert C.mkfifo((work + '/fifo').str, 0o600) == 0; for input in [work + '/link', work + '/fifo'] { monitor_io_check(input, [0, 0, 0, 0]!, 0, 0, 0, 3, 1); assert data_monitor_io.discoveries == 0 }
 	for at in 0 .. size { mut bad := bytes; bad[at] ^= 1; os.write_file_array(path, bad[..size])!; monitor_io_check(path, [0, 0, 0, 0]!, 0, 0, 0, 3, 1); assert data_monitor_io.discoveries == 0 }; os.write_file_array(path, bytes[..size])!
-	text := monitor_io_check(path, [0, 0, 0, 0]!, 0, 0, 0, 512, 0); assert text.count('format=VINIXDM1') == 512 && data_monitor_io.discoveries == 2 && data_io.opened == 2
+	text := monitor_io_check(path, [0, 0, 0, 0]!, 0, 0, 0, 512, 0); assert text.count('format=TULPARDM1') == 512 && data_monitor_io.discoveries == 2 && data_io.opened == 2
 	child := C.fork(); assert child >= 0; if child == 0 { fd := C.open(c'/dev/null', C.O_RDONLY); if fd < 0 || C.dup2(fd, 1) != 1 { C._exit(3) }; C.close(fd); data_io = DataIO{}; data_monitor_io = DataMonitorIO{active: true, masks: [3, 0, 0, 0]!}; result := monitor_manifest_data(path.str, 0, 3); C._exit(if result == 1 && data_io.opened == data_io.closed && data_monitor_io.files_opened == data_monitor_io.files_closed { 0 } else { 5 }) }; mut code := i32(-1); assert C.waitpid(child, &code, 0) == child && code == 0
 }

@@ -118,7 +118,7 @@ pub fn pf_handler(gpr_state &cpulocal.GPRState) ? {
 		if addr < higher_half && gpr_state.cs & 3 == 0 && gpr_state.err & pf_instruction == 0
 			&& gpr_state.rflags & rflags_ac == 0 && cpu.read_cr4() & cr4_smap != 0 {
 			if !memory.user_guard_auditing() {
-				C.kprintf(c'user-access: the kernel %s user address 0x%llx directly, at pc 0x%llx; vinix.user_access=audit reports this and carries on\n',
+				C.kprintf(c'user-access: the kernel %s user address 0x%llx directly, at pc 0x%llx; tulpar.user_access=audit reports this and carries on\n',
 					if gpr_state.err & pf_write != 0 { c'wrote' } else { c'read' }, addr,
 					gpr_state.rip)
 				return none

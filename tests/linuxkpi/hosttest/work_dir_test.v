@@ -4,7 +4,7 @@ module hosttest
 import os
 
 fn test_work_dir_kept_unix_literal_paths_and_retirement() {
-	work := work_dir('', 'vinix-work-dir-test-') or { panic(err) }
+	work := work_dir('', 'tulpar-work-dir-test-') or { panic(err) }
 	defer { remove_work_dir(work) or { panic(err) } }
 	output := work + '/literal\\parent/new\\output'
 	assert work_dir(output, 'unused-') or { panic(err) } == module_resolve(output) or { panic(err) }
@@ -28,7 +28,7 @@ fn test_work_dir_kept_unix_literal_paths_and_retirement() {
 }
 
 fn test_work_dir_resolves_links_before_parent_components() {
-	work := work_dir('', 'vinix-work-dir-test-') or { panic(err) }
+	work := work_dir('', 'tulpar-work-dir-test-') or { panic(err) }
 	defer { remove_work_dir(work) or { panic(err) } }
 	os.mkdir(work + '/target') or { panic(err) }
 	os.mkdir(work + '/target/inside') or { panic(err) }
@@ -40,7 +40,7 @@ fn test_work_dir_resolves_links_before_parent_components() {
 }
 
 fn test_work_dir_existing_output_remains_untouched() {
-	work := work_dir('', 'vinix-work-dir-test-') or { panic(err) }
+	work := work_dir('', 'tulpar-work-dir-test-') or { panic(err) }
 	defer { remove_work_dir(work) or { panic(err) } }
 	output := work + '/existing\\output'
 	os.write_file(output, 'retained') or { panic(err) }
@@ -53,14 +53,14 @@ fn test_work_dir_existing_output_remains_untouched() {
 }
 
 fn test_work_dir_temporary_prefix_preserves_literal_backslashes() {
-	work := work_dir('', 'vinix-work\\literal-') or { panic(err) }
+	work := work_dir('', 'tulpar-work\\literal-') or { panic(err) }
 	defer { remove_work_dir(work) or { panic(err) } }
-	assert work.all_after_last('/').starts_with('vinix-work\\literal-')
+	assert work.all_after_last('/').starts_with('tulpar-work\\literal-')
 	os.write_file(work + '/literal\\child', 'scratch') or { panic(err) }
 }
 
 fn test_work_dir_temporary_prefix_rejects_embedded_null() {
-	work_dir('', 'vinix-invalid\x00prefix-') or {
+	work_dir('', 'tulpar-invalid\x00prefix-') or {
 		assert err.msg() == 'embedded null byte'
 		return
 	}
@@ -68,7 +68,7 @@ fn test_work_dir_temporary_prefix_rejects_embedded_null() {
 }
 
 fn test_work_dir_honors_configured_scratch_volume_and_private_permissions() {
-	work := work_dir('', 'vinix-temp-parent-') or { panic(err) }
+	work := work_dir('', 'tulpar-temp-parent-') or { panic(err) }
 	defer { remove_work_dir(work) or { panic(err) } }
 	parent := work + '/literal\\scratch'
 	os.mkdir(parent) or { panic(err) }

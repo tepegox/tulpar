@@ -3,7 +3,7 @@
 @[translated]
 module waitbitfixture
 #include "linuxkpi_wait_bit_fixture_v_contract.h"
-struct C.task_struct { __state u32 vinix_thread voidptr }
+struct C.task_struct { __state u32 tulpar_thread voidptr }
 struct C.completion {}
 struct C.wait_queue_head {}
 struct C.wait_queue_entry {}
@@ -12,21 +12,21 @@ struct C.wait_bit_key { flags voidptr bit_nr i32 }
 struct C.pthread_t {}
 type BitThread = fn (voidptr) voidptr
 type BitAction = fn (&C.wait_bit_key, i32) i32
-fn C.vinix_linuxkpi_fixture_bit_thread(voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_bit_action_error(&C.wait_bit_key, i32) i32
-fn C.vinix_linuxkpi_fixture_bit_action_clear(&C.wait_bit_key, i32) i32
+fn C.tulpar_linuxkpi_fixture_bit_thread(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_bit_action_error(&C.wait_bit_key, i32) i32
+fn C.tulpar_linuxkpi_fixture_bit_action_clear(&C.wait_bit_key, i32) i32
 fn C.pthread_create(voidptr, voidptr, BitThread, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
 fn C.get_task_struct(&C.task_struct) &C.task_struct
 fn C.put_task_struct(&C.task_struct)
 fn C.task_is_running(&C.task_struct) bool
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_task_queued(voidptr) bool
-fn C.vinix_linuxkpi_test_task_signal(voidptr, u64)
-fn C.vinix_linuxkpi_test_alloc_oom(i32)
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_task_queued(voidptr) bool
+fn C.tulpar_linuxkpi_test_task_signal(voidptr, u64)
+fn C.tulpar_linuxkpi_test_alloc_oom(i32)
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
 fn C.init_completion(&C.completion)
 fn C.complete(&C.completion)
 fn C.complete_all(&C.completion)
@@ -107,7 +107,7 @@ mut:
  initialized bool
  started bool
 }
-@[export: 'vinix_linuxkpi_fixture_bit_thread']
+@[export: 'tulpar_linuxkpi_fixture_bit_thread']
 pub fn worker(argument voidptr) voidptr {
  unsafe {
   mut test := &BitTest(argument)
@@ -139,8 +139,8 @@ pub fn worker(argument voidptr) voidptr {
    C.wait_var_event(test.var, C.READ_ONCE(*test.ready))
   }
   if test.value == 0 && test.payload != nil && C.READ_ONCE(*test.payload) != 42 { test.result = -C.EIO }
-  C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, 0)
-  if !C.task_is_running(C.current) || !C.vinix_linuxkpi_may_sleep() { test.result = -C.EIO }
+  C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, 0)
+  if !C.task_is_running(C.current) || !C.tulpar_linuxkpi_may_sleep() { test.result = -C.EIO }
   C.complete(&test.done)
   C.pthread_exit(nil)
   return nil
@@ -152,7 +152,7 @@ fn start(test &BitTest, operation Operation, word &uint, bit i32, state u32, var
   C.init_completion(&test.entered); C.init_completion(&test.acquired)
   C.init_completion(&test.release); C.init_completion(&test.done)
   test.initialized = true
-  if C.pthread_create(&test.thread, nil, C.vinix_linuxkpi_fixture_bit_thread, test) != 0 { return -C.ENOMEM }
+  if C.pthread_create(&test.thread, nil, C.tulpar_linuxkpi_fixture_bit_thread, test) != 0 { return -C.ENOMEM }
   test.started = true
   return if C.wait_for_completion_timeout(&test.entered, 500) != 0 { i32(0) } else { -C.EIO }
  }
@@ -160,7 +160,7 @@ fn start(test &BitTest, operation Operation, word &uint, bit i32, state u32, var
 fn parked(test &BitTest) i32 {
  unsafe {
   deadline := C.jiffies + 500
-  for C.__atomic_load_n(&test.task.__state, 2) != test.state || C.vinix_linuxkpi_task_queued(test.task.vinix_thread) {
+  for C.__atomic_load_n(&test.task.__state, 2) != test.state || C.tulpar_linuxkpi_task_queued(test.task.tulpar_thread) {
    if C.time_after_eq(C.jiffies, deadline) { return -C.EIO }
    C.msleep(1)
   }
@@ -193,12 +193,12 @@ fn keyed_body(tests &BitTest, words &uint, wrong_bit i32, collided u32, payload 
      start(&tests[2], .clear, &words[collided], 0, C.TASK_UNINTERRUPTIBLE, nil, nil, payload) != 0 { return -C.EIO }
   for i in 0 .. 3 { if parked(&tests[i]) != 0 { return -C.EIO } }
   C.WRITE_ONCE(*payload, u32(42))
-  C.vinix_linuxkpi_test_alloc_oom(0)
-  flags := C.vinix_linuxkpi_irq_save()
+  C.tulpar_linuxkpi_test_alloc_oom(0)
+  flags := C.tulpar_linuxkpi_irq_save()
   C.clear_and_wake_up_bit(0, words)
-  C.vinix_linuxkpi_irq_restore(flags)
+  C.tulpar_linuxkpi_irq_restore(flags)
   unexpected := C.kmalloc(1, C.GFP_KERNEL)
-  C.vinix_linuxkpi_test_alloc_oom(-1)
+  C.tulpar_linuxkpi_test_alloc_oom(-1)
   if unexpected != nil { C.kfree(unexpected); result = -C.EIO }
   if C.wait_for_completion_timeout(&tests[0].done, 500) == 0 || C.completion_done(&tests[1].done) ||
      C.completion_done(&tests[2].done) || !C.test_bit(wrong_bit, words) || !C.test_bit(0, &words[collided]) { result = -C.EIO }
@@ -280,7 +280,7 @@ fn interrupt() i32 {
   mut result := start(&test, .clear, &word, 0, C.TASK_INTERRUPTIBLE, nil, nil, nil)
   if result == 0 {
    if parked(&test) != 0 { result = -C.EIO }
-   C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, u64(1) << 14)
+   C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, u64(1) << 14)
    if C.wait_for_completion_timeout(&test.done, 500) == 0 || test.value != -C.EINTR || !C.test_bit(0, &word) { result = -C.EIO }
   }
   C.clear_and_wake_up_bit(0, &word)
@@ -296,14 +296,14 @@ fn variable_body(test &BitTest, killable bool, address voidptr, allocated &bool,
   if started != 0 { return started }
   if parked(test) != 0 { return -C.EIO }
   if killable {
-   C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, u64(1) << 14)
+   C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, u64(1) << 14)
    if parked(test) != 0 || C.completion_done(&test.done) { result = -C.EIO }
-   C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, u64(1) << 8)
+   C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, u64(1) << 8)
    if C.wait_for_completion_timeout(&test.done, 500) == 0 || test.value != -C.ERESTARTSYS { result = -C.EIO }
   } else {
    if *allocated { C.kfree(address); *allocated = false }
    C.WRITE_ONCE(*payload, u32(42)); C.WRITE_ONCE(*ready, u32(1)); C.smp_mb()
-   flags := C.vinix_linuxkpi_irq_save(); C.wake_up_var(address); C.vinix_linuxkpi_irq_restore(flags)
+   flags := C.tulpar_linuxkpi_irq_save(); C.wake_up_var(address); C.tulpar_linuxkpi_irq_restore(flags)
    if C.wait_for_completion_timeout(&test.done, 500) == 0 { result = -C.EIO }
   }
   return result
@@ -322,9 +322,9 @@ fn variable(killable bool, inaccessible bool) i32 {
   return result
  }
 }
-@[export: 'vinix_linuxkpi_fixture_bit_action_error']
+@[export: 'tulpar_linuxkpi_fixture_bit_action_error']
 pub fn action_error(key &C.wait_bit_key, mode i32) i32 { return -C.ENOSPC }
-@[export: 'vinix_linuxkpi_fixture_bit_action_clear']
+@[export: 'tulpar_linuxkpi_fixture_bit_action_clear']
 pub fn action_clear(key &C.wait_bit_key, mode i32) i32 { C.clear_bit_unlock(key.bit_nr, key.flags); return -C.EINTR }
 fn repeated() i32 {
  unsafe {
@@ -332,27 +332,27 @@ fn repeated() i32 {
   for _ in 0 .. 256 {
    C.set_bit(0, &word)
    if C.wait_on_bit_timeout(&word, 0, C.TASK_UNINTERRUPTIBLE, 0) != -C.EAGAIN ||
-      C.wait_on_bit_action(&word, 0, C.vinix_linuxkpi_fixture_bit_action_error, C.TASK_UNINTERRUPTIBLE) != -C.ENOSPC { result = -C.EIO }
+      C.wait_on_bit_action(&word, 0, C.tulpar_linuxkpi_fixture_bit_action_error, C.TASK_UNINTERRUPTIBLE) != -C.ENOSPC { result = -C.EIO }
    started := C.jiffies
    if C.wait_on_bit_timeout(&word, 0, C.TASK_UNINTERRUPTIBLE, 1) != -C.EAGAIN || C.time_before(C.jiffies, started + 1) { result = -C.EIO }
-   if C.wait_on_bit_lock_action(&word, 0, C.vinix_linuxkpi_fixture_bit_action_clear, C.TASK_INTERRUPTIBLE) != 0 || !C.test_bit(0, &word) { result = -C.EIO }
+   if C.wait_on_bit_lock_action(&word, 0, C.tulpar_linuxkpi_fixture_bit_action_clear, C.TASK_INTERRUPTIBLE) != 0 || !C.test_bit(0, &word) { result = -C.EIO }
    C.clear_and_wake_up_bit(0, &word)
    if C.wait_on_bit_timeout(&word, 0, C.TASK_UNINTERRUPTIBLE, 0) != 0 ||
       C.wait_var_event_timeout(&ready, C.READ_ONCE(ready), 0) != 1 || C.wait_var_event_timeout(&ready, u32(0), 1) != 0 { result = -C.EIO }
    if C.waitqueue_active(C.bit_waitqueue(&word, 0)) || C.waitqueue_active(C.__var_waitqueue(&ready)) { result = -C.EIO }
   }
-  C.vinix_linuxkpi_test_task_signal(C.current.vinix_thread, u64(1) << 8)
+  C.tulpar_linuxkpi_test_task_signal(C.current.tulpar_thread, u64(1) << 8)
   if C.wait_var_event_killable(&ready, C.READ_ONCE(ready)) != 0 ||
      C.__wait_var_event_killable(&ready, C.READ_ONCE(ready)) != 0 ||
      C.__wait_var_event_interruptible(&ready, C.READ_ONCE(ready)) != 0 ||
      C.wait_on_bit(&word, 0, C.TASK_INTERRUPTIBLE) != 0 { result = -C.EIO }
-  C.vinix_linuxkpi_test_task_signal(C.current.vinix_thread, 0)
+  C.tulpar_linuxkpi_test_task_signal(C.current.tulpar_thread, 0)
   if !C.task_is_running(C.current) || C.waitqueue_active(C.__var_waitqueue(&ready)) { result = -C.EIO }
   return result
  }
 }
 fn trace(message &char) { if C.VKFW_TRACE != 0 { C.kprintf(c'%s', message) } }
-@[export: 'vinix_linuxkpi_wait_bit_native_selftest']
+@[export: 'tulpar_linuxkpi_wait_bit_native_selftest']
 pub fn selftest() i32 {
  mut result := i32(0)
  trace(c'linuxkpi: wait-bit trace: repeated begin\n')

@@ -94,14 +94,14 @@ fn test_real_qemu_lifecycle_isolated_state_offline_snapshots_and_locking() {
 	}
 	image_tool := os.find_abs_path_of_executable('qemu-img')!
 	io_tool := os.find_abs_path_of_executable('qemu-io')!
-	firmware_dir := os.getenv_opt('VINIX_VM_TEST_FIRMWARE') or {
+	firmware_dir := os.getenv_opt('TULPAR_VM_TEST_FIRMWARE') or {
 		if os.is_dir('/opt/homebrew/share/qemu') {
 			'/opt/homebrew/share/qemu'
 		} else {
 			'/usr/share/qemu'
 		}
 	}
-	root := '/tmp/vinix-vm-test-${os.getpid()}'
+	root := '/tmp/tulpar-vm-test-${os.getpid()}'
 	devcore.fresh_directory(root)!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/raw.img', '\x00'.repeat(1024 * 1024))!
@@ -123,9 +123,9 @@ fn test_real_qemu_lifecycle_isolated_state_offline_snapshots_and_locking() {
 	assert (os.stat(state)!.mode & 0o077) == 0
 	// Compile the real entry point so the run lock is held by another process.
 	build_result := sourcecommand.capture([@VEXE, '-enable-globals', '-gc', 'none', '-cc', 'cc',
-		'-o', root + '/vinix-vm', os.dir(os.dir(@FILE)) + '/vm.v'], os.environ(), 120, 65536, unsafe { nil })!
+		'-o', root + '/tulpar-vm', os.dir(os.dir(@FILE)) + '/vm.v'], os.environ(), 120, 65536, unsafe { nil })!
 	assert build_result.status == 0, build_result.stderr
-	mut owner := os.new_process(root + '/vinix-vm')
+	mut owner := os.new_process(root + '/tulpar-vm')
 	owner.set_args(['start', state])
 	owner.set_redirect_stdio()
 	owner.run()
@@ -150,13 +150,13 @@ fn test_real_qemu_lifecycle_isolated_state_offline_snapshots_and_locking() {
 	control('pause', state)!
 	assert !control('status', state)!.as_map()['running']!.bool()
 	for command in [['start', state], ['snapshot-create', state, 'live'], ['snapshot-recover', state]] {
-		refused := sourcecommand.capture([root + '/vinix-vm', ...command], os.environ(), 10, 4096, unsafe { nil })!
+		refused := sourcecommand.capture([root + '/tulpar-vm', ...command], os.environ(), 10, 4096, unsafe { nil })!
 		assert refused.status != 0 && refused.stderr.contains('running'), refused.stderr
 	}
 	control('stop', state)!
 	owner.wait()
 	assert owner.code == 0, owner.stdout_read() + owner.stderr_read()
-	check_orphaned_vm(root + '/vinix-vm', state, image_tool)!
+	check_orphaned_vm(root + '/tulpar-vm', state, image_tool)!
 	snapshot('snapshot-create', state, 'baseline')!
 	baseline_vars := devcore.file_hash(state + '/vars.fd')!
 	write := sourcecommand.capture([io_tool, '-f', 'qcow2', '-c', 'write -P 0x56 0 4096',

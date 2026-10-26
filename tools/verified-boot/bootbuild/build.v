@@ -47,7 +47,7 @@ fn build_bundle(args string) ! {
 	if truth(pe[1])! { invalid('loader input must be unsigned: enrollment must happen before signing')! }
 	method(attribute(output, 'parent')!, 'mkdir', [], {'parents': v(ah.Value(true)), 'exist_ok': v(ah.Value(true))})!
 	manager := invoke('tempfile.TemporaryDirectory', [], {
-		'prefix': v(ah.Value('.vinix-verified-'))
+		'prefix': v(ah.Value('.tulpar-verified-'))
 		'dir': o(attribute(output, 'parent')!)
 	})!
 	temporary := enter(manager)!
@@ -71,8 +71,8 @@ fn build_body(args string, output string, temporary string, loader_data string, 
 	efi := join(staging, 'EFI/BOOT')!
 	method(boot, 'mkdir', [], {})!
 	method(efi, 'mkdir', [], {'parents': v(ah.Value(true))})!
-	call('shutil.copyfile', o(attribute(args, 'kernel')!), o(join(boot, 'vinix')!))!
-	call('check_kernel', o(join(boot, 'vinix')!), o(attribute(args, 'arch')!))!
+	call('shutil.copyfile', o(attribute(args, 'kernel')!), o(join(boot, 'tulpar')!))!
+	call('check_kernel', o(join(boot, 'tulpar')!), o(attribute(args, 'arch')!))!
 	entries := iterator(call('enumerate', o(attribute(args, 'initramfs')!))!)!
 	for {
 		entry := next(entries)!
@@ -90,7 +90,7 @@ fn build_body(args string, output string, temporary string, loader_data string, 
 		dtb_hash = call('digest', o(join(boot, 'platform.dtb')!))!
 	}
 	config := join(boot, 'limine.conf')!
-	kernel_hash := call('digest', o(join(boot, 'vinix')!))!
+	kernel_hash := call('digest', o(join(boot, 'tulpar')!))!
 	module_hashes := call('builtins.list')!
 	indices := iterator(call('range', o(call('len', o(attribute(args, 'initramfs')!))!))!)!
 	for {

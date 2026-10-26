@@ -102,7 +102,7 @@ fn test_native_text_reader_negotiates_versions_and_closes_on_eof() {
 	read_window_event_for(2) or { mismatch = true; unsafe { err.free() } }
 	assert mismatch
 	unsafe { legacy.free(); legacy_line.free() }
-	assert os.setenv('VINIX_WINDOW_PROTOCOL', '1', true) == 0
+	assert os.setenv('TULPAR_WINDOW_PROTOCOL', '1', true) == 0
 	frame := input_fixture()
 	mut refused := false
 	publish_window_frame(frame) or { refused = true; unsafe { err.free() } }

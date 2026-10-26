@@ -2,17 +2,17 @@
 @[has_globals]
 module memory
 
-fn C.vinix_guard_probe_read(addr u64) u64
-fn C.vinix_guard_probe_write(addr u64) u64
-fn C.vinix_guard_probe_stack(base u64) u64
-fn C.vinix_guard_read_fault()
-fn C.vinix_guard_write_fault()
-fn C.vinix_guard_stack_fault()
-fn C.vinix_guard_read_resume()
-fn C.vinix_guard_write_resume()
-fn C.vinix_guard_stack_resume()
-fn C.vinix_stack_guard_message(message charptr)
-fn C.vinix_stack_guard_diagnostic(sp u64, pc u64, address u64)
+fn C.tulpar_guard_probe_read(addr u64) u64
+fn C.tulpar_guard_probe_write(addr u64) u64
+fn C.tulpar_guard_probe_stack(base u64) u64
+fn C.tulpar_guard_read_fault()
+fn C.tulpar_guard_write_fault()
+fn C.tulpar_guard_stack_fault()
+fn C.tulpar_guard_read_resume()
+fn C.tulpar_guard_write_resume()
+fn C.tulpar_guard_stack_resume()
+fn C.tulpar_stack_guard_message(message charptr)
+fn C.tulpar_stack_guard_diagnostic(sp u64, pc u64, address u64)
 
 __global (
 	stack_probe_address u64
@@ -27,7 +27,7 @@ __global (
 pub fn stack_guard_probe_fixup(pc u64, addr u64) u64 {
 	$if kernel_stack_selftest ? {
 		$if kernel_stack_overflowtest ? {
-			if pc == u64(voidptr(C.vinix_guard_stack_fault)) { return 0 }
+			if pc == u64(voidptr(C.tulpar_guard_stack_fault)) { return 0 }
 		}
 		if pc == stack_probe_pc && addr == stack_probe_address && stack_probe_pc != 0 {
 			stack_probe_seen = true
@@ -45,21 +45,21 @@ fn guard_probe(addr u64, mode int) {
 	stack_probe_seen = false
 	stack_probe_address = addr
 	stack_probe_pc = match mode {
-		0 { u64(voidptr(C.vinix_guard_read_fault)) }
-		1 { u64(voidptr(C.vinix_guard_write_fault)) }
-		else { u64(voidptr(C.vinix_guard_stack_fault)) }
+		0 { u64(voidptr(C.tulpar_guard_read_fault)) }
+		1 { u64(voidptr(C.tulpar_guard_write_fault)) }
+		else { u64(voidptr(C.tulpar_guard_stack_fault)) }
 	}
 	stack_probe_resume = match mode {
-		0 { u64(voidptr(C.vinix_guard_read_resume)) }
-		1 { u64(voidptr(C.vinix_guard_write_resume)) }
-		else { u64(voidptr(C.vinix_guard_stack_resume)) }
+		0 { u64(voidptr(C.tulpar_guard_read_resume)) }
+		1 { u64(voidptr(C.tulpar_guard_write_resume)) }
+		else { u64(voidptr(C.tulpar_guard_stack_resume)) }
 	}
 	result := match mode {
-		0 { C.vinix_guard_probe_read(addr) }
-		1 { C.vinix_guard_probe_write(addr) }
+		0 { C.tulpar_guard_probe_read(addr) }
+		1 { C.tulpar_guard_probe_write(addr) }
 		else {
-			$if aarch64 ? { C.vinix_guard_probe_stack(addr + 16) }
-			$else { C.vinix_guard_probe_stack(addr + 8) }
+			$if aarch64 ? { C.tulpar_guard_probe_stack(addr + 16) }
+			$else { C.tulpar_guard_probe_stack(addr + 8) }
 		}
 	}
 	stack_probe_pc = 0
@@ -114,6 +114,6 @@ pub fn kernel_stack_selftest() {
 			stack_test_require(free_bytes() == baseline)
 		}
 		stack_test_require(kernel_stack_alloc(0) == unsafe { nil })
-		C.vinix_stack_guard_message(c'STACK-GUARD PASS actual read/write faults, stack exhaustion, x15/x16/x17 preservation, supervisor NX mappings, rollback and 64 page-return cycles\n')
+		C.tulpar_stack_guard_message(c'STACK-GUARD PASS actual read/write faults, stack exhaustion, x15/x16/x17 preservation, supervisor NX mappings, rollback and 64 page-return cycles\n')
 	}
 }

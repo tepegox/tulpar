@@ -148,7 +148,7 @@ pub fn publish(plan Plan) ! {
 		install(build + '/musl-' + plan.version + '/include/malloc.h', plan.options.stage + '/usr/include/malloc.h', 0o644)!
 		replace_link(plan.options.stage + '/usr/lib/libc.so', '../../lib/ld-musl-' + plan.options.arch + '.so.1')!
 	}
-	install(published, plan.options.stage + '/usr/share/vinix/musl-build.json', 0o644)!
+	install(published, plan.options.stage + '/usr/share/tulpar/musl-build.json', 0o644)!
 	install(build + '/musl-' + plan.version + '/COPYRIGHT', plan.options.stage + '/usr/share/licenses/musl/COPYRIGHT', 0o644)!
-	println('    staged Vinix musl ' + plan.version + ' (' + plan.options.arch + ', retention=' + plan.retain + ', ' + plan.key[..12] + ')')
+	println('    staged Tulpar musl ' + plan.version + ' (' + plan.options.arch + ', retention=' + plan.retain + ', ' + plan.key[..12] + ')')
 }

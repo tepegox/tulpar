@@ -12,7 +12,7 @@ __global (
 	linuxkpi_iowait_counts [256]u32
 )
 
-fn C.vinix_linuxkpi_task_in_iowait(storage voidptr) bool
+fn C.tulpar_linuxkpi_task_in_iowait(storage voidptr) bool
 
 // IRQs are off and the run-queue lock is held. The reservation contains an
 // origin CPU, never a pointer into a sleeping task's stack or a borrowed task.
@@ -48,7 +48,7 @@ pub fn linuxkpi_iowait_block(owner &proc.Thread) {
 			scheduler_queue_lock.release()
 		}
 		mut t := unsafe { owner }
-		if t.is_dead || t.is_in_queue || !C.vinix_linuxkpi_task_in_iowait(voidptr(&t.linuxkpi_task[0])) {
+		if t.is_dead || t.is_in_queue || !C.tulpar_linuxkpi_task_in_iowait(voidptr(&t.linuxkpi_task[0])) {
 			return
 		}
 		if t.linuxkpi_iowait_cpu_plus_one != 0 {

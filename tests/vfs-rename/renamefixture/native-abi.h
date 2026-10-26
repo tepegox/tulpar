@@ -1,5 +1,5 @@
-#ifndef VINIX_RENAME_NATIVE_ABI_H
-#define VINIX_RENAME_NATIVE_ABI_H
+#ifndef TULPAR_RENAME_NATIVE_ABI_H
+#define TULPAR_RENAME_NATIVE_ABI_H
 #include <errno.h>
 #include <dirent.h>
 #include <fcntl.h>

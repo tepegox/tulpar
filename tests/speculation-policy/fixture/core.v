@@ -7,9 +7,9 @@ module fixture
 
 fn C.printf(&char, ...) i32
 fn C.speculation_fixture_assert_failure(&char, i32, &char)
-fn C.vinix_speculation_select(u32, u32, u64) u64
-fn C.vinix_speculation_init(u64) u64
-fn C.vinix_speculation_switch(u64)
+fn C.tulpar_speculation_select(u32, u32, u64) u64
+fn C.tulpar_speculation_init(u64) u64
+fn C.tulpar_speculation_switch(u64)
 
 __global sf_max_leaf u32
 __global sf_max_subleaf u32
@@ -27,7 +27,7 @@ fn require(ok bool, function &char, line i32, expression &char) {
 	if !ok { C.speculation_fixture_assert_failure(function, line, expression) }
 }
 
-@[export: 'vinix_spec_test_cpuid']
+@[export: 'tulpar_spec_test_cpuid']
 pub fn cpuid(leaf u32, subleaf u32, a &u32, b &u32, c &u32, d &u32) {
 	sf_queries++
 	unsafe {
@@ -36,18 +36,18 @@ pub fn cpuid(leaf u32, subleaf u32, a &u32, b &u32, c &u32, d &u32) {
 		*c = 0
 		*d = 0
 		if leaf == 0 {
-			require(sf_queries == 1 && subleaf == 0, c'vinix_spec_test_cpuid', 17, c'queries == 1 && subleaf == 0')
+			require(sf_queries == 1 && subleaf == 0, c'tulpar_spec_test_cpuid', 17, c'queries == 1 && subleaf == 0')
 			*a = sf_max_leaf
 			return
 		}
-		require(leaf == 7 && sf_max_leaf >= 7, c'vinix_spec_test_cpuid', 21, c'leaf == 7 && max_leaf >= 7')
+		require(leaf == 7 && sf_max_leaf >= 7, c'tulpar_spec_test_cpuid', 21, c'leaf == 7 && max_leaf >= 7')
 		if subleaf == 0 {
-			require(sf_queries == 2, c'vinix_spec_test_cpuid', 23, c'queries == 2')
+			require(sf_queries == 2, c'tulpar_spec_test_cpuid', 23, c'queries == 2')
 			*a = sf_max_subleaf
 			*d = sf_features
 			return
 		}
-		require(subleaf == 2 && sf_max_subleaf >= 2 && sf_queries == 3, c'vinix_spec_test_cpuid', 30, c'subleaf == 2 && max_subleaf >= 2 && queries == 3')
+		require(subleaf == 2 && sf_max_subleaf >= 2 && sf_queries == 3, c'tulpar_spec_test_cpuid', 30, c'subleaf == 2 && max_subleaf >= 2 && queries == 3')
 		*d = sf_features2
 	}
 }
@@ -64,31 +64,31 @@ fn supported_ctrl() u64 {
 		})
 }
 
-@[export: 'vinix_spec_test_rdmsr']
+@[export: 'tulpar_spec_test_rdmsr']
 pub fn rdmsr(msr u32) u64 {
 	sf_reads++
 	if msr == 0x10a {
-		require(sf_max_leaf >= 7 && sf_features & (u32(1) << 29) != 0, c'vinix_spec_test_rdmsr', 48, c'max_leaf >= 7 && (features & (UINT32_C(1) << 29))')
+		require(sf_max_leaf >= 7 && sf_features & (u32(1) << 29) != 0, c'tulpar_spec_test_rdmsr', 48, c'max_leaf >= 7 && (features & (UINT32_C(1) << 29))')
 		return sf_caps
 	}
-	require(msr == 0x48 && supported_ctrl() != 0, c'vinix_spec_test_rdmsr', 51, c'msr == 0x48 && supported_ctrl()')
+	require(msr == 0x48 && supported_ctrl() != 0, c'tulpar_spec_test_rdmsr', 51, c'msr == 0x48 && supported_ctrl()')
 	return sf_spec_ctrl
 }
 
-@[export: 'vinix_spec_test_wrmsr']
+@[export: 'tulpar_spec_test_wrmsr']
 pub fn wrmsr(msr u32, value u64) {
-	require(msr == 0x48 || msr == 0x49, c'vinix_spec_test_wrmsr', 56, c'msr == 0x48 || msr == 0x49')
+	require(msr == 0x48 || msr == 0x49, c'tulpar_spec_test_wrmsr', 56, c'msr == 0x48 || msr == 0x49')
 	sf_writes++
 	sf_last_msr = msr
 	sf_last_value = value
 	if msr == 0x49 {
-		require(sf_max_leaf >= 7 && sf_features & (u32(1) << 26) != 0, c'vinix_spec_test_wrmsr', 59, c'max_leaf >= 7 && (features & (UINT32_C(1) << 26))')
-		require(value == 1, c'vinix_spec_test_wrmsr', 60, c'value == 1')
+		require(sf_max_leaf >= 7 && sf_features & (u32(1) << 26) != 0, c'tulpar_spec_test_wrmsr', 59, c'max_leaf >= 7 && (features & (UINT32_C(1) << 26))')
+		require(value == 1, c'tulpar_spec_test_wrmsr', 60, c'value == 1')
 	} else {
 		supported := supported_ctrl()
-		require(supported != 0, c'vinix_spec_test_wrmsr', 63, c'supported')
-		require((value & ~supported) == (sf_spec_ctrl & ~supported), c'vinix_spec_test_wrmsr', 66, c'(value & ~supported) == (spec_ctrl & ~supported)')
-		require((value & sf_spec_ctrl) == sf_spec_ctrl, c'vinix_spec_test_wrmsr', 67, c'(value & spec_ctrl) == spec_ctrl')
+		require(supported != 0, c'tulpar_spec_test_wrmsr', 63, c'supported')
+		require((value & ~supported) == (sf_spec_ctrl & ~supported), c'tulpar_spec_test_wrmsr', 66, c'(value & ~supported) == (spec_ctrl & ~supported)')
+		require((value & sf_spec_ctrl) == sf_spec_ctrl, c'tulpar_spec_test_wrmsr', 67, c'(value & spec_ctrl) == spec_ctrl')
 		sf_spec_ctrl = value
 	}
 }
@@ -105,16 +105,16 @@ fn check(bits u32, enhanced u32, bhi u32, bhi_no u32, firmware u64) {
 	sf_reads = 0
 	sf_writes = 0
 	sf_spec_ctrl = firmware
-	selected := (if bits & 1 != 0 { u64(C.VINIX_SPEC_IBPB) } else { u64(0) }) |
+	selected := (if bits & 1 != 0 { u64(C.TULPAR_SPEC_IBPB) } else { u64(0) }) |
 		(if bits & 1 != 0 && bits & 4 != 0 && enhanced != 0 { u64(1) } else { u64(0) }) |
 		(if bits & 2 != 0 { u64(2) } else { u64(0) }) |
 		(if bits & 8 != 0 { u64(4) } else { u64(0) }) |
 		(if bhi != 0 && !(bits & 4 != 0 && bhi_no != 0) { u64(1) << 10 } else { u64(0) })
-	require(u64(C.VINIX_SPEC_BHI_DIS_S) == u64(1) << 10, c'check', 90, c'VINIX_SPEC_BHI_DIS_S == UINT64_C(1) << 10')
-	require(C.vinix_speculation_select(sf_features, sf_features2, sf_caps) == selected, c'check', 91, c'vinix_speculation_select(features, features2, caps) == selected')
+	require(u64(C.TULPAR_SPEC_BHI_DIS_S) == u64(1) << 10, c'check', 90, c'TULPAR_SPEC_BHI_DIS_S == UINT64_C(1) << 10')
+	require(C.tulpar_speculation_select(sf_features, sf_features2, sf_caps) == selected, c'check', 91, c'tulpar_speculation_select(features, features2, caps) == selected')
 	mut expected := if sf_max_leaf >= 7 { selected } else { u64(0) }
 	if sf_max_subleaf < 2 { expected &= ~(u64(1) << 10) }
-	policy := C.vinix_speculation_init(0)
+	policy := C.tulpar_speculation_init(0)
 	require(policy == expected, c'check', 97, c'policy == expected')
 	require(sf_queries == 1 + u32(sf_max_leaf >= 7) * (1 + u32(sf_max_subleaf >= 2)), c'check', 98, c'queries == 1 + (max_leaf >= 7) * (1 + (max_subleaf >= 2))')
 	arch_reads := u32(sf_max_leaf >= 7 && bits & 4 != 0)
@@ -123,7 +123,7 @@ fn check(bits u32, enhanced u32, bhi u32, bhi_no u32, firmware u64) {
 	require(sf_writes == ctrl_reads, c'check', 102, c'writes == ctrl_reads')
 	require(sf_spec_ctrl == (firmware | (expected & u64(0x407))), c'check', 103, c'spec_ctrl == (firmware | (expected & UINT64_C(0x407)))')
 	old_writes := sf_writes
-	C.vinix_speculation_switch(policy)
+	C.tulpar_speculation_switch(policy)
 	barrier := u32(sf_max_leaf >= 7 && bits & 1 != 0)
 	require(sf_writes == old_writes + barrier, c'check', 107, c'writes == old_writes + barrier')
 	if barrier != 0 {

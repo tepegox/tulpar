@@ -4,9 +4,9 @@ module pkgcore
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn validation_package() Package {
 	return Package{ id: 'editor', version: '123456789.0.999999999', architecture: 'aarch64',
@@ -30,10 +30,10 @@ fn test_repeated_model_validation_retires_all_scratch_and_preserves_borrowed_inp
 	p := validation_package(); config := validation_config()
 	p.validate()!; config.validate()!
 	for _ in 0 .. 64 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		p.validate()!; config.validate()!
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+			kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained'
 		}
 	}
@@ -61,10 +61,10 @@ fn test_validation_map_growth_and_deep_parent_checks_retire_scratch() {
 	config := Config{ architecture: 'x86_64', repositories: repositories,
 		policy: Policy{ allowed: allowed, pins: dependencies, licenses: allowed } }
 	for _ in 0 .. 16 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		large.validate()!; config.validate()!
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+			kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained during growth'
 		}
 	}
@@ -87,12 +87,12 @@ fn test_late_validation_failures_release_scratch_and_keep_exact_diagnostics() {
 		'editor: invalid or duplicate payload path: ../escape', 'editor: invalid or duplicate payload path: bin/editor',
 		'editor: file/directory collision: bin/editor', 'editor: executable entrypoint missing from payload', 'invalid version: 01.2.3']
 	for i, candidate in packages {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		if _ := candidate.validate() { assert false } else {
 			message := err.msg(); assert message == messages[i]
 			unsafe { message.free(); err.free() }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); count := C.vinix_heap_count(); assert kept == 0 && count == 0, '${messages[i]}: ${kept} bytes / ${count} allocations' }
+		$if track_heap ? { kept := C.tulpar_heap_end(); count := C.tulpar_heap_count(); assert kept == 0 && count == 0, '${messages[i]}: ${kept} bytes / ${count} allocations' }
 	}
 	configs := [
 		Config{ ...c, repositories: [c.repositories[0], c.repositories[0]] },
@@ -107,12 +107,12 @@ fn test_late_validation_failures_release_scratch_and_keep_exact_diagnostics() {
 		'invalid or duplicate organization allowlist entry: editor', 'invalid or duplicate organization permissions entry: files',
 		'invalid or duplicate organization licenses entry: MIT', 'duplicate organization version pin: editor', 'empty dependency range for editor']
 	for i, candidate in configs {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		if _ := candidate.validate() { assert false } else {
 			message := err.msg(); assert message == config_messages[i]
 			unsafe { message.free(); err.free() }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); count := C.vinix_heap_count(); assert kept == 0 && count == 0, '${config_messages[i]}: ${kept} bytes / ${count} allocations' }
+		$if track_heap ? { kept := C.tulpar_heap_end(); count := C.tulpar_heap_count(); assert kept == 0 && count == 0, '${config_messages[i]}: ${kept} bytes / ${count} allocations' }
 	}
 	p.validate()!; c.validate()!
 	println('VALIDATION late manifest/repository/policy rejection releases scratch and preserves diagnostics PASS')
@@ -138,31 +138,31 @@ fn test_scalar_admission_preserves_byte_domains_and_path_boundaries() {
 
 fn test_version_parser_preserves_public_result_and_error_categories() {
 	for version in ['0.0.0', '1.2.3', '999999999.999999999.999999999'] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		parts := version_parts(version)!
 		assert parts.len == 3
 		if version == '1.2.3' { assert parts[0] == 1 && parts[1] == 2 && parts[2] == 3 }
 		if version.starts_with('999') { assert parts[0] == 999999999 && parts[1] == 999999999 && parts[2] == 999999999 }
 		unsafe { parts.free() }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 && C.vinix_heap_count() == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 && C.tulpar_heap_count() == 0 }
 	}
 	for version in ['', '1', '1.2', 'x.2', '01.2.3.4', '1.2.3.'] {
 		expected := 'version must contain three numeric components: ' + version
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		if _ := version_parts(version) { assert false } else {
 			message := err.msg(); assert message == expected
 			unsafe { message.free(); err.free() }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 && C.vinix_heap_count() == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 && C.tulpar_heap_count() == 0 }
 	}
 	for version in ['.1.2', '1..2', '1.2.', '01.2.3', '1.02.3', '1.2.03', '1000000000.2.3', '-1.2.3', '1.x.3', '1.2.3-beta'] {
 		expected := 'invalid version: ' + version
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		if _ := version_parts(version) { assert false } else {
 			message := err.msg(); assert message == expected
 			unsafe { message.free(); err.free() }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 && C.vinix_heap_count() == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 && C.tulpar_heap_count() == 0 }
 	}
 	println('VALIDATION version component ownership, numeric limits and diagnostic precedence PASS')
 }

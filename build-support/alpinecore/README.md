@@ -16,10 +16,10 @@ Run the native checks with:
 
 ```sh
 v -cc cc -o /tmp/alpine-resolve build-support/alpine-resolve.v
-VINIX_ALPINE_TOOL=/tmp/alpine-resolve v -cc cc test build-support/alpinecore
+TULPAR_ALPINE_TOOL=/tmp/alpine-resolve v -cc cc test build-support/alpinecore
 ```
 
-`VINIX_ALPINE_REPO=/path/to/vinix` additionally checks the cached Java, Go and
+`TULPAR_ALPINE_REPO=/path/to/tulpar` additionally checks the cached Java, Go and
 QEMU package manifests against their unpacked indexes without downloading or
 changing anything. Qualification passed on ARM and Rosetta x86 hosts and with
 ARM ASan/UBSan, including all three cached manifests and a 1,000-package closure.

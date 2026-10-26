@@ -7,13 +7,13 @@ import os
 
 pub fn execute(arguments []string) !int {
 	if arguments == ['--help'] {
-		println('Usage: python3-smoke [--abi-only|--fcntl-only]\nRun the original CPython runtime checks from V through its C API. VINIX_CPYTHON_LIBRARY selects the target SDK. --abi-only resolves symbols without initializing the interpreter; --fcntl-only checks the developer-tools module import.')
+		println('Usage: python3-smoke [--abi-only|--fcntl-only]\nRun the original CPython runtime checks from V through its C API. TULPAR_CPYTHON_LIBRARY selects the target SDK. --abi-only resolves symbols without initializing the interpreter; --fcntl-only checks the developer-tools module import.')
 		return 0
 	}
 	if arguments.len > 1 || (arguments.len == 1 && arguments[0] !in ['--abi-only', '--fcntl-only']) {
 		return error_with_code('unknown argument', 2)
 	}
-	mut api := cpythonapi.open(os.getenv_opt('VINIX_CPYTHON_LIBRARY') or { 'libpython3.12.so.1.0' })!
+	mut api := cpythonapi.open(os.getenv_opt('TULPAR_CPYTHON_LIBRARY') or { 'libpython3.12.so.1.0' })!
 	defer { api.close_library() }
 	if arguments == ['--abi-only'] {
 		println('Resolved ${cpythonapi.symbols.len} CPython ABI symbols without initializing the interpreter')

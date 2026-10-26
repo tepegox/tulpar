@@ -79,7 +79,7 @@ fn coretemp_describe(mut text lib.Text) {
 // TjMax forced on the command line, as coretemp's tjmax= parameter: degrees
 // Celsius, used only where the processor does not say. 0 for none.
 fn coretemp_forced_tjmax() i64 {
-	word := devcore.boot_option('vinix.tjmax=') or { return 0 }
+	word := devcore.boot_option('tulpar.tjmax=') or { return 0 }
 	degrees := parse_signed(word) or { return 0 }
 	if degrees <= 0 || degrees > 150 {
 		return 0

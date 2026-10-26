@@ -26,7 +26,7 @@
 // offers one, a suspend to RAM. Then a run of short rehearsals, after which
 // the kernel must hold no more memory than before.
 //
-// pci-d3-off is the same machine told not to (vinix.pci_d3=off): the card
+// pci-d3-off is the same machine told not to (tulpar.pci_d3=off): the card
 // stays in D0 and on the bus, and works afterwards all the same.
 module main
 
@@ -186,9 +186,9 @@ fn scenario_pci_d3_off(mut t Test) {
 	t.step('a rehearsal, the card left awake')
 	sleep_now(mut t, 'freeze')
 	t.check(stat_word('success') == '1', 'the rehearsal failed: step "${stat_word('last_failed_step')}", device "${stat_word('last_failed_dev')}"')
-	t.check(d3_figure('last') == 0 && d3_figure('total') == 0, 'functions were put into D3hot with vinix.pci_d3=off: ${d3_figure('last')}')
+	t.check(d3_figure('last') == 0 && d3_figure('total') == 0, 'functions were put into D3hot with tulpar.pci_d3=off: ${d3_figure('last')}')
 	t.check(read_word('${card}/power/d3_count') == '0', 'the card has spent ${read_word(card +
-		'/power/d3_count')} sleeps in D3hot with vinix.pci_d3=off')
+		'/power/d3_count')} sleeps in D3hot with tulpar.pci_d3=off')
 	t.check(read_word('${card}/power_state') == 'D0', 'the card says it is in "${read_word(card +
 		'/power_state')}", not D0')
 	t.check(network_works(15), 'nothing comes back over the card after the rehearsal')

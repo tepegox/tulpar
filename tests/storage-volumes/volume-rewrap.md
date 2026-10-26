@@ -1,6 +1,6 @@
 # Encrypted-volume configuration credential changes
 
-`rewrap-volume` uses the existing authenticated 320-byte `VINIXVC1` format and
+`rewrap-volume` uses the existing authenticated 320-byte `TULPARVC1` format and
 fixed scrypt profile. It preserves the exact volume key, whole-disk identity,
 native geometry, slot, extent and readonly mode while publishing a separate
 private configuration with new credential bytes and fresh salt/nonce. See

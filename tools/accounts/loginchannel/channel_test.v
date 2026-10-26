@@ -11,14 +11,14 @@ fn C.close(int) int
 
 $if track_heap ? {
 	#include "heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn test_forged_inherited_channel_cannot_receive_a_password() {
 	if os.geteuid() == 0 { return }
-	previous := os.getenv('VINIX_SESSION_FD')
-	defer { os.setenv('VINIX_SESSION_FD', previous, true) }
+	previous := os.getenv('TULPAR_SESSION_FD')
+	defer { os.setenv('TULPAR_SESSION_FD', previous, true) }
 	mut sockets := [2]i32{}
 	assert C.socketpair(C.AF_UNIX, C.SOCK_STREAM, 0, &sockets[0]) == 0
 	saved := C.dup(3)
@@ -39,16 +39,16 @@ fn test_forged_inherited_channel_cannot_receive_a_password() {
 		}
 	}
 	assert C.dup2(local, 3) == 3
-	os.setenv('VINIX_SESSION_FD', '3', true)
+	os.setenv('TULPAR_SESSION_FD', '3', true)
 	for _ in 0 .. 1000 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		mut rejected := false
 		inherited() or {
 			rejected = true
 			unsafe { err.free() }
 		}
 		assert rejected
-		$if track_heap ? { assert C.vinix_heap_end() == 0 }
+		$if track_heap ? { assert C.tulpar_heap_end() == 0 }
 	}
 	password := 'never disclosed'.bytes()
 	name := 'person'.bytes()
@@ -62,7 +62,7 @@ fn test_forged_inherited_channel_cannot_receive_a_password() {
 	assert refused && password.all(it == 0)
 	mut wait := C.pollfd{ fd: remote, events: C.POLLIN }
 	assert C.poll(&wait, 1, 0) == 0
-	os.setenv('VINIX_SESSION_FD', '10', true)
+	os.setenv('TULPAR_SESSION_FD', '10', true)
 	inherited() or {
 		assert err.msg().contains('no session manager')
 		return

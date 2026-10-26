@@ -4,7 +4,7 @@ module volumecli
 fn test_automatic_data_commands_reject_bad_arity_and_empty_paths_before_io() {
 	unsafe {
 		for verb in [&char(c'hash-bundle-auto'), &char(c'scrub-data-auto'), &char(c'verify-data-auto')]! {
-			mut args := [&char(c'vinix-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+			mut args := [&char(c'tulpar-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 			count := if C.strcmp(verb, c'verify-data-auto') == 0 { 3 } else { 4 }
 			for wrong in [2, 3, 4, 5] { if wrong != count { assert run(wrong, &args[0]) == 2 } }
 			for at in 2 .. count { args[at] = &char(c''); assert run(count, &args[0]) == 2; args[at] = &char(c'/unused') }

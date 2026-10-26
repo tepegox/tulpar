@@ -18,7 +18,7 @@ import x86.cpu.local as cpulocal
 // even for a low target CPU because native CPUs beyond 63 are unconstrained.
 // CPU hotplug is not supported, so the boot CPU table and online bits remain
 // stable after LinuxKPI initialization.
-@[export: 'vinix_linuxkpi_worker_bind']
+@[export: 'tulpar_linuxkpi_worker_bind']
 fn worker_bind(target u32) int {
 	ints := cpu.interrupt_toggle(false)
 	local := cpulocal.current()
@@ -76,7 +76,7 @@ fn worker_bind(target u32) int {
 // The caller retains the anonymous worker while changing its affinity. This
 // fixture hook uses the same native mask publication and target wake as bind;
 // it does not change an I/O block's stored origin CPU.
-@[export: 'vinix_linuxkpi_test_worker_route']
+@[export: 'tulpar_linuxkpi_test_worker_route']
 fn test_worker_route(owner voidptr, target u32) int {
 	ints := cpu.interrupt_toggle(false)
 	mut t := unsafe { &proc.Thread(owner) }

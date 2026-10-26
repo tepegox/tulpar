@@ -50,7 +50,7 @@ fn seal_volume_file(device &char, keyfile &char, password &char, destination &ch
 	size := read_private_key_file(password, &work.password[0], 1, 1024)
 	if size == 0 { return 1 }
 	fd := C.open(device, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open configuration disk'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open configuration disk'); return 1 }; defer { C.close(fd) }
 	if !probe_disk(fd, mut work.disk, mut work.status) || !volume_seal_geometry(&work.disk, &work.request.data) { return plan_error(c'invalid encrypted extent or physical disk') }
 	if !key_random_bytes(&work.random[0], 28) || !sealed_derive(&work.password[0], size, &work.random[0], &work.wrapping[0])
 		|| !encode_volume_seal(&work.disk, &work.request, &work.wrapping[0], &work.random[0], &work.envelope[0]) { return 1 }
@@ -67,13 +67,13 @@ fn open_volume_seal(device &char, config &char, password &char, readonly bool) i
 	if !load_volume_seal(config, password, mut *work) { return 1 }
 	if readonly { work.request.data.flags = 1 }
 	fd := C.open(device, (if work.request.data.flags == 0 { C.O_RDWR } else { C.O_RDONLY }) | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open configured encrypted parent'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open configured encrypted parent'); return 1 }; defer { C.close(fd) }
 	if !probe_disk(fd, mut work.after, mut work.status) || !key_matches(&work.disk, &work.after) {
 		return plan_error(c'sealed volume disk identity or geometry does not match')
 	}
 	if !volume_seal_recheck(fd, mut *work) { return 1 }
-	if C.ioctl(fd, u64(0x56560006), &work.request) != 0 { C.perror(c'vinix-volume: import configured encrypted mapping'); return 1 }
-	return finish_bundle_report(C.printf(c'/dev/mapper/vinix%u\n', work.request.data.slot) >= 0)
+	if C.ioctl(fd, u64(0x56560006), &work.request) != 0 { C.perror(c'tulpar-volume: import configured encrypted mapping'); return 1 }
+	return finish_bundle_report(C.printf(c'/dev/mapper/tulpar%u\n', work.request.data.slot) >= 0)
 }
 
 @[direct_array_access]

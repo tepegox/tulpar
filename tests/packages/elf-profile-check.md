@@ -38,7 +38,7 @@ v -nocache -no-skip-unused -gc none -manualfree \
 /tmp/elf-core
 v -nocache -gc none -manualfree -path '@vlib|@vmodules|.' \
   -o /tmp/elf-cli tests/packages/elf-profile-check.v
-/tmp/elf-cli /path/to/vinix-package /tmp/new-elf-qualification
+/tmp/elf-cli /path/to/tulpar-package /tmp/new-elf-qualification
 ```
 
 The maintained distribution driver discovers the ELF assertion runner and runs

@@ -19,7 +19,7 @@ fn C.memalloc_pin_restore(u32)
 
 // This caller must retain all ten genuine unresolved MM services. A successful
 // standalone link would mean the declaration boundary invented MM behavior.
-@[export: 'vinix_sched_mm_requires_runtime']
+@[export: 'tulpar_sched_mm_requires_runtime']
 pub fn requires_runtime(task &C.task_struct, flags u32) u32 {
 	noio := C.memalloc_noio_save()
 	nofs := C.memalloc_nofs_save()

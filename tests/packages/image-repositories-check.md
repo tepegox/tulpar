@@ -1,9 +1,9 @@
 # Signed offline repositories in release images
 
 Production `tools/packages/stage.v` accepts `--repositories DIRECTORY` and
-`VINIX_PACKAGE_IMAGE_REPOSITORIES`; the explicit option wins. A reviewed package
+`TULPAR_PACKAGE_IMAGE_REPOSITORIES`; the explicit option wins. A reviewed package
 configuration must already select the publisher keys and target URLs under
-`file:///usr/share/vinix-packages/repositories/ID`. The input directory contains
+`file:///usr/share/tulpar-packages/repositories/ID`. The input directory contains
 the corresponding complete signed `publish-release` exports, with no extra
 repository, publisher workspace or secret files. No default trust or acceptance
 of proprietary/firmware terms is added.
@@ -80,14 +80,14 @@ Reproduce with the native builder's pinned inputs and matching sandbox/kernel:
 ```sh
 v -path '@vlib|@vmodules|.|tests/hardware-platform|tools/accounts' \
   -o /tmp/native-catalog-check tests/packages/native-catalog-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
-  VINIX_NATIVE_CATALOG_INPUTS=/build/native-inputs \
-  VINIX_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/vinix-sandbox \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+  TULPAR_NATIVE_CATALOG_INPUTS=/build/native-inputs \
+  TULPAR_NATIVE_CATALOG_SANDBOX=/build/aarch64-root/usr/bin/tulpar-sandbox \
   /tmp/native-catalog-check --image --arch aarch64 \
   --kernel /build/aarch64-kernel --state-dir /build/new-bundle-image-state
 ```
 
-Repeat for x86_64 and with `--software` plus `VINIX_PACKAGE_TEST_UI2` for the
+Repeat for x86_64 and with `--software` plus `TULPAR_PACKAGE_TEST_UI2` for the
 ordinary Software workflow. Each run needs a new state directory. The default
 controller mode retains explicit enrollment for the legacy native-catalog check.
 

@@ -10,9 +10,9 @@ import tools.packages.signing
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn view_package(id string, version string, kind string) Package {
 	p := Package{
@@ -96,7 +96,7 @@ fn test_software_catalog_projection_retires_rows_resolution_policy_and_refusal_s
 				for index in 0 .. 64 { packages << view_installed(view_package('app-' + index.str(), '1.0.0', 'native')) }
 			}
 			catalog := Catalog{packages: packages}
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 1000 {
 				mut view := catalog_view(config, catalog, if mode == 'fresh' { State{architecture: 'aarch64'} } else { current },
 					if mode == 'revoked' { 'Publisher revoked' } else { '' })!
@@ -104,37 +104,37 @@ fn test_software_catalog_projection_retires_rows_resolution_policy_and_refusal_s
 				if mode in ['unresolved', 'denied']! { assert view.update_error != '' }
 				view.close(); view.close()
 			}
-			kept := C.vinix_heap_end()
-			assert kept == 0 && C.vinix_heap_count() == 0, mode + ': retained ' + kept.str() + ' bytes'
+			kept := C.tulpar_heap_end()
+			assert kept == 0 && C.tulpar_heap_count() == 0, mode + ': retained ' + kept.str() + ' bytes'
 		}
 		mut packages := []Installed{cap: 4097}
 		for index in 0 .. 4097 { packages << view_installed(view_package('app-' + index.str(), '1.0.0', 'native')) }
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 16 {
 			if mut view := catalog_view(base, Catalog{packages: packages}, State{architecture: 'aarch64'}, '') {
 				view.close(); assert false
 			} else { message := err.msg(); assert message.contains('row limit'); unsafe { message.free(); err.free() } }
 		}
-		kept := C.vinix_heap_end()
-		assert kept == 0 && C.vinix_heap_count() == 0, 'row-limit refusals retained ' + kept.str()
+		kept := C.tulpar_heap_end()
+		assert kept == 0 && C.tulpar_heap_count() == 0, 'row-limit refusals retained ' + kept.str()
 		println('SOFTWARE VIEW OWNERSHIP 1000 update/unresolved/revoked/denied/fresh/65-row cycles and sixteen row-limit refusals retain zero tracked bytes PASS')
 	}
 }
 
 fn test_public_software_view_retires_fresh_authenticated_and_failed_read_storage() {
-	root := os.temp_dir() + '/vinix-view-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.temp_dir() + '/tulpar-view-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	defer { os.rmdir_all(root) or {} }
-	path := root + '/etc/vinix-packages/config.json'; directory := state_directory(root)
+	path := root + '/etc/tulpar-packages/config.json'; directory := state_directory(root)
 	fresh := json2.encode(Config{architecture: 'aarch64', launch_user: 'alex'})
 	os.write_file(path, fresh)!
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		mut view := software_view(root, true)!
 		assert view.offline && view.catalog_error.contains('repo-enroll') && view.rows.len == 0
 		view.close(); view.close()
 	}
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'fresh reads retained ' + kept.str() }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'fresh reads retained ' + kept.str() }
 	assert os.read_file(path)! == fresh && !os.exists(directory)
 	private := signing.new_key_from_seed([]u8{len: 32, init: 7})
 	repository := Repository{id: 'fixture', url: 'file:///offline/repository', public_key: private.public_key().hex()}
@@ -156,7 +156,7 @@ fn test_public_software_view_retires_fresh_authenticated_and_failed_read_storage
 	mut warm := software_view(root, false)!; warm.close()
 	for failed in [false, true]! {
 		if failed { os.write_file(directory + '/catalog.json', '{invalid catalog')! }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. if failed { 1000 } else { 128 } {
 			mut view := software_view(root, false)!
 			assert view.rows.len == 1 && view.rows[0].installed_version == '1.0.0'
@@ -164,18 +164,18 @@ fn test_public_software_view_retires_fresh_authenticated_and_failed_read_storage
 			assert (view.catalog_error != '') == failed && view.rows[0].updatable == !failed
 			view.close(); view.close()
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'cached reads retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'cached reads retained ' + kept.str() }
 	}
 	// Failed configuration and busy-reader refusals release all partial storage.
 	for busy in [false, true]! {
 		writer := if busy { acquire(directory)! } else { Lock{fd: -1} }
 		os.write_file(path, '{invalid configuration')!
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			if mut view := software_view(root, false) { view.close(); assert false }
 			else { message := err.msg(); if busy { assert message.contains('another package transaction') }; unsafe { message.free(); err.free() } }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, 'refused reads retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, 'refused reads retained ' + kept.str() }
 		if busy { writer.release() }
 		os.write_file(path, text)!
 	}
@@ -425,10 +425,10 @@ fn test_new_catalog_applications_prefer_allowed_versions_and_host_architecture()
 }
 
 fn test_disk_view_is_read_only_and_uses_package_reader_lock() {
-	root := os.real_path(os.temp_dir()) + '/vinix-software-view-' + os.getpid().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.real_path(os.temp_dir()) + '/tulpar-software-view-' + os.getpid().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	defer { os.rmdir_all(root) or {} }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: 'aarch64', policy: Policy{ reserve_bytes: 0 } }))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: 'aarch64', policy: Policy{ reserve_bytes: 0 } }))!
 	assert software_view(root, false)!.catalog_error.contains('repo-enroll')
 	assert !os.exists(state_directory(root))
 	os.mkdir_all(root + '/source/bin')!
@@ -548,21 +548,21 @@ fn test_diagnostic_graphs_retire_owned_messages_edges_and_key_checks() {
 		packages := state.packages.map(if it.repository == 'legacy' { Installed{ ...it, public_key: weak } } else { it })
 		invalid := Config{ ...config, repositories: [config.repositories[0], Repository{ ...config.repositories[1], public_key: weak }] }
 		for installed in packages {
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			mut keys := map[string]bool{}
 			message := package_diagnostic(invalid, installed, mut keys)
 			unsafe { message.free(); keys.free() }
-			kept := C.vinix_heap_end()
-			assert kept == 0 && C.vinix_heap_count() == 0, '${installed.package.id}: direct diagnostic retained ${kept}'
+			kept := C.tulpar_heap_end()
+			assert kept == 0 && C.tulpar_heap_count() == 0, '${installed.package.id}: direct diagnostic retained ${kept}'
 		}
 		for _ in 0 .. 32 {
 			for index, checked in [config, invalid, Config{ ...config, repositories: [] }, Config{ ...invalid, policy: Policy{ allowed: ['runtime'] } }] {
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 				messages := package_diagnostics(checked, packages)
 				assert messages['app'] != '' && messages['runtime'] != ''
 				close_package_diagnostics(messages)
-				kept := C.vinix_heap_end()
-				assert kept == 0 && C.vinix_heap_count() == 0, 'case ${index}: package diagnostics retained ${kept} bytes'
+				kept := C.tulpar_heap_end()
+				assert kept == 0 && C.tulpar_heap_count() == 0, 'case ${index}: package diagnostics retained ${kept} bytes'
 			}
 		}
 		println('Package diagnostics: 128 valid/invalid/revoked/policy graph reads and retirement cycles retain zero tracked bytes PASS')

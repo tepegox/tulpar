@@ -14,9 +14,9 @@ IPv6 TCP/UDP echo service with explicitly joined workers.
 
 Provided ARM init/archive inputs and provided x86 ISOs remain supported.
 `run.sh [aarch64|amd64]` builds the unchanged strict-warning C fixture, copies a
-prebuilt kernel and packages a private ISO. ARM defaults to `VINIX_KERNEL_DIR`
-or `kernel`; x86 defaults to `VINIX_AMD64_KERNEL` or
-`build-amd64-kernel/bin/vinix`. `--kernel-dir` overrides either. Explicit state
+prebuilt kernel and packages a private ISO. ARM defaults to `TULPAR_KERNEL_DIR`
+or `kernel`; x86 defaults to `TULPAR_AMD64_KERNEL` or
+`build-amd64-kernel/bin/tulpar`. `--kernel-dir` overrides either. Explicit state
 directories retain raw serial, captures and launch hashes; default scratch is
 removed. `--build-only` prepares without booting.
 

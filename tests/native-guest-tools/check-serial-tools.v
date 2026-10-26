@@ -88,7 +88,7 @@ fn check_capture() ! {
 	}
 	assert descriptors() == baseline
 	println('PASS merged binary stream, fractional EOF deadline and twenty FD/PID retirement cycles')
-	group_work := hosttest.work_dir('', 'vinix-serial-group-')!
+	group_work := hosttest.work_dir('', 'tulpar-serial-group-')!
 	defer { hosttest.remove_work_dir(group_work) or { eprintln(err.msg()) } }
 	mut group_timeout := false
 	fixturehost.capture_owned_bounded([os.executable(), '--child', 'group', group_work + '/child.pid'],
@@ -137,7 +137,7 @@ fn check_producer(producer string, work string) ! {
 					path := baseline + '/initcore/' + file
 					mut text := hosttest.module_read_text(path)!
 					for symbol in ['memcpy', 'memset', 'memmove', '_start'] {
-						text = text.replace("@[export: '" + symbol + "']", "@[export: 'vinix_init_host_" + symbol + "']")
+						text = text.replace("@[export: '" + symbol + "']", "@[export: 'tulpar_init_host_" + symbol + "']")
 					}
 					hosttest.module_write_text(path, text)!
 				}
@@ -166,13 +166,13 @@ fn check_interrupts(producer string, churn string, rsp string, work string) ! {
 	mut env := policyhost.environment()
 	env['TMPDIR'] = scratch
 	env['V'] = os.executable()
-	env['VINIX_SERIAL_QA_SURROGATE'] = '1'
-	env['VINIX_SERIAL_QA_PID'] = work + '/surrogate.pid'
+	env['TULPAR_SERIAL_QA_SURROGATE'] = '1'
+	env['TULPAR_SERIAL_QA_PID'] = work + '/surrogate.pid'
 	mut commands := [[producer, 'desktop', work + '/interrupt.c']]
 	if churn != '' {
 		env['CC_AMD64'] = os.executable()
 		commands << [churn, '--arch', 'amd64', '--mode', 'pipes', '--kernel',
-			os.getenv('VINIX_SERIAL_QA_KERNEL_X86')]
+			os.getenv('TULPAR_SERIAL_QA_KERNEL_X86')]
 	}
 	if rsp != '' {
 		build := work + '/rsp-build'
@@ -196,7 +196,7 @@ fn check_interrupts(producer string, churn string, rsp string, work string) ! {
 
 fn checked() ! {
 	check_capture()!
-	work_cwd := hosttest.work_dir('', 'vinix-serial-cwd-')!
+	work_cwd := hosttest.work_dir('', 'tulpar-serial-cwd-')!
 	defer { hosttest.remove_work_dir(work_cwd) or { eprintln(err.msg()) } }
 	directory := work_cwd + '/with space\\bytes'
 	os.mkdir(directory)!
@@ -219,7 +219,7 @@ fn checked() ! {
 	assert guesthost.churn_features('select')!.len == 2
 	assert guesthost.memlock_features().len == 8 && guesthost.realtime_features().len == 11
 	if os.args.len >= 2 {
-		work := hosttest.work_dir('', 'vinix-serial-generator-check-')!
+		work := hosttest.work_dir('', 'tulpar-serial-generator-check-')!
 		defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 		check_producer(os.args[1], work)!
 		check_interrupts(os.args[1], if os.args.len >= 3 { os.args[2] } else { '' },
@@ -228,9 +228,9 @@ fn checked() ! {
 }
 
 fn main() {
-	if os.getenv('VINIX_SERIAL_QA_SURROGATE') == '1' {
+	if os.getenv('TULPAR_SERIAL_QA_SURROGATE') == '1' {
 		if os.args.len == 2 && os.args[1] == 'version' { println('V 0.5.2 native ownership fixture'); return }
-		os.write_file(os.getenv('VINIX_SERIAL_QA_PID'), os.getpid().str()) or { panic(err) }
+		os.write_file(os.getenv('TULPAR_SERIAL_QA_PID'), os.getpid().str()) or { panic(err) }
 		C.kill(C.getppid(), C.SIGINT)
 		for { time.sleep(20 * time.millisecond) }
 	}

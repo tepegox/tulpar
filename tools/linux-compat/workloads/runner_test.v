@@ -4,7 +4,7 @@ import os
 import time
 
 fn test_nonzero_and_timeout_are_retained_as_failures() {
-	work := os.join_path(os.temp_dir(), 'vinix-workload-test-${os.getpid()}-${time.now().unix_nano()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-workload-test-${os.getpid()}-${time.now().unix_nano()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	mut suite := Suite{ work: work, path: 'native-aarch64', timeout: 1 }
@@ -25,7 +25,7 @@ fn test_nonzero_and_timeout_are_retained_as_failures() {
 
 fn test_missing_dependency_is_not_a_passing_command() {
 	mut suite := Suite{ path: 'native-aarch64', timeout: 1 }
-	suite.execute('/vinix-nonexistent-compat-fixture', []) or {
+	suite.execute('/tulpar-nonexistent-compat-fixture', []) or {
 		assert err.msg().starts_with('unsupported:')
 		assert suite.commands.len == 0
 		return
@@ -34,10 +34,10 @@ fn test_missing_dependency_is_not_a_passing_command() {
 }
 
 fn test_child_environment_is_recorded_without_changing_parent() {
-	work := os.join_path(os.temp_dir(), 'vinix-workload-env-${os.getpid()}-${time.now().unix_nano()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-workload-env-${os.getpid()}-${time.now().unix_nano()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
-	key := 'VINIX_COMPAT_WORKLOAD_ENV_${os.getpid()}'
+	key := 'TULPAR_COMPAT_WORKLOAD_ENV_${os.getpid()}'
 	assert os.getenv_opt(key) == none
 	mut suite := Suite{ work: work, path: 'native-aarch64', timeout: 1 }
 	suite.environment[key] = '42 with spaces'

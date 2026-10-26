@@ -1,13 +1,13 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_KERNEL_H
-#define VINIX_LINUX_KERNEL_H
+#ifndef TULPAR_LINUX_KERNEL_H
+#define TULPAR_LINUX_KERNEL_H
 #include <linux/types.h>
 #include <linux/limits.h>
 #include <linux/kstrtox.h>
 #include <linux/typecheck.h>
 #include <linux/bug.h>
-#include <vinix/runtime.h>
-#include <vinix/integer_policy.h>
+#include <tulpar/runtime.h>
+#include <tulpar/integer_policy.h>
 #include <linux/string.h>
 #include <linux/log2.h>
 #include <linux/minmax.h>
@@ -29,6 +29,6 @@
 )
 #define container_of_safe(ptr, type, member) \
     ((ptr) ? container_of((ptr), type, member) : NULL)
-#define might_sleep() BUG_ON(!vinix_linuxkpi_may_sleep())
-#define might_sleep_if vinix_might_sleep_if
+#define might_sleep() BUG_ON(!tulpar_linuxkpi_may_sleep())
+#define might_sleep_if tulpar_might_sleep_if
 #endif

@@ -24,7 +24,7 @@ fn syscall3(nr isize, a isize, b isize, c isize) isize {
 	return result
 }
 
-@[export: 'vinix_linuxkpi_guest_start'; noreturn]
+@[export: 'tulpar_linuxkpi_guest_start'; noreturn]
 pub fn start() {
 	unsafe {
 		// Original real CPL3 workload: eight intervals allow the APIC timer

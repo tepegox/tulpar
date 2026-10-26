@@ -7,8 +7,8 @@ import strings
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn policy_decode_selected(selection string) bool {
@@ -79,7 +79,7 @@ fn policy_decode_refusal(text string, review bool) {
 
 fn test_policy_decode_independent_owned_documents_and_reviews() {
 	if os.args.len == 3 && os.args[1] == '--policy-decode-case' && !os.args[2].starts_with('owned-') { return }
-	root := os.temp_dir() + '/vinix-policy-decode-' + os.getpid().str()
+	root := os.temp_dir() + '/tulpar-policy-decode-' + os.getpid().str()
 	os.mkdir_all(root)!; defer { os.rmdir_all(root) or {} }
 	path := root + '/policy.json'
 	for architecture in ['aarch64', 'x86_64']! {
@@ -90,7 +90,7 @@ fn test_policy_decode_independent_owned_documents_and_reviews() {
 			os.write_file(path, document)!
 			tracked := count != 4096
 			cycles := if tracked { $if track_heap ? { 1000 } $else { 64 } } else { 1 }
-			$if track_heap ? { if tracked { C.vinix_heap_begin() } }
+			$if track_heap ? { if tracked { C.tulpar_heap_begin() } }
 			for _ in 0 .. cycles {
 				mut policy := read_policy_document(path, architecture)!
 				assert policy.format == 1 && policy.architecture == architecture && policy.policy.pins.len == count
@@ -105,7 +105,7 @@ fn test_policy_decode_independent_owned_documents_and_reviews() {
 				value.close(); value.close()
 			}
 			$if track_heap ? { if tracked {
-				kept := C.vinix_heap_end(); assert kept == 0
+				kept := C.tulpar_heap_end(); assert kept == 0
 				println('POLICY DECODE ' + architecture + ' ' + count.str() + ' entries: 1000 cycles retained ' + kept.str() + ' bytes')
 			} }
 			if !tracked { continue }
@@ -126,29 +126,29 @@ fn test_policy_decode_compatibility_and_borrowed_validation() {
 	document := policy_decode_document(1, 'aarch64'); review := policy_decode_review(1, 'aarch64')
 	cycles := $if track_heap ? { 1000 } $else { 64 }
 	for input in [document, ' \n' + document + '\t', document.replace('"policy":', '"pol\\u0069cy":'), document.replace('"files","network"', '"network","files"')] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { mut value := decode_policy_document(input, 'aarch64')!; assert value.policy.permissions[0] == 'files'; value.close() }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		mut value := decode_policy_document(input, 'aarch64')!; assert json2.encode(value) == document; value.close()
 	}
 	for input in [document.replace(',"minimum":"1.0.0","before":"2.0.0"', ''), document.replace('"permissions":["files","network"]', '"permissions":[]'),
 		document.replace('"reserve_bytes":0', '"reserve_bytes":1099511627776')] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { mut value := decode_policy_document(input, 'aarch64')!; value.close() }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	}
 	legacy := read_stored_configuration('{"architecture":"aarch64"}')!
 	assert legacy.policy.permissions.len == 5 && legacy.policy.reserve_bytes == 67108864; close_decoded_configuration(legacy)
 	mut borrowed := decode_policy_review(review)!
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. cycles { borrowed.validate()! }
-	$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+	$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	assert json2.encode(borrowed) == review; borrowed.close()
 	for input in [policy_decode_review(0, 'x86_64'), review.replace('"generation":1', '"generation":18446744073709551615'),
 		review.replace(',"minimum":"1.0.0","before":"2.0.0"', ''), review.replace('"previous":', '"prev\\u0069ous":')] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { mut value := decode_policy_review(input)!; value.close() }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 	}
 	println('POLICY DECODE strict declarations preserve legacy defaults, optional pin ranges, canonical settings, empty permissions and full u64 generations; borrowed validation retires scratch PASS')
 }
@@ -158,9 +158,9 @@ fn test_policy_decode_truncated_schema_and_semantic_refusals() {
 	invalid_utf8 := [u8(0xc0), 0xaf].bytestr()
 	for review in [false, true]! {
 		text := if review { policy_decode_review(2, 'aarch64') } else { policy_decode_document(1, 'aarch64') }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for end in 0 .. text.len { policy_decode_refusal(unsafe { tos(text.str, end) }, review) }
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0 }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0 }
 		mut inputs := [text + 'true', '{}', text.replace('"format":1', '"format":2147483648'), text.replace('"format":1', '"format":2'),
 			text.replace('"format":1', '"format":1.0'), text.replace('"format":1', '"format":01'), text.replace('"architecture":"aarch64"', '"architecture":"other"'),
 			text.replace('"format":1,', ''), text.replace('"offline":true', '"offline":null'), text.replace('"offline":true', '"offline":"true"'),
@@ -188,10 +188,10 @@ fn test_policy_decode_truncated_schema_and_semantic_refusals() {
 		cycles := $if track_heap ? { 1000 } $else { 64 }
 		for number, input in inputs {
 			assert input != text
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. cycles { policy_decode_refusal(input, review) }
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); assert kept == 0
+				kept := C.tulpar_heap_end(); assert kept == 0
 				println('POLICY DECODE refusal ' + review.str() + ' ' + number.str() + ': 1000 cycles retained ' + kept.str() + ' bytes')
 			}
 		}

@@ -2,9 +2,9 @@
 set -eu
 
 repo=$(cd "$(dirname "$0")/../.." && pwd)
-sysroot=${VINIX_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
+sysroot=${TULPAR_AARCH64_SYSROOT:-"$repo/build-aarch64-userland/sysroot"}
 cc=${CC:-clang}
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-realtime.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-realtime.XXXXXX")
 
 cleanup() {
 	rm -rf "$work"
@@ -18,7 +18,7 @@ for input in \
 	"$sysroot/lib/libgcc.a"; do
 	if [ ! -e "$input" ]; then
 		echo "ERROR: AArch64 test sysroot input is missing: $input" >&2
-		echo "       Run ./scripts/build-userland-aarch64.sh first or set VINIX_AARCH64_SYSROOT." >&2
+		echo "       Run ./scripts/build-userland-aarch64.sh first or set TULPAR_AARCH64_SYSROOT." >&2
 		exit 1
 	fi
 done
@@ -45,4 +45,4 @@ COPYFILE_DISABLE=1 tar --format=ustar -cf "$work/initramfs.tar" \
 	--init "$work/init" \
 	--initramfs "$work/initramfs.tar" \
 	--state-dir "$work/vm" \
-	--timeout "${VINIX_QEMU_TIMEOUT:-300}"
+	--timeout "${TULPAR_QEMU_TIMEOUT:-300}"

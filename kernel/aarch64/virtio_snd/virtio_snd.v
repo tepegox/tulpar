@@ -702,7 +702,7 @@ const interrupted = -2
 //
 // Linux restarts a sound write that a handled signal interrupts, and SDL
 // counts on that: it takes a failed write to mean the card is gone for good.
-// Vinix cannot restart a system call, so a write with no more left than the
+// Tulpar cannot restart a system call, so a write with no more left than the
 // device holds, which is every write SDL makes, finishes first and the
 // handler runs right after it. A signal that kills the process does not wait.
 fn (mut s SoundStream) wait_for_period(remaining u64) int {

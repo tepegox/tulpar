@@ -52,4 +52,4 @@ C/V target executables pass machine, allocator-import and absent-interpreter
 checks. This stage makes no fresh kernel, QEMU guest or hardware boot claim.
 
 Run the owner/CLI fixture with `tests/memory/test-memory-tools NEW_STATE`, setting
-`VINIX_MEMORY_TEST_C_BIGIO` to the immutable original `big_io_guest.c` input.
+`TULPAR_MEMORY_TEST_C_BIGIO` to the immutable original `big_io_guest.c` input.

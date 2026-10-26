@@ -123,13 +123,13 @@ fn exploratory(area string, out string) ! {
 	mut artifacts := map[string]string{}
 	for arch, suffix in {'aarch64':'arm', 'x86_64':'x86'} {
 		state := area + 'states/p1-after-' + suffix
-		captured := receipt(state, arch, digest(area + 'exploratory-' + suffix + '-vinix'), ['randomsignal','runtime','randomrange'], arch == 'aarch64')!
+		captured := receipt(state, arch, digest(area + 'exploratory-' + suffix + '-tulpar'), ['randomsignal','runtime','randomrange'], arch == 'aarch64')!
 		for key, hash in captured { artifacts[suffix + '_' + key] = hash }
 		text := os.read_file(state + '/randomsignal/serial.log')!
 		semantics(text, if arch == 'aarch64' { 'before' } else { 'after' }, arch, false)
 		storage(text, arch, if arch == 'aarch64' { 'before' } else { 'after' })
 		assert os.read_file(area + 'exploratory-build-after-' + suffix + '-detached.log')!.trim_space() == suffix + ' after production build: PASS'
-		assert os.read_file(area + 'exploratory-build-after-' + suffix + '.log')!.contains('-o bin/vinix')
+		assert os.read_file(area + 'exploratory-build-after-' + suffix + '.log')!.contains('-o bin/tulpar')
 		c_before := os.read_file(area + 'before-' + suffix + '.c')!
 		c_first := os.read_file(area + 'exploratory-after-' + suffix + '.c')!
 		marker := '\nmulti_return_u64_u64 table__syscall_linux_getrandom(void* _0, u64 buf, u64 count, u32 flags) {'
@@ -152,7 +152,7 @@ fn replay(area string, out string) ! {
 	failed := area + 'states/p2-after-arm'
 	refusal := object(failed + '/receipt.json')!
 	assert refusal['architecture']!.str() == 'aarch64'
-	assert refusal['kernel_sha256']!.str() == digest(area + 'kernel-arm/kernel/bin/vinix')
+	assert refusal['kernel_sha256']!.str() == digest(area + 'kernel-arm/kernel/bin/tulpar')
 	rows := refusal['results']!.as_array(); assert rows.len == 3
 	assert os.read_file(failed + '.log')!.count("fatal error: 'fcntl.h' file not found") == 3
 	for index, name in ['randomsignal','runtime','randomrange'] {
@@ -160,7 +160,7 @@ fn replay(area string, out string) ! {
 		assert row['name']!.str() == name && row['exit_code']!.int() == 1
 		assert row['init_sha256']!.str() == '' && row['iso_sha256']!.str() == '' && row['detail']!.str() == 'Command failed'
 		assert !os.exists(failed + '/' + name + '/init') && !os.exists(failed + '/' + name + '/serial.log')
-		assert row['source_sha256']!.str() == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert row['source_sha256']!.str() == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		original := area + 'states/' + if name == 'randomsignal' { 'p1-before-arm' } else { 'p1-after-arm' }
 		current := area + 'states/p3-after-arm/' + name
 		for file in ['fixture.c','serial.c','fixture.o','serial.o','init'] {
@@ -290,7 +290,7 @@ fn storage(log string, arch string, phase string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -321,7 +321,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -346,12 +346,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/randomsignal-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/randomsignal-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/randomsignalreferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/randomsignalreferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -389,7 +389,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: randomsignal-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	os.write_file(area + 'assertion-control.log', control(['--negative-control'], 'randomsignal assertions must execute'))!
@@ -402,7 +402,7 @@ fn main() {
 	os.write_file(area + 'scope-check.log', 'arm/x86: complete production C differs only in table__syscall_linux_getrandom; exact page-boundary current-thread borrowed signal/must-exit sampling, short-success loop exit and cooperative scheduling; all flag/range/readiness/copy checks, existing bounce lifetime and erasure unchanged; no allocation/free or compiler normalization\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '66da0245247afe0df1c4ccffb2b0520b7bc7eb6c'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -507,7 +507,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + if phase == 'before' { 'p1-' } else { if suffix == 'arm' { 'p3-' } else { 'p2-' } } + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['randomsignal']
 			} else {
@@ -527,7 +527,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + 'build-' + phase + '-' + suffix + '-detached.log'
 			assert os.read_file(producer)!.trim_space() == suffix + ' ' + phase + ' production build: PASS'
 			artifacts[phase + '_build_producer'] = digest(producer)

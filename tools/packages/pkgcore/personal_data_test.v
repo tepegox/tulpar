@@ -16,7 +16,7 @@ fn test_inventory_is_sorted_independent_of_catalog_and_never_opens_links_or_spec
 	work := data_work()!
 	defer { os.rmdir_all(work) or { panic(err) } }
 	home := work + '/home'
-	parent := home + '/.local/share/vinix-apps'
+	parent := home + '/.local/share/tulpar-apps'
 	os.mkdir_all(parent + '/removed-app')!
 	os.mkdir_all(parent + '/installed-app')!
 	os.mkdir_all(parent + '/shared-app')!
@@ -49,7 +49,7 @@ fn test_inventory_missing_parent_is_empty_but_unsafe_home_or_parent_is_refused()
 	mut refused := false
 	personal_data_inventory(home, u32(os.geteuid()), State{}) or { refused = err.msg().contains('ordinary directory') }
 	assert refused
-	os.rm(home + '/.local')!; os.mkdir_all(home + '/.local/share/vinix-apps')!
+	os.rm(home + '/.local')!; os.mkdir_all(home + '/.local/share/tulpar-apps')!
 	for uid in [u32(os.geteuid()) + 1] {
 		mut wrong_owner := false
 		personal_data_inventory(home, uid, State{}) or { wrong_owner = true }
@@ -70,7 +70,7 @@ fn test_inventory_bounds_all_entries_including_names_that_are_not_package_ids() 
 	work := data_work()!
 	defer { os.rmdir_all(work) or { panic(err) } }
 	home := work + '/home'
-	parent := home + '/.local/share/vinix-apps'
+	parent := home + '/.local/share/tulpar-apps'
 	os.mkdir_all(parent)!
 	for index in 0 .. 4097 { os.write_file(parent + '/invalid ' + index.str(), '')! }
 	mut refused := false

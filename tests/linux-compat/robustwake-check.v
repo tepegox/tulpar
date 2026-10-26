@@ -127,7 +127,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -158,7 +158,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -183,12 +183,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/robustwake-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/robustwake-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/robustwakereferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/robustwakereferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -212,7 +212,7 @@ fn definition(source string, marker string) string {
 fn main() {
 	if '--scope-only' in os.args {
 		area := os.args[2].trim_right('/')+'/'
-		check_source(area,'/Users/alex/code/vinix/')!
+		check_source(area,'/Users/alex/code/tulpar/')!
 		for suffix in ['arm','x86'] {check_c(area,suffix)!}
 		println('Native robust-futex exit wake source/C scope: PASS')
 		return
@@ -228,7 +228,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: robustwake-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	sdk_and_primary(area, out)!
@@ -241,7 +241,7 @@ fn main() {
 	os.write_file(area+'scope-check.log','arm/x86: exact whole production C differs only in release_robust_list calls, abandon_robust_futex prototype/body: PI and pending flags, ownerless pending non-PI wake, bounded ordinary wake1; existing user reads/writes, traversal, offsets, PI-state release, process/map ownership and cleanup unchanged; no allocation/free/pin/stack promotion or normalization\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '29d59c0e06b4cfc116777e634f74ca9ac6348ffe'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -333,7 +333,7 @@ fn main() {
 			'linux_primary_pin':        digest(area + 'linux-source.sha256')
 			'private_sdk': digest(area + 'sdk-inputs.json')
 			'primary_source_note': digest(area + 'primary-source-note.txt')
-			'sdk_prior_inputs': digest('/Users/alex/.cache/vinix-linux-compat/waitabi-20261015/sdk-inputs.json')
+			'sdk_prior_inputs': digest('/Users/alex/.cache/tulpar-linux-compat/waitabi-20261015/sdk-inputs.json')
 			'arm_compiler_adapter': digest(area + 'arm-cc.v')
 			'arm_compiler_adapter_binary': digest(area + 'arm-cc')
 			'prior_diagnostics': digest(area + 'diagnostic-pins.json')
@@ -352,7 +352,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + 'p3-' + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['robustwake']
 			} else {
@@ -372,7 +372,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + if phase == 'before' { 'initial-build-' + suffix + '-before.log' } else { 'build-' + suffix + '-after-producer.log' }
 			assert os.read_file(producer)!.trim_space() == suffix + ' ' + phase + ' production build: PASS'
 			artifacts[phase + '_build_producer'] = digest(producer)
@@ -525,13 +525,13 @@ fn check_c(area string,suffix string) ! {
  replacement_decl := 'void userland__abandon_robust_futex(i64 tid, u64 address, bool pi, bool pending);'
  assert before.count(previous_decl) == 1
  assert before.replace(old,'').replace(old_release,'').replace(previous_decl,replacement_decl) == after.replace(new,'').replace(new_release,''),'Exact whole-C two-function/prototype scope; no normalization'
- for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','vinix_stack_alloc(','pin_process(','unpin_process(','copy_from_user(','copy_to_user('] {
+ for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','tulpar_stack_alloc(','pin_process(','unpin_process(','copy_from_user(','copy_to_user('] {
   assert old.count(token) == new.count(token) && old_release.count(token) == new_release.count(token),token
  }
  assert old.count('futex__wake(address)') == 1 && new.count('futex__wake_n_key(address, 1, false)') == 2
 }
 fn sdk_and_primary(area string,out string) ! {
- sdk := object(area+'sdk-inputs.json')!; prior := object('/Users/alex/.cache/vinix-linux-compat/waitabi-20261015/sdk-inputs.json')!
+ sdk := object(area+'sdk-inputs.json')!; prior := object('/Users/alex/.cache/tulpar-linux-compat/waitabi-20261015/sdk-inputs.json')!
  assert sdk.len == 2014 && prior.len == 2014
  mut found := map[string]bool{}
  for path in os.walk_ext(area+'sdk','') {assert os.inode(path).typ == .regular; local := path.all_after(area+'sdk/'); assert local in sdk && local !in found; found[local] = true}
@@ -553,7 +553,7 @@ fn diagnostics(area string,out string) ! {
   entries := object(area+manifest)!; assert entries.len == if manifest == 'prior-transparent-compression.json' {42} else {75}
   for path,hash in entries {
    names := if manifest == 'prior-transparent-compression.json' {['robustquery']} else {['groupabi','grouptid','grouporder','groupzombie']}
-   assert names.any(path.starts_with('/Users/alex/.cache/vinix-linux-compat/'+it+'-20261015/'))
+   assert names.any(path.starts_with('/Users/alex/.cache/tulpar-linux-compat/'+it+'-20261015/'))
    assert os.inode(path).typ == .regular && digest(path) == hash.str(),path
   }
   pins[manifest] = digest(area+manifest); publish(area+manifest,out+'robustwake-'+manifest)!
@@ -562,7 +562,7 @@ fn diagnostics(area string,out string) ! {
  assert os.read_file(area+'compress-earlier.log')!.trim_space() == 'Preserved 75 earlier process-group artifacts with transparent compression; paths and SHA-256 unchanged'
  first := os.read_file(area+'initial-probe.v')!; second := os.read_file(area+'second-probe.v')!
  assert first.count('unsafe{&wanted}') == 1 && second == first.replace('unsafe{&wanted}','&wanted')
- final := os.read_file('/Users/alex/code/vinix/tests/linux-compat/robustwakefixture/core.v')!
+ final := os.read_file('/Users/alex/code/tulpar/tests/linux-compat/robustwakefixture/core.v')!
  original_flags := 'fn flags(choice i32) u32 {return [u32(0),0x40000000,0x80000000,0xc0000000]![choice]}'
  assert second.count(original_flags) == 1 && final == second.replace(original_flags,'fn flags(choice i32) u32 {return u32(choice)<<30}')
  for suffix in ['arm','x86'] {for phase in ['p1','p2'] {
@@ -597,7 +597,7 @@ fn diagnostics(area string,out string) ! {
   pins[name] = digest(area+name)
   if name.ends_with('.json') || name.ends_with('.log') || name in ['initial-probe.v','second-probe.v','compress-earlier.v'] {publish(area+name,out+'robustwake-'+name)!}
  }
- helper := '/Users/alex/.cache/vinix-linux-compat/compress-robustquery-for-wake.v'; pins[helper] = digest(helper); publish(helper,out+'robustwake-compress-prior.v')!
+ helper := '/Users/alex/.cache/tulpar-linux-compat/compress-robustquery-for-wake.v'; pins[helper] = digest(helper); publish(helper,out+'robustwake-compress-prior.v')!
  data := json2.encode(pins,prettify:true)+'\n'
  if os.exists(area+'diagnostic-pins.json') {assert os.read_file(area+'diagnostic-pins.json')! == data} else {os.write_file(area+'diagnostic-pins.json',data)!}
  publish(area+'diagnostic-pins.json',out+'robustwake-diagnostic-pins.json')!

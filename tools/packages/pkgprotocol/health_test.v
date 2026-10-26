@@ -6,8 +6,8 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn health_protocol_fixture(count int) HealthReport {
 	mut rows := []PackageHealth{cap: count}
@@ -61,12 +61,12 @@ fn test_maximum_health_report_fits_the_reply_bound_and_decoder_retires_partial_r
 	$if track_heap ? {
 		small := json2.encode(health_protocol_fixture(32))
 		bad := small[..small.len - 1] + ',"extra":{}}'
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut report := decode_health(small)!; report.close()
 			decode_health(bad) or { message := err.msg(); unsafe { message.free(); err.free() } }
 		}
-		kept := C.vinix_heap_end(); assert kept == 0, 'health decoder retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'health decoder retained ${kept} bytes'
 		println('HEALTH PROTOCOL 1000 complete and partial-invalid decode/retirement cycles retain zero tracked bytes PASS')
 	}
 }

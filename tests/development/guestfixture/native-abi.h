@@ -1,5 +1,5 @@
-#ifndef VINIX_DEVELOPMENT_NATIVE_ABI_H
-#define VINIX_DEVELOPMENT_NATIVE_ABI_H
+#ifndef TULPAR_DEVELOPMENT_NATIVE_ABI_H
+#define TULPAR_DEVELOPMENT_NATIVE_ABI_H
 #include <errno.h>
 #include <fcntl.h>
 #include <grp.h>

@@ -31,7 +31,7 @@ fn C.bitmap_zalloc_node(u32,u32,i32) &usize
 fn C.bitmap_alloc_node(u32,u32,i32) &usize
 fn C.bitmap_free(&usize)
 fn C.ksize(voidptr) usize
-fn C.vinix_linuxkpi_bitmap_runtime_selftest() i32
+fn C.tulpar_linuxkpi_bitmap_runtime_selftest() i32
 fn C.malloc(usize) voidptr
 fn C.free(voidptr)
 const test_bits = 8193
@@ -134,5 +134,5 @@ pub fn test_bitmap_runtime() { unsafe {
   C.bitmap_free(bitmap); C.assert(C.vmh_live_pages==before)
  }
  C.vmh_fail_allocation=true; C.assert(C.bitmap_alloc(1,C.GFP_KERNEL)==nil); C.assert(C.bitmap_zalloc(4097,C.GFP_KERNEL)==nil); C.assert(C.bitmap_alloc(~u32(0),C.GFP_KERNEL)==nil); C.assert(C.bitmap_zalloc_node(~u32(0),C.GFP_KERNEL,0)==nil); C.vmh_fail_allocation=false; C.assert(C.vmh_live_pages==before)
- for round:=u32(0); round<200; round++ { C.assert(C.vinix_linuxkpi_bitmap_runtime_selftest()==0); C.assert(C.vmh_live_pages==before) }
+ for round:=u32(0); round<200; round++ { C.assert(C.tulpar_linuxkpi_bitmap_runtime_selftest()==0); C.assert(C.vmh_live_pages==before) }
 } }

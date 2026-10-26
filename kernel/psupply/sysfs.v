@@ -3,7 +3,7 @@
 //
 // Power supplies as /sys shows them: /sys/class/power_supply/<name>/ with the
 // files and units Linux has, so that a battery applet, upower or `acpi` reads
-// a Vinix machine the way it reads any other.
+// a Tulpar machine the way it reads any other.
 //
 //	type                   Battery or Mains
 //	online                 a charger: 1 when supplying power
@@ -129,7 +129,7 @@ fn applies(attribute Attribute, supply &Supply) bool {
 }
 
 fn supply_path(supply &Supply, file string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(64) }
 	text.add('class/power_supply/')
 	text.add(supply.name)

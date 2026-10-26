@@ -245,14 +245,14 @@ fn test_flat_checks_preserve_exact_size_thresholds_and_semantics() {
 }
 
 fn test_native_cli_modes_options_error_streams_and_no_partial_reports() {
-	tool := os.getenv('VINIX_CHURN_CHECK_TOOL')
+	tool := os.getenv('TULPAR_CHURN_CHECK_TOOL')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-churn-check-')!
+	work := hosttest.work_dir('', 'tulpar-churn-check-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	path := work + '/guest log.txt'
 	for mode in modes {
 		os.write_file(path, fixture(mode))!
-		artifacts := os.getenv('VINIX_CHURN_FIXTURE_DIR')
+		artifacts := os.getenv('TULPAR_CHURN_FIXTURE_DIR')
 		if artifacts != '' {
 			os.mkdir_all(artifacts)!
 			os.write_file(artifacts + '/' + mode + '.log', fixture(mode))!

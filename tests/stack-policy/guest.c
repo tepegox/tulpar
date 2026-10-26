@@ -11,14 +11,14 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define PR_VINIX_STACK_POLICY 0x56490001
+#define PR_TULPAR_STACK_POLICY 0x56490001
 static int failures;
 extern long stack_syscall_on(void *, long);
 static void check(int valid, const char *name) {
     printf("STACK POLICY %s: %s (errno=%d)\n", valid ? "PASS" : "FAIL", name, errno);
     failures += !valid;
 }
-static int policy(long action) { return prctl(PR_VINIX_STACK_POLICY, action, 0L, 0L, 0L); }
+static int policy(long action) { return prctl(PR_TULPAR_STACK_POLICY, action, 0L, 0L, 0L); }
 static int wait_status(pid_t child) {
     int status; pid_t ret;
     do ret = waitpid(child, &status, 0); while (ret < 0 && errno == EINTR);

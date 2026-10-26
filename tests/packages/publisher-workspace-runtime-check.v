@@ -54,7 +54,7 @@ fn check() !int {
 	options := hwhost.parse_options(args)!
 	if options.help || options.list { return hwhost.run_suite(suite(), args, @FILE) }
 	if !os.is_file(options.kernel) { return error('--kernel is not a file') }
-	work := os.temp_dir() + '/vinix-publisher-workspace-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-publisher-workspace-' + os.getpid().str()
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	os.cp(options.kernel, work + '/kernel')!

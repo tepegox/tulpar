@@ -6,11 +6,11 @@ independent V oracle.
 The generator and clock have deterministic host stand-ins. No V builtin
 runtime is linked, and all production and oracle objects are checked for
 allocator imports. Address and undefined-behavior sanitizers are enabled by
-default; set `VINIX_NET_RANDOM_SANITIZERS=none` to disable them. The native
+default; set `TULPAR_NET_RANDOM_SANITIZERS=none` to disable them. The native
 runner uses V for its complete host and guest path. On macOS, Apple's runtime
 does not support LeakSanitizer; ASan/UBSan remain enabled with leak detection
 disabled. Supported hosts retain leak detection. Set
-`VINIX_NET_RANDOM_ASAN_OPTIONS` to override that platform setting.
+`TULPAR_NET_RANDOM_ASAN_OPTIONS` to override that platform setting.
 
 Coverage includes 64 SipHash answers at 16 unaligned offsets, 262,144 IP IDs
 with the 32,768-datagram reuse guarantee, IPv4/IPv6 tuple separation and every

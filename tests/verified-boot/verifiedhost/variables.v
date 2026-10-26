@@ -115,7 +115,7 @@ pub fn enroll_variables(template string, certificate string, output string) ! {
 		}
 		current = next
 	}
-	der := bh.temporary(os.dir(output), '.vinix-firmware-')!
+	der := bh.temporary(os.dir(output), '.tulpar-firmware-')!
 	defer { bh.retire(der) }
 	bh.quiet(['openssl', 'x509', '-in', certificate, '-outform', 'DER', '-out',
 		der + '/certificate.der'])!

@@ -27,11 +27,11 @@ fn environment_or(name string, fallback string) string {
 }
 
 // The checkout, from where the controller's own source was compiled.
-// VINIX_ROOT names another one; the working directory is the last resort for
+// TULPAR_ROOT names another one; the working directory is the last resort for
 // a binary that has been moved away from its source.
 pub fn find_root(controller_source string) !string {
 	mut candidates := []string{}
-	if override := os.getenv_opt('VINIX_ROOT') {
+	if override := os.getenv_opt('TULPAR_ROOT') {
 		candidates << override
 	} else {
 		candidates << os.join_path(os.dir(os.real_path(controller_source)), '..', '..')
@@ -47,7 +47,7 @@ pub fn find_root(controller_source string) !string {
 			return os.real_path(candidate)
 		}
 	}
-	return error('cannot find the Vinix checkout; set VINIX_ROOT')
+	return error('cannot find the Tulpar checkout; set TULPAR_ROOT')
 }
 
 // The checkout a git worktree was made from, or '' for a main checkout.
@@ -94,7 +94,7 @@ pub fn shared_path(root string, relative string) string {
 // The compiler the launcher chose (build-support/find-v.sh exports V), or
 // the one that script would choose.
 fn find_v() !string {
-	for name in ['V', 'VINIX_V_COMPILER'] {
+	for name in ['V', 'TULPAR_V_COMPILER'] {
 		mut value := os.getenv(name)
 		if value == '' {
 			continue
@@ -119,7 +119,7 @@ fn find_v() !string {
 			return candidate
 		}
 	}
-	return error('cannot find a V compiler; set V or VINIX_V_COMPILER')
+	return error('cannot find a V compiler; set V or TULPAR_V_COMPILER')
 }
 
 // Firmware ships beside QEMU, in share/qemu next to its bin. A package
@@ -145,11 +145,11 @@ pub fn find_host(root string, arch string, qemu_option string) !Host {
 	upper := arch.to_upper()
 	mut qemu := qemu_option
 	if qemu == '' {
-		qemu = environment_or('VINIX_QEMU_${upper}', 'qemu-system-${arch}')
+		qemu = environment_or('TULPAR_QEMU_${upper}', 'qemu-system-${arch}')
 	}
 	if !qemu.contains('/') {
 		qemu = os.find_abs_path_of_executable(qemu) or {
-			return error('${qemu} is not on PATH; pass --qemu or set VINIX_QEMU_${upper}')
+			return error('${qemu} is not on PATH; pass --qemu or set TULPAR_QEMU_${upper}')
 		}
 	}
 	if !os.is_executable(qemu) {
@@ -157,14 +157,14 @@ pub fn find_host(root string, arch string, qemu_option string) !Host {
 	}
 	mut vars := ''
 	if arch == 'aarch64' {
-		vars = find_firmware(qemu, 'edk2-arm-vars.fd', 'VINIX_OVMF_VARS_AARCH64')!
+		vars = find_firmware(qemu, 'edk2-arm-vars.fd', 'TULPAR_OVMF_VARS_AARCH64')!
 	}
 	return Host{
 		root:          root
 		arch:          arch
 		v:             find_v()!
 		qemu:          qemu
-		firmware:      find_firmware(qemu, 'edk2-${arch}-code.fd', 'VINIX_OVMF_CODE_${upper}')!
+		firmware:      find_firmware(qemu, 'edk2-${arch}-code.fd', 'TULPAR_OVMF_CODE_${upper}')!
 		firmware_vars: vars
 	}
 }
@@ -172,9 +172,9 @@ pub fn find_host(root string, arch string, qemu_option string) !Host {
 // How QEMU runs the guest's processor. An AArch64 guest on Apple silicon
 // runs on the host's own cores through Hypervisor.framework; everything else
 // is emulated, which is slower and is also the only way x86-64 runs there.
-// VINIX_HWTEST_TCG=1 asks for emulation where there is a choice.
+// TULPAR_HWTEST_TCG=1 asks for emulation where there is a choice.
 pub fn (h &Host) accelerator() []string {
-	if h.arch == 'aarch64' && os.getenv('VINIX_HWTEST_TCG') != '1' {
+	if h.arch == 'aarch64' && os.getenv('TULPAR_HWTEST_TCG') != '1' {
 		$if macos && arm64 {
 			return ['-accel', 'hvf', '-cpu', 'host']
 		}

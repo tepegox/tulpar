@@ -37,7 +37,7 @@ fn fifo_identity(path &char) u64 {
 fn private_file_checks() {
 	unsafe {
 		state := &char(c'/home/developer/fifo-token')
-		check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/fifo-jobs.json', state) == 0, 426)
+		check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/fifo-jobs.json', state) == 0, 426)
 		check(C.unlink(c'/home/developer/token') == 0
 			&& C.mkfifo(c'/home/developer/token', 0o600) == 0, 427)
 		inode := fifo_identity(c'/home/developer/token')
@@ -48,7 +48,7 @@ fn private_file_checks() {
 		job_state(c'/home/developer/fifo-failed.json', false, c'private file must be regular', c'"runs":1')
 
 		check(C.unlink(c'/home/developer/token') == 0, 431)
-		write_text(c'/home/developer/token', c'vinix-native-fixture-secret', 27)
+		write_text(c'/home/developer/token', c'tulpar-native-fixture-secret', 27)
 		// The failed attempt still enforces its normal interval. Retry after it
 		// becomes due, without rewriting the pinned plan or scheduler state.
 		deadline := job_clock() + 4000000000

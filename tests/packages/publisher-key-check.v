@@ -30,9 +30,9 @@ fn check() ! {
 	if before { println('Publisher key baseline: same fabricated signature authenticated two identity-key indexes'); return }
 	work := os.abs_path(os.args[1])
 	assert !os.exists(work) && !os.is_link(work)
-	os.mkdir_all(work + '/etc/vinix-packages')!
+	os.mkdir_all(work + '/etc/tulpar-packages')!
 	defer { os.rmdir_all(work) or {} }
-	config_path := work + '/etc/vinix-packages/config.json'
+	config_path := work + '/etc/tulpar-packages/config.json'
 	initial := pkgcore.Config{ architecture: 'aarch64', policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }
 	os.write_file(config_path, json2.encode(initial))!
 	os.chmod(config_path, 0o644)!
@@ -93,7 +93,7 @@ fn check() ! {
 	os.write_file(pkgcore.state_directory(work) + '/catalog.json', json2.encode([
 		pkgcore.Snapshot{ repository: bad, text: forged(1000000), signature: sig },
 	]))!
-	personal := work + '/home/user/.local/share/vinix-apps/data'
+	personal := work + '/home/user/.local/share/tulpar-apps/data'
 	os.mkdir_all(personal)!
 	os.write_file(personal + '/note', 'retained')!
 	legacy_config := os.read_file(config_path)!

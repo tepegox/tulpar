@@ -20,7 +20,7 @@ import bridge is involved.
 
 Run the pruning suite through `tests/build-cache/run.sh`, or run
 `tests/build-cache/test_prune_build_artifacts.v` using the repository's V tool
-runner. `VINIX_PRUNE_TOOL` optionally selects a prebuilt production executable.
+runner. `TULPAR_PRUNE_TOOL` optionally selects a prebuilt production executable.
 `tests/desktop-bootstrap/run-runner.sh` checks help, cold dependencies, warm
 dependencies, no-build ordering and an explicit compiler override. Its fake
 commands are V executables.
@@ -32,8 +32,8 @@ symlink boundaries, concurrent replacement, inspection failures, open files,
 another process's selected input, automatic opt-out, lock contention and repeated
 descriptor retirement. Real ps/lsof inspection is exercised; V process fixtures
 also check lsof statuses and redacted failures. Logs are
-`/tmp/vinix-prune-{test,front}-{arm,x86,san}.log` and
-`/tmp/vinix-bootstrap-{arm,x86,san}.log`.
+`/tmp/tulpar-prune-{test,front}-{arm,x86,san}.log` and
+`/tmp/tulpar-bootstrap-{arm,x86,san}.log`.
 
 No Python was executed, no real workspace archives were deleted, and these
 host checks do not establish a new guest boot. All desktop bootstrap suites now

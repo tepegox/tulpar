@@ -79,7 +79,7 @@ fn check_registration(generation string, p Package, options RegistrationOptions)
 	tree := capture_registration_tree(generation, options.flushed)!
 	defer { close_registration_tree(tree) }
 	options.checkpoint('captured', generation)!
-	name := 'vinix-' + p.id + '.desktop'
+	name := 'tulpar-' + p.id + '.desktop'
 	path := generation + '/share/applications/' + name
 	text := desktop_entry(p)
 	defer { unsafe { name.free(); path.free(); text.free() } }

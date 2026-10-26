@@ -1,6 +1,6 @@
 description = Add a user account
 auth = admin
-exec = /usr/sbin/vinix-account
+exec = /usr/sbin/tulpar-account
 arg = add
 param = name
 param = text

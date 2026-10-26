@@ -11,22 +11,22 @@ rules; this page is where things are.
 | `authcore/` | What the service decides (`service.v`), the action files (`action.v`) and how an allowed action is started (`run.v`). |
 | `authclient/` | Connect, send one request, read one reply. |
 | `sessioncore/` | `become.v`: a root process turned into an account's, logins and the seat. `launch.v`: starting a session. `manager.v`: the session manager. |
-| `actions/` | The action files that ship, installed in `/usr/share/vinix/actions`. |
-| `authd.v` | `vinix-authd` |
-| `auth.v` | `vinix-auth` |
-| `account.v` | `vinix-account` |
-| `session.v` | `vinix-session` |
-| `system.v` | `vinix-system` |
+| `actions/` | The action files that ship, installed in `/usr/share/tulpar/actions`. |
+| `authd.v` | `tulpar-authd` |
+| `auth.v` | `tulpar-auth` |
+| `account.v` | `tulpar-account` |
+| `session.v` | `tulpar-session` |
+| `system.v` | `tulpar-system` |
 
 ## Building
 
     tools/accounts/build aarch64|x86_64 ROOT
 
-builds the five programs statically for a Vinix machine and lays them and
+builds the five programs statically for a Tulpar machine and lays them and
 the action files out under `ROOT` as they are installed.
 
 The command is a thin launcher for `build.v`, which invokes the V staging tool.
-It keeps `V`/`VINIX_V_COMPILER`, `CC` and `VINIX_AARCH64_SYSROOT` for AArch64,
+It keeps `V`/`TULPAR_V_COMPILER`, `CC` and `TULPAR_AARCH64_SYSROOT` for AArch64,
 and `CC_AMD64` for x86_64. Compiler names and paths are literal arguments.
 For other cross compilers, invoke staging directly with an explicit argument list:
 
@@ -47,8 +47,8 @@ path replacements, outside-file preservation, short writes and flush failures.
 
 A system starts using them with, as root and in this order:
 
-    vinix-account init      # at every boot
-    vinix-authd &           # before anything that logs in
+    tulpar-account init      # at every boot
+    tulpar-authd &           # before anything that logs in
 
 ## Tests
 
@@ -78,7 +78,7 @@ existing generic service diagnosis. Complete transactions, malformed replies
 and root-peer decisions have tracked ownership checks; see
 [authentication client qualification](../../tests/packages/auth-client-check.md).
 
-`vinix-session run --isolated USER COMMAND [ARGUMENT...]` is a root-only
+`tulpar-session run --isolated USER COMMAND [ARGUMENT...]` is a root-only
 application profile. It creates a login attributed to that ordinary account,
 drops all supplementary memberships before dropping privileges, verifies the
 same IDs/capabilities as a normal session, and waits for the command. It does
@@ -87,7 +87,7 @@ The package service uses this profile for its configured `launch_user`.
 
 Ordinary desktops keep their account memberships. Package launches from those
 sessions use the fixed `packages-launch` action (`auth = account`): the kernel
-identifies the caller, and `vinix-session package-launch` runs only the installed
+identifies the caller, and `tulpar-session package-launch` runs only the installed
 package CLI with that account's isolated profile. The helper and supervisor drop
 root; existing stdin/stdout/stderr descriptors preserve native-window and terminal
 I/O. No password or account selection is involved. See
@@ -96,8 +96,8 @@ I/O. No password or account selection is involved. See
 ## Adding an action
 
 Write a file in `actions/` (the format is at the top of
-`authcore/action.v`), and a program for it to run if `vinix-system` or
-`vinix-account` does not already do the thing. Keep the program to one
+`authcore/action.v`), and a program for it to run if `tulpar-system` or
+`tulpar-account` does not already do the thing. Keep the program to one
 operation with arguments it checks itself: the service checks them too, but
 the program is what runs as root. `authcore/shipped_actions_test.v` fails if
 a shipped file does not parse or lets someone who merely sits at the machine

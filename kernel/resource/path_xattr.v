@@ -20,7 +20,7 @@ mut:
 pub fn path_xattr_resource(res &Resource) &Resource {
 	mut origin := unsafe { res }
 	if mut origin is PathXAttrResource {
-		mut call := unsafe { &PathXAttrCall(C.vinix_stack_alloc(sizeof(PathXAttrCall))) }
+		mut call := unsafe { &PathXAttrCall(C.tulpar_stack_alloc(sizeof(PathXAttrCall))) }
 		unsafe { call.backend = PathXAttrResource(origin) }
 		backing := call.backend.path_xattr_backend()
 		if backing != unsafe { nil } { return backing }
@@ -30,7 +30,7 @@ pub fn path_xattr_resource(res &Resource) &Resource {
 
 pub fn refresh_path_xattr_resource(mut res Resource) {
 	if mut res is PathXAttrResource {
-		mut call := unsafe { &PathXAttrCall(C.vinix_stack_alloc(sizeof(PathXAttrCall))) }
+		mut call := unsafe { &PathXAttrCall(C.tulpar_stack_alloc(sizeof(PathXAttrCall))) }
 		unsafe { call.backend = PathXAttrResource(res) }
 		call.backend.path_xattrs_changed()
 	}

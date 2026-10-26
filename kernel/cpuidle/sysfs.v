@@ -101,7 +101,7 @@ fn store_disable(context voidptr, data &u8, length u64) u64 {
 // it. Built on the stack, as every path in /sys is: a builder made as a local
 // value is moved to the heap by the compiler and left there.
 fn numbered_path(a string, n int, b string, m int, c string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(a.len + b.len + c.len + 24) }
 	text.add(a)
 	text.add_unsigned(u64(n))
@@ -114,7 +114,7 @@ fn numbered_path(a string, n int, b string, m int, c string) string {
 }
 
 fn number_line(value u64) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(24) }
 	text.add_unsigned(value)
 	text.add_byte(`\n`)
@@ -122,7 +122,7 @@ fn number_line(value u64) string {
 }
 
 fn text_line(value string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(value.len + 1) }
 	text.add(value)
 	text.add_byte(`\n`)

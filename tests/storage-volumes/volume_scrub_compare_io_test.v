@@ -16,7 +16,7 @@ fn volume_scrub_compare_check(before string, after string, fault int, expected i
 	output := os.dir(before) + '/capture'; assert C.fflush(C.stdout) == 0
 	saved := C.dup(1); fd := C.open(output.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
-	unsafe { args := [&char(c'vinix-volume'), &char(c'compare-volume-scrubs'), before.str, after.str, &char(nil)]!; assert run(4, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'compare-volume-scrubs'), before.str, after.str, &char(nil)]!; assert run(4, &args[0]) == expected }
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	volume_scrub_report_ready()
 	assert recovery_io.opened == recovery_io.closed && recovery_io.volume_wipes == 0 && recovery_io.random == -1 && volume_recovery_io.derives == 0
@@ -28,7 +28,7 @@ fn volume_scrub_compare_check(before string, after string, fault int, expected i
 fn test_scrub_comparison_history_transitions_private_inputs_complete_validation_and_output_errors() {
 	volume_scrub_model = true; volume_scrub_offline = true; ciphertext_model = true
 	defer { volume_scrub_model = false; volume_scrub_offline = false; ciphertext_model = false }
-	work := os.join_path(os.temp_dir(), 'vinix-scrub-compare-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-scrub-compare-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	before := work + '/before'; after := work + '/after'
 	for sector in [u64(512), u64(4096)] { for kind in [u32(1), u32(2)] { for flags in [u64(0), u64(1)] {
 		mut disk := DiskKey{bytes: u64(-1) - (sector - 1), sector: sector, kind: kind}; disk.id[0] = 1; if kind == 2 { disk.id[15] = 0x83 }
@@ -39,7 +39,7 @@ fn test_scrub_comparison_history_transitions_private_inputs_complete_validation_
 			os.write_file_array(before, records[i][..])!; os.write_file_array(after, records[j][..])!; os.chmod(before, 0o600)!; os.chmod(after, 0o600)!
 			identity := if kind == 1 { 'mbr:00000001' } else { 'gpt:00000001-0000-0000-0000-000000000083' }
 			result := if i == j { 'stable' } else if j == 0 { 'restored' } else if i == 0 { 'new-change' } else { 'changed-again' }
-			expected := 'format=VINIXCS1 operation=compared-ciphertext mappings=1 stable=${int(i == j)} changed=${int(i != j)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference[..])[..])
+			expected := 'format=TULPARCS1 operation=compared-ciphertext mappings=1 stable=${int(i == j)} changed=${int(i != j)} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(reference[..])[..])
 				+ '\ndisk_bytes=${disk.bytes} sector=${sector} identity=${identity} slot=63 offset=8192 bytes=73728 readonly=${flags} before=${if i == 0 { 'match' } else { 'changed' }} after=${if j == 0 { 'match' } else { 'changed' }} result=${result} expected_sha256=' + hex.encode(digest[..])
 				+ ' before_sha256=' + hex.encode(records[i][160..192]) + ' after_sha256=' + hex.encode(records[j][160..192]) + '\n'
 			for fault in [0, 1, 2, 3, 4, 5, 21, 22, 32, 33] {

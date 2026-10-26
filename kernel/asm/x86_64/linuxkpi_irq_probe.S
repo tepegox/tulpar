@@ -1,12 +1,12 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifdef VINIX_LINUXKPI
+#ifdef TULPAR_LINUXKPI
 .section .text
-.global vinix_linuxkpi_irq_probe
-.type vinix_linuxkpi_irq_probe,@function
+.global tulpar_linuxkpi_irq_probe
+.type tulpar_linuxkpi_irq_probe,@function
 /* A runtime vector selects an immutable immediate-INT leaf. No exception
  * vector, reserved high vector or dynamically patched instruction is used.
  * Tail dispatch preserves the ordinary caller stack through INT and IRET. */
-vinix_linuxkpi_irq_probe:
+tulpar_linuxkpi_irq_probe:
     sub $32, %edi
     cmp $207, %edi
     ja 1f
@@ -16,7 +16,7 @@ vinix_linuxkpi_irq_probe:
 1:
     mov $-22, %eax
     ret
-.size vinix_linuxkpi_irq_probe, .-vinix_linuxkpi_irq_probe
+.size tulpar_linuxkpi_irq_probe, .-tulpar_linuxkpi_irq_probe
 
 .altmacro
 .macro IRQ_PROBE vector

@@ -26,13 +26,13 @@ fn C.vks_smp_load_word(&uint, i32) uint
 fn C.vks_smp_exchange_word(&uint, uint, i32) uint
 fn C.vks_smp_compare_word(&uint, &uint, uint, i32, i32) bool
 fn C.vks_smp_fence(i32)
-fn C.vinix_linuxkpi_smp_send_ipi(u32)
-fn C.vinix_linuxkpi_smp_boot_context() bool
-fn C.vinix_linuxkpi_smp_task_present() bool
-fn C.vinix_linuxkpi_maskable_irq_depth() u32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_smp_send_ipi(u32)
+fn C.tulpar_linuxkpi_smp_boot_context() bool
+fn C.tulpar_linuxkpi_smp_task_present() bool
+fn C.tulpar_linuxkpi_maskable_irq_depth() u32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
 
 __global (
 	vks_smp_published u32
@@ -56,7 +56,7 @@ pub fn smp_bootstrap(count u32) i32 {
 		return -22
 	}
 	if smp_calls_ready() { return -114 }
-	if !C.vinix_linuxkpi_smp_boot_context() { return -1 }
+	if !C.tulpar_linuxkpi_smp_boot_context() { return -1 }
 	// count <= 256 bounds both products and padding in the native 64-bit ABI.
 	single_bytes := uint(count) * uint(C.VKS_SMP_CSD_BYTES) + uint(C.VKS_SMP_CSD_ALIGN) - 1
 	many_bytes := uint(count) * uint(count) * uint(C.VKS_SMP_CSD_BYTES) + uint(C.VKS_SMP_CSD_ALIGN) - 1
@@ -82,15 +82,15 @@ pub fn smp_bootstrap(count u32) i32 {
 }
 
 fn smp_task_context() bool {
-	return (C.vinix_linuxkpi_irq_flags() & 512) != 0 && C.vinix_linuxkpi_maskable_irq_depth() == 0
-		&& C.vinix_linuxkpi_smp_task_present()
+	return (C.tulpar_linuxkpi_irq_flags() & 512) != 0 && C.tulpar_linuxkpi_maskable_irq_depth() == 0
+		&& C.tulpar_linuxkpi_smp_task_present()
 }
 
 fn smp_wait_csd(csd voidptr) {
 	flags := C.vks_smp_csd_flags(csd)
 	for (C.vks_smp_load32(flags, 2) & u32(C.VKS_SMP_LOCK)) != 0 {
 		// Spin only services native TLB shootdowns; callbacks require their IPI.
-		C.vinix_linuxkpi_spin_wait()
+		C.tulpar_linuxkpi_spin_wait()
 	}
 }
 
@@ -120,24 +120,24 @@ fn smp_execute_single(source u32, cpu i32, csd voidptr) i32 {
 		callback := C.vks_smp_csd_function(csd)
 		info := C.vks_smp_csd_info(csd)
 		C.vks_smp_store32(C.vks_smp_csd_flags(csd), 0, 3)
-		flags := C.vinix_linuxkpi_irq_save()
+		flags := C.tulpar_linuxkpi_irq_save()
 		callback(info)
-		C.vinix_linuxkpi_irq_restore(flags)
+		C.tulpar_linuxkpi_irq_restore(flags)
 		return 0
 	}
 	if cpu < 0 || u32(cpu) >= unsafe { vks_smp_cpu_count } {
 		C.vks_smp_store32(C.vks_smp_csd_flags(csd), 0, 3)
 		return -6
 	}
-	if smp_enqueue(u32(cpu), csd) { C.vinix_linuxkpi_smp_send_ipi(u32(cpu)) }
+	if smp_enqueue(u32(cpu), csd) { C.tulpar_linuxkpi_smp_send_ipi(u32(cpu)) }
 	return 0
 }
 
 @[export: 'vks_smp_single']
 pub fn smp_single(wait u32, cpu i32, callback SmpCallFn, info voidptr, stack_csd voidptr) i32 {
 	require(smp_calls_ready() && smp_task_context())
-	C.vinix_linuxkpi_preempt_disable()
-	source := C.vinix_linuxkpi_cpu_id()
+	C.tulpar_linuxkpi_preempt_disable()
+	source := C.tulpar_linuxkpi_cpu_id()
 	require(source < unsafe { vks_smp_cpu_count })
 	mut csd := unsafe { voidptr(uint(stack_csd)) }
 	if wait == 0 {
@@ -150,35 +150,35 @@ pub fn smp_single(wait u32, cpu i32, callback SmpCallFn, info voidptr, stack_csd
 	C.vks_smp_csd_set_callback(csd, callback, info)
 	result := smp_execute_single(source, cpu, csd)
 	if wait != 0 { smp_wait_csd(csd) }
-	C.vinix_linuxkpi_preempt_enable()
+	C.tulpar_linuxkpi_preempt_enable()
 	return result
 }
 
 @[export: 'vks_smp_async']
 pub fn smp_async(cpu i32, csd voidptr) i32 {
 	require(smp_calls_ready() && uint(csd) != 0)
-	C.vinix_linuxkpi_preempt_disable()
+	C.tulpar_linuxkpi_preempt_disable()
 	flags := C.vks_smp_csd_flags(csd)
 	// Caller serialization is required by Linux. Busy wins over invalid CPU.
 	if (C.vks_smp_load32(flags, 2) & u32(C.VKS_SMP_LOCK)) != 0 {
-		C.vinix_linuxkpi_preempt_enable()
+		C.tulpar_linuxkpi_preempt_enable()
 		return -16
 	}
 	C.vks_smp_store32(flags, u32(C.VKS_SMP_LOCK), 0)
 	C.vks_smp_fence(3)
-	source := C.vinix_linuxkpi_cpu_id()
+	source := C.tulpar_linuxkpi_cpu_id()
 	require(source < unsafe { vks_smp_cpu_count })
 	result := smp_execute_single(source, cpu, csd)
-	C.vinix_linuxkpi_preempt_enable()
+	C.tulpar_linuxkpi_preempt_enable()
 	return result
 }
 
 @[export: 'vks_smp_drain']
 pub fn smp_drain(cpu u32) {
 	require(smp_calls_ready() && cpu < unsafe { vks_smp_cpu_count }
-		&& cpu == C.vinix_linuxkpi_cpu_id()
-		&& (C.vinix_linuxkpi_irq_flags() & 512) == 0
-		&& C.vinix_linuxkpi_maskable_irq_depth() != 0)
+		&& cpu == C.tulpar_linuxkpi_cpu_id()
+		&& (C.tulpar_linuxkpi_irq_flags() & 512) == 0
+		&& C.tulpar_linuxkpi_maskable_irq_depth() != 0)
 	mut entry := unsafe { voidptr(C.vks_smp_exchange_word(&vks_smp_heads[cpu], 0, 2)) }
 	mut fifo := unsafe { voidptr(0) }
 	for uint(entry) != 0 {
@@ -228,9 +228,9 @@ pub fn smp_drain(cpu u32) {
 
 @[export: 'vks_smp_many']
 pub fn smp_many(mask C.vks_smp_const_void, callback SmpCallFn, info voidptr, wait bool, run_local bool, condition SmpCondFn) {
-	require(smp_calls_ready() && smp_task_context() && C.vinix_linuxkpi_preempt_count() != 0
+	require(smp_calls_ready() && smp_task_context() && C.tulpar_linuxkpi_preempt_count() != 0
 		&& uint(mask) != 0)
-	source := C.vinix_linuxkpi_cpu_id()
+	source := C.tulpar_linuxkpi_cpu_id()
 	count := unsafe { vks_smp_cpu_count }
 	require(source < count)
 	mut candidates := [4]u64{}
@@ -249,15 +249,15 @@ pub fn smp_many(mask C.vks_smp_const_void, callback SmpCallFn, info voidptr, wai
 		csd := unsafe { voidptr(vks_smp_many_slots + (uint(source) * uint(count) + uint(target)) * uint(C.VKS_SMP_CSD_BYTES)) }
 		smp_claim_csd(csd, wait)
 		C.vks_smp_csd_set_callback(csd, callback, info)
-		if smp_enqueue(target, csd) { C.vinix_linuxkpi_smp_send_ipi(target) }
+		if smp_enqueue(target, csd) { C.tulpar_linuxkpi_smp_send_ipi(target) }
 		// No ASYNC node reads after publish. These stack bits outlive its reuse.
 		unsafe { selected[target / 64] |= u64(1) << (target % 64) }
 	}
 	if local_selected
 		&& (uint(condition) == 0 || condition(i32(source), info)) {
-		flags := C.vinix_linuxkpi_irq_save()
+		flags := C.tulpar_linuxkpi_irq_save()
 		callback(info)
-		C.vinix_linuxkpi_irq_restore(flags)
+		C.tulpar_linuxkpi_irq_restore(flags)
 	}
 	if wait {
 		for target := u32(0); target < count; target++ {

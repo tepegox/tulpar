@@ -44,7 +44,7 @@ fn test_scrub_comparison_complete_reports_exact_reference_and_transactional_outp
 
 fn test_scrub_comparison_rejects_invalid_arity_and_empty_paths_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'compare-volume-scrubs'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'compare-volume-scrubs'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 		for count in [2, 3, 5] { assert run(count, &args[0]) == 2 }
 		for at in [2, 3] { args[at] = &char(c''); assert run(4, &args[0]) == 2; args[at] = &char(c'/unused') }
 	}

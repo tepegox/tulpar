@@ -170,7 +170,7 @@ fn test_membership_full_table_retries_priority_compaction_and_v1_v2_roundtrips()
 
 fn test_membership_batch_cli_rejects_counts_unsigned_numbers_and_invalid_windows() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-add-batch'), &char(c'/unused'), &char(c'3'),
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-add-batch'), &char(c'/unused'), &char(c'3'),
 			&char(c'0'), &char(c'0'), &char(c'4096'), &char(c'4096'), &char(nil)]!
 		for command in [c'pool-add-batch', c'pool-preview-add-batch'] {
 			args[1] = &char(command)
@@ -196,7 +196,7 @@ fn test_membership_batch_cli_rejects_counts_unsigned_numbers_and_invalid_windows
 }
 
 fn test_maximum_membership_cli_publishes_all_260_add_and_68_remove_arguments() {
-	work := os.join_path(os.temp_dir(), 'vinix-members-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-members-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut set := PlanSet{}
@@ -210,7 +210,7 @@ fn test_maximum_membership_cli_publishes_all_260_add_and_68_remove_arguments() {
 	unsafe {
 		mut args := [261]&char{}
 		mut numbers := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[2] = path.str; args[3] = &char(c'3')
+		args[0] = &char(c'tulpar-volume'); args[2] = path.str; args[3] = &char(c'3')
 		for i in 0 .. 64 {
 			C.snprintf(&numbers[i][0], 4, c'%u', u32(63 - i))
 			args[4 + i * 4] = &numbers[i][0]; args[5 + i * 4] = &char(c'8192')
@@ -235,7 +235,7 @@ fn test_maximum_membership_cli_publishes_all_260_add_and_68_remove_arguments() {
 }
 
 fn test_membership_commands_preserve_corrupt_symlink_and_nonregular_sources() {
-	work := os.join_path(os.temp_dir(), 'vinix-members-input-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-members-input-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
 	mut set := PlanSet{}

@@ -21,7 +21,7 @@ mut:
 // KekVM's GPU bottle has no slirp. Keep the original stream/hub backend
 // in a separate, owned stock QEMU, retiring its process group on every path.
 pub fn game_network(qemu string, env map[string]string, log_path string) !&GameNetwork {
-	mut template := '/tmp/vinix-game-net-XXXXXX'.bytes()
+	mut template := '/tmp/tulpar-game-net-XXXXXX'.bytes()
 	template << u8(0)
 	if isnil(C.mkdtemp(unsafe { &char(template.data) })) { return posix_error() }
 	work := template[..template.len - 1].bytestr()

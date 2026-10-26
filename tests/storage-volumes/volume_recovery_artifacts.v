@@ -18,7 +18,7 @@ fn header(bytes []u8, backup bool, readonly bool) {
 
 fn header_geometry(bytes []u8, backup bool, readonly bool, capacity u64, length u64) {
 	assert bytes.len == 320
-	magic := if backup { 'VINIXVR1' } else { 'VINIXVC1' }
+	magic := if backup { 'TULPARVR1' } else { 'TULPARVC1' }
 	mut expected := []u8{len: 192}; copy(mut expected, magic.bytes())
 	for field in [[8, 4, 1], [12, 4, 1], [16, 4, 320], [20, 4, 64],
 		[88, 8, 512], [96, 4, 1], [104, 4, 0x12345678],
@@ -101,8 +101,8 @@ fn main() {
 	assert !os.exists(output)
 	os.mkdir(output)!; os.chmod(output, 0o700)!
 	for marker in ['first-boot.log', 'second-boot.log'] { assert os.read_file(work + '/' + marker)!.contains('PLAN DONE') }
-	debugfs := os.getenv_opt('VINIX_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
-	openssl := os.getenv_opt('VINIX_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
+	debugfs := os.getenv_opt('TULPAR_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
+	openssl := os.getenv_opt('TULPAR_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
 	if unlock && os.args[3] == '--volume-inspect' { inspect_artifacts(work, output, debugfs, openssl)!; return }
 	names := if growth { ['volume.vrecover', 'volume-ro.vrecover', 'grown.vrecover', 'grown-ro.vrecover', 'capacity.vrecover', 'capacity-ro.vrecover', 'recovery.key'] }
 		else if rewrap { ['volume.vrecover', 'volume-ro.vrecover', 'rotated.vrecover', 'rotated-ro.vrecover', 'recovery.key'] }
@@ -111,7 +111,7 @@ fn main() {
 		r := os.exec([debugfs, '-R', 'dump /root/' + name + ' ' + output + '/' + name, work + '/config.ext2']); assert r.exit_code == 0, r.output
 	}
 	if !unlock { for name in ['boot-volume.vcrypt', 'boot-volume.pass'] {
-		r := os.exec([debugfs, '-R', 'dump /etc/vinix/' + name + ' ' + output + '/' + name, work + '/config.ext2']); assert r.exit_code == 0, r.output
+		r := os.exec([debugfs, '-R', 'dump /etc/tulpar/' + name + ' ' + output + '/' + name, work + '/config.ext2']); assert r.exit_code == 0, r.output
 	} }
 	key := []u8{len: 64, init: u8(index * 13 + 7)}
 	recovery := os.read_bytes(output + '/recovery.key')!

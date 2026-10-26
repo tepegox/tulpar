@@ -25,7 +25,7 @@ fn seed_workspace() !(string, string, i64) {
 }
 
 fn seed_work() !string {
-	path := os.real_path(os.temp_dir()) + '/vinix-seed-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	path := os.real_path(os.temp_dir()) + '/tulpar-seed-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(path, mode: 0o700)!
 	return path
 }
@@ -107,7 +107,7 @@ fn test_release_secret_exclusion_uses_the_same_seed_capture_as_signing() {
 		refused = err.msg().contains('include the signing seed as a payload')
 	}
 	assert refused && !os.exists(work + '/release') && !os.exists(work + '/repository/.publisher/history.json')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-release-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-release-'))
 	os.rm(work + '/seed')!; os.rename(work + '/seed.saved', work + '/seed')!
 	os.rm(work + '/repository/manifests/secret-all-1.0.0.json')!
 	info := publish_release(work + '/repository', 'fixture', work + '/seed', 1, expires, work + '/retry')!

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_PCI_CONFIG_FIXTURE_NATIVE_ABI_H
-#define VINIX_PCI_CONFIG_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_PCI_CONFIG_FIXTURE_NATIVE_ABI_H
+#define TULPAR_PCI_CONFIG_FIXTURE_NATIVE_ABI_H
 #include <assert.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -10,7 +10,7 @@
 #include <pthread.h>
 #include <sched.h>
 #include "pci_config.h"
-/* Native storage only: V's Vinix backend cannot declare per-thread globals.
+/* Native storage only: V's Tulpar backend cannot declare per-thread globals.
  * These are the original bool/unsigned words and original true/zero initializers.
  * No transport or oracle implementation lives in this header. */
 static __thread bool pci_interrupts = true, pci_locked, pci_saved_interrupts;

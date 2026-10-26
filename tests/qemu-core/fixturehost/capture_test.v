@@ -26,7 +26,7 @@ fn test_capture_reports_the_child_signal() {
 }
 
 fn test_capture_reports_exec_error_without_successful_child() {
-	capture_both_preferred(['/vinix-nonexistent-capture-test-command'], os.environ(), '') or {
+	capture_both_preferred(['/tulpar-nonexistent-capture-test-command'], os.environ(), '') or {
 		assert err is FileError
 		assert err.code() == 2
 		return

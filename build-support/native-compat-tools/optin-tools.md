@@ -24,7 +24,7 @@ rejecting normal guest pass/fail output. ARM keeps 2048 MiB, the physical privat
 supervision checkpoints. x86 retains 1024 MiB, two CPUs, the original E1000
 network and capture, serial framing, acceleration override and architecture-
 specific firmware variable. Kernel inputs may be directories or ELF files.
-`VINIX_QEMU_TIMEOUT` retains the default 300-second budget.
+`TULPAR_QEMU_TIMEOUT` retains the default 300-second budget.
 
 CPU mitigation remains x86 only and retains the selected CPU, SMP count,
 unchanged instruction probe and either unchanged C guest. Its default kernel
@@ -37,8 +37,8 @@ TLS/LDT assertion or feature marker changes.
 
 SMT keeps one socket, two cores and two threads per core, testing restriction
 before enablement. Each retained archive contains the exact one-byte request
-and the same V affinity probe. The corresponding ISO receives `vinix.smt=0`
-or `vinix.smt=1`; the command-line environment is restored after construction.
+and the same V affinity probe. The corresponding ISO receives `tulpar.smt=0`
+or `tulpar.smt=1`; the command-line environment is restored after construction.
 The duplicate feature/pass entries remain in the marker list. Its default
 budget is 180 seconds and its original kernel/runner/firmware overrides remain.
 
@@ -78,7 +78,7 @@ its unchanged core feature and final CPU marker. The x86 runtime stack guest
 times out after its unchanged first warmup on this prepared kernel; its
 300-second budget and required completion marker remain. The prepared x86 kernel's
 restricted SMT guest fails with `online=4 expected=2`. Extracting the actual
-boot ISO confirms `vinix.disk=auto vinix.smt=0`; the original topology and
+boot ISO confirms `tulpar.disk=auto tulpar.smt=0`; the original topology and
 affinity assertion remain. Its controller stops before the enabled run, as
 before. New ACPI kernel builds, opt-in fault/overflow kernels, both-policy SMT
 guest success and hardware mitigation effectiveness are not claimed.

@@ -4,17 +4,17 @@ module compatcore
 
 #include "linuxkpi_pagefault_v_contract.h"
 
-fn C.vinix_linuxkpi_fault_depth() &u32
+fn C.tulpar_linuxkpi_fault_depth() &u32
 
 // The aliases share the existing native ABI without redeclaring task.v's
 // V function names in this module. These callbacks own no algorithm state.
-@[c: 'vinix_linuxkpi_irq_save']
+@[c: 'tulpar_linuxkpi_irq_save']
 fn C.vkf_irq_save() u64
-@[c: 'vinix_linuxkpi_irq_restore']
+@[c: 'tulpar_linuxkpi_irq_restore']
 fn C.vkf_irq_restore(u64)
-@[c: 'vinix_linuxkpi_preempt_count']
+@[c: 'tulpar_linuxkpi_preempt_count']
 fn C.vkf_preempt_count() u32
-fn C.vinix_linuxkpi_maskable_irq_depth() u32
+fn C.tulpar_linuxkpi_maskable_irq_depth() u32
 
 // Linux needs compiler ordering, rather than an inter-CPU hardware fence,
 // around its task-local depth change. This lowers to a compiler primitive.
@@ -23,7 +23,7 @@ fn C.vkf_compiler_barrier(i32)
 
 fn fault_depth_problem(flags u64, message &char) {
 	C.vkf_irq_restore(flags)
-	C.vinix_linuxkpi_bug(message, 0)
+	C.tulpar_linuxkpi_bug(message, 0)
 }
 
 // The native getter borrows the running task's counter only for this call.
@@ -32,7 +32,7 @@ fn fault_depth_problem(flags u64, message &char) {
 @[export: 'pagefault_disable']
 pub fn pagefault_disable() {
 	flags := C.vkf_irq_save()
-	depth := C.vinix_linuxkpi_fault_depth()
+	depth := C.tulpar_linuxkpi_fault_depth()
 	if depth == unsafe { nil } {
 		fault_depth_problem(flags, c'pagefault_disable without a current task')
 		return
@@ -50,7 +50,7 @@ pub fn pagefault_disable() {
 @[export: 'pagefault_enable']
 pub fn pagefault_enable() {
 	flags := C.vkf_irq_save()
-	depth := C.vinix_linuxkpi_fault_depth()
+	depth := C.tulpar_linuxkpi_fault_depth()
 	if depth == unsafe { nil } {
 		fault_depth_problem(flags, c'pagefault_enable without a current task')
 		return
@@ -69,7 +69,7 @@ pub fn pagefault_enable() {
 // fallback counter, and do not change interrupt or preemption state.
 @[export: 'pagefault_disabled']
 pub fn pagefault_disabled() bool {
-	depth := C.vinix_linuxkpi_fault_depth()
+	depth := C.tulpar_linuxkpi_fault_depth()
 	return depth != unsafe { nil } && C.vkp_load32(depth, 0) != 0
 }
 
@@ -78,5 +78,5 @@ pub fn pagefault_disabled() bool {
 @[export: 'faulthandler_disabled']
 pub fn faulthandler_disabled() bool {
 	return pagefault_disabled() || C.vkf_preempt_count() != 0
-		|| C.vinix_linuxkpi_maskable_irq_depth() != 0
+		|| C.tulpar_linuxkpi_maskable_irq_depth() != 0
 }

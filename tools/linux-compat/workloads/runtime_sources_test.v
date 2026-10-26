@@ -5,13 +5,13 @@ import os
 fn test_native_runtime_inputs_keep_the_workload_and_architecture_assertion() {
 	for language, source in {
 		'go': $embed_file('../../../tests/go/smoke.go').to_string()
-		'java': $embed_file('../../../tests/java/VinixJavaSmoke.java').to_string()
+		'java': $embed_file('../../../tests/java/TulparJavaSmoke.java').to_string()
 	} {
 		assert native_runtime_fixture(language, 'native-aarch64', source)! == source
 		x86 := native_runtime_fixture(language, 'native-x86_64', source)!
 		assert x86.contains('"amd64"') && x86.len > 2000
 		assert x86.replace('"amd64"', if language == 'go' { '"arm64"' } else { '"aarch64"' })
-			.replace('VINIX AMD64 GO SMOKE', 'VINIX ARM64 GO SMOKE')
+			.replace('TULPAR AMD64 GO SMOKE', 'TULPAR ARM64 GO SMOKE')
 			.replace('x86-64 Go runtime', 'AArch64 Go runtime') == source
 	}
 }
@@ -28,7 +28,7 @@ fn test_runtime_generation_refuses_unknown_inputs_and_foreign_compilation() {
 }
 
 fn test_jdk_tools_must_all_be_executable_in_one_directory() {
-	root := os.join_path(os.temp_dir(), 'vinix-jdk-tools-' + os.getpid().str())
+	root := os.join_path(os.temp_dir(), 'tulpar-jdk-tools-' + os.getpid().str())
 	os.mkdir_all(root)!
 	defer { os.rmdir_all(root) or { panic(err) } }
 	assert !complete_java_bin(root)

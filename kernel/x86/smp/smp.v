@@ -21,7 +21,7 @@ __global (
 	}
 )
 
-fn C.vinix_x86_mitigations_setup(count u64) bool
+fn C.tulpar_x86_mitigations_setup(count u64) bool
 
 pub fn initialise() {
 	if smp_req.response == unsafe { nil } {
@@ -33,7 +33,7 @@ pub fn initialise() {
 	C.kprintf(c'smp: Total CPU count: %llu\n', u64(smp_tag.cpu_count))
 	C.kprintf(c'smp: Using x2APIC:    %s\n', if x2apic_mode { c'true' } else { c'false' })
 
-	if !C.vinix_x86_mitigations_setup(smp_tag.cpu_count) {
+	if !C.tulpar_x86_mitigations_setup(smp_tag.cpu_count) {
 		panic('Cannot allocate per-CPU speculation policies')
 	}
 	smp_info_array := smp_tag.cpus

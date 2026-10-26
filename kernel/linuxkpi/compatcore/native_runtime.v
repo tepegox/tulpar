@@ -97,10 +97,10 @@ pub fn vkr_pointer_hash(value u64, key voidptr) u64 {
  }
 }
 
-@[export: 'vinix_linuxkpi_format_set_key']
+@[export: 'tulpar_linuxkpi_format_set_key']
 pub fn native_format_set_key(key &u64) i32 { return vkr_format_key(key) }
 
-@[export: 'vinix_linuxkpi_vformat']
+@[export: 'tulpar_linuxkpi_vformat']
 pub fn native_vformat(buf &char, size uint, fmt &char, args voidptr, status &u32) i32 {
  mut local := unsafe { nil }
  return vkr_format_entry(buf, size, fmt, abiargs.parameter(args, unsafe { &local }), status)
@@ -123,15 +123,15 @@ pub fn native_vsprintf(buf &char, fmt &char, args voidptr) i32 {
 }
 
 // Variadic prologues already provide an addressable cursor, unlike va_list parameters.
-@[export: 'vinix_linuxkpi_snprintf_entry']
+@[export: 'tulpar_linuxkpi_snprintf_entry']
 pub fn native_snprintf(buf &char, size uint, fmt &char, args voidptr) i32 {
  return vkr_format_entry(buf, size, fmt, args, unsafe { nil })
 }
-@[export: 'vinix_linuxkpi_scnprintf_entry']
+@[export: 'tulpar_linuxkpi_scnprintf_entry']
 pub fn native_scnprintf(buf &char, size uint, fmt &char, args voidptr) i32 {
  return vkr_format_sc_entry(buf, size, fmt, args)
 }
-@[export: 'vinix_linuxkpi_sprintf_entry']
+@[export: 'tulpar_linuxkpi_sprintf_entry']
 pub fn native_sprintf(buf &char, fmt &char, args voidptr) i32 {
  return vkr_format_entry(buf, 0x7fffffff, fmt, args, unsafe { nil })
 }

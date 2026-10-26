@@ -81,7 +81,7 @@ fn test_volume_seal_geometry_bounds_and_failed_encoder_preserve_output() {
 
 fn test_volume_seal_commands_reject_syntax_before_input_or_device_access() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'seal-volume'), &char(c'/unused'), &char(c'0'), &char(c'0'), &char(c'512'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'ro'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'seal-volume'), &char(c'/unused'), &char(c'0'), &char(c'0'), &char(c'512'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'ro'), &char(nil)]!
 		assert run(8, &args[0]) == 2 && run(11, &args[0]) == 2
 		args[3] = &char(c'64'); assert run(9, &args[0]) == 2; args[3] = &char(c'0')
 		args[5] = &char(c'0'); assert run(9, &args[0]) == 2; args[5] = &char(c'512')

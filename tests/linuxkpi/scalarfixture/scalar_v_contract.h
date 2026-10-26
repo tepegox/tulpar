@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native scalar/type metadata only; all executable fixture logic lives in V. */
-#ifndef VINIX_SCALAR_V_CONTRACT_H
-#define VINIX_SCALAR_V_CONTRACT_H
+#ifndef TULPAR_SCALAR_V_CONTRACT_H
+#define TULPAR_SCALAR_V_CONTRACT_H
 #define u64 vsh_linux_u64
 #define timezone vsh_linux_timezone
 #define ffs vsh_linux_ffs

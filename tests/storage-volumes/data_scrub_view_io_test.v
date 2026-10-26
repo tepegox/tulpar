@@ -70,7 +70,7 @@ fn scrub_view_ferror(stream voidptr) i32 {
 
 fn scrub_view_text(changed bool) string {
 	zero := '0'.repeat(64)
-	return 'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=2 matched=${if changed { 1 } else { 2 }} changed=${int(changed)} algorithm=sha256 reference_sha256=${zero}\n' +
+	return 'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=2 matched=${if changed { 1 } else { 2 }} changed=${int(changed)} algorithm=sha256 reference_sha256=${zero}\n' +
 		'disk=0 slot=63 offset=0 bytes=512 readonly=1 result=match expected_sha256=${zero} actual_sha256=${zero}\n' +
 		'disk=1 slot=0 offset=512 bytes=4096 readonly=0 result=${if changed { 'changed' } else { 'match' }} expected_sha256=${zero} actual_sha256=${if changed { 'f'.repeat(64) } else { zero }}\n'
 }
@@ -79,15 +79,15 @@ fn scrub_view_check(path string, mode int, expected i32) string {
 	capture := os.dir(path) + '/view-capture'; assert C.fflush(C.stdout) == 0
 	saved := C.dup(1); fd := C.open(capture.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	scrub_view_io = ScrubViewIO{active: true, mode: mode}
-	unsafe { args := [&char(c'vinix-volume'), &char(c'show-data-scrub'), path.str, &char(nil)]!; assert run(3, &args[0]) == expected }
+	unsafe { args := [&char(c'tulpar-volume'), &char(c'show-data-scrub'), path.str, &char(nil)]!; assert run(3, &args[0]) == expected }
 	assert scrub_view_io.opened == scrub_view_io.closed
 	scrub_view_io.active = false; assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
 	text := os.read_file(capture) or { panic(err) }; os.rm(capture) or { panic(err) }
-	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=VINIXSR1') && !text.contains('disk=') }; return text
+	if expected == 1 && mode !in [8, 9] { assert !text.contains('format=TULPARSR1') && !text.contains('disk=') }; return text
 }
 
 fn test_scrub_view_real_readers_balanced_descriptors_pinned_output_and_error_precedence() {
-	work := os.join_path(os.temp_dir(), 'vinix-scrub-view-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-scrub-view-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/report'
 	for changed in [false, true] {
 		text := scrub_view_text(changed); os.write_file(path, text)!; os.chmod(path, 0o644)!

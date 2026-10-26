@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_ASM_ATOMIC_H
-#define VINIX_ASM_ATOMIC_H
+#ifndef TULPAR_ASM_ATOMIC_H
+#define TULPAR_ASM_ATOMIC_H
 #include <linux/types.h>
 #define ATOMIC_INIT(v) { (v) }
 #define ATOMIC64_INIT(v) { (v) }
@@ -60,5 +60,5 @@ s64 arch_atomic64_cmpxchg_relaxed(atomic64_t *, s64, s64);
 #define arch_atomic64_xchg_relaxed arch_atomic64_xchg_relaxed
 #define arch_atomic64_cmpxchg_relaxed arch_atomic64_cmpxchg_relaxed
 
-#include <vinix/atomic_exchange.h>
+#include <tulpar/atomic_exchange.h>
 #endif

@@ -50,7 +50,7 @@ fn check() ! {
 			'-efi-boot-part', '--efi-boot-image', '--protective-msdos-label', staging, '-o', patched])!
 		os.mv(patched, state + '/test.iso')!
 		expected := match policy {
-			'shell' { ['Hello from userland!', 'Vinix 0.1.0 aarch64', 'SHELL INIT GUEST: PASS'] }
+			'shell' { ['Hello from userland!', 'Tulpar 0.1.0 aarch64', 'SHELL INIT GUEST: PASS'] }
 			'full' { ['FULL INIT GUEST: PASS'] }
 			else {
 				['DESKTOP RELOAD FORWARDED: PASS', 'DESKTOP RESTART: PASS', 'DESKTOP INIT GUEST: PASS']

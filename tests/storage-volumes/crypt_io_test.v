@@ -61,7 +61,7 @@ fn crypt_mock_bzero(pointer voidptr, size usize) {
 }
 
 fn test_encrypted_open_short_reads_interruptions_errors_and_full_request_erasure() {
-	path := os.join_path(os.temp_dir(), 'vinix-crypt-io-${os.getpid()}')
+	path := os.join_path(os.temp_dir(), 'tulpar-crypt-io-${os.getpid()}')
 	mut key := []u8{len: 64}
 	for i in 0 .. 64 { key[i] = u8(i * 13 + 7) }
 	os.write_file_array(path, key)!

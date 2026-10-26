@@ -19,8 +19,8 @@ fn C.kill(int, int) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn client_cycles() int { $if auth_client_baseline ? { return 5 }; return 1000 }
@@ -36,7 +36,7 @@ fn client_fds() int {
 }
 fn client_window(label string) {
 	$if track_heap ? {
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('AUTH CLIENT ' + label + ' retained ' + kept.str() + ' bytes')
 		$if !auth_client_baseline ? { assert kept == 0, kept.str() }
 	}
@@ -124,7 +124,7 @@ fn client_wiped(fields [][]u8) {
 fn client_free(fields [][]u8) { unsafe { for field in fields { field.free() }; (&array(&fields)).free() } }
 
 fn test_complete_transactions_retire_storage_and_preserve_borrowed_fields() {
-	directory := os.temp_dir() + '/vinix-auth-client-' + os.getpid().str()
+	directory := os.temp_dir() + '/tulpar-auth-client-' + os.getpid().str()
 	os.mkdir(directory, mode: 0o700)!
 	defer { os.rmdir_all(directory) or {}; unsafe { directory.free() } }
 	path := directory + '/service.sock'; defer { unsafe { path.free() } }
@@ -139,7 +139,7 @@ fn test_complete_transactions_retire_storage_and_preserve_borrowed_fields() {
 		guard_rejects := mode == 2 && os.geteuid() != 0
 		mut server := client_server(path, wire, guard_rejects)
 		defer { server.close() }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. client_cycles() {
 			client_reset(mut fields)
 			if guard_rejects {
@@ -165,7 +165,7 @@ fn test_complete_transactions_retire_storage_and_preserve_borrowed_fields() {
 }
 
 fn test_refusals_erase_borrowed_requests_and_retire_transport_scratch() {
-	directory := os.temp_dir() + '/vinix-auth-refusal-' + os.getpid().str()
+	directory := os.temp_dir() + '/tulpar-auth-refusal-' + os.getpid().str()
 	os.mkdir(directory, mode: 0o700)!
 	defer { os.rmdir_all(directory) or {}; unsafe { directory.free() } }
 	path := directory + '/service.sock'; defer { unsafe { path.free() } }
@@ -184,7 +184,7 @@ fn test_refusals_erase_borrowed_requests_and_retire_transport_scratch() {
 			4 { malformed } 5 { bad_count } else { oversized } }
 		mut server := client_server(path, data, false)
 		defer { server.close() }
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. client_cycles() {
 			client_reset(mut fields)
 			if mut reply := ask(path, authproto.op_verify, ...fields) { reply.close(); assert false }
@@ -199,7 +199,7 @@ fn test_refusals_erase_borrowed_requests_and_retire_transport_scratch() {
 	}
 	long_path := '/'.repeat(100); defer { unsafe { long_path.free() } }
 	for socket in [long_path, path] {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. client_cycles() {
 			client_reset(mut fields)
 			if mut reply := ask(socket, authproto.op_verify, ...fields) { reply.close(); assert false }
@@ -214,7 +214,7 @@ fn test_refusals_erase_borrowed_requests_and_retire_transport_scratch() {
 	defer { invalid.close() }
 	mut server := client_server(path, []u8{}, true)
 	defer { server.close() }
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. client_cycles() {
 		if mut reply := transact(path, mut invalid) { reply.close(); assert false }
 		else { message := client_error(err); assert message == 'too many fields'; unsafe { message.free() } }

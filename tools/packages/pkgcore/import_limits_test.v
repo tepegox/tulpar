@@ -11,7 +11,7 @@ fn C.setrlimit(int, voidptr) int
 struct ImportLimitDescriptors { current u64 maximum u64 }
 
 fn import_limits_work() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-import-limits-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-import-limits-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/root/tree')!
 	os.mkdir(work + '/output')!
 	return work
@@ -30,7 +30,7 @@ fn import_limits_package(work string, root string, target string, repository str
 }
 
 fn import_limits_scratch() ![]string {
-	prefix := 'vinix-pack-root-' + os.getpid().str() + '-'
+	prefix := 'tulpar-pack-root-' + os.getpid().str() + '-'
 	return os.ls(os.temp_dir())!.filter(it.starts_with(prefix))
 }
 
@@ -50,7 +50,7 @@ fn test_prepared_import_stops_before_materializing_excessive_directory_depth() {
 	mut importer := RootImport{ root: root, output: work + '/output' }
 	mut diagnostic := ''
 	importer.copy('tree', 'payload') or { diagnostic = err.msg() }
-	before := os.getenv('VINIX_IMPORT_LIMITS_BEFORE') == '1'
+	before := os.getenv('TULPAR_IMPORT_LIMITS_BEFORE') == '1'
 	if before {
 		assert diagnostic == ''
 		assert os.read_file(work + '/output/payload' + '/d'.repeat(128) + '/data')! == 'bounded payload'

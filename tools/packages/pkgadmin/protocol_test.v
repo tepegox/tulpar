@@ -3,11 +3,11 @@ module pkgadmin
 
 fn test_reviewed_admin_requests_and_bound_completion() {
 	fingerprint := 'a'.repeat(64)
-	for arguments in [['update'], ['--progress', 'update'], ['--progress', '--offline', 'apply', fingerprint, 'install', 'org.vinix.memo'],
+	for arguments in [['update'], ['--progress', 'update'], ['--progress', '--offline', 'apply', fingerprint, 'install', 'org.tulpar.memo'],
 		['apply', fingerprint, 'upgrade'], ['apply', fingerprint, 'repair'], ['apply', fingerprint, 'rollback'], ['cleanup-apply', fingerprint], ['repo-apply', fingerprint, 'revoke', 'publisher'],
 		['repo-apply', fingerprint, 'enroll', 'publisher', 'file:///media/with spaces; $literal', fingerprint],
 		['deployment-apply', fingerprint, '/etc/company/approved apps.json'], ['policy-apply', fingerprint, '/etc/company/policy.json'],
-		['mirror-apply', fingerprint, '/media/offline', 'org.vinix.memo'], ['mirror-deployment-apply', fingerprint, '/media/offline', '/etc/company/lock.json']] {
+		['mirror-apply', fingerprint, '/media/offline', 'org.tulpar.memo'], ['mirror-deployment-apply', fingerprint, '/media/offline', '/etc/company/lock.json']] {
 		request := Request{ nonce: 'b'.repeat(32), arguments: arguments }
 		text := request.encode()!
 		mut decoded := decode(text)!

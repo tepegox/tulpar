@@ -7,7 +7,7 @@ import memory
 import memory.mmap
 import usercopy
 
-pub const pr_vinix_syscall_policy = 0x56490002
+pub const pr_tulpar_syscall_policy = 0x56490002
 const syscall_pin_limit = u32(512)
 const syscall_pin_span_limit = u64(64 * 1024 * 1024)
 
@@ -32,7 +32,7 @@ mut:
 	reserved u64
 }
 
-fn C.vinix_stack_alloc(size u64) voidptr
+fn C.tulpar_stack_alloc(size u64) voidptr
 
 fn policy_pins(policy &SyscallPolicy) &mmap.SyscallPin {
 	return unsafe { &mmap.SyscallPin(u64(policy) + sizeof(SyscallPolicy)) }
@@ -83,7 +83,7 @@ pub fn syscall_policy_control(mut process Process, action u64, request u64) (u64
 	}
 	if action != 1 && action != 2 { return errno.err, errno.einval }
 	if katomic.load(&process.syscall_policy_mode) != 0 { return errno.err, errno.eperm }
-	mut input := unsafe { &SyscallPinRequest(C.vinix_stack_alloc(sizeof(SyscallPinRequest))) }
+	mut input := unsafe { &SyscallPinRequest(C.tulpar_stack_alloc(sizeof(SyscallPinRequest))) }
 	if !usercopy.copy_from_user(voidptr(input), request, sizeof(SyscallPinRequest)) {
 		return errno.err, errno.efault
 	}

@@ -10,7 +10,7 @@ const resource_fixture = $embed_file('templates/resource.v').to_string()
 pub fn prepare(root string, work string) ! {
 	if os.exists(work) { return error('host test directory must be new') }
 	for directory in ['ext2', 'errno', 'memory', 'time', 'fs', 'resource', 'posix_acl'] { os.mkdir_all(work + '/' + directory)! }
-	os.write_file(work + '/v.mod', "Module { name: 'vinix_xattr_tests' }\n")!
+	os.write_file(work + '/v.mod', "Module { name: 'tulpar_xattr_tests' }\n")!
 	os.write_file(work + '/ext2/codec.v', os.read_file(root + '/kernel/fs/ext2/xattr_block.v')! + '\nfn C.memcpy(voidptr, voidptr, usize) voidptr\n')!
 	codec := os.read_file(root + '/tests/ext2-xattr/codec_test.v')!
 	marker := 'fn test_sorted_entries'

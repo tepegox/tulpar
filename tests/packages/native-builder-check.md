@@ -68,12 +68,12 @@ No kernel allocation/lifetime code changes here.
 
 ```sh
 v -nocache -o /tmp/native-builder-check tests/packages/native-builder-check.v
-VINIX_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
+TULPAR_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
   /tmp/native-builder-check /build/new-native-builder-host
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/native-builder-runtime tests/packages/native-builder-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/native-builder-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-native-builder-arm
 ```

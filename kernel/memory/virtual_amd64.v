@@ -24,7 +24,7 @@ pub fn user_address_limit() u64 {
 	return if la57 { u64(1) << 56 } else { u64(1) << 47 }
 }
 
-// Vinix installs bit 63 in non-executable PTEs, so NX is a required amd64
+// Tulpar installs bit 63 in non-executable PTEs, so NX is a required amd64
 // facility rather than an optional optimization. Enable EFER.NXE explicitly
 // on every CPU instead of depending on firmware or the bootloader to leave it
 // set. OpenBSD likewise programs EFER.NXE before relying on NX page entries.
@@ -363,7 +363,7 @@ __global (
 )
 
 pub fn vmm_init() {
-	// Enable NXE before the first Vinix-owned page table containing NX entries
+	// Enable NXE before the first Tulpar-owned page table containing NX entries
 	// becomes active. This removes a hidden dependency on Limine's EFER state.
 	enable_nx()
 

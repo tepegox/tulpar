@@ -178,7 +178,7 @@ fn vtd_start_poller() {
 fn vtd_publish_file(unit &VtdUnit, leaf string, show fs.SysfsShow) {
 	// On the stack, as every path in devcore/sysfs.v is: a builder made as a
 	// local value is moved to the heap and left there.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(48) }
 	text.add('class/iommu/')
 	text.add(unit.name)

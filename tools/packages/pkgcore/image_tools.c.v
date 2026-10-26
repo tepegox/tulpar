@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module pkgcore
 
-const image_tool_names = ['vinix-package', 'vinix-session', 'vinix-linux-runner']!
-const image_tool_parents = ['/usr/bin', '/usr/sbin', '/usr/libexec/vinix']!
+const image_tool_names = ['tulpar-package', 'tulpar-session', 'tulpar-linux-runner']!
+const image_tool_parents = ['/usr/bin', '/usr/sbin', '/usr/libexec/tulpar']!
 
 // A private compiler workspace bound to one admitted image root. Compilation
 // may use directory(), but publication captures every output before any rename.
@@ -33,7 +33,7 @@ fn (configuration &ImageConfiguration) prepare_tool_build_at(parent string) !Ima
 	if !image_configuration_root_matches(configuration.root, configuration.device, configuration.inode) {
 		return error('package image root changed before tool compilation')
 	}
-	stage := create_export_stage(parent, '.vinix-package-build', 'image tool compiler workspace')!
+	stage := create_export_stage(parent, '.tulpar-package-build', 'image tool compiler workspace')!
 	return ImageToolBuild{ stage: stage, root: configuration.root.clone(), architecture: configuration.architecture.clone(),
 		device: configuration.device, inode: configuration.inode }
 }

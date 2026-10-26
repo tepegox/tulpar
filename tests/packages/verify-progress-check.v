@@ -8,13 +8,13 @@ import tools.packages.pkgprotocol
 
 fn record(event pkgprotocol.Progress) {
 	event.validate() or { panic(err) }
-	mut file := os.open_file(os.getenv('VINIX_VERIFY_EVENTS'), 'a', 0o600) or { panic(err) }
+	mut file := os.open_file(os.getenv('TULPAR_VERIFY_EVENTS'), 'a', 0o600) or { panic(err) }
 	file.writeln(json2.encode(event)) or { panic(err) }; file.close()
-	root := os.getenv('VINIX_VERIFY_WRITER')
+	root := os.getenv('TULPAR_VERIFY_WRITER')
 	if root != '' && event.phase == 'verify' && event.package != '' {
 		if _ := (pkgcore.Service{ root: root }).transact('remove', ['app'], pkgcore.TransactionOptions{}) { panic('verification did not hold its reader lock') }
 		else { assert err.msg().contains('transaction') }
-		os.write_file(os.getenv('VINIX_VERIFY_LOCKED'), 'writer refused') or { panic(err) }
+		os.write_file(os.getenv('TULPAR_VERIFY_LOCKED'), 'writer refused') or { panic(err) }
 	}
 }
 
@@ -40,13 +40,13 @@ fn check() ! {
 	if os.args.len == 4 && !before { return error('four arguments require --before') }
 	binary := if before { os.real_path(os.args[3]) } else if os.args.len == 3 { os.real_path(os.args[2]) } else { '' }
 	work := os.abs_path(os.args[1]); if os.exists(work) || os.is_link(work) { return error('qualification directory must be new') }
-	root := work + '/root'; os.mkdir_all(root + '/etc/vinix-packages')!
+	root := work + '/root'; os.mkdir_all(root + '/etc/tulpar-packages')!
 	arch := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	key := pkgcore.keygen(work + '/seed')!
 	config := pkgcore.Config{ architecture: arch, repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }], policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }
-	configuration := root + '/etc/vinix-packages/config.json'; os.write_file(configuration, json2.encode(config))!
-	log := work + '/events'; os.write_file(log, '')!; os.setenv('VINIX_VERIFY_EVENTS', log, true)
-	defer { os.unsetenv('VINIX_VERIFY_EVENTS'); os.unsetenv('VINIX_VERIFY_WRITER'); os.unsetenv('VINIX_VERIFY_LOCKED') }
+	configuration := root + '/etc/tulpar-packages/config.json'; os.write_file(configuration, json2.encode(config))!
+	log := work + '/events'; os.write_file(log, '')!; os.setenv('TULPAR_VERIFY_EVENTS', log, true)
+	defer { os.unsetenv('TULPAR_VERIFY_EVENTS'); os.unsetenv('TULPAR_VERIFY_WRITER'); os.unsetenv('TULPAR_VERIFY_LOCKED') }
 	observed := pkgcore.Service{ root: root, progress: record }; setup := pkgcore.Service{ root: root }
 	assert observed.verify()!.generation == 0 && !os.exists(pkgcore.state_directory(root))
 	if !before { assert frames(os.read_file(log)!, false)!.map(it.phase) == ['verify', 'complete'] }
@@ -73,11 +73,11 @@ fn check() ! {
 	}
 	healthy := frames(os.read_file(log)!, false)!
 	assert healthy.len == 6 && healthy.first().phase == 'verify' && healthy.last().phase == 'complete'
-	assert healthy.any(it.package == 'app' && it.path == 'share/applications/vinix-app.desktop')
+	assert healthy.any(it.package == 'app' && it.path == 'share/applications/tulpar-app.desktop')
 	assert healthy.filter(it.path == 'bin/app').map(it.package) == ['app', 'assets', 'runtime']
-	os.setenv('VINIX_VERIFY_WRITER', root, true); os.setenv('VINIX_VERIFY_LOCKED', work + '/lock-observed', true)
+	os.setenv('TULPAR_VERIFY_WRITER', root, true); os.setenv('TULPAR_VERIFY_LOCKED', work + '/lock-observed', true)
 	os.write_file(log, '')!; assert observed.verify()!.generation == 1
-	assert os.read_file(work + '/lock-observed')! == 'writer refused'; os.unsetenv('VINIX_VERIFY_WRITER')
+	assert os.read_file(work + '/lock-observed')! == 'writer refused'; os.unsetenv('TULPAR_VERIFY_WRITER')
 	if binary != '' {
 		code, text := command(binary, root, ['--progress', 'verify']); assert code == 0
 		cli_frames := frames(text, true)!; assert cli_frames == healthy && text.contains('Installed package files and launchers verified.')
@@ -86,17 +86,17 @@ fn check() ! {
 		bad_code, rejected := command(binary, root, ['--json', '--progress', 'verify']); assert bad_code != 0 && !rejected.contains(pkgprotocol.progress_prefix)
 		os.write_file(work + '/cli.txt', text + '\nLegacy text:\n' + plain + '\nJSON:\n' + document)!
 	}
-	app := store + '/current/apps/app/bin/app'; entry := store + '/current/share/applications/vinix-app.desktop'; entry_bytes := os.read_file(entry)!
+	app := store + '/current/apps/app/bin/app'; entry := store + '/current/share/applications/tulpar-app.desktop'; entry_bytes := os.read_file(entry)!
 	for fault in ['payload', 'mode', 'registration'] {
 		if fault == 'payload' { os.write_file(app, 'x'.repeat(os.read_file(app)!.len))! }
 		if fault == 'mode' { os.chmod(app, 0o644)! }
 		if fault == 'registration' { os.rm(entry)! }
 		os.write_file(log, '')!
-		if _ := observed.verify() { assert false } else { assert err.msg().contains('verification failed') && err.msg().contains('vinix-package repair') }
+		if _ := observed.verify() { assert false } else { assert err.msg().contains('verification failed') && err.msg().contains('tulpar-package repair') }
 		failed := frames(os.read_file(log)!, false)!; assert failed.len >= 1 && failed.all(it.phase == 'verify')
 		if fault == 'mode' { assert failed.len == 1 && failed[0].package == '' }
 		if binary != '' {
-			code, text := command(binary, root, ['--progress', 'verify']); assert code != 0 && text.contains('vinix-package repair')
+			code, text := command(binary, root, ['--progress', 'verify']); assert code != 0 && text.contains('tulpar-package repair')
 			assert frames(text, true)!.all(it.phase != 'complete')
 			json_code, document := command(binary, root, ['--json', 'verify']); assert json_code != 0 && !document.contains('"generation"')
 		}

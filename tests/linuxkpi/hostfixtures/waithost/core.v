@@ -52,9 +52,9 @@ fn C.wait_var_event_killable(voidptr, ...) i32
 fn C.__wait_var_event_interruptible(voidptr, ...) i32
 fn C.__wait_var_event_killable(voidptr, ...) i32
 fn C.wait_var_event_timeout(voidptr, ...) isize
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
 fn C.READ_ONCE(usize) usize
 fn C.WRITE_ONCE(usize, usize)
 fn C.mmap(voidptr, usize, i32, i32, i32, i64) voidptr
@@ -146,7 +146,7 @@ pub fn expiry_hook() {
  unsafe {
   actor := &Actor(C.vmh_wait_bit_test_current)
   C.assert(actor != nil && actor.success_at_expiry)
-  if C.vinix_linuxkpi_time_waiters() == 0 {
+  if C.tulpar_linuxkpi_time_waiters() == 0 {
    C.vmh_host_irq_restore_hook = C.vmh_wait_bit_expiry_hook
    return
   }
@@ -216,7 +216,7 @@ fn start(actor &Actor, operation Operation, word &usize, bit i32, state u32) {
 fn parked(actor &Actor) {
  unsafe {
   wait_value(&actor.model.parked, 1)
-  C.assert(!C.vinix_linuxkpi_task_queued(&actor.model))
+  C.assert(!C.tulpar_linuxkpi_task_queued(&actor.model))
   queue := if actor.operation >= .var_normal { C.__var_waitqueue(actor.key) } else { C.bit_waitqueue(actor.word, actor.bit) }
   C.assert(C.waitqueue_active(queue))
  }
@@ -231,7 +231,7 @@ fn join(actor &Actor) {
 fn signal_actor(actor &Actor, signal u64) {
  unsafe {
   C.__atomic_store_n(&C.vmh_u64(&actor.model.pending), signal, 3)
-  C.assert(C.vinix_linuxkpi_task_enqueue(&actor.model))
+  C.assert(C.tulpar_linuxkpi_task_enqueue(&actor.model))
  }
 }
 fn basics() {
@@ -249,11 +249,11 @@ fn basics() {
    start(&actor, .normal, &words[0], C.BITS_PER_LONG + 5, C.TASK_UNINTERRUPTIBLE)
    if early == 0 {
     parked(&actor)
-    flags := C.vinix_linuxkpi_irq_save()
+    flags := C.tulpar_linuxkpi_irq_save()
     payload = 0xabc123
     C.clear_and_wake_up_bit(C.BITS_PER_LONG + 5, &words[0])
     C.assert(!C.vmh_interrupts)
-    C.vinix_linuxkpi_irq_restore(flags)
+    C.tulpar_linuxkpi_irq_restore(flags)
    }
    join(&actor)
    C.assert(actor.result == 0 && !C.waitqueue_active(C.bit_waitqueue(&words[0], C.BITS_PER_LONG + 5)))
@@ -323,13 +323,13 @@ fn collisions() {
    C.assert(C.vmh_queue_waiters(C.bit_waitqueue(matching_word, matching_bit)) == 2)
    C.wait_bit_init()
    C.wake_up_bit(matching_word, matching_bit)
-   C.assert(!C.vinix_linuxkpi_task_queued(&matching.model))
-   C.assert(!C.vinix_linuxkpi_task_queued(&wrong.model))
+   C.assert(!C.tulpar_linuxkpi_task_queued(&matching.model))
+   C.assert(!C.tulpar_linuxkpi_task_queued(&wrong.model))
    C.assert(C.test_and_clear_wake_up_bit(matching_bit, matching_word))
    C.assert(!C.test_and_clear_wake_up_bit(matching_bit, matching_word))
    join(&matching)
    C.assert(C.__atomic_load_n(&wrong.returned, 2) == 0)
-   C.assert(!C.vinix_linuxkpi_task_queued(&wrong.model))
+   C.assert(!C.tulpar_linuxkpi_task_queued(&wrong.model))
    C.assert(C.vmh_queue_waiters(C.bit_waitqueue(matching_word, matching_bit)) == 1)
    C.clear_and_wake_up_bit(wrong_bit, wrong_word)
    join(&wrong)
@@ -354,14 +354,14 @@ fn wake_quota() {
   start(&wrong, .lock, other, bit, C.TASK_UNINTERRUPTIBLE); parked(&wrong)
   for i in u32(0)..u32(2) { start(&lockers[i], .lock, word, bit, C.TASK_UNINTERRUPTIBLE); parked(&lockers[i]) }
   for i in u32(0)..u32(3) { start(&normal[i], .normal, word, bit, C.TASK_UNINTERRUPTIBLE); parked(&normal[i]) }
-  flags := C.vinix_linuxkpi_irq_save()
+  flags := C.tulpar_linuxkpi_irq_save()
   C.clear_and_wake_up_bit(bit, word)
   C.assert(!C.vmh_interrupts)
-  C.vinix_linuxkpi_irq_restore(flags)
+  C.tulpar_linuxkpi_irq_restore(flags)
   for i in u32(0)..u32(3) { wait_value(&normal[i].awakened, 1) }
   wait_value(&lockers[0].awakened, 1)
-  C.assert(!C.vinix_linuxkpi_task_queued(&wrong.model))
-  C.assert(!C.vinix_linuxkpi_task_queued(&lockers[1].model))
+  C.assert(!C.tulpar_linuxkpi_task_queued(&wrong.model))
+  C.assert(!C.tulpar_linuxkpi_task_queued(&lockers[1].model))
   C.assert(wrong.awakened == 0 && lockers[1].awakened == 0)
   C.assert(C.vmh_queue_waiters(C.bit_waitqueue(word, bit)) == 2)
   for i in u32(0)..u32(3) {
@@ -431,14 +431,14 @@ fn signals() {
     start(&actor, Operation(kind), &word, 9, C.TASK_INTERRUPTIBLE); parked(&actor)
     signal_actor(&actor, u64(1) << 14); join(&actor)
     C.assert(actor.result == -C.EINTR && C.test_bit(9, &word))
-    C.assert(!C.waitqueue_active(C.bit_waitqueue(&word, 9)) && C.vinix_linuxkpi_time_waiters() == 0)
+    C.assert(!C.waitqueue_active(C.bit_waitqueue(&word, 9)) && C.tulpar_linuxkpi_time_waiters() == 0)
    }
   }
   for lock_mode in u32(0)..u32(2) {
    mut actor := Actor{}
    start(&actor, if lock_mode != 0 { Operation.lock } else { Operation.normal }, &word, 9, C.TASK_KILLABLE)
    parked(&actor); signal_actor(&actor, u64(1) << 14)
-   for C.vinix_linuxkpi_task_queued(&actor.model) { C.sched_yield() }
+   for C.tulpar_linuxkpi_task_queued(&actor.model) { C.sched_yield() }
    C.assert(C.__atomic_load_n(&actor.returned, 2) == 0)
    C.assert(C.__atomic_load_n(&actor.actions, 2) == 1)
    signal_actor(&actor, u64(1) << 8); join(&actor)
@@ -473,28 +473,28 @@ fn deadlines() {
  unsafe {
   mut word := usize(1) << 12
   C.assert(C.wait_on_bit_timeout(&word, 12, C.TASK_UNINTERRUPTIBLE, 0) == -C.EAGAIN)
-  C.assert(!C.waitqueue_active(C.bit_waitqueue(&word, 12)) && C.vinix_linuxkpi_time_waiters() == 0)
+  C.assert(!C.waitqueue_active(C.bit_waitqueue(&word, 12)) && C.tulpar_linuxkpi_time_waiters() == 0)
   mut actor := Actor{timeout: 10, track_timeout: true}
   start(&actor, .timed, &word, 12, C.TASK_UNINTERRUPTIBLE); parked(&actor)
-  C.assert(C.vinix_linuxkpi_time_waiters() == 1)
+  C.assert(C.tulpar_linuxkpi_time_waiters() == 1)
   advance(3)
   C.wake_up_process(&C.task_struct(&actor.model.storage[0]))
   wait_value(&actor.actions, 2)
-  for C.vinix_linuxkpi_time_waiters() == 0 || C.vinix_linuxkpi_task_queued(&actor.model) { C.sched_yield() }
+  for C.tulpar_linuxkpi_time_waiters() == 0 || C.tulpar_linuxkpi_task_queued(&actor.model) { C.sched_yield() }
   advance(3)
   C.wake_up_process(&C.task_struct(&actor.model.storage[0]))
   wait_value(&actor.actions, 3)
-  for C.vinix_linuxkpi_time_waiters() == 0 || C.vinix_linuxkpi_task_queued(&actor.model) { C.sched_yield() }
+  for C.tulpar_linuxkpi_time_waiters() == 0 || C.tulpar_linuxkpi_task_queued(&actor.model) { C.sched_yield() }
   advance(4)
   join(&actor)
   C.assert(actor.result == -C.EAGAIN && C.test_bit(12, &word))
-  C.assert(C.vinix_linuxkpi_time_waiters() == 0 && !C.waitqueue_active(C.bit_waitqueue(&word, 12)))
+  C.assert(C.tulpar_linuxkpi_time_waiters() == 0 && !C.waitqueue_active(C.bit_waitqueue(&word, 12)))
   actor = Actor{timeout: 10}
   start(&actor, .timed, &word, 12, C.TASK_UNINTERRUPTIBLE); parked(&actor)
   advance(4)
   C.clear_and_wake_up_bit(12, &word); join(&actor)
-  C.assert(actor.result == 0 && C.vinix_linuxkpi_time_waiters() == 0)
-  C.assert(C.vinix_linuxkpi_time_waiters() == 0)
+  C.assert(actor.result == 0 && C.tulpar_linuxkpi_time_waiters() == 0)
+  C.assert(C.tulpar_linuxkpi_time_waiters() == 0)
   actual_jiffies := C.READ_ONCE(C.jiffies)
   C.WRITE_ONCE(C.jiffies, C.ULONG_MAX - 3)
   C.set_bit(12, &word)
@@ -505,7 +505,7 @@ fn deadlines() {
   mut key := C.wait_bit_key{flags: &word, bit_nr: 12, timeout: C.ULONG_MAX - 3}
   C.assert(C.bit_wait_timeout(&key, i32(C.TASK_UNINTERRUPTIBLE)) == -C.EAGAIN)
   C.WRITE_ONCE(C.jiffies, actual_jiffies)
-  C.assert(C.task_is_running(C.current) && C.vinix_linuxkpi_time_waiters() == 0)
+  C.assert(C.task_is_running(C.current) && C.tulpar_linuxkpi_time_waiters() == 0)
   C.clear_and_wake_up_bit(12, &word)
  }
 }
@@ -525,7 +525,7 @@ fn variables() {
   start(&matching, .var_normal, nil, 0, C.TASK_UNINTERRUPTIBLE); parked(&matching)
   C.__atomic_store_n(&conditions[0], u32(1), 3); C.smp_mb(); C.wake_up_var(variable)
   join(&matching)
-  C.assert(!C.vinix_linuxkpi_task_queued(&wrong.model))
+  C.assert(!C.tulpar_linuxkpi_task_queued(&wrong.model))
   C.assert(C.vmh_queue_waiters(C.__var_waitqueue(variable)) == 1)
   C.__atomic_store_n(&conditions[1], u32(1), 3); C.smp_mb(); C.wake_up_var(other)
   join(&wrong)
@@ -574,11 +574,11 @@ fn variables() {
    if var_first != 0 {
     C.__atomic_store_n(&condition, u32(1), 3); C.smp_mb(); C.wake_up_var(mixed_word)
     join(&var_actor)
-    C.assert(!C.vinix_linuxkpi_task_queued(&bit_actor.model))
+    C.assert(!C.tulpar_linuxkpi_task_queued(&bit_actor.model))
     C.clear_and_wake_up_bit(mixed_bit, mixed_word); join(&bit_actor)
    } else {
     C.clear_and_wake_up_bit(mixed_bit, mixed_word); join(&bit_actor)
-    C.assert(!C.vinix_linuxkpi_task_queued(&var_actor.model))
+    C.assert(!C.tulpar_linuxkpi_task_queued(&var_actor.model))
     C.__atomic_store_n(&condition, u32(1), 3); C.smp_mb(); C.wake_up_var(mixed_word)
     join(&var_actor)
    }
@@ -596,7 +596,7 @@ fn variables() {
    }
    join(&actor)
    C.assert(actor.result == if outcome == 0 { isize(0) } else if outcome == 1 { isize(6) } else { isize(1) })
-   C.assert(C.vinix_linuxkpi_time_waiters() == 0 && !C.waitqueue_active(C.__var_waitqueue(&condition)))
+   C.assert(C.tulpar_linuxkpi_time_waiters() == 0 && !C.waitqueue_active(C.__var_waitqueue(&condition)))
   }
   for unmap in u32(0)..u32(2) {
    key := C.mmap(nil, 4096, C.PROT_NONE, C.MAP_PRIVATE | C.MAP_ANONYMOUS, -1, 0)
@@ -622,7 +622,7 @@ pub fn tests() {
   C.vmh_fail_allocation = true
   C.wait_bit_init()
   basics(); collisions(); wake_quota(); actions(); signals(); deadlines(); variables()
-  C.assert(C.vmh_live_pages == before && C.vinix_linuxkpi_time_waiters() == 0)
+  C.assert(C.vmh_live_pages == before && C.tulpar_linuxkpi_time_waiters() == 0)
   C.assert(C.task_is_running(C.current) && C.vmh_interrupts && C.vmh_preempt_depth == 0)
   C.vmh_fail_allocation = false; C.vmh_native_task = nil
   C.vmh_sync_model_destroy(&controller)

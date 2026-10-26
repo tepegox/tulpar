@@ -12,7 +12,7 @@ import time
 #include <unistd.h>
 
 @[typedef]
-struct C.vinix_prune_stat {
+struct C.tulpar_prune_stat {
 	st_dev               u64
 	st_ino               u64
 	st_mode              u32
@@ -25,13 +25,13 @@ struct C.vinix_prune_stat {
 	st_atime             i64
 	st_mtime             i64
 	st_ctime             i64
-	vinix_prune_atime_ns i64
-	vinix_prune_mtime_ns i64
-	vinix_prune_ctime_ns i64
+	tulpar_prune_atime_ns i64
+	tulpar_prune_mtime_ns i64
+	tulpar_prune_ctime_ns i64
 }
 
-fn C.vinix_prune_stat_read(&char, &C.vinix_prune_stat) i32
-fn C.vinix_prune_lstat_read(&char, &C.vinix_prune_stat) i32
+fn C.tulpar_prune_stat_read(&char, &C.tulpar_prune_stat) i32
+fn C.tulpar_prune_lstat_read(&char, &C.tulpar_prune_stat) i32
 fn C.flock(i32, i32) i32
 
 struct Snapshot {
@@ -53,14 +53,14 @@ struct Snapshot {
 }
 
 fn snapshot(path string, follow bool) !Snapshot {
-	mut state := C.vinix_prune_stat{}
+	mut state := C.tulpar_prune_stat{}
 	code := if follow {
-		C.vinix_prune_stat_read(path.str, &state)
+		C.tulpar_prune_stat_read(path.str, &state)
 	} else {
-		C.vinix_prune_lstat_read(path.str, &state)
+		C.tulpar_prune_lstat_read(path.str, &state)
 	}
 	if code != 0 { return os.error_posix() }
-	return Snapshot{u64(state.st_dev), state.st_ino, state.st_mode, u64(state.st_nlink), state.st_uid, state.st_gid, u64(state.st_rdev), state.st_size, u64(state.st_blocks), state.st_atime, state.st_mtime, state.st_ctime, state.vinix_prune_atime_ns, state.vinix_prune_mtime_ns, state.vinix_prune_ctime_ns}
+	return Snapshot{u64(state.st_dev), state.st_ino, state.st_mode, u64(state.st_nlink), state.st_uid, state.st_gid, u64(state.st_rdev), state.st_size, u64(state.st_blocks), state.st_atime, state.st_mtime, state.st_ctime, state.tulpar_prune_atime_ns, state.tulpar_prune_mtime_ns, state.tulpar_prune_ctime_ns}
 }
 
 fn regular(path string) bool {

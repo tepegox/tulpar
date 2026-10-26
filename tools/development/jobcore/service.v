@@ -20,13 +20,13 @@ pub fn service_unit(path string) !string {
 	load(path)!
 	state := unit_argument(os.real_path(path))!
 	executable := unit_argument(os.real_path(os.executable()))!
-	unit := '[Unit]\nDescription=Vinix scheduled jobs\n[Service]\nType=simple\n' +
+	unit := '[Unit]\nDescription=Tulpar scheduled jobs\n[Service]\nType=simple\n' +
 		'ExecStart=' + executable + ' watch ' + state + '\n' +
 		'Restart=on-failure\nRestartSec=1s\nTimeoutStopSec=10s\n' +
 		'[Install]\nWantedBy=default.target\n'
 	// Validate against the maintained native contract, including its bounded
 	// arguments. The stop window exceeds the scheduler's eight-second grace.
-	service := sessioncore.import_linux_service('vinix-jobs.service', unit, false)!
+	service := sessioncore.import_linux_service('tulpar-jobs.service', unit, false)!
 	mut supervisor := sessioncore.Supervisor{count: 1}
 	supervisor.services[0] = service
 	supervisor.validate()!

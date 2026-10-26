@@ -7,11 +7,11 @@ import os
 #include <unistd.h>
 
 @[typedef]
-struct C.vinix_cache_passwd {
+struct C.tulpar_cache_passwd {
 	pw_dir &char
 }
 
-fn C.vinix_cache_getpwnam(&char) &C.vinix_cache_passwd
+fn C.tulpar_cache_getpwnam(&char) &C.tulpar_cache_passwd
 fn C.access(&char, i32) i32
 
 fn join_path(base string, name string) string {
@@ -75,7 +75,7 @@ pub fn expand_user(path string) !string {
 		home = os.getenv_opt('HOME') or { os.home_dir() }
 	} else {
 		if path[1..separator].contains('\x00') { return error('embedded null byte') }
-		entry := C.vinix_cache_getpwnam(&char(path[1..separator].str))
+		entry := C.tulpar_cache_getpwnam(&char(path[1..separator].str))
 		if isnil(entry) { return path }
 		home = unsafe { entry.pw_dir.vstring().clone() }
 	}

@@ -1,6 +1,6 @@
 # System V message queues
 
-Vinix implements `msgget`, `msgsnd`, `msgrcv`, and `msgctl` (`IPC_SET`,
+Tulpar implements `msgget`, `msgsnd`, `msgrcv`, and `msgctl` (`IPC_SET`,
 `IPC_STAT`, `IPC_RMID`) using the 64-bit Linux layouts on ARM64 and x86-64.
 Queues have independent keys and IDs in each IPC namespace. Permissions use
 owner/creator IDs, effective and supplementary groups, and capabilities scoped
@@ -52,7 +52,7 @@ kernel without checkpoint/restore; invalid `MSG_COPY` flag combinations return
 enumeration, and writable tuning sysctls remain unsupported. Existing semaphore
 and shared-memory registries remain global; this queue implementation does not
 claim isolation for those other System V IPC objects. User namespaces remain
-Vinix's existing flat identity model, without Linux's full ancestry and ID maps.
+Tulpar's existing flat identity model, without Linux's full ancestry and ID maps.
 
 Build each architecture in a separate worktree, with kernel dependencies linked
 as described in [AGENTS.md](../../AGENTS.md), then run:

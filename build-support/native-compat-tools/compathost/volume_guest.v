@@ -53,9 +53,9 @@ fn volume_guest(args []string) !int {
 	], 0, 'Usage: run [--arch aarch64|amd64] [--state-dir FRESH-DIR] [--kernel-dir DIR] [--build-only]',
 		'Exercise block volumes and inspect the disposable disk after a power cut.') or { return error_with_code(err.msg(), 2) }
 	arch := if parsed.options['--arch'] == 'amd64' { 'x86_64' } else { 'aarch64' }
-	timeout := strconv.atoi(os.getenv_opt('VINIX_QEMU_TIMEOUT') or { '300' }) or { return error_with_code('Invalid VINIX_QEMU_TIMEOUT', 2) }
+	timeout := strconv.atoi(os.getenv_opt('TULPAR_QEMU_TIMEOUT') or { '300' }) or { return error_with_code('Invalid TULPAR_QEMU_TIMEOUT', 2) }
 	if timeout <= 0 { return error_with_code('Timeout must be positive', 2) }
-	work := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-volume-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-volume-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
 	cc, link := target_compiler(arch)!
 	init := work + '/init'
@@ -71,32 +71,32 @@ fn volume_guest(args []string) !int {
 	disk := work + '/volume.raw'
 	volume_disk(disk, arch)!
 	source_kernel := if '--kernel-dir' in parsed.options {
-		resolve(parsed.options['--kernel-dir'])! + '/bin/vinix'
+		resolve(parsed.options['--kernel-dir'])! + '/bin/tulpar'
 	} else if arch == 'aarch64' {
-		resolve(os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' })! + '/bin/vinix'
+		resolve(os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' })! + '/bin/tulpar'
 	} else {
-		resolve(os.getenv_opt('VINIX_AMD64_KERNEL') or { root() + '/build-amd64-kernel/bin/vinix' })!
+		resolve(os.getenv_opt('TULPAR_AMD64_KERNEL') or { root() + '/build-amd64-kernel/bin/tulpar' })!
 	}
 	os.mkdir_all(work + '/kernel/bin')!
-	hosttest.module_copy_file_preserving_stat(source_kernel, work + '/kernel/bin/vinix')!
-	elf_arch(work + '/kernel/bin/vinix', arch)!
+	hosttest.module_copy_file_preserving_stat(source_kernel, work + '/kernel/bin/tulpar')!
+	elf_arch(work + '/kernel/bin/tulpar', arch)!
 	mut receipt := {
 		'arch':                json2.Any(arch)
-		'kernel_sha256':       json2.Any(hosttest.sha(work + '/kernel/bin/vinix')!)
+		'kernel_sha256':       json2.Any(hosttest.sha(work + '/kernel/bin/tulpar')!)
 		'guest_source_sha256': json2.Any(hosttest.sha(root() + '/tests/storage-volumes/guest.c')!)
 		'init_sha256':         json2.Any(hosttest.sha(init)!)
-		'utility_sha256':      json2.Any(hosttest.sha(rootfs + '/usr/sbin/vinix-volume')!)
+		'utility_sha256':      json2.Any(hosttest.sha(rootfs + '/usr/sbin/tulpar-volume')!)
 		'disk_size':           json2.Any(16 * 1024 * 1024)
 		'power_cut':           json2.Any(true)
 	}
 	hosttest.write_json(work + '/inputs.json', receipt)!
 	if '--build-only' in parsed.options { return 0 }
 	configured := guesthost.launch_from(init, archive, work, work + '/kernel', arch, true,
-		os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() })!
+		os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() })!
 	mut argv := configured.command.clone()
 	mut env := configured.env.clone()
 	// A short private link also protects QEMU's comma-separated drive syntax.
-	drive_owner := hosttest.work_dir('', 'vinix-volume-drive-')!
+	drive_owner := hosttest.work_dir('', 'tulpar-volume-drive-')!
 	defer { retire(drive_owner) }
 	short := drive_owner + '/disk.raw'
 	os.symlink(disk, short)!
@@ -107,18 +107,18 @@ fn volume_guest(args []string) !int {
 			'-device', 'virtio-blk-device,drive=volume-test']
 	} else {
 		argv << ['-drive', 'if=ide,format=raw,file=' + short + ',cache=writeback,discard=unmap']
-		if firmware := os.getenv_opt('VINIX_OVMF_CODE_AMD64') {
+		if firmware := os.getenv_opt('TULPAR_OVMF_CODE_AMD64') {
 			for index, argument in argv {
 				if argument.starts_with('if=pflash,') {
 					argv[index] = 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware
 				}
 			}
 		}
-		if accel := os.getenv_opt('VINIX_QEMU_ACCEL') {
+		if accel := os.getenv_opt('TULPAR_QEMU_ACCEL') {
 			for index, argument in argv { if argument == '-accel' { argv[index + 1] = accel } }
 		}
 	}
-	env['VINIX_QEMU_NETWORK'] = '0'
+	env['TULPAR_QEMU_NETWORK'] = '0'
 	receipt['command'] = hosttest.strings(argv)
 	receipt['archive_sha256'] = hosttest.sha(archive)!
 	receipt['iso_sha256'] = hosttest.sha(work + '/test.iso')!

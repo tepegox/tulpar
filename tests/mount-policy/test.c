@@ -24,7 +24,7 @@
 
 static char *const probe_argv[] = { "probe", "--probe", NULL };
 static char *const empty_env[] = { NULL };
-static char *const wx_env[] = { "VINIX_ALLOW_WX=1", NULL };
+static char *const wx_env[] = { "TULPAR_ALLOW_WX=1", NULL };
 static int copy_file(const char *from, const char *to);
 static unsigned long slab_kb(void);
 static void allocation_sites(int start);
@@ -606,7 +606,7 @@ int main(int argc, char **argv)
     }
     setvbuf(stdout, NULL, _IONBF, 0);
     int result = run_tests();
-    puts(result ? "VINIX MOUNT POLICY: FAIL" : "VINIX MOUNT POLICY: PASS");
+    puts(result ? "TULPAR MOUNT POLICY: FAIL" : "TULPAR MOUNT POLICY: PASS");
     sync();
     reboot(RB_POWER_OFF);
     for (;;) pause();

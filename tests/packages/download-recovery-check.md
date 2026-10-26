@@ -52,12 +52,12 @@ Reproduce the host checks with the pinned compiler and staged headless UI module
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
 V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 \
-  VINIX_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/desktop-assets/modules \
   /tmp/distribution-check --direct-tests --cross
 ```
 
 Run [the Linux guest controller](linux-runtime-check.v) with matching retained
-AArch64/x86_64 kernels and native sandbox inputs, `VINIX_HWTEST_TCG=1`, and fresh
+AArch64/x86_64 kernels and native sandbox inputs, `TULPAR_HWTEST_TCG=1`, and fresh
 state directories. Service/init/account/session programs are freshly built.
 The new assertion runner also runs ASan/UBSan with leak detection disabled and
 undefined behavior fatal. Full logs, baseline, binaries and generated C are

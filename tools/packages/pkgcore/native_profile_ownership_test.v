@@ -7,13 +7,13 @@ import tests.packages.elffixture
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn native_owned_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-native-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-native-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64']! {
 		root := work + '/roots/' + architecture
 		os.mkdir_all(root + '/bin')!
@@ -32,11 +32,11 @@ fn test_native_owned_complete_build_preserves_catalog_and_reports_remaining_file
 	work := native_owned_fixture()!
 	defer { os.rmdir_all(work) or {} }
 	roots := work + '/roots'; target := work + '/lock'
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	mut info := native_catalog('1.0.0', roots, target)!
 	info.close(); info.close()
 	$if track_heap ? {
-		kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+		kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 		println('NATIVE OWNERSHIP whole-build retained=' + kept.str() + ' allocations=' + count.str())
 		// The first build includes lazy JSON field metadata. The complete-call
 		// owner is measured after initialization in native_builder_ownership_test.
@@ -44,7 +44,7 @@ fn test_native_owned_complete_build_preserves_catalog_and_reports_remaining_file
 	}
 	text := os.read_file(target + '/catalog.json')!
 	assert index_digest(text) == '249d6bfb150918c4586f86d68da6b6394800d150f7385c3654fadb7ab19a3fce'
-	if golden := os.getenv_opt('VINIX_NATIVE_OWNERSHIP_GOLDEN') { assert text == os.read_file(golden)! }
+	if golden := os.getenv_opt('TULPAR_NATIVE_OWNERSHIP_GOLDEN') { assert text == os.read_file(golden)! }
 	assert os.ls(work)!.sorted() == ['lock', 'roots']
 	println('NATIVE OWNERSHIP complete build preserves baseline canonical bytes and retires reply without removing published lock PASS')
 }
@@ -69,7 +69,7 @@ fn native_owned_plan_probe(version string, count int, fault string) ! {
 		canonical := plan.canonical()!
 		defer { unsafe { canonical.free() } }
 		plan.close()
-		assert canonical.contains('org.vinix.counter') && canonical.contains('licenses/musl-MIT.txt')
+		assert canonical.contains('org.tulpar.counter') && canonical.contains('licenses/musl-MIT.txt')
 		mut reply := native_profile_result(version, '/review/native', canonical)
 		reply.close(); reply.close()
 	}
@@ -95,10 +95,10 @@ fn test_native_owned_plans_retire_partial_imports_canonicalization_and_late_refu
 		mut maximum := u64(0); mut records := u32(0)
 		cycles := $if track_heap ? { 128 } $else { 4 }
 		for _ in 0 .. cycles {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			native_owned_attempt(version, count, fault)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 			}
 		}

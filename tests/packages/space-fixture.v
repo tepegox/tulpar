@@ -21,7 +21,7 @@ fn fixture_max_count() u64 {
 // The V controller includes the real platform header before defining a
 // function-like statvfs macro. Only calls are redirected; the native C struct
 // layout remains intact. No test hook is compiled into the package service.
-@[export: 'vinix_package_fixture_statvfs']
+@[export: 'tulpar_package_fixture_statvfs']
 fn fixture_statvfs(path &char, output &C.statvfs) int {
 	name := unsafe { tos3(path) }
 	if name == '/fixture/error' { return -1 }

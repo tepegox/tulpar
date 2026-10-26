@@ -7,7 +7,7 @@ import time
 import userland.packagecore
 
 fn test_real_package_generations_update_uninstall_and_rollback_have_coherent_desktop_registration() {
-	work := os.real_path(os.temp_dir()) + '/vinix-registration-lifecycle-' + os.getpid().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-registration-lifecycle-' + os.getpid().str()
 	os.mkdir_all(work + '/source/bin')!
 	defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/source/bin/runner', 'fixture payload, never executed\n')!
@@ -16,8 +16,8 @@ fn test_real_package_generations_update_uninstall_and_rollback_have_coherent_des
 	for architecture in ['aarch64', 'x86_64'] {
 		repository := work + '/repository-' + architecture
 		root := work + '/root-' + architecture
-		os.mkdir_all(root + '/etc/vinix-packages')!
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(Config{architecture: architecture,
+		os.mkdir_all(root + '/etc/tulpar-packages')!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(Config{architecture: architecture,
 			repositories: [Repository{id: 'fixture', url: 'file://' + repository, public_key: key}],
 			policy: Policy{reserve_bytes: 0}}))!
 		service := Service{root: root}

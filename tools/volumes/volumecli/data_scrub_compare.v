@@ -48,7 +48,7 @@ fn decode_data_scrub_report(data &u8, size int, mut report DataScrubReport) bool
 	mut cursor := unsafe { &ScrubReportCursor(C.alloca(sizeof(ScrubReportCursor))) }
 	mut candidate := unsafe { &DataScrubReport(C.alloca(sizeof(DataScrubReport))) }
 	unsafe { *cursor = ScrubReportCursor{data: data, size: size}; *candidate = DataScrubReport{} }
-	if !scrub_report_literal(mut cursor, c'format=VINIXSR1 operation=scrubbed-data disks=') { return false }
+	if !scrub_report_literal(mut cursor, c'format=TULPARSR1 operation=scrubbed-data disks=') { return false }
 	disks := scrub_report_number(mut cursor) or { return false }
 	if !scrub_report_literal(mut cursor, c' mappings=') { return false }
 	count := scrub_report_number(mut cursor) or { return false }
@@ -93,7 +93,7 @@ fn encode_data_scrub_snapshot(report &DataScrubReport, output &char) int {
 	mut changed := 0; for i in 0 .. report.count { if report.expected[i] != report.actual[i] { changed++ } }
 	mut fingerprint := [65]char{}
 	if !scrub_digest_text(unsafe { &report.reference }, &fingerprint[0]) { return 0 }
-	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=VINIXSR1 operation=scrubbed-data disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &fingerprint[0]))
+	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=TULPARSR1 operation=scrubbed-data disks=%d mappings=%d matched=%d changed=%d algorithm=sha256 reference_sha256=%s\n', report.disks, report.count, report.count - changed, changed, &fingerprint[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut expected := [65]char{}; mut actual := [65]char{}
 	for i in 0 .. report.count {
@@ -137,7 +137,7 @@ fn encode_data_scrub_comparison(before &DataScrubReport, after &DataScrubReport,
 	mut history := DataScrubHistory{}; if !compare_data_scrubs(before, after, mut history) { return 0 }
 	mut reference := [65]char{}; mut first := [65]char{}; mut second := [65]char{}
 	if !scrub_digest_text(unsafe { &before.reference }, &reference[0]) || !data_scrub_fingerprint(before, &first[0]) || !data_scrub_fingerprint(after, &second[0]) { return 0 }
-	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=VINIXSR1 operation=compared-data-scrubs disks=%d mappings=%d stable=%d changed=%d new_changes=%d restored=%d changed_again=%d algorithm=sha256 reference_sha256=%s before_report_sha256=%s after_report_sha256=%s\n', before.disks, before.count, history.stable, before.count - history.stable, history.new_changes, history.restored, history.changed_again, &reference[0], &first[0], &second[0]))
+	mut length := int(C.snprintf(output, uint(scrub_report_max), c'format=TULPARSR1 operation=compared-data-scrubs disks=%d mappings=%d stable=%d changed=%d new_changes=%d restored=%d changed_again=%d algorithm=sha256 reference_sha256=%s before_report_sha256=%s after_report_sha256=%s\n', before.disks, before.count, history.stable, before.count - history.stable, history.new_changes, history.restored, history.changed_again, &reference[0], &first[0], &second[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut expected := [65]char{}; mut old := [65]char{}; mut next := [65]char{}
 	for i in 0 .. before.count {

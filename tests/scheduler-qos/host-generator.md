@@ -12,7 +12,7 @@ generates, builds and runs every original assertion. `VEXE` retains precedence
 over `V` for the fixture compiler, and empty overrides fail. Temporary files
 are removed on success and returned failures. The maintained shell entry
 selects its own compiler through `build-support/find-v.sh`.
-`VINIX_SCHEDULER_QOS_GENERATOR` can select an already compiled generator.
+`TULPAR_SCHEDULER_QOS_GENERATOR` can select an already compiled generator.
 The generator also exposes `--extract SOURCE NAME` for independent comparisons.
 Source reads preserve strict UTF-8 and universal newline behavior, and the
 extractor counts all braces exactly as the original controller did.

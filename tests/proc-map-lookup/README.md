@@ -15,9 +15,9 @@ growth itself is outside that window: current procfs pruning retains nodes.
 Run the requested production kernel with the shared isolated-guest harness:
 
 ```sh
-VINIX_QEMU_SMP=4 tests/kernel-gaps/run-native --no-network \
+TULPAR_QEMU_SMP=4 tests/kernel-gaps/run-native --no-network \
   --source tests/proc-map-lookup/mapfixture/core.v --arch aarch64 --kernel-dir kernel \
-  --timeout 1800 --expect 'VINIX PROC MAP LOOKUP: PASS'
+  --timeout 1800 --expect 'TULPAR PROC MAP LOOKUP: PASS'
 ```
 
 Repeat with `--arch x86_64` and its kernel directory. Also run the
@@ -34,7 +34,7 @@ a build artifact; the original oracle is recovered from immutable Git revision
 Build and run both versions against the same kernel with the paired runner:
 
 ```sh
-VINIX_QEMU_SMP=4 tests/proc-map-lookup/run --arch aarch64 \
+TULPAR_QEMU_SMP=4 tests/proc-map-lookup/run --arch aarch64 \
   --kernel-dir /absolute/isolated/kernel \
   --state-dir /absolute/new/evidence --guest-state-dir /tmp/proc-map-arm
 ```
@@ -44,7 +44,7 @@ architecture. `--build-only` checks the actual musl SDK objects and static
 executables without launching QEMU. The runner attaches the same serial
 constructor to both versions, verifies their four cohorts and progress, and
 compares every retained-class and large/UAF row. The complete workload requires
-Vinix procfs behavior; a Darwin host compile is not a substitute for it.
+Tulpar procfs behavior; a Darwin host compile is not a substitute for it.
 
 Both original/V native controls passed on ARM with four CPUs and x86 with
 two CPUs, using identical validated production kernels per architecture.

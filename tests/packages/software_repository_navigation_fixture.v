@@ -137,7 +137,7 @@ fn check_software_repository_paste() ! {
 }
 
 fn software_repository_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if mode.starts_with('list-') || mode.starts_with('review-') {
 		listing := args[1..] == ['--json', 'repo-config']
@@ -199,10 +199,10 @@ fn check_repository_writer_protected(mut app SoftwareApp) ! {
 fn check_software_repository_navigation() ! {
 	check_software_repository_paste()!
 	check_repository_reader_boundaries()!
-	receipt := os.temp_dir() + '/vinix-repository-navigation-' + os.getpid().str()
+	receipt := os.temp_dir() + '/tulpar-repository-navigation-' + os.getpid().str()
 	url := repository_fixture_url + '/部署 ' + 'source-'.repeat(40)
-	os.setenv('VINIX_SOFTWARE_REPOSITORY_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_REPOSITORY_FIXTURE'); os.unsetenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION') }
+	os.setenv('TULPAR_SOFTWARE_REPOSITORY_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_REPOSITORY_FIXTURE'); os.unsetenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION') }
 	mut app := SoftwareApp{ service_path: os.executable(), output: []u8{cap: 8192}, query: 'kept search'.bytes(), filter: 1 }
 	defer { app.close_app() }
 	app.handle('software.repositories')!; wait_for_software(mut app)
@@ -212,7 +212,7 @@ fn check_software_repository_navigation() ! {
 		for ending in ['partial', 'complete']! {
 			for action in ['software.repository.stop', 'software.repository.cancel', 'escape']! {
 				mode := if kind == 'list' { 'list-' + ending } else { 'review-' + ending }
-				os.setenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION', mode, true)
+				os.setenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION', mode, true)
 				app.handle(if kind == 'list' { 'software.repository.reload' } else if kind == 'enroll' { 'software.repository.enroll' } else { 'software.repository.revoke' })!
 				pid := app.worker.pid
 				wait_for_repository_output(mut app, false)
@@ -235,7 +235,7 @@ fn check_software_repository_navigation() ! {
 				assert app.repository_mode && app.repository_selected == 0 && app.repository_status.repositories[0].id == 'fixture'
 				assert editor_bytes_text(app.repository_url) == url && editor_bytes_text(app.repository_key) == 'b'.repeat(64)
 				assert app.status.contains('stopped') && !os.exists(receipt)
-				os.unsetenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION')
+				os.unsetenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION')
 				if kind == 'list' {
 					app.handle('software.repository.reload')!; wait_for_software(mut app)
 					assert app.repository_status.repositories[0].id == 'fixture'
@@ -268,19 +268,19 @@ fn check_software_repository_navigation() ! {
 			app.begin_repository_review(operation); wait_for_software(mut app)
 			for app.repository_url_page + 1 < app.repository_url_pages.len { app.handle('software.repository.url-next')! }
 			assert app.repository_review_ready
-			os.setenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION', mode, true)
+			os.setenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION', mode, true)
 			app.handle('software.repository.confirm')!
 			assert app.worker.args == if operation == 'enroll' { ['repo-apply', 'd'.repeat(64), 'enroll', 'fixture', url, 'b'.repeat(64)] } else { ['repo-apply', 'd'.repeat(64), 'revoke', 'fixture'] }
 			wait_for_repository_output(mut app, true); check_repository_writer_protected(mut app)!
 			if operation == 'revoke' && mode == 'write-complete' {
-				os.setenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION', 'list-complete', true)
+				os.setenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION', 'list-complete', true)
 			}
 			release := u8(`!`); assert C.write(app.worker.stdio_fd[0], &release, 1) == 1
 			if operation == 'enroll' && mode != 'write-apply-failed' {
 				for _ in 0 .. 1000 { app.poll(); if app.repository_worker == .refresh { break }; time.sleep(time.millisecond) }
 				assert app.repository_worker == .refresh
 				wait_for_repository_output(mut app, true); check_repository_writer_protected(mut app)!
-				if mode == 'write-complete' { os.setenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION', 'list-complete', true) }
+				if mode == 'write-complete' { os.setenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION', 'list-complete', true) }
 				assert C.write(app.worker.stdio_fd[0], &release, 1) == 1
 			}
 			if mode == 'write-complete' {
@@ -290,7 +290,7 @@ fn check_software_repository_navigation() ! {
 				assert app.repository_read_running() && app.prepare_close() && os.exists(receipt)
 				app.handle('software.repository.stop')!
 				assert app.repository_result != '' && os.exists(receipt)
-				os.unsetenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION')
+				os.unsetenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION')
 				app.handle('software.repository.reload')!
 			}
 			wait_for_software(mut app)
@@ -305,7 +305,7 @@ fn check_software_repository_navigation() ! {
 				app.handle('software.failure')!; assert app.failure_mode
 				app.handle('software.failure.back')!; assert !app.failure_mode && app.repository_mode
 			}
-			os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_REPOSITORY_NAVIGATION')
+			os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_REPOSITORY_NAVIGATION')
 			app.clear_failure()
 		}
 	}
@@ -332,7 +332,7 @@ fn check_software_repository_navigation_memory() ! {
 		app.initialize_repository_fields(); app.page_rows = 5
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.repository_focus = 2; app.select_all = true
 				app.repository_paste_input(url)
@@ -359,7 +359,7 @@ fn check_software_repository_navigation_memory() ! {
 		// The last successfully decoded list is live state until explicitly
 		// retired; include its retirement before measuring retained allocations.
 		app.repository_status.close(); app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'repository navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'repository navigation retained ${kept} bytes'
 		println('Software repository navigation: 1000 configuration/enrollment/revocation/page/full/compact/failure/cancel/retirement cycles retain zero tracked bytes')
 		println('Software repository paste: 1000 valid/rejected/selected-input cycles retain zero tracked bytes')
 		println('Software repository reader: 1000 enrollment/revocation/read/page/resize/ignored-confirm/Back/cancel/retirement cycles retain zero tracked bytes')

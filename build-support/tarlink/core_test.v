@@ -11,7 +11,7 @@ import tarstream
 fn C.mkdtemp(&char) &char
 
 fn temporary_directory() !string {
-	mut pattern := (os.temp_dir() + '/vinix-tarlink-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir() + '/tulpar-tarlink-XXXXXX\x00').bytes()
 	unsafe {
 		path := C.mkdtemp(&char(pattern.data))
 		if path == nil { return error('cannot create test directory') }
@@ -257,7 +257,7 @@ fn test_plain_gzip_bzip2_xz_and_system_tar_pax_inputs() {
 }
 
 fn test_native_command_status_and_saved_bytes() {
-	tool := os.getenv('VINIX_TARLINK_TOOL')
+	tool := os.getenv('TULPAR_TARLINK_TOOL')
 	if tool == '' { return }
 	work := temporary_directory()!
 	defer { os.rmdir_all(work) or { panic(err) } }

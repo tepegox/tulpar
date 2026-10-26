@@ -46,7 +46,7 @@ fn retain() ! {
 		for path in ['guest/init', 'guest/program-0/review', 'guest/program-1/protocol', 'guest/build.log', 'guest/program-0/build.log', 'guest/program-1/build.log']! {
 			inputs << pin(work + '/' + path)!
 		}
-		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/vinix')!
+		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/tulpar')!
 		inputs << pin(os.find_abs_path_of_executable(architecture + '-linux-musl-gcc')!)!
 		report := root + '/build/package-review-permissions-work/guest-' + architecture + '-1.txt'
 		assert os.read_file(report)!.contains('1 passed, 0 failed, 0 skipped')

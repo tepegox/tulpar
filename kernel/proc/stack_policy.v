@@ -5,9 +5,9 @@ import errno
 import katomic
 import memory.mmap
 
-// A Vinix extension: query=0, audit=1, enforce=2, violation-count=3.
+// A Tulpar extension: query=0, audit=1, enforce=2, violation-count=3.
 // A process may only strengthen its mode until exec installs a new image.
-pub const pr_vinix_stack_policy = 0x56490001
+pub const pr_tulpar_stack_policy = 0x56490001
 
 pub fn stack_policy_control(mut process Process, action u64, pointer u64) (u64, u64) {
 	if action == 0 { return u64(katomic.load(&process.stack_policy_mode)), 0 }

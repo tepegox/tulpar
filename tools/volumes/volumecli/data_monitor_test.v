@@ -15,8 +15,8 @@ fn monitor_native_fixture(sector u64, kind u32, flags u64, mut manifest DataMani
 }
 fn monitor_native_expected(manifest &DataManifest, observed &DataDigests, sample u64, changed_samples u64) string {
 	mut bytes := [11392]u8{}; size := encode_data_manifest(manifest, &bytes[0]); mut changed := 0; for i in 0 .. observed.count { if manifest.digests.values[i] != observed.values[i] { changed++ } }
-	mut text := 'format=VINIXDM1 operation=monitored-data sample=${sample} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\n' +
-		'format=VINIXSR1 operation=scrubbed-data disks=${manifest.set.count} mappings=${observed.count} matched=${observed.count - changed} changed=${changed} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(bytes[..size])) + '\n'
+	mut text := 'format=TULPARDM1 operation=monitored-data sample=${sample} changed_samples=${changed_samples} session_changed=${int(changed_samples != 0)}\n' +
+		'format=TULPARSR1 operation=scrubbed-data disks=${manifest.set.count} mappings=${observed.count} matched=${observed.count - changed} changed=${changed} algorithm=sha256 reference_sha256=' + hex.encode(sha256.sum(bytes[..size])) + '\n'
 	mut record := 0
 	for disk in 0 .. manifest.set.count { for at in 0 .. int(manifest.set.plans[disk].count) { row := manifest.set.plans[disk].rows[at]; text += 'disk=${disk} slot=${row.slot} offset=${row.offset} bytes=${row.length} readonly=${row.flags} result=${if observed.values[record] == manifest.digests.values[record] { 'match' } else { 'changed' }} expected_sha256=' + hex.encode(manifest.digests.values[record][..]) + ' actual_sha256=' + hex.encode(observed.values[record][..]) + '\n'; record++ } }
 	return text
@@ -45,7 +45,7 @@ fn test_monitor_invalid_later_records_session_counters_and_maximum_snapshot() {
 	for disk in 0 .. 64 { manifest.set.plans[disk].count = 0 }; manifest.set.slots = 0; manifest.digests = DataDigests{}; observed = manifest.digests; assert encode_data_monitor(&manifest, &observed, 1, 0, &output[0]) > 0
 }
 fn test_monitor_cli_arity_decimal_bounds_and_missing_reference_before_discovery() {
-	unsafe { mut args := [&char(c'vinix-volume'), &char(c'monitor-data-auto'), &char(c'/missing-monitor-reference'), &char(c'0'), &char(c'1'), &char(c'extra'), &char(nil)]!
+	unsafe { mut args := [&char(c'tulpar-volume'), &char(c'monitor-data-auto'), &char(c'/missing-monitor-reference'), &char(c'0'), &char(c'1'), &char(c'extra'), &char(nil)]!
 		for count in [2, 3, 4, 6, 7] { assert run(count, &args[0]) == 2 }
 		for at in [2, 3, 4] { saved := args[at]; args[at] = &char(c''); assert run(5, &args[0]) == 2; args[at] = saved }
 		for text in [&char(c'-1'), &char(c'86401'), &char(c'18446744073709551616')]! { args[3] = text; assert run(5, &args[0]) == 2 }; args[3] = &char(c'0'); args[4] = &char(c'0'); assert run(5, &args[0]) == 2; args[4] = &char(c'1'); assert run(5, &args[0]) == 1

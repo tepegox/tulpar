@@ -29,7 +29,7 @@ fn flags(linux string, generated string, standard string, target string) []strin
 	here := os.join_path(root, 'kernel/linuxkpi')
 	mut result := ['-std=' + standard, '-O2', '-ffreestanding', '-fwrapv', '-fno-strict-aliasing',
 		'-nostdinc', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
-		'-Wno-sign-compare', '-D__KERNEL__', '-DVINIX_LINUXKPI', '-include', 'linux/kconfig.h',
+		'-Wno-sign-compare', '-D__KERNEL__', '-DTULPAR_LINUXKPI', '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h'), '-isystem',
 		os.join_path(root, 'kernel/freestnd-c-hdrs')]
 	if target != '' { result.prepend('--target=' + target) }
@@ -178,7 +178,7 @@ fn run_profile(keep string) ! {
 	linux := os.real_path(hosttest.env_default('LINUXKPI_SOURCE_DIR',
 		os.join_path(root, 'third_party/linux-i915/linux-' + version)))
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
-	work := hosttest.work_dir(keep, 'vinix-cpu-masks-')!
+	work := hosttest.work_dir(keep, 'tulpar-cpu-masks-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut observed := [@FILE, core, queries, storage, primitives, contract,
 		os.join_path(here, 'compatcore/bitmap.v'), os.join_path(here, 'compatcore/primitives.v'),
@@ -198,7 +198,7 @@ fn run_profile(keep string) ! {
 	if os.is_file(os.join_path(here, 'abi/overflow.json')) { adapters << ['overflow.json', 'integer_policy.h'] }
 	for adapter in adapters {
 		run_command([os.join_path(here, 'generate-abi'), os.join_path(here, 'abi', adapter[0]),
-			os.join_path(generated, 'vinix', adapter[1])], '')!
+			os.join_path(generated, 'tulpar', adapter[1])], '')!
 	}
 	profile := flags(linux, generated, 'gnu11', 'x86_64-unknown-none')
 	bounds_path := os.join_path(generated, 'generated/bounds.h')

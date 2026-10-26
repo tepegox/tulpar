@@ -1,6 +1,6 @@
 /* Native declarations; fixture generators, callbacks and checks live in V. */
-#ifndef VINIX_NET_RANDOM_FIXTURE_ABI_H
-#define VINIX_NET_RANDOM_FIXTURE_ABI_H
+#ifndef TULPAR_NET_RANDOM_FIXTURE_ABI_H
+#define TULPAR_NET_RANDOM_FIXTURE_ABI_H
 #include <net_random.h>
 #include <stdbool.h>
 #include <stdio.h>

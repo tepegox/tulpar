@@ -114,7 +114,7 @@ pub fn cache_geometry(size u32, requested u32, flags u32, alignment &uint, strid
 		minimum += align - 1
 		if minimum > uint(-1) - uint(size) { return false }
 		minimum += uint(size)
-		page := C.vinix_linuxkpi_page_size()
+		page := C.tulpar_linuxkpi_page_size()
 		if page == 0 || (page & (page - 1)) != 0 || minimum > uint(-1) - (page - 1) {
 			return false
 		}
@@ -132,7 +132,7 @@ pub fn cache_create(name &char, size u32, alignment u32, flags u32, ctor fn (voi
 		mut actual := uint(0)
 		mut stride := uint(0)
 		mut pages := uint(0)
-		if uint(name) == 0 || !C.vinix_linuxkpi_may_sleep() || (flags & ~u32(0x2000)) != 0 || !cache_geometry(size, alignment, flags, &actual, &stride, &pages) {
+		if uint(name) == 0 || !C.tulpar_linuxkpi_may_sleep() || (flags & ~u32(0x2000)) != 0 || !cache_geometry(size, alignment, flags, &actual, &stride, &pages) {
 			return nil
 		}
 		length := C.strlen(name)
@@ -161,27 +161,27 @@ pub fn cache_create(name &char, size u32, alignment u32, flags u32, ctor fn (voi
 pub fn cache_refill(cache &Cache, flags u32) &CacheSlab {
 	unsafe {
 		C.vkp_cache_ctor_warning(uint(cache.ctor) != 0 && (flags & 0x100) != 0)
-		base := C.vinix_linuxkpi_alloc_gfp_pages(cache.pages_per_slab, flags)
+		base := C.tulpar_linuxkpi_alloc_gfp_pages(cache.pages_per_slab, flags)
 		if uint(base) == 0 { return nil }
-		page := C.vinix_linuxkpi_page_size()
+		page := C.tulpar_linuxkpi_page_size()
 		if page != 0 && cache.pages_per_slab > uint(-1) / page {
-			C.vinix_linuxkpi_free_pages(base, cache.pages_per_slab)
+			C.tulpar_linuxkpi_free_pages(base, cache.pages_per_slab)
 			return nil
 		}
 		bytes := cache.pages_per_slab * page
 		if uint(base) > uint(-1) - bytes || uint(base) > uint(-1) - sizeof(CacheSlab) {
-			C.vinix_linuxkpi_free_pages(base, cache.pages_per_slab)
+			C.tulpar_linuxkpi_free_pages(base, cache.pages_per_slab)
 			return nil
 		}
 		end := uint(base) + bytes
 		mut start := uint(base) + sizeof(CacheSlab)
 		if start > uint(-1) - sizeof(CacheSlot) {
-			C.vinix_linuxkpi_free_pages(base, cache.pages_per_slab)
+			C.tulpar_linuxkpi_free_pages(base, cache.pages_per_slab)
 			return nil
 		}
 		start += sizeof(CacheSlot)
 		if start > uint(-1) - (cache.alignment - 1) {
-			C.vinix_linuxkpi_free_pages(base, cache.pages_per_slab)
+			C.tulpar_linuxkpi_free_pages(base, cache.pages_per_slab)
 			return nil
 		}
 		start += cache.alignment - 1
@@ -227,7 +227,7 @@ pub fn cache_take_locked(cache &Cache, slab &CacheSlab) voidptr {
 @[export: 'kmem_cache_alloc']
 pub fn cache_alloc(cache &Cache, flags u32) voidptr {
 	unsafe {
-		if uint(cache) == 0 || !C.vinix_linuxkpi_gfp_supported(flags) { return nil }
+		if uint(cache) == 0 || !C.tulpar_linuxkpi_gfp_supported(flags) { return nil }
 		mut irq := C.vkp_spin_lock_irqsave(&cache.guard)
 		require(!cache.closing)
 		mut object := voidptr(nil)
@@ -283,7 +283,7 @@ pub fn cache_release_slabs(head_ &CacheList) {
 			slab := slab_all(head_.next)
 			pages := slab.pages
 			list_del(&slab.all)
-			C.vinix_linuxkpi_free_pages(slab, pages)
+			C.tulpar_linuxkpi_free_pages(slab, pages)
 		}
 	}
 }
@@ -291,7 +291,7 @@ pub fn cache_release_slabs(head_ &CacheList) {
 @[export: 'kmem_cache_shrink']
 pub fn cache_shrink(cache &Cache) i32 {
 	unsafe {
-		require(uint(cache) != 0 && C.vinix_linuxkpi_may_sleep())
+		require(uint(cache) != 0 && C.tulpar_linuxkpi_may_sleep())
 		mut detached := CacheList{}
 		list_init(&detached)
 		irq := C.vkp_spin_lock_irqsave(&cache.guard)
@@ -318,7 +318,7 @@ pub fn cache_shrink(cache &Cache) i32 {
 pub fn cache_destroy(cache &Cache) {
 	unsafe {
 		if uint(cache) == 0 { return }
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		mut detached := CacheList{}
 		list_init(&detached)
 		irq := C.vkp_spin_lock_irqsave(&cache.guard)

@@ -38,7 +38,7 @@ pub fn pci_cli(tools Tools, argv []string) !int {
 	args := cachecli.arguments(argv, ['--source', '--keep-dir'], [], [], 0, 0, 'Compile the actual PCI config core and independent oracle with native sanitizers.\nUsage: pci-config [--source IMMUTABLE_C --keep-dir NEW_DIRECTORY]') or { return error_with_code(err.msg(), 2) }
 	temporary := '--keep-dir' !in args.options
 	work := if temporary {
-		sourcecommand.temporary('vinix-pci-config-')!
+		sourcecommand.temporary('tulpar-pci-config-')!
 	} else {
 		hosttest.module_resolve(args.required('--keep-dir')!)!
 	}
@@ -120,9 +120,9 @@ pub fn exercise_pci(tools Tools, work string, original string) ! {
 		flags := [...cc, '-std=' + dialect, '-O1', '-g', '-Wall', '-Wextra', '-Werror', '-pthread',
 			'-fsanitize=address,undefined', '-fno-omit-frame-pointer']
 		tools.checked([...flags, '-Wno-unused-function', '-I', tools.root + '/kernel/c',
-			'-ffreestanding', '-fno-builtin', '-fno-strict-aliasing', '-Dmalloc=vinix_pci_test_malloc',
-			'-Dcalloc=vinix_pci_test_calloc', '-Drealloc=vinix_pci_test_realloc',
-			'-Dfree=vinix_pci_test_free', '-c', work + '/core.c', '-o',
+			'-ffreestanding', '-fno-builtin', '-fno-strict-aliasing', '-Dmalloc=tulpar_pci_test_malloc',
+			'-Dcalloc=tulpar_pci_test_calloc', '-Drealloc=tulpar_pci_test_realloc',
+			'-Dfree=tulpar_pci_test_free', '-c', work + '/core.c', '-o',
 			work + '/core-' + dialect + '.o'], environment)!
 		mut input := fixture
 		if original == '' {

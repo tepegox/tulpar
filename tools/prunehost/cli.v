@@ -55,7 +55,7 @@ pub fn run(args []string) {
 		exit(2)
 	}
 	automatic := '--automatic' in parsed.options
-	if automatic && os.getenv('VINIX_PRUNE_BUILD') == '0' { return }
+	if automatic && os.getenv('TULPAR_PRUNE_BUILD') == '0' { return }
 	root := resolve(parsed.options['--root'] or { hosttest.root() }) or {
 		eprintln(err)
 		exit(1)
@@ -85,10 +85,10 @@ pub fn run(args []string) {
 		}
 	}
 	for name, value in os.environ() {
-		if name.starts_with('VINIX_') && (name.contains('INITRAMFS') || name.ends_with('_ISO') || name in [
-			'VINIX_QEMU_MODULE_ISO',
-			'VINIX_QEMU_BASE_ARCHIVE',
-			'VINIX_QEMU_EXTRA_MODULES',
+		if name.starts_with('TULPAR_') && (name.contains('INITRAMFS') || name.ends_with('_ISO') || name in [
+			'TULPAR_QEMU_MODULE_ISO',
+			'TULPAR_QEMU_BASE_ARCHIVE',
+			'TULPAR_QEMU_EXTRA_MODULES',
 		]) {
 			for line in value.split_into_lines() {
 				if line != '' {

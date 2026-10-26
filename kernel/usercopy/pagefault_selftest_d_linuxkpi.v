@@ -14,19 +14,19 @@ import time
 
 #include "linuxkpi_pagefault_v_contract.h"
 
-fn C.vinix_linuxkpi_fault_depth() &u32
+fn C.tulpar_linuxkpi_fault_depth() &u32
 fn C.pagefault_disable()
 fn C.pagefault_enable()
 fn C.pagefault_disabled() bool
 fn C.faulthandler_disabled() bool
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_worker_bind(u32) int
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
-fn C.vinix_linuxkpi_irq_save() u64
-fn C.vinix_linuxkpi_irq_restore(u64)
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_worker_bind(u32) int
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_irq_save() u64
+fn C.tulpar_linuxkpi_irq_restore(u64)
 
 const fault_test_base = u64(0x64000000)
 const fault_test_cow_base = u64(0x78000000)
@@ -46,10 +46,10 @@ mut:
 }
 
 fn fault_test_depth(expected u32) bool {
-	depth := C.vinix_linuxkpi_fault_depth()
+	depth := C.tulpar_linuxkpi_fault_depth()
 	return scalar_test_require(depth != unsafe { nil } && katomic.load(depth) == expected
 		&& C.pagefault_disabled() == (expected != 0)
-		&& C.faulthandler_disabled() == (expected != 0 || C.vinix_linuxkpi_preempt_count() != 0),
+		&& C.faulthandler_disabled() == (expected != 0 || C.tulpar_linuxkpi_preempt_count() != 0),
 		c'fault depth and handler queries follow the current task')
 }
 
@@ -59,8 +59,8 @@ fn fault_test_absent(pagemap &memory.Pagemap, address u64) bool {
 }
 
 fn fault_test_irq_state(enabled bool) bool {
-	flags := C.vinix_linuxkpi_irq_save()
-	C.vinix_linuxkpi_irq_restore(flags)
+	flags := C.tulpar_linuxkpi_irq_save()
+	C.tulpar_linuxkpi_irq_restore(flags)
 	return scalar_test_require((flags & u64(1 << 9) != 0) == enabled,
 		c'fault nesting and checked page locks preserve the caller interrupt state')
 }
@@ -69,7 +69,7 @@ fn fault_test_missing_checks(pagemap &memory.Pagemap, allow_faults bool) bool {
 	address := fault_test_base + 4 * page_size + 3
 	mut bytes := [u8(0xcc), 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc, 0xcc]!
 	buffer := unsafe { voidptr(&bytes[0]) }
-	result := unsafe { &u64(C.vinix_stack_alloc(sizeof(u64))) }
+	result := unsafe { &u64(C.tulpar_stack_alloc(sizeof(u64))) }
 	unsafe { *result = ~u64(0) }
 	if allow_faults {
 		if !scalar_test_require(!read_scalar_pagemap(pagemap, address, 8, result)
@@ -108,7 +108,7 @@ fn fault_test_prefix_checks(pagemap &memory.Pagemap, allow_faults bool) bool {
 		&& scalar_store_test_bytes(pagemap, address, 4, scalar_test_pattern),
 		c'blocked raw store commits only the resident prefix') { return false }
 	if allow_faults {
-		result := unsafe { &u64(C.vinix_stack_alloc(sizeof(u64))) }
+		result := unsafe { &u64(C.tulpar_stack_alloc(sizeof(u64))) }
 		unsafe { *result = ~u64(0) }
 		// Native checked split-page accesses may commit a writable prefix.
 		// They promise neither rollback nor Linux exception-table recovery.
@@ -156,17 +156,17 @@ fn fault_test_disabled_missing(pagemap &memory.Pagemap) bool {
 }
 
 fn fault_test_preempt_missing(pagemap &memory.Pagemap) bool {
-	C.vinix_linuxkpi_preempt_disable()
-	defer { C.vinix_linuxkpi_preempt_enable() }
-	return scalar_test_require(C.vinix_linuxkpi_preempt_count() != 0,
+	C.tulpar_linuxkpi_preempt_disable()
+	defer { C.tulpar_linuxkpi_preempt_enable() }
+	return scalar_test_require(C.tulpar_linuxkpi_preempt_count() != 0,
 		c'actual preemption pin is visible') && fault_test_depth(0)
 		&& fault_test_resident_checks(pagemap, true)
 		&& fault_test_missing_checks(pagemap, true) && fault_test_prefix_checks(pagemap, true)
 }
 
 fn fault_test_irq_missing(pagemap &memory.Pagemap) bool {
-	flags := C.vinix_linuxkpi_irq_save()
-	defer { C.vinix_linuxkpi_irq_restore(flags) }
+	flags := C.tulpar_linuxkpi_irq_save()
+	defer { C.tulpar_linuxkpi_irq_restore(flags) }
 	return fault_test_irq_state(false) && fault_test_disabled_missing(pagemap)
 		&& fault_test_depth(0) && fault_test_irq_state(false)
 }
@@ -241,15 +241,15 @@ fn fault_test_disabled_cow(pagemap &memory.Pagemap, child &memory.Pagemap,
 
 fn fault_test_preempt_cow(pagemap &memory.Pagemap, child &memory.Pagemap,
 	shared_alias voidptr, physical u64) bool {
-	C.vinix_linuxkpi_preempt_disable()
-	defer { C.vinix_linuxkpi_preempt_enable() }
+	C.tulpar_linuxkpi_preempt_disable()
+	defer { C.tulpar_linuxkpi_preempt_enable() }
 	return fault_test_depth(0) && fault_test_cow_blocked(pagemap, child, shared_alias, physical, true)
 }
 
 fn fault_test_irq_cow(pagemap &memory.Pagemap, child &memory.Pagemap,
 	shared_alias voidptr, physical u64) bool {
-	flags := C.vinix_linuxkpi_irq_save()
-	defer { C.vinix_linuxkpi_irq_restore(flags) }
+	flags := C.tulpar_linuxkpi_irq_save()
+	defer { C.tulpar_linuxkpi_irq_restore(flags) }
 	return fault_test_irq_state(false)
 		&& fault_test_disabled_cow(pagemap, child, shared_alias, physical)
 		&& fault_test_depth(0) && fault_test_irq_state(false)
@@ -306,8 +306,8 @@ fn fault_test_actor_wait(_controller &PagefaultActor, finish bool) bool {
 fn fault_test_actor_context(_controller &PagefaultActor) bool {
 	mut controller := unsafe { _controller }
 	// Creation occurred while the parent had depth two. New tasks start zero.
-	if !fault_test_depth(0) || C.vinix_linuxkpi_worker_bind(0) != 0
-		|| C.vinix_linuxkpi_cpu_id() != 0 { return false }
+	if !fault_test_depth(0) || C.tulpar_linuxkpi_worker_bind(0) != 0
+		|| C.tulpar_linuxkpi_cpu_id() != 0 { return false }
 	C.pagefault_disable()
 	C.pagefault_disable()
 	mut held := u32(2)
@@ -316,10 +316,10 @@ fn fault_test_actor_context(_controller &PagefaultActor) bool {
 	if !fault_test_depth(2) { return false }
 	katomic.store(mut &controller.ready, true)
 	if !fault_test_actor_wait(controller, false) || !fault_test_depth(2) { return false }
-	target := if C.vinix_linuxkpi_percpu_count() > 1 { u32(1) } else { u32(0) }
-	if C.vinix_linuxkpi_worker_bind(target) != 0 { return false }
+	target := if C.tulpar_linuxkpi_percpu_count() > 1 { u32(1) } else { u32(0) }
+	if C.tulpar_linuxkpi_worker_bind(target) != 0 { return false }
 	sched.yield(true)
-	if !scalar_test_require(C.vinix_linuxkpi_cpu_id() == target && fault_test_depth(2),
+	if !scalar_test_require(C.tulpar_linuxkpi_cpu_id() == target && fault_test_depth(2),
 		c'task-local disabled scope survives sleep, yield and CPU migration') { return false }
 	katomic.store(mut &controller.migrated, true)
 	if !fault_test_actor_wait(controller, true) || !fault_test_depth(2) { return false }
@@ -385,7 +385,7 @@ fn fault_test_join(_controller &PagefaultActor, actor &proc.Thread) bool {
 	}
 	event.pthread_wait(actor)
 	// One pin remains after the join pin is released, retaining this observer.
-	for !C.vinix_linuxkpi_test_thread_reap_ready(actor) {
+	for !C.tulpar_linuxkpi_test_thread_reap_ready(actor) {
 		if time.monotonic_ns() - started >= scalar_test_timeout_ns {
 			proc.unpin_thread(actor)
 			sched.reap_deferred()
@@ -396,7 +396,7 @@ fn fault_test_join(_controller &PagefaultActor, actor &proc.Thread) bool {
 	proc.unpin_thread(actor)
 	// The actor pointer is dead after its final pin; never inspect it again.
 	sched.reap_deferred()
-	for !C.vinix_linuxkpi_test_reap_quiescent() {
+	for !C.tulpar_linuxkpi_test_reap_quiescent() {
 		if time.monotonic_ns() - started >= scalar_test_timeout_ns {
 			return scalar_test_require(false, c'fault actor final reclamation deadline')
 		}
@@ -408,7 +408,7 @@ fn fault_test_join(_controller &PagefaultActor, actor &proc.Thread) bool {
 
 fn fault_test_lifecycle() bool {
 	if !fault_test_depth(0) { return false }
-	mut controller := unsafe { &PagefaultActor(C.vinix_stack_alloc(sizeof(PagefaultActor))) }
+	mut controller := unsafe { &PagefaultActor(C.tulpar_stack_alloc(sizeof(PagefaultActor))) }
 	unsafe { *controller = PagefaultActor{} }
 	C.pagefault_disable()
 	C.pagefault_disable()

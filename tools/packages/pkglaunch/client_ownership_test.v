@@ -28,8 +28,8 @@ struct C.sockaddr_un { mut: sun_family u16 sun_path [108]char }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 fn launch_client_cycles() int { $if launch_client_baseline ? { return 5 }; return 1000 }
 fn launch_client_error(err IError) string {
@@ -37,7 +37,7 @@ fn launch_client_error(err IError) string {
 }
 fn launch_client_window(label string) {
 	$if track_heap ? {
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('LAUNCH CLIENT ' + label + ' retained ' + kept.str() + ' bytes')
 		$if !launch_client_baseline ? { assert kept == 0, kept.str() }
 	}
@@ -53,12 +53,12 @@ fn launch_client_settle() {
 fn test_launch_client_local_refusals_retire_owned_authentication_inputs() {
 	arguments := ['run', 'example.app']
 	defer { unsafe { arguments.free() } }
-	directory := os.temp_dir() + '/vinix-launch-local-' + os.getpid().str()
+	directory := os.temp_dir() + '/tulpar-launch-local-' + os.getpid().str()
 	os.mkdir(directory, mode: 0o700)!
 	defer { os.rmdir_all(directory) or {}; unsafe { directory.free() } }
 	path := directory + '/auth.sock'; defer { unsafe { path.free() } }
 	before := launch_client_fds()
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. launch_client_cycles() {
 		if code := run_with_socket(arguments, path) { assert code < 0; assert false }
 		else {
@@ -151,7 +151,7 @@ fn launch_case_error(mode int) string {
 }
 fn launch_fixture_worker(socket string, arguments []string, mode int) {
 	before := launch_client_fds()
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for cycle in 0 .. launch_client_cycles() {
 		if code := run_with_socket(arguments, socket) {
 			if (mode == 0 && code != 37) || (mode == 12 && code != 0) || mode !in [0, 12]! { C._exit(81) }
@@ -175,7 +175,7 @@ fn test_root_service_exercises_complete_ordinary_launch_callers() {
 	directory := '/run/user/1000'
 	os.mkdir_all(directory, mode: 0o700)!
 	os.chown(directory, 1000, 1000)!
-	root := os.temp_dir() + '/vinix-launch-service-' + os.getpid().str()
+	root := os.temp_dir() + '/tulpar-launch-service-' + os.getpid().str()
 	os.mkdir(root, mode: 0o755)!
 	defer { os.rmdir_all(root) or {}; unsafe { root.free() } }
 	path := root + '/auth.sock'; defer { unsafe { path.free() } }
@@ -231,7 +231,7 @@ fn test_launch_reply_checks_borrow_exact_bytes_without_allocating() {
 			frame := authproto.text_frame(authproto.status_ok, ...fields)
 			unsafe { replies.push_many(&frame, 1); (&array(&fields)).free() }
 		}
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. launch_client_cycles() {
 			for index, reply in replies {
 				assert reply_field(reply, 0, '0') && reply_field(reply, 1, inputs[index])

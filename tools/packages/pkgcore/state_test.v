@@ -20,7 +20,7 @@ fn state_validation_fixture(architecture string) State {
 }
 
 fn state_validation_work(label string) !string {
-	path := os.temp_dir() + '/vinix-state-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	path := os.temp_dir() + '/tulpar-state-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(path + '/generations')!
 	os.mkdir(path + '/objects')!
 	return path
@@ -80,8 +80,8 @@ fn test_persistent_state_rechecks_roots_history_architecture_and_runtime_closure
 		runtime := state.packages[1]
 		config := Config{ architecture: architecture, repositories: [Repository{
 			id: 'publisher', url: 'file:///fixture', public_key: app.public_key }] }
-		launch := launch_plan(config, '/var/lib/vinix-packages', state, 'app', '/home/user/app', 1000, 1000, [])!
-		assert '/var/lib/vinix-packages/generations/2/apps/runtime/bin/runner' in launch.arguments
+		launch := launch_plan(config, '/var/lib/tulpar-packages', state, 'app', '/home/user/app', 1000, 1000, [])!
+		assert '/var/lib/tulpar-packages/generations/2/apps/runtime/bin/runner' in launch.arguments
 		mut invalid := [State{ ...state, generation: 0 }, State{ ...state, previous: 2 }, State{ ...state, previous: 3 },
 			State{ ...state, format: 2 }, State{ ...state, requested: ['app', 'app'] },
 			State{ ...state, requested: ['missing'] }, State{ ...state, requested: [] },
@@ -102,7 +102,7 @@ fn test_persistent_state_rechecks_roots_history_architecture_and_runtime_closure
 		}
 		for broken in invalid {
 			state_validation_refusal(json2.encode(broken), architecture)
-			if _ := launch_plan(config, '/var/lib/vinix-packages', broken, 'app', '/home/user/app', 1000, 1000, []) {
+			if _ := launch_plan(config, '/var/lib/tulpar-packages', broken, 'app', '/home/user/app', 1000, 1000, []) {
 				assert false
 			}
 		}

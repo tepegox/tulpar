@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_IRQ_WORK_V_CONTRACT_H
-#define VINIX_LINUXKPI_IRQ_WORK_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_IRQ_WORK_V_CONTRACT_H
+#define TULPAR_LINUXKPI_IRQ_WORK_V_CONTRACT_H
 #include "linuxkpi_common_v_contract.h"
 #include <linux/irq_work.h>
 #include "linuxkpi_irq_work_v_primitives.h"

@@ -21,7 +21,7 @@ fn C.memset(voidptr, i32, usize) voidptr
 fn C.memcpy(voidptr, voidptr, usize) voidptr
 fn C.strcmp(&char, &char) i32
 fn C.puts(&char) i32
-fn C.vinix_sandbox_main(i32, &&char) i32
+fn C.tulpar_sandbox_main(i32, &&char) i32
 
 __global sandbox_calls i32
 __global sandbox_fail_at i32
@@ -205,7 +205,7 @@ fn exec(path &char, argv &&char, envp &&char) i32 {
 fn run(argv &&char) i32 {
 	mut argc := i32(0)
 	unsafe { for argv[argc] != nil { argc++ } }
-	return C.vinix_sandbox_main(argc, argv)
+	return C.tulpar_sandbox_main(argc, argv)
 }
 
 fn bad(argv &&char) {
@@ -217,7 +217,7 @@ fn bad(argv &&char) {
 @[export: 'main']
 pub fn entry() i32 {
 	unsafe {
-		mut valid := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio rpath error'), &char(c'--uid'), &char(c'1000'),
+		mut valid := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio rpath error'), &char(c'--uid'), &char(c'1000'),
 			&char(c'--gid'), &char(c'1000'), &char(c'--unveil'), &char(c'/tmp/data'), &char(c'r'), &char(c'--env'),
 			&char(c'TOKEN=$(id);touch /tmp/unsafe'), &char(c'--'), &char(c'/sbin/probe'), &char(c'literal;argument'), &char(c'--uid'), &char(nil)]!
 		reset()
@@ -243,38 +243,38 @@ pub fn entry() i32 {
 			if i == 4 { sandbox_lying_ambient = 1 }
 			C.assert(run(&valid[0]) == 125 && sandbox_execs == 0)
 		}
-		mut bad01 := [&char(c'vinix-sandbox'), &char(nil)]!
+		mut bad01 := [&char(c'tulpar-sandbox'), &char(nil)]!
 		bad(&bad01[0])
-		mut bad02 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'relative'), &char(nil)]!
+		mut bad02 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'relative'), &char(nil)]!
 		bad(&bad02[0])
-		mut bad03 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad03 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad03[0])
-		mut bad04 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'-1'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad04 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'-1'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad04[0])
-		mut bad05 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'4294967295'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad05 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'4294967295'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad05[0])
-		mut bad06 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'4294967296'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad06 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'4294967296'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad06[0])
-		mut bad07 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'0'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad07 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--uid'), &char(c'0'), &char(c'--gid'), &char(c'1000'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad07[0])
-		mut bad08 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--gid'), &char(c'1000'), &char(c'--gid'), &char(c'1001'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad08 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--gid'), &char(c'1000'), &char(c'--gid'), &char(c'1001'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad08[0])
-		mut bad09 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--unveil'), &char(c'/tmp'), &char(c'rZ'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad09 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--unveil'), &char(c'/tmp'), &char(c'rZ'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad09[0])
-		mut bad10 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--unveil'), &char(c'tmp'), &char(c'r'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad10 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--unveil'), &char(c'tmp'), &char(c'r'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad10[0])
-		mut bad11 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--unveil'), &char(c'/tmp'), &char(c'r'), &char(c'--unveil'), &char(c'/tmp'), &char(c'rw'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad11 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--unveil'), &char(c'/tmp'), &char(c'r'), &char(c'--unveil'), &char(c'/tmp'), &char(c'rw'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad11[0])
-		mut bad12 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--env'), &char(c'1TOKEN=x'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad12 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--env'), &char(c'1TOKEN=x'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad12[0])
-		mut bad13 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--env'), &char(c'TOKEN=x'), &char(c'--env'), &char(c'TOKEN=y'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad13 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--env'), &char(c'TOKEN=x'), &char(c'--env'), &char(c'TOKEN=y'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad13[0])
-		mut bad14 := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--promises'), &char(c'rpath'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad14 := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--promises'), &char(c'rpath'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad14[0])
-		mut bad15 := [&char(c'vinix-sandbox'), &char(c'--unknown'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut bad15 := [&char(c'tulpar-sandbox'), &char(c'--unknown'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		bad(&bad15[0])
 		reset()
-		mut root_default := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut root_default := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		C.assert(run(&root_default[0]) == 125 && sandbox_execs == 0)
 		reset()
 		sandbox_groups = 0
@@ -283,7 +283,7 @@ pub fn entry() i32 {
 			sandbox_uids[i] = 1000
 			sandbox_gids[i] = 1000
 		}
-		mut user_default := [&char(c'vinix-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
+		mut user_default := [&char(c'tulpar-sandbox'), &char(c'--promises'), &char(c'stdio'), &char(c'--'), &char(c'/sbin/probe'), &char(nil)]!
 		C.assert(run(&user_default[0]) == 125 && sandbox_execs == 1)
 		C.assert(sandbox_exec_env[0] == nil)
 		C.puts(&char(c'APPLICATION SANDBOX HOST PASS'))

@@ -73,7 +73,7 @@ fn option(args []string, name string) !string {
 fn certificate(work string, mut checks []Check) ! {
 	os.mkdir_all(work)!
 	os.write_file(work + '/certificate.cnf', '[req]\nprompt=no\ndistinguished_name=subject\nx509_extensions=extensions\n' +
-		'[subject]\nCN=Vinix guest TLS fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\n' +
+		'[subject]\nCN=Tulpar guest TLS fixture\n[extensions]\nbasicConstraints=critical,CA:TRUE\n' +
 		'keyUsage=critical,digitalSignature,keyEncipherment,keyCertSign\nextendedKeyUsage=serverAuth\nsubjectAltName=IP:127.0.0.1,IP:10.0.2.2\n')!
 	openssl := os.find_abs_path_of_executable('openssl')!
 	checks << run('certificate', [openssl, 'req', '-new', '-x509', '-newkey', 'rsa:2048', '-nodes',

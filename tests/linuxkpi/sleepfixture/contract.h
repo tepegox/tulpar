@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Type, compiler-intrinsic and include metadata only. Runtime logic is V. */
-#ifndef VINIX_CONDITIONAL_SLEEP_FIXTURE_H
-#define VINIX_CONDITIONAL_SLEEP_FIXTURE_H
+#ifndef TULPAR_CONDITIONAL_SLEEP_FIXTURE_H
+#define TULPAR_CONDITIONAL_SLEEP_FIXTURE_H
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -25,5 +25,5 @@ typedef struct { int value; } vsl_record;
 typedef union { int value; double other; } vsl_union;
 /* A compiler intrinsic binding, with executable observations in core.v. */
 #define vsl_make_complex(real, imaginary) __builtin_complex((real), (imaginary))
-_Static_assert(__builtin_types_compatible_p(__typeof__(&vinix_might_sleep_if_native), void (*)(_Bool, const char *, int)), "conditional sleep native ABI");
+_Static_assert(__builtin_types_compatible_p(__typeof__(&tulpar_might_sleep_if_native), void (*)(_Bool, const char *, int)), "conditional sleep native ABI");
 #endif

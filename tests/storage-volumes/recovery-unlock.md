@@ -6,8 +6,8 @@ Run the scoped native qualification and disposable architecture guests:
 
 ```sh
 sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --host-recovery-unlock --work /tmp/recovery-unlock-host
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/vinix --recovery-unlock --work /tmp/recovery-unlock-arm
-sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/vinix --recovery-unlock --work /tmp/recovery-unlock-x86
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch aarch64 --kernel /path/to/arm/kernel/bin/tulpar --recovery-unlock --work /tmp/recovery-unlock-arm
+sh build-support/run-v-tool.sh tests/storage-volumes/plan_run.v --arch amd64 --kernel /path/to/x86/kernel/bin/tulpar --recovery-unlock --work /tmp/recovery-unlock-x86
 ```
 
 The scoped host run includes the independent recovery codec suite, existing

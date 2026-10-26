@@ -6,7 +6,7 @@ fn growth_preview_tool(parent &char, input &char, credential &char, recovery boo
 	unsafe {
 		mut capacity_text := [24]char{}; mut length_text := [24]char{}
 		C.snprintf(&capacity_text[0], 24, c'%lu', capacity); C.snprintf(&length_text[0], 24, c'%lu', length)
-		args := [&char(c'/usr/sbin/vinix-volume'), if recovery { &char(c'plan-preview-grow-recovery-volume') } else { &char(c'plan-preview-grow-volume') }, parent, input, credential, &capacity_text[0], &length_text[0], &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), if recovery { &char(c'plan-preview-grow-recovery-volume') } else { &char(c'plan-preview-grow-volume') }, parent, input, credential, &capacity_text[0], &length_text[0], &char(nil)]!
 		output := C.open(c'/root/preview.out', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(output >= 0, c'open preview capture')
 		child := C.fork(); check(child >= 0, c'fork growth preview')
 		if child == 0 {
@@ -40,7 +40,7 @@ fn growth_preview_cycles(parent &char, count int) {
 	for _ in 0 .. count {
 		growth_preview_query(parent, false, true, 16777216, 8192, 0)
 		growth_preview_query(parent, true, true, 16777216, 8192, 0)
-		missing(c'/dev/mapper/vinix60')
+		missing(c'/dev/mapper/tulpar60')
 	}
 	C.sleep(13); C.printf(c'PLAN GROWTH PREVIEW CYCLES count=%d\n', count)
 }
@@ -76,26 +76,26 @@ fn growth_preview_first(parent &char, wrong &char) {
 				growth_preview_query(parent, recovery, readonly, 33554432, 8192, 1)
 				growth_preview_query(parent, recovery, readonly, 16777216, 512, 1)
 				growth_preview_query(parent, recovery, readonly, 16777216, 8193, 1)
-				missing(c'/dev/mapper/vinix60')
+				missing(c'/dev/mapper/tulpar60')
 			}
 		}
 		growth_preview_tool(parent, c'/root/volume.sealed', c'/root/next.pass', false, false, 16777216, 8192, 1)
 		growth_preview_tool(parent, c'/root/volume.vrecover', c'/root/volume.vrecover', true, false, 16777216, 8192, 1)
 		recovery_unlock_tool(c'/root/volume-ro.vrecover', c'/root/recovery.key', false, 0)
-		before := status(c'/dev/mapper/vinix60'); held := C.open(c'/dev/mapper/vinix60', C.O_RDONLY)
+		before := status(c'/dev/mapper/tulpar60'); held := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY)
 		mut ciphertext := [512]u8{}; mut after_ciphertext := [512]u8{}; raw := C.open(parent, C.O_RDONLY)
 		check(held >= 0 && raw >= 0 && C.pread(raw, &ciphertext[0], 512, 15728640) == 512, c'pin existing view and physical ciphertext')
 		for recovery in [false, true]! { growth_preview_query(parent, recovery, false, 16777216, 8192, 0) }
-		after := status(c'/dev/mapper/vinix60'); check(before == after, c'previews preserve entire live status/generation/counters'); crypt_data(held, 0, 0x73)
+		after := status(c'/dev/mapper/tulpar60'); check(before == after, c'previews preserve entire live status/generation/counters'); crypt_data(held, 0, 0x73)
 		check(C.pread(raw, &after_ciphertext[0], 512, 15728640) == 512 && C.memcmp(&ciphertext[0], &after_ciphertext[0], 512) == 0, c'previews never write ciphertext')
-		check(C.close(held) == 0 && C.close(raw) == 0, c'close held preview descriptors'); simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		check(C.close(held) == 0 && C.close(raw) == 0, c'close held preview descriptors'); simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		growth_preview_retention(parent)
 		for i in 0 .. 4 { volume_rewrap_read(paths[i], &again[0]); check(C.memcmp(&originals[i][0], &again[0], 320) == 0, c'previews preserve all configuration and backup bytes') }
 		check(C.open(c'/root/crypt.key', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'previews create no raw keyfile')
-		check(C.unlink(c'/root/preview.out') == 0 && C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'clear capture and invalid boot plan')
+		check(C.unlink(c'/root/preview.out') == 0 && C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'clear capture and invalid boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist preview phase')
-		for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! {
+		for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! {
 			fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist preview inputs')
 		}
 		C.printf(c'PLAN GROWTH PREVIEW PASSED: exact authenticated keep/grow reports, refusal/cleanup, stable live views and real-KDF lifetimes\n')
@@ -119,7 +119,7 @@ fn growth_preview_entry() i32 {
 				growth_preview_query(parent, recovery, readonly, 16777216, 8192, 1)
 				growth_preview_query(parent, recovery, readonly, 33554432, 4096, 0)
 				growth_preview_query(parent, recovery, readonly, 33554432, 12288, 0)
-				missing(c'/dev/mapper/vinix60')
+				missing(c'/dev/mapper/tulpar60')
 			}
 		}
 		// Actual adoption/application is a separate explicit action after preview.

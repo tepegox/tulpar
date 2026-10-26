@@ -152,7 +152,7 @@ fn test_maximum_growth_batch_near_u64_roundtrips_and_accepts_all_64_cli_pairs() 
 	mut decoded := PlanSet{}
 	assert decode_bundle(&bytes[0], 8768, mut decoded) && decoded == set
 	assert bundle_pool_grow_batch(mut set, 63, &batch, mut results) && set == decoded
-	work := os.join_path(os.temp_dir(), 'vinix-grow-batch-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-grow-batch-full-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/full.vset'
@@ -160,14 +160,14 @@ fn test_maximum_growth_batch_near_u64_roundtrips_and_accepts_all_64_cli_pairs() 
 	unsafe {
 		mut args := [133]&char{}
 		mut numbers := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'pool-grow-batch'); args[2] = path.str; args[3] = &char(c'63')
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'pool-grow-batch'); args[2] = path.str; args[3] = &char(c'63')
 		for i in 0 .. 64 { C.snprintf(&numbers[i][0], 4, c'%u', batch.slots[i]); args[4 + i * 2] = &numbers[i][0]; args[5 + i * 2] = &char(c'1024') }
 		assert run(132, &args[0]) == 0 && os.read_bytes(path)! == bytes[..]
 	}
 }
 
 fn test_growth_batch_files_lock_writers_allow_previews_and_reject_corrupt_inputs_and_cli_pairs() {
-	work := os.join_path(os.temp_dir(), 'vinix-grow-batch-file-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-grow-batch-file-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -195,7 +195,7 @@ fn test_growth_batch_files_lock_writers_allow_previews_and_reject_corrupt_inputs
 	os.write_file_array(path, broken)!
 	for preview in [false, true] { assert grow_batch_pool_plan(path.str, 3, &batch, preview) == 1 && os.read_bytes(path)! == broken }
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-grow-batch'), &char(c'/unused'), &char(c'3'), &char(c'2'), &char(c'8192'), &char(c'9'), &char(c'8192'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-grow-batch'), &char(c'/unused'), &char(c'3'), &char(c'2'), &char(c'8192'), &char(c'9'), &char(c'8192'), &char(nil)]!
 		for command in [c'pool-grow-batch', c'pool-preview-grow-batch'] {
 			args[1] = &char(command)
 			for count in [4, 5, 7, 134] { assert run(count, &args[0]) == 2 }

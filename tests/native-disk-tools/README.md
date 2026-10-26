@@ -14,9 +14,9 @@ V=/path/to/v tests/reboot-persistence/run.sh --arch x86_64
 
 Build the requested kernel first. Every command validates its architecture and
 copies its bytes into a private snapshot; these controllers never rebuild the
-kernel. `--kernel-dir` overrides `VINIX_KERNEL_DIR` on ARM or
-`VINIX_AMD64_KERNEL` on AMD. `VINIX_VM_RUNNER_ROOT` selects boot assets.
-`VINIX_AARCH64_SYSROOT`, `CC` and `CC_AMD64` select the native musl tools.
+kernel. `--kernel-dir` overrides `TULPAR_KERNEL_DIR` on ARM or
+`TULPAR_AMD64_KERNEL` on AMD. `TULPAR_VM_RUNNER_ROOT` selects boot assets.
+`TULPAR_AARCH64_SYSROOT`, `CC` and `CC_AMD64` select the native musl tools.
 QEMU, firmware, Limine, xorriso, tar and e2fsprogs must already be available.
 
 `--state-dir` retains inputs, disks, serial captures and launch receipts.
@@ -24,7 +24,7 @@ Mounted-disk policy requires a fresh state directory. Without it, the fixture
 commands use disposable directories. The supplied-init no-sync and reboot
 interfaces still require a state directory; their `run.sh` commands use V to
 build the maintained guest fixtures. `--build-only` prepares inputs without booting.
-`VINIX_QEMU_TIMEOUT` keeps the original 240-second no-sync/reboot and
+`TULPAR_QEMU_TIMEOUT` keeps the original 240-second no-sync/reboot and
 300-second other defaults; `--timeout` overrides no-sync and reboot.
 
 The no-sync steps retain their order and one physical volume. Mapped ARM

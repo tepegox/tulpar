@@ -66,19 +66,19 @@
 	}                                                                       \
 } while (0)
 
-static const char *test_dir = "/root/vinix-qemu-core";
-static const char *file_a = "/root/vinix-qemu-core/a";
-static const char *file_b = "/root/vinix-qemu-core/b";
-static const char *file_c = "/root/vinix-qemu-core/c";
-static const char *surface_file = "/root/vinix-qemu-core/surface";
-static const char *persist_file = "/root/vinix-qemu-core/persist";
-static const char persist_payload[] = "vinix-ext2-cache-writeback-v1";
+static const char *test_dir = "/root/tulpar-qemu-core";
+static const char *file_a = "/root/tulpar-qemu-core/a";
+static const char *file_b = "/root/tulpar-qemu-core/b";
+static const char *file_c = "/root/tulpar-qemu-core/c";
+static const char *surface_file = "/root/tulpar-qemu-core/surface";
+static const char *persist_file = "/root/tulpar-qemu-core/persist";
+static const char persist_payload[] = "tulpar-ext2-cache-writeback-v1";
 /* The same marker written the way a shell writes a file: buffered, closed, and
  * pushed out by sync(2) alone. Nothing else drains a small write from the
  * shared cache, so a restart used to lose it while the O_SYNC marker above
  * survived, which is exactly what made a persistent /root look empty. */
-static const char *synced_file = "/root/vinix-qemu-core/synced";
-static const char synced_payload[] = "vinix-ext2-sync-writeback-v1";
+static const char *synced_file = "/root/tulpar-qemu-core/synced";
+static const char synced_payload[] = "tulpar-ext2-sync-writeback-v1";
 static volatile sig_atomic_t posix_timer_callbacks;
 #line 75 "test.c"
 
@@ -133,7 +133,7 @@ static int verify_persistence_boot(void)
 	if (verify_marker(synced_file, synced_payload,
 	        sizeof(synced_payload) - 1) != 0)
 		return -1;
-	puts("VINIX QEMU CORE PERSIST: PASS");
+	puts("TULPAR QEMU CORE PERSIST: PASS");
 	return 1;
 }
 
@@ -174,7 +174,7 @@ static int test_cow(void)
 #line 282 "test.c"
 static int test_sparse_tmpfs_shared_mapping(void)
 {
-	const char *path = "/dev/shm/vinix-qemu-core-sparse";
+	const char *path = "/dev/shm/tulpar-qemu-core-sparse";
 	const size_t size = 64UL * 1024 * 1024;
 	struct sysinfo before, sized, mapped;
 	CHECK(sysinfo(&before) == 0);
@@ -270,9 +270,9 @@ static int test_partial_munmap_reclaims_pages(void)
 }
 
 #if defined(__aarch64__)
-#define SYS_vinix_mimmutable 247
+#define SYS_tulpar_mimmutable 247
 #else
-#define SYS_vinix_mimmutable 500
+#define SYS_tulpar_mimmutable 500
 #endif
 
 /* Split a shared range -- change one page of it -- at the moment the process
@@ -303,7 +303,7 @@ static int split_while_a_sharer_unmaps(int how)
 	if (how < 2)
 		result = mprotect(page, unit, PROT_READ);
 	else if (how < 4)
-		result = (int)syscall(SYS_vinix_mimmutable, page, (size_t)unit);
+		result = (int)syscall(SYS_tulpar_mimmutable, page, (size_t)unit);
 	else
 		result = madvise(page, unit, MADV_DONTFORK);
 	if (result != 0)
@@ -443,8 +443,8 @@ static int prepare_directory(void)
 	unlink(file_a);
 	unlink(file_b);
 	unlink(file_c);
-	unlink("/root/vinix-qemu-core/notify-a");
-	unlink("/root/vinix-qemu-core/notify-b");
+	unlink("/root/tulpar-qemu-core/notify-a");
+	unlink("/root/tulpar-qemu-core/notify-b");
 	if (mkdir(test_dir, 0755) < 0)
 		CHECK(errno == EEXIST);
 	return 0;
@@ -518,7 +518,7 @@ static int test_ext2_mapping_and_namespace(void)
  */
 static int test_syscall_buffers_in_untouched_pages(void)
 {
-	static const char *path = "/dev/shm/vinix-qemu-core-untouched";
+	static const char *path = "/dev/shm/tulpar-qemu-core-untouched";
 	const size_t page = 4096;
 	const size_t size = 64UL * 1024 * 1024;
 	char text[64];
@@ -556,7 +556,7 @@ static int test_syscall_buffers_in_untouched_pages(void)
 
 static int test_private_file_mapping(void)
 {
-	static const char *path = "/root/vinix-qemu-core/private";
+	static const char *path = "/root/tulpar-qemu-core/private";
 	const size_t page = 4096;
 	const size_t length = 5 * page + 123;
 	unsigned char *expected = malloc(length);
@@ -910,8 +910,8 @@ static int test_inotify(void)
 	int watch = inotify_add_watch(notify, test_dir,
 	    IN_CREATE | IN_DELETE | IN_MOVED_FROM | IN_MOVED_TO | IN_MODIFY);
 	CHECK(watch > 0);
-	const char *first = "/root/vinix-qemu-core/notify-a";
-	const char *second = "/root/vinix-qemu-core/notify-b";
+	const char *first = "/root/tulpar-qemu-core/notify-a";
+	const char *second = "/root/tulpar-qemu-core/notify-b";
 	int fd = open(first, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 	CHECK(fd >= 0);
 	CHECK(write(fd, "event", 5) == 5);
@@ -1113,7 +1113,7 @@ static int test_anonymous_descriptor_access(void)
 	address.sun_family = AF_UNIX;
 	/* The test image has no /tmp; the working directory is on the volume the
 	 * rest of these tests use. */
-	strcpy(address.sun_path, "/root/vinix-qemu-core/accept.sock");
+	strcpy(address.sun_path, "/root/tulpar-qemu-core/accept.sock");
 	unlink(address.sun_path);
 	int listener = socket(AF_UNIX, SOCK_STREAM, 0);
 	CHECK(listener >= 0);
@@ -1553,10 +1553,10 @@ static int write_text(const char *path, const char *text)
  * once it thaws. */
 static int test_frozen_cgroup_stops_its_threads(void)
 {
-	static const char *root = "/dev/shm/vinix-qemu-core-cgroup";
+	static const char *root = "/dev/shm/tulpar-qemu-core-cgroup";
 	CHECK(mkdir(root, 0755) == 0);
 	CHECK(mount("cgroup2", root, "cgroup2", 0, NULL) == 0);
-	CHECK(mkdir("/dev/shm/vinix-qemu-core-cgroup/frozen", 0755) == 0);
+	CHECK(mkdir("/dev/shm/tulpar-qemu-core-cgroup/frozen", 0755) == 0);
 
 	volatile unsigned long *counter = mmap(NULL, 4096, PROT_READ | PROT_WRITE,
 	    MAP_SHARED | MAP_ANONYMOUS, -1, 0);
@@ -1565,13 +1565,13 @@ static int test_frozen_cgroup_stops_its_threads(void)
 	CHECK(child > 0);
 	char pid_text[32];
 	snprintf(pid_text, sizeof(pid_text), "%d\n", child);
-	CHECK(write_text("/dev/shm/vinix-qemu-core-cgroup/frozen/cgroup.procs", pid_text) == 0);
+	CHECK(write_text("/dev/shm/tulpar-qemu-core-cgroup/frozen/cgroup.procs", pid_text) == 0);
 
 	CHECK(count_for(counter, 200, 0) > 0);
-	CHECK(write_text("/dev/shm/vinix-qemu-core-cgroup/frozen/cgroup.freeze", "1\n") == 0);
+	CHECK(write_text("/dev/shm/tulpar-qemu-core-cgroup/frozen/cgroup.freeze", "1\n") == 0);
 	usleep(50000);
 	unsigned long frozen = count_for(counter, 300, 0);
-	CHECK(write_text("/dev/shm/vinix-qemu-core-cgroup/frozen/cgroup.freeze", "0\n") == 0);
+	CHECK(write_text("/dev/shm/tulpar-qemu-core-cgroup/frozen/cgroup.freeze", "0\n") == 0);
 	unsigned long thawed = count_for(counter, 300, 0);
 	if (!(frozen == 0 && thawed > 0)) {
 		printf("cgroup counts: frozen %lu, thawed %lu\n", frozen, thawed);
@@ -1580,7 +1580,7 @@ static int test_frozen_cgroup_stops_its_threads(void)
 
 	CHECK(kill_counter(child) == 0);
 	CHECK(munmap((void *)counter, 4096) == 0);
-	CHECK(rmdir("/dev/shm/vinix-qemu-core-cgroup/frozen") == 0);
+	CHECK(rmdir("/dev/shm/tulpar-qemu-core-cgroup/frozen") == 0);
 	CHECK(umount(root) == 0);
 	CHECK(rmdir(root) == 0);
 	puts("QEMU CORE PASS: a frozen cgroup stops its threads");
@@ -2170,7 +2170,7 @@ static int test_large_pipe_progress(void)
 }
 
 /* qemu-user translates an x86 epoll_event into the native AArch64 layout
- * before entering Vinix. Verify both that layout and the syscall result: a
+ * before entering Tulpar. Verify both that layout and the syscall result: a
  * wrong stride or a returned byte count makes userspace consume uninitialised
  * events, which is especially destructive to Wine's server protocol. */
 #line 2531 "test.c"
@@ -2186,7 +2186,7 @@ static int test_large_pipe_progress(void)
 static int test_abstract_socket_reuse(void)
 {
 	struct sockaddr_un address;
-	const char name[] = "\0vinix-core-abstract";
+	const char name[] = "\0tulpar-core-abstract";
 	socklen_t length = offsetof(struct sockaddr_un, sun_path) + sizeof(name) - 1;
 
 	for (int attempt = 0; attempt < 3; ++attempt) {
@@ -3003,7 +3003,7 @@ static int run_tests(void)
 	CHECK(fsync(fd) == 0);
 	CHECK(close(fd) == 0);
 	puts("QEMU CORE PASS: persistence markers synchronized");
-	puts("VINIX QEMU CORE: PASS");
+	puts("TULPAR QEMU CORE: PASS");
 	return 0;
 }
 
@@ -3047,12 +3047,12 @@ int main(int argc, char **argv)
 		dup2(console, STDERR_FILENO);
 		close(console);
 	}
-	puts("VINIX QEMU CORE: START");
+	puts("TULPAR QEMU CORE: START");
 	pid_t worker = fork();
 	if (worker == 0)
 		_exit(run_tests());
 	if (worker < 0 || reap_ok(worker) != 0)
-		puts("VINIX QEMU CORE: FAIL");
+		puts("TULPAR QEMU CORE: FAIL");
 	for (;;)
 		sleep(1);
 }

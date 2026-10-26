@@ -5,7 +5,7 @@ import os
 
 fn main() {
 	root := os.real_path(os.join_path(os.dir(@FILE), '..', '..'))
-	work := os.join_path(os.temp_dir(), 'vinix-bootlog-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-bootlog-${os.getpid()}')
 	os.mkdir_all(os.join_path(work, 'lib')) or { panic(err) }
 	defer { os.rmdir_all(work) or {} }
 	os.cp(os.join_path(root, 'kernel/kprint/bootlog.v'), os.join_path(work, 'bootlog.v')) or { panic(err) }

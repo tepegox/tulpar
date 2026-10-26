@@ -1,5 +1,5 @@
 Run `tests/native-host/stdio-test` to compile and qualify the real native query.
-`VINIX_NATIVE_STDIO_QUERY` retains the original executable override.
+`TULPAR_NATIVE_STDIO_QUERY` retains the original executable override.
 An existing query and a retained evidence directory can also be supplied:
 
 ```sh
@@ -15,4 +15,4 @@ the same final retirement boundary. Device and inode numbers retain all 64 bits.
 `qualify.v COMPILER NEW_EVIDENCE arm|x86|san` cold-builds the test, unchanged
 query, numeric-token tests and existing archive/reader regressions. It checks
 build status, assertions, sanitizer diagnostics and the final evidence receipt.
-Qualification executes no Python or Vinix guest.
+Qualification executes no Python or Tulpar guest.

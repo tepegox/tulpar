@@ -700,7 +700,7 @@ checks. Native credential/capability output records and the 17-pointer argv
 bank remain on the stack with their original borrowed lifetimes. Strict C/V
 SDK links and native layouts pass on both architectures. All four original
 C/V guest controls and both exact maintained-runner V controls pass real
-Vinix enforcement under the original 180-second allowance. The maintained
+Tulpar enforcement under the original 180-second allowance. The maintained
 compiler initially exposed a missing production-header include; the one-line
 relative include correction preserves the same declarations. Different final
 link orders required the two additional native controls. Fresh independent
@@ -858,7 +858,7 @@ build, guest sanitizer, whole-heap or physical-hardware claim.
 
 The portable benchmark (`5b37c952`) passed all 272 original-C/V host sanitizer
 cases, four native musl guests and genuine guest GCC 14.2.0 compilation through
-its maintained Vinix runner. All six workloads, failure cleanup and checksum
+its maintained Tulpar runner. All six workloads, failure cleanup and checksum
 453 remain; permanent fixed table initialization replaces an uncalled dynamic
 initializer. Its retained earlier failure and help-only exact instruction proof
 are in `alloc-bench-validation.json`. No new paired timing ratio is claimed.
@@ -1154,7 +1154,7 @@ do not run it through shared dependency symlinks.
 
 Set `port_arm` and `port_x86` to separate prepared worktrees, guest variables
 to unused state directories and `port_v` to a verified frozen compiler binary.
-Respect `find-v.sh`; pass `VINIX_V_COMPILER="$port_v"` to host generators.
+Respect `find-v.sh`; pass `TULPAR_V_COMPILER="$port_v"` to host generators.
 Build/test shapes remain:
 
 ```sh
@@ -1175,7 +1175,7 @@ V_C_ERROR_BUG_REPORT_DISABLED=1 make -C "$port_x86/kernel" -j4 \
   LINUXKPI_SOURCE_DIR=/Users/alex/code/vinix/third_party/linux-i915/linux-6.6.157
 
 tests/linuxkpi/run.sh
-python3 tests/linuxkpi/run_vm.py --kernel "$port_x86/kernel/bin/vinix" \
+python3 tests/linuxkpi/run_vm.py --kernel "$port_x86/kernel/bin/tulpar" \
   --state-dir "$port_guest" --cpu qemu64 --timeout 3600
 python3 tests/hypervisor/run-vm.py --arch aarch64 \
   --kernel-dir "$port_arm/kernel" --state-dir "$port_arm_guest" --timeout 3600
@@ -1218,7 +1218,7 @@ Never compare benchmark captures from different workload/compiler policies.
 - Use explicit `voidptr` comparisons for pointer identity where V can emit
   structural comparisons, especially nested workqueue conditions.
 - Preserve public native layouts; generate declaration headers from maintained V
-  ABI/configuration metadata. `VINIX_V_RUNTIME` guards prevent generated
+  ABI/configuration metadata. `TULPAR_V_RUNTIME` guards prevent generated
   opaque-signature conflicts; escape reserved fields as `C.@type`/`C.@read`.
   Check private pool sizes/alignment and opaque storage with static assertions.
 - Unmodified upstream Linux macros/inlines may be called by native V bindings.

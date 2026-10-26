@@ -77,7 +77,7 @@ fn verify_generation_tree(root string, state State, text string, flushed bool) !
 			generation_entry(mut expected, path, if file.executable { u32(0o755) } else { u32(0o644) })!
 		}
 		if p.kind !in ['data', 'runtime'] {
-			path := 'share/applications/vinix-' + p.id + '.desktop'
+			path := 'share/applications/tulpar-' + p.id + '.desktop'
 			defer { unsafe { path.free() } }
 			generation_entry(mut expected, path, 0o644)!
 		}

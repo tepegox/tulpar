@@ -133,7 +133,7 @@ fn get(receiver string) ! {
 		method(receiver, 'send_app_build', [o(app), o(name)], {})!
 		return
 	}
-	if compare('eq', pathname, literal(ah.Value('/vinix-source.tar'))!)! && !compare('is_', server_field(receiver, 'source_root')!, null()!)! {
+	if compare('eq', pathname, literal(ah.Value('/tulpar-source.tar'))!)! && !compare('is_', server_field(receiver, 'source_root')!, null()!)! {
 		method(receiver, 'send_source_snapshot', [], {})!
 		return
 	}

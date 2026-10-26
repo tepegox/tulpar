@@ -1,6 +1,6 @@
 /* Native declarations and widths only; protection and cache-walk policy are V. */
-#ifndef VINIX_EXECUTE_ONLY_NATIVE_ABI_H
-#define VINIX_EXECUTE_ONLY_NATIVE_ABI_H
+#ifndef TULPAR_EXECUTE_ONLY_NATIVE_ABI_H
+#define TULPAR_EXECUTE_ONLY_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

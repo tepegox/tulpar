@@ -22,14 +22,14 @@ fn sealed_derive(password &u8, size int, salt &u8, output &u8) bool {
 	mut key := [64]u8{}
 	defer { erase_key(unsafe { &key[0] }, sizeof(key)) }
 	memory := C.mmap(unsafe { nil }, sealed_scrypt_memory, C.PROT_READ | C.PROT_WRITE, C.MAP_PRIVATE | C.MAP_ANONYMOUS, -1, 0)
-	if memory == unsafe { voidptr(C.MAP_FAILED) } { C.perror(c'vinix-volume: allocate scrypt workspace'); return false }
+	if memory == unsafe { voidptr(C.MAP_FAILED) } { C.perror(c'tulpar-volume: allocate scrypt workspace'); return false }
 	valid := scrypt_core(password, size, salt, 16, sealed_scrypt_n, sealed_scrypt_r, sealed_scrypt_p,
 		unsafe { &u32(memory) }, sealed_scrypt_memory, unsafe { &key[0] })
 	erase_key(memory, sealed_scrypt_memory)
 	for {
 		if C.munmap(memory, sealed_scrypt_memory) == 0 { break }
 		if unsafe { C.errno == C.EINTR } { continue }
-		C.perror(c'vinix-volume: release erased scrypt workspace'); return false
+		C.perror(c'tulpar-volume: release erased scrypt workspace'); return false
 	}
 	if !valid { return false }
 	unsafe { C.memcpy(output, &key[0], 64) }
@@ -38,7 +38,7 @@ fn sealed_derive(password &u8, size int, salt &u8, output &u8) bool {
 
 fn sealed_header(bytes &u8, size int) bool {
 	if size != sealed_bytes { return false }
-	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'VINIXKP1'[i]) { return false } } }
+	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'TULPARKP1'[i]) { return false } } }
 	if get_le(bytes, 8, 4) != 1 || get_le(bytes, 12, 4) != 1 || get_le(bytes, 16, 4) != sealed_bytes
 		|| get_le(bytes, 20, 4) != 64 || get_le(bytes, 24, 8) != sealed_scrypt_n
 		|| get_le(bytes, 32, 4) != sealed_scrypt_r || get_le(bytes, 36, 4) != sealed_scrypt_p { return false }
@@ -61,7 +61,7 @@ fn encode_sealed_key(key &u8, wrapping &u8, random &u8, output &u8) bool {
 	mut work := unsafe { &SealedCrypto(C.alloca(sizeof(SealedCrypto))) }
 	unsafe { *work = SealedCrypto{} }
 	defer { erase_key(work, sizeof(SealedCrypto)) }
-	unsafe { C.memcpy(&work.bytes[0], c'VINIXKP1', 8) }
+	unsafe { C.memcpy(&work.bytes[0], c'TULPARKP1', 8) }
 	put_le(&work.bytes[0], 8, 4, 1); put_le(&work.bytes[0], 12, 4, 1)
 	put_le(&work.bytes[0], 16, 4, sealed_bytes); put_le(&work.bytes[0], 20, 4, 64)
 	put_le(&work.bytes[0], 24, 8, sealed_scrypt_n); put_le(&work.bytes[0], 32, 4, sealed_scrypt_r); put_le(&work.bytes[0], 36, 4, sealed_scrypt_p)

@@ -19,13 +19,13 @@ fn reference_checks() {
 		ci := ci_fd >= 0
 		if ci {
 			check(C.close(ci_fd) == 0, 417)
-			check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/ci-jobs.json', c'/home/developer/ci-state') == 0, 418)
+			check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/ci-jobs.json', c'/home/developer/ci-state') == 0, 418)
 		}
 		outputs := if ci { [&char(c'/home/developer/ci-1'), &char(c'/home/developer/ci-2')]! }
 			else { [&char(c'/home/developer/reference-a'), &char(c'/home/developer/reference-b')]! }
 		for output in outputs {
-			status := if ci { command(c'/usr/bin/vinix-jobs', c'run-due', c'/home/developer/ci-state', nil) }
-				else { command(c'/usr/bin/vinix-build', c'build', c'/home/developer/reference-build.json', output) }
+			status := if ci { command(c'/usr/bin/tulpar-jobs', c'run-due', c'/home/developer/ci-state', nil) }
+				else { command(c'/usr/bin/tulpar-build', c'build', c'/home/developer/reference-build.json', output) }
 			if ci && status != 0 { private_receipt(c'/home/developer/ci-state/state.json', c'ci') }
 			mut st := C.stat{}
 			check(C.stat(output, &st) == 0 && st.st_uid == 1000 && st.st_mode & 0o777 == 0o700, 383)
@@ -43,7 +43,7 @@ fn reference_checks() {
 				emit_command_log(&path[0])
 			}
 			C.snprintf(&path[0], path.len, c'%s/receipt.json', output)
-			emit_receipt(&path[0], c'Vinix', false)
+			emit_receipt(&path[0], c'Tulpar', false)
 			if status != 0 {
 				for name in [&char(c'make'), &char(c'ninja'), &char(c'cmake'), &char(c'sqlite'), &char(c'node'), &char(c'go'), &char(c'java')]! {
 					for index in 0 .. 3 {
@@ -54,7 +54,7 @@ fn reference_checks() {
 			}
 			check(status == 0, 381)
 			C.snprintf(&path[0], path.len, c'%s/work/qualification/report.json', output)
-			emit_receipt(&path[0], c'vinix-native', false)
+			emit_receipt(&path[0], c'tulpar-native', false)
 			if ci {
 				C.snprintf(&path[0], path.len, c'%s/work/ci-account.json', output)
 				private_receipt(&path[0], c'"credential_absent":true')

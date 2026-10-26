@@ -54,7 +54,7 @@ fn test_activity_gpu_unavailable_does_not_fabricate_valid_history() {
 	mut gpu := ActivityGpu{}
 	defer { gpu.free() }
 	gpu.sample(mut resources)
-	// macOS test hosts have no Vinix GPU node. A missing node must remain
+	// macOS test hosts have no Tulpar GPU node. A missing node must remain
 	// unavailable rather than becoming an idle 0% device.
 	if !gpu.available {
 		assert !gpu.initialized

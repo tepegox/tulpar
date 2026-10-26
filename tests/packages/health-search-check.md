@@ -30,7 +30,7 @@ filtering, stable visible selection, no results, reload success/refusal, small
 window navigation, catalog isolation and full-set repair handoff. It runs with
 the actual Software sources through
 `tests/packages/distribution-check.v --software-only --direct-tests` (set
-`VINIX_PACKAGE_TEST_UI2` to the parent of a staged headless `ui2` module).
+`TULPAR_PACKAGE_TEST_UI2` to the parent of a staged headless `ui2` module).
 Its `health-memory` mode measures 1,000 complete decode, page, render, search,
 filter, empty-result and retirement cycles after warmup with `-gc none
 -manualfree -d track_heap`.

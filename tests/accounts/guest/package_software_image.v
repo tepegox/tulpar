@@ -11,8 +11,8 @@ fn qualify_package_software_image(mut t Test) ! {
 	sessioncore.make_runtime_directory(alex)!
 	sessioncore.make_runtime_directory(sam)!
 	t.start_authd()
-	configuration := os.read_file('/etc/vinix-packages/config.json')!
-	assert os.ls('/var/lib/vinix-packages')!.len == 0
+	configuration := os.read_file('/etc/tulpar-packages/config.json')!
+	assert os.ls('/var/lib/tulpar-packages')!.len == 0
 	config := pkgcore.load_config('')!
 	assert config.repositories.len == 1 && config.repositories[0].url == 'file://' + pkgcore.image_repositories_path + '/native'
 	assert os.is_file(pkgcore.image_repositories_path + '/native/index.json') && !os.is_link(pkgcore.image_repositories_path)
@@ -36,19 +36,19 @@ fn qualify_package_software_image(mut t Test) ! {
 	assert reinstalled.status == 0, reinstalled.output
 	t.say(reinstalled.output)
 	state = pkgcore.Service{}.verify()!
-	assert state.packages.len == 3 && state.packages.any(it.package.id == 'org.vinix.memo' && it.package.version == '1.1.0')
+	assert state.packages.len == 3 && state.packages.any(it.package.id == 'org.tulpar.memo' && it.package.version == '1.1.0')
 	state.close()
-	assert os.exists('/var/lib/vinix-packages/current/share/applications/vinix-org.vinix.memo.desktop')
-	assert owner_of('/var/lib/vinix-packages/current/state.json') == 0
+	assert os.exists('/var/lib/tulpar-packages/current/share/applications/tulpar-org.tulpar.memo.desktop')
+	assert owner_of('/var/lib/tulpar-packages/current/state.json') == 0
 	for name in ['alex', 'sam']! {
-		counter := '/home/' + name + '/.local/share/vinix-apps/org.vinix.counter/counter.txt'
+		counter := '/home/' + name + '/.local/share/tulpar-apps/org.tulpar.counter/counter.txt'
 		assert os.read_file(counter)! == '1'
 		assert owner_of(counter) == if name == 'alex' { 1000 } else { 1001 }
 	}
-	memo := '/home/alex/.local/share/vinix-apps/org.vinix.memo/memo.txt'
+	memo := '/home/alex/.local/share/tulpar-apps/org.tulpar.memo/memo.txt'
 	assert os.read_file(memo)! == 'Saved through ordinary Software' && owner_of(memo) == 1000
-	assert os.read_file('/etc/vinix-packages/config.json')! == configuration
-	log := os.read_file('/var/log/vinix/auth.log')!
+	assert os.read_file('/etc/tulpar-packages/config.json')! == configuration
+	log := os.read_file('/var/log/tulpar/auth.log')!
 	assert log.contains('uid=1000 run packages-change as alex: exit 0')
 	assert log.contains('packages-launch') && !log.contains(alex_password) && !log.contains(sam_password)
 	assert os.ls('/run/user/1000')!.all(!it.starts_with('pkg-'))

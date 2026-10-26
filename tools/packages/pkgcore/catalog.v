@@ -249,7 +249,7 @@ fn catalog_build(recipe_file string, source_roots string, destination string, op
 		fd := catalog_source_root(root, item.source)!
 		roots[item.source] = fd
 	}
-	mut exporting := create_export_stage(parent, '.vinix-catalog', 'catalog workspace')!
+	mut exporting := create_export_stage(parent, '.tulpar-catalog', 'catalog workspace')!
 	defer { exporting.close() }
 	write_catalog_stage(plan, roots, target, options, mut exporting) or { return exporting.failure(err) }
 	return plan.result(target)

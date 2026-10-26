@@ -15,9 +15,9 @@ struct C.atomic_long_t {}
 struct C.pthread_t {}
 
 struct C.task_struct {
-	vinix_thread voidptr
+	tulpar_thread voidptr
 	__state u32
-	vinix_wait_lock C.raw_spinlock_t
+	tulpar_wait_lock C.raw_spinlock_t
 	in_iowait u32
 }
 
@@ -43,15 +43,15 @@ mut:
 
 type IoWorker = fn (voidptr) voidptr
 
-fn C.vinix_linuxkpi_fixture_io_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_io_worker(voidptr) voidptr
 fn C.pthread_create(voidptr, voidptr, IoWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
 fn C.get_task_struct(&C.task_struct) &C.task_struct
 fn C.put_task_struct(&C.task_struct)
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_percpu_count() u32
 fn C.init_completion(&C.completion)
 fn C.complete(&C.completion)
 fn C.complete_all(&C.completion)
@@ -67,18 +67,18 @@ fn C.set_current_state(u32)
 fn C.__set_current_state(u32)
 fn C.task_is_running(&C.task_struct) bool
 fn C.cond_resched() i32
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
 fn C.raw_spin_lock_irqsave(&C.raw_spinlock_t, uint)
 fn C.raw_spin_unlock_irqrestore(&C.raw_spinlock_t, uint)
-fn C.vinix_linuxkpi_task_dequeue(voidptr)
-fn C.vinix_linuxkpi_task_queued(voidptr) bool
-fn C.vinix_linuxkpi_iowait_block(voidptr)
-fn C.vinix_linuxkpi_test_task_signal(voidptr, u64)
-fn C.vinix_linuxkpi_test_worker_route(voidptr, u32) i32
-fn C.vinix_linuxkpi_test_worker_oom(i32)
-fn C.vinix_linuxkpi_test_park_preempt()
+fn C.tulpar_linuxkpi_task_dequeue(voidptr)
+fn C.tulpar_linuxkpi_task_queued(voidptr) bool
+fn C.tulpar_linuxkpi_iowait_block(voidptr)
+fn C.tulpar_linuxkpi_test_task_signal(voidptr, u64)
+fn C.tulpar_linuxkpi_test_worker_route(voidptr, u32) i32
+fn C.tulpar_linuxkpi_test_worker_oom(i32)
+fn C.tulpar_linuxkpi_test_park_preempt()
 fn C.nr_iowait_cpu(u32) u32
 fn C.nr_iowait() u32
 fn C.wake_up_process(&C.task_struct) i32
@@ -171,14 +171,14 @@ fn cancelled(test &IoThread) bool {
 }
 
 // Callback registration names the exported C wrapper, preserving native identity.
-@[export: 'vinix_linuxkpi_fixture_io_worker']
+@[export: 'tulpar_linuxkpi_fixture_io_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut test := &IoThread(argument)
 		mut task := C.get_task_struct(C.current)
 		C.__atomic_store(&test.task, &task, 3)
 		mut outer := i32(-1)
-		if C.vinix_linuxkpi_worker_bind(test.cpu) != 0 || C.current.in_iowait != 0 {
+		if C.tulpar_linuxkpi_worker_bind(test.cpu) != 0 || C.current.in_iowait != 0 {
 			test.result = -C.EIO
 		}
 		C.complete(&test.entered)
@@ -194,13 +194,13 @@ pub fn worker(argument voidptr) voidptr {
 			if test.operation == .exit_counted {
 				// Keep IRQs disabled through the actual dead dequeue and pthread exit.
 				token := C.io_schedule_prepare()
-				C.vinix_linuxkpi_irq_save()
+				C.tulpar_linuxkpi_irq_save()
 				mut wait_flags := uint(0)
-				C.raw_spin_lock_irqsave(&test.task.vinix_wait_lock, wait_flags)
+				C.raw_spin_lock_irqsave(&test.task.tulpar_wait_lock, wait_flags)
 				C.set_current_state(C.TASK_UNINTERRUPTIBLE)
-				C.vinix_linuxkpi_task_dequeue(test.task.vinix_thread)
-				C.vinix_linuxkpi_iowait_block(test.task.vinix_thread)
-				C.raw_spin_unlock_irqrestore(&test.task.vinix_wait_lock, wait_flags)
+				C.tulpar_linuxkpi_task_dequeue(test.task.tulpar_thread)
+				C.tulpar_linuxkpi_iowait_block(test.task.tulpar_thread)
+				C.raw_spin_unlock_irqrestore(&test.task.tulpar_wait_lock, wait_flags)
 				if token != 0 || C.nr_iowait_cpu(test.cpu) != test.baseline[test.cpu] + 1 {
 					test.result = -C.EIO
 				}
@@ -214,7 +214,7 @@ pub fn worker(argument voidptr) voidptr {
 				if (C.current.in_iowait != 0) != test.nested ||
 					C.atomic_long_read(&test.mutex.owner) != int(C.current) { test.result = -C.EIO }
 				if outer >= 0 { C.io_schedule_finish(outer); outer = -1 }
-				test.resumed_cpu = C.vinix_linuxkpi_cpu_id()
+				test.resumed_cpu = C.tulpar_linuxkpi_cpu_id()
 				C.complete(&test.acquired)
 				C.wait_for_completion(&test.release)
 				C.mutex_unlock(test.mutex)
@@ -233,20 +233,20 @@ pub fn worker(argument voidptr) voidptr {
 				// Cancellation publication pairs with the state-store barrier.
 				if cancelled(test) { C.__set_current_state(C.TASK_RUNNING) }
 				else {
-					if test.operation == .preempt { C.vinix_linuxkpi_test_park_preempt() }
+					if test.operation == .preempt { C.tulpar_linuxkpi_test_park_preempt() }
 					if test.operation == .timeout { test.remaining = C.io_schedule_timeout(test.timeout) }
 					else if test.operation == .ordinary { C.schedule() }
 					else { C.io_schedule() }
 				}
 			}
-			test.resumed_cpu = C.vinix_linuxkpi_cpu_id()
+			test.resumed_cpu = C.tulpar_linuxkpi_cpu_id()
 		}
 		if outer >= 0 {
 			if C.current.in_iowait == 0 { test.result = -C.EIO }
 			C.io_schedule_finish(outer)
 		}
-		C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, 0)
-		if C.current.in_iowait != 0 || !C.task_is_running(C.current) || !C.vinix_linuxkpi_may_sleep() {
+		C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, 0)
+		if C.current.in_iowait != 0 || !C.task_is_running(C.current) || !C.tulpar_linuxkpi_may_sleep() {
 			test.result = -C.EIO
 		}
 		C.complete(&test.done)
@@ -266,7 +266,7 @@ fn start(test &IoThread, operation Operation, cpu u32, state u32, timeout int,
 		C.init_completion(&test.release)
 		C.init_completion(&test.done)
 		test.initialized = true
-		if C.pthread_create(&test.thread, nil, C.vinix_linuxkpi_fixture_io_worker, test) != 0 {
+		if C.pthread_create(&test.thread, nil, C.tulpar_linuxkpi_fixture_io_worker, test) != 0 {
 			return -C.ENOMEM
 		}
 		test.started = true
@@ -280,7 +280,7 @@ fn parked(test &IoThread) i32 {
 		for {
 			if C.completion_done(&test.done) { return -C.EIO }
 			if C.__atomic_load_n(&test.task.__state, 2) == test.state &&
-				!C.vinix_linuxkpi_task_queued(test.task.vinix_thread) { return 0 }
+				!C.tulpar_linuxkpi_task_queued(test.task.tulpar_thread) { return 0 }
 			if C.time_after_eq(C.jiffies, deadline) { return -C.EIO }
 			C.msleep(1)
 		}
@@ -302,7 +302,7 @@ fn join(test &IoThread) i32 {
 fn counts(baseline &u32, cpu0 u32, cpu1 u32) i32 {
 	unsafe {
 		deadline := C.jiffies + 500
-		count := C.vinix_linuxkpi_percpu_count()
+		count := C.tulpar_linuxkpi_percpu_count()
 		for {
 			mut total := u32(0)
 			mut matches := true
@@ -344,10 +344,10 @@ fn pool_counts(baseline &u32) i32 {
 		}
 		if result == 0 && counts(baseline, 2, 1) != 0 { result = -C.EIO }
 		if result == 0 {
-			C.vinix_linuxkpi_test_task_signal(tests[1].task.vinix_thread, u64(1) << 14)
+			C.tulpar_linuxkpi_test_task_signal(tests[1].task.tulpar_thread, u64(1) << 14)
 			if parked(&tests[1]) != 0 || counts(baseline, 2, 1) != 0 { result = -C.EIO }
 			// Keep proceeding here after that observation fails, as the original did.
-			if C.vinix_linuxkpi_test_worker_route(tests[0].task.vinix_thread, 1) != 0 { result = -C.EIO }
+			if C.tulpar_linuxkpi_test_worker_route(tests[0].task.tulpar_thread, 1) != 0 { result = -C.EIO }
 			C.wake_up_process(tests[0].task)
 			C.wake_up_process(tests[0].task)
 			if C.wait_for_completion_timeout(&tests[0].done, 500) == 0 || tests[0].resumed_cpu != 1 ||
@@ -369,7 +369,7 @@ fn timeout(baseline &u32, expire bool, interrupt bool) i32 {
 			C.complete(&test.go)
 			if parked(&test) != 0 || counts(baseline, 1, 0) != 0 { result = -C.EIO }
 			else {
-				if interrupt { C.vinix_linuxkpi_test_task_signal(test.task.vinix_thread, u64(1) << 14) }
+				if interrupt { C.tulpar_linuxkpi_test_task_signal(test.task.tulpar_thread, u64(1) << 14) }
 				else if !expire { C.wake_up_process(test.task) }
 				if C.wait_for_completion_timeout(&test.done, 500) == 0 ||
 					(if expire { test.remaining != 0 } else { test.remaining <= 0 || test.remaining > 200 }) {
@@ -399,7 +399,7 @@ fn bits(baseline &u32, want_lock bool, interrupt bool) i32 {
 		if result == 0 && counts(baseline, u32(nr), 0) != 0 { result = -C.EIO }
 		if result == 0 {
 			if interrupt {
-				C.vinix_linuxkpi_test_task_signal(tests[0].task.vinix_thread, u64(1) << 14)
+				C.tulpar_linuxkpi_test_task_signal(tests[0].task.tulpar_thread, u64(1) << 14)
 				if C.wait_for_completion_timeout(&tests[0].done, 500) == 0 || tests[0].value != -C.EINTR ||
 					!C.test_bit(0, &word) { result = -C.EIO }
 			} else {
@@ -449,23 +449,23 @@ fn fast_paths(baseline &u32) i32 {
 				C.io_schedule_timeout(0) != 0 || task.in_iowait == 0 { result = -C.EIO }
 			C.io_schedule_finish(outer)
 			C.set_current_state(C.TASK_INTERRUPTIBLE)
-			C.vinix_linuxkpi_test_task_signal(task.vinix_thread, u64(1) << 14)
+			C.tulpar_linuxkpi_test_task_signal(task.tulpar_thread, u64(1) << 14)
 			remaining := C.io_schedule_timeout(10)
 			if remaining < 0 || remaining > 10 || task.in_iowait != 0 || !C.task_is_running(task) { result = -C.EIO }
-			C.vinix_linuxkpi_test_task_signal(task.vinix_thread, 0)
+			C.tulpar_linuxkpi_test_task_signal(task.tulpar_thread, 0)
 			token := C.io_schedule_prepare()
-			flags := C.vinix_linuxkpi_irq_save()
+			flags := C.tulpar_linuxkpi_irq_save()
 			mut wait_flags := uint(0)
-			C.raw_spin_lock_irqsave(&task.vinix_wait_lock, wait_flags)
+			C.raw_spin_lock_irqsave(&task.tulpar_wait_lock, wait_flags)
 			C.set_current_state(C.TASK_UNINTERRUPTIBLE)
-			C.vinix_linuxkpi_task_dequeue(task.vinix_thread)
-			C.raw_spin_unlock_irqrestore(&task.vinix_wait_lock, wait_flags)
+			C.tulpar_linuxkpi_task_dequeue(task.tulpar_thread)
+			C.raw_spin_unlock_irqrestore(&task.tulpar_wait_lock, wait_flags)
 			if C.wake_up_process(task) == 0 { result = -C.EIO }
-			C.raw_spin_lock_irqsave(&task.vinix_wait_lock, wait_flags)
-			C.vinix_linuxkpi_iowait_block(task.vinix_thread)
-			C.raw_spin_unlock_irqrestore(&task.vinix_wait_lock, wait_flags)
+			C.raw_spin_lock_irqsave(&task.tulpar_wait_lock, wait_flags)
+			C.tulpar_linuxkpi_iowait_block(task.tulpar_thread)
+			C.raw_spin_unlock_irqrestore(&task.tulpar_wait_lock, wait_flags)
 			C.io_schedule_finish(token)
-			C.vinix_linuxkpi_irq_restore(flags)
+			C.tulpar_linuxkpi_irq_restore(flags)
 			if !C.task_is_running(task) || task.in_iowait != 0 || counts(baseline, 0, 0) != 0 { result = -C.EIO }
 			mut word := uint(1)
 			mut key := C.wait_bit_key{ flags: &word, bit_nr: 0, timeout: C.jiffies }
@@ -506,10 +506,10 @@ fn mutex_handoffs(baseline &u32, fail_after u32, oom_stage u32) i32 {
 		mut constructed := true
 		C.BUG_ON(oom_stage != 0 && (oom_stage > 4 || fail_after >= 3))
 		for i in 0 .. 3 {
-			if oom_stage != 0 && u32(i) == fail_after { C.vinix_linuxkpi_test_worker_oom(i32(oom_stage)) }
+			if oom_stage != 0 && u32(i) == fail_after { C.tulpar_linuxkpi_test_worker_oom(i32(oom_stage)) }
 			started := start(&tests[i], if i == 1 { Operation.mutex_ordinary } else { Operation.mutex },
 				if i != 0 { u32(1) } else { u32(0) }, C.TASK_UNINTERRUPTIBLE, 0, nil, baseline, i == 0)
-			C.vinix_linuxkpi_test_worker_oom(0)
+			C.tulpar_linuxkpi_test_worker_oom(0)
 			if oom_stage != 0 && u32(i) == fail_after {
 				if started != -C.ENOMEM || tests[i].started || counts(baseline, if i != 0 { u32(1) } else { u32(0) }, 0) != 0 {
 					result = -C.EIO
@@ -527,10 +527,10 @@ fn mutex_handoffs(baseline &u32, fail_after u32, oom_stage u32) i32 {
 		if constructed {
 			if counts(baseline, 1, 1) != 0 { result = -C.EIO }
 			else {
-				C.vinix_linuxkpi_test_task_signal(tests[2].task.vinix_thread, u64(1) << 14)
+				C.tulpar_linuxkpi_test_task_signal(tests[2].task.tulpar_thread, u64(1) << 14)
 				if parked(&tests[2]) != 0 || mutex_waiters(&mutex, 3) != 0 || counts(baseline, 1, 1) != 0 { result = -C.EIO }
 				else {
-					if C.vinix_linuxkpi_test_worker_route(tests[0].task.vinix_thread, 1) != 0 {
+					if C.tulpar_linuxkpi_test_worker_route(tests[0].task.tulpar_thread, 1) != 0 {
 						result = -C.EIO
 					} else {
 						C.mutex_unlock(&mutex)
@@ -576,10 +576,10 @@ fn ordinary_and_exit(baseline &u32, exiting bool) i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_io_native_selftest']
+@[export: 'tulpar_linuxkpi_io_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
-		count := C.vinix_linuxkpi_percpu_count()
+		count := C.tulpar_linuxkpi_percpu_count()
 		mut baseline := [256]u32{}
 		mut result := i32(0)
 		if count < 2 || count > 256 { return -C.EIO }
@@ -617,7 +617,7 @@ pub fn selftest() i32 {
 			C.kprintf(c'linuxkpi: I/O ordinary-sleep/dead-dequeue checks failed\n'); result = -C.EIO
 		}
 		if counts(&baseline[0], 0, 0) != 0 || C.current.in_iowait != 0 ||
-			!C.task_is_running(C.current) || !C.vinix_linuxkpi_may_sleep() { result = -C.EIO }
+			!C.task_is_running(C.current) || !C.tulpar_linuxkpi_may_sleep() { result = -C.EIO }
 		return result
 	}
 }

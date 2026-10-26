@@ -175,7 +175,7 @@ fn test_pool_format_v1_compatibility_v2_roundtrip_corruption_and_appended_disk_i
 	assert bundle_pool_add(mut set, &region)
 	mut bytes := [8768]u8{}
 	size := encode_bundle(&set, &bytes[0])
-	assert size == 168 && bytes[..8].bytestr() == 'VINIXVS2' && get_le(&bytes[0], 28, 4) == 1
+	assert size == 168 && bytes[..8].bytestr() == 'TULPARVS2' && get_le(&bytes[0], 28, 4) == 1
 	mut decoded := PlanSet{}
 	assert decode_bundle(&bytes[0], size, mut decoded) && decoded == set
 	for shorter in 0 .. size {
@@ -249,7 +249,7 @@ fn test_full_pool_format_bound_and_capacity_totals_exceeding_u64() {
 }
 
 fn test_pool_file_commands_preserve_queries_and_refuse_corrupt_symlink_or_nonregular_inputs() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/pool.vset'
@@ -286,7 +286,7 @@ fn test_pool_file_commands_preserve_queries_and_refuse_corrupt_symlink_or_nonreg
 
 fn test_pool_cli_rejects_counts_indices_modes_and_overflow_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-add'), &char(c'/unused'), &char(c'3'),
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-add'), &char(c'/unused'), &char(c'3'),
 			&char(c'0'), &char(c'1024'), &char(c'8192'), &char(c'4096'), &char(nil)]!
 		assert run(7, &args[0]) == 2 && run(9, &args[0]) == 2
 		for bad in [c'', c'-1', c'64', c'1x', c'18446744073709551616'] {

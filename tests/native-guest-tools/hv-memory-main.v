@@ -37,7 +37,7 @@ fn main() {
 	// supplied worktree cannot change the binary this receipt describes.
 	owned_kernel := state + '/kernel'
 	os.mkdir_all(owned_kernel + '/bin') or { panic(err) }
-	os.cp(kernel + '/bin/vinix', owned_kernel + '/bin/vinix') or { panic(err) }
+	os.cp(kernel + '/bin/tulpar', owned_kernel + '/bin/tulpar') or { panic(err) }
 	init := guesthost.compile_init(guesthost.root() + '/tests/hypervisor/memoryguest/core.v', state, 'x86_64', false) or { panic(err) }
 	archive := guesthost.image(init, state) or { panic(err) }
 	launch := guesthost.launch(init, archive, state, owned_kernel, 'x86_64', true) or { panic(err) }
@@ -57,7 +57,7 @@ fn main() {
 		1
 	}
 	os.write_file(state + '/receipt.json', json2.encode(Receipt{
-		kernel_sha256:  digest(owned_kernel + '/bin/vinix')
+		kernel_sha256:  digest(owned_kernel + '/bin/tulpar')
 		fixture_sha256: digest(init)
 		iso_sha256:     digest(state + '/test.iso')
 		command:        command

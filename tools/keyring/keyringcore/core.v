@@ -17,7 +17,7 @@
 // The file says nothing about what it holds beyond how many items: the
 // names of services and accounts are inside the encryption.
 //
-//	vinix-keyring 1
+//	tulpar-keyring 1
 //	slot password <cost> <salt> <nonce> <wrapped store key>
 //	slot recovery <salt> <nonce> <wrapped store key>
 //	check <nonce> <a constant, encrypted>
@@ -45,8 +45,8 @@ pub const max_file = 16 * 1024 * 1024
 const nonce_bytes = 24
 const salt_bytes = 16
 const recovery_bytes = 20
-const magic = 'vinix-keyring 1'
-const check_text = 'vinix-keyring check'
+const magic = 'tulpar-keyring 1'
+const check_text = 'tulpar-keyring check'
 // Letters and digits that are not mistaken for one another on paper.
 const recovery_alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 
@@ -193,7 +193,7 @@ fn recovery_key_text(bytes []u8) string {
 }
 
 fn recovery_wrapping_key(recovery []u8, salt []u8) []u8 {
-	mut material := 'vinix-keyring recovery 1'.bytes()
+	mut material := 'tulpar-keyring recovery 1'.bytes()
 	material << salt
 	material << recovery
 	return sha256.sum(material)
@@ -211,7 +211,7 @@ pub fn create(password []u8, cost Cost) !(Store, []u8, string) {
 }
 
 fn seal_named(key []u8, kind string, id string, plaintext []u8) !Sealed {
-	nonce, wrapped := seal(key, 'vinix-keyring ${kind} ${id}', plaintext)!
+	nonce, wrapped := seal(key, 'tulpar-keyring ${kind} ${id}', plaintext)!
 	return Sealed{
 		id:      id
 		nonce:   nonce
@@ -221,7 +221,7 @@ fn seal_named(key []u8, kind string, id string, plaintext []u8) !Sealed {
 
 // Whether `key` is this store's key.
 fn (s &Store) holds(key []u8) bool {
-	plain := open(key, 'vinix-keyring check ', s.check.nonce, s.check.wrapped) or { return false }
+	plain := open(key, 'tulpar-keyring check ', s.check.nonce, s.check.wrapped) or { return false }
 	return plain == check_text.bytes()
 }
 
@@ -229,7 +229,7 @@ fn (s &Store) holds(key []u8) bool {
 pub fn (s &Store) unlock(password []u8) ![]u8 {
 	mut wrapping := password_key(password, s.password.salt, s.password.cost)!
 	defer { wipe(mut wrapping) }
-	key := open(wrapping, 'vinix-keyring slot password', s.password.nonce, s.password.wrapped) or {
+	key := open(wrapping, 'tulpar-keyring slot password', s.password.nonce, s.password.wrapped) or {
 		return error('wrong password')
 	}
 	if !s.holds(key) {
@@ -246,7 +246,7 @@ pub fn (s &Store) unlock_with_recovery(recovery string) ![]u8 {
 		wipe(mut bytes)
 		wipe(mut wrapping)
 	}
-	key := open(wrapping, 'vinix-keyring slot recovery', s.recovery.nonce, s.recovery.wrapped) or {
+	key := open(wrapping, 'tulpar-keyring slot recovery', s.recovery.nonce, s.recovery.wrapped) or {
 		return error('wrong recovery key')
 	}
 	if !s.holds(key) {
@@ -264,7 +264,7 @@ pub fn (mut s Store) set_password(key []u8, password []u8, cost Cost) ! {
 	salt := random(salt_bytes)!
 	mut wrapping := password_key(password, salt, cost)!
 	defer { wipe(mut wrapping) }
-	nonce, wrapped := seal(wrapping, 'vinix-keyring slot password', key)!
+	nonce, wrapped := seal(wrapping, 'tulpar-keyring slot password', key)!
 	s.password = Slot{
 		cost:    cost
 		salt:    salt
@@ -281,7 +281,7 @@ pub fn (mut s Store) new_recovery(key []u8) !string {
 	mut bytes := random(recovery_bytes)!
 	salt := random(salt_bytes)!
 	mut wrapping := recovery_wrapping_key(bytes, salt)
-	nonce, wrapped := seal(wrapping, 'vinix-keyring slot recovery', key)!
+	nonce, wrapped := seal(wrapping, 'tulpar-keyring slot recovery', key)!
 	s.recovery = Slot{
 		salt:    salt
 		nonce:   nonce
@@ -349,7 +349,7 @@ fn decode_item(data []u8) !Item {
 }
 
 fn (s &Store) open_item(key []u8, sealed Sealed) !Item {
-	mut plain := open(key, 'vinix-keyring item ${sealed.id}', sealed.nonce, sealed.wrapped) or {
+	mut plain := open(key, 'tulpar-keyring item ${sealed.id}', sealed.nonce, sealed.wrapped) or {
 		return error('damaged item')
 	}
 	defer { wipe(mut plain) }

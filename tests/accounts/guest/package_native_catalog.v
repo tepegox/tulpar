@@ -8,13 +8,13 @@ import tools.packages.appsdk
 import tools.packages.pkgcore
 
 fn native_catalog_reopen(memo string) ! {
-	for id in ['org.vinix.counter', 'org.vinix.memo'] {
-		result := run(['/usr/bin/vinix-package', 'run-window', id], '', none, none)
+	for id in ['org.tulpar.counter', 'org.tulpar.memo'] {
+		result := run(['/usr/bin/tulpar-package', 'run-window', id], '', none, none)
 		assert result.status == 0, result.output
 		mut frames := window_guest_frames(result.output)!
 		defer { for mut frame in frames { frame.close() } }
 		assert frames.len == 1
-		if id == 'org.vinix.counter' { assert frames[0].format == 1 && frames[0].elements[0].text == 'Count: 1' }
+		if id == 'org.tulpar.counter' { assert frames[0].format == 1 && frames[0].elements[0].text == 'Count: 1' }
 		else { assert frames[0].format == 2 && frames[0].elements[1].text == memo }
 	}
 }
@@ -32,10 +32,10 @@ fn qualify_package_native_catalog(mut t Test) ! {
 		assert pkgcore.pack_catalog(profile.catalog, roots, workspace)!.package_count == 6
 		pkgcore.publish_release(workspace, 'native', '/tmp/package-publisher/native-seed', u64(i + 1), time.now().unix() + 3600, '/tmp/native-release-' + version)!
 	}
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'alex',
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'alex',
 		policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	// Stable repository identity, with successive complete signed snapshots.
 	os.symlink('/tmp/native-release-1.0.0', '/tmp/native-repository')!
 	package_success(['repo-enroll', 'native', 'file:///tmp/native-repository', key])!
@@ -44,20 +44,20 @@ fn qualify_package_native_catalog(mut t Test) ! {
 
 fn native_catalog_consume(mut t Test, key string, architecture string, release_prefix string, repository string) ! {
 	package_success(['update'])!
-	ids := ['org.vinix.counter', 'org.vinix.memo', 'org.vinix.package-hello']
+	ids := ['org.tulpar.counter', 'org.tulpar.memo', 'org.tulpar.package-hello']
 	reviewed_package_operation('install', ids)!
 	state := pkgcore.Service{}.verify()!
 	assert state.packages.len == 3 && state.packages.all(it.package.architecture == architecture)
 	view := pkgcore.software_view('', false)!
 	assert view.rows.len == 3
 	for row in view.rows {
-		if row.id == 'org.vinix.counter' { assert row.installed_window_protocol == 1 }
-		if row.id == 'org.vinix.memo' { assert row.installed_window_protocol == 2 }
+		if row.id == 'org.tulpar.counter' { assert row.installed_window_protocol == 1 }
+		if row.id == 'org.tulpar.memo' { assert row.installed_window_protocol == 2 }
 	}
 	for installed in state.packages {
 		p := installed.package
 		assert p.files.len == 4 && installed.public_key == key && installed.repository == 'native'
-		assert os.is_file('/var/lib/vinix-packages/current/share/applications/vinix-' + p.id + '.desktop')
+		assert os.is_file('/var/lib/tulpar-packages/current/share/applications/tulpar-' + p.id + '.desktop')
 	}
 	document := '/home/alex/native document.txt'
 	os.write_file(document, 'native catalog document')!; os.chown(document, 1000, 1000)!; os.chmod(document, 0o600)!
@@ -65,15 +65,15 @@ fn native_catalog_consume(mut t Test, key string, architecture string, release_p
 	assert hello.contains('Application: ' + ids[2] + ' 1.0.0') && hello.contains('native catalog document')
 	input := appsdk.WindowEvent{ kind: 'click', sequence: 1, id: 'increase' }.encode()! + '\n'
 		+ appsdk.WindowEvent{ kind: 'close', sequence: 2 }.encode()! + '\n'
-	counter := run(['/usr/bin/vinix-package', 'run-window', ids[0]], input, none, none)
+	counter := run(['/usr/bin/tulpar-package', 'run-window', ids[0]], input, none, none)
 	assert counter.status == 0, counter.output
 	memo := 'Catalog é🚀 $literal'
 	text := appsdk.WindowEvent{ format: 2, kind: 'text', sequence: 1, id: 'memo', text: memo }.encode()! + '\n'
 		+ appsdk.WindowEvent{ format: 2, kind: 'click', sequence: 2, id: 'save' }.encode()! + '\n'
 		+ appsdk.WindowEvent{ format: 2, kind: 'close', sequence: 3 }.encode()! + '\n'
-	saved := run(['/usr/bin/vinix-package', 'run-window', ids[1]], text, none, none)
+	saved := run(['/usr/bin/tulpar-package', 'run-window', ids[1]], text, none, none)
 	assert saved.status == 0, saved.output
-	data := '/home/alex/.local/share/vinix-apps/'
+	data := '/home/alex/.local/share/tulpar-apps/'
 	assert owner_of(data + ids[0] + '/counter.txt') == 1000 && os.read_file(data + ids[0] + '/counter.txt')! == '1'
 	assert owner_of(data + ids[1] + '/memo.txt') == 1000 && os.read_file(data + ids[1] + '/memo.txt')! == memo
 	native_catalog_reopen(memo)!
@@ -90,7 +90,7 @@ fn native_catalog_consume(mut t Test, key string, architecture string, release_p
 	native_catalog_reopen(memo)!
 	reviewed_package_operation('upgrade', [])!
 	reviewed_package_operation('remove', ids)!
-	for id in ids { assert !os.exists('/var/lib/vinix-packages/current/share/applications/vinix-' + id + '.desktop') }
+	for id in ids { assert !os.exists('/var/lib/tulpar-packages/current/share/applications/tulpar-' + id + '.desktop') }
 	package_success(['gc'])!
 	os.rename(release_prefix + '1.1.0/objects', '/tmp/native-hidden-objects')!
 	reviewed_package_operation('install', ids)!
@@ -105,13 +105,13 @@ fn scenario_packages_native_catalog(mut t Test) { qualify_package_native_catalog
 fn qualify_package_native_image(mut t Test) ! {
 	t.make_accounts()
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
-	path := '/etc/vinix-packages/config.json'
+	path := '/etc/tulpar-packages/config.json'
 	initial := os.read_file(path)!
 	config := pkgcore.load_config('')!
 	assert config.architecture == architecture && config.launch_user == 'alex' && config.policy.offline
 	assert config.repositories.len == 1 && config.repositories[0].id == 'native'
 	assert config.repositories[0].url == 'file://' + pkgcore.image_repositories_path + '/native'
-	assert os.ls('/var/lib/vinix-packages')!.len == 0
+	assert os.ls('/var/lib/tulpar-packages')!.len == 0
 	assert os.is_file(pkgcore.image_repositories_path + '/native/index.json') && !os.is_link(pkgcore.image_repositories_path)
 	t.say('PACKAGE IMAGE CONFIG booted with staged trust policy and launch account before first refresh PASS')
 	fixture := run(['/usr/share/package-fixtures/image-configuration'], '', none, none)

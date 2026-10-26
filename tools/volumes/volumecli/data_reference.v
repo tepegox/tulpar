@@ -31,7 +31,7 @@ fn encode_data_reference_comparison(before &DataManifest, after &DataManifest, o
 	mut first := [65]char{}; mut second := [65]char{}
 	if !data_reference_fingerprint(before, &first[0]) || !data_reference_fingerprint(after, &second[0]) { return 0 }
 	mut length := int(C.snprintf(output, uint(scrub_report_max),
-		c'format=VINIXDH1 operation=compared-data-references disks=%d mappings=%d stable=%d changed=%d algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\n',
+		c'format=TULPARDH1 operation=compared-data-references disks=%d mappings=%d stable=%d changed=%d algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\n',
 		before.set.count, before.digests.count, before.digests.count - summary.changed, summary.changed, &first[0], &second[0]))
 	if length <= 0 || length >= scrub_report_max { return 0 }
 	mut record := 0; mut old := [65]char{}; mut next := [65]char{}; mut identity := [41]char{}

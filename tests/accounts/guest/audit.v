@@ -37,7 +37,7 @@ fn events_now(mut t Test) eventcore.Snapshot {
 }
 
 fn collect(mut t Test) {
-	ran := run(['/usr/sbin/vinix-security-events', '--once'], '', none, none)
+	ran := run(['/usr/sbin/tulpar-security-events', '--once'], '', none, none)
 	t.check(ran.status == 0, 'the collector: ${ran.status} ${ran.output}')
 }
 
@@ -52,12 +52,12 @@ fn scenario_audit(mut t Test) {
 	// Something root is allowed, for a record of an allowed decision.
 	C.sethostname(c'audited', 7)
 	// Sam logs in and is refused things.
-	swept := run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'sweep', '1',
+	swept := run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'sweep', '1',
 		'1'], '', none, none)
 	t.check(swept.output.contains('SWEEP bind-80 13'), 'the sweep did not run: ${swept.output}')
-	run(['/usr/sbin/vinix-session', 'run', 'sam', '/usr/bin/vinix-auth', 'verify'], 'not the password\n',
+	run(['/usr/sbin/tulpar-session', 'run', 'sam', '/usr/bin/tulpar-auth', 'verify'], 'not the password\n',
 		none, none)
-	run(['/usr/sbin/vinix-session', 'run', 'alex', '/usr/bin/vinix-auth', 'run', 'hostname-set',
+	run(['/usr/sbin/tulpar-session', 'run', 'alex', '/usr/bin/tulpar-auth', 'run', 'hostname-set',
 		'audited2'], alex_password + '\n', none, none)
 
 	snapshot := events_now(mut t)
@@ -127,12 +127,12 @@ fn scenario_audit(mut t Test) {
 
 	// Not for accounts to read, and not for them to write.
 	for what in [['read', '/proc/security_events'], ['write', '/proc/security_events'],
-		['read', '/proc/security_audit'], ['list', '/var/log/vinix-audit']] {
+		['read', '/proc/security_audit'], ['list', '/var/log/tulpar-audit']] {
 		got := probe(what, db, sam).output.trim_space()
 		t.check(got.starts_with('errno'), 'sam: ${what.join(' ')}: ${got}')
 	}
 	before := events_now(mut t).total
-	forged := run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'report'],
+	forged := run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'report'],
 		'', none, none)
 	t.check(forged.output.trim_space() == 'refused', 'sam reporting a decision into the record: ${forged.output}')
 	for event in events_now(mut t).events {
@@ -142,12 +142,12 @@ fn scenario_audit(mut t Test) {
 
 	// The collector: everything once, on disk, root's alone.
 	collect(mut t)
-	log := '/var/log/vinix-audit/events.log'
+	log := '/var/log/tulpar-audit/events.log'
 	first := read_text(log)
 	kept := first.split_into_lines().filter(it.starts_with('event '))
 	t.check(kept.len >= snapshot.events.len, 'the log has ${kept.len} records, the snapshot had ${snapshot.events.len}')
-	t.check(mode_of(log) == 0o600 && owner_of(log) == 0 && mode_of('/var/log/vinix-audit') == 0o700,
-		'the log is mode ${mode_of(log):o}, its directory ${mode_of('/var/log/vinix-audit'):o}')
+	t.check(mode_of(log) == 0o600 && owner_of(log) == 0 && mode_of('/var/log/tulpar-audit') == 0o700,
+		'the log is mode ${mode_of(log):o}, its directory ${mode_of('/var/log/tulpar-audit'):o}')
 	t.check(first.contains(' kind=network result=denied ') && first.contains(' login=${sam.uid} ')
 		&& first.contains(' label=auth:verify_sam:denied'), 'the log does not read as expected')
 	mut seen := map[string]bool{}
@@ -164,17 +164,17 @@ fn scenario_audit(mut t Test) {
 
 	// More refusals than the ring holds between two passes: the gap is
 	// written down, to the record.
-	os.mkdir_all('/etc/vinix') or {}
-	os.write_file('/etc/vinix/audit.conf', 'max_bytes = 8192\nkeep_files = 2\nmax_age_days = 0\n') or {}
+	os.mkdir_all('/etc/tulpar') or {}
+	os.write_file('/etc/tulpar/audit.conf', 'max_bytes = 8192\nkeep_files = 2\nmax_age_days = 0\n') or {}
 	last_before := events_now(mut t).total
-	run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'flood', '600'],
+	run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'flood', '600'],
 		'', none, none)
 	after := events_now(mut t)
 	t.check(after.total >= last_before + 600 && after.dropped > 0, 'the flood: total ${last_before} -> ${after.total}, overwritten ${after.dropped}')
 	collect(mut t)
 	mut text := ''
 	for name in ['events.log.2', 'events.log.1', 'events.log'] {
-		text += read_text('/var/log/vinix-audit/${name}')
+		text += read_text('/var/log/tulpar-audit/${name}')
 	}
 	loss := text.split_into_lines().filter(it.starts_with('loss '))
 	t.check(loss.len == 1, '${loss.len} gaps recorded, not 1')
@@ -189,10 +189,10 @@ fn scenario_audit(mut t Test) {
 	// Set aside by size -- at the pass after the one that outgrew it -- and
 	// deleted by count.
 	for _ in 0 .. 4 {
-		run(['/usr/sbin/vinix-session', 'run', 'sam', '/sbin/init', 'probe', 'flood', '200'],
+		run(['/usr/sbin/tulpar-session', 'run', 'sam', '/sbin/init', 'probe', 'flood', '200'],
 			'', none, none)
 		collect(mut t)
 	}
-	final := os.ls('/var/log/vinix-audit') or { []string{} }
+	final := os.ls('/var/log/tulpar-audit') or { []string{} }
 	t.check(final.len == 3 && 'events.log.2' in final && 'events.log.3' !in final, 'after more records the directory holds ${final}')
 }

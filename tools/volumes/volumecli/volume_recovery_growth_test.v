@@ -3,7 +3,7 @@ module volumecli
 
 fn test_recovery_growth_cli_rejects_invalid_sizes_paths_and_arity_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-grow-recovery-volume'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'16777216'), &char(c'8192'), &char(c'/unused'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-grow-recovery-volume'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'16777216'), &char(c'8192'), &char(c'/unused'), &char(nil)]!
 		for count in [2, 3, 4, 5, 6, 7, 9] { assert run(count, &args[0]) == 2 }
 		for at in [2, 3, 4, 7] { args[at] = &char(c''); assert run(8, &args[0]) == 2; args[at] = &char(c'/unused') }
 		for at in [5, 6] {

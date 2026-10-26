@@ -25,33 +25,33 @@
     ret
 .endm
 
-.global vinix_guard_probe_read
-.type vinix_guard_probe_read, %function
-vinix_guard_probe_read:
+.global tulpar_guard_probe_read
+.type tulpar_guard_probe_read, %function
+tulpar_guard_probe_read:
     GUARD_REGISTERS
-.global vinix_guard_read_fault
-vinix_guard_read_fault:
+.global tulpar_guard_read_fault
+tulpar_guard_read_fault:
     ldrb w1, [x0]
-.global vinix_guard_read_resume
-vinix_guard_read_resume:
+.global tulpar_guard_read_resume
+tulpar_guard_read_resume:
     GUARD_VERIFY
-.size vinix_guard_probe_read, .-vinix_guard_probe_read
+.size tulpar_guard_probe_read, .-tulpar_guard_probe_read
 
-.global vinix_guard_probe_write
-.type vinix_guard_probe_write, %function
-vinix_guard_probe_write:
+.global tulpar_guard_probe_write
+.type tulpar_guard_probe_write, %function
+tulpar_guard_probe_write:
     GUARD_REGISTERS
-.global vinix_guard_write_fault
-vinix_guard_write_fault:
+.global tulpar_guard_write_fault
+tulpar_guard_write_fault:
     strb wzr, [x0]
-.global vinix_guard_write_resume
-vinix_guard_write_resume:
+.global tulpar_guard_write_resume
+tulpar_guard_write_resume:
     GUARD_VERIFY
-.size vinix_guard_probe_write, .-vinix_guard_probe_write
+.size tulpar_guard_probe_write, .-tulpar_guard_probe_write
 
-.global vinix_guard_probe_stack
-.type vinix_guard_probe_stack, %function
-vinix_guard_probe_stack:
+.global tulpar_guard_probe_stack
+.type tulpar_guard_probe_stack, %function
+tulpar_guard_probe_stack:
     stp x19, x20, [sp, #-32]!
     stp x21, x30, [sp, #16]
     mov x19, sp
@@ -59,11 +59,11 @@ vinix_guard_probe_stack:
     msr spsel, #1
     mov x21, sp
     mov sp, x0
-.global vinix_guard_stack_fault
-vinix_guard_stack_fault:
+.global tulpar_guard_stack_fault
+tulpar_guard_stack_fault:
     stp xzr, xzr, [sp, #-16]!
-.global vinix_guard_stack_resume
-vinix_guard_stack_resume:
+.global tulpar_guard_stack_resume
+tulpar_guard_stack_resume:
     mov sp, x21
     cbnz x20, 1f
     msr spsel, #0
@@ -73,4 +73,4 @@ vinix_guard_stack_resume:
     ldp x19, x20, [sp], #32
     mov x0, #1
     ret
-.size vinix_guard_probe_stack, .-vinix_guard_probe_stack
+.size tulpar_guard_probe_stack, .-tulpar_guard_probe_stack

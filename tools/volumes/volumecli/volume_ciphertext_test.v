@@ -36,7 +36,7 @@ fn test_ciphertext_reference_exact_geometry_crc_reserved_and_signed_ranges() {
 fn test_ciphertext_commands_reject_invalid_syntax_before_io() {
 	unsafe {
 		for verb in [&char(c'hash-volume'), &char(c'verify-volume'), &char(c'hash-recovery-volume'), &char(c'verify-recovery-volume')]! {
-			mut args := [&char(c'vinix-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+			mut args := [&char(c'tulpar-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 			for count in [2, 3, 4, 5, 7] { assert run(count, &args[0]) == 2 }
 			for at in [2, 3, 4, 5] { args[at] = &char(c''); assert run(6, &args[0]) == 2; args[at] = &char(c'/unused') }
 		}

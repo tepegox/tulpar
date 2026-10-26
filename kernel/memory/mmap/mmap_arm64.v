@@ -36,7 +36,7 @@ pub fn pf_handler(gpr_state &cpulocal.GPRState) ? {
 		// writable already and retry the access for ever.
 		if addr < higher_half && gpr_state.pstate & 0xf != 0 && gpr_state.pstate & cpu.pstate_pan != 0 {
 			if !memory.user_guard_auditing() {
-				C.kprintf(c'user-access: the kernel %s user address 0x%llx directly, at pc 0x%llx; vinix.user_access=audit reports this and carries on\n',
+				C.kprintf(c'user-access: the kernel %s user address 0x%llx directly, at pc 0x%llx; tulpar.user_access=audit reports this and carries on\n',
 					if wnr != 0 { c'wrote' } else { c'read' }, addr, gpr_state.pc)
 				return none
 			}

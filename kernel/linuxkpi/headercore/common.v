@@ -9,7 +9,7 @@ struct C.spinlock_t { locked u32 }
 @[typedef]
 struct C.refcount_t {}
 struct C.mutex {}
-struct C.task_struct { in_iowait u32, __state u32, vinix_thread voidptr, pid i32, tgid i32 }
+struct C.task_struct { in_iowait u32, __state u32, tulpar_thread voidptr, pid i32, tgid i32 }
 struct C.wait_bit_key { timeout uint }
 @[typedef]
 struct C.vkh_const_char_p {}
@@ -30,16 +30,16 @@ fn C.signal_pending_state(u32, &C.task_struct) i32
 @[c_extern]
 __global C.jiffies uint
 fn C.READ_ONCE(uint) uint
-fn C.vinix_linuxkpi_warn_format(C.vkh_const_char_p, i32, &char, ...)
+fn C.tulpar_linuxkpi_warn_format(C.vkh_const_char_p, i32, &char, ...)
 fn C._printk(&char, ...) i32
-fn C.vinix_linuxkpi_test_warn_note(C.vkh_const_char_p, i32)
-fn C.vinix_linuxkpi_test_refcount_note(i32)
+fn C.tulpar_linuxkpi_test_warn_note(C.vkh_const_char_p, i32)
+fn C.tulpar_linuxkpi_test_refcount_note(i32)
 @[export: '__per_cpu_offset']
 __global vkh_percpu_offsets [256]uint
 @[c_extern]
-__global C.__vinix_percpu_start u8
+__global C.__tulpar_percpu_start u8
 @[c_extern]
-__global C.__vinix_percpu_end u8
+__global C.__tulpar_percpu_end u8
 
 @[export: 'vkp_spin_init']
 pub fn common_spin_init(storage voidptr) { unsafe { C.spin_lock_init(&C.spinlock_t(storage)) } }
@@ -78,20 +78,20 @@ pub fn common_jiffies() uint { return C.READ_ONCE(C.jiffies) }
 @[export: 'vkp_bit_timeout']
 pub fn common_bit_timeout(key voidptr) uint { return unsafe { (&C.wait_bit_key(key)).timeout } }
 @[export: 'vkp_warn']
-pub fn common_warn(file C.vkh_const_char_p, line i32) { unsafe { C.vinix_linuxkpi_warn_format(file, line, nil) } }
+pub fn common_warn(file C.vkh_const_char_p, line i32) { unsafe { C.tulpar_linuxkpi_warn_format(file, line, nil) } }
 @[export: 'vkp_refcount_warning']
 pub fn common_refcount_warning(kind i32) { C._printk(c'\x01\x34linuxkpi: refcount saturated after invalid operation %d; retaining object\n', kind) }
 @[export: 'vkp_warn_note']
-pub fn common_warn_note(file C.vkh_const_char_p, line i32) { $if linuxkpi_host_test ? { C.vinix_linuxkpi_test_warn_note(file, line) } }
+pub fn common_warn_note(file C.vkh_const_char_p, line i32) { $if linuxkpi_host_test ? { C.tulpar_linuxkpi_test_warn_note(file, line) } }
 @[export: 'vkp_refcount_note']
-pub fn common_refcount_note(kind i32) { $if linuxkpi_host_test ? { C.vinix_linuxkpi_test_refcount_note(kind) } }
+pub fn common_refcount_note(kind i32) { $if linuxkpi_host_test ? { C.tulpar_linuxkpi_test_refcount_note(kind) } }
 @[export: 'vkp_percpu_offsets']
 pub fn common_percpu_offsets() voidptr { return unsafe { &vkh_percpu_offsets[0] } }
 @[export: 'vkp_percpu_begin']
 pub fn common_percpu_begin() voidptr {
-	$if linuxkpi_host_test ? { return unsafe { nil } } $else { return unsafe { &C.__vinix_percpu_start } }
+	$if linuxkpi_host_test ? { return unsafe { nil } } $else { return unsafe { &C.__tulpar_percpu_start } }
 }
 @[export: 'vkp_percpu_end']
 pub fn common_percpu_end() voidptr {
-	$if linuxkpi_host_test ? { return unsafe { nil } } $else { return unsafe { &C.__vinix_percpu_end } }
+	$if linuxkpi_host_test ? { return unsafe { nil } } $else { return unsafe { &C.__tulpar_percpu_end } }
 }

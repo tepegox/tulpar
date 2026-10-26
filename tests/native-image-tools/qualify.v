@@ -64,7 +64,7 @@ fn run() ! {
 		result := sourcecommand.capture_full([work + '/human', ...argv], os.environ(), -1, 1024 * 1024, cachecli.cancelled)!
 		assert result.status == 2
 	}
-	for path in ['scripts/build-vinix-guest-disk.sh', 'build-support/human-size'] {
+	for path in ['scripts/build-tulpar-guest-disk.sh', 'build-support/human-size'] {
 		checked(['/bin/sh', '-n', root + '/' + path], work + '/' + os.file_name(path) + '-syntax.log')!
 	}
 	checked(['/bin/bash', '-n', root + '/scripts/deploy-iso.sh'], work + '/deploy-syntax.log')!

@@ -6,10 +6,10 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export HOME=/root
 export SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-echo "VINIX SUBLIME TEXT PACKAGE TEST"
+echo "TULPAR SUBLIME TEXT PACKAGE TEST"
 
 if [ ! -x /usr/bin/Xorg ]; then
-	echo "Sublime test needs the Vinix Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
+	echo "Sublime test needs the Tulpar Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
 	exit 1
 fi
 if [ -e /opt/sublime_text ] || [ -e /lib/ld-linux-aarch64.so.1 ]; then
@@ -31,7 +31,7 @@ test -f /usr/share/applications/sublime_text.desktop
 test "$(subl --version)" = "Sublime Text Build 4200"
 echo "PASS pkg installed the glibc-compatible Sublime runtime"
 
-printf 'Sublime Text on Vinix\n' >/tmp/sublime-smoke.txt
+printf 'Sublime Text on Tulpar\n' >/tmp/sublime-smoke.txt
 mkdir -p /tmp/.X11-unix /var/lib/xkb
 display=:9
 /usr/bin/Xorg "$display" +iglx -noreset \
@@ -63,8 +63,8 @@ DISPLAY="$display" subl --multiinstance --foreground --safe-mode -n \
 sublime_pid=$!
 
 # A persistent /root can shadow the copy the image ships there.
-if [ -x /usr/share/vinix/x-window-check ]; then
-	x_window_check=/usr/share/vinix/x-window-check
+if [ -x /usr/share/tulpar/x-window-check ]; then
+	x_window_check=/usr/share/tulpar/x-window-check
 else
 	x_window_check=/root/x-window-check
 fi
@@ -90,4 +90,4 @@ if [ "$mapped" != true ]; then
 fi
 
 echo "PASS Sublime Text opened an editor window"
-echo "VINIX SUBLIME TEXT PACKAGE TEST: PASS"
+echo "TULPAR SUBLIME TEXT PACKAGE TEST: PASS"

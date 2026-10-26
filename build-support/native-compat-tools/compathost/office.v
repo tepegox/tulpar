@@ -57,7 +57,7 @@ fn office_test(args []string) !int {
 	parsed := hosttest.parse_arguments(args, [hosttest.Option{name: '--baseline-rev', value: true},
 		hosttest.Option{name: '--state-dir', value: true}], 0,
 		'Usage: run [--baseline-rev REV] [--state-dir FRESH-DIR]', 'Compare Office licensing ABI goldens, sanitizers and Windows64 exports.') or { return error_with_code(err.msg(), 2) }
-	state := hosttest.work_dir(parsed.options['--state-dir'], 'vinix-office-abi-')!
+	state := hosttest.work_dir(parsed.options['--state-dir'], 'tulpar-office-abi-')!
 	defer { if '--state-dir' !in parsed.options { retire(state) } }
 	support := root() + '/build-support/x86-translation'
 	test := root() + '/tests/office-compat'

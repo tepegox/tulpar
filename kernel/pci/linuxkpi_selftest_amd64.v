@@ -4,7 +4,7 @@ module pci
 // The boot scan retains its records for the kernel's lifetime. This fixture
 // copies scalar identity fields only; it never publishes a Linux PCI device
 // or retains any of the caller's output pointers.
-@[export: 'vinix_linuxkpi_pci_identity']
+@[export: 'tulpar_linuxkpi_pci_identity']
 fn linuxkpi_pci_identity(index u32, bdf &u32, identity &u32, class_revision &u32) int {
 	$if linuxkpi ? {
 		if bdf == unsafe { nil } || identity == unsafe { nil } ||

@@ -14,8 +14,8 @@
  * shadows the header instead, and is what clang's own would have expanded to.
  * It only has to cover what V's sync.stdatomic emits.
  */
-#ifndef VINIX_AARCH64_STDATOMIC_H
-#define VINIX_AARCH64_STDATOMIC_H
+#ifndef TULPAR_AARCH64_STDATOMIC_H
+#define TULPAR_AARCH64_STDATOMIC_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -93,4 +93,4 @@ typedef struct atomic_flag {
 #define atomic_flag_clear_explicit(object, order) __c11_atomic_store(&(object)->_Value, 0, order)
 #define atomic_flag_clear(object) atomic_flag_clear_explicit(object, __ATOMIC_SEQ_CST)
 
-#endif /* VINIX_AARCH64_STDATOMIC_H */
+#endif /* TULPAR_AARCH64_STDATOMIC_H */

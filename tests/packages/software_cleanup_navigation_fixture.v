@@ -13,10 +13,10 @@ fn fixture_cleanup_navigation_review(empty bool) pkgprotocol.CleanupReview {
 }
 
 fn software_cleanup_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if mode.starts_with('review-') && args[1..] == ['cleanup-review'] {
-		text := json2.encode(fixture_cleanup_navigation_review(os.exists(os.getenv('VINIX_SOFTWARE_CLEANUP_RECEIPT'))))
+		text := json2.encode(fixture_cleanup_navigation_review(os.exists(os.getenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT'))))
 		partial := mode == 'review-partial'
 		print(if partial { text[..text.len / 2] } else { text }); flush_stdout()
 		mut release := u8(0); assert C.read(0, &release, 1) == 1
@@ -37,11 +37,11 @@ fn software_cleanup_navigation_service_fixture(args []string) !bool {
 		println('Retiring the approved obsolete generation set…'); flush_stdout()
 		// Credential submission closes stdin. Publish the separate release file
 		// by rename so existence always exposes its complete contents.
-		release := os.getenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION_RELEASE')
+		release := os.getenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION_RELEASE')
 		for _ in 0 .. 20000 { if os.is_file(release) { break }; time.sleep(time.millisecond) }
 		assert os.read_file(release)! == 'release'
 		if mode == 'apply-failed' { eprintln('Generation cleanup review is stale: eligible set changed. Reload and review again.'); exit(29) }
-		os.write_file(os.getenv('VINIX_SOFTWARE_CLEANUP_RECEIPT'), 'reviewed generations only')!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT'), 'reviewed generations only')!
 		println('Obsolete generation cleanup completed.')
 		return true
 	}
@@ -51,9 +51,9 @@ fn software_cleanup_navigation_service_fixture(args []string) !bool {
 fn wait_for_cleanup_navigation_output(mut app SoftwareApp) {
 	mut minimum := 1
 	if app.cleanup_review_running() {
-		mut review := fixture_cleanup_navigation_review(os.exists(os.getenv('VINIX_SOFTWARE_CLEANUP_RECEIPT')))
+		mut review := fixture_cleanup_navigation_review(os.exists(os.getenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT')))
 		text := json2.encode(review)
-		minimum = if os.getenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION') == 'review-partial' { text.len / 2 } else { text.len }
+		minimum = if os.getenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION') == 'review-partial' { text.len / 2 } else { text.len }
 		review.close(); unsafe { text.free() }
 	}
 	for _ in 0 .. 5000 {
@@ -65,14 +65,14 @@ fn wait_for_cleanup_navigation_output(mut app SoftwareApp) {
 }
 
 fn check_software_cleanup_navigation() ! {
-	receipt := os.temp_dir() + '/vinix-cleanup-navigation-' + os.getpid().str()
+	receipt := os.temp_dir() + '/tulpar-cleanup-navigation-' + os.getpid().str()
 	release := receipt + '.release'
-	os.setenv('VINIX_SOFTWARE_CLEANUP_RECEIPT', receipt, true)
-	os.setenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION_RELEASE', release, true)
+	os.setenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT', receipt, true)
+	os.setenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION_RELEASE', release, true)
 	defer {
 		os.rm(receipt) or {}; os.rm(release) or {}; os.rm(release + '.pending') or {}
-		os.unsetenv('VINIX_SOFTWARE_CLEANUP_RECEIPT'); os.unsetenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION')
-		os.unsetenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION_RELEASE')
+		os.unsetenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT'); os.unsetenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION')
+		os.unsetenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION_RELEASE')
 	}
 	mut app := SoftwareApp{ administration_required: true, service_path: os.executable(),
 		output: []u8{cap: 128 * 1024}, query: 'kept query'.bytes(), filter: 2, selected: 0,
@@ -81,7 +81,7 @@ fn check_software_cleanup_navigation() ! {
 	app.handle('software.cleanup')!; wait_for_software(mut app)
 	for ending in ['partial', 'complete']! {
 		for action in ['software.cleanup.stop', 'software.cleanup.cancel', 'escape']! {
-			os.setenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION', 'review-' + ending, true)
+			os.setenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION', 'review-' + ending, true)
 			app.handle('software.cleanup.reload')!; pid := app.worker.pid
 			wait_for_cleanup_navigation_output(mut app)
 			assert app.cleanup_review_running() && !app.cleanup_ready && app.cleanup_snapshot.fingerprint == '' && app.prepare_close() && !app.admin_prompt
@@ -102,12 +102,12 @@ fn check_software_cleanup_navigation() ! {
 			compact := app.build(ui2.rect(0, 0, 320, 240))!
 			assert compact.children.any(it.id == 'software.cleanup.back') && compact.children.any(it.id == 'software.cleanup.reload')
 			free_window_tree(compact)
-			os.unsetenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION'); app.handle('software.cleanup.reload')!; wait_for_software(mut app)
+			os.unsetenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION'); app.handle('software.cleanup.reload')!; wait_for_software(mut app)
 			assert app.cleanup_ready && app.cleanup_snapshot.generations.len == 30
 		}
 	}
 	// Admit a complete, maximum-sized proposal only after worker exit.
-	os.setenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION', 'review-complete', true)
+	os.setenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION', 'review-complete', true)
 	app.handle('software.cleanup.reload')!; wait_for_cleanup_navigation_output(mut app)
 	assert !app.cleanup_ready && app.cleanup_snapshot.generations.len == 0
 	app.worker.stdin_write('x'); wait_for_software(mut app)
@@ -123,15 +123,15 @@ fn check_software_cleanup_navigation() ! {
 	}
 	check_cleanup_report_content(&app); check_software_report_reader(mut app)!
 	assert app.cleanup_scroll == 7 && app.cleanup_snapshot.generations.len == 4096
-	os.setenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION', 'apply-complete', true)
+	os.setenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION', 'apply-complete', true)
 	app.handle('software.cleanup.confirm')!; assert app.admin_prompt
 	app.stop_cleanup_review(); assert app.admin_prompt && app.worker != unsafe { nil }
 	app.handle('software.admin.cancel')!
 	assert !app.admin_prompt && app.worker == unsafe { nil } && !app.cleanup_ready && !os.exists(receipt)
 	app.handle('software.cleanup.confirm')!; assert app.worker == unsafe { nil }
 	for mode in ['apply-failed', 'apply-complete']! {
-		os.unsetenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION'); app.handle('software.cleanup.reload')!; wait_for_software(mut app)
-		os.setenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION', mode, true)
+		os.unsetenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION'); app.handle('software.cleanup.reload')!; wait_for_software(mut app)
+		os.setenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION', mode, true)
 		app.handle('software.cleanup.confirm')!
 		assert app.admin_prompt && app.worker.args == ['admin', 'cleanup-apply', 'd'.repeat(64)]
 		app.key_input('fixture secret é'); app.handle('software.admin.approve')!
@@ -148,7 +148,7 @@ fn check_software_cleanup_navigation() ! {
 		assert !app.report_reader_mode && app.details_pages.len == 0 && app.details_compact_pages.len == 0
 		app.key_input('\x1b'); app.stop_cleanup_review(); app.paste_input('must not edit')
 		assert app.worker.pid == pid && C.kill(pid, 0) == 0 && app.cleanup_mode && !os.exists(receipt)
-		if mode == 'apply-complete' { os.setenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION', 'review-complete', true) }
+		if mode == 'apply-complete' { os.setenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION', 'review-complete', true) }
 		os.write_file(release + '.pending', 'release')!; os.rename(release + '.pending', release)!
 		if mode == 'apply-complete' {
 			for _ in 0 .. 5000 { app.poll(); if app.cleanup_worker == .review { break }; time.sleep(time.millisecond) }
@@ -156,11 +156,11 @@ fn check_software_cleanup_navigation() ! {
 			wait_for_cleanup_navigation_output(mut app); app.handle('software.cleanup.stop')!
 			assert app.cleanup_result.contains('Cleanup finished') && !app.cleanup_ready && app.cleanup_snapshot.fingerprint == ''
 			// A failed subsequent reload must not consume the completed result.
-			os.setenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION', 'review-failed', true)
+			os.setenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION', 'review-failed', true)
 			app.handle('software.cleanup.reload')!; wait_for_cleanup_navigation_output(mut app)
 			app.worker.stdin_write('x'); wait_for_software(mut app)
 			assert !app.cleanup_ready && app.cleanup_result.contains('Cleanup finished') && app.failure_pages.len > 0
-			os.unsetenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION'); app.handle('software.cleanup.reload')!
+			os.unsetenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION'); app.handle('software.cleanup.reload')!
 		}
 		wait_for_software(mut app)
 		if mode == 'apply-failed' {
@@ -176,7 +176,7 @@ fn check_software_cleanup_navigation() ! {
 			app.handle('software.cleanup.reload')!; wait_for_software(mut app)
 			assert app.cleanup_ready && !app.status.contains('Cleanup finished')
 		}
-		os.rm(release)!; os.unsetenv('VINIX_SOFTWARE_CLEANUP_NAVIGATION')
+		os.rm(release)!; os.unsetenv('TULPAR_SOFTWARE_CLEANUP_NAVIGATION')
 	}
 	app.key_input('\x1b')
 	assert !app.cleanup_mode && app.cleanup_snapshot.generations.len == 0 && app.cleanup_result == ''
@@ -195,7 +195,7 @@ fn check_software_cleanup_navigation_memory() ! {
 		mut app := SoftwareApp{ cleanup_mode: true, output: []u8{cap: 128 * 1024} }
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.cleanup_mode = true
 				app.output.clear(); for byte in text { app.output << byte }; app.load_cleanup_review()
@@ -216,7 +216,7 @@ fn check_software_cleanup_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'cleanup navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'cleanup navigation retained ${kept} bytes'
 		println('Software cleanup navigation: 1000 4096-generation/empty review/full/compact/resize/failure/progress/result/back/retirement cycles retain zero tracked bytes')
 		println('Software cleanup reader: 1000 maximum/empty review/read/resize/back/retirement cycles retain zero tracked bytes')
 	}

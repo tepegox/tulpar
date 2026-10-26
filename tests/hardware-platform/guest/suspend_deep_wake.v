@@ -122,6 +122,6 @@ fn scenario_suspend_deep_wake_off(mut t Test) {
 	write_text('/sys/power/mem_sleep', 'deep') or { t.check(false, 'selecting deep: ${err.msg()}') }
 	mut listed := true
 	read_text(wakeup_report) or { listed = false }
-	t.check(!listed, '${wakeup_report} exists with vinix.acpi_wake=off')
+	t.check(!listed, '${wakeup_report} exists with tulpar.acpi_wake=off')
 	wake_sleep(mut t, 'deep sleep, nothing armed', 1)
 }

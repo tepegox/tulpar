@@ -8,7 +8,7 @@ import dev.keyboard
 import wakesrc
 import klock
 
-fn C.vinix_call_void_fn(callback voidptr)
+fn C.tulpar_call_void_fn(callback voidptr)
 
 __global (
 	vi_poll_lock klock.Lock
@@ -251,7 +251,7 @@ pub fn report_buttons(buttons u32) {
 
 fn notify_pointer_event() {
 	if vi_ptr_callback != voidptr(0) {
-		C.vinix_call_void_fn(vi_ptr_callback)
+		C.tulpar_call_void_fn(vi_ptr_callback)
 	}
 }
 
@@ -284,7 +284,7 @@ fn vi_put_uint(value u32) {
 }
 
 // CSI-u preserves the Super modifier which a traditional terminal byte
-// stream otherwise discards. The Vinix Aquamarine backend turns these chords
+// stream otherwise discards. The Tulpar Aquamarine backend turns these chords
 // back into ordinary key events for Hyprland.
 fn vi_emit_csi_u(codepoint u32, modifiers u32) {
 	vi_puts(c'\e[')
@@ -464,7 +464,7 @@ fn process_key(code u16, value u32) {
 	}
 
 	// Preserve GUI chords in the terminal stream for graphical compositors.
-	// Native vinix-desktop consumes Cmd-Tab and ignores the other sequences.
+	// Native tulpar-desktop consumes Cmd-Tab and ignores the other sequences.
 	if vi_meta_active && code == key_tab {
 		vi_emit_csi_u(9, 8 | if vi_shift_active { u32(1) } else { u32(0) })
 		vi_meta_chorded = true
@@ -807,6 +807,6 @@ pub fn poll() {
 		poll_device(i)
 	}
 	if vi_extra_poller != voidptr(0) {
-		C.vinix_call_void_fn(vi_extra_poller)
+		C.tulpar_call_void_fn(vi_extra_poller)
 	}
 }

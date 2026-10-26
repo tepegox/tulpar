@@ -14,7 +14,7 @@ fn C.mkfifo(&char, u32) int
 struct CachePromotionFixture { directory string partial string object string outside string payload Payload }
 
 fn cache_promotion_fixture() !CachePromotionFixture {
-	directory := os.real_path(os.temp_dir()) + '/vinix-cache-promotion-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.real_path(os.temp_dir()) + '/tulpar-cache-promotion-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory + '/objects')!
 	text := 'authenticated complete partial'
 	payload := Payload{ path: 'bin/app', bytes: u64(text.len), sha256: sha256.sum(text.bytes()).hex(), executable: true }
@@ -25,7 +25,7 @@ fn cache_promotion_fixture() !CachePromotionFixture {
 }
 
 fn cache_promotion_change(_ string, path string) ! {
-	mode := os.getenv('VINIX_CACHE_PROMOTION_CHANGE')
+	mode := os.getenv('TULPAR_CACHE_PROMOTION_CHANGE')
 	parent := os.dir(path)
 	outside := os.dir(parent) + '/outside'
 	match mode {
@@ -47,9 +47,9 @@ fn cache_promotion_change(_ string, path string) ! {
 }
 
 fn cache_promotion_flush(fd int) int {
-	mode := os.getenv('VINIX_CACHE_PROMOTION_FLUSH')
-	count := os.getenv('VINIX_CACHE_PROMOTION_FLUSHES').int()
-	os.setenv('VINIX_CACHE_PROMOTION_FLUSHES', (count + 1).str(), true)
+	mode := os.getenv('TULPAR_CACHE_PROMOTION_FLUSH')
+	count := os.getenv('TULPAR_CACHE_PROMOTION_FLUSHES').int()
+	os.setenv('TULPAR_CACHE_PROMOTION_FLUSHES', (count + 1).str(), true)
 	mut info := C.stat{}
 	assert C.fstat(fd, &info) == 0
 	if mode == 'interrupt' && count == 0 { C.errno = C.EINTR; return -1 }
@@ -62,10 +62,10 @@ fn test_cache_promotion_captures_the_partial_and_parent_without_changing_unrelat
 	for mode in ['link', 'replace', 'symlink', 'fifo', 'parent', 'contents', 'destination-link'] {
 		fixture := cache_promotion_fixture()!
 		defer { os.rmdir_all(fixture.directory) or {} }
-		os.setenv('VINIX_CACHE_PROMOTION_CHANGE', mode, true)
+		os.setenv('TULPAR_CACHE_PROMOTION_CHANGE', mode, true)
 		mut refused := false
 		promote_cached_payload_with(fixture.directory, fixture.payload, CachePromotionOptions{ checkpoint: cache_promotion_change }) or { refused = true }
-		os.unsetenv('VINIX_CACHE_PROMOTION_CHANGE')
+		os.unsetenv('TULPAR_CACHE_PROMOTION_CHANGE')
 		assert os.read_file(fixture.outside)! == 'authenticated complete partial'
 		assert os.lstat(fixture.outside)!.mode & 0o777 == 0o640
 		if mode == 'destination-link' {
@@ -94,23 +94,23 @@ fn test_cache_promotion_checks_hash_length_and_retires_descriptors_under_failure
 			if mode == 'hardlink' { os.link(fixture.partial, fixture.partial + '.alias')! }
 			if mode == 'size' { os.write_file(fixture.partial, 'short')! }
 			if mode == 'hash' { os.write_file(fixture.partial, 'x'.repeat(int(fixture.payload.bytes)))! }
-			os.setenv('VINIX_CACHE_PROMOTION_FLUSH', mode, true); os.setenv('VINIX_CACHE_PROMOTION_FLUSHES', '0', true)
+			os.setenv('TULPAR_CACHE_PROMOTION_FLUSH', mode, true); os.setenv('TULPAR_CACHE_PROMOTION_FLUSHES', '0', true)
 			mut message := ''
 			promote_cached_payload_with(fixture.directory, fixture.payload, CachePromotionOptions{ flush: cache_promotion_flush }) or { message = err.msg() }
-			os.unsetenv('VINIX_CACHE_PROMOTION_FLUSH')
+			os.unsetenv('TULPAR_CACHE_PROMOTION_FLUSH')
 			assert os.read_file(fixture.outside)! == 'authenticated complete partial' && os.lstat(fixture.outside)!.mode & 0o777 == 0o640
 			if mode in ['success', 'interrupt', 'directory-interrupt', 'directory-failure'] {
 				assert verified_file(fixture.object, fixture.payload) && !os.exists(fixture.partial)
 				assert os.lstat(fixture.object)!.mode & 0o777 == 0o444
 				if mode == 'directory-failure' { assert message.contains('cached payload saved') }
 				else { assert message == '' }
-				if mode in ['interrupt', 'directory-interrupt'] { assert os.getenv('VINIX_CACHE_PROMOTION_FLUSHES') == '3' }
+				if mode in ['interrupt', 'directory-interrupt'] { assert os.getenv('TULPAR_CACHE_PROMOTION_FLUSHES') == '3' }
 			} else {
 				assert message != '' && !os.exists(fixture.object) && os.exists(fixture.partial)
 				assert os.lstat(fixture.partial)!.mode & 0o777 == if mode == 'failure' { 0o444 } else { 0o640 }
 			}
 		}
 	}
-	os.unsetenv('VINIX_CACHE_PROMOTION_FLUSHES')
+	os.unsetenv('TULPAR_CACHE_PROMOTION_FLUSHES')
 	println('CACHE PROMOTION signed hash/length, captured flush EINTR/EIO, published-cache diagnostics and 128 cycles under 32 descriptors PASS')
 }

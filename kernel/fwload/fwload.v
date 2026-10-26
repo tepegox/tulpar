@@ -7,7 +7,7 @@
 // A wireless card, a GPU's display controller, a storage adapter's microcode:
 // the driver knows the name of the image -- brcm/brcmfmac4378b1-pcie.bin --
 // and nothing about where it is kept. request() looks for it where Linux
-// keeps firmware, so that the linux-firmware tree can be dropped into a Vinix
+// keeps firmware, so that the linux-firmware tree can be dropped into a Tulpar
 // image as it is:
 //
 //	/lib/firmware/updates/<name>     a newer copy, put there by hand

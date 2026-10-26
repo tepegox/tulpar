@@ -5,7 +5,7 @@ import os
 
 pub const ffmpeg_application_id = 'org.ffmpeg.cli'
 pub const ffprobe_application_id = 'org.ffmpeg.probe'
-pub const ffmpeg_runtime_id = 'org.vinix.ffmpeg-runtime'
+pub const ffmpeg_runtime_id = 'org.tulpar.ffmpeg-runtime'
 pub const ffmpeg_profile_version = '8.0.1'
 pub const ffmpeg_source_digest = '05ee0b03119b45c0bdb4df654b96802e909e0a752f72e4fe3794f487229e5a41'
 pub const ffmpeg_source_bytes = u64(11388848)
@@ -13,7 +13,7 @@ pub const ffmpeg_source_bytes = u64(11388848)
 const ffmpeg_libraries = ['lib/libavcodec.so.62', 'lib/libavdevice.so.62', 'lib/libavfilter.so.11',
 	'lib/libavformat.so.62', 'lib/libavutil.so.60', 'lib/libswresample.so.6', 'lib/libswscale.so.9']
 const ffmpeg_notices = ['licenses/ffmpeg-LICENSE.md', 'licenses/ffmpeg-COPYING.LGPLv2.1',
-	'licenses/musl-COPYRIGHT', 'licenses/vinix-COPYING', 'licenses/v-COPYRIGHT', 'sources/build.json',
+	'licenses/musl-COPYRIGHT', 'licenses/tulpar-COPYING', 'licenses/v-COPYRIGHT', 'sources/build.json',
 	'sources/linux-runner.v', 'sources/ffmpeg-build.v', 'sources/ffmpeg-source.json']
 
 pub struct FfmpegProfileInfo {
@@ -92,7 +92,7 @@ fn (plan FfmpegProfilePlan) canonical() !string {
 }
 
 fn ffmpeg_elf_kind(path string) string {
-	return if path in ['bin/ffmpeg', 'bin/ffprobe']! { 'pie' } else if path == 'bin/vinix-linux-runner' { 'static' }
+	return if path in ['bin/ffmpeg', 'bin/ffprobe']! { 'pie' } else if path == 'bin/tulpar-linux-runner' { 'static' }
 		else if path.starts_with('lib/') { 'shared' } else { '' }
 }
 
@@ -105,7 +105,7 @@ fn ffmpeg_templates(architecture string, runtime_version string) []RootRecipe {
 				description: if name == 'ffmpeg' { 'Isolated FFmpeg CLI profile: local AVI/MPEG-4 and WAV/PCM encoding, generated video/audio and filters. Use run-args for command flags; network, hardware codecs and external codecs are disabled.' }
 					else { 'Isolated FFprobe CLI profile: inspect local AVI/MPEG-4 and WAV/PCM media with run-args. Shares the explicitly versioned FFmpeg runtime.' },
 				homepage: 'https://ffmpeg.org/', license: 'LGPL-2.1-or-later', kind: 'linux',
-				runtime: ffmpeg_runtime_id, entrypoint: 'bin/vinix-linux-runner', permissions: ['files'],
+				runtime: ffmpeg_runtime_id, entrypoint: 'bin/tulpar-linux-runner', permissions: ['files'],
 				arguments: ['@RUNTIME@/lib/ld-musl-' + architecture + '.so.1', '@APP@/bin/' + name],
 				dependencies: [Dependency{ id: ffmpeg_runtime_id, minimum: '1.0.0', before: '2.0.0' }] }
 			entries: [RootEntry{ source: 'bin/' + name, path: 'bin/' + name },
@@ -114,7 +114,7 @@ fn ffmpeg_templates(architecture string, runtime_version string) []RootRecipe {
 		}
 	}
 	mut entries := []RootEntry{cap: 20}
-	entries << RootEntry{ source: 'bin/vinix-linux-runner', path: 'bin/vinix-linux-runner' }
+	entries << RootEntry{ source: 'bin/tulpar-linux-runner', path: 'bin/tulpar-linux-runner' }
 	entries << RootEntry{ source: 'lib/libc.so', path: 'lib/libc.so' }
 	entries << RootEntry{ source: 'lib/libc.so', path: 'lib/ld-musl-' + architecture + '.so.1' }
 	for path in ffmpeg_libraries { entries << RootEntry{ source: path, path: path } }
@@ -151,7 +151,7 @@ fn ffmpeg_catalog_with(runtime_version string, source_roots string, destination 
 		if fd < 0 { return error('FFmpeg profile requires both ordinary architecture roots: ${architecture}') }
 		roots[architecture] = fd
 		mut root_bytes := u64(0)
-		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/vinix-linux-runner', 'lib/libc.so']! {
+		for path in ['bin/ffmpeg', 'bin/ffprobe', 'bin/tulpar-linux-runner', 'lib/libc.so']! {
 			profile_elf(fd, path, architecture, ffmpeg_elf_kind(path), true)!
 			node := import_node(fd, path)!
 			C.close(node.fd)
@@ -186,7 +186,7 @@ fn ffmpeg_catalog_with(runtime_version string, source_roots string, destination 
 	scratch = mirror_cost(scratch, scratch)!
 	disk_check(options.available_space(parent)!, mirror_cost(needed, scratch)!, 64 * 1024 * 1024)!
 	disk_check(options.available_space(temporary)!, scratch, 64 * 1024 * 1024)!
-	mut exporting := create_profile_stage(parent, '.vinix-ffmpeg-profile', 'FFmpeg profile')!
+	mut exporting := create_profile_stage(parent, '.tulpar-ffmpeg-profile', 'FFmpeg profile')!
 	defer { exporting.close() }
 	canonical := write_ffmpeg_profile(runtime_version, roots, target, options, mut exporting) or { return exporting.failure(err) }
 	defer { unsafe { canonical.free() } }

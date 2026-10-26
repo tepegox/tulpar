@@ -1,5 +1,5 @@
-#ifndef VINIX_HOST_MODEL_GUEST_V_CONTRACT_H
-#define VINIX_HOST_MODEL_GUEST_V_CONTRACT_H
+#ifndef TULPAR_HOST_MODEL_GUEST_V_CONTRACT_H
+#define TULPAR_HOST_MODEL_GUEST_V_CONTRACT_H
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>

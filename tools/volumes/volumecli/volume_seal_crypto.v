@@ -32,7 +32,7 @@ fn volume_seal_row(bytes &u8) Request {
 
 fn volume_seal_header(bytes &u8, size int) bool {
 	if size != volume_seal_bytes { return false }
-	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'VINIXVC1'[i]) { return false } } }
+	unsafe { for i in 0 .. 8 { if bytes[i] != u8(c'TULPARVC1'[i]) { return false } } }
 	if get_le(bytes, 8, 4) != 1 || get_le(bytes, 12, 4) != 1 || get_le(bytes, 16, 4) != volume_seal_bytes
 		|| get_le(bytes, 20, 4) != 64 || get_le(bytes, 24, 8) != sealed_scrypt_n
 		|| get_le(bytes, 32, 4) != sealed_scrypt_r || get_le(bytes, 36, 4) != sealed_scrypt_p { return false }
@@ -60,7 +60,7 @@ fn encode_volume_seal(disk &DiskKey, request &EncryptedRequest, wrapping &u8, ra
 	mut work := unsafe { &VolumeSealCrypto(C.alloca(sizeof(VolumeSealCrypto))) }
 	unsafe { *work = VolumeSealCrypto{} }
 	defer { erase_key(work, sizeof(VolumeSealCrypto)) }
-	unsafe { C.memcpy(&work.bytes[0], c'VINIXVC1', 8) }
+	unsafe { C.memcpy(&work.bytes[0], c'TULPARVC1', 8) }
 	put_le(&work.bytes[0], 8, 4, 1); put_le(&work.bytes[0], 12, 4, 1)
 	put_le(&work.bytes[0], 16, 4, volume_seal_bytes); put_le(&work.bytes[0], 20, 4, 64)
 	put_le(&work.bytes[0], 24, 8, sealed_scrypt_n); put_le(&work.bytes[0], 32, 4, sealed_scrypt_r); put_le(&work.bytes[0], 36, 4, sealed_scrypt_p)

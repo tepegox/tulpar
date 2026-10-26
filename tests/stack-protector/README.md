@@ -13,7 +13,7 @@ main and native ABI wrappers. The production
 kernel uses the same attribute-bearing declarations in `stack_protector.h`.
 Architecture entropy instructions additionally require both kernel builds and
 guest boots; host tests cannot access ARM privileged identification registers.
-`VINIX_STACK_TEST_ARCH=x86_64` selects the x86 host ABI when using an x86
+`TULPAR_STACK_TEST_ARCH=x86_64` selects the x86 host ABI when using an x86
 compiler on an ARM host. The original 57-line C caller is recoverable at
 `27aaf760fd4cc92fd3641984718e43d9e923404f:tests/stack-protector/host.c`.
 

@@ -12,7 +12,7 @@ fn test_http_receipt_requires_loopback_private_paths_cgi_pin_and_owned_retiremen
 	command := Command{argv: ['/opt/reference/bin/busybox', 'httpd', '-f', '-p', '127.0.0.1:45678',
 		'-h', project + '/www', '-c', project + '/server.conf'], executable_sha256: server,
 		exit_code: -15, log: project + '/command-0.log'}
-	report := Report{schema: 1, kernel: 'Vinix', architecture: 'aarch64', uid: 1000, context: 'vinix-native',
+	report := Report{schema: 1, kernel: 'Tulpar', architecture: 'aarch64', uid: 1000, context: 'tulpar-native',
 		runner_sha256: runner, requested: ['http'], command_timeout_seconds: 600, complete: true,
 		all_selected_passed: true, results: [Verdict{profile: 'http', status: 'passed', commands: [command]}]}
 	mut outputs := {'qualification/http/www/cgi-bin/api': runner, 'qualification/http/www/index.html': 'c'.repeat(64),
@@ -28,7 +28,7 @@ fn test_http_receipt_requires_loopback_private_paths_cgi_pin_and_owned_retiremen
 	}
 	for replacement in [Command{...command, exit_code: 0},
 		Command{...command, argv: ['/opt/reference/bin/busybox', '--help']},
-		Command{...command, environment_overrides: {'VINIX_ALLOW_WX': '1'}}] {
+		Command{...command, environment_overrides: {'TULPAR_ALLOW_WX': '1'}}] {
 		changed := Report{...report, results: [Verdict{...report.results[0], commands: [replacement]}]}
 		if _ := verify_report(json2.encode(changed), 'aarch64', ['http'], runner, tools, work, outputs) {
 			assert false, 'server workflow substituted or JIT requested'

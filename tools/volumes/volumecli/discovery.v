@@ -17,7 +17,7 @@ fn C.S_ISBLK(u32) i32
 fn candidate_disk(fd i32, expected &DiskKey, mut key DiskKey, mut status Status) i32 {
 	if C.ioctl(fd, u64(0x56560004), &status) != 0 {
 		if unsafe { C.errno == C.ENOTTY } { return 0 }
-		C.perror(c'vinix-volume: discovery status'); return -1
+		C.perror(c'tulpar-volume: discovery status'); return -1
 	}
 	if status.version != 1 || status.reserved != 0 {
 		plan_error(c'unsupported discovery status version'); return -1
@@ -47,9 +47,9 @@ fn discover_disk(plan &Plan, directory &char, writable bool, name &char) i32 {
 fn discover_disk_key(expected &DiskKey, directory &char, writable bool, name &char, mut selected_status Status) i32 {
 	if !key_valid(expected) { plan_error(c'invalid discovery identity'); return -1 }
 	dir_fd := C.open(directory, C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
-	if dir_fd < 0 { C.perror(c'vinix-volume: open device directory'); return -1 }
+	if dir_fd < 0 { C.perror(c'tulpar-volume: open device directory'); return -1 }
 	stream := C.fdopendir(dir_fd)
-	if stream == unsafe { nil } { C.close(dir_fd); C.perror(c'vinix-volume: read device directory'); return -1 }
+	if stream == unsafe { nil } { C.close(dir_fd); C.perror(c'tulpar-volume: read device directory'); return -1 }
 	defer { C.closedir(stream) } // fdopendir owns dir_fd.
 	mut selected := i32(-1)
 	mut selected_id := u64(0)
@@ -62,7 +62,7 @@ fn discover_disk_key(expected &DiskKey, directory &char, writable bool, name &ch
 		unsafe { C.errno = 0 }
 		entry := C.readdir(stream)
 		if entry == unsafe { nil } {
-			if unsafe { C.errno != 0 } { C.perror(c'vinix-volume: device enumeration'); return -1 }
+			if unsafe { C.errno != 0 } { C.perror(c'tulpar-volume: device enumeration'); return -1 }
 			break
 		}
 		child := unsafe { &entry.d_name[0] }
@@ -71,11 +71,11 @@ fn discover_disk_key(expected &DiskKey, directory &char, writable bool, name &ch
 		if entries > 4096 { plan_error(c'device directory exceeds discovery limit'); return -1 }
 		mut info := C.stat{}
 		if C.fstatat(dir_fd, child, &info, C.AT_SYMLINK_NOFOLLOW) != 0 {
-			C.perror(c'vinix-volume: discovery entry changed'); return -1
+			C.perror(c'tulpar-volume: discovery entry changed'); return -1
 		}
 		if C.S_ISBLK(info.st_mode) == 0 { continue }
 		mut fd := C.openat(dir_fd, child, C.O_RDONLY | C.O_NONBLOCK | C.O_CLOEXEC | C.O_NOFOLLOW)
-		if fd < 0 { C.perror(c'vinix-volume: open discovery candidate'); return -1 }
+		if fd < 0 { C.perror(c'tulpar-volume: open discovery candidate'); return -1 }
 		mut opened := C.stat{}
 		if C.fstat(fd, &opened) != 0 || C.S_ISBLK(opened.st_mode) == 0 {
 			C.close(fd); plan_error(c'discovery entry changed type'); return -1
@@ -92,7 +92,7 @@ fn discover_disk_key(expected &DiskKey, directory &char, writable bool, name &ch
 		}
 		if writable {
 			write_fd := C.openat(dir_fd, child, C.O_RDWR | C.O_NONBLOCK | C.O_CLOEXEC | C.O_NOFOLLOW)
-			if write_fd < 0 { C.close(fd); C.perror(c'vinix-volume: open discovered disk for restore'); return -1 }
+			if write_fd < 0 { C.close(fd); C.perror(c'tulpar-volume: open discovered disk for restore'); return -1 }
 			mut again := Status{}
 			valid := C.fstat(write_fd, &opened) == 0 && C.S_ISBLK(opened.st_mode) != 0
 				&& candidate_disk(write_fd, expected, mut key, mut again) == 1 && again.disk_id == status.disk_id
@@ -116,7 +116,7 @@ fn automatic_loaded(plan &Plan, restore bool) i32 {
 	fd := discover_disk(plan, c'/dev', restore && plan_writable(plan), &name[0])
 	if fd < 0 { return 1 }
 	defer { C.close(fd) }
-	C.printf(c'vinix-volume: matched /dev/%s\n', &name[0])
+	C.printf(c'tulpar-volume: matched /dev/%s\n', &name[0])
 	return if restore { restore_loaded(fd, plan) } else { 0 }
 }
 
@@ -133,13 +133,13 @@ fn boot_restore() i32 {
 	etc := C.open(c'/etc', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
 	if etc < 0 {
 		if unsafe { C.errno == C.ENOENT } { return 0 }
-		C.perror(c'vinix-volume: boot configuration directory'); return 1
+		C.perror(c'tulpar-volume: boot configuration directory'); return 1
 	}
 	defer { C.close(etc) }
-	directory := C.openat(etc, c'vinix', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
+	directory := C.openat(etc, c'tulpar', C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC)
 	if directory < 0 {
 		if unsafe { C.errno == C.ENOENT } { return 0 }
-		C.perror(c'vinix-volume: boot plan directory'); return 1
+		C.perror(c'tulpar-volume: boot plan directory'); return 1
 	}
 	defer { C.close(directory) }
 	mut set := unsafe { &PlanSet(C.alloca(sizeof(PlanSet))) }

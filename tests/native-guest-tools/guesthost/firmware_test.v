@@ -18,7 +18,7 @@ fn C.waitpid(i32, &i32, int) i32
 fn C._exit(int)
 
 fn firmware_test_dir() string {
-	dir := os.join_path(os.temp_dir(), 'vinix-firmware-' + os.getpid().str() + '-' + time.sys_mono_now().str())
+	dir := os.join_path(os.temp_dir(), 'tulpar-firmware-' + os.getpid().str() + '-' + time.sys_mono_now().str())
 	os.mkdir(dir) or { panic(err.msg()) }
 	return dir
 }

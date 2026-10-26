@@ -65,7 +65,7 @@ fn test_activity_inspector_export_contains_selected_process_data() {
 		files:      '0: /dev/tty'.clone()
 	}
 	defer { inspector.close() }
-	home := os.join_path(os.temp_dir(), 'vinix-activity-inspector-test')
+	home := os.join_path(os.temp_dir(), 'tulpar-activity-inspector-test')
 	defer { unsafe { home.free() } }
 	os.mkdir_all(home)!
 	path := os.join_path(home, 'Activity-Monitor-42.txt')

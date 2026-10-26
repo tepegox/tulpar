@@ -13,7 +13,7 @@ int main(void) {
     if (fprintf(file, "%d", answer) != 2 || fclose(file)) return 3;
     file = fopen("project.data", "r"); int readback = 0;
     if (!file || fscanf(file, "%d", &readback) != 1 || fclose(file) || readback != 42) return 4;
-    puts("VINIX-TOOLCHAIN:PASS"); return 0;
+    puts("TULPAR-TOOLCHAIN:PASS"); return 0;
 }
 '
 
@@ -26,7 +26,7 @@ int main() {
     std::thread worker([&]() { for (int x : values) answer += x; }); worker.join();
     { std::ofstream file("project.data"); file << answer; if (!file) return 1; }
     std::ifstream file("project.data"); int readback = 0; file >> readback;
-    if (readback != 42) return 2; std::cout << "VINIX-TOOLCHAIN:PASS\\n";
+    if (readback != 42) return 2; std::cout << "TULPAR-TOOLCHAIN:PASS\\n";
 }
 '
 
@@ -38,7 +38,7 @@ fn main() {
     for value in values { answer += value }
     os.write_file("project.data", answer.str())!
     if os.read_file("project.data")! != "42" { exit(1) }
-    println("VINIX-TOOLCHAIN:PASS")
+    println("TULPAR-TOOLCHAIN:PASS")
 }
 '
 
@@ -47,7 +47,7 @@ fn main() {
     let answer = thread::spawn(|| vec![20, 22].iter().sum::<i32>()).join().unwrap();
     fs::write("project.data", answer.to_string()).unwrap();
     assert_eq!(fs::read_to_string("project.data").unwrap(), "42");
-    println!("VINIX-TOOLCHAIN:PASS");
+    println!("TULPAR-TOOLCHAIN:PASS");
 }
 '
 
@@ -57,7 +57,7 @@ func main() {
     channel := make(chan int); go func() { channel <- 20 + 22 }()
     if err := os.WriteFile("project.data", []byte(fmt.Sprint(<-channel)), 0600); err != nil { panic(err) }
     data, err := os.ReadFile("project.data"); if err != nil || string(data) != "42" { panic("readback") }
-    fmt.Println("VINIX-TOOLCHAIN:PASS")
+    fmt.Println("TULPAR-TOOLCHAIN:PASS")
 }
 '
 
@@ -68,7 +68,7 @@ public class Project {
         worker.start(); worker.join(); Path path = Path.of("project.data");
         Files.writeString(path, Integer.toString(answer[0]));
         if (!Files.readString(path).equals("42")) throw new Exception("readback");
-        System.out.println("VINIX-TOOLCHAIN:PASS");
+        System.out.println("TULPAR-TOOLCHAIN:PASS");
     }
 }
 '
@@ -77,7 +77,7 @@ const node_source = 'const fs = require("node:fs");
 const crypto = require("node:crypto");
 fs.writeFileSync("project.data", "42", {mode: 0o600});
 if (fs.readFileSync("project.data", "utf8") !== "42" || crypto.createHash("sha256").update("42").digest("hex").length !== 64) process.exit(1);
-console.log("VINIX-TOOLCHAIN:PASS");
+console.log("TULPAR-TOOLCHAIN:PASS");
 '
 
 fn (mut runner Runner) profile(name string) ! {
@@ -96,7 +96,7 @@ fn (mut runner Runner) profile(name string) ! {
 			runner.write('main.v', v_source)!
 			mut v_args := ['-gc', 'none', '-cc', tool('cc')!, '-o', 'project', 'main.v']
 			kernel := os.uname()
-			if kernel.sysname.to_lower() == 'vinix' {
+			if kernel.sysname.to_lower() == 'tulpar' {
 				// Match the installed native compiler's defaults without requiring
 				// a shell wrapper. Keep V3 workers serial and make failures final.
 				v_args.prepend(['-new-compiler', '-no-retry-compilation', '-no-parallel',
@@ -114,9 +114,9 @@ fn (mut runner Runner) profile(name string) ! {
 		'cargo' {
 			os.mkdir(runner.work + '/src')!
 			runner.write('src/main.rs', rust_source)!
-			runner.write('Cargo.toml', '[package]\nname = "vinix-project"\nversion = "0.1.0"\nedition = "2021"\n')!
+			runner.write('Cargo.toml', '[package]\nname = "tulpar-project"\nversion = "0.1.0"\nedition = "2021"\n')!
 			runner.command('cargo', ['build', '--offline'])!
-			runner.verify_binary('target/debug/vinix-project')!
+			runner.verify_binary('target/debug/tulpar-project')!
 		}
 		'go' {
 			runner.write('main.go', go_source)!
@@ -140,7 +140,7 @@ fn (mut runner Runner) profile(name string) ! {
 			}
 		}
 		'typescript' {
-			runner.write('project.ts', 'const answer: number = [20, 22].reduce((a: number, b: number) => a + b);\nif (answer !== 42) throw new Error("answer");\nconsole.log("VINIX-TOOLCHAIN:PASS");\n')!
+			runner.write('project.ts', 'const answer: number = [20, 22].reduce((a: number, b: number) => a + b);\nif (answer !== 42) throw new Error("answer");\nconsole.log("TULPAR-TOOLCHAIN:PASS");\n')!
 			runner.command('tsc', ['--strict', '--target', 'ES2020', 'project.ts'])!
 			if runner.command('node', ['project.js'])!.trim_space() != marker {
 				return error('TypeScript output failed')
@@ -180,7 +180,7 @@ fn (mut runner Runner) build_system(name string) ! {
 		}
 		'cmake' {
 			tool('ninja')!
-			runner.write('CMakeLists.txt', 'cmake_minimum_required(VERSION 3.10)\nproject(vinix_project C)\nfind_package(Threads REQUIRED)\nadd_executable(project main.c)\ntarget_link_libraries(project PRIVATE Threads::Threads)\n')!
+			runner.write('CMakeLists.txt', 'cmake_minimum_required(VERSION 3.10)\nproject(tulpar_project C)\nfind_package(Threads REQUIRED)\nadd_executable(project main.c)\ntarget_link_libraries(project PRIVATE Threads::Threads)\n')!
 			runner.command('cmake', ['-S', '.', '-B', 'build', '-G', 'Ninja',
 				'-DCMAKE_C_COMPILER=' + compiler])!
 			runner.command('cmake', ['--build', 'build'])!
@@ -198,13 +198,13 @@ fn (mut runner Runner) build_system(name string) ! {
 
 fn (mut runner Runner) npm_project() ! {
 	os.mkdir(runner.work + '/dependency')!
-	runner.write('dependency/package.json', '{"name":"vinix-local-dependency","version":"1.0.0","main":"index.js"}\n')!
+	runner.write('dependency/package.json', '{"name":"tulpar-local-dependency","version":"1.0.0","main":"index.js"}\n')!
 	runner.write('dependency/index.js', 'module.exports = 42;\n')!
-	runner.write('package.json', '{"name":"vinix-local-project","version":"1.0.0","private":true}\n')!
+	runner.write('package.json', '{"name":"tulpar-local-project","version":"1.0.0","private":true}\n')!
 	runner.command('npm', ['pack', './dependency', '--offline', '--ignore-scripts'])!
-	runner.command('npm', ['install', './vinix-local-dependency-1.0.0.tgz', '--offline',
+	runner.command('npm', ['install', './tulpar-local-dependency-1.0.0.tgz', '--offline',
 		'--ignore-scripts', '--no-audit', '--no-fund'])!
-	runner.write('project.js', 'if (require("vinix-local-dependency") !== 42) process.exit(1);\nconsole.log("VINIX-TOOLCHAIN:PASS");\n')!
+	runner.write('project.js', 'if (require("tulpar-local-dependency") !== 42) process.exit(1);\nconsole.log("TULPAR-TOOLCHAIN:PASS");\n')!
 	if runner.command('node', ['project.js'])!.trim_space() != marker {
 		return error('offline package installation failed')
 	}

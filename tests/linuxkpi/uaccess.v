@@ -29,7 +29,7 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	arch := $if arm64 { 'arm64' } $else $if amd64 { 'amd64' } $else { '' }
 	if arch == '' { return error('Unsupported host architecture') }
-	work := hosttest.work_dir(keep, 'vinix-uaccess-host-')!
+	work := hosttest.work_dir(keep, 'tulpar-uaccess-host-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	core := os.join_path(work, 'compatcore')
 	os.mkdir(core)!
@@ -49,7 +49,7 @@ fn run_profile(keep string) ! {
 		'-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter', '-fsanitize=address,undefined',
 		'-fno-omit-frame-pointer']
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
-	caller_includes := ['-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
+	caller_includes := ['-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
 		'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h'),
 		'-I' + os.join_path(root, 'kernel/linuxkpi/include'), '-I' + os.join_path(linux, 'include'),
@@ -60,7 +60,7 @@ fn run_profile(keep string) ! {
 	for standard in ['gnu99', 'gnu11'] {
 		mut flags := common.clone(); flags << '-std=' + standard
 		production := os.join_path(work, standard + '-core.o')
-		mut argv := flags.clone(); argv << ['-DVINIX_V_RUNTIME', '-I' + os.join_path(root, 'kernel/c'), '-c', generated, '-o', production]
+		mut argv := flags.clone(); argv << ['-DTULPAR_V_RUNTIME', '-I' + os.join_path(root, 'kernel/c'), '-c', generated, '-o', production]
 		command(argv)!
 		imports := command(['nm', '-u', production])!.stdout
 		if allocation_import(imports) { return error('Implicit production allocations:\n${imports}') }
@@ -115,7 +115,7 @@ static unsigned assertions;
     } \\
 } while (0)
 
-unsigned long vinix_linuxkpi_user_address_limit(void) {
+unsigned long tulpar_linuxkpi_user_address_limit(void) {
     limit_calls++;
     return address_limit;
 }
@@ -139,22 +139,22 @@ static unsigned long model_copy(void *kernel, void *user, unsigned long count,
     return count - amount;
 }
 
-unsigned long vinix_linuxkpi_raw_copy_from_user(void *to, void *from,
+unsigned long tulpar_linuxkpi_raw_copy_from_user(void *to, void *from,
                                                unsigned long count) {
     return model_copy(to, from, count, false, true);
 }
 
-unsigned long vinix_linuxkpi_raw_copy_to_user(void *to, void *from,
+unsigned long tulpar_linuxkpi_raw_copy_to_user(void *to, void *from,
                                              unsigned long count) {
     return model_copy(from, to, count, true, true);
 }
 
-unsigned long vinix_linuxkpi_raw_copy_from_user_inatomic(void *to, void *from,
+unsigned long tulpar_linuxkpi_raw_copy_from_user_inatomic(void *to, void *from,
                                                        unsigned long count) {
     return model_copy(to, from, count, false, false);
 }
 
-unsigned long vinix_linuxkpi_raw_copy_to_user_inatomic(void *to, void *from,
+unsigned long tulpar_linuxkpi_raw_copy_to_user_inatomic(void *to, void *from,
                                                      unsigned long count) {
     return model_copy(from, to, count, true, false);
 }
@@ -191,11 +191,11 @@ static void range_tests(void) {
         CHECK(!access_ok((void *)UINTPTR_MAX, 2));
         CHECK(!access_ok((void *)1, ULONG_MAX));
     }
-    CHECK(!vinix_linuxkpi_check_copy_size(4, 5));
-    CHECK(vinix_linuxkpi_check_copy_size(4, 4));
-    CHECK(vinix_linuxkpi_check_copy_size((size_t)-1, INT_MAX));
-    CHECK(!vinix_linuxkpi_check_copy_size((size_t)-1, (unsigned long)INT_MAX + 1));
-    CHECK(!vinix_linuxkpi_check_copy_size((size_t)-1, ULONG_MAX));
+    CHECK(!tulpar_linuxkpi_check_copy_size(4, 5));
+    CHECK(tulpar_linuxkpi_check_copy_size(4, 4));
+    CHECK(tulpar_linuxkpi_check_copy_size((size_t)-1, INT_MAX));
+    CHECK(!tulpar_linuxkpi_check_copy_size((size_t)-1, (unsigned long)INT_MAX + 1));
+    CHECK(!tulpar_linuxkpi_check_copy_size((size_t)-1, ULONG_MAX));
 }
 
 static void prefix_tests(void) {

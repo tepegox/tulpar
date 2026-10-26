@@ -57,7 +57,7 @@ fn flags(work string, linux string, standard string) ![]string {
 	argv << ['--target=x86_64-unknown-none', '-std=' + standard, '-O2', '-g', '-ffreestanding',
 		'-fno-builtin', '-fno-stack-protector', '-fstack-usage', '-nostdinc', '-fno-pic', '-fno-pie',
 		'-fwrapv', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter',
-		'-Wno-sign-compare', '-Wno-typedef-redefinition', '-D__KERNEL__', '-DVINIX_LINUXKPI', '-include',
+		'-Wno-sign-compare', '-Wno-typedef-redefinition', '-D__KERNEL__', '-DTULPAR_LINUXKPI', '-include',
 		'linux/kconfig.h', '-include', linux + '/include/linux/compiler_types.h', '-isystem',
 		root + '/kernel/freestnd-c-hdrs']
 	for path in [work + '/include', root + '/tests/linuxkpi/schedmmfixture',
@@ -72,7 +72,7 @@ fn run(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	hosttest.verify_upstream(linux, hosttest.upstream_pin()!)!
-	work := hosttest.work_dir(keep, 'vinix-sched-mm-')!
+	work := hosttest.work_dir(keep, 'tulpar-sched-mm-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	original := linux + '/include/linux/sched/mm.h'
 	mut inputs := [@FILE, os.executable(), original, root + '/tests/linuxkpi/generate_sched_mm.v',

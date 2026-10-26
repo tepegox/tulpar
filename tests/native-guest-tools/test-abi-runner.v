@@ -104,7 +104,7 @@ fn main() {
 	assert guesthost.abi_verdict('ONE: PASS', 'aarch64', ['ONE: PASS'], []string{}, true, false, 7) == 1
 	assert guesthost.abi_verdict('ONE: PASS', 'x86_64', ['ONE: PASS'], []string{}, true, true, 7) == 0
 	assert guesthost.abi_verdict('ONE: PASS', 'x86_64', ['ONE: PASS'], []string{}, false, false, 0) == 1
-	work := hosttest.work_dir('', 'vinix-abi-verdict-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-abi-verdict-check-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	baseline := descriptors()
 	for arch in ['aarch64', 'x86_64'] {

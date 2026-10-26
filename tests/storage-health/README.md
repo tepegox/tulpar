@@ -92,7 +92,7 @@ V=/path/to/v build-support/run-v-tool.sh tests/storage-health/ans_fixture.v /pat
 make -C /path/to/ans-worktree/kernel ARCH=aarch64 CC=clang V=/path/to/v \
   VFLAGS='-nocache -d ans_health_fixture' ALLOC_TRACK=1
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/ans-worktree/kernel/bin/vinix --work /tmp/ans-kernel-model
+  --arch aarch64 --kernel /path/to/ans-worktree/kernel/bin/tulpar --work /tmp/ans-kernel-model
 V=/path/to/v build-support/run-v-tool.sh tests/storage-health/ans_fixture.v \
   --log /tmp/ans-kernel-model/first-boot.log
 V=/path/to/v build-support/run-v-tool.sh tests/storage-health/ans_fixture.v \
@@ -114,10 +114,10 @@ storage controller against each built kernel:
 
 ```sh
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --work /tmp/storage-health-x86
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --work /tmp/storage-health-arm
 ```
 
@@ -139,7 +139,7 @@ NVMe guest qualification uses a development kernel with the existing
 
 ```sh
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --nvme --kernel /path/to/development-kernel/bin/vinix \
+  --arch amd64 --nvme --kernel /path/to/development-kernel/bin/tulpar \
   --work /tmp/storage-health-nvme
 ```
 

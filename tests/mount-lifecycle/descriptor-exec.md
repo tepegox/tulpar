@@ -88,7 +88,7 @@ and symlink targets; `gcc/sources.json` pins `crtbeginT.o`, `crtend.o`,
 `libgcc.a` and `libgcc_eh.a`. The V compiler wrapper supplies these support
 paths to Clang's link step. `mount-descexec-sdk-b.log` and
 `mount-descexec-gcc-support-a.log` record verified copies. This is a host build
-input, not a qualification of these toolchains running inside Vinix.
+input, not a qualification of these toolchains running inside Tulpar.
 
 Initial ARM states `de-0-before-a` and `de-0-before-b` stopped before boot,
 respectively at missing headers from a removed userland sysroot and missing

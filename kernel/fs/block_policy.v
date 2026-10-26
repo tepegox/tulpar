@@ -35,7 +35,7 @@ fn begin_block_device_mount(source &VFSNode) ?int {
 
 fn begin_filesystem_block_mount(mut filesystem FileSystem) ?int {
 	if filesystem is BlockBackedFilesystem {
-		mut call := unsafe { &BlockFilesystemCall(C.vinix_stack_alloc(sizeof(BlockFilesystemCall))) }
+		mut call := unsafe { &BlockFilesystemCall(C.tulpar_stack_alloc(sizeof(BlockFilesystemCall))) }
 		unsafe { call.backend = BlockBackedFilesystem(filesystem) }
 		for {
 			identity := call.backend.block_identity()

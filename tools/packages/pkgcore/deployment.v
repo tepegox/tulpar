@@ -25,7 +25,7 @@ pub:
 }
 
 struct DeploymentIdentity {
-	domain   string = 'vinix-deployment-review-1'
+	domain   string = 'tulpar-deployment-review-1'
 	config   Config
 	current  State
 	document DeploymentLock

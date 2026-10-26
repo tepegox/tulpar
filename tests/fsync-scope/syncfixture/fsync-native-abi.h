@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_FSYNC_SCOPE_NATIVE_ABI_H
-#define VINIX_FSYNC_SCOPE_NATIVE_ABI_H
+#ifndef TULPAR_FSYNC_SCOPE_NATIVE_ABI_H
+#define TULPAR_FSYNC_SCOPE_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

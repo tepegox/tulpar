@@ -13,12 +13,12 @@ fn C.sysconf(i32) isize
 fn C.mmap(voidptr,usize,i32,i32,i32,isize) voidptr
 fn C.mprotect(voidptr,usize,i32) i32
 fn C.munmap(voidptr,usize) i32
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_irq_flags() usize
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable_no_resched()
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable_no_resched()
 struct Pair { a &char b &char equal bool }
 const pairs = [
  Pair{&char(c''),&char(c''),true},Pair{&char(c''),&char(c'\n'),true},Pair{&char(c'\n'),&char(c''),true},
@@ -56,10 +56,10 @@ pub fn string_helpers_tests() { unsafe {
  guarded_array:=&&char(array_mapping+2*page_size-3*sizeof(&char))
  guarded_array[0]=borrowed; guarded_array[1]=c'auto'; guarded_array[2]=nil
  C.assert(C.mprotect(array_mapping+page_size,usize(page_size),C.PROT_READ)==0)
- pages:=C.vmh_live_pages; original_depth:=C.vinix_linuxkpi_preempt_count(); original_irq:=C.vinix_linuxkpi_irq_flags()
+ pages:=C.vmh_live_pages; original_depth:=C.tulpar_linuxkpi_preempt_count(); original_irq:=C.tulpar_linuxkpi_irq_flags()
  allocation_failure:=C.vmh_fail_allocation; C.vmh_fail_allocation=true
- flags:=C.vinix_linuxkpi_irq_save(); C.vinix_linuxkpi_preempt_disable(); C.vinix_linuxkpi_preempt_disable()
- depth:=C.vinix_linuxkpi_preempt_count(); irq:=C.vinix_linuxkpi_irq_flags()
+ flags:=C.tulpar_linuxkpi_irq_save(); C.tulpar_linuxkpi_preempt_disable(); C.tulpar_linuxkpi_preempt_disable()
+ depth:=C.tulpar_linuxkpi_preempt_count(); irq:=C.tulpar_linuxkpi_irq_flags()
  for i:=usize(0); i<pairs.len; i++ { C.assert(C.sysfs_streq(pairs[i].a,pairs[i].b)==pairs[i].equal) }
  for i:=usize(0); i<matches.len; i++ { C.assert(C.match_string(voidptr(&sources[0]),matches[i].count,matches[i].query)==matches[i].exact); C.assert(C.__sysfs_match_string(voidptr(&sources[0]),matches[i].count,matches[i].query)==matches[i].sysfs) }
  C.assert(C.match_string(voidptr(&newline_entries[0]),4,c'a')==1)
@@ -96,10 +96,10 @@ pub fn string_helpers_tests() { unsafe {
  mut high_byte:=[char(0xff),58,char(0xff),0]!
  C.assert(usize(C.strreplace(&high_byte[0],char(0xff),95))==usize(&high_byte[0]))
  C.assert(C.strcmp(&high_byte[0],c'_:_')==0)
- C.assert(C.vmh_live_pages==pages && C.vinix_linuxkpi_preempt_count()==depth && C.vinix_linuxkpi_irq_flags()==irq)
- C.vinix_linuxkpi_preempt_enable_no_resched(); C.vinix_linuxkpi_preempt_enable_no_resched(); C.vinix_linuxkpi_irq_restore(flags)
+ C.assert(C.vmh_live_pages==pages && C.tulpar_linuxkpi_preempt_count()==depth && C.tulpar_linuxkpi_irq_flags()==irq)
+ C.tulpar_linuxkpi_preempt_enable_no_resched(); C.tulpar_linuxkpi_preempt_enable_no_resched(); C.tulpar_linuxkpi_irq_restore(flags)
  C.vmh_fail_allocation=allocation_failure
- C.assert(C.vinix_linuxkpi_preempt_count()==original_depth && C.vinix_linuxkpi_irq_flags()==original_irq && C.vmh_live_pages==pages)
+ C.assert(C.tulpar_linuxkpi_preempt_count()==original_depth && C.tulpar_linuxkpi_irq_flags()==original_irq && C.vmh_live_pages==pages)
  C.assert(C.munmap(string_mapping,mapping_size)==0); C.assert(C.munmap(array_mapping,mapping_size)==0)
  C.assert(C.sysfs_streq(c'after',c'after\n')); C.assert(C.match_string(voidptr(&sources[0]),7,c'auto')==1)
 } }

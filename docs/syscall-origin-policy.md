@@ -1,6 +1,6 @@
 # Opt-in syscall instruction policy
 
-Vinix's native Linux syscall entry paths can check an exact instruction address
+Tulpar's native Linux syscall entry paths can check an exact instruction address
 for each syscall number. A cooperating runtime registers copied syscall veneers
 once per image and chooses audit or enforcement. Ordinary Linux executables
 start with the policy disabled; this does not yet load ELF pin tables or modify
@@ -10,7 +10,7 @@ The design follows OpenBSD's per-number instruction checks in
 [syscall_mi.h](https://github.com/openbsd/src/blob/3ce1f3f79392ae4d60ce67bea5835d517caaa2ca/sys/sys/syscall_mi.h)
 and one-time registration in
 [uvm_mmap.c](https://github.com/openbsd/src/blob/3ce1f3f79392ae4d60ce67bea5835d517caaa2ca/sys/uvm/uvm_mmap.c).
-The Vinix extension uses Linux `prctl` and a restricted anonymous-text contract;
+The Tulpar extension uses Linux `prctl` and a restricted anonymous-text contract;
 it does not accept OpenBSD's ABI, ELF segment, or wildcard offset encoding.
 
 ## ABI
@@ -28,16 +28,16 @@ Call `prctl(0x56490002, action, request, 0, 0)`. Actions are:
 For installation, `request` points to this native little-endian layout:
 
 ```c
-struct vinix_syscall_pin {
+struct tulpar_syscall_pin {
     uint32_t number;   /* Native Linux syscall number, less than 512. */
     uint32_t flags;    /* Must be zero. */
     uint64_t offset;   /* Offset of the SYSCALL/SVC instruction from base. */
 };
-struct vinix_syscall_pin_request {
+struct tulpar_syscall_pin_request {
     uint64_t version;  /* 1 */
     uint64_t base;
     uint64_t length;
-    uint64_t entries;  /* Pointer to vinix_syscall_pin[count]. */
+    uint64_t entries;  /* Pointer to tulpar_syscall_pin[count]. */
     uint64_t count;
     uint64_t reserved; /* Must be zero. */
 };
@@ -55,7 +55,7 @@ instruction pages `EFAULT`, and allocation failure `ENOMEM`.
 
 Copy dedicated syscall veneers into private anonymous memory, synchronize
 instruction caches where required, change the span to readable executable
-memory, and seal it with Vinix's existing `mimmutable` syscall. Every mapping
+memory, and seal it with Tulpar's existing `mimmutable` syscall. Every mapping
 in the registered span must be immutable, executable and nonwritable, with
 neither `MADV_DONTFORK` nor `MADV_WIPEONFORK`. Holes, shared mappings and
 file-backed mappings are rejected with `EPERM`. File-backed text could otherwise
@@ -65,7 +65,7 @@ Install before publishing another thread. Registration holds the same
 `threads_lock` as `CLONE_THREAD` attachment while checking the sole-thread
 condition and publishing the table. Descriptor and record copies happen before
 that lock, so they can page in safely. Non-thread `CLONE_VM` currently copies
-the address space in Vinix; a future implementation of shared process address
+the address space in Tulpar; a future implementation of shared process address
 spaces must preserve this policy and immutable-mapping contract.
 
 Each number must use its own registered instruction. A runtime's generic

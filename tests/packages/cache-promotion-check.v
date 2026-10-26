@@ -8,19 +8,19 @@ import tools.packages.pkgcore
 import tools.packages.pkgprotocol
 
 fn record(event pkgprotocol.Progress) {
-	mut file := os.open_file(os.getenv('VINIX_CACHE_PROBE_EVENTS'), 'a') or { panic(err) }
+	mut file := os.open_file(os.getenv('TULPAR_CACHE_PROBE_EVENTS'), 'a') or { panic(err) }
 	file.writeln(event.phase) or { panic(err) }; file.close()
-	if event.phase == 'verify' && os.getenv('VINIX_CACHE_PROBE_SWAP') == '1' {
-		os.unsetenv('VINIX_CACHE_PROBE_SWAP')
-		partial := os.getenv('VINIX_CACHE_PROBE_PARTIAL')
+	if event.phase == 'verify' && os.getenv('TULPAR_CACHE_PROBE_SWAP') == '1' {
+		os.unsetenv('TULPAR_CACHE_PROBE_SWAP')
+		partial := os.getenv('TULPAR_CACHE_PROBE_PARTIAL')
 		os.rm(partial) or { panic(err) }
-		os.link(os.getenv('VINIX_CACHE_PROBE_OUTSIDE'), partial) or { panic(err) }
+		os.link(os.getenv('TULPAR_CACHE_PROBE_OUTSIDE'), partial) or { panic(err) }
 	}
 }
 
 fn check_case(directory string, mode string, before bool) ! {
 	root := directory + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	os.mkdir_all(directory + '/source/bin')!
 	text := 'authenticated cache payload\n'.repeat(1024)
 	os.write_file(directory + '/source/bin/app', text)!; os.chmod(directory + '/source/bin/app', 0o755)!
@@ -33,7 +33,7 @@ fn check_case(directory string, mode string, before bool) ! {
 	pkgcore.publish(directory + '/repository', 'fixture', directory + '/seed', 1, time.now().unix() + 3600)!
 	config := pkgcore.Config{ architecture: architecture, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'fixture', url: 'file://' + directory + '/repository', public_key: key }] }
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	initial := pkgcore.Service{ root: root }
 	initial.refresh()!
 	initial.transact('install', ['app'], pkgcore.TransactionOptions{})!
@@ -57,9 +57,9 @@ fn check_case(directory string, mode string, before bool) ! {
 	history := os.read_file(store + '/trust-history.json')!
 	state := os.read_file(store + '/current/state.json')!
 	os.write_file(directory + '/events', '')!
-	os.setenv('VINIX_CACHE_PROBE_EVENTS', directory + '/events', true)
-	os.setenv('VINIX_CACHE_PROBE_PARTIAL', partial, true); os.setenv('VINIX_CACHE_PROBE_OUTSIDE', outside, true)
-	if mode == 'verify-hardlink' { os.setenv('VINIX_CACHE_PROBE_SWAP', '1', true) }
+	os.setenv('TULPAR_CACHE_PROBE_EVENTS', directory + '/events', true)
+	os.setenv('TULPAR_CACHE_PROBE_PARTIAL', partial, true); os.setenv('TULPAR_CACHE_PROBE_OUTSIDE', outside, true)
+	if mode == 'verify-hardlink' { os.setenv('TULPAR_CACHE_PROBE_SWAP', '1', true) }
 	service := pkgcore.Service{ root: root, progress: record }
 	mut review := service.review('install', ['app'])!
 	defer { review.close() }
@@ -107,7 +107,7 @@ fn check() ! {
 	before := os.args.len == 3
 	modes := if before { ['valid-complete'] } else { ['prefix', 'valid-complete', 'invalid-complete', 'oversized', 'verify-hardlink'] }
 	for mode in modes { check_case(work + '/' + mode, mode, before)! }
-	for name in ['VINIX_CACHE_PROBE_EVENTS', 'VINIX_CACHE_PROBE_PARTIAL', 'VINIX_CACHE_PROBE_OUTSIDE', 'VINIX_CACHE_PROBE_SWAP'] { os.unsetenv(name) }
+	for name in ['TULPAR_CACHE_PROBE_EVENTS', 'TULPAR_CACHE_PROBE_PARTIAL', 'TULPAR_CACHE_PROBE_OUTSIDE', 'TULPAR_CACHE_PROBE_SWAP'] { os.unsetenv(name) }
 	if !before { println('CACHE PROMOTION signed reviewed recovery, hard-link refusal, preserved outside metadata and ordinary cache/rollback PASS') }
 }
 

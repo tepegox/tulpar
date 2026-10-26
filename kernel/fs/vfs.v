@@ -181,7 +181,7 @@ fn reduce_node(node &VFSNode, follow_symlinks bool) &VFSNode {
 }
 
 fn reduce_node_bounded(node &VFSNode, follow_symlinks bool, depth int, effective bool) &VFSNode {
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(node, identity) { return unsafe { nil } }
 	return reduce_node_on_mount(node, follow_symlinks, depth, effective, identity)
 }
@@ -270,7 +270,7 @@ fn reduce_node_resolved(node &VFSNode, follow_symlinks bool, depth int, effectiv
 // into `path`: a caller that makes a node with it gives the node a copy, and
 // copying it for every lookup left the copies behind on every other path.
 fn walk_path(parent &VFSNode, path string, depth int, effective bool) (&VFSNode, &VFSNode, string) {
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(parent, identity) { return unsafe { nil }, unsafe { nil }, '' }
 	return walk_path_on_mount(parent, path, depth, effective, identity)
 }
@@ -437,7 +437,7 @@ pub fn get_node(parent &VFSNode, path string, follow_links bool) ?&VFSNode {
 
 fn get_node_with_credentials(parent &VFSNode, path string, follow_links bool,
 	effective bool) ?&VFSNode {
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(parent, identity) { return none }
 	return get_node_with_credentials_on_mount(parent, path, follow_links, effective, identity)
 }
@@ -535,7 +535,7 @@ fn join_path(nodes []&VFSNode) string {
 }
 
 pub fn symlink(parent &VFSNode, dest string, target string) ?&VFSNode {
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	return symlink_on_mount(parent, dest, target, identity, false)
 }
 
@@ -635,7 +635,7 @@ pub fn link(parent &VFSNode, dest string, target string) ?&VFSNode {
 }
 
 pub fn unlink(parent &VFSNode, name string, remove_dir bool) ? {
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	unlink_on_mount(parent, name, remove_dir, identity, false)?
 }
 
@@ -799,7 +799,7 @@ fn internal_create_with_acl(parent &VFSNode, name string, mode u32, access u32,
 
 fn internal_create_with_acl_locked(parent &VFSNode, name string, mode u32, access u32,
 	apply_umask bool) ?&VFSNode {
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(parent, identity) { return none }
 	return internal_create_resolved_locked(parent, name, mode, access, apply_umask, identity, 0, false, false, 0)
 }
@@ -988,7 +988,7 @@ pub fn syscall_unlinkat(_ voidptr, dirfd int, _path charptr, flags int) (u64, u6
 		return errno.err, errno.enoent
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(dirfd, path, identity) or { return errno.err, errno.get() }
 
 	remove_dir := flags & at_removedir != 0
@@ -1017,7 +1017,7 @@ pub fn syscall_mkdirat(_ voidptr, dirfd int, _path charptr, mode u32) (u64, u64)
 		return errno.err, errno.enoent
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(dirfd, path, identity) or { return errno.err, errno.get() }
 
 	internal_create_resolved(parent, path, (mode & 0o7777) | stat.ifdir, proc.policy_create,
@@ -1177,9 +1177,9 @@ pub fn syscall_openat_resolved(_ voidptr, dirfd int, _path charptr, requested_fl
 		return errno.err, errno.enoent
 	}
 
-	open_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	open_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(dirfd, path, open_mount) or { return errno.err, errno.get() }
-	parent_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	parent_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	lib.copy_mount_context(parent_mount, open_mount)
 
 	creat_flags := flags & resource.file_creation_flags_mask
@@ -1638,7 +1638,7 @@ pub fn syscall_faccessat(_ voidptr, dirfd int, _path charptr, mode u32, flags in
 	if mode & ~u32(7) != 0 || flags & ~(at_eaccess | at_symlink_nofollow | at_empty_path) != 0 {
 		return errno.err, errno.einval
 	}
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 
 	if path.len == 0 {
 		if flags & at_empty_path == 0 { return errno.err, errno.enoent }
@@ -1822,8 +1822,8 @@ pub fn syscall_linkat(_ voidptr, olddirfd int, _oldpath charptr, newdirfd int, _
 	}
 	if newpath.len == 0 { return errno.err, errno.enoent }
 
-	old_identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
-	new_identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	old_identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
+	new_identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	oldbase := parent_and_mount_for(olddirfd, oldpath, old_identity) or { return errno.err, errno.get() }
 	newbase := parent_and_mount_for(newdirfd, newpath, new_identity) or { return errno.err, errno.get() }
 	vfs_lock.acquire()
@@ -1933,7 +1933,7 @@ pub fn syscall_fchmodat(_ voidptr, dirfd int, _path charptr, mode u32) (u64, u64
 		return errno.err, errno.enoent
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(dirfd, path, identity) or { return errno.err, errno.get() }
 	held := retain_path_target_on_mount(parent, path, true, identity) or { return errno.err, errno.get() }
 	defer { release_path_target(held) }
@@ -1977,7 +1977,7 @@ pub fn syscall_chdir(_ voidptr, _path charptr) (u64, u64) {
 		return errno.err, errno.enoent
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(at_fdcwd, path, identity) or { return errno.err, errno.get() }
 	node := get_node_on_mount(parent, path, true, identity) or {
 		return errno.err, errno.get()
@@ -2054,7 +2054,7 @@ pub fn syscall_readdir(_ voidptr, fdnum int, mut buf stat.Dirent) (u64, u64) {
 				return errno.err, errno.enametoolong
 			}
 		}
-		mut new_dirent := unsafe { &stat.Dirent(C.vinix_stack_alloc(sizeof(stat.Dirent))) }
+		mut new_dirent := unsafe { &stat.Dirent(C.tulpar_stack_alloc(sizeof(stat.Dirent))) }
 		mut i := u64(0)
 		for index in 0 .. entry_count {
 			child := if nodes.len > 0 { nodes[index] } else { lookup_child_synced(dir_node, names[index]) }
@@ -2223,7 +2223,7 @@ pub fn syscall_symlinkat(_ voidptr, _target charptr, newdirfd int, _linkpath cha
 		return errno.err, errno.enoent
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(newdirfd, linkpath, identity) or { return errno.err, errno.get() }
 
 	symlink_on_mount(parent, target, linkpath, identity, true) or { return errno.err, errno.get() }
@@ -2242,8 +2242,8 @@ pub const rename_whiteout = 4
 // durable namespace change first; only then does the VFS mirror it in the eager
 // child maps and update the node's parent/name.
 pub fn rename(oldparent &VFSNode, oldpath string, newparent &VFSNode, newpath string, flags int) ? {
-	old_identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
-	new_identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	old_identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
+	new_identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	rename_on_mount(oldparent, oldpath, newparent, newpath, flags, old_identity, new_identity, false)?
 }
 
@@ -2541,8 +2541,8 @@ pub fn syscall_renameat2(_ voidptr, olddirfd int, _oldpath charptr, newdirfd int
 		return errno.err, errno.enoent
 	}
 
-	old_identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
-	new_identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	old_identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
+	new_identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	oldparent := parent_and_mount_for(olddirfd, oldpath, old_identity) or { return errno.err, errno.get() }
 	newparent := parent_and_mount_for(newdirfd, newpath, new_identity) or { return errno.err, errno.get() }
 
@@ -2595,7 +2595,7 @@ pub fn syscall_truncate(_ voidptr, _path charptr, length i64) (u64, u64) {
 		return errno.err, errno.enoent
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(at_fdcwd, path, identity) or { return errno.err, errno.get() }
 	held := retain_path_target_on_mount(parent, path, true, identity) or { return errno.err, errno.get() }
 	defer { release_path_target(held) }
@@ -2683,7 +2683,7 @@ pub fn syscall_fchownat(_ voidptr, dirfd int, _path charptr, uid u32, gid u32, f
 		return 0, 0
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(dirfd, path, identity) or { return errno.err, errno.get() }
 
 	follow_links := flags & at_symlink_nofollow == 0
@@ -2746,7 +2746,7 @@ pub fn syscall_statfs(_ voidptr, _path charptr, buf u64) (u64, u64) {
 		return errno.err, errno.efault
 	}
 
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	parent := parent_and_mount_for(at_fdcwd, path, identity) or { return errno.err, errno.get() }
 	node := get_node_on_mount(parent, path, true, identity) or {
 		return errno.err, errno.get()
@@ -2850,7 +2850,7 @@ pub fn set_file_times(dirfd int, _path charptr, requested [2]time.TimeSpec, flag
 	defer { if held_fd != unsafe { nil } { held_fd.unref() } }
 	mut held_path := PathTarget{}
 	defer { release_path_target(held_path) }
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if path.len == 0 {
 		if !on_descriptor && flags & at_empty_path == 0 { return errno.err, errno.enoent }
 		if is_fdcwd(dirfd) {

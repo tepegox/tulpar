@@ -2,7 +2,7 @@
 module linkedcheck
 
 fn fixture(count int) string {
-	return 'file format elf64-x86-64\n<vinix_x86_resume_context>:\n<__x86_indirect_thunk_rax>:\n' +
+	return 'file format elf64-x86-64\n<tulpar_x86_resume_context>:\n<__x86_indirect_thunk_rax>:\n' +
 		'  1: callq 0 <__x86_indirect_thunk_rax>\n'.repeat(count)
 }
 
@@ -12,7 +12,7 @@ fn test_linked_policy_rejects_every_original_failure() {
 		fixture(100).replace('elf64-x86-64', 'elf64-aarch64'):           'FAIL: expected an x86-64 production ELF'
 		fixture(100) + '  2: jmpq *%rax\n':                              'FAIL: raw indirect branches:\n  2: jmpq *%rax'
 		fixture(100) + '  2: call 0 <__x86_indirect_thunk_rbx+4>\n':     'FAIL: unresolved thunk rbx'
-		fixture(100).replace('<vinix_x86_resume_context>:', '<other>:'): 'FAIL: missing final scheduler mitigation stub'
+		fixture(100).replace('<tulpar_x86_resume_context>:', '<other>:'): 'FAIL: missing final scheduler mitigation stub'
 		fixture(99):                                                     'FAIL: compiler mitigation appears absent'
 	} {
 		check(listing) or {

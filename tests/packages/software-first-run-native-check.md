@@ -3,12 +3,12 @@
 `software-graphical-check.v --ordinary=true --installed=true --first-run=true`
 extends the [installed Software scenario](software-graphical-check.md) with the
 real first-run release card. It starts the ordinary compositor through
-`vinix-session run --seat alex /usr/bin/vinix-desktop`, without an application
+`tulpar-session run --seat alex /usr/bin/tulpar-desktop`, without an application
 argument. The fixture stages an ordinary root-owned declaration at
-`/usr/share/vinix-packages/applications.json`:
+`/usr/share/tulpar-packages/applications.json`:
 
 ```json
-{"format":1,"architecture":"aarch64","packages":["org.vinix.counter"]}
+{"format":1,"architecture":"aarch64","packages":["org.tulpar.counter"]}
 ```
 
 The x86 fixture uses `x86_64`. The exact package ID comes from the fixture's signed
@@ -27,7 +27,7 @@ generation files and approval audit records are absent before and after that
 read-only request.
 
 The choice must create the ordinary account's regular mode-0600
-`.vinix-first-run-release` file containing exactly `review\n`. Acquisition then
+`.tulpar-first-run-release` file containing exactly `review\n`. Acquisition then
 uses the existing real Software confirmation and password flow, with exact signed
 Counter state and administrator attribution. Pointer input saves Count 2,
 close/reopen compares its exact rendered label, and a second save records Count 3.
@@ -86,7 +86,7 @@ the new mode:
 /build/software-graphical-check --ordinary=true --installed=true --first-run=true \
   --arch=aarch64 --rootfs=/build/native-arm/guest/root \
   --publisher=/build/native-arm/publisher \
-  --desktop=/build/frozen-desktop-arm/vinix-desktop --kernel=/build/arm-kernel \
+  --desktop=/build/frozen-desktop-arm/tulpar-desktop --kernel=/build/arm-kernel \
   --out=/build/new-first-run-arm
 /build/software-graphical-retain /build/new-first-run-arm /build/frozen-desktop-arm \
   /build/arm-kernel /build/software-graphical-check /build/retained aarch64

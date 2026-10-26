@@ -234,7 +234,7 @@ pub fn release_resource(mut res Resource) {
 
 pub fn advise_resource(mut res Resource, handle voidptr, offset u64, length u64, advice int) ? {
 	if mut res is AdvisableResource {
-		mut call := unsafe { &AdviceCall(C.vinix_stack_alloc(sizeof(AdviceCall))) }
+		mut call := unsafe { &AdviceCall(C.tulpar_stack_alloc(sizeof(AdviceCall))) }
 		unsafe { call.resource = AdvisableResource(res) }
 		mut target := unsafe { &call.resource }
 		target.advise(handle, offset, length, advice) or { return none }
@@ -332,7 +332,7 @@ pub fn filesystem_stat(mut res Resource) FileSystemStat {
 		// dispatch would allocate an unfreed wrapper on every statfs call.
 		// Returning a composite value can also promote an address-taken V
 		// local. Use explicit caller-frame storage for this capability header.
-		mut call := unsafe { &FileSystemStatCall(C.vinix_stack_alloc(sizeof(FileSystemStatCall))) }
+		mut call := unsafe { &FileSystemStatCall(C.tulpar_stack_alloc(sizeof(FileSystemStatCall))) }
 		unsafe { call.resource = FileSystemStatResource(res) }
 		mut backend := unsafe { &call.resource }
 		return backend.filesystem_stat()

@@ -46,17 +46,17 @@ guest tests. Then run from this repository:
 
 ```sh
 tests/security-mac/host-run.sh
-VINIX_KERNEL_DIR=/path/to/arm-worktree/kernel tests/security-mac/run.sh aarch64
-VINIX_KERNEL_DIR=/path/to/x86-worktree/kernel tests/security-mac/run.sh x86_64
+TULPAR_KERNEL_DIR=/path/to/arm-worktree/kernel tests/security-mac/run.sh aarch64
+TULPAR_KERNEL_DIR=/path/to/x86-worktree/kernel tests/security-mac/run.sh x86_64
 ```
 
-`CC` selects clang for the ARM test; `VINIX_AARCH64_SYSROOT` selects its sysroot.
-`CC_AMD64` selects `x86_64-linux-musl-gcc` for x86. `VINIX_QEMU_TIMEOUT` overrides
-the 300-second guest deadline. `VINIX_MAC_STATE_DIR` fixes the artifact directory;
+`CC` selects clang for the ARM test; `TULPAR_AARCH64_SYSROOT` selects its sysroot.
+`CC_AMD64` selects `x86_64-linux-musl-gcc` for x86. `TULPAR_QEMU_TIMEOUT` overrides
+the 300-second guest deadline. `TULPAR_MAC_STATE_DIR` fixes the artifact directory;
 the shared kernel-gaps harness prints its location and retains the serial log.
 The runner disables guest networking to reduce unrelated allocation noise.
 Scheduling checks use direct syscalls because musl stubs several libc wrappers.
-Set `V`, `VEXE` and `VINIX_V_COMPILER` to the same verified V compiler when
+Set `V`, `VEXE` and `TULPAR_V_COMPILER` to the same verified V compiler when
 reproducing a specific source revision. Generated C is a temporary build
 artifact. The maintained V oracle uses fixed stack arrays and uninitialized
 native output storage; pthread callbacks receive borrowed stack descriptors

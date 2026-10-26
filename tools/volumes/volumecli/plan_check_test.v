@@ -56,7 +56,7 @@ fn test_bundle_identity_output_uses_mbr_value_and_canonical_gpt_byte_order_with_
 }
 
 fn test_offline_bundle_show_validates_and_preserves_contents_without_devices() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-show-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-show-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'
@@ -75,7 +75,7 @@ fn test_offline_bundle_show_validates_and_preserves_contents_without_devices() {
 
 fn test_bundle_inspection_cli_rejects_extra_arguments_and_invalid_growth_mode() {
 	unsafe {
-		mut arguments := [&char(c'vinix-volume'), &char(c'show-bundle'), &char(c'/unused'),
+		mut arguments := [&char(c'tulpar-volume'), &char(c'show-bundle'), &char(c'/unused'),
 			&char(c'grow'), &char(nil)]!
 		assert run(4, &arguments[0]) == 2
 		arguments[1] = &char(c'check-bundle')
@@ -87,7 +87,7 @@ fn test_bundle_inspection_cli_rejects_extra_arguments_and_invalid_growth_mode() 
 }
 
 fn test_offline_report_rejects_immediate_write_and_buffered_flush_failures() {
-	work := os.join_path(os.temp_dir(), 'vinix-plan-output-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-plan-output-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'

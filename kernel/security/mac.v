@@ -7,7 +7,7 @@ import proc
 import resource
 import stat
 
-pub const mac_label_name = 'security.vinix'
+pub const mac_label_name = 'security.tulpar'
 
 // Canonical decimal type IDs only. The three fixed kernel types cannot be
 // forged through an on-disk label; malformed persisted labels deny access.

@@ -72,7 +72,7 @@ fn compile_scaffolding(generated string) !(string, json2.Any) {
 	after := hosttest.c_bodies(compiled)
 	core := before.filter(it.all_before('\n').contains('cpu__') ||
 		it.all_before('\n').contains('local__') ||
-		it.all_before('\n').contains('vinix_x86_maskable_irq_') ||
+		it.all_before('\n').contains('tulpar_x86_maskable_irq_') ||
 		it.all_before('\n').contains('main('))
 	if before != after || core.len != 11 { return error('Private compiler scaffolding changed an actual generated body') }
 	return compiled, map[string]json2.Any{
@@ -166,15 +166,15 @@ fn check_assembly(work string, clang string, thunks string, speculation string) 
 	mut records := []json2.Any{}
 	for vector in 0 .. 256 {
 		body := disassembly_body(disassembly, 'interrupt_thunk_${vector}')!
-		enters := word_count(body, 'vinix_x86_maskable_irq_enter')
-		exits := word_count(body, 'vinix_x86_maskable_irq_exit')
+		enters := word_count(body, 'tulpar_x86_maskable_irq_enter')
+		exits := word_count(body, 'tulpar_x86_maskable_irq_exit')
 		expected := if vector >= 32 { 1 } else { 0 }
 		if enters != expected || exits != expected { return error('Wrong actual IRQ hook pair: ${vector}') }
 		if vector >= 32 {
-			before_enter := body.all_before('vinix_x86_maskable_irq_enter')
-			after_enter := body.all_after('vinix_x86_maskable_irq_enter')
-			before_exit := after_enter.all_before('vinix_x86_maskable_irq_exit')
-			after_exit := after_enter.all_after('vinix_x86_maskable_irq_exit')
+			before_enter := body.all_before('tulpar_x86_maskable_irq_enter')
+			after_enter := body.all_after('tulpar_x86_maskable_irq_enter')
+			before_exit := after_enter.all_before('tulpar_x86_maskable_irq_exit')
+			after_exit := after_enter.all_after('tulpar_x86_maskable_irq_exit')
 			entry_gate(before_enter, vector)!
 			exit_gate(before_exit, vector)!
 			entry := before_exit.index('interrupt_enter') or { return error('IRQ pair does not enclose actual handler') }
@@ -215,7 +215,7 @@ fn run_profile(keep string) ! {
 	contract := os.join_path(root, 'kernel/c/x86_irq_v_contract.h')
 	thunks := os.join_path(root, 'kernel/asm/int_thunks_asm.S')
 	speculation := os.join_path(root, 'kernel/asm/x86_64/speculation.h')
-	work := hosttest.work_dir(keep, 'vinix-irq-context-')!
+	work := hosttest.work_dir(keep, 'tulpar-irq-context-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut sources := [core, local_source, contract, thunks, speculation, @FILE]
 	sources << os.walk_ext(os.join_path(os.dir(@FILE), 'hosttest'), '.v')
@@ -339,8 +339,8 @@ fn panic(message string) { C.irq_model_panic(message) }
 '
 
 const observer_header = '
-#ifndef VINIX_IRQ_MODEL_H
-#define VINIX_IRQ_MODEL_H
+#ifndef TULPAR_IRQ_MODEL_H
+#define TULPAR_IRQ_MODEL_H
 #include <stdbool.h>
 bool irq_model_interrupt_state(void);
 bool irq_model_interrupt_toggle(bool enabled);
@@ -384,10 +384,10 @@ _Static_assert(__builtin_types_compatible_p(
     __typeof__(((local__Local *)0)->maskable_irq_scheduler_deferrals), uint64_t),
     "actual native counter field types");
 _Static_assert(__builtin_types_compatible_p(
-    __typeof__(&vinix_x86_maskable_irq_enter), void (*)(uint32_t, uint64_t)) &&
-    __builtin_types_compatible_p(__typeof__(&vinix_x86_maskable_irq_exit),
+    __typeof__(&tulpar_x86_maskable_irq_enter), void (*)(uint32_t, uint64_t)) &&
+    __builtin_types_compatible_p(__typeof__(&tulpar_x86_maskable_irq_exit),
                                void (*)(uint32_t)) &&
-    __builtin_types_compatible_p(__typeof__(&vinix_x86_maskable_irq_depth),
+    __builtin_types_compatible_p(__typeof__(&tulpar_x86_maskable_irq_depth),
                                uint32_t (*)(void)), "native scalar ABI");
 
 static local__Local cpus[4], baselines[4];
@@ -467,18 +467,18 @@ static void entry_and_nesting(void) {
         for (uint32_t vector = 32; vector <= 255; vector++) {
             for (size_t item = 0; item < sizeof(selectors) / sizeof(selectors[0]); item++) {
                 uint64_t before_flags = flags;
-                vinix_x86_maskable_irq_enter(vector, selectors[item]);
+                tulpar_x86_maskable_irq_enter(vector, selectors[item]);
                 entries++;
                 users += (selectors[item] % 4) == 3;
                 check_local(cpu, 1, entries, entries == 1 ? 1 : 2, users);
                 CHECK(flags == before_flags && toggle_count == 0);
                 uint32_t nested_vector = 32 + (vector + 73) % 224;
-                vinix_x86_maskable_irq_enter(nested_vector, 0x30);
+                tulpar_x86_maskable_irq_enter(nested_vector, 0x30);
                 entries++;
                 check_local(cpu, 2, entries, 2, users);
-                vinix_x86_maskable_irq_exit(nested_vector);
+                tulpar_x86_maskable_irq_exit(nested_vector);
                 check_local(cpu, 1, entries, 2, users);
-                vinix_x86_maskable_irq_exit(vector);
+                tulpar_x86_maskable_irq_exit(vector);
                 check_local(cpu, 0, entries, 2, users);
                 CHECK(flags == before_flags && toggle_count == 0);
             }
@@ -489,13 +489,13 @@ static void entry_and_nesting(void) {
     for (unsigned round = 0; round < 31; round++) {
         for (unsigned cpu = 0; cpu < 4; cpu++) {
             selected_cpu = cpu;
-            vinix_x86_maskable_irq_enter(0xff, cpu % 2 ? 0x43 : 0x30);
+            tulpar_x86_maskable_irq_enter(0xff, cpu % 2 ? 0x43 : 0x30);
         }
     }
     for (unsigned cpu = 0; cpu < 4; cpu++) {
         check_local(cpu, 31, 31, 31, cpu % 2 ? 31 : 0);
         selected_cpu = cpu;
-        for (unsigned round = 0; round < 31; round++) vinix_x86_maskable_irq_exit(0xff);
+        for (unsigned round = 0; round < 31; round++) tulpar_x86_maskable_irq_exit(0xff);
         check_local(cpu, 0, 31, 31, cpu % 2 ? 31 : 0);
     }
 }
@@ -512,7 +512,7 @@ static void preserving_query(void) {
             local__Local before[4];
             memcpy(before, cpus, sizeof(before));
             unsigned before_toggle = toggle_count;
-            CHECK(vinix_x86_maskable_irq_depth() == 100 + cpu);
+            CHECK(tulpar_x86_maskable_irq_depth() == 100 + cpu);
             CHECK(flags == before_flags);
             CHECK(toggle_count == before_toggle + 2);
             CHECK(memcmp(before, cpus, sizeof(before)) == 0);
@@ -529,9 +529,9 @@ static void must_fail(enum Action action, uint32_t vector, uint64_t selector,
     unsigned prior_panic = panic_count;
     expect_panic = true;
     if (!setjmp(panic_destination)) {
-        if (action == ENTER) vinix_x86_maskable_irq_enter(vector, selector);
-        else if (action == EXIT) vinix_x86_maskable_irq_exit(vector);
-        else (void)vinix_x86_maskable_irq_depth();
+        if (action == ENTER) tulpar_x86_maskable_irq_enter(vector, selector);
+        else if (action == EXIT) tulpar_x86_maskable_irq_exit(vector);
+        else (void)tulpar_x86_maskable_irq_depth();
         CHECK(false);
     }
     expect_panic = false;
@@ -569,38 +569,38 @@ static void failures(void) {
     reset();
     cpus[0].maskable_irq_user_entries = UINT64_MAX;
     cpus[0].maskable_irq_peak_depth = UINT32_MAX;
-    vinix_x86_maskable_irq_enter(32, 0x30);
+    tulpar_x86_maskable_irq_enter(32, 0x30);
     CHECK(cpus[0].maskable_irq_depth == 1 && cpus[0].maskable_irq_entries == 1);
     CHECK(cpus[0].maskable_irq_user_entries == UINT64_MAX);
     CHECK(cpus[0].maskable_irq_peak_depth == UINT32_MAX);
-    vinix_x86_maskable_irq_exit(32);
+    tulpar_x86_maskable_irq_exit(32);
     /* The largest representable result succeeds; the following overflowing
      * entry must fail before touching any field, including other CPU records. */
     reset();
     cpus[0].maskable_irq_depth = UINT32_MAX - 1;
     cpus[0].maskable_irq_peak_depth = UINT32_MAX - 1;
-    vinix_x86_maskable_irq_enter(200, 0x43);
+    tulpar_x86_maskable_irq_enter(200, 0x43);
     CHECK(cpus[0].maskable_irq_depth == UINT32_MAX);
     CHECK(cpus[0].maskable_irq_peak_depth == UINT32_MAX);
     must_fail(ENTER, 200, 0x30, "accounting overflow", true);
-    vinix_x86_maskable_irq_exit(200);
+    tulpar_x86_maskable_irq_exit(200);
     CHECK(cpus[0].maskable_irq_depth == UINT32_MAX - 1);
     reset();
     cpus[0].maskable_irq_entries = UINT64_MAX - 1;
-    vinix_x86_maskable_irq_enter(220, 0x30);
+    tulpar_x86_maskable_irq_enter(220, 0x30);
     CHECK(cpus[0].maskable_irq_entries == UINT64_MAX);
     must_fail(ENTER, 220, 0x30, "accounting overflow", true);
-    vinix_x86_maskable_irq_exit(220);
+    tulpar_x86_maskable_irq_exit(220);
     reset();
     cpus[0].maskable_irq_user_entries = UINT64_MAX - 1;
-    vinix_x86_maskable_irq_enter(230, 0x43);
+    tulpar_x86_maskable_irq_enter(230, 0x43);
     CHECK(cpus[0].maskable_irq_user_entries == UINT64_MAX);
     must_fail(ENTER, 230, 0x43, "accounting overflow", true);
-    vinix_x86_maskable_irq_enter(231, 0x30);
+    tulpar_x86_maskable_irq_enter(231, 0x30);
     CHECK(cpus[0].maskable_irq_depth == 2 && cpus[0].maskable_irq_entries == 2);
     CHECK(cpus[0].maskable_irq_user_entries == UINT64_MAX);
-    vinix_x86_maskable_irq_exit(231);
-    vinix_x86_maskable_irq_exit(230);
+    tulpar_x86_maskable_irq_exit(231);
+    tulpar_x86_maskable_irq_exit(230);
     reset();
     initialized = false;
     flags |= IRQ_IF;

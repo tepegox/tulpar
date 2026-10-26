@@ -16,7 +16,7 @@ the original spool to the caller. The legacy uncaught snapshot-error branch also
 keeps its original spool ownership behavior.
 
 The shared host controller compiles the query with `build-support/run-v-tool.sh`.
-`VINIX_PACKAGE_STORE_QUERY` can select a prepared query for fixture runs. Native
+`TULPAR_PACKAGE_STORE_QUERY` can select a prepared query for fixture runs. Native
 host programs use the host GC; this module does not change the kernel allocator.
 Python stdlib HTTP, tar, filesystem and process primitives remain library
 bindings. No C implementation is added or credited.

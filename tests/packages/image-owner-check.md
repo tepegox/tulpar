@@ -55,7 +55,7 @@ V=/path/to/reviewed/v /tmp/image-owner-check /build/new-image-host
 
 v -nocache -path '@vlib|@vmodules|tests/hardware-platform' \
   -o /tmp/image-owner-runtime tests/packages/image-owner-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/image-owner-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-image-arm
 ```

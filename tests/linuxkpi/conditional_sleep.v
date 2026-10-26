@@ -7,7 +7,7 @@ import json2
 import hosttest
 
 const scope = 'Execute the real conditional-sleep V leaf with a V context spy through its generated C statement adapter. Check C scalar truth, once-only evaluation, false-path query elision, task/IRQ/pin context, fatal caller locations and no scheduling. This is focused host evidence, not a whole-kernel lifetime or hardware result.'
-const production_names = ['headercore__might_sleep_if', 'vinix_might_sleep_if_native']
+const production_names = ['headercore__might_sleep_if', 'tulpar_might_sleep_if_native']
 const fixture_file = 'conditional-sleep-callsite.v'
 const fixture_line = 730
 
@@ -59,8 +59,8 @@ fn select_source(raw string) !(string, int, map[string]string) {
 		line := body.all_before('\n')
 		if hosttest.named_body(body, 'main') && !body.contains('sleepfixture__run') { continue }
 		if ['headercore__', 'sleepfixture__', 'sleepspy__'].any(line.contains(it))
-			|| ['vsl_fixture_entry', '_vno_main_init_caller', '_vinit', 'vinix_might_sleep_if_native',
-				'vinix_linuxkpi_may_sleep', 'vinix_linuxkpi_bug', 'vsl_condition_value', 'schedule'].any(hosttest.named_body(body, it)) {
+			|| ['vsl_fixture_entry', '_vno_main_init_caller', '_vinit', 'tulpar_might_sleep_if_native',
+				'tulpar_linuxkpi_may_sleep', 'tulpar_linuxkpi_bug', 'vsl_condition_value', 'schedule'].any(hosttest.named_body(body, it)) {
 			selected << body
 			hashes[line] = hosttest.text_sha(body)
 		}
@@ -167,7 +167,7 @@ fn run(keep string) ! {
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	pin := hosttest.upstream_pin()!
 	hosttest.verify_upstream(linux, pin)!
-	work := hosttest.work_dir(keep, 'vinix-conditional-sleep-v-')!
+	work := hosttest.work_dir(keep, 'tulpar-conditional-sleep-v-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut inputs := [@FILE, root + '/kernel/linuxkpi/abi/overflow.json', root + '/kernel/linuxkpi/include/linux/kernel.h', root + '/kernel/linuxkpi/include/linux/bug.h', root + '/kernel/linuxkpi/upstream.json']
 	for directory in ['kernel/linuxkpi/headercore', 'tests/linuxkpi/sleepfixture', 'tests/linuxkpi/hosttest'] {
@@ -218,11 +218,11 @@ fn run(keep string) ! {
 		production_hashes[name] = hosttest.text_sha(body)
 	}
 	hosttest.audit_headers(work + '/abi')!
-	policy := os.read_file(work + '/abi/vinix/integer_policy.h')!
-	require(policy.contains('#define vinix_might_sleep_if(condition) do {') && policy.contains('vinix_might_sleep_if_native((condition), __FILE__, __LINE__);') && policy.contains('} while (0)'), 'Conditional adapter statement/source location changed')!
+	policy := os.read_file(work + '/abi/tulpar/integer_policy.h')!
+	require(policy.contains('#define tulpar_might_sleep_if(condition) do {') && policy.contains('tulpar_might_sleep_if_native((condition), __FILE__, __LINE__);') && policy.contains('} while (0)'), 'Conditional adapter statement/source location changed')!
 	mut flags := [compiler, '-O1', '-g', '-ffreestanding', '-fno-builtin', '-fwrapv', '-fno-strict-aliasing', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter', '-fsanitize=address,undefined', '-fno-omit-frame-pointer']
 	$if macos { flags << ['-arch', 'x86_64'] }
-	flags << ['-D__KERNEL__', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-include', root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h', '-include', linux + '/include/linux/compiler_types.h']
+	flags << ['-D__KERNEL__', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-include', root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h', '-include', linux + '/include/linux/compiler_types.h']
 	for directory in [root + '/tests/linuxkpi/sleepfixture', work + '/abi', root + '/kernel/linuxkpi/include', linux + '/include', linux + '/include/uapi', linux + '/arch/x86/include', linux + '/arch/x86/include/uapi'] { flags << ['-I', directory] }
 	flags << ['-idirafter', root + '/kernel/c']
 	mut profiles := []json2.Any{}
@@ -274,7 +274,7 @@ fn run(keep string) ! {
 	}
 	require(before == hosttest.hashes(inputs)!, 'Source/fixture/compiler inputs changed')!
 	hosttest.verify_upstream(linux, pin)!
-	hosttest.write_json(work + '/result.json', {'scope': json2.Any(scope), 'counts': json2.Any(counts), 'source_sha256': hosttest.string_map(before), 'generation_argv': hosttest.strings(argv), 'generated_sha256': hosttest.sha(generated)!, 'selected_sha256': hosttest.sha(source)!, 'selected_body_sha256': hosttest.string_map(selected_hashes), 'reference_sha256': hosttest.sha(reference_c)!, 'production_body_sha256': hosttest.string_map(production_hashes), 'generated_policy_sha256': hosttest.sha(work + '/abi/vinix/integer_policy.h')!, 'profiles': profiles, 'compiler_controls': controls, 'metadata_controls': metadata, 'fatal_callsite_file': fixture_file, 'fatal_callsite_line': fatal_line, 'limits': hosttest.strings(['Focused V model; genuine native CPU/IRQ context and page recovery are separate checks.', 'All executed selected V bodies are unchanged; the staged initializer owns no unrelated full-headercore globals.', 'The generated statement adapter is source-checked for do/while grouping and exercised in V branches; no handwritten unbraced-C test body is executed.', 'No rescheduling, lockdep service, global allocation gate or hardware GPU support is claimed.'])})!
+	hosttest.write_json(work + '/result.json', {'scope': json2.Any(scope), 'counts': json2.Any(counts), 'source_sha256': hosttest.string_map(before), 'generation_argv': hosttest.strings(argv), 'generated_sha256': hosttest.sha(generated)!, 'selected_sha256': hosttest.sha(source)!, 'selected_body_sha256': hosttest.string_map(selected_hashes), 'reference_sha256': hosttest.sha(reference_c)!, 'production_body_sha256': hosttest.string_map(production_hashes), 'generated_policy_sha256': hosttest.sha(work + '/abi/tulpar/integer_policy.h')!, 'profiles': profiles, 'compiler_controls': controls, 'metadata_controls': metadata, 'fatal_callsite_file': fixture_file, 'fatal_callsite_line': fatal_line, 'limits': hosttest.strings(['Focused V model; genuine native CPU/IRQ context and page recovery are separate checks.', 'All executed selected V bodies are unchanged; the staged initializer owns no unrelated full-headercore globals.', 'The generated statement adapter is source-checked for do/while grouping and exercised in V branches; no handwritten unbraced-C test body is executed.', 'No rescheduling, lockdep service, global allocation gate or hardware GPU support is claimed.'])})!
 }
 
 fn main() {

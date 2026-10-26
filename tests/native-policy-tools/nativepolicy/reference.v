@@ -62,16 +62,16 @@ pub fn reference_init(source string, kind string) !string {
 		text = text[..position] + 'static void signal_restorer(void) {}' + text[end..]
 		start = position + 'static void signal_restorer(void) {}'.len
 	}
-	text = text.replace('void _start(void)', 'void vinix_init_' + kind + '(void)')
+	text = text.replace('void _start(void)', 'void tulpar_init_' + kind + '(void)')
 	if kind == 'desktop' {
 		text = text.replace('static volatile int requested_power_signal', 'volatile int vinit_power')
 			.replace('static volatile int requested_desktop_reload', 'volatile int vinit_reload')
 		text = replace_word(text, 'requested_power_signal', 'vinit_power')
 		text = replace_word(text, 'requested_desktop_reload', 'vinit_reload')
-		text = text.replace('static void power_signal_handler', 'void vinix_init_power_signal')
-			.replace('static void child_signal_handler', 'void vinix_init_child_signal')
-			.replace('power_signal_handler', 'vinix_init_power_signal')
-			.replace('child_signal_handler', 'vinix_init_child_signal')
+		text = text.replace('static void power_signal_handler', 'void tulpar_init_power_signal')
+			.replace('static void child_signal_handler', 'void tulpar_init_child_signal')
+			.replace('power_signal_handler', 'tulpar_init_power_signal')
+			.replace('child_signal_handler', 'tulpar_init_child_signal')
 	}
 	end := (text.index('typedef long i64;') or { return error('Missing original i64 declaration') }) +
 		'typedef long i64;'.len

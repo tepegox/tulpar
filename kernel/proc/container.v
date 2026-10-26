@@ -202,7 +202,7 @@ pub fn put_namespace(mut ns Namespace) bool {
 }
 
 // A thread's own root, working directory and mount namespace. Linux keeps all
-// three per thread; Vinix keeps them per process, which is the same thing
+// three per thread; Tulpar keeps them per process, which is the same thing
 // until one thread of a multithreaded process asks for its own with
 // unshare(CLONE_FS) or unshare(CLONE_NEWNS). Go programs do exactly that to
 // chroot inside a goroutine locked to its thread while the rest of the
@@ -451,7 +451,7 @@ pub fn set_process_oom_score_adj(pid int, value int) {
 }
 
 // The identity id map a process starts a user namespace with: everything maps
-// to itself, since Vinix does not renumber ids across a user namespace.
+// to itself, since Tulpar does not renumber ids across a user namespace.
 pub fn id_map_text(pid int, _group bool) string {
 	lock_table()
 	defer { unlock_table() }

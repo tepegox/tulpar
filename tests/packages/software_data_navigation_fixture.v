@@ -8,12 +8,12 @@ import ui2
 import tools.packages.pkgprotocol
 
 fn software_data_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_DATA_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_DATA_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if mode.starts_with('list-') && args[1..] == ['--json', 'data-list'] {
 		status := fixture_personal_data_status()
 		text := json2.encode(pkgprotocol.PersonalDataStatus{ ...status,
-			rows: status.rows.filter(it.id != 'removed-app' || !os.exists(os.getenv('VINIX_SOFTWARE_DATA_FIXTURE'))) })
+			rows: status.rows.filter(it.id != 'removed-app' || !os.exists(os.getenv('TULPAR_SOFTWARE_DATA_FIXTURE'))) })
 		partial := mode == 'list-partial'
 		print(if partial { text[..text.len / 2] } else { text }); flush_stdout()
 		mut release := u8(0); assert C.read(0, &release, 1) == 1
@@ -26,7 +26,7 @@ fn software_data_navigation_service_fixture(args []string) !bool {
 		println('Checking confirmed personal data deletion…'); flush_stdout()
 		mut release := u8(0); assert C.read(0, &release, 1) == 1
 		if mode == 'purge-failed' { eprintln('cannot purge removed-app: generation 3 is still in use; stop applications and retry'); exit(17) }
-		os.write_file(os.getenv('VINIX_SOFTWARE_DATA_FIXTURE'), 'removed-app')!
+		os.write_file(os.getenv('TULPAR_SOFTWARE_DATA_FIXTURE'), 'removed-app')!
 		return true
 	}
 	return false
@@ -42,16 +42,16 @@ fn wait_for_data_navigation_output(mut app SoftwareApp) {
 }
 
 fn check_software_data_navigation() ! {
-	receipt := os.temp_dir() + '/vinix-data-navigation-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_DATA_FIXTURE', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_DATA_FIXTURE'); os.unsetenv('VINIX_SOFTWARE_DATA_NAVIGATION') }
+	receipt := os.temp_dir() + '/tulpar-data-navigation-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_DATA_FIXTURE', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_DATA_FIXTURE'); os.unsetenv('TULPAR_SOFTWARE_DATA_NAVIGATION') }
 	mut app := SoftwareApp{ administration_required: true, service_path: os.executable(), output: []u8{cap: 8192}, query: 'kept query'.bytes(), filter: 1 }
 	defer { app.close_app() }
 	app.handle('software.data')!; wait_for_software(mut app)
 	for ending in ['partial', 'complete']! {
 		for action in ['software.data.stop', 'software.data.cancel', 'escape']! {
 			app.handle('software.row.1')!
-			os.setenv('VINIX_SOFTWARE_DATA_NAVIGATION', 'list-' + ending, true)
+			os.setenv('TULPAR_SOFTWARE_DATA_NAVIGATION', 'list-' + ending, true)
 			app.handle('software.data.reload')!; pid := app.worker.pid
 			wait_for_data_navigation_output(mut app)
 			assert app.data_read_running() && app.prepare_close() && !app.data_ready && !app.admin_prompt
@@ -72,11 +72,11 @@ fn check_software_data_navigation() ! {
 			compact := app.build(ui2.rect(0, 0, 320, 240))!
 			assert compact.children.any(it.id == 'software.data.back') && compact.children.any(it.id == 'software.data.reload')
 			free_window_tree(compact)
-			os.unsetenv('VINIX_SOFTWARE_DATA_NAVIGATION'); app.handle('software.data.reload')!; wait_for_software(mut app)
+			os.unsetenv('TULPAR_SOFTWARE_DATA_NAVIGATION'); app.handle('software.data.reload')!; wait_for_software(mut app)
 			assert app.data_ready && app.data_status.rows.len == 4 && app.data_selected == -1
 		}
 	}
-	os.setenv('VINIX_SOFTWARE_DATA_NAVIGATION', 'list-failed', true)
+	os.setenv('TULPAR_SOFTWARE_DATA_NAVIGATION', 'list-failed', true)
 	app.handle('software.data.reload')!; wait_for_data_navigation_output(mut app)
 	app.worker.stdin_write('x'); wait_for_software(mut app)
 	assert !app.data_ready && app.failure_pages.len > 0 && app.status.contains('account directory access')
@@ -85,7 +85,7 @@ fn check_software_data_navigation() ! {
 	assert failed.children.any(it.id == 'software.data.back') && failed.children.any(it.id == 'software.data.reload') && failed.children.any(it.id == 'software.failure')
 	free_window_tree(failed)
 	app.handle('software.failure')!; app.handle('software.failure.back')!; assert !app.failure_mode && app.data_mode
-	os.unsetenv('VINIX_SOFTWARE_DATA_NAVIGATION'); app.handle('software.data.reload')!; wait_for_software(mut app)
+	os.unsetenv('TULPAR_SOFTWARE_DATA_NAVIGATION'); app.handle('software.data.reload')!; wait_for_software(mut app)
 	for action in ['software.data.cancel', 'escape']! {
 		app.handle('software.row.1')!; app.handle('software.data.delete')!
 		selected := app.data_selected; scroll := app.data_scroll
@@ -103,7 +103,7 @@ fn check_software_data_navigation() ! {
 	}
 	for mode in ['purge-failed', 'purge-complete']! {
 		app.handle('software.row.1')!; app.handle('software.data.delete')!
-		os.setenv('VINIX_SOFTWARE_DATA_NAVIGATION', mode, true)
+		os.setenv('TULPAR_SOFTWARE_DATA_NAVIGATION', mode, true)
 		app.handle('software.data.confirm')!; pid := app.worker.pid
 		wait_for_data_navigation_output(mut app)
 		assert app.worker.args == ['purge-data', 'removed-app'] && !app.admin_prompt && !app.prepare_close() && !app.data_read_running()
@@ -117,7 +117,7 @@ fn check_software_data_navigation() ! {
 		assert !app.report_reader_mode && app.details_pages.len == 0 && app.details_compact_pages.len == 0
 		app.key_input('\x1b'); app.stop_data_read()
 		assert app.worker.pid == pid && C.kill(pid, 0) == 0 && !os.exists(receipt) && app.data_pending == 'removed-app'
-		if mode == 'purge-complete' { os.setenv('VINIX_SOFTWARE_DATA_NAVIGATION', 'list-complete', true) }
+		if mode == 'purge-complete' { os.setenv('TULPAR_SOFTWARE_DATA_NAVIGATION', 'list-complete', true) }
 		app.worker.stdin_write('x')
 		if mode == 'purge-complete' {
 			for _ in 0 .. 5000 { app.poll(); if app.data_worker == .list { break }; time.sleep(time.millisecond) }
@@ -127,7 +127,7 @@ fn check_software_data_navigation() ! {
 			app.handle('software.data.stop')!
 			assert !app.data_ready && app.data_result == 'Personal data deleted for removed-app.'
 			app.handle('software.data.delete')!; assert app.data_pending == ''
-			os.unsetenv('VINIX_SOFTWARE_DATA_NAVIGATION'); app.handle('software.data.reload')!
+			os.unsetenv('TULPAR_SOFTWARE_DATA_NAVIGATION'); app.handle('software.data.reload')!
 		}
 		wait_for_software(mut app)
 		if mode == 'purge-failed' {
@@ -140,7 +140,7 @@ fn check_software_data_navigation() ! {
 		} else {
 			assert app.data_ready && !app.data_status.rows.any(it.id == 'removed-app') && app.status == 'Personal data deleted for removed-app.' && app.data_result == ''
 		}
-		os.unsetenv('VINIX_SOFTWARE_DATA_NAVIGATION')
+		os.unsetenv('TULPAR_SOFTWARE_DATA_NAVIGATION')
 	}
 	app.key_input('\x1b'); wait_for_software(mut app)
 	assert !app.data_mode && app.query.bytestr() == 'kept query' && app.filter == 1
@@ -165,7 +165,7 @@ fn check_software_data_navigation_memory() ! {
 		mut app := SoftwareApp{ administration_required: true, data_mode: true, output: []u8{cap: 8192} }
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.output.clear(); for byte in text { app.output << byte }; app.load_personal_data()
 				app.handle_personal_data('software.row.1')
@@ -186,7 +186,7 @@ fn check_software_data_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'personal data navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'personal data navigation retained ${kept} bytes'
 		println('Software personal data navigation: 1000 inventory/select/full/compact/confirm/cancel/failure/progress/retirement cycles retain zero tracked bytes')
 		println('Software personal data reader: 1000 read/confirm/failure/progress/resize/Back/cancel/cache-retirement cycles retain zero tracked bytes')
 	}

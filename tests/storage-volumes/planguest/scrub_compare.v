@@ -4,7 +4,7 @@ module planguest
 @[direct_array_access]
 fn scrub_compare_tool(before &char, after &char, readonly bool, old_changed bool, new_changed bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'compare-volume-scrubs'), before, after, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'compare-volume-scrubs'), before, after, &char(nil)]!
 		capture := C.open(c'/root/compare.out', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(capture >= 0, c'open compare capture')
 		child := C.fork(); check(child >= 0, c'fork compare tool')
 		if child == 0 { if C.dup2(capture, 1) != 1 || C.close(capture) != 0 { C._exit(126) }; C.execv(args[0], &args[0]); C._exit(127) }
@@ -15,7 +15,7 @@ fn scrub_compare_tool(before &char, after &char, readonly bool, old_changed bool
 		check(count >= 0 && count < 2047 && C.close(fd) == 0, c'bounded compare output')
 		if expected == 1 { check(C.strstr(&text[0], c'operation=') == nil, c'invalid later report emits no comparison'); return }
 		changed := old_changed != new_changed; mut wanted := [2048]char{}
-		C.snprintf(&wanted[0], 2048, c'format=VINIXCS1 operation=compared-ciphertext mappings=1 stable=%lu changed=%lu algorithm=sha256 reference_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu before=%s after=%s result=%s expected_sha256=115d50809715a805656e2c32b2d84ce5b4df581c65e1ec9b4523df3f9e4a6748 before_sha256=%s after_sha256=%s\n',
+		C.snprintf(&wanted[0], 2048, c'format=TULPARCS1 operation=compared-ciphertext mappings=1 stable=%lu changed=%lu algorithm=sha256 reference_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu before=%s after=%s result=%s expected_sha256=115d50809715a805656e2c32b2d84ce5b4df581c65e1ec9b4523df3f9e4a6748 before_sha256=%s after_sha256=%s\n',
 			u64(!changed), u64(changed), if readonly { &char(c'b3163f5b9fe199889368f06145927d5c7632102ef305580ff54a0fe37ad426b0') } else { &char(c'ceb82ed81ecbf7ac0ced5930717d27aea59e88d7cf485e3a2bf885974c1d2329') }, u64(readonly),
 			if old_changed { &char(c'changed') } else { &char(c'match') }, if new_changed { &char(c'changed') } else { &char(c'match') },
 			if !changed { &char(c'stable') } else if new_changed { &char(c'new-change') } else { &char(c'restored') },
@@ -41,7 +41,7 @@ fn scrub_compare_matrix() {
 	original[0] ^= 1; bad := C.open(c'/root/bad.vcscrub', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 	check(bad >= 0 && C.write(bad, &original[0], 224) == 224 && C.close(bad) == 0, c'create private invalid report')
 	scrub_compare_tool(c'/root/clean-volume.vcscrub', c'/root/bad.vcscrub', false, false, false, 1)
-	check(C.unlink(c'/root/bad.vcscrub') == 0, c'reclaim invalid report'); missing(c'/dev/mapper/vinix60')
+	check(C.unlink(c'/root/bad.vcscrub') == 0, c'reclaim invalid report'); missing(c'/dev/mapper/tulpar60')
 }
 
 fn scrub_compare_cycles(count int) {
@@ -73,10 +73,10 @@ fn scrub_compare_entry() i32 {
 		volume_scrub_first($if amd64 { &char(c'/dev/sd0') } $else { &char(c'/dev/vda') }, $if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') })
 		scrub_compare_matrix()
 		recovery_unlock_tool(c'/root/volume-ro.vrecover', c'/root/recovery.key', false, 0)
-		status_before := status(c'/dev/mapper/vinix60'); held := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); check(held >= 0, c'hold comparison mapping')
+		status_before := status(c'/dev/mapper/tulpar60'); held := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); check(held >= 0, c'hold comparison mapping')
 		scrub_compare_tool(c'/root/clean-volume-ro.vcscrub', c'/root/changed-recovery-ro.vcscrub', true, false, true, 2)
-		check(status_before == status(c'/dev/mapper/vinix60'), c'comparison preserves live status'); crypt_data(held, 0, 0x73)
-		check(C.close(held) == 0, c'close comparison mapping'); simple(c'remove', c'/dev/mapper/vinix60', unsafe { nil }, 0)
+		check(status_before == status(c'/dev/mapper/tulpar60'), c'comparison preserves live status'); crypt_data(held, 0, 0x73)
+		check(C.close(held) == 0, c'close comparison mapping'); simple(c'remove', c'/dev/mapper/tulpar60', unsafe { nil }, 0)
 		scrub_compare_retention(); C.printf(c'PLAN SCRUB COMPARE PASSED: stable/new-change/restored, exact references, private inputs and bounded lifetimes\n')
 	} else {
 		check(C.close(phase) == 0, c'close comparison phase'); scrub_compare_matrix()

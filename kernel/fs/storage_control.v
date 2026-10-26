@@ -95,7 +95,7 @@ fn volume_extent(parent resource.BlockIdentity, offset u64, bytes u64, sector u6
 }
 
 fn volume_name(slot u32, buffer &u8) string {
-	prefix := 'mapper/vinix'
+	prefix := 'mapper/tulpar'
 	unsafe { C.memcpy(buffer, prefix.str, prefix.len) }
 	mut length := prefix.len
 	if slot >= 10 {
@@ -440,7 +440,7 @@ fn create_logical_volume(mut descriptor file.FD, data VolumeRequest) ?int {
 
 fn create_encrypted_volume(mut descriptor file.FD, data VolumeRequest, key &[64]u8) ?int {
 	katomic.store(mut &encrypted_block_used, 1)
-	mut cipher := unsafe { &aesxts.Cipher(C.vinix_stack_alloc(sizeof(aesxts.Cipher))) }; unsafe { *cipher = aesxts.Cipher{} }
+	mut cipher := unsafe { &aesxts.Cipher(C.tulpar_stack_alloc(sizeof(aesxts.Cipher))) }; unsafe { *cipher = aesxts.Cipher{} }
 	defer { aesxts.clear(mut cipher) }
 	if !aesxts.initialize(mut cipher, key) { errno.set(errno.einval); return none }
 	return create_volume(mut descriptor, data, cipher)

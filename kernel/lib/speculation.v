@@ -11,7 +11,7 @@ const spec_compat_arch = u32(1) << 29
 const spec_compat_ssbd = u32(1) << 31
 const spec_compat_bhi_ctrl = u32(1) << 4
 
-@[export: 'vinix_speculation_select']
+@[export: 'tulpar_speculation_select']
 fn speculation_select(edx u32, edx2 u32, arch_caps u64) u64 {
 	mut policy := u64(0)
 	if edx & spec_compat_ibrs_ibpb != 0 {

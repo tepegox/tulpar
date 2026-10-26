@@ -15,7 +15,7 @@ fn build() !int {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	mut cc := []string{}
 	if architecture == 'aarch64' {
-		configured_root := os.getenv('VINIX_AARCH64_SYSROOT')
+		configured_root := os.getenv('TULPAR_AARCH64_SYSROOT')
 		sysroot := os.abs_path(if configured_root == '' {
 			repository + '/build-aarch64-userland/sysroot'
 		} else {

@@ -13,14 +13,14 @@ struct C.vks_data_alignment_probe { prefix u8, data C.srcu_data }
 type HeaderWorkFn = fn (&C.work_struct)
 fn C.INIT_WORK(&C.work_struct, HeaderWorkFn)
 fn C.INIT_DELAYED_WORK(&C.delayed_work, HeaderWorkFn)
-fn C.vinix_linuxkpi_srcu_gp_work(&C.work_struct)
-fn C.vinix_linuxkpi_srcu_callback_work(&C.work_struct)
+fn C.tulpar_linuxkpi_srcu_gp_work(&C.work_struct)
+fn C.tulpar_linuxkpi_srcu_callback_work(&C.work_struct)
 @[c_extern]
 __global C.system_unbound_wq voidptr
 fn C.preempt_disable()
 fn C.preempt_enable()
 fn C.preempt_count() u32
-fn C.vinix_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_cpu_id() u32
 fn C.queue_work(voidptr, voidptr) bool
 fn C.queue_delayed_work(voidptr, voidptr, uint) bool
 
@@ -33,9 +33,9 @@ pub fn srcu_init_delayed_work(storage voidptr, callback voidptr) {
 	unsafe { C.INIT_DELAYED_WORK(&C.delayed_work(storage), HeaderWorkFn(callback)) }
 }
 @[export: 'vks_gp_callback']
-pub fn srcu_gp_callback() voidptr { return voidptr(C.vinix_linuxkpi_srcu_gp_work) }
+pub fn srcu_gp_callback() voidptr { return voidptr(C.tulpar_linuxkpi_srcu_gp_work) }
 @[export: 'vks_cblist_callback']
-pub fn srcu_cblist_callback() voidptr { return voidptr(C.vinix_linuxkpi_srcu_callback_work) }
+pub fn srcu_cblist_callback() voidptr { return voidptr(C.tulpar_linuxkpi_srcu_callback_work) }
 @[export: 'vks_unbound_ready']
 pub fn srcu_unbound_ready() bool { return C.system_unbound_wq != unsafe { nil } }
 @[export: 'vks_preempt_disable']
@@ -45,7 +45,7 @@ pub fn srcu_preempt_enable() { C.preempt_enable() }
 @[export: 'vks_preempt_count']
 pub fn srcu_preempt_count() u32 { return C.preempt_count() }
 @[export: 'vks_cpu_id']
-pub fn srcu_cpu_id() u32 { return C.vinix_linuxkpi_cpu_id() }
+pub fn srcu_cpu_id() u32 { return C.tulpar_linuxkpi_cpu_id() }
 @[export: 'vks_data_alignment']
 pub fn srcu_data_alignment() uint { return __offsetof(C.vks_data_alignment_probe, data) }
 @[export: 'vks_queue_work']

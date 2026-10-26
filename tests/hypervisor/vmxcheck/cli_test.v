@@ -5,9 +5,9 @@ import hosttest
 import os
 
 fn test_real_cli_original_entry_bytes_failures_argument_rules_and_cleanup() {
-	tool := os.getenv('VINIX_VMX_TOOL')
+	tool := os.getenv('TULPAR_VMX_TOOL')
 	if tool == '' { return }
-	work := hosttest.work_dir('', 'vinix-vmx-cli-')!
+	work := hosttest.work_dir('', 'tulpar-vmx-cli-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	temporary := join(work, 'temporary')
 	os.mkdir(temporary)!
@@ -38,7 +38,7 @@ fn test_real_cli_original_entry_bytes_failures_argument_rules_and_cleanup() {
 	assert mismatch.code == 1 && mismatch.stderr == 'VM entry bytes changed\n', mismatch.stderr
 	assert mismatch.stdout.contains('VMX INSTRUCTION PASS:') && !mismatch.stdout.contains('VMX ENTRY PASS:') && !mismatch.stdout.contains('PASS VMX production')
 	assert os.ls(temporary)!.len == 0
-	env['CC'] = '/absent/vinix-vmx-compiler'
+	env['CC'] = '/absent/tulpar-vmx-compiler'
 	failed := hosttest.capture([tool], '', 60, env)!
 	assert failed.code == 1 && failed.stdout == '' && failed.stderr.contains(env['CC'])
 	assert os.ls(temporary)!.len == 0

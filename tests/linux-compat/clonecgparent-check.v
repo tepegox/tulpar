@@ -132,7 +132,7 @@ fn storage(log string, arch string, _phase string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -163,7 +163,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -188,12 +188,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/clonecgparent-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/clonecgparent-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/clonecgparentreferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/clonecgparentreferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -386,13 +386,13 @@ fn prototype(area string, out string) ! {
  old := '[u64(0x8000),0x48000,0x808000,0x100008000,0x20008000,0x28000,0x8200,0x8400]![choice]'
  corrected := '[u64(0x8000),0x48000,0x808000,0x100008000,0x8100,0x8600,0x8200,0x8400]![choice]'
  source := os.read_file(p0+'tests__linux-compat__clonecgparentfixture__core.v')!
- assert source.count(old)==1 && source.replace(old,corrected)==os.read_file('/Users/alex/code/vinix/tests/linux-compat/clonecgparentfixture/core.v')!
+ assert source.count(old)==1 && source.replace(old,corrected)==os.read_file('/Users/alex/code/tulpar/tests/linux-compat/clonecgparentfixture/core.v')!
  for suffix in ['arm','x86'] {
   for phase in ['before','after'] {
    state := p0+'states/'+phase+'-'+suffix
    value := object(state+'/receipt.json')!
-   assert value['kernel_sha256']!.str()==digest(state+'/kernel/bin/vinix')
-   assert digest(state+'/kernel/bin/vinix')==digest(area+if phase=='before' {'baseline-'} else {'kernel-'}+suffix+'/kernel/bin/vinix')
+   assert value['kernel_sha256']!.str()==digest(state+'/kernel/bin/tulpar')
+   assert digest(state+'/kernel/bin/tulpar')==digest(area+if phase=='before' {'baseline-'} else {'kernel-'}+suffix+'/kernel/bin/tulpar')
    rows := value['results']!.as_array()
    assert rows.len==if phase=='before' {1} else {3}
    for index,row in rows {
@@ -464,7 +464,7 @@ fn parser_refusal(area string,out string) ! {
 
 fn main() {
 	if '--scope-only' in os.args {
-		scope(os.args[2].trim_right('/') + '/', '/Users/alex/code/vinix/')!
+		scope(os.args[2].trim_right('/') + '/', '/Users/alex/code/tulpar/')!
 		println('Native clonecgparent exact source/C scope: PASS')
 		return
 	}
@@ -478,7 +478,7 @@ fn main() {
 	}
 	assert os.args.len in [2, 3] && (os.args.len == 2 || os.args[2] == '--verify-only'), 'Usage: clonecgparent-check.v EVIDENCE-AREA [--verify-only] (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := if os.args.len == 3 {
 		area + 'preview/'
 	} else {
@@ -507,12 +507,12 @@ fn main() {
 			} else {
 				['clonecgparent', 'runtime', 'clonecgshare']
 			}
-			kernel := digest(state + '/kernel/bin/vinix')
+			kernel := digest(state + '/kernel/bin/tulpar')
 			assert kernel == digest(area + '/' + if phase == 'before' {
 				'baseline-' + suffix
 			} else {
 				'kernel-' + suffix
-			} + '/kernel/bin/vinix')
+			} + '/kernel/bin/tulpar')
 			got := receipt(state, arch, kernel, names, phase == 'before')!
 			for key, hash in got { artifacts[phase + '_' + key] = hash }
 			log := os.read_file(state + '/clonecgparent/serial.log')!
@@ -559,12 +559,12 @@ fn main() {
 	}
 	assert digest(area + 'states/preflight-arm/fixture.c') == digest(area + 'states/before-arm/clonecgparent/fixture.c')
 	assert os.read_file(area + 'preflight.log')!.contains('Probe compiler preflight: PASS')
-	pins := object('/Users/alex/.cache/vinix-linux-compat/proctask-20261014/compiler-inputs.json')!
+	pins := object('/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/compiler-inputs.json')!
 	assert pins.len == 15146
 	for path, hash in pins {
-		assert digest('/Users/alex/.cache/vinix-linux-compat/proctask-20261014/compiler/' + path) == hash.str(), path
+		assert digest('/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/compiler/' + path) == hash.str(), path
 	}
-	sdk := object('/Users/alex/.cache/vinix-linux-compat/tidfault-20261015/sdk-inputs.json')!
+	sdk := object('/Users/alex/.cache/tulpar-linux-compat/tidfault-20261015/sdk-inputs.json')!
 	assert sdk.len == 2014
 	for path, hash in sdk {
 		assert digest(area + 'sdk/' + path) == hash.str(), path

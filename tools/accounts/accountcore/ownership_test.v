@@ -5,8 +5,8 @@ import os
 
 $if track_heap ? {
 	#include "heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 const owned_passwd = 'root:x:0:0:root:/root:/bin/sh\nalex:x:1000:1000:Alex:/home/alex:/bin/zsh\n'
@@ -42,7 +42,7 @@ fn owned_cycle(passwd string, group string, shadow string, refused bool) {
 
 fn test_owned_snapshots_and_partial_refusals() {
 	for _ in 0 .. 1000 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		owned_cycle(owned_passwd, owned_group, owned_shadow, false)
 		owned_cycle(owned_bad_uid, owned_group, '', true)
 		owned_cycle(owned_passwd, owned_bad_group, '', true)
@@ -54,13 +54,13 @@ fn test_owned_snapshots_and_partial_refusals() {
 		owned_cycle('alex:x:1000:77::/:/bin/sh\n', owned_group, '', true)
 		owned_cycle('root:x:0:0:root:/root:/bin/sh\r\n', owned_group, '', true)
 		owned_cycle('root:x:0:0:root:/root:/bin/sh', owned_group, '', true)
-		$if track_heap ? { assert C.vinix_heap_end() == 0 }
+		$if track_heap ? { assert C.tulpar_heap_end() == 0 }
 	}
 }
 
 fn test_store_snapshots_release_file_buffers_and_lookup_borrows() ! {
 	pid := os.getpid().str()
-	directory := os.temp_dir() + '/vinix-account-owned-' + pid
+	directory := os.temp_dir() + '/tulpar-account-owned-' + pid
 	defer { os.rmdir_all(directory) or {}; unsafe { pid.free(); directory.free() } }
 	os.mkdir_all(directory)!
 	passwd := directory + '/passwd'; group := directory + '/group'; shadow := directory + '/shadow'
@@ -69,7 +69,7 @@ fn test_store_snapshots_release_file_buffers_and_lookup_borrows() ! {
 	os.chmod(shadow, 0o600)!
 	store := Store{etc: directory, owned: false}
 	for _ in 0 .. 1000 {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		mut db := store.load_public()!
 		assert db.shadows.len == 0 && db.users.len == 2 && db.groups.len == 3
 		mut user := (db.user('alex') or { panic('missing account') }).owned_copy()
@@ -77,21 +77,21 @@ fn test_store_snapshots_release_file_buffers_and_lookup_borrows() ! {
 		assert user.name == 'alex'
 		user.close()
 		$if track_heap ? {
-			remaining := C.vinix_heap_end()
+			remaining := C.tulpar_heap_end()
 			assert remaining == 0
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 		}
 		mut complete := store.load()!
 		assert complete.shadows.len == 2
 		complete.close()
-		$if track_heap ? { assert C.vinix_heap_end() == 0 }
+		$if track_heap ? { assert C.tulpar_heap_end() == 0 }
 	}
 	for bad in [owned_bad_uid, owned_duplicate_uid]! {
 		os.write_file(passwd, bad)!
 		for _ in 0 .. 100 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			if _ := store.load_public() { assert false } else { ownership_error(err) }
-			$if track_heap ? { assert C.vinix_heap_end() == 0 }
+			$if track_heap ? { assert C.tulpar_heap_end() == 0 }
 		}
 	}
 }

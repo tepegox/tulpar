@@ -537,7 +537,7 @@ pub fn look_for_images() bool {
 	hib_waiting = name
 	C.kprintf(c'hibernate: an image of this system is waiting on %.*s, and this boot has not gone back into it.\n',
 		i32(name.len), name.str)
-	print('hibernate: the disks are left alone, so that it stays true: start with vinix.hibernate= naming that device to go back into it, or clear the device to be rid of it\n')
+	print('hibernate: the disks are left alone, so that it stays true: start with tulpar.hibernate= naming that device to go back into it, or clear the device to be rid of it\n')
 	return true
 }
 

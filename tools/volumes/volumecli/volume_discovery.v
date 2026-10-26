@@ -21,6 +21,6 @@ fn open_loaded_volume_seal_auto(mut work VolumeSealFiles, readonly bool) i32 {
 	fd := discover_disk_key(&work.disk, c'/dev', work.request.data.flags == 0, &name[0], mut work.status)
 	if fd < 0 { return 1 }; defer { C.close(fd) }
 	if !volume_seal_recheck(fd, mut work) || !volume_seal_recheck(fd, mut work) { return 1 }
-	if C.ioctl(fd, u64(0x56560006), &work.request) != 0 { C.perror(c'vinix-volume: import discovered encrypted mapping'); return 1 }
-	return finish_bundle_report(C.printf(c'/dev/mapper/vinix%u\n', work.request.data.slot) >= 0)
+	if C.ioctl(fd, u64(0x56560006), &work.request) != 0 { C.perror(c'tulpar-volume: import discovered encrypted mapping'); return 1 }
+	return finish_bundle_report(C.printf(c'/dev/mapper/tulpar%u\n', work.request.data.slot) >= 0)
 }

@@ -46,7 +46,7 @@ fn selected_source(raw string) !string {
 		if hosttest.named_body(body, 'v_panic') && !body.contains('policytransport__unexpected_v_panic') { continue }
 		if hosttest.named_body(body, 'main') && !body.contains('cpupolicyfixture__run') { continue }
 		if ['linuxkpi__', 'samplefixture__', 'policytransport__', 'cpupolicyfixture__', 'katomic__', 'lib__', 'cpu__', 'memory__'].any(line.contains(it))
-			|| ['vinix_linuxkpi_cpu_has', 'policy_configure', 'policy_initialize', 'policy_state', 'policy_seed_ready', 'policy_sample', 'array_get', 'v_panic', 'main', '_vno_main_init_caller'].any(hosttest.named_body(body, it)) {
+			|| ['tulpar_linuxkpi_cpu_has', 'policy_configure', 'policy_initialize', 'policy_state', 'policy_seed_ready', 'policy_sample', 'array_get', 'v_panic', 'main', '_vno_main_init_caller'].any(hosttest.named_body(body, it)) {
 			bodies << body
 		}
 	}
@@ -96,7 +96,7 @@ fn selected_source(raw string) !string {
 fn native_objects(work string, raw string, selected string, environment map[string]string) !json2.Any {
 	names := ['linuxkpi__directstore_has', 'linuxkpi__initialise_cpu_features',
 		'linuxkpi__cpu_infrastructure_has', 'linuxkpi__initialise_cpu_infrastructure_features',
-		'linuxkpi__cpu_has', 'vinix_linuxkpi_cpu_has', 'samplefixture__sample']
+		'linuxkpi__cpu_has', 'tulpar_linuxkpi_cpu_has', 'samplefixture__sample']
 	mut bodies := []string{}
 	mut hashes := map[string]string{}
 	for name in names {
@@ -162,7 +162,7 @@ fn run_profile(keep string) ! {
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	pin := hosttest.upstream_pin()!
 	hosttest.verify_upstream(linux, pin)!
-	work := hosttest.work_dir(keep, 'vinix-cpu-policy-v-')!
+	work := hosttest.work_dir(keep, 'tulpar-cpu-policy-v-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	policies := ['cpu_features_amd64.v', 'cpu_features_enabled_amd64.v']
 	mut inputs := [@FILE, root + '/kernel/linuxkpi/bridge_amd64.v', root + '/kernel/x86/cpu/local/local.v',
@@ -228,7 +228,7 @@ fn run_profile(keep string) ! {
 	raw := os.read_file(raw_path)!
 	selected := work + '/selected.c'
 	os.write_file(selected, selected_source(raw)!)!
-	mut includes := ['-D__KERNEL__', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST',
+	mut includes := ['-D__KERNEL__', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST',
 		'-include', root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h',
 		'-include', linux + '/include/linux/compiler_types.h']
 	for directory in [root + '/tests/linuxkpi', root + '/kernel/linuxkpi/include', linux + '/include',

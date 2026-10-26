@@ -6,8 +6,8 @@ import tools.packages.pkglaunch
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn command_owned_cycles() int { return $if track_heap ? { 1000 } $else { 64 } }
@@ -54,14 +54,14 @@ fn test_command_parser_repeat_calls_retire_success_and_refusal_scratch() {
 		mut source := command_owned_source(count)
 		defer { pkgprotocol.free_command_values(mut source) }
 		mut warm := command_launch(source)!; warm.close()
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles {
 			mut value := command_launch(source)!
 			assert value.documents.len == count && value.arguments.len == 8 && value.data_cwd
 			value.close(); value.close()
 		}
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0, count.str() + ': retained ' + kept.str()
+			kept := C.tulpar_heap_end(); assert kept == 0, count.str() + ': retained ' + kept.str()
 			println('COMMAND OWNERSHIP ' + count.str() + ' documents: 1000 parse/close cycles retained 0 bytes')
 		}
 	}
@@ -88,10 +88,10 @@ fn test_command_parser_repeat_calls_retire_success_and_refusal_scratch() {
 	]
 	for i, source in cases {
 		command_owned_refusal(source, messages[i])
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles { command_owned_refusal(source, messages[i]) }
 		$if track_heap ? {
-			kept := C.vinix_heap_end(); assert kept == 0, messages[i] + ': retained ' + kept.str()
+			kept := C.tulpar_heap_end(); assert kept == 0, messages[i] + ': retained ' + kept.str()
 			println('COMMAND OWNERSHIP refusal ' + i.str() + ': 1000 attempts retained 0 bytes')
 		}
 	}
@@ -138,9 +138,9 @@ fn test_isolated_transport_validation_retires_borrowed_prefixes_on_both_modes() 
 			// Spreading an array borrows its strings; source remains the owner.
 			defer { unsafe { (&array(&vector)).free() } }
 			pkglaunch.validate_arguments(vector)!
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. cycles { pkglaunch.validate_arguments(vector)! }
-			$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, mode + ' retained ' + kept.str() }
+			$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, mode + ' retained ' + kept.str() }
 			assert vector[0] == mode && vector[2] == '--data-cwd' && vector.last() == '--uid'
 		}
 	}
@@ -160,12 +160,12 @@ fn test_isolated_transport_validation_retires_borrowed_prefixes_on_both_modes() 
 		'command argument contains NUL or exceeds 4096 bytes', 'command launch exceeds the 64 KiB input limit',
 		'command launch exceeds the argument/document count limit']
 	for i, source in cases {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. cycles {
 			if _ := pkglaunch.validate_arguments(source) { assert false }
 			else { message := err.msg(); assert message == messages[i], message; unsafe { message.free(); err.free() } }
 		}
-		$if track_heap ? { kept := C.vinix_heap_end(); assert kept == 0, messages[i] + ': retained ' + kept.str() }
+		$if track_heap ? { kept := C.tulpar_heap_end(); assert kept == 0, messages[i] + ': retained ' + kept.str() }
 	}
 	mut source := command_owned_source(256)
 	source << []string{len: 248, init: ''}

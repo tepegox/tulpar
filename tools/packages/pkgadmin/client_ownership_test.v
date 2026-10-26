@@ -21,14 +21,14 @@ fn C.kill(int, int) int
 fn C.usleep(u32) int
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 fn admin_client_cycles() int { $if admin_client_baseline ? { return 5 }; return 1000 }
 fn admin_client_error(err IError) string { message := err.msg(); unsafe { err.free() }; return message }
 fn admin_client_window(label string) {
 	$if track_heap ? {
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('ADMIN CLIENT ' + label + ' retained ' + kept.str() + ' bytes')
 		$if !admin_client_baseline ? { assert kept == 0, kept.str() }
 	}
@@ -54,7 +54,7 @@ fn test_admin_password_owners_and_refusals() {
 	defer { unsafe { inputs[2].free(); (&array(&inputs)).free() } }
 	for index, text in inputs {
 		before := admin_client_fds()
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. admin_client_cycles() {
 			fd := admin_fixture_input(text)
 			if mut password := read_password(fd) {
@@ -74,12 +74,12 @@ fn test_admin_password_owners_and_refusals() {
 }
 fn test_admin_client_unavailable_service_retires_inputs() {
 	arguments := ['update']; defer { unsafe { (&array(&arguments)).free() } }
-	root := os.temp_dir() + '/vinix-admin-local-' + os.getpid().str()
+	root := os.temp_dir() + '/tulpar-admin-local-' + os.getpid().str()
 	os.mkdir(root, mode: 0o700)!
 	defer { os.rmdir_all(root) or {}; unsafe { root.free() } }
 	path := root + '/auth.sock'; defer { unsafe { path.free() } }
 	before := admin_client_fds()
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. admin_client_cycles() {
 		if _ := run_with_socket(arguments, path) { assert false } else {
 			message := admin_client_error(err)
@@ -97,19 +97,19 @@ fn test_admin_output_requires_bound_receipt_and_exact_eof() {
 	request := Request{ nonce: '0123456789abcdef0123456789abcdef', arguments: arguments }
 	receipt := request.receipt(37); defer { unsafe { receipt.free() } }
 	oversized := 'x'.repeat(16385); defer { unsafe { oversized.free() } }
-	inputs := [receipt + '\n', 'diagnostic\nVINIX-PACKAGE-PROGRESS {"phase":"check"}\n' + receipt + '\n',
+	inputs := [receipt + '\n', 'diagnostic\nTULPAR-PACKAGE-PROGRESS {"phase":"check"}\n' + receipt + '\n',
 		oversized + '\n' + receipt + '\n', receipt.replace(request.nonce, 'ffffffffffffffffffffffffffffffff') + '\n',
 		receipt + '\nextra', receipt.clone(), 'diagnostic\n', '', receipt + '\n\n',
 		result_prefix + oversized + '\n', pkgprotocol.progress_prefix + oversized + '\n', receipt + 'x\n']
 	defer { unsafe { inputs.free() } }
-	path := os.temp_dir() + '/vinix-admin-stream-' + os.getpid().str(); defer { unsafe { path.free() } }
+	path := os.temp_dir() + '/tulpar-admin-stream-' + os.getpid().str(); defer { unsafe { path.free() } }
 	before := admin_client_fds()
 	for index, input in inputs {
 		os.write_file(path, input)!
 		fd := C.open(path.str, C.O_RDONLY); assert fd >= 0
 		output := C.dup(1); assert output >= 0
 		null := C.open(c'/dev/null', C.O_WRONLY); assert null >= 0; assert C.dup2(null, 1) == 1; C.close(null)
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. admin_client_cycles() {
 			assert C.lseek(fd, 0, C.SEEK_SET) == 0
 			if status := receive_output(fd, request) { assert index < 3 && status == 37 } else {
@@ -143,7 +143,7 @@ fn test_admin_reply_checks_borrow_fields_and_invitation() {
 			fields := ['0', input]; frame := authproto.text_frame(authproto.status_ok, ...fields)
 			unsafe { frames.push_many(&frame, 1); (&array(&fields)).free() }
 		}
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. admin_client_cycles() {
 			for index, frame in frames {
 				assert reply_field(frame, 0, '0') && reply_field(frame, 1, inputs[index])
@@ -160,7 +160,7 @@ fn test_admin_approval_errors_own_their_diagnostics_after_reply_retirement() {
 		nonce := '0123456789abcdef0123456789abcdef'
 		invitation := nonce + '\n'; defer { unsafe { invitation.free() } }
 		for mode in 0 .. 7 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			for _ in 0 .. admin_client_cycles() {
 				fields := if mode == 0 { ['0', invitation] } else if mode == 1 { ['7'] }
 					else if mode == 2 { ['0', invitation] } else if mode == 3 { ['1', 'review was refused'] }
@@ -192,7 +192,7 @@ fn test_admin_approval_errors_own_their_diagnostics_after_reply_retirement() {
 }
 fn admin_fixture_accept(listener int) !int {
 	mut readiness := Poll{ fd: i32(listener), events: 1 }
-	if C.vinix_package_admin_poll(unsafe { &readiness }, 1, 30000) <= 0 { return error('fixture accept timeout') }
+	if C.tulpar_package_admin_poll(unsafe { &readiness }, 1, 30000) <= 0 { return error('fixture accept timeout') }
 	fd := C.accept(listener, unsafe { nil }, unsafe { nil })
 	if fd < 0 { return error('fixture accept failed') }
 	return fd
@@ -261,7 +261,7 @@ fn admin_fixture_worker(socket string, arguments []string, mode int) {
 	before := admin_client_fds()
 	output := C.dup(1); assert output >= 0
 	null := C.open(c'/dev/null', C.O_WRONLY); assert null >= 0; assert C.dup2(null, 1) == 1; C.close(null)
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for cycle in 0 .. admin_client_cycles() {
 		input := admin_fixture_input('fixture-password\n'); assert C.dup2(input, 0) == 0; C.close(input)
 		if code := run_with_socket(arguments, socket) {
@@ -282,12 +282,12 @@ fn test_root_service_exercises_complete_ordinary_administration_callers() {
 	$if !admin_client_guest ? { return }
 	if os.geteuid() != 0 { return }
 	directory := '/run/user/1000'; os.mkdir_all(directory, mode: 0o700)!; os.chown(directory, 1000, 1000)!
-	root := os.temp_dir() + '/vinix-admin-service-' + os.getpid().str(); os.mkdir(root, mode: 0o755)!
+	root := os.temp_dir() + '/tulpar-admin-service-' + os.getpid().str(); os.mkdir(root, mode: 0o755)!
 	defer { os.rmdir_all(root) or {}; unsafe { root.free() } }
 	path := root + '/auth.sock'; defer { unsafe { path.free() } }
 	location := address(path)!; listener := C.socket(C.AF_UNIX, C.SOCK_STREAM, 0); assert listener >= 0
 	defer { C.close(listener) }
-	assert C.bind(listener, unsafe { &location }, u32(sizeof(C.vinix_package_admin_address))) == 0
+	assert C.bind(listener, unsafe { &location }, u32(sizeof(C.tulpar_package_admin_address))) == 0
 	assert C.listen(listener, 8) == 0; os.chmod(path, 0o666)!
 	arguments := ['--progress', '--offline', 'policy-apply', 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', '/etc/a space; $literal "quote" \\ 💡.json']
 	defer { unsafe { (&array(&arguments)).free() } }

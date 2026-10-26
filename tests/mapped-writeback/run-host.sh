@@ -89,7 +89,7 @@ cat > "$work/modules/sched/sched.v" <<'EOF'
 module sched
 pub fn yield(_save bool) {}
 EOF
-if [ "${VINIX_HOST_SANITIZE:-0}" = 1 ]; then
+if [ "${TULPAR_HOST_SANITIZE:-0}" = 1 ]; then
     VMODULES="$work/modules" "$root/build-support/source-tools/run" test-directory "$v" "$work/modules/ext2" -cc clang -cflags '-fsanitize=address,undefined' -ldflags '-fsanitize=address,undefined' -enable-globals -gc none
 else
     VMODULES="$work/modules" "$root/build-support/source-tools/run" test-directory "$v" "$work/modules/ext2" -enable-globals -gc none

@@ -95,9 +95,9 @@ void *gtk_builder_new_from_resource(const char *resource_path) {
     if (!builder_from_resource)
         return (void *)0;
 
-    char *builder_boundary = getenv("VINIX_GTK_SMOKE_BUILDER_BOUNDARY");
+    char *builder_boundary = getenv("TULPAR_GTK_SMOKE_BUILDER_BOUNDARY");
     if (builder_boundary && builder_boundary[0] == '1') {
-        /* The widget factory's large embedded UI currently monopolises Vinix's
+        /* The widget factory's large embedded UI currently monopolises Tulpar's
            single QEMU CPU inside this call. Reaching it with a live X display
            is the deterministic integration boundary for that example. */
         sync_and_exit();

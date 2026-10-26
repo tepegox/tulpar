@@ -30,7 +30,7 @@ fn checked(binary string, profile string, cache string) ! {
 				mut recipe := manifest['compile_command']!.as_array().map(it.str())
 				mut cc := []string{}
 				if arch == 'aarch64' {
-					sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { hosttest.root() + '/build-aarch64-userland/sysroot' }
+					sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { hosttest.root() + '/build-aarch64-userland/sysroot' }
 					cc = [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk, '-L' + sdk + '/lib', '-fuse-ld=lld']
 				} else { cc = [os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }] }
 				mut expected := cc.clone()
@@ -43,7 +43,7 @@ fn checked(binary string, profile string, cache string) ! {
 				recipe[recipe.len - 1] = init + '-original-recipe'
 				fixturehost.inherited_command_environment_preferred(recipe, env, policyhost.caller_arch())!
 				if bytes != os.read_bytes(init + '-original-recipe')! { return error('Byte-identical recipe replay differs') }
-				if manifest['kernel_sha256']!.str() != hosttest.sha(kernel + '/bin/vinix')! { return error('Kernel snapshot differs') }
+				if manifest['kernel_sha256']!.str() != hosttest.sha(kernel + '/bin/tulpar')! { return error('Kernel snapshot differs') }
 				for block in if family == 'ext2-sparse' { ['1024', '4096'] } else { ['4096'] } {
 					disk := work + if family == 'ext2-sparse' { '/root-' + block + '.ext2' } else { '/root.ext2' }
 					if os.file_size(disk) != u64(64 * 1024 * 1024) { return error('Wrong physical disk size') }
@@ -53,7 +53,7 @@ fn checked(binary string, profile string, cache string) ! {
 					check := fixturehost.capture_both_preferred([os.dir(format[0]) + '/e2fsck', '-f', '-n', disk], env, policyhost.caller_arch())!
 					if check.status != 0 { return error('Initial physical ext2 image inconsistent') }
 				}
-				if arch == 'amd64' && os.read_file(work + '/seed/.vinix-image-id')! != manifest['archive_sha256']!.str()[..16] + '\n' { return error('Exact ISO/root identity differs') }
+				if arch == 'amd64' && os.read_file(work + '/seed/.tulpar-image-id')! != manifest['archive_sha256']!.str()[..16] + '\n' { return error('Exact ISO/root identity differs') }
 				if arch == 'aarch64' && os.ls(work + '/seed')!.len != 0 { return error('ARM home must start empty') }
 				println('Native target, exact recipe replay and physical ext2 images PASS: ' + profile + ' ' + family + ' ' + arch + ' retention=' + retention.str())
 			}

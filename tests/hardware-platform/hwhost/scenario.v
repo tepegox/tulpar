@@ -226,7 +226,7 @@ const tftp_probe = StateFile{
 const iommu_disk = Disk{
 	name:     'disk.raw'
 	size_mib: 32
-	header:   'vinix hardware test disk: not blank'
+	header:   'tulpar hardware test disk: not blank'
 }
 
 // A machine with an empty PCI Express port, no network card, and the network
@@ -421,7 +421,7 @@ pub const scenarios = [
 			Disk{
 				name:     'disk.raw'
 				size_mib: 32
-				header:   'vinix hardware test disk: not blank'
+				header:   'tulpar hardware test disk: not blank'
 			},
 		]
 		required: ['HWTEST START ahci', 'HWTEST PASS ahci']
@@ -472,7 +472,7 @@ pub const scenarios = [
 		name:     'iommu-intel'
 		about:    'network card and disk controller isolated behind Intel VT-d'
 		arches:   ['x86_64']
-		cmdline:  'vinix.iommu=1'
+		cmdline:  'tulpar.iommu=1'
 		qemu:     ['-device', 'intel-iommu', '-nic', 'user,model=e1000,tftp={state}/tftp', '-drive',
 			'if=ide,format=raw,file={state}/disk.raw']
 		disks:    [iommu_disk]
@@ -484,7 +484,7 @@ pub const scenarios = [
 		name:     'iommu-amd'
 		about:    'network card and disk controller isolated behind AMD-Vi'
 		arches:   ['x86_64']
-		cmdline:  'vinix.iommu=1'
+		cmdline:  'tulpar.iommu=1'
 		// QEMU's AMD unit translates nothing unless it is told to.
 		qemu:     ['-device', 'amd-iommu,dma-remap=on', '-nic', 'user,model=e1000,tftp={state}/tftp',
 			'-drive', 'if=ide,format=raw,file={state}/disk.raw']
@@ -509,7 +509,7 @@ pub const scenarios = [
 		about:    'the kernel makes a card reach past its domain behind Intel VT-d'
 		arches:   ['x86_64']
 		define:   'vtd_selftest'
-		cmdline:  'vinix.iommu=1'
+		cmdline:  'tulpar.iommu=1'
 		qemu:     ['-device', 'intel-iommu', '-nic', 'user,model=e1000']
 		required: ['HWTEST START iommu-intel-selftest', 'HWTEST PASS iommu-intel-selftest']
 		ending:   .poweroff
@@ -519,7 +519,7 @@ pub const scenarios = [
 		about:    'the kernel makes a card reach past its domain behind AMD-Vi'
 		arches:   ['x86_64']
 		define:   'amdvi_selftest'
-		cmdline:  'vinix.iommu=1'
+		cmdline:  'tulpar.iommu=1'
 		qemu:     ['-device', 'amd-iommu,dma-remap=on', '-nic', 'user,model=e1000']
 		required: ['HWTEST START iommu-amd-selftest', 'HWTEST PASS iommu-amd-selftest']
 		ending:   .poweroff
@@ -535,7 +535,7 @@ pub const scenarios = [
 		name:     'cpu-power-simulated'
 		about:    'governors and profiles reach every CPU through a made-up frequency driver'
 		arches:   ['x86_64']
-		cmdline:  'vinix.cpufreq=simulate'
+		cmdline:  'tulpar.cpufreq=simulate'
 		required: ['HWTEST START cpu-power-simulated', 'HWTEST PASS cpu-power-simulated']
 		ending:   .poweroff
 	},
@@ -589,9 +589,9 @@ pub const scenarios = [
 	},
 	Scenario{
 		name:     'acpi-backlight-off'
-		about:    'vinix.acpi_backlight=off: the same panels are left alone'
+		about:    'tulpar.acpi_backlight=off: the same panels are left alone'
 		arches:   ['x86_64']
-		cmdline:  'vinix.acpi_backlight=off'
+		cmdline:  'tulpar.acpi_backlight=off'
 		tables:   ['backlight-bench']
 		qemu:     ['-acpitable', 'file={state}/backlight-bench.aml', '-chardev', 'file,id=hwsaid,path={state}/firmware-said.txt',
 			'-device', 'isa-debugcon,iobase=0x505,chardev=hwsaid']
@@ -624,9 +624,9 @@ pub const scenarios = [
 	},
 	Scenario{
 		name:     'acpi-ec-off'
-		about:    'vinix.ec=off leaves an embedded controller alone'
+		about:    'tulpar.ec=off leaves an embedded controller alone'
 		arches:   ['x86_64']
-		cmdline:  'vinix.ec=off'
+		cmdline:  'tulpar.ec=off'
 		tables:   ['ec-absent']
 		qemu:     ['-acpitable', 'file={state}/ec-absent.aml']
 		required: ['HWTEST START acpi-ec-off', 'HWTEST PASS acpi-ec-off']
@@ -649,7 +649,7 @@ pub const scenarios = [
 		about:    'the same with no ECDT, and the controller cleared of events at start and on resume'
 		arches:   ['x86_64']
 		define:   'acpiec_selftest'
-		cmdline:  'vinix.ec=clear,dsdt-gpe'
+		cmdline:  'tulpar.ec=clear,dsdt-gpe'
 		timeout:  240
 		tables:   ['ec-bench-dsdt']
 		qemu:     ec_selftest_qemu('ec-bench-dsdt', false)
@@ -716,9 +716,9 @@ pub const scenarios = [
 	},
 	Scenario{
 		name:     'pci-d3-off'
-		about:    'vinix.pci_d3=off: the same card stays in D0, and on the bus, through a sleep'
+		about:    'tulpar.pci_d3=off: the same card stays in D0, and on the bus, through a sleep'
 		arches:   ['aarch64', 'x86_64']
-		cmdline:  'vinix.pci_d3=off'
+		cmdline:  'tulpar.pci_d3=off'
 		qemu:     d3_card
 		files:    [tftp_probe]
 		required: ['HWTEST START pci-d3-off', 'HWTEST PASS pci-d3-off']
@@ -866,7 +866,7 @@ pub const scenarios = [
 		name:     'pci-hotplug-iommu'
 		about:    'a card that arrives behind an IOMMU that is on gets a domain of its own'
 		arches:   ['x86_64']
-		cmdline:  'vinix.iommu=1'
+		cmdline:  'tulpar.iommu=1'
 		qemu:     hotplug_machine_isolated
 		files:    [tftp_probe]
 		required: ['HWTEST START pci-hotplug-iommu', 'HWTEST PASS pci-hotplug-iommu']
@@ -894,7 +894,7 @@ pub const scenarios = [
 		name:     'suspend-deep-iommu'
 		about:    'the same behind Intel VT-d: the unit is brought back before any device may use the bus'
 		arches:   ['x86_64']
-		cmdline:  'vinix.iommu=1'
+		cmdline:  'tulpar.iommu=1'
 		qemu:     ['-smp', '4', '-device', 'intel-iommu', '-nic', 'user,model=e1000,tftp={state}/tftp',
 			'-drive', 'if=ide,format=raw,file={state}/disk.raw']
 		disks:    [deep_disk]
@@ -911,7 +911,7 @@ pub const scenarios = [
 		name:     'suspend-deep-iommu-amd'
 		about:    'the same behind AMD-Vi'
 		arches:   ['x86_64']
-		cmdline:  'vinix.iommu=1'
+		cmdline:  'tulpar.iommu=1'
 		qemu:     ['-smp', '4', '-device', 'amd-iommu,dma-remap=on', '-nic', 'user,model=e1000,tftp={state}/tftp',
 			'-drive', 'if=ide,format=raw,file={state}/disk.raw']
 		disks:    [deep_disk]
@@ -1025,9 +1025,9 @@ pub const scenarios = [
 	},
 	Scenario{
 		name:     'suspend-deep-forced'
-		about:    'the same display with vinix.deep_sleep=force: offered, and the machine comes back'
+		about:    'the same display with tulpar.deep_sleep=force: offered, and the machine comes back'
 		arches:   ['x86_64']
-		cmdline:  'vinix.deep_sleep=force'
+		cmdline:  'tulpar.deep_sleep=force'
 		qemu:     ['-vga', 'virtio']
 		required: ['HWTEST START suspend-deep-forced', 'HWTEST PASS suspend-deep-forced']
 		ending:   .poweroff
@@ -1088,9 +1088,9 @@ pub const scenarios = [
 	},
 	Scenario{
 		name:     'suspend-deep-wake-off'
-		about:    'vinix.acpi_wake=off: the same lid and button are left alone, and no event is left on for the sleep'
+		about:    'tulpar.acpi_wake=off: the same lid and button are left alone, and no event is left on for the sleep'
 		arches:   ['x86_64']
-		cmdline:  'vinix.acpi_wake=off'
+		cmdline:  'tulpar.acpi_wake=off'
 		tables:   ['wake-bench']
 		qemu:     ['-acpitable', 'file={state}/wake-bench.aml', '-chardev', 'file,id=hwsaid,path={state}/firmware-said.txt',
 			'-device', 'isa-debugcon,iobase=0x505,chardev=hwsaid']
@@ -1126,7 +1126,7 @@ pub const scenarios = [
 			Disk{
 				name:     'ide.raw'
 				size_mib: 16
-				header:   'vinix hardware test disk: not blank'
+				header:   'tulpar hardware test disk: not blank'
 			},
 		]
 		required: ['HWTEST START drivers-sleep', 'HWTEST PASS drivers-sleep']
@@ -1181,7 +1181,7 @@ pub const scenarios = [
 			Disk{
 				name:     'nvme.raw'
 				size_mib: 16
-				header:   'vinix hardware test disk: not blank'
+				header:   'tulpar hardware test disk: not blank'
 			},
 		]
 		required: ['HWTEST START nvme-sleep', 'HWTEST PASS nvme-sleep']
@@ -1219,7 +1219,7 @@ pub const scenarios = [
 		name:       'hibernate'
 		about:      'suspend to disk, twice: the machine is switched off and the same process carries on in the next boot'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk]
 		files:      [tftp_probe]
@@ -1238,7 +1238,7 @@ pub const scenarios = [
 		name:       'hibernate-xapic'
 		about:      'the same on processors without x2APIC or 57-bit addresses: page tables four levels deep'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       ['-cpu', 'max,-x2apic,-la57', '-smp', '4', '-nic', 'user,model=e1000,tftp={state}/tftp',
 			'-drive', 'if=ide,format=raw,file={state}/disk.raw', '-drive',
 			'if=ide,format=raw,file={state}/image.raw']
@@ -1259,7 +1259,7 @@ pub const scenarios = [
 		name:       'hibernate-iommu'
 		about:      'the same behind Intel VT-d, which the kernel that loads the image has switched on too'
 		arches:     ['x86_64']
-		cmdline:    'vinix.iommu=1 vinix.hibernate=sd1'
+		cmdline:    'tulpar.iommu=1 tulpar.hibernate=sd1'
 		qemu:       hibernate_machine_isolated
 		disks:      [hibernate_data_disk, hibernate_image_disk]
 		files:      [tftp_probe]
@@ -1278,7 +1278,7 @@ pub const scenarios = [
 		name:       'hibernate-iommu-amd'
 		about:      'the same behind AMD-Vi'
 		arches:     ['x86_64']
-		cmdline:    'vinix.iommu=1 vinix.hibernate=sd1'
+		cmdline:    'tulpar.iommu=1 tulpar.hibernate=sd1'
 		qemu:       ['-smp', '4', '-device', 'amd-iommu,dma-remap=on', '-nic',
 			'user,model=e1000,tftp={state}/tftp', '-drive', 'if=ide,format=raw,file={state}/disk.raw',
 			'-drive', 'if=ide,format=raw,file={state}/image.raw']
@@ -1299,7 +1299,7 @@ pub const scenarios = [
 		name:       'hibernate-cycles'
 		about:      'five suspends to disk one after another, and what the last four leave allocated in the kernel'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk]
 		files:      [tftp_probe]
@@ -1313,7 +1313,7 @@ pub const scenarios = [
 		name:       'hibernate-damaged-header'
 		about:      'an image whose header was damaged while the machine was off is not gone back into'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk]
 		files:      [tftp_probe]
@@ -1341,7 +1341,7 @@ pub const scenarios = [
 		name:       'hibernate-damaged-pages'
 		about:      'nor one with a page damaged, which is only found once all of it has been read'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk]
 		files:      [tftp_probe]
@@ -1368,7 +1368,7 @@ pub const scenarios = [
 		name:       'hibernate-memory'
 		about:      'nor by a machine with another amount of memory than the image was taken on'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk]
 		files:      [tftp_probe]
@@ -1387,13 +1387,13 @@ pub const scenarios = [
 		name:       'hibernate-disks'
 		about:      'nor by a machine with a disk more than the image was taken with'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk,
 			Disk{
 				name:     'extra.raw'
 				size_mib: 16
-				header:   'vinix hardware test disk: not blank'
+				header:   'tulpar hardware test disk: not blank'
 			}]
 		files:      [tftp_probe]
 		required:   ['HWTEST START hibernate-disks', 'HWTEST PASS hibernate-disks']
@@ -1412,7 +1412,7 @@ pub const scenarios = [
 		name:       'hibernate-root'
 		about:      'suspend to disk with the system on a disk: resumed, used again, and found whole by a third start'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_root_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk, hibernate_system_disk]
 		files:      [tftp_probe]
@@ -1427,7 +1427,7 @@ pub const scenarios = [
 		name:       'hibernate-waiting'
 		about:      'a start without the option, between the suspend to disk and the resume, leaves the image and the system\'s disk alone'
 		arches:     ['x86_64']
-		cmdline:    'vinix.hibernate=sd1'
+		cmdline:    'tulpar.hibernate=sd1'
 		qemu:       hibernate_root_machine
 		disks:      [hibernate_data_disk, hibernate_image_disk, hibernate_system_disk]
 		files:      [tftp_probe]
@@ -1445,7 +1445,7 @@ pub const scenarios = [
 		name:     'hibernate-foreign'
 		about:    'a named device that holds something else is not written to, and there is no disk state'
 		arches:   ['x86_64']
-		cmdline:  'vinix.hibernate=sd1'
+		cmdline:  'tulpar.hibernate=sd1'
 		qemu:     hibernate_machine
 		disks:    [
 			Disk{
@@ -1509,7 +1509,7 @@ const hibernate_system_disk = Disk{
 const hibernate_data_disk = Disk{
 	name:     'disk.raw'
 	size_mib: 32
-	header:   'vinix hardware test disk: not blank'
+	header:   'tulpar hardware test disk: not blank'
 }
 
 // Room for an image of everything a machine with a gigabyte of memory can
@@ -1583,7 +1583,7 @@ const hibernate_refusal_patterns = [
 const hibernate_no_image = [
 	DiskBytes{
 		disk: 'image.raw'
-		text: 'VINIXHIB'
+		text: 'TULPARHIB'
 	},
 	DiskBytes{
 		disk:   'image.raw'
@@ -1601,7 +1601,7 @@ const deep_once = ['SUSPEND', 'WAKEUP']
 const deep_disk = Disk{
 	name:     'disk.raw'
 	size_mib: 32
-	header:   'vinix hardware test disk: not blank'
+	header:   'tulpar hardware test disk: not blank'
 	prefill:  [
 		DiskPattern{
 			offset: 17 << 20

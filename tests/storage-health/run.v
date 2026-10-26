@@ -46,7 +46,7 @@ fn host(root string, work string, ans_only bool) ! {
 	put(work, 'errno/error.v', '@[has_globals]\nmodule errno\n__global pub code int\npub const eio=5\npub const ebadf=9\npub const enodev=19\npub const enotty=25\npub const efault=14\npub const eperm=1\npub const enomem=12\npub const einval=22\npub const erofs=30\npub const eopnotsupp=95\npub fn set(value u64) { code=int(value) }\npub fn get() u64 { return u64(code) }\n')!
 	// Keep optional-interface dispatch compilable in individual health tests
 	// that do not import a status-capable backend. This stub is never published.
-	put(work, 'resource/base.v', 'module resource\nimport stat\n#define vinix_stack_alloc __builtin_alloca\nfn C.vinix_stack_alloc(usize) voidptr\npub interface Resource { mut: stat stat.Stat }\nstruct StatusStub { mut: stat stat.Stat }\nfn (mut s StatusStub) block_status() BlockStatus { return BlockStatus{version:0} }\npub struct BlockMetrics { pub mut: failures int }\npub fn (mut m BlockMetrics) failed() { m.failures++ }\npub fn (mut m BlockMetrics) flushed() {}\npub const o_rdonly=0\npub const o_rdwr=2\npub const o_accmode=3|0o10000000\n'
+	put(work, 'resource/base.v', 'module resource\nimport stat\n#define tulpar_stack_alloc __builtin_alloca\nfn C.tulpar_stack_alloc(usize) voidptr\npub interface Resource { mut: stat stat.Stat }\nstruct StatusStub { mut: stat stat.Stat }\nfn (mut s StatusStub) block_status() BlockStatus { return BlockStatus{version:0} }\npub struct BlockMetrics { pub mut: failures int }\npub fn (mut m BlockMetrics) failed() { m.failures++ }\npub fn (mut m BlockMetrics) flushed() {}\npub const o_rdonly=0\npub const o_rdwr=2\npub const o_accmode=3|0o10000000\n'
 		+ function(os.read_file(root + '/kernel/resource/block_discard.v')!, 'discard_range_valid')!)!
 	os.cp(root + '/kernel/resource/block_health.v', work + '/resource/health.v')!
 	status_source := os.read_file(root + '/kernel/resource/block_status.v')!
@@ -111,7 +111,7 @@ fn nvme_host(root string, work string) ! {
 	}
 	functions += function(source[source.index('pub fn (mut pair NVMEQueuePair) initialise(') or { return error('Missing queue initializer') }..], 'initialise')!
 	put(work, 'nvme/nvme.v', declarations.replace('module nvme', 'module nvme\nimport memory\nimport lib\nimport pci\nimport bitmap\nimport stat\nimport klock\nimport event.eventstruct\nimport errno\nimport katomic\nimport resource\nimport proc\nimport x86.hpet as hpet_clock\n')
-		+ '\nconst page_size=u64(4096)\nconst higher_half=u64(0)\n__global kernel_pagemap=memory.Pagemap{}\n#include <stdio.h>\n#define kprintf printf\n#define vinix_stack_alloc __builtin_alloca\nfn C.kprintf(&char,...voidptr) int\nfn C.vinix_stack_alloc(usize) voidptr\nfn C.memset(voidptr,i32,usize) voidptr\nfn C.memcpy(voidptr,voidptr,usize) voidptr\n'
+		+ '\nconst page_size=u64(4096)\nconst higher_half=u64(0)\n__global kernel_pagemap=memory.Pagemap{}\n#include <stdio.h>\n#define kprintf printf\n#define tulpar_stack_alloc __builtin_alloca\nfn C.kprintf(&char,...voidptr) int\nfn C.tulpar_stack_alloc(usize) voidptr\nfn C.memset(voidptr,i32,usize) voidptr\nfn C.memcpy(voidptr,voidptr,usize) voidptr\n'
 		// Power-transition waiting is outside this awake-controller model.
 		+ 'fn (mut c NVMEController) wait_awake() { assert !c.asleep }\n' + functions)!
 	os.cp(root + '/kernel/dev/nvme/health.v', work + '/nvme/health.v')!
@@ -131,14 +131,14 @@ fn ans_host(root string, work string) ! {
 	// Preserve the production transport and media policy. Only privileged
 	// hardware callbacks and boot-only globals are omitted on the host.
 	source := os.read_file(root + '/kernel/apple/ans/anscore/core.v')!
-	end := source.index('fn C.vinix_mmio_read32(') or { return error('Missing ANS hardware boundary') }
+	end := source.index('fn C.tulpar_mmio_read32(') or { return error('Missing ANS hardware boundary') }
 	put(work, 'anscore/core.v', source[..end].replace('module anscore',
-		'module anscore\nimport ext2core as _\n#flag -iquote ${root}/kernel/c\n#flag -DVINIX_V_RUNTIME\n')
+		'module anscore\nimport ext2core as _\n#flag -iquote ${root}/kernel/c\n#flag -DTULPAR_V_RUNTIME\n')
 		+ '\n__global ans_controller Ans\n')!
 	os.cp(root + '/kernel/apple/ans/anscore/health.v', work + '/anscore/health.v')!
 	os.cp(root + '/kernel/apple/ans/anscore/status.v', work + '/anscore/status.v')!
 	mut api := ''
-	for name in ['vinix_ans_read', 'vinix_ans_write', 'vinix_ans_flush', 'vinix_ans_partition_writable'] {
+	for name in ['tulpar_ans_read', 'tulpar_ans_write', 'tulpar_ans_flush', 'tulpar_ans_partition_writable'] {
 		api += "\n@[export: '${name}']\n" + function(source, name)!
 	}
 	put(work, 'anscore/api.v', '@[translated]\nmodule anscore\n' + api)!
@@ -153,7 +153,7 @@ fn ans_host(root string, work string) ! {
 	ans_source := os.read_file(root + '/kernel/apple/ans/ans.v')!
 	ans_start := ans_source.index('struct AnsBlock {') or { return error('Missing ANS resource') }
 	ans_end := ans_source.index("// A block geometry query's answer") or { return error('Missing ANS ioctl boundary') }
-	put(work, 'ans/base.v', '@[has_globals]\nmodule ans\nimport stat\nimport klock\nimport event.eventstruct\nimport errno\n__global ans_lock=klock.Lock{}\n__global ans_ready=true\n__global ans_read_error_reported=false\nfn report(_ string,_ int) {}\nfn C.vinix_ans_read(u32,voidptr,u64,usize) i32\nfn C.vinix_ans_write(u32,u32,voidptr,u64,usize) i32\nfn C.vinix_ans_partition_writable(u32,u32) i32\nfn C.vinix_ans_flush() i32\n'
+	put(work, 'ans/base.v', '@[has_globals]\nmodule ans\nimport stat\nimport klock\nimport event.eventstruct\nimport errno\n__global ans_lock=klock.Lock{}\n__global ans_ready=true\n__global ans_read_error_reported=false\nfn report(_ string,_ int) {}\nfn C.tulpar_ans_read(u32,voidptr,u64,usize) i32\nfn C.tulpar_ans_write(u32,u32,voidptr,u64,usize) i32\nfn C.tulpar_ans_partition_writable(u32,u32) i32\nfn C.tulpar_ans_flush() i32\n'
 		+ ans_source[ans_start..ans_end] + function(ans_source, 'flush')!)!
 	os.cp(root + '/tests/storage-health/ans_test.v', work + '/ans/health_test.v')!
 	os.cp(root + '/tests/storage-health/ans_status_test.v', work + '/ans/status_test.v')!

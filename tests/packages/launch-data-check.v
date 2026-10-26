@@ -20,16 +20,16 @@ fn data_suite(repository string, sandbox string) !hwhost.Suite {
 	return hwhost.Suite{
 		name: 'package-launch-data', guest: 'tests/accounts/guest'
 		module_paths: ['.', 'tools/accounts', 'tools/security-events', 'tools/keyring']
-		programs: [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/vinix-authd' },
-			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+		programs: [hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+			hwhost.Program{ source: 'tools/accounts/authd.v', path: 'usr/sbin/tulpar-authd' },
+			hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 			hwhost.Program{ source: 'tests/packages/launch-data-probe.v', path: 'usr/share/package-fixtures/launch-data-probe' }]
-		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
+		binaries: [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
 		files: [hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
-			hwhost.RootFile{ path: 'usr/share/vinix/actions/packages-launch', text: if repository == '' { '' } else { os.read_file(repository + '/tools/accounts/actions/packages-launch')! } }]
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'usr/share/tulpar/actions/packages-launch', text: if repository == '' { '' } else { os.read_file(repository + '/tools/accounts/actions/packages-launch')! } }]
 		directories: ['run', 'home', 'var/log', 'tmp:1777']
 		scenarios: [hwhost.Scenario{ name: 'packages-launch-data', arches: ['aarch64', 'x86_64'],
 			about: 'ordinary-account application data preparation, unsafe entries, retained data and clean purge', timeout: 180, ending: .poweroff,
@@ -43,10 +43,10 @@ fn data_suite(repository string, sandbox string) !hwhost.Suite {
 fn check() !int {
 	options := hwhost.parse_options(os.args[1..])!
 	if options.help || options.list { return hwhost.run_suite(data_suite('', '')!, os.args[1..], @FILE) }
-	sandbox := os.getenv('VINIX_LAUNCH_DATA_SANDBOX')
-	if os.getenv('VINIX_HWTEST_TCG') != '1' || !os.is_file(sandbox) || !os.is_file(options.kernel)
+	sandbox := os.getenv('TULPAR_LAUNCH_DATA_SANDBOX')
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' || !os.is_file(sandbox) || !os.is_file(options.kernel)
 		|| options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir) {
-		return error('provide VINIX_HWTEST_TCG=1, VINIX_LAUNCH_DATA_SANDBOX, a target --kernel and a new --state-dir')
+		return error('provide TULPAR_HWTEST_TCG=1, TULPAR_LAUNCH_DATA_SANDBOX, a target --kernel and a new --state-dir')
 	}
 	repository := hwhost.find_root(@FILE)!
 	definition := data_suite(repository, sandbox)!
@@ -60,11 +60,11 @@ fn check() !int {
 	guest := hwhost.build_program(host, repository + '/' + definition.guest, work + '/guest', 'init', definition.module_paths)!
 	root := hwhost.build_extras(host, definition, work + '/guest')!
 	mut artifacts := []DataArtifact{}
-	for role, path in {'kernel': work + '/kernel', 'guest-init': guest, 'package-service': root + '/usr/bin/vinix-package',
-		'authentication-service': root + '/usr/sbin/vinix-authd', 'account-manager': root + '/usr/sbin/vinix-account',
-		'session-runner': root + '/usr/sbin/vinix-session', 'sandbox': root + '/usr/bin/vinix-sandbox',
+	for role, path in {'kernel': work + '/kernel', 'guest-init': guest, 'package-service': root + '/usr/bin/tulpar-package',
+		'authentication-service': root + '/usr/sbin/tulpar-authd', 'account-manager': root + '/usr/sbin/tulpar-account',
+		'session-runner': root + '/usr/sbin/tulpar-session', 'sandbox': root + '/usr/bin/tulpar-sandbox',
 		'application-probe': root + '/usr/share/package-fixtures/launch-data-probe',
-		'launch-action': root + '/usr/share/vinix/actions/packages-launch'} { artifacts << data_artifact(role, path)! }
+		'launch-action': root + '/usr/share/tulpar/actions/packages-launch'} { artifacts << data_artifact(role, path)! }
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: work + '/kernel', guest: guest, extras: root,
 		state: work + '/packages-launch-data', timeout: if options.timeout > 180 { options.timeout } else { 180 }, keep: true })
 	println(hwhost.report(options.arch, outcome))

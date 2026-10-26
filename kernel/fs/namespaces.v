@@ -315,7 +315,7 @@ const unshare_allowed = proc.clone_namespace_flags | u64(0x00000100) | clone_fs 
 
 pub fn syscall_unshare(_ voidptr, flags u64) (u64, u64) {
 	// CLONE_FILES, CLONE_SIGHAND and CLONE_SYSVSEM ask to stop sharing what a
-	// Vinix process never shares with another in the first place.
+	// Tulpar process never shares with another in the first place.
 	if flags & ~unshare_allowed != 0 {
 		return errno.err, errno.einval
 	}
@@ -370,7 +370,7 @@ pub fn syscall_setns(_ voidptr, fdnum int, nstype int) (u64, u64) {
 	}
 	mut res := fd.handle.resource
 	if mut res !is NsFSResource {
-		// A pidfd names every namespace of a process at once; Vinix has none.
+		// A pidfd names every namespace of a process at once; Tulpar has none.
 		return errno.err, errno.einval
 	}
 	// Read through the smart cast: `res as NsFSResource` copied the resource
@@ -400,7 +400,7 @@ pub fn syscall_setns(_ voidptr, fdnum int, nstype int) (u64, u64) {
 			}
 			// Joining a mount namespace puts the caller at its root.
 			mut table := table_of(process)
-			identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+			identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 			table.lock.acquire()
 			root := if table.initial || table.root_hint == unsafe { nil } {
 				vfs_root

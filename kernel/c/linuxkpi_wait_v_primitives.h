@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUXKPI_WAIT_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_WAIT_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_WAIT_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_WAIT_V_PRIMITIVES_H
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -54,12 +54,12 @@ bool vkw_atomic_add_unless(void *, int, int);
 bool vkw_atomic_dec_and_test(void *);
 void *vkw_autoremove_callback(void);
 
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 void wait_bit_init(void);
 void *bit_waitqueue(void *, int);
 void *__var_waitqueue(void *);
 int wake_bit_function(struct wait_queue_entry *, unsigned int, int, void *);
-int vinix_linuxkpi_var_wake_function(struct wait_queue_entry *, unsigned int, int, void *);
+int tulpar_linuxkpi_var_wake_function(struct wait_queue_entry *, unsigned int, int, void *);
 void init_wait_var_entry(void *, void *, int);
 int __wait_on_bit(void *, void *, int (*)(struct wait_bit_key *, int), unsigned int);
 int __wait_on_bit_lock(void *, void *, int (*)(struct wait_bit_key *, int), unsigned int);

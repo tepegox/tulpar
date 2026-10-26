@@ -4,7 +4,7 @@ module volumecli
 fn test_growth_preview_syntax_rejects_invalid_paths_arity_and_sizes_before_io() {
 	unsafe {
 		for verb in [&char(c'plan-preview-grow-volume'), &char(c'plan-preview-grow-recovery-volume')]! {
-			mut args := [&char(c'vinix-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'16777216'), &char(c'8192'), &char(nil)]!
+			mut args := [&char(c'tulpar-volume'), verb, &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'16777216'), &char(c'8192'), &char(nil)]!
 			for count in [2, 3, 4, 5, 6, 8] { assert run(count, &args[0]) == 2 }
 			for at in [2, 3, 4] { args[at] = &char(c''); assert run(7, &args[0]) == 2; args[at] = &char(c'/unused') }
 			for at in [5, 6] {

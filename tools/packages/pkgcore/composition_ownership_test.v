@@ -7,13 +7,13 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn composition_owned_fixture(count int, fault string) !(string, []CatalogSource) {
-	work := os.real_path(os.temp_dir()) + '/vinix-composition-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-composition-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work)!
 	mut sources := []CatalogSource{cap: 2}
 	for profile in ['alpha', 'beta']! {
@@ -75,10 +75,10 @@ fn test_composition_planning_retires_inputs_results_and_refusal_scratch() {
 			mut maximum := u64(0); mut records := u32(0)
 			cycles := $if track_heap ? { 128 } $else { 4 }
 			for _ in 0 .. cycles {
-				$if track_heap ? { C.vinix_heap_begin() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				composition_probe_once(sources, architecture, fault != '')
 				$if track_heap ? {
-					kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+					kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 					if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 				}
 			}
@@ -103,7 +103,7 @@ fn test_composition_plan_and_public_result_survive_retired_source_arguments_and_
 	defer { unsafe { catalog_digest.free(); provenance_digest.free() } }
 	assert catalog_digest == '7cefe79d434695991a6fe7526d0aa45c91af7e5a90cb94921a8b06525aee24dd'
 	assert provenance_digest == '89376c4a33384af4e6b7149b5f9b57ceb37dd8606b05336f98158249edb084f6'
-	golden := os.getenv('VINIX_COMPOSITION_GOLDEN')
+	golden := os.getenv('TULPAR_COMPOSITION_GOLDEN')
 	if golden != '' {
 		assert plan.text == os.read_file(golden + '/alpha.json-aarch64-catalog.json')!
 		assert plan.provenance == os.read_file(golden + '/alpha.json-aarch64-composition.json')!

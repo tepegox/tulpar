@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "guard": "VINIX_HOST_PERCPU_LVALUE_ADAPTER_H",
+  "guard": "TULPAR_HOST_PERCPU_LVALUE_ADAPTER_H",
   "sources": [],
   "boundary": {"kind": "upstream_lvalue_address_adapter", "v_algorithm_credit": 0},
   "native_expression_imports": [{"name":"get_cpu_var","header":"linux/percpu.h","parameters":["operand"]}],

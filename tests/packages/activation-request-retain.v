@@ -99,7 +99,7 @@ fn retain() ! {
 		for index, name in ['request', 'lifetime', 'service', 'rollback', 'empty', 'admission']! {
 			for suffix in [name, name + '.c', 'build.log'] { inputs << pin(state + '/guest/program-' + index.str() + '/' + suffix)! }
 		}
-		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/vinix')!
+		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/tulpar')!
 		inputs << pin(os.find_abs_path_of_executable(architecture + '-linux-musl-gcc')!)!
 		report := work + '/guest-' + architecture + '-2.txt'
 		assert os.read_file(report)!.contains('1 passed, 0 failed, 0 skipped'); save(report, prefix + architecture + '.txt', mut evidence)!

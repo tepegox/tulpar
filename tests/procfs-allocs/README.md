@@ -3,15 +3,15 @@
 Build an isolated kernel with `ALLOC_TRACK=1`, then run:
 
 ```sh
-VINIX_KERNEL_DIR=/path/to/worktree/kernel VINIX_QEMU_RT_NO_BUILD=1 \
-  VINIX_AARCH64_SYSROOT=/path/to/aarch64/sysroot \
+TULPAR_KERNEL_DIR=/path/to/worktree/kernel TULPAR_QEMU_RT_NO_BUILD=1 \
+  TULPAR_AARCH64_SYSROOT=/path/to/aarch64/sysroot \
   tests/procfs-allocs/run
-VINIX_AMD64_KERNEL=/path/to/worktree/kernel/bin/vinix \
+TULPAR_AMD64_KERNEL=/path/to/worktree/kernel/bin/tulpar \
   tests/procfs-allocs/run --arch amd64
 tests/procfs-allocs/check-generated kernel/obj/blob.c
 ```
 
-`VINIX_VM_RUNNER_ROOT` can point at a checkout with the prepared boot inputs.
+`TULPAR_VM_RUNNER_ROOT` can point at a checkout with the prepared boot inputs.
 `--baseline` reports retained allocations without enforcing flatness and skips
 the unsafe-name regression against kernels lacking the bounds check.
 

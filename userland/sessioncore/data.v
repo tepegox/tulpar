@@ -23,7 +23,7 @@ fn data_nibble(byte u8) !u8 {
 
 pub fn (a &Associations) encode() string {
 	mut w := Writer{}
-	w.add('vinix-associations\t1\n')
+	w.add('tulpar-associations\t1\n')
 	for i in 0 .. a.count {
 		v := a.items[i]
 		w.add('type\t')
@@ -50,7 +50,7 @@ pub fn decode_associations(record string) !Associations {
 		f := fields(unsafe { tos(&record.str[start], end - start) })!
 		start = end + 1
 		if !header {
-			if f.count != 2 || f.values[0] != 'vinix-associations' || f.values[1] != '1' {
+			if f.count != 2 || f.values[0] != 'tulpar-associations' || f.values[1] != '1' {
 				return error('invalid associations')
 			}
 			header = true

@@ -11,7 +11,7 @@ pages still drop PMM references when their resource has no cache callback.
 `tests/mapped-writeback/run-host.sh` runs actual EXT2 acquire/release/writeback
 code and checks cache-owner/private/fork references, clean pages without I/O,
 mixed private/shared references and failed dirty-page retry. Either host runner
-accepts `VINIX_HOST_SANITIZE=1` for AddressSanitizer and UndefinedBehaviorSanitizer.
+accepts `TULPAR_HOST_SANITIZE=1` for AddressSanitizer and UndefinedBehaviorSanitizer.
 
 Run `tests/mapped-writeback/run --arch aarch64 --steps=private` or
 `--arch amd64 --steps=private` against a built kernel (worktree environment is

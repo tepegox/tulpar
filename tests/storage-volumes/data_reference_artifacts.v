@@ -20,7 +20,7 @@ fn auto_data_crc(bytes []u8, field int) u32 {
 
 fn auto_data_plan(disk int) []u8 {
 	count := if disk == 0 { 2 } else { 1 }; mut bytes := []u8{len: 64 + count * 32}
-	copy(mut bytes, 'VINIXVM1'.bytes())
+	copy(mut bytes, 'TULPARVM1'.bytes())
 	for field in [[8, 4, 1], [12, 4, count], [16, 8, 16777216], [24, 8, 512], [32, 4, 1], [40, 4, 0x12345678 + disk]] {
 		auto_data_put(mut bytes, field[0], field[1], u64(field[2]))
 	}
@@ -50,7 +50,7 @@ fn auto_data_digest(output string, name string, bytes []u8, openssl string) ![]u
 }
 
 fn auto_data_report(reference []u8, expected [][]u8, observed [][]u8, changed bool) string {
-	mut text := 'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=3 matched=${if changed { 1 } else { 3 }} changed=${if changed { 2 } else { 0 }} algorithm=sha256 reference_sha256=${sha256.hexhash(reference.bytestr())}\n'
+	mut text := 'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=3 matched=${if changed { 1 } else { 3 }} changed=${if changed { 2 } else { 0 }} algorithm=sha256 reference_sha256=${sha256.hexhash(reference.bytestr())}\n'
 	for i in 0 .. 3 {
 		disk := if i == 2 { 1 } else { 0 }; slot := [2, 5, 9][i]
 		offset := if i == 1 { 2097152 } else { 1048576 }; length := if i == 1 { 12288 } else { 8192 }
@@ -60,7 +60,7 @@ fn auto_data_report(reference []u8, expected [][]u8, observed [][]u8, changed bo
 }
 
 fn reference_data_comparison(before []u8, after []u8, first [][]u8, second [][]u8, changed bool) string {
-	mut text := 'format=VINIXDH1 operation=compared-data-references disks=2 mappings=3 stable=${if changed { 1 } else { 3 }} changed=${if changed { 2 } else { 0 }} algorithm=sha256 before_reference_sha256=${sha256.hexhash(before.bytestr())} after_reference_sha256=${sha256.hexhash(after.bytestr())}\n'
+	mut text := 'format=TULPARDH1 operation=compared-data-references disks=2 mappings=3 stable=${if changed { 1 } else { 3 }} changed=${if changed { 2 } else { 0 }} algorithm=sha256 before_reference_sha256=${sha256.hexhash(before.bytestr())} after_reference_sha256=${sha256.hexhash(after.bytestr())}\n'
 	for i in 0 .. 3 {
 		disk := if i == 2 { 1 } else { 0 }; slot := [2, 5, 9][i]
 		if i != 1 { text += 'disk=${disk} disk_bytes=16777216 sector=512 identity=mbr:' + if i == 0 { '12345678\n' } else { '12345679\n' } }
@@ -76,9 +76,9 @@ fn main() {
 	for marker in ['first-boot.log', 'second-boot.log'] {
 		text := os.read_file(work + '/' + marker)!; assert text.contains('PLAN DONE') && !text.contains('PLAN FAIL') && !text.contains('KERNEL PANIC')
 	}
-	debugfs := os.getenv_opt('VINIX_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
-	openssl := os.getenv_opt('VINIX_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
-	mut bundle := []u8{len: 64}; copy(mut bundle, 'VINIXVS1'.bytes()); bundle << auto_data_plan(0); bundle << auto_data_plan(1)
+	debugfs := os.getenv_opt('TULPAR_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
+	openssl := os.getenv_opt('TULPAR_OPENSSL') or { '/opt/homebrew/opt/openssl@3/bin/openssl' }
+	mut bundle := []u8{len: 64}; copy(mut bundle, 'TULPARVS1'.bytes()); bundle << auto_data_plan(0); bundle << auto_data_plan(1)
 	for field in [[8, 4, 1], [12, 4, 2], [16, 4, 288], [20, 4, 3]] { auto_data_put(mut bundle, field[0], field[1], u64(field[2])) }
 	auto_data_put(mut bundle, 24, 4, u64(auto_data_crc(bundle, 24)))
 	mut expected := [][]u8{}; mut observed := [][]u8{}; mut evidence := ''
@@ -93,7 +93,7 @@ fn main() {
 		observed << auto_data_digest(output, 'changed-' + i.str(), changed, openssl)!
 		evidence += 'extent=${i} bytes=${bytes.len} restored_sha256=${digest.hex()} changed_sha256=${observed[i].hex()}\n'
 	}
-	mut reference := []u8{len: 64}; copy(mut reference, 'VINIXDH1'.bytes()); reference << bundle
+	mut reference := []u8{len: 64}; copy(mut reference, 'TULPARDH1'.bytes()); reference << bundle
 	for i in 0 .. 3 {
 		mut record := []u8{len: 40}; auto_data_put(mut record, 0, 4, if i == 2 { u64(1) } else { u64(0) })
 		auto_data_put(mut record, 4, 4, u64([2, 5, 9][i])); copy(mut record[8..], expected[i]); reference << record
@@ -115,7 +115,7 @@ fn main() {
 	}
 	auto_data_digest(output, 'reference', reference, openssl)!; auto_data_digest(output, 'changed-reference', later, openssl)!
 	assert sha256.hexhash(reference.bytestr()) == 'a54001cd53e073d1214f5c2ed19a0d4f14c18f6408ac69a4c65a6cf75f4d3d0a' && sha256.hexhash(later.bytestr()) == 'c464c0c5d2f2fc71c03efb0e88385d4c39b2f85b8743286bacd07d7d8db057a1'
-	evidence += 'PASS: independent persisted plain multi-disk bundle, original/automatic/changed VINIXDH1, clean VINIXSR1 and four complete reference comparisons; exact geometry/reserved fields/CRC and V/OpenSSL full-extent/reference SHA-256\n'
+	evidence += 'PASS: independent persisted plain multi-disk bundle, original/automatic/changed TULPARDH1, clean TULPARSR1 and four complete reference comparisons; exact geometry/reserved fields/CRC and V/OpenSSL full-extent/reference SHA-256\n'
 	os.write_file(output + '/oracle.log', evidence)!
 	mut manifest := ''; mut names := os.ls(output)!; names.sort()
 	for name in names { manifest += sha256.hexhash(os.read_file(output + '/' + name)!) + '  ' + name + '\n'; os.chmod(output + '/' + name, 0o600)! }

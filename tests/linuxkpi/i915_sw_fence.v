@@ -37,8 +37,8 @@ fn selected_source(raw string, prefix string, header string, global_prefixes []s
 	mut declarations := []string{}
 	for body in hosttest.c_bodies(raw) {
 		line := body.all_before('\n')
-		if line.contains(prefix) || line.contains(' vinix_arch_') || line.contains(' vinix_might_sleep_if_native(') || line.contains(' vinix_spin_lock_irqsave_nested_native(') || line.contains(' vinix_local_irq_') || line.contains(' spin_') || line.contains(' vinix_raw_spin_trylock(') || line.contains(' arch_atomic_sub_return_relaxed(') || line.contains(' init_timer_key(') || line.contains(' mod_timer(') || line.contains(' timer_shutdown_sync(') || line.contains(' round_jiffies_up(') || line.contains(' vkt_') || line.contains(' vinix_linuxkpi_timer_') || line.contains(' __init_waitqueue_head(') || line.contains(' init_wait_entry(') || line.contains(' prepare_to_wait_event(') || line.contains(' finish_wait(') || line.contains(' default_wake_function(') || line.contains(' autoremove_wake_function(') || line.contains(' dma_resv_') || line.contains(' vdr_') || line.contains(' vkw_') || line.contains(' ww_mutex_') || line.contains(' __mutex_init(') || line.contains(' mutex_is_locked(') || line.contains(' mutex_destroy(') || line.contains(' kmalloc_size_roundup(') || line.contains(' krealloc_array(') || line.contains(' cpu_relax(') || line.contains(' vdf_') || line.contains(' vfa_') || line.contains(' vfc_') || line.contains(' vkiw_') || line.contains(' irq_work_') || line.contains(' arch_irq_work_raise(') || line.contains(' dma_fence_') || line.contains(' vinix_linuxkpi_set_task_state(') || line.contains(' vinix_linuxkpi_time_') || line.contains(' wake_up_') || line.contains(' schedule(') || line.contains(' schedule_timeout(') || line.contains(' ktime_get(') || line.contains(' get_task_struct(') || line.contains(' put_task_struct(') || line.contains(' signal_pending') || line.contains(' vkp_') || line.contains(' refcount_warn_saturate(') || line.contains(' add_taint(') || line.contains(' test_taint(') || line.contains(' get_taint(') || line.contains(' vinix_linuxkpi_warn(') || line.contains(' vinix_linuxkpi_refcount_warning(') || line.contains(' vinix_linuxkpi_task_in_iowait(') || line.contains(' vkr_') || line.contains(' vkm_')
-			|| line.contains(' vinix_linuxkpi_gfp_supported(') || line.contains(' vinix_linuxkpi_alloc_gfp_pages(') || line.contains(' vinix_linuxkpi_tigerlake_id(')
+		if line.contains(prefix) || line.contains(' tulpar_arch_') || line.contains(' tulpar_might_sleep_if_native(') || line.contains(' tulpar_spin_lock_irqsave_nested_native(') || line.contains(' tulpar_local_irq_') || line.contains(' spin_') || line.contains(' tulpar_raw_spin_trylock(') || line.contains(' arch_atomic_sub_return_relaxed(') || line.contains(' init_timer_key(') || line.contains(' mod_timer(') || line.contains(' timer_shutdown_sync(') || line.contains(' round_jiffies_up(') || line.contains(' vkt_') || line.contains(' tulpar_linuxkpi_timer_') || line.contains(' __init_waitqueue_head(') || line.contains(' init_wait_entry(') || line.contains(' prepare_to_wait_event(') || line.contains(' finish_wait(') || line.contains(' default_wake_function(') || line.contains(' autoremove_wake_function(') || line.contains(' dma_resv_') || line.contains(' vdr_') || line.contains(' vkw_') || line.contains(' ww_mutex_') || line.contains(' __mutex_init(') || line.contains(' mutex_is_locked(') || line.contains(' mutex_destroy(') || line.contains(' kmalloc_size_roundup(') || line.contains(' krealloc_array(') || line.contains(' cpu_relax(') || line.contains(' vdf_') || line.contains(' vfa_') || line.contains(' vfc_') || line.contains(' vkiw_') || line.contains(' irq_work_') || line.contains(' arch_irq_work_raise(') || line.contains(' dma_fence_') || line.contains(' tulpar_linuxkpi_set_task_state(') || line.contains(' tulpar_linuxkpi_time_') || line.contains(' wake_up_') || line.contains(' schedule(') || line.contains(' schedule_timeout(') || line.contains(' ktime_get(') || line.contains(' get_task_struct(') || line.contains(' put_task_struct(') || line.contains(' signal_pending') || line.contains(' vkp_') || line.contains(' refcount_warn_saturate(') || line.contains(' add_taint(') || line.contains(' test_taint(') || line.contains(' get_taint(') || line.contains(' tulpar_linuxkpi_warn(') || line.contains(' tulpar_linuxkpi_refcount_warning(') || line.contains(' tulpar_linuxkpi_task_in_iowait(') || line.contains(' vkr_') || line.contains(' vkm_')
+			|| line.contains(' tulpar_linuxkpi_gfp_supported(') || line.contains(' tulpar_linuxkpi_alloc_gfp_pages(') || line.contains(' tulpar_linuxkpi_tigerlake_id(')
 			|| line.contains(' kmalloc(') || line.contains(' kzalloc(') || line.contains(' kmalloc_array(') || line.contains(' kcalloc(') || line.contains(' ksize(') || line.contains(' kfree(') || line.contains(' krealloc(') || line.contains(' kmemdup(') || line.contains(' kmem_cache_') || line.contains(' kvfree(') || line.contains(' kvfree_call_rcu(')
 			|| line.contains(' call_rcu(') || line.contains(' synchronize_rcu') || line.contains(' rcu_barrier(') || line.contains(' get_state_synchronize_rcu(') || line.contains(' start_poll_synchronize_rcu(') || line.contains(' poll_state_synchronize_rcu(') || line.contains(' cond_synchronize_rcu(')
 			|| line.contains(' __bitmap_weight(') || line.contains(' arch_atomic64_add_return_relaxed(') || line.contains(' arch_atomic_read(') || line.contains(' arch_atomic_set(') || line.contains(' arch_atomic_fetch_add_relaxed(') || line.contains(' arch_atomic_fetch_sub_relaxed(') || line.contains(' arch_atomic_cmpxchg_relaxed(') {
@@ -125,10 +125,10 @@ fn stage_sources(work string) ![]string {
 		'struct C.callback_head {}\nstruct C.vkw_list { mut: next &C.vkw_list, prev &C.vkw_list }\n' +
 		'struct C.vkw_swait_head { lock u32, task_list C.vkw_list }\n' +
 		'struct C.vkw_completion { done u32, @wait C.vkw_swait_head }\n' +
-		'fn C.kzalloc(usize,u32) voidptr\nfn C.kfree(voidptr)\nfn C.memset(voidptr,i32,usize) voidptr\nfn C.memcpy(voidptr,voidptr,usize) voidptr\nfn C.strlen(voidptr) usize\nfn C.kmalloc(usize,u32) voidptr\nfn C.vinix_linuxkpi_page_size() usize\nfn C.vinix_linuxkpi_free_pages(voidptr,usize)\nfn C.vinix_linuxkpi_alloc_gfp_pages(usize,u32) voidptr\nfn C.vinix_linuxkpi_gfp_supported(u32) bool\nfn C.vkp_cache_ctor_warning(bool)\n' +
-		'fn C._printk(&char,...)i32\nfn C.vinix_linuxkpi_bug(&char,i32)\nfn C.vinix_linuxkpi_irq_flags() u64\n' +
-		'fn C.vinix_linuxkpi_may_sleep() bool\nfn C.vinix_linuxkpi_spin_wait()\nfn C.vinix_linuxkpi_cond_resched() i32\n' +
-		'fn C.vinix_linuxkpi_preempt_disable()\nfn C.vinix_linuxkpi_preempt_enable()\n' +
+		'fn C.kzalloc(usize,u32) voidptr\nfn C.kfree(voidptr)\nfn C.memset(voidptr,i32,usize) voidptr\nfn C.memcpy(voidptr,voidptr,usize) voidptr\nfn C.strlen(voidptr) usize\nfn C.kmalloc(usize,u32) voidptr\nfn C.tulpar_linuxkpi_page_size() usize\nfn C.tulpar_linuxkpi_free_pages(voidptr,usize)\nfn C.tulpar_linuxkpi_alloc_gfp_pages(usize,u32) voidptr\nfn C.tulpar_linuxkpi_gfp_supported(u32) bool\nfn C.vkp_cache_ctor_warning(bool)\n' +
+		'fn C._printk(&char,...)i32\nfn C.tulpar_linuxkpi_bug(&char,i32)\nfn C.tulpar_linuxkpi_irq_flags() u64\n' +
+		'fn C.tulpar_linuxkpi_may_sleep() bool\nfn C.tulpar_linuxkpi_spin_wait()\nfn C.tulpar_linuxkpi_cond_resched() i32\n' +
+		'fn C.tulpar_linuxkpi_preempt_disable()\nfn C.tulpar_linuxkpi_preempt_enable()\n' +
 		'fn C.vkp_spin_init(voidptr)\nfn C.vkp_spin_lock_irqsave(voidptr) u64\n' +
 		'fn C.vkp_spin_unlock_irqrestore(voidptr,u64)\nfn C.msleep(u32)\n' +
 		'fn C.rcuh_completion_init(voidptr)\nfn C.rcuh_completion_complete(voidptr)\nfn C.rcuh_completion_wait(voidptr)\n' +
@@ -140,7 +140,7 @@ fn stage_sources(work string) ![]string {
 		bindings += hosttest.v_function(os.read_file(primitive)!, name)!
 	}
 	bindings += hosttest.v_function(os.read_file(bitmap)!, 'bitmap_weight')!
-	bindings += '\nfn C.vinix_linuxkpi_cpu_id()u32\nfn C.vinix_linuxkpi_maskable_irq_depth()u32\nfn C.vinix_linuxkpi_preempt_count()u32\nfn C.vinix_linuxkpi_irq_save()u64\nfn C.vinix_linuxkpi_irq_restore(u64)\nfn C.vinix_linuxkpi_smp_task_present()bool\nfn C.vinix_linuxkpi_smp_boot_context()bool\nfn C.vks_smp_ready()bool\n'
+	bindings += '\nfn C.tulpar_linuxkpi_cpu_id()u32\nfn C.tulpar_linuxkpi_maskable_irq_depth()u32\nfn C.tulpar_linuxkpi_preempt_count()u32\nfn C.tulpar_linuxkpi_irq_save()u64\nfn C.tulpar_linuxkpi_irq_restore(u64)\nfn C.tulpar_linuxkpi_smp_task_present()bool\nfn C.tulpar_linuxkpi_smp_boot_context()bool\nfn C.vks_smp_ready()bool\n'
 
 	// The original WD writer lock executes unchanged; only selected mutex
 	// initialization/destruction bodies are needed below the upstream inline.
@@ -158,7 +158,7 @@ fn stage_sources(work string) ![]string {
 	os.write_file(os.join_path(work, 'headercore/bindings.v'), '@[translated]\nmodule headercore\n' +
 		'#include "linuxkpi_header_primitive_v_contract.h"\n@[typedef]\nstruct C.atomic_t { counter i32 }\n' +
 		'@[typedef]\nstruct C.vhp_const_atomicp {}\nfn C.test_bit(i32,voidptr) bool\n' +
-		'@[typedef]\nstruct C.vhp_const_voidp {}\nstruct C.callback_head {}\nstruct C.task_struct { vinix_thread voidptr, __state u32 }\n' +
+		'@[typedef]\nstruct C.vhp_const_voidp {}\nstruct C.callback_head {}\nstruct C.task_struct { tulpar_thread voidptr, __state u32 }\n' +
 		'@[typedef]\nstruct C.pthread_t {}\ntype HeaderThreadFn = fn(voidptr) voidptr\n' +
 		'fn C.pthread_create(voidptr,voidptr,HeaderThreadFn,voidptr) i32\nfn C.pthread_join(C.pthread_t,voidptr) i32\n' +
 		'fn C.pthread_exit(voidptr)\nfn C.memcpy(voidptr,voidptr,usize) voidptr\n' +
@@ -198,10 +198,10 @@ fn stage_sources(work string) ![]string {
 	extra += hosttest.v_function(os.read_file(io_path)!, 'task_in_iowait')!
 	os.write_file(os.join_path(work, 'compatcore/extra.v'), '@[translated]\nmodule compatcore\n' + extra)!
 	mut h := os.read_file(os.join_path(work, 'headercore/bindings.v'))!
-	h += '\n@[typedef]\nstruct C.spinlock_t { locked u32 }\nfn C.vinix_linuxkpi_task_get(voidptr)\nfn C.vinix_linuxkpi_task_put(voidptr)\nfn C.vinix_linuxkpi_task_signal_pending(voidptr,bool)bool\nfn C.schedule_timeout(isize)isize\nfn C.signal_pending_state(u32,&C.task_struct)i32\nfn C.READ_ONCE(usize)usize\n@[c_extern]\n__global C.jiffies usize\n'
+	h += '\n@[typedef]\nstruct C.spinlock_t { locked u32 }\nfn C.tulpar_linuxkpi_task_get(voidptr)\nfn C.tulpar_linuxkpi_task_put(voidptr)\nfn C.tulpar_linuxkpi_task_signal_pending(voidptr,bool)bool\nfn C.schedule_timeout(isize)isize\nfn C.signal_pending_state(u32,&C.task_struct)i32\nfn C.READ_ONCE(usize)usize\n@[c_extern]\n__global C.jiffies usize\n'
 	h += "@[c:'__atomic_fetch_add']\nfn C.vhp_add32(&i32,i32,i32)i32\n@[c:'__atomic_fetch_sub']\nfn C.vhp_sub32(&i32,i32,i32)i32\n@[c:'__atomic_store_n']\nfn C.vhp_store32(&i32,i32,i32)\n@[c:'__atomic_compare_exchange_n']\nfn C.vhp_compare32(&i32,&i32,i32,bool,i32,i32)bool\n"
-	h += '\nfn C.vinix_linuxkpi_spin_wait()\n'
-	h += '\nfn C.vinix_linuxkpi_cpu_id()u32\n'
+	h += '\nfn C.tulpar_linuxkpi_spin_wait()\n'
+	h += '\nfn C.tulpar_linuxkpi_cpu_id()u32\n'
 	for name in ['cpu_relax', 'atomic_set', 'atomic_cmpxchg', 'atomic_fetch_add_relaxed',
 		'atomic_fetch_sub_relaxed', 'get_task', 'put_task', 'signal_pending', 'fatal_signal_pending',
 		'signal_pending_state'] {
@@ -211,7 +211,7 @@ fn stage_sources(work string) ![]string {
 		'common_signal_pending', 'common_jiffies'] {
 		h += hosttest.v_function(os.read_file(common_path)!, name)!
 	}
-	h = h.replace('struct C.task_struct { vinix_thread voidptr, __state u32 }', 'struct C.task_struct { vinix_thread voidptr, __state u32, in_iowait u32 }')
+	h = h.replace('struct C.task_struct { tulpar_thread voidptr, __state u32 }', 'struct C.task_struct { tulpar_thread voidptr, __state u32, in_iowait u32 }')
 
 	wait_path := os.join_path(root, 'kernel/linuxkpi/headercore/wait.v')
 	owned << wait_path
@@ -237,7 +237,7 @@ fn stage_consumer_sources(work string) ![]string {
 	for name in ['timer.v'] {
 		path := root + '/kernel/linuxkpi/compatcore/' + name
 		owned << path
-		os.write_file(work + '/compatcore/' + name, os.read_file(path)!.all_before("@[export: 'vinix_linuxkpi_timer_selftest']"))!
+		os.write_file(work + '/compatcore/' + name, os.read_file(path)!.all_before("@[export: 'tulpar_linuxkpi_timer_selftest']"))!
 	}
 	exchange := root + '/kernel/linuxkpi/exchangecore/core.v'
 	owned << exchange
@@ -255,8 +255,8 @@ fn stage_consumer_sources(work string) ![]string {
 	}
 	os.write_file(work + '/compatcore/consumer_wait.v', extra)!
 	mut h := os.read_file(work + '/headercore/bindings.v')!
-	h += '\n@[typedef]\nstruct C.vkh_const_char_p {}\nfn C.vinix_linuxkpi_bug(C.vkh_const_char_p,i32)\n' +
-		'fn C.vinix_linuxkpi_may_sleep()bool\nfn C.vinix_linuxkpi_preempt_disable()\nfn C.vinix_linuxkpi_preempt_enable()\nfn C.vinix_linuxkpi_irq_save()usize\nfn C.vinix_linuxkpi_irq_restore(usize)\n' +
+	h += '\n@[typedef]\nstruct C.vkh_const_char_p {}\nfn C.tulpar_linuxkpi_bug(C.vkh_const_char_p,i32)\n' +
+		'fn C.tulpar_linuxkpi_may_sleep()bool\nfn C.tulpar_linuxkpi_preempt_disable()\nfn C.tulpar_linuxkpi_preempt_enable()\nfn C.tulpar_linuxkpi_irq_save()usize\nfn C.tulpar_linuxkpi_irq_restore(usize)\n' +
 		"@[c: '__atomic_compare_exchange_n']\nfn C.vhp_compare_unsigned(&u32,&u32,u32,bool,i32,i32)bool\n@[c: '__atomic_store_n']\nfn C.vhp_store_unsigned(&u32,u32,i32)\n@[c: '__atomic_sub_fetch']\nfn C.vhp_sub_return32(&i32,i32,i32)i32\n"
 	atomic_source := root + '/kernel/linuxkpi/headercore/primitive.v'
 	for name in ['spin_raw_try', 'spin_lock', 'spin_unlock', 'spin_lock_irqsave_nested', 'irq_save',
@@ -344,7 +344,7 @@ fn stage_fixture(directory string) ! {
 	original := os.read_file(os.join_path(root, 'tests/linuxkpi/rcucallfixture/core.v'))!
 	mut transport := original.all_before('fn callback(head &C.callback_head) {').replace('module rcucallfixture', 'module swfencefixture')
 	for attribute in ["@[export: 'kzalloc']", "@[export: 'kfree']",
-		"@[export: 'vinix_linuxkpi_bug'; noreturn]", "@[export: 'vkr_page_allocation_size']",
+		"@[export: 'tulpar_linuxkpi_bug'; noreturn]", "@[export: 'vkr_page_allocation_size']",
 		"@[export: 'vkr_kvfree']", "@[export: 'get_task_struct']", "@[export: 'put_task_struct']",
 		"@[export: 'vkp_spin_lock_irqsave']"] {
 		transport = transport.replace(attribute + ' pub fn', attribute + '\npub fn')
@@ -370,7 +370,7 @@ fn stage_fixture(directory string) ! {
 	os.write_file(os.join_path(directory, 'native.v'), native)!
 	free_raw := os.read_file(os.join_path(root, 'tests/linuxkpi/freefixture/core.v'))!
 	mut pages := free_raw.all_before('fn live()').replace('module freefixture', 'module swfencefixture')
-	pages = pages.replace("@[export:'vinix_linuxkpi_bug'; noreturn] pub fn", "@[export:'vinix_linuxkpi_bug'; noreturn]\npub fn")
+	pages = pages.replace("@[export:'tulpar_linuxkpi_bug'; noreturn] pub fn", "@[export:'tulpar_linuxkpi_bug'; noreturn]\npub fn")
 	pages = pages.replace(hosttest.v_function(pages, 'bug')!, '')
 	pages = pages.replace('if C.rcuh_load32(&page_fail) != 0 { return nil }',
 		'if C.rcuh_load32(&page_fail) != 0 || page_should_fail() { return nil }')
@@ -587,7 +587,7 @@ fn profile(work string, linux string, compiler []string, standard string) []stri
 		'-fno-strict-aliasing', '-ffunction-sections', '-fdata-sections', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-sign-compare',
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-D_FORTIFY_SOURCE=0',
-		'-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
+		'-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
 		os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h', '-include',
 		os.join_path(linux, 'include/linux/compiler_types.h')]
 	// No reservation, refcount or iterator scheduling algorithm is replaced.
@@ -608,7 +608,7 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
-	work := hosttest.work_dir(keep, 'vinix-i915-sw-fence-')!
+	work := hosttest.work_dir(keep, 'tulpar-i915-sw-fence-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut env := os.environ()
 	env['VCACHE'] = os.join_path(work, 'vcache')
@@ -658,7 +658,7 @@ fn run_profile(keep string) ! {
 		'spinlock':        'spinlock_adapters'
 	} {
 		hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema + '.json'),
-			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'vinix', name + '.h'))!
+			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'tulpar', name + '.h'))!
 	}
 	mut proofs := []json2.Any{}
 	bounds_path := include + '/generated/bounds.h'
@@ -683,7 +683,7 @@ fn run_profile(keep string) ! {
 				hosttest.scalar_metadata(os.join_path(stage, name), '')!
 		} else {
 			'#include "linuxkpi_dma_resv_v_primitives.h"\n#include "linuxkpi_wait_v_primitives.h"\n#include "linuxkpi_dma_fence_v_primitives.h"\n#include "linuxkpi_dma_fence_array_v_primitives.h"\n#include "linuxkpi_dma_fence_chain_v_primitives.h"\n#include "linuxkpi_irq_work_v_primitives.h"\n#include "linuxkpi_task_v_primitives.h"\n#include "linuxkpi_rcu_v_primitives.h"\n#include "linuxkpi_smp_masks_v_primitives.h"\n' +
-				'void msleep(unsigned int); void rcuh_completion_init(void *); void rcuh_completion_complete(void *); void rcuh_completion_wait(void *);\n#include <string.h>\n#include <stdio.h>\n#define _printk(f,a,b,c,d) printf((f),(const char *)(a),(const char *)(b),(unsigned long long)(uintptr_t)(c),(unsigned long long)(uintptr_t)(d))\nvoid *vinix_linuxkpi_alloc_pages(size_t,bool);\nvoid *swh_resv_load(void **);\n#undef vdr_load_ptr\n#define vdr_load_ptr(p) swh_resv_load((void **)(p))\n'
+				'void msleep(unsigned int); void rcuh_completion_init(void *); void rcuh_completion_complete(void *); void rcuh_completion_wait(void *);\n#include <string.h>\n#include <stdio.h>\n#define _printk(f,a,b,c,d) printf((f),(const char *)(a),(const char *)(b),(unsigned long long)(uintptr_t)(c),(unsigned long long)(uintptr_t)(d))\nvoid *tulpar_linuxkpi_alloc_pages(size_t,bool);\nvoid *swh_resv_load(void **);\n#undef vdr_load_ptr\n#define vdr_load_ptr(p) swh_resv_load((void **)(p))\n'
 		}
 		prefixes := if name == 'headercore' {
 			['headercore__vdf_', 'headercore__vfa_', 'headercore__vfc_', 'dma_fence_array_ops',
@@ -715,7 +715,7 @@ fn run_profile(keep string) ! {
 		for group in ['compatcore', 'headercore', 'exchangecore'] {
 			obj := os.join_path(work, standard + '-' + group + '.o')
 			mut group_flags := base.clone()
-			if group == 'compatcore' { group_flags << '-DVINIX_V_RUNTIME' }
+			if group == 'compatcore' { group_flags << '-DTULPAR_V_RUNTIME' }
 			inputs << compile_input(group_flags, os.join_path(work, group + '-selected.c'), obj,
 				os.join_path(work, standard + '-' + group + '-compile.log'), env)!
 			imports := command([hosttest.tool('llvm-nm'), '-u', obj], '', env)!.stdout
@@ -737,25 +737,25 @@ fn run_profile(keep string) ! {
 		$if macos {
 			storage_flags << ['-arch', 'x86_64']
 		}
-		command([...storage_flags, '-DVINIX_LINUXKPI', '-c',
+		command([...storage_flags, '-DTULPAR_LINUXKPI', '-c',
 			os.join_path(root, 'kernel/asm/x86_64/linuxkpi_storage.S'), '-o', storage], os.join_path(work, standard + '-storage.log'), env)!
 		objects << storage
 		sw_object := os.join_path(work, standard + '-i915-sw-fence.o')
 		mut source_flags := [...base, ...sw_identity(), '-include',
 			root + '/tests/linuxkpi/swfencefixture/contract.h']
 		control_object := work + '/' + standard + '-original-notice-control.o'
-		inputs << compile_input([...source_flags, '-DVINIX_SW_FENCE_ORIGINAL_NOTICE'], linux + '/drivers/gpu/drm/i915/i915_sw_fence.c', control_object, work + '/' + standard + '-original-notice-control-compile.log', env)!
+		inputs << compile_input([...source_flags, '-DTULPAR_SW_FENCE_ORIGINAL_NOTICE'], linux + '/drivers/gpu/drm/i915/i915_sw_fence.c', control_object, work + '/' + standard + '-original-notice-control-compile.log', env)!
 		control_preprocessed := work + '/' + standard + '-original-notice-control.p'
 		typed_preprocessed := work + '/' + standard + '-typed-notice.p'
-		command([...source_flags, '-DVINIX_SW_FENCE_ORIGINAL_NOTICE', '-E', '-P',
+		command([...source_flags, '-DTULPAR_SW_FENCE_ORIGINAL_NOTICE', '-E', '-P',
 			linux + '/drivers/gpu/drm/i915/i915_sw_fence.c', '-o', control_preprocessed], work + '/' + standard + '-original-notice-control-preprocess.log', env)!
-		command([...source_flags, '-DVINIX_SW_FENCE_PRINTK_TRANSPORT', '-E', '-P',
+		command([...source_flags, '-DTULPAR_SW_FENCE_PRINTK_TRANSPORT', '-E', '-P',
 			linux + '/drivers/gpu/drm/i915/i915_sw_fence.c', '-o', typed_preprocessed], work + '/' + standard + '-typed-notice-preprocess.log', env)!
 		if os.read_file(control_preprocessed)!.replace('swh_printk', '_printk') != os.read_file(typed_preprocessed)!.replace('swh_printk', '_printk') {
 			return error('Typed notice adapter changed other original preprocessed tokens')
 		}
 		inputs << compile_input([...base, ...sw_identity(), '-include',
-			root + '/tests/linuxkpi/swfencefixture/contract.h', '-DVINIX_SW_FENCE_PRINTK_TRANSPORT'], linux + '/drivers/gpu/drm/i915/i915_sw_fence.c', sw_object, os.join_path(work, standard + '-i915-sw-fence-compile.log'), env)!
+			root + '/tests/linuxkpi/swfencefixture/contract.h', '-DTULPAR_SW_FENCE_PRINTK_TRANSPORT'], linux + '/drivers/gpu/drm/i915/i915_sw_fence.c', sw_object, os.join_path(work, standard + '-i915-sw-fence-compile.log'), env)!
 		objects << sw_object
 		object_exports := native_symbols(sw_object, true, work + '/' + standard + '-sw-exports.log', env)!
 		if object_exports.filter(it.contains('i915_sw_fence')) != sw_exports() {

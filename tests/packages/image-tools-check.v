@@ -18,7 +18,7 @@ fn task(name string, argv []string, work string, binary string, regression bool)
 	start := time.now(); child.run(); output := child.stdout_slurp(); child.wait(); code := child.code; child.close()
 	log := work + '/' + name + '.txt'; os.write_file(log, output)!
 	if regression {
-		assert code != 0 && output.contains('c-2 replaced vinix-package'), output
+		assert code != 0 && output.contains('c-2 replaced tulpar-package'), output
 	} else {
 		if code != 0 || output.contains('V panic:') || output.contains('ERROR: AddressSanitizer') || output.contains('runtime error:') {
 			return error(name + ' failed: ' + output)
@@ -64,7 +64,7 @@ fn qualify() ! {
 		checks << task(pair[0] + '-compile', [v, ...flags, '-o', work + '/' + pair[0], root + '/' + pair[1]], work, work + '/' + pair[0], false)!
 	}
 	checks << task('cli-run', [work + '/cli', work + '/stage', work + '/compiler', work + '/cli-cases'], work, work + '/cli', false)!
-	os.setenv('VINIX_PACKAGE_STAGE_CHECK_CLI', work + '/stage', true)
+	os.setenv('TULPAR_PACKAGE_STAGE_CHECK_CLI', work + '/stage', true)
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	for start := 0; start < jobs.len; start += 3 {
 		end := if start + 3 < jobs.len { start + 3 } else { jobs.len }

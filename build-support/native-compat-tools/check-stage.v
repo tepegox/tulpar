@@ -9,17 +9,17 @@ import policyhost
 fn check(ok bool, message string) ! { if !ok { return error(message) } }
 
 fn owners() ![]string {
-	mut result := os.ls('/tmp')!.filter(it.starts_with('vinix-compat-project-') || it.starts_with('vinix-security-tools-') || it.starts_with('vinix-volume-tool-'))
+	mut result := os.ls('/tmp')!.filter(it.starts_with('tulpar-compat-project-') || it.starts_with('tulpar-security-tools-') || it.starts_with('tulpar-volume-tool-'))
 	result.sort()
 	return result
 }
 
 fn qualify(binary string) ! {
-	work := hosttest.work_dir('', 'vinix-stage-controller-check-')!
+	work := hosttest.work_dir('', 'tulpar-stage-controller-check-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	mut env := policyhost.environment()
 	env['ASAN_OPTIONS'] = 'detect_leaks=0'
-	env['VINIX_FAULT_MACHINE'] = 'aarch64-linux-musl'
+	env['TULPAR_FAULT_MACHINE'] = 'aarch64-linux-musl'
 	for family in ['security-compile', 'x11-compile', 'security-stage', 'volume-stage', 'volume-host',
 		'volume-guest', 'mac-host', 'sandbox-host', 'audit-host', 'xinput-test', 'xinput-guest',
 		'wine-guest'] {
@@ -31,7 +31,7 @@ fn qualify(binary string) ! {
 	os.mkdir(work + '/staging')!
 	os.mkdir_all(work + '/staging/usr/bin')!
 	os.mkdir_all(work + '/staging/usr/sbin')!
-	for name in ['usr/bin/vinix-sandbox', 'usr/sbin/vinix-volume'] {
+	for name in ['usr/bin/tulpar-sandbox', 'usr/sbin/tulpar-volume'] {
 		os.write_file(work + '/staging/' + name, 'preserve')!
 	}
 	for family in ['security-stage', 'volume-stage'] {
@@ -51,7 +51,7 @@ fn qualify(binary string) ! {
 			check(failed.status == 1 && owners()! == before, 'Failed stage retained a private compiler owner')!
 		}
 	}
-	for name in ['usr/bin/vinix-sandbox', 'usr/sbin/vinix-volume'] {
+	for name in ['usr/bin/tulpar-sandbox', 'usr/sbin/tulpar-volume'] {
 		check(os.read_file(work + '/staging/' + name)! == 'preserve', 'Failed compile replaced installed utility')!
 	}
 	os.mkdir(work + '/keep')!
@@ -72,7 +72,7 @@ fn qualify(binary string) ! {
 fn main() {
 	if os.args.len > 1 && os.args[1] == '--compiler' {
 		if os.args.contains('-dumpmachine') {
-			println(os.getenv('VINIX_FAULT_MACHINE'))
+			println(os.getenv('TULPAR_FAULT_MACHINE'))
 			return
 		}
 		exit(77)

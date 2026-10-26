@@ -19,13 +19,13 @@ const group_seed = 'root:x:0:\nwheel:x:10:alex,sam\nusers:x:100:alex,sam,kim\nal
 const shadow_seed = 'root:*:19000:0:99999:7:::\nalex:\$scrypt\$ln=15,r=8,p=1\$AAECAwQFBgcICQoLDA0ODw\$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8:20000::::::\nsam:!x:1::::::\n'
 const record_seed = '\$scrypt\$ln=15,r=8,p=1\$AAECAwQFBgcICQoLDA0ODw\$AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8'
 const registration_seed = 'version=1\nname=416c6578204d\nkdf=scrypt\nn=16384\nr=8\np=1\nsalt=000102030405060708090a0b0c0d0e0f\nhash=000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f\n'
-const action_seed = '# add someone\ndescription = Add a user account\nauth = admin\nexec = /usr/sbin/vinix-account\narg = add\nparam = name\nparam = text\nparam = choice:admin,standard\ninput = secret\n'
+const action_seed = '# add someone\ndescription = Add a user account\nauth = admin\nexec = /usr/sbin/tulpar-account\narg = add\nparam = name\nparam = text\nparam = choice:admin,standard\ninput = secret\n'
 const snapshot_seed = 'version=1 capacity=256 total=3 retained=2 dropped=0 boot=00112233445566778899aabbccddeeff\n# sequence ns kind denied pid tid uid euid loginuid session arg label\n2 2000 1 1 42 42 1001 1001 1001 3 0 system/hostname/set\n3 3000 7 1 43 43 1001 1001 4294967295 0 80 bind\n'
 const log_seed = 'boundary boot=00112233445566778899aabbccddeeff previous=none collected=1\nloss boot=00112233445566778899aabbccddeeff first=1 last=44 count=44 collected=1\nevent boot=00112233445566778899aabbccddeeff seq=45 ns=5 collected=1 kind=network result=denied pid=42 tid=42 uid=1001 euid=1001 login=1001 session=3 arg=80 label=bind\n'
 
 // A store made once, with a password nobody uses, and written out here: a
 // seed has to be the same bytes on every run.
-const keyring_seed = 'vinix-keyring 1
+const keyring_seed = 'tulpar-keyring 1
 slot password ln=10,r=8,p=1 m/7qowgmXuH8mGVddiwaWg== O6SApKaRpM7HzlUrF07/IqGZl5pfvlTV Mr68cGhhp1koTA4RMB50XcT9PI0hKWP/0GhndZutm2aBfVLXxU/UeSNkhkuafCVz
 slot recovery bMhEb4plnkovjnsTATYH9g== GqGbA6fDU8zn+5+INqKvSHIWGtLE0RO6 V+OoiayYBlJmKlLH3oojlszW5mzqGAwPFru8qPWux8i2DUDxAeIkF7RaJ84OQf5+
 check XYGi3yaQ/PuP1P+09qmgtScfvPQI7379 G8FGXak2ghXrCxCZdtWyXVbqyNgeex+hmZ5Rjc1WTKGVQ5s=

@@ -10,7 +10,7 @@ fn main() {
 		if arg.starts_with('--time-server=') {
 			server = arg['--time-server='.len..]
 		} else if arg != '--time-service' {
-			eprintln('Usage: vinix-timesync [--time-server=HOST]')
+			eprintln('Usage: tulpar-timesync [--time-server=HOST]')
 			exit(2)
 		}
 	}

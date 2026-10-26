@@ -13,27 +13,27 @@ $if mocked_space ? {
 	struct C.statvfs { f_bsize usize f_frsize usize f_bavail usize }
 	// The controller redirects statvfs calls through a forced-include header.
 	// Production builds and target guests use the actual filesystem reports.
-	@[export: 'vinix_removal_fixture_statvfs']
+	@[export: 'tulpar_removal_fixture_statvfs']
 	fn fixture_statvfs(_ &char, output &C.statvfs) int {
-		available := os.getenv_opt('VINIX_REMOVAL_FREE') or { '1073741824' }
+		available := os.getenv_opt('TULPAR_REMOVAL_FREE') or { '1073741824' }
 		unsafe { output.f_bsize = 4096; output.f_frsize = 1; output.f_bavail = usize(available.u64()) }
 		return 0
 	}
 }
 
 fn reserve(available u64) {
-	$if mocked_space ? { os.setenv('VINIX_REMOVAL_FREE', available.str(), true) }
+	$if mocked_space ? { os.setenv('TULPAR_REMOVAL_FREE', available.str(), true) }
 }
 
 fn tamper_before_copy(event pkgprotocol.Progress) {
 	if event.phase != 'stage' || event.package != '' { return }
-	path := os.getenv('VINIX_REMOVAL_TAMPER')
+	path := os.getenv('TULPAR_REMOVAL_TAMPER')
 	if path != '' { os.write_file(path, 'x'.repeat(4096)) or { panic(err) } }
 }
 
 fn check() ! {
-	root := os.real_path(os.temp_dir()) + '/vinix-removal-space-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := os.real_path(os.temp_dir()) + '/tulpar-removal-space-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	defer { os.rmdir_all(root) or {} }
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	data := 'k'.repeat(4096)
@@ -55,7 +55,7 @@ fn check() ! {
 	pkgcore.publish(root + '/repository', 'fixture', root + '/seed', 1, time.now().unix() + 3600)!
 	config := pkgcore.Config{ architecture: architecture, policy: pkgcore.Policy{ offline: true, reserve_bytes: 4096 },
 		repositories: [pkgcore.Repository{ id: 'fixture', url: 'file://' + root + '/repository', public_key: key }] }
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	os.write_file(path, json2.encode(config))!
 	service := pkgcore.Service{ root: root }
 	service.refresh()!
@@ -110,10 +110,10 @@ fn check() ! {
 	os.write_file(retained, data)!
 	// Admission does not replace per-copy verification: corruption introduced
 	// by the progress observer after preflight must not activate a new set.
-	os.setenv('VINIX_REMOVAL_TAMPER', retained, true)
+	os.setenv('TULPAR_REMOVAL_TAMPER', retained, true)
 	guarded := pkgcore.Service{ root: root, progress: tamper_before_copy }
 	if _ := guarded.transact('remove', ['remove'], pkgcore.TransactionOptions{ expected_review: review.fingerprint }) { assert false }
-	os.unsetenv('VINIX_REMOVAL_TAMPER')
+	os.unsetenv('TULPAR_REMOVAL_TAMPER')
 	assert os.readlink(store + '/current')! == current
 	os.write_file(retained, data)!
 	final := service.transact('remove', ['remove'], pkgcore.TransactionOptions{ expected_review: review.fingerprint })!
@@ -123,8 +123,8 @@ fn check() ! {
 		assert pkgcore.verified_file(store + '/current/apps/keep/' + file.path, file)
 		assert !os.exists(store + '/objects/' + file.sha256)
 	}
-	assert os.is_file(store + '/current/share/applications/vinix-keep.desktop')
-	assert !os.exists(store + '/current/share/applications/vinix-remove.desktop')
+	assert os.is_file(store + '/current/share/applications/tulpar-keep.desktop')
+	assert !os.exists(store + '/current/share/applications/tulpar-remove.desktop')
 	assert os.is_file(store + '/' + current + '/apps/remove/bin/one')
 	assert os.read_file(root + '/personal/keep.txt')! == 'personal data'
 	assert os.read_file(store + '/catalog.json')! == 'damaged catalog' && os.read_file(store + '/trust-history.json')! == 'damaged history'

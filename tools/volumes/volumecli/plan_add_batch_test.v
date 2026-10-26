@@ -126,7 +126,7 @@ fn test_identity_retries_follow_compaction_and_explicit_extents_need_no_pool_ali
 }
 
 fn test_full_323_argument_cli_reaches_v2_limit_and_preserves_durable_keep_retries() {
-	work := os.join_path(os.temp_dir(), 'vinix-addition-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-addition-full-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}
 	for disk in 0 .. 64 {
@@ -148,7 +148,7 @@ fn test_full_323_argument_cli_reaches_v2_limit_and_preserves_durable_keep_retrie
 		values << '4096'; values << if row.flags == 1 { 'ro' } else { 'rw' }
 	}
 	unsafe {
-		mut args := [324]&char{}; args[0] = &char(c'vinix-volume'); args[2] = path.str
+		mut args := [324]&char{}; args[0] = &char(c'tulpar-volume'); args[2] = path.str
 		for i in 0 .. values.len { args[3 + i] = values[i].str }
 		args[1] = &char(c'plan-preview-add-batch'); assert run(323, &args[0]) == 0 && os.read_bytes(path)! == original
 		args[1] = &char(c'plan-add-batch'); assert run(323, &args[0]) == 0
@@ -160,7 +160,7 @@ fn test_full_323_argument_cli_reaches_v2_limit_and_preserves_durable_keep_retrie
 }
 
 fn test_bad_sources_and_later_malformed_cli_tokens_never_publish_a_prefix() {
-	work := os.join_path(os.temp_dir(), 'vinix-addition-cli-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-addition-cli-${os.getpid()}')
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}; addition_fixture(mut set, 0, 1)
 	assert publish_bundle(path.str, &set); original := os.read_bytes(path)!
@@ -170,7 +170,7 @@ fn test_bad_sources_and_later_malformed_cli_tokens_never_publish_a_prefix() {
 		for bad in [work + '/missing', work, work + '/alias'] { assert add_batch_bundle_plan(bad.str, &batch, preview) == 1 }
 	}
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-add-batch'), path.str,
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-add-batch'), path.str,
 			&char(c'mbr:00000001'), &char(c'0'), &char(c'8192'), &char(c'4096'), &char(c'rw'),
 			&char(c'gpt:00000002-0000-0000-0000-000000000055'), &char(c'1'), &char(c'8192'), &char(c'4096'), &char(c'ro'), &char(nil)]!
 		for command in [c'plan-add-batch', c'plan-preview-add-batch'] {

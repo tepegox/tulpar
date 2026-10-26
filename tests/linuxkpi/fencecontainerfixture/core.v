@@ -64,9 +64,9 @@ fn C.dfh_list_empty(&C.dma_fence) bool
 fn C.dfh_lock_held(&C.dma_fence) u32
 fn C.dfh_timestamp(&C.dma_fence) i64
 fn C.dfh_error(&C.dma_fence) i32
-fn C.vinix_linuxkpi_time_tick(u64)
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_set_task_state(u32)
+fn C.tulpar_linuxkpi_time_tick(u64)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_set_task_state(u32)
 fn C.vdf_init(voidptr, voidptr, voidptr, u64, u64)
 fn C.kfree(voidptr)
 
@@ -237,7 +237,7 @@ pub fn compare_prev(address &voidptr, expected voidptr, replacement voidptr) voi
 // The genuine queue/dispatcher owns all IRQ-work list and BUSY transitions.
 // This boundary supplies only CPU doorbells and a chosen scheduling stop before
 // the real post-callback guard acquisition; no work fields or atomics change.
-@[export:'vinix_linuxkpi_irqwork_send_ipi']
+@[export:'tulpar_linuxkpi_irqwork_send_ipi']
 pub fn container_send_ipi(cpu u32) {
 	unsafe {
 		check(cpu < 4, @LINE)
@@ -871,27 +871,27 @@ fn chain_long_release_test() {
 	}
 }
 
-@[export:'vinix_linuxkpi_task_get']
+@[export:'tulpar_linuxkpi_task_get']
 pub fn native_task_get(owner voidptr) {
 	unsafe { C.rcuh_add32(&(&Context(owner)).refs, 1) }
 }
 
-@[export:'vinix_linuxkpi_task_put']
+@[export:'tulpar_linuxkpi_task_put']
 pub fn native_task_put(owner voidptr) {
 	unsafe { release_context(&Context(owner)) }
 }
 
-@[export:'vinix_linuxkpi_task_signal_pending']
+@[export:'tulpar_linuxkpi_task_signal_pending']
 pub fn native_pending(owner C.rcuh_const_voidp, fatal bool) bool {
 	return unsafe { C.rcuh_load32(&(&Context(voidptr(owner))).pending) != 0 }
 }
 
-@[export:'vinix_linuxkpi_task_dequeue']
+@[export:'tulpar_linuxkpi_task_dequeue']
 pub fn native_dequeue(owner voidptr) {
 	unsafe { C.rcuh_store32(&(&Context(owner)).queued, 0) }
 }
 
-@[export:'vinix_linuxkpi_task_enqueue']
+@[export:'tulpar_linuxkpi_task_enqueue']
 pub fn native_enqueue(owner voidptr) bool {
 	unsafe {
 		C.rcuh_exchange32(&(&Context(owner)).queued, 1)
@@ -899,12 +899,12 @@ pub fn native_enqueue(owner voidptr) bool {
 	}
 }
 
-@[export:'vinix_linuxkpi_task_is_dead']
+@[export:'tulpar_linuxkpi_task_is_dead']
 pub fn native_dead(owner C.rcuh_const_voidp) bool {
 	return unsafe { C.rcuh_load32(&(&Context(voidptr(owner))).retired) != 0 }
 }
 
-@[export:'vinix_linuxkpi_task_park']
+@[export:'tulpar_linuxkpi_task_park']
 pub fn native_park() {
 	unsafe {
 		c := context()
@@ -913,15 +913,15 @@ pub fn native_park() {
 	}
 }
 
-@[export:'vinix_linuxkpi_iowait_block']
+@[export:'tulpar_linuxkpi_iowait_block']
 pub fn unsupported_iowait(owner voidptr) { check(false, @LINE) }
 
-@[export:'vinix_linuxkpi_clock_ns']
+@[export:'tulpar_linuxkpi_clock_ns']
 pub fn native_clock() u64 {
 	return unsafe { C.rcuh_load64(&dma_clock_ns) }
 }
 
-@[export:'vinix_linuxkpi_timer_tick']
+@[export:'tulpar_linuxkpi_timer_tick']
 pub fn timer_observation() {
 	unsafe { C.rcuh_add32(&dma_timer_observations, 1) }
 }
@@ -966,7 +966,7 @@ pub fn unsupported_mutex(owner voidptr) { check(false, @LINE) }
 @[export:'vkp_mutex_unlock']
 pub fn unsupported_mutex_unlock(owner voidptr) { check(false, @LINE) }
 
-@[export:'vinix_linuxkpi_bug'; noreturn]
+@[export:'tulpar_linuxkpi_bug'; noreturn]
 pub fn bug(reason C.rcuh_const_charp, line i32) {
 	unsafe {
 		if container_fatal_watch {
@@ -990,7 +990,7 @@ pub fn bug(reason C.rcuh_const_charp, line i32) {
 fn advance(ticks u64) {
 	unsafe {
 		now := C.rcuh_add64(&dma_clock_ns, ticks * 1000000) + ticks * 1000000
-		C.vinix_linuxkpi_time_tick(now)
+		C.tulpar_linuxkpi_time_tick(now)
 	}
 }
 
@@ -1103,7 +1103,7 @@ fn join_wait(waiter &FenceWaiter) {
 
 fn await_deadline() {
 	for turns := 0; turns < 20000000; turns++ {
-		if C.vinix_linuxkpi_time_waiters() != 0 { return }
+		if C.tulpar_linuxkpi_time_waiters() != 0 { return }
 		C.sched_yield()
 	}
 	check(false, @LINE)
@@ -1375,14 +1375,14 @@ fn wait_tests() {
 		C.rcuh_store32(&intr.ctx.pending, 1)
 		C.wake_up_process(&intr.ctx.task)
 		join_wait(&intr)
-		check(intr.result == -512 && C.dfh_list_empty(&interrupted.fence) && C.vinix_linuxkpi_time_waiters() == 0, @LINE)
+		check(intr.result == -512 && C.dfh_list_empty(&interrupted.fence) && C.tulpar_linuxkpi_time_waiters() == 0, @LINE)
 		C.dma_fence_put(&interrupted.fence)
 		mut forever := FenceNode{}
 		initialize(&forever)
 		mut infinite := FenceWaiter{ node: &forever, timeout: isize(0x7fffffffffffffff) }
 		start_wait(&infinite)
 		await32(&infinite.ctx.parks, 1)
-		check(C.vinix_linuxkpi_time_waiters() == 0, @LINE)
+		check(C.tulpar_linuxkpi_time_waiters() == 0, @LINE)
 		C.dma_fence_signal(&forever.fence)
 		join_wait(&infinite)
 		check(infinite.result == isize(0x7fffffffffffffff), @LINE)
@@ -1454,7 +1454,7 @@ fn any_tests() {
 				if i != 2 || round != 0 { check(C.dfh_list_empty(fences[i]), @LINE) }
 				C.dma_fence_put(fences[i])
 			}
-			check(C.vinix_linuxkpi_time_waiters() == 0 && C.rcuh_load32(&page_live) == baseline, @LINE)
+			check(C.tulpar_linuxkpi_time_waiters() == 0 && C.rcuh_load32(&page_live) == baseline, @LINE)
 		}
 	}
 }
@@ -1519,16 +1519,16 @@ fn simple_tests() {
 		initialize(&other)
 		mut waiter := FenceWaiter{ node: &other, timeout: 20 }
 		start_wait(&waiter)
-		for C.vinix_linuxkpi_time_waiters() == 0 { C.sched_yield() }
+		for C.tulpar_linuxkpi_time_waiters() == 0 { C.sched_yield() }
 		check(C.dma_fence_signal(&other.fence) == 0, @LINE)
 		join_wait(&waiter)
-		check(waiter.result > 0 && C.vinix_linuxkpi_time_waiters() == 0, @LINE)
+		check(waiter.result > 0 && C.tulpar_linuxkpi_time_waiters() == 0, @LINE)
 		C.dma_fence_put(&other.fence)
 		mut timed := FenceNode{}
 		initialize(&timed)
 		mut timeout := FenceWaiter{ node: &timed, timeout: 3 }
 		start_wait(&timeout)
-		for C.vinix_linuxkpi_time_waiters() == 0 { C.sched_yield() }
+		for C.tulpar_linuxkpi_time_waiters() == 0 { C.sched_yield() }
 		advance(3)
 		join_wait(&timeout)
 		check(timeout.result == 0 && C.dfh_list_empty(&timed.fence), @LINE)
@@ -1622,7 +1622,7 @@ pub fn main(argc i32, argv &&char) i32 {
 		chain_long_release_test()
 		C.rcu_barrier()
 		C.vkr_rcu_shutdown_for_test()
-		check(C.rcuh_load32(&page_live) == 0 && C.vinix_linuxkpi_time_waiters() == 0, @LINE)
+		check(C.rcuh_load32(&page_live) == 0 && C.tulpar_linuxkpi_time_waiters() == 0, @LINE)
 		check(C.rcuh_load32(&ctx.refs) == 1, @LINE)
 		check(C.pthread_setspecific(context_key, nil) == 0, @LINE)
 		context_destructor(ctx)

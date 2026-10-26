@@ -4,8 +4,8 @@ module main
 import json2
 import os
 
-const release_declaration = '/usr/share/vinix-packages/applications.json'
-const release_decision = '/home/alex/.vinix-first-run-release'
+const release_declaration = '/usr/share/tulpar-packages/applications.json'
+const release_decision = '/home/alex/.tulpar-first-run-release'
 
 fn check_first_run_inputs(fresh bool) ! {
 	info := os.lstat(release_declaration)!
@@ -16,10 +16,10 @@ fn check_first_run_inputs(fresh bool) ! {
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	if document.len != 3 || document['format']! != json2.Any(f64(1)) ||
 		document['architecture']!.str() != architecture ||
-		document['packages']!.as_array().map(it.str()) != ['org.vinix.counter'] {
+		document['packages']!.as_array().map(it.str()) != ['org.tulpar.counter'] {
 		return error('first-run declaration is not the complete architecture-matched Counter set')
 	}
-	if os.exists('/usr/bin/pkg') || os.exists('/home/alex/.vinix-first-run-apps') {
+	if os.exists('/usr/bin/pkg') || os.exists('/home/alex/.tulpar-first-run-apps') {
 		return error('first-run qualification must not depend on legacy pkg or pending marker')
 	}
 	if fresh {
@@ -43,7 +43,7 @@ fn first_run_proposal() ! {
 	require_uninstalled()!
 	// An independent read-only oracle records the complete signed proposal.
 	// The host separately captures Software's real proposal before Confirm.
-	mut child := os.new_process('/usr/bin/vinix-package')
+	mut child := os.new_process('/usr/bin/tulpar-package')
 	defer { child.close() }
 	child.set_args(['deployment-review', release_declaration])
 	child.set_redirect_stdio()
@@ -60,13 +60,13 @@ fn first_run_proposal() ! {
 	architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	if review['operation']!.str() != 'deploy' || review['architecture']!.str() != architecture ||
 		review['generation']!.f64() != 0 || review['fingerprint']!.str().len != 64 ||
-		review['names']!.as_array().map(it.str()) != ['org.vinix.counter'] ||
-		review['requested']!.as_array().map(it.str()) != ['org.vinix.counter'] ||
+		review['names']!.as_array().map(it.str()) != ['org.tulpar.counter'] ||
+		review['requested']!.as_array().map(it.str()) != ['org.tulpar.counter'] ||
 		review['rows']!.as_array().len != 1 {
 		return error('first-run proposal differs from the complete declared Counter set')
 	}
 	row := review['rows']!.as_array()[0].as_map()
-	if row['id']!.str() != 'org.vinix.counter' || row['version']!.str() != '1.0.0' ||
+	if row['id']!.str() != 'org.tulpar.counter' || row['version']!.str() != '1.0.0' ||
 		row['installed_version']!.str() != '' || row['architecture']!.str() != architecture ||
 		row['kind']!.str() != 'native' || row['repository']!.str() != 'native' ||
 		row['license']!.str() != 'MIT' || row['public_key']!.str().len != 64 ||

@@ -16,9 +16,9 @@ fn C.alarm(u32) u32
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 // Deliberately executable checks: the pinned compiler removes assert in -prod.
@@ -27,7 +27,7 @@ fn catalog_publication_check(ok bool, message string) {
 }
 
 fn catalog_publication_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-catalog-publication-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-catalog-publication-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/roots/shared')!
 	os.write_file(work + '/roots/shared/COPYING', 'explicitly licensed fixture data')!
 	mut imports := []CatalogImport{}
@@ -465,7 +465,7 @@ fn test_catalog_publication_closes_reader_and_decoded_comparison_owners_repeated
 		descriptors := catalog_publication_descriptors()
 		for i in 0 .. cycles + 1 {
 			$if track_heap ? {
-				if i > 0 { C.vinix_heap_begin() }
+				if i > 0 { C.tulpar_heap_begin() }
 			}
 			if mode.starts_with('error-') {
 				catalog_publication_reader(error_path, MetadataReadOptions{ checkpoint: catalog_publication_reader_error }, true)
@@ -476,8 +476,8 @@ fn test_catalog_publication_closes_reader_and_decoded_comparison_owners_repeated
 			}
 			$if track_heap ? {
 				if i > 0 {
-					kept := C.vinix_heap_end()
-					allocations := C.vinix_heap_count()
+					kept := C.tulpar_heap_end()
+					allocations := C.tulpar_heap_count()
 					if kept > maximum { maximum = kept }
 					if allocations > records { records = allocations }
 				}

@@ -133,8 +133,8 @@ fn abi_spec(family string) !AbiSpec {
 				'CLOCK CONTROL PASS: discipline ABI validates modes and bounds',
 				'CLOCK CONTROL PASS: privilege and securelevel guard changes',
 				'CLOCK CONTROL PASS: realtime steps adjust sleeps and absolute timers',
-			], pass: 'VINIX CLOCK CONTROL: PASS', failures: [
-				'VINIX CLOCK CONTROL: FAIL',
+			], pass: 'TULPAR CLOCK CONTROL: PASS', failures: [
+				'TULPAR CLOCK CONTROL: FAIL',
 				'CLOCK CONTROL FAIL',
 				'FATAL EXCEPTION',
 				'KERNEL PANIC',

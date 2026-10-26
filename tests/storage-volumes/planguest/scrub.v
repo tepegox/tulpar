@@ -4,7 +4,7 @@ module planguest
 @[direct_array_access]
 fn scrub_tool(reference &char, report &char, parent &char, other &char, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'scrub-data'), reference, report, &char(c'1'), other, &char(c'0'), parent, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'scrub-data'), reference, report, &char(c'1'), other, &char(c'0'), parent, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
 		fd := C.open(c'/root/scrub-output', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(fd >= 0, c'open scrub capture')
 		child := C.fork(); check(child >= 0, c'fork scrub')
@@ -30,12 +30,12 @@ fn planned_scrub(parent &char, other &char) {
 	unsafe {
 		ref := C.open(c'/root/data.vhash', C.O_RDONLY); mut reference := [11392]u8{}; size := C.read(ref, &reference[0], 11392)
 		check(ref >= 0 && size == 696 && C.close(ref) == 0, c'scrub trusted reference')
-		first := status(c'/dev/mapper/vinix2').generation; second := status(c'/dev/mapper/vinix9').generation
-		held_first := C.open(c'/dev/mapper/vinix2', C.O_RDONLY); held_second := C.open(c'/dev/mapper/vinix9', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar2').generation; second := status(c'/dev/mapper/tulpar9').generation
+		held_first := C.open(c'/dev/mapper/tulpar2', C.O_RDONLY); held_second := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY)
 		check(held_first >= 0 && held_second >= 0, c'hold scrub views')
 		mut clean := [4096]char{}; mut output := [4096]char{}
 		scrub_tool(c'/root/data.vhash', c'/root/scrub-report.txt', parent, other, 0, &clean[0])
-		check(contains(&clean[0], c'format=VINIXSR1 operation=scrubbed-data disks=2 mappings=5 matched=5 changed=0 algorithm=sha256') && contains(&clean[0], c'disk=1 slot=13'), c'complete clean scrub')
+		check(contains(&clean[0], c'format=TULPARSR1 operation=scrubbed-data disks=2 mappings=5 matched=5 changed=0 algorithm=sha256') && contains(&clean[0], c'disk=1 slot=13'), c'complete clean scrub')
 		copy_scrub_report(c'/root/scrub-report.txt', c'/root/scrub-clean.txt')
 		directory := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY | C.O_CLOEXEC)
 		check(directory >= 0 && C.flock(directory, C.LOCK_EX | C.LOCK_NB) == 0, c'hold scrub writer lock')
@@ -64,7 +64,7 @@ fn planned_scrub(parent &char, other &char) {
 		for i in 0 .. 4096 { check(changed[i] == original_first[i], c'held first scrub data') }
 		check(C.pread(held_second, &changed[0], 4096, 0) == 4096 && C.close(held_second) == 0, c'read held second scrub view')
 		for i in 0 .. 4096 { check(changed[i] == original_second[i], c'held second scrub data') }
-		check(status(c'/dev/mapper/vinix2').generation == first && status(c'/dev/mapper/vinix9').generation == second, c'scrub retains mapping generations')
+		check(status(c'/dev/mapper/tulpar2').generation == first && status(c'/dev/mapper/tulpar9').generation == second, c'scrub retains mapping generations')
 		C.printf(c'PLAN SCRUB PASSED: all rows, multiple corruptions, complete durable findings, failed-scan rollback, writer exclusion and preserved held data\n')
 	}
 }
@@ -88,11 +88,11 @@ fn scrub_boot_phase(parent &char, other &char) {
 	unsafe {
 		fd := C.open(c'/root/boot-scrub.txt', C.O_RDONLY); mut prior := [4096]u8{}; size := C.read(fd, &prior[0], 4096)
 		check(fd >= 0 && size > 0 && size < 4096 && C.close(fd) == 0, c'persisted nine-row scrub report')
-		first := status(c'/dev/mapper/vinix20').generation; second := status(c'/dev/mapper/vinix19').generation
+		first := status(c'/dev/mapper/tulpar20').generation; second := status(c'/dev/mapper/tulpar19').generation
 		mut output := [4096]char{}; scrub_tool(c'/root/boot-data.vhash', c'/root/boot-scrub.txt', parent, other, 0, &output[0])
 		check(contains(&output[0], c'mappings=9 matched=9 changed=0') && contains(&output[0], c'disk=1 slot=19'), c'complete nine-row boot scrub')
 		bundle_unchanged(c'/root/boot-scrub.txt', &prior[0], size)
-		check(status(c'/dev/mapper/vinix20').generation == first && status(c'/dev/mapper/vinix19').generation == second, c'boot scrub preserves generations')
+		check(status(c'/dev/mapper/tulpar20').generation == first && status(c'/dev/mapper/tulpar19').generation == second, c'boot scrub preserves generations')
 		C.printf(c'PLAN SCRUB BOOT PRESERVED\n')
 	}
 }

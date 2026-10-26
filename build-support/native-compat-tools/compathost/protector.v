@@ -38,13 +38,13 @@ fn stack_protected(attributes string) bool {
 fn protector_command(args []string) !int {
 	parsed := hosttest.parse_arguments(args, [hosttest.Option{ name: '--state-dir', value: true }], 0,
 		'Usage: run [--state-dir FRESH-DIR]', 'Exercise production V canaries and independently check LLVM protection attributes.') or { return error_with_code(err.msg(), 2) }
-	arch := os.getenv_opt('VINIX_STACK_TEST_ARCH') or { if policyhost.caller_arch() == 'arm64' { 'aarch64' } else { 'x86_64' } }
+	arch := os.getenv_opt('TULPAR_STACK_TEST_ARCH') or { if policyhost.caller_arch() == 'arm64' { 'aarch64' } else { 'x86_64' } }
 	if arch !in ['aarch64', 'x86_64'] { return error('Unsupported stack protector host architecture') }
-	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'vinix-stack-protector-')!
+	work := hosttest.work_dir(parsed.options['--state-dir'] or { '' }, 'tulpar-stack-protector-')!
 	defer { if '--state-dir' !in parsed.options { retire(work) } }
-	write(work + '/v.mod', "Module { name: 'vinix_stack_protector_tests' }\n")!
+	write(work + '/v.mod', "Module { name: 'tulpar_stack_protector_tests' }\n")!
 	hosttest.module_copy_file_preserving_stat(root() + '/kernel/lib/stack_protector.v', work + '/protector.v')!
-	write(work + '/ports.v', "module lib\nfn C.vinix_stack_test_panic(message charptr)\nfn stack_boot_entropy() u64 { return u64(0x713b38249a6255cb) }\n@[noreturn]\nfn kpanic(state voidptr, message charptr) {\n    _ = state\n    C.vinix_stack_test_panic(message)\n    for {}\n}\n")!
+	write(work + '/ports.v', "module lib\nfn C.tulpar_stack_test_panic(message charptr)\nfn stack_boot_entropy() u64 { return u64(0x713b38249a6255cb) }\n@[noreturn]\nfn kpanic(state voidptr, message charptr) {\n    _ = state\n    C.tulpar_stack_test_panic(message)\n    for {}\n}\n")!
 	v := output(['sh', '-c', '. "$1/build-support/find-v.sh"; printf "%s" "$V"', 'find-v', root()])!
 	mut env := policyhost.environment()
 	env['V_C_ERROR_BUG_REPORT_DISABLED'] = '1'
@@ -62,7 +62,7 @@ fn protector_command(args []string) !int {
 	run([work + '/host'])!
 	run([...production, '-S', '-emit-llvm', work + '/protector.c', '-o', work + '/protector.ll'])!
 	ir := read(work + '/protector.ll')!
-	for name in ['lib__stack_guard_init', 'vinix_stack_guard_init'] {
+	for name in ['lib__stack_guard_init', 'tulpar_stack_guard_init'] {
 		if stack_protected(llvm_function_attributes(ir, name)!) { return error('Initialization unexpectedly has stack protection: ' + name) }
 	}
 	run([...common, '-I', root() + '/tests/stack-protector/protectorfixture', '-Wno-unused-function',

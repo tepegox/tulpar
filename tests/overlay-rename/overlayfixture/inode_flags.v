@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 module overlayfixture
 
-fn C.vinix_overlay_truncate(&char, i64) int
+fn C.tulpar_overlay_truncate(&char, i64) int
 
 fn inode_flag_path(base &char, index int, path &char) {
 	check(C.snprintf(path, 512, c'%s/flags-%d', base, index) > 0, 650)
@@ -171,7 +171,7 @@ fn exercise_inode_flags() {
 		}
 		append_path := &char(c'/tmp/overlay-state/diskmerged/flags-0')
 		check(C.open(append_path, C.O_WRONLY) == -1 && *C.__errno_location() == C.EPERM, 661)
-		check(C.vinix_overlay_truncate(append_path, 0) == -1 && *C.__errno_location() == C.EPERM, 661)
+		check(C.tulpar_overlay_truncate(append_path, 0) == -1 && *C.__errno_location() == C.EPERM, 661)
 		check(C.unlink(append_path) == -1 && *C.__errno_location() == C.EPERM, 661)
 		fd := C.open(append_path, C.O_WRONLY | C.O_APPEND)
 		check(fd >= 0 && C.write(fd, c'Q', 1) == 1 && C.fsync(fd) == 0 && C.close(fd) == 0, 662)

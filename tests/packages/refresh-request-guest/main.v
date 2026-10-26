@@ -27,16 +27,16 @@ fn check() ! {
 		for explicit in [false, true]! {
 			for mode in ['fresh', 'cached', 'migrate', 'empty', 'bad-cache', 'bad-history', 'signature', 'syntax', 'schema',
 				'expired', 'floor', 'equivocation', 'ambiguous', 'missing-index', 'missing-signature', 'offline', 'busy']! {
-				os.setenv('VINIX_REFRESH_CASE', architecture + (if explicit { ' explicit ' } else { ' service ' }) + mode, true)
+				os.setenv('TULPAR_REFRESH_CASE', architecture + (if explicit { ' explicit ' } else { ' service ' }) + mode, true)
 				child('/usr/share/package-fixtures/request', 'REFRESH REQUEST selected case PASS', ceiling)!
 			}
 		}
 		for mode in ['bad-config', 'invalid-root']! {
-			os.setenv('VINIX_REFRESH_CASE', architecture + ' service ' + mode, true)
+			os.setenv('TULPAR_REFRESH_CASE', architecture + ' service ' + mode, true)
 			child('/usr/share/package-fixtures/request', 'REFRESH REQUEST selected case PASS', ceiling)!
 		}
 	}
-	os.unsetenv('VINIX_REFRESH_CASE')
+	os.unsetenv('TULPAR_REFRESH_CASE')
 	println('REFRESH REQUEST 72 cases with 64 measured calls after 8 warmups PASS')
 	child('/usr/share/package-fixtures/lifetime', 'REFRESH REQUEST independently owned', ceiling)!
 	child('/usr/share/package-fixtures/workspace', 'REFRESH PUBLICATION catalog 64 refused calls retained 0', ceiling)!

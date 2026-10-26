@@ -4,7 +4,7 @@ module pkgadmin
 import os
 
 fn test_private_socket_admits_only_its_account_and_never_removes_existing_names() {
-	directory := os.temp_dir() + '/vinix-package-admin-socket-' + os.getpid().str()
+	directory := os.temp_dir() + '/tulpar-package-admin-socket-' + os.getpid().str()
 	os.mkdir(directory, mode: 0o700)!
 	defer { os.rmdir_all(directory) or {} }
 	uid := u32(os.geteuid())

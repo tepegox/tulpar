@@ -1,4 +1,4 @@
-Run `./tests/network-tcp-lifetime/run-host.sh` to exercise the production Vinix
+Run `./tests/network-tcp-lifetime/run-host.sh` to exercise the production Tulpar
 native V socket adapter (`kernel/netcore`) and lwIP 2.2.1 with ASan/UBSan. The fixture uses actual TCP packets
 and timer processing; it does not mock shutdown, PCB allocation, or close.
 

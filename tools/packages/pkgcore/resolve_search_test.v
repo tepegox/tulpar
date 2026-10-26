@@ -3,8 +3,8 @@ module pkgcore
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn search_fixture_package(id string, dependencies []Dependency) Package {
@@ -341,7 +341,7 @@ fn test_search_work_buffers_retire_without_retained_allocations() {
 		mut broken := candidates.clone()
 		broken[255] = search_fixture_candidate(search_fixture_package('node-255', [Dependency{id: 'absent'}]))
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				mut search := Search{config: config, candidates: candidates}
 				result := search.solve(roots)!
@@ -373,7 +373,7 @@ fn test_search_work_buffers_retire_without_retained_allocations() {
 				}
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'dependency search work buffers retained ${kept} bytes'
 		println('Dependency search: 1000 successful 256-package chains and missing/policy refusals retain zero tracked bytes')
 		println('Dependency diagnostics: 1000 policy-fallback and deep missing-path refusals retain zero tracked bytes')

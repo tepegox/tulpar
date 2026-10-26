@@ -58,7 +58,7 @@ fn check_software_progress_memory() ! {
 			defer { unsafe { line.free() } }
 			mut app := SoftwareApp{output: []u8{cap: 8192}, progress_pending: []u8{cap: pkgprotocol.progress_limit}}
 			for warmup in 0 .. 2 {
-				if warmup == 1 { C.vinix_heap_begin() }
+				if warmup == 1 { C.tulpar_heap_begin() }
 				for _ in 0 .. 1000 {
 					for frame in frames { progress_memory_fragments(mut app, frame) }
 					assert app.progress_seen && app.progress_snapshot.phase == 'complete'
@@ -85,7 +85,7 @@ fn check_software_progress_memory() ! {
 				}
 			}
 			app.close_app()
-			kept := C.vinix_heap_end()
+			kept := C.tulpar_heap_end()
 			assert kept == 0, 'progress case ' + index.str() + ' retained ' + kept.str() + ' bytes'
 		}
 		println('SOFTWARE PROGRESS 12 x 1000 fragmented valid/invalid/oversized/recovery/diagnostic/render/retirement cycles retain zero tracked bytes PASS')

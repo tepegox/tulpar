@@ -30,7 +30,7 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	arch := $if arm64 { 'arm64' } $else $if amd64 { 'amd64' } $else { '' }
 	if arch == '' { return error('Unsupported host architecture') }
-	work := hosttest.work_dir(keep, 'vinix-user-access-scope-')!
+	work := hosttest.work_dir(keep, 'tulpar-user-access-scope-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	core := os.join_path(work, 'compatcore')
 	os.mkdir(core)!
@@ -42,13 +42,13 @@ fn run_profile(keep string) ! {
 	}
 	include := os.join_path(work, 'include')
 	os.mkdir_all(os.join_path(include, 'linux'))!
-	os.mkdir(os.join_path(include, 'vinix'))!
+	os.mkdir(os.join_path(include, 'tulpar'))!
 	for name in contracts {
 		path := os.join_path(root, 'kernel/c', name)
 		observed << path
 		os.cp(path, os.join_path(include, name))!
 	}
-	for name in ['linux/uaccess.h', 'vinix/user_access_scope.h'] {
+	for name in ['linux/uaccess.h', 'tulpar/user_access_scope.h'] {
 		path := os.join_path(root, 'kernel/linuxkpi/include', name)
 		observed << path
 		os.cp(path, os.join_path(include, name))!
@@ -65,13 +65,13 @@ fn run_profile(keep string) ! {
 		'-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter', '-fsanitize=address,undefined',
 		'-fno-omit-frame-pointer']
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
-	callers := ['-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
+	callers := ['-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-D_FORTIFY_SOURCE=0',
 		'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h'), '-I' + include,
 		'-I' + os.join_path(root, 'kernel/linuxkpi/include'), '-I' + os.join_path(linux, 'include'),
 		'-I' + os.join_path(linux, 'include/uapi'), '-I' + os.join_path(linux, 'arch/x86/include'),
 		'-I' + os.join_path(linux, 'arch/x86/include/uapi')]
-	native := ['-DVINIX_V_RUNTIME', '-I' + include, '-I' + os.join_path(root, 'kernel/c')]
+	native := ['-DTULPAR_V_RUNTIME', '-I' + include, '-I' + os.join_path(root, 'kernel/c')]
 	strip := $if macos { '-Wl,-dead_strip' } $else { '-Wl,--gc-sections' }
 	mut env := os.environ(); env['ASAN_OPTIONS'] = 'detect_stack_use_after_return=1'; env['UBSAN_OPTIONS'] = 'halt_on_error=1'
 	mut results := map[string]json2.Any{}
@@ -124,7 +124,7 @@ fn run_profile(keep string) ! {
 	mut hashes := map[string]string{}
 	for name in sources { hashes[name] = hosttest.sha(os.join_path(core, name))! }
 	for name in contracts { hashes[name] = hosttest.sha(os.join_path(include, name))! }
-	for name in ['linux/uaccess.h', 'vinix/user_access_scope.h'] { hashes[name] = hosttest.sha(os.join_path(include, name))! }
+	for name in ['linux/uaccess.h', 'tulpar/user_access_scope.h'] { hashes[name] = hosttest.sha(os.join_path(include, name))! }
 	hashes['core.c'] = hosttest.sha(generated)!
 	hashes['test.c'] = hosttest.sha(os.join_path(work, 'test.c'))!
 	hashes['user_access_scope.v'] = hosttest.sha(@FILE)!
@@ -155,7 +155,7 @@ const c_test = '
 #include <stdio.h>
 #include <string.h>
 #include <linux/uaccess.h>
-#include <vinix/user_access_scope.h>
+#include <tulpar/user_access_scope.h>
 #include <uapi/drm/i915_drm.h>
 
 #if defined(unsafe_get_user) || defined(unsafe_copy_to_user) || defined(unsafe_copy_from_user)
@@ -184,7 +184,7 @@ static void *last_destination;
     } \\
 } while (0)
 
-unsigned long vinix_linuxkpi_user_address_limit(void) {
+unsigned long tulpar_linuxkpi_user_address_limit(void) {
     limit_calls++;
     return address_limit;
 }
@@ -192,7 +192,7 @@ unsigned long vinix_linuxkpi_user_address_limit(void) {
 /* Independent synthetic-map model. The real V frontend dispatches its exact
  * scalar bits and propagates this result. A missing mapping may resolve only
  * in the model\'s ordinary context; an accessible prefix can precede a fault. */
-int vinix_linuxkpi_write_user_scalar(void *destination, size_t size, uint64_t value) {
+int tulpar_linuxkpi_write_user_scalar(void *destination, size_t size, uint64_t value) {
     bridge_calls++;
     last_destination = destination;
     last_size = size;
@@ -502,7 +502,7 @@ int main(void) {
 
 const invalid_width = '
 #include <linux/uaccess.h>
-#include <vinix/user_access_scope.h>
+#include <tulpar/user_access_scope.h>
 int bad_width(void) {
     unsigned __int128 destination = 0;
     unsafe_put_user(1, &destination, failed);
@@ -514,7 +514,7 @@ failed:
 
 const end_probe = '
 #include <linux/uaccess.h>
-#include <vinix/user_access_scope.h>
+#include <tulpar/user_access_scope.h>
 void scope_end_probe(void) {
     user_access_end();
     user_read_access_end();

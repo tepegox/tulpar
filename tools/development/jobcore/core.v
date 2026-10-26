@@ -265,7 +265,7 @@ pub fn acknowledge(path string, name string) ! {
 	write_atomic(path + '/state.json', json2.encode(state) + '\n')!
 }
 
-// Replace the polling process at each tick. On Vinix's gc-none runtime this
+// Replace the polling process at each tick. On Tulpar's gc-none runtime this
 // releases the tick's V allocations instead of retaining them forever.
 pub fn watch(path string) ! {
 	run_due(path, time.now().unix())!

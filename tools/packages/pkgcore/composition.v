@@ -171,7 +171,7 @@ fn compose_catalog_selected(sources []CatalogSource, destination string, archite
 	parent := os.dir(target)
 	defer { unsafe { target.free(); parent.free() } }
 	disk_check(options.available_space(parent)!, u64(plan.text.len + plan.provenance.len) + 4 * 1024 * 1024, 64 * 1024 * 1024)!
-	mut exporting := create_export_stage(parent, '.vinix-composition', 'catalog composition')!
+	mut exporting := create_export_stage(parent, '.tulpar-composition', 'catalog composition')!
 	defer { exporting.close() }
 	write_composition_stage(plan, target, options, mut exporting) or { return exporting.failure(err) }
 	return composition_result(plan.info, target)

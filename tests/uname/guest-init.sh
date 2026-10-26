@@ -14,7 +14,7 @@ check() {
 }
 
 kernel=$(/bin/busybox uname -s)
-test "$kernel" = Vinix
+test "$kernel" = Tulpar
 check "$kernel"
 check "$kernel" -s
 check "$kernel" --

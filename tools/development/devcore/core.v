@@ -37,7 +37,7 @@ pub fn file_hash(path string) !string {
 fn hash_tree(path string, root string, relative string, mut digest sha256.Digest) ! {
 	st := os.lstat(path)!
 	// Symlink access is governed by its containing directory and target.
-	// Darwin records umask-dependent link modes; Linux/Vinix report 0777.
+	// Darwin records umask-dependent link modes; Linux/Tulpar report 0777.
 	// Hash a canonical mode so a portable closure survives copy and boot.
 	mode := if st.get_filetype() == .symbolic_link { u32(0o777) } else { st.mode & 0o777 }
 	digest.write('${relative.len}:${relative}:${mode}:'.bytes())!

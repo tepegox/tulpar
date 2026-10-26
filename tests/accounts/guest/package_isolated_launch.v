@@ -36,10 +36,10 @@ fn package_isolated_application_probe() !int {
 	mut effective := u32(0)
 	mut saved := u32(0)
 	assert C.getresuid(&real, &effective, &saved) == 0 && real == uid && effective == uid && saved == uid
-	assert os.getenv('VINIX_AUTH_UID') == '' && os.getenv('VINIX_AUTH_USER') == ''
+	assert os.getenv('TULPAR_AUTH_UID') == '' && os.getenv('TULPAR_AUTH_USER') == ''
 	mut context := appsdk.load()!
 	defer { context.close() }
-	assert context.data_directory == '/home/' + (if uid == 1000 { 'alex' } else { 'sam' }) + '/.local/share/vinix-apps/isolated-cli'
+	assert context.data_directory == '/home/' + (if uid == 1000 { 'alex' } else { 'sam' }) + '/.local/share/tulpar-apps/isolated-cli'
 	if os.args[2..] == ['hold'] {
 		os.write_file(context.data_directory + '/ready', 'leased')!
 		for _ in 0 .. 6000 {
@@ -98,7 +98,7 @@ fn package_isolated_terminal_client() !int {
 	user := db.user('alex') or { return error('no alex') }
 	sessioncore.become(db, user)!
 	assert C.getgroups(0, unsafe { nil }) == 2
-	sessioncore.exec_as(user, ['/usr/bin/vinix-package', 'run-terminal-args', 'isolated-cli', '--', 'terminal'],
+	sessioncore.exec_as(user, ['/usr/bin/tulpar-package', 'run-terminal-args', 'isolated-cli', '--', 'terminal'],
 		['HOME=/home/alex', 'PATH=/usr/bin:/bin'], false)
 	return 127
 }
@@ -142,11 +142,11 @@ fn qualify_isolated_document_refusals(db accountcore.Database, users []accountco
 			work + '/fifo-alias', work + '/socket-alias', work + '/block-alias', work + '/directory-alias', work + '/device-alias', '/dev/null'] {
 			for command in [['run', 'isolated-cli', path], ['run-args', 'isolated-cli', '--file', path, '--', 'document', path],
 				['run-window', 'isolated-window', path]] {
-				refused := run(['/usr/bin/vinix-package', ...command], '', db, user)
+				refused := run(['/usr/bin/tulpar-package', ...command], '', db, user)
 				assert refused.status != 0 && refused.output.contains('document must be an existing absolute regular file: ' + path), refused.output
 				assert !refused.output.contains('PACKAGE ISOLATED DOCUMENT '), refused.output
-				assert !os.exists(user.home + '/.local/share/vinix-apps/isolated-cli')
-				assert !os.exists(user.home + '/.local/share/vinix-apps/isolated-window')
+				assert !os.exists(user.home + '/.local/share/tulpar-apps/isolated-cli')
+				assert !os.exists(user.home + '/.local/share/tulpar-apps/isolated-window')
 			}
 		}
 		assert os.ls('/run/user/' + user.uid.str())!.all(!it.starts_with('pkg-'))
@@ -175,11 +175,11 @@ fn qualify_package_isolated_launch(mut t Test) ! {
 	os.mkdir_all('/tmp/package-publisher', mode: 0o700)!
 	key := pkgcore.keygen('/tmp/package-publisher/isolated-seed')!
 	pkgcore.publish(repository, 'isolated-publisher', '/tmp/package-publisher/isolated-seed', 1, time.now().unix() + 3600)!
-	os.mkdir_all('/etc/vinix-packages')!
+	os.mkdir_all('/etc/tulpar-packages')!
 	// A conflicting root-desktop identity must never select the caller's account.
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'sam',
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'sam',
 		policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['repo-enroll', 'isolated-publisher', 'file://' + repository, key])!
 	package_success(['update'])!
 	package_success(['install', 'isolated-cli', 'isolated-window'])!
@@ -187,14 +187,14 @@ fn qualify_package_isolated_launch(mut t Test) ! {
 	peer_probe := run(['/sbin/init', 'package-isolated-peer-probe'], '', db, alex)
 	planted.close()
 	assert peer_probe.status == 0, peer_probe.output
-	assert !os.exists('/home/alex/.local/share/vinix-apps/isolated-cli')
+	assert !os.exists('/home/alex/.local/share/tulpar-apps/isolated-cli')
 	qualify_isolated_document_refusals(db, [alex, sam])!
 	for user in [alex, sam] {
 		assert db.supplementary_gids(user).len > 0
-		launched := run(['/usr/bin/vinix-package', 'run-args', 'isolated-cli', '--', '', '-flag', 'a space; $(literal)'], 'ordinary stdin\n', db, user)
+		launched := run(['/usr/bin/tulpar-package', 'run-args', 'isolated-cli', '--', '', '-flag', 'a space; $(literal)'], 'ordinary stdin\n', db, user)
 		assert launched.status == 37 && launched.output.contains('PACKAGE ISOLATED STDOUT uid=${user.uid} groups=0') && launched.output.contains('PACKAGE ISOLATED STDERR'), launched.output
-		assert !launched.output.contains('VINIX-PACKAGE-LAUNCH ')
-		assert owner_of(user.home + '/.local/share/vinix-apps/isolated-cli/ran') == user.uid
+		assert !launched.output.contains('TULPAR-PACKAGE-LAUNCH ')
+		assert owner_of(user.home + '/.local/share/tulpar-apps/isolated-cli/ran') == user.uid
 		assert os.ls('/run/user/' + user.uid.str())!.all(!it.starts_with('pkg-'))
 	}
 	t.say('PACKAGE ISOLATED account-admin-standard own-identity groups-zero literal-argv stdin-stdout-stderr exit-code private-data PASS')
@@ -203,23 +203,23 @@ fn qualify_package_isolated_launch(mut t Test) ! {
 			path := '/tmp/isolated-documents/' + name
 			for command in [['run', 'isolated-cli', path], ['run-args', 'isolated-cli', '--file', path, '--', 'document', path]] {
 				os.write_file('/tmp/isolated-documents/regular with spaces', 'ordinary document')!
-				accepted := run(['/usr/bin/vinix-package', ...command], '', db, user)
+				accepted := run(['/usr/bin/tulpar-package', ...command], '', db, user)
 				assert accepted.status == 0 && accepted.output.contains('PACKAGE ISOLATED DOCUMENT ' + path), accepted.output
 				assert os.read_file('/tmp/isolated-documents/regular with spaces')! == 'updated document'
 			}
 		}
 	}
-	root_attempt := run(['/usr/bin/vinix-package', 'run-args', 'isolated-cli', '--', 'root-attempt'], '', db, alex)
+	root_attempt := run(['/usr/bin/tulpar-package', 'run-args', 'isolated-cli', '--', 'root-attempt'], '', db, alex)
 	assert root_attempt.status != 0 && root_attempt.output.contains('PACKAGE ISOLATED ROOT ATTEMPT') && !root_attempt.output.contains('REGained root'), root_attempt.output
 	window_input := appsdk.WindowEvent{ kind: 'close', sequence: 1 }.encode()! + '\n'
-	window := run(['/usr/bin/vinix-package', 'run-window', 'isolated-window'], window_input, db, alex)
+	window := run(['/usr/bin/tulpar-package', 'run-window', 'isolated-window'], window_input, db, alex)
 	assert window.status == 0, window.output
 	mut frames := window_guest_frames(window.output)!
 	assert frames.len == 1 && frames[0].elements[0].text == 'isolated window'
 	for mut frame in frames { frame.close() }
 	for name in ['regular with spaces', 'alias'] {
 		os.write_file('/tmp/isolated-documents/regular with spaces', 'ordinary document')!
-		document_window := run(['/usr/bin/vinix-package', 'run-window', 'isolated-window', '/tmp/isolated-documents/' + name], window_input, db, alex)
+		document_window := run(['/usr/bin/tulpar-package', 'run-window', 'isolated-window', '/tmp/isolated-documents/' + name], window_input, db, alex)
 		assert document_window.status == 0 && document_window.output.contains('PACKAGE ISOLATED DOCUMENT '), document_window.output
 		assert os.read_file('/tmp/isolated-documents/regular with spaces')! == 'updated document'
 	}
@@ -233,16 +233,16 @@ fn qualify_package_isolated_launch(mut t Test) ! {
 	qualify_package_data_purge(mut t, db, alex, sam)!
 	// Re-admission still happens as the ordinary account, after isolation.
 	original := pkgcore.load_config('')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ ...original, repositories: [] }))!
-	revoked := run(['/usr/bin/vinix-package', 'run', 'isolated-cli'], '', db, alex)
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ ...original, repositories: [] }))!
+	revoked := run(['/usr/bin/tulpar-package', 'run', 'isolated-cli'], '', db, alex)
 	assert revoked.status != 0 && revoked.output.contains('revoked'), revoked.output
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(original))!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(original))!
 	state := pkgcore.Service{}.state()!
-	payload := '/var/lib/vinix-packages/generations/' + state.generation.str() + '/apps/isolated-cli/bin/probe'
+	payload := '/var/lib/tulpar-packages/generations/' + state.generation.str() + '/apps/isolated-cli/bin/probe'
 	os.write_file(payload, 'changed')!
-	tampered := run(['/usr/bin/vinix-package', 'run', 'isolated-cli'], '', db, sam)
+	tampered := run(['/usr/bin/tulpar-package', 'run', 'isolated-cli'], '', db, sam)
 	assert tampered.status != 0 && tampered.output.contains('payload changed'), tampered.output
-	assert os.read_file('/var/log/vinix/auth.log')!.contains('uid=1001 run packages-launch as sam: exit 0')
+	assert os.read_file('/var/log/tulpar/auth.log')!.contains('uid=1001 run packages-launch as sam: exit 0')
 	assert os.ls('/run/user/1000')!.all(!it.starts_with('pkg-'))
 	t.say('PACKAGE ISOLATED native-window terminal-tty geometry input trust-and-payload-refusal audit clean-runtime PASS')
 }

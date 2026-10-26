@@ -20,10 +20,10 @@ import x86.idt
 #include "linuxkpi_pagefault_v_contract.h"
 #include "linuxkpi_scalar_uaccess_v_contract.h"
 
-fn C.vinix_linuxkpi_irq_probe(u32) i32
-fn C.vinix_linuxkpi_test_thread_reap_ready(voidptr) bool
+fn C.tulpar_linuxkpi_irq_probe(u32) i32
+fn C.tulpar_linuxkpi_test_thread_reap_ready(voidptr) bool
 fn C.faulthandler_disabled() bool
-fn C.vinix_linuxkpi_conditional_irq_fixture() i32
+fn C.tulpar_linuxkpi_conditional_irq_fixture() i32
 
 const irq_test_cpus = 4
 const irq_test_rounds = u64(8)
@@ -107,7 +107,7 @@ fn irq_test_handler_queries(expected u32) bool {
 	entry_pins := preempt_depth[index]
 	owner := proc.current_thread()
 	cpu.interrupt_toggle(entry_irq)
-	result := C.vinix_linuxkpi_conditional_irq_fixture()
+	result := C.tulpar_linuxkpi_conditional_irq_fixture()
 	observed_irq := cpu.interrupt_toggle(false)
 	after := cpulocal.current()
 	stable := result == 0 && entry_irq && observed_irq == entry_irq
@@ -162,7 +162,7 @@ fn irq_test_outer(vector u32, frame &cpulocal.GPRState) {
 		irq_test_fail(index, 524288)
 	}
 	cpu.interrupt_toggle(check_wait_ints)
-	if C.vinix_linuxkpi_irq_probe(irq_test_inner_vector) != 0
+	if C.tulpar_linuxkpi_irq_probe(irq_test_inner_vector) != 0
 		|| !irq_test_handler_queries(1) { irq_test_fail(index, 16) }
 
 	// The ordinary observer is runnable on this CPU. Deliver a real scheduler
@@ -221,7 +221,7 @@ fn irq_test_primary(index u32) {
 		}
 		runs := katomic.load(&state.observer_runs)
 		katomic.store(mut &state.in_probe, true)
-		result := C.vinix_linuxkpi_irq_probe(irq_test_outer_vector)
+		result := C.tulpar_linuxkpi_irq_probe(irq_test_outer_vector)
 		// This acknowledgement executes only after the real outer IRET. The
 		// saved IF was zero, so a legal post-IRET switch cannot race this check.
 		if result != 0 || cpu.interrupt_state() || cpulocal.current().maskable_irq_depth != 0
@@ -340,7 +340,7 @@ fn irq_test_join(actor &proc.Thread) bool {
 	event.pthread_wait(actor)
 	// The second pin retains this observer after pthread_wait drops the join
 	// pin. Do not reset ledger entries until every actor has left its stack.
-	for !C.vinix_linuxkpi_test_thread_reap_ready(actor) {
+	for !C.tulpar_linuxkpi_test_thread_reap_ready(actor) {
 		if irq_hpet_clock.nanoseconds() - started >= irq_test_timeout_ns {
 			lib.kpanic(unsafe { nil }, c'linuxkpi: IRQ actor off-stack deadline')
 		}
@@ -371,7 +371,7 @@ fn irq_test_lifecycle() bool {
 		}
 		for i in 0 .. created { irq_test_join(owners[i]) }
 		started := irq_hpet_clock.nanoseconds()
-		for !C.vinix_linuxkpi_test_reap_quiescent() {
+		for !C.tulpar_linuxkpi_test_reap_quiescent() {
 			if irq_hpet_clock.nanoseconds() - started >= irq_test_timeout_ns {
 				lib.kpanic(unsafe { nil }, c'linuxkpi: IRQ actor final reclamation deadline')
 			}
@@ -472,9 +472,9 @@ pub fn irq_context_native_selftest() bool {
 		irq_test_vectors_set = true
 	}
 	// Invalid vectors are rejected before dispatch; no exception is executed.
-	if !irq_test_require(C.vinix_linuxkpi_irq_probe(0) == -22
-		&& C.vinix_linuxkpi_irq_probe(31) == -22 && C.vinix_linuxkpi_irq_probe(240) == -22
-		&& C.vinix_linuxkpi_irq_probe(u32(-1)) == -22, c'private probe vector bounds') { return false }
+	if !irq_test_require(C.tulpar_linuxkpi_irq_probe(0) == -22
+		&& C.tulpar_linuxkpi_irq_probe(31) == -22 && C.tulpar_linuxkpi_irq_probe(240) == -22
+		&& C.tulpar_linuxkpi_irq_probe(u32(-1)) == -22, c'private probe vector bounds') { return false }
 	for i in 0 .. 3 {
 		before := selftest_free_baseline()
 		if !irq_test_lifecycle() { return false }
@@ -506,7 +506,7 @@ pub fn irq_context_native_selftest() bool {
 // The counter was incremented by a real THUNK with its actual saved CS=3.
 // Sampling saved IF, CPU, depth and entries together under CLI ties that
 // evidence to a later ordinary task return without retaining a Thread.
-@[export: 'vinix_linuxkpi_test_maskable_user_return']
+@[export: 'tulpar_linuxkpi_test_maskable_user_return']
 fn irq_test_maskable_user_return() {
 	ints := cpu.interrupt_toggle(false)
 	local := cpulocal.current()

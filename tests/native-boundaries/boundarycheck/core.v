@@ -51,7 +51,7 @@ pub fn compare(root string, machine string, env map[string]string) !string {
 	if machine !in ['arm64', 'aarch64'] {
 		return error('This differential boundary fixture requires an ARM64 host')
 	}
-	work := hosttest.work_dir('', 'vinix-native-boundaries-')!
+	work := hosttest.work_dir('', 'tulpar-native-boundaries-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	flags := [env['CC'] or { 'clang' }, '-O2', '-g', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter', '-ffreestanding', '-fno-builtin',

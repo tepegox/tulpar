@@ -7,8 +7,8 @@ import policyhost
 
 fn volume_host(args []string) !int {
 	hosttest.parse_arguments(args, []hosttest.Option{}, 0, 'Usage: host', 'Run production volume, metrics and extent-reservation tests on the host.') or { return error_with_code(err.msg(), 2) }
-	keep := os.getenv('VINIX_VOLUME_HOST_DIR')
-	work := hosttest.work_dir(keep, 'vinix-volume-host-')!
+	keep := os.getenv('TULPAR_VOLUME_HOST_DIR')
+	work := hosttest.work_dir(keep, 'tulpar-volume-host-')!
 	defer { if keep == '' { retire(work) } }
 	for source in ['kernel/fs/storage_control.v', 'kernel/fs/storage_health.v', 'kernel/fs/storage_crypt.v', 'kernel/aesxts/core.v',
 		'kernel/resource/block_health.v', 'kernel/resource/block_health_arm64.v',
@@ -31,7 +31,7 @@ fn volume_host(args []string) !int {
 	os.cp(root() + '/tests/storage-volumes/aesxts_vectors.rsp', work + '/aesxts/aesxts_vectors.rsp')!
 	v := output(['sh', '-c', '. "$1/build-support/find-v.sh"; printf "%s" "$V"', 'find-v', root()])!
 	mut argv := [v, '-enable-globals', '-cc', 'clang', '-arch', policyhost.caller_arch()]
-	if os.getenv('VINIX_HOST_SANITIZE') == '1' {
+	if os.getenv('TULPAR_HOST_SANITIZE') == '1' {
 		argv << ['-cflags', '-fsanitize=address,undefined', '-ldflags', '-fsanitize=address,undefined']
 	}
 	argv << ['test', 'fs', 'aesxts']

@@ -18,13 +18,13 @@ fn test_exact_compiler_filter_and_allocator_guard() {
 
 fn test_all_original_fault_domains_and_flags() {
 	assert faults == ['none', 'open_zero', 'open_null', 'open_proc', 'read_proc', 'empty_proc', 'missing_large', 'bad_large', 'close_proc', 'warm_read', 'warm_write', 'interrupted_sleep', 'round_read', 'nonzero_payload', 'round_write', 'bad_read_errno', 'bad_read_return', 'bad_write_errno', 'bad_write_return', 'changed_pages', 'close_zero', 'close_null']
-	previous := os.getenv_opt('VINIX_MEMORY_SANITIZERS')
-	defer { if value := previous { os.setenv('VINIX_MEMORY_SANITIZERS', value, true) } else { os.unsetenv('VINIX_MEMORY_SANITIZERS') } }
-	os.setenv('VINIX_MEMORY_SANITIZERS', 'none', true)
+	previous := os.getenv_opt('TULPAR_MEMORY_SANITIZERS')
+	defer { if value := previous { os.setenv('TULPAR_MEMORY_SANITIZERS', value, true) } else { os.unsetenv('TULPAR_MEMORY_SANITIZERS') } }
+	os.setenv('TULPAR_MEMORY_SANITIZERS', 'none', true)
 	plain := flags('aarch64', false, true)
 	assert '-std=gnu99' in plain && '-fno-builtin' in plain && !plain.any(it.starts_with('-fsanitize='))
 	assert '-fsanitize=address,undefined' in flags('aarch64', false, false)
-	os.setenv('VINIX_MEMORY_SANITIZERS', 'undefined', true)
+	os.setenv('TULPAR_MEMORY_SANITIZERS', 'undefined', true)
 	assert '-fsanitize=undefined' in flags('aarch64', false, true)
 	assert '-fsanitize=undefined' !in flags('aarch64', true, true)
 }

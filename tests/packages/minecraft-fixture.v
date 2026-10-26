@@ -42,7 +42,7 @@ fn fetch(arguments []string) ! {
 	os.write_file(os.join_path(root, 'launch.env'), "MC_VERSION='1.21.5'\n" +
 		"MC_VERSION_TYPE='release'\nMC_ASSET_INDEX='17'\nMC_JAVA_MAJOR='21'\n" +
 		"MC_CLASSPATH='/usr/share/minecraft/libraries/org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3.jar:/usr/share/minecraft/libraries/org/lwjgl/lwjgl/3.3.3/lwjgl-3.3.3-natives-linux-arm64.jar'\n")!
-	os.write_file(os.getenv('VINIX_TEST_MINECRAFT_FETCH_LOG'),
+	os.write_file(os.getenv('TULPAR_TEST_MINECRAFT_FETCH_LOG'),
 		arguments.join(' ') + '\nmax-java=${options['--max-java']}\n')!
 }
 

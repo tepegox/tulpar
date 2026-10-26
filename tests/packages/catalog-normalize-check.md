@@ -58,7 +58,7 @@ V=/path/to/reviewed/v /tmp/catalog-normalize-check /build/new-normalize-check
 
 v -no-skip-unused -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/catalog-normalize-runtime-check tests/packages/catalog-normalize-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/catalog-normalize-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-normalize-arm
 ```

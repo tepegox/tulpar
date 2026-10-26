@@ -24,7 +24,7 @@ fn (request &Request) validate_display_shape() ! {
 		if uid > 0xffff_ffff { return error('invalid isolated private display') }
 		at++
 	}
-	prefix := '/vinix-hosted-x11/'
+	prefix := '/tulpar-hosted-x11/'
 	if request.authority.len - at < prefix.len { return error('invalid isolated private display') }
 	for index, byte in prefix { if request.authority[at + index] != byte { return error('invalid isolated private display') } }
 	at += prefix.len

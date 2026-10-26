@@ -7,12 +7,12 @@ retain the architecture's existing implicit readability and W^X rules.
 
 Enhanced PAN is necessary because the ARM descriptor denying EL0 data access
 is privileged-readable. Ordinary PAN alone would allow raw kernel reads of
-that descriptor. Vinix enables SCTLR_EL1.EPAN only when the CPU reports
+that descriptor. Tulpar enables SCTLR_EL1.EPAN only when the CPU reports
 FEAT_PAN3; any active boot CPU without it, or any disabled PAN configuration,
 permanently vetoes execute-only mappings before userspace starts. See the
 [Fuchsia architecture analysis](https://fuchsia.dev/fuchsia-src/contribute/governance/rfcs/0159_execute_only_memory#xom_and_pan).
 
-When that gate is false, `PROT_EXEC` retains Vinix's readable executable
+When that gate is false, `PROT_EXEC` retains Tulpar's readable executable
 fallback. AMD64 also retains that fallback: PKU support is not implemented.
 Kernel access audit mode deliberately permits and logs raw accesses after a
 PAN fault; use the normal strict mode for enforcement. The existing Apple EL2
@@ -45,18 +45,18 @@ The guest checks:
 Build allocation-tracked kernels in an isolated worktree, then run:
 
 ```sh
-export VINIX_VM_RUNNER_ROOT=/path/to/main
-export VINIX_KERNEL_DIR=/path/to/worktree/kernel
-export VINIX_AARCH64_SYSROOT=/path/to/main/build-aarch64-userland/sysroot
-export VINIX_QEMU_RT_NO_BUILD=1 VINIX_QEMU_AUDIO=off
+export TULPAR_VM_RUNNER_ROOT=/path/to/main
+export TULPAR_KERNEL_DIR=/path/to/worktree/kernel
+export TULPAR_AARCH64_SYSROOT=/path/to/main/build-aarch64-userland/sysroot
+export TULPAR_QEMU_RT_NO_BUILD=1 TULPAR_QEMU_AUDIO=off
 USE_TCG=1 tests/execute-only/run
 
 # The same CPU with PAN explicitly disabled must keep readable text.
-VINIX_CMDLINE=vinix.user_access=off USE_TCG=1 \
+TULPAR_CMDLINE=tulpar.user_access=off USE_TCG=1 \
   tests/execute-only/run --expect-readable
 
-VINIX_VM_RUNNER_ROOT=/path/to/main \
-VINIX_AMD64_KERNEL=/path/to/worktree/build-amd64-kernel/bin/vinix \
+TULPAR_VM_RUNNER_ROOT=/path/to/main \
+TULPAR_AMD64_KERNEL=/path/to/worktree/build-amd64-kernel/bin/tulpar \
   tests/execute-only/run --arch=amd64
 ```
 
@@ -70,7 +70,7 @@ V; five original ARM register/cache/barrier boundary lines remain inline
 assembly. Native process/status/transfer widths, callback casts, child reaping,
 pipe consumption and mapping lifetimes retain the original C behavior.
 The runner uses `build-support/find-v.sh` through the shared fixture compiler.
-Set `VINIX_V_COMPILER=/path/to/v` to select a compiler explicitly.
+Set `TULPAR_V_COMPILER=/path/to/v` to select a compiler explicitly.
 
 Use `--state-dir /path/to/new-directory` to retain generated C, objects,
 guest ELF, input hashes and VM artifacts. `--kernel-dir /path/to/worktree/kernel`
@@ -109,8 +109,8 @@ A Cortex-A76 CPU with ordinary PAN also passed the readable-fallback guest
 at 1,552 / 1,552 KiB. AMD64 passed its readable-fallback and protection
 regressions at 1,044 / 1,044 KiB. The older integrated ARM kernel fails the
 data-read protection assertion; it allowed that read. Logs are saved locally as
-`/tmp/vinix-execute-only-{arm,amd64}-guest.log` and
-`/tmp/vinix-execute-only-arm-pan-off-guest.log`.
+`/tmp/tulpar-execute-only-{arm,amd64}-guest.log` and
+`/tmp/tulpar-execute-only-arm-pan-off-guest.log`.
 
 The generated-production-code harness runs with ASan/UBSan:
 
@@ -132,7 +132,7 @@ four CPUs. The earlier ePAN build stalled in the SMP page-table test; its
 artifacts were preserved before correcting kernel UXN. The final focused
 guest again leaves Slab at 1,488 / 1,488 KiB. Final ELF, generated C, sources,
 logs, helpers and hashes are saved under
-`/tmp/vinix-execute-only-final-artifacts/`.
+`/tmp/tulpar-execute-only-final-artifacts/`.
 
 SEC7 remains partial. AMD64 PKU, automatic loader/toolchain use and protected
 copy registration for otherwise readable ELF/libc text remain separate work.

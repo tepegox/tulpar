@@ -99,7 +99,7 @@ the permanent identity, overlay preservation, and no new direct heap promotion
 in the changed helpers. Per-architecture `xattr-c-audit.txt` retains these checks.
 
 Initial `linux-a` states preserve the failed divergent-flags inherited-FD
-comparison. Linux retains the original attachment's flags; Vinix currently maps
+comparison. Linux retains the original attachment's flags; Tulpar currently maps
 its identity into the caller's namespace copy. That existing difference remains
 open, and the final inherited-FD case copies the namespace without remounting.
 Initial x86 `linux-b` and native `all-after-a`/`all-after-b` states preserve

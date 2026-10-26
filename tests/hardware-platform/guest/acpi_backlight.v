@@ -129,12 +129,12 @@ fn scenario_acpi_backlight(mut t Test) {
 	backlight_is(mut t, '2', '2', 'at the end')
 }
 
-// The same machine with vinix.acpi_backlight=off: no panel is listed, and a
+// The same machine with tulpar.acpi_backlight=off: no panel is listed, and a
 // sleep goes by without firmware being told anything, which the controller
 // reads off an empty record.
 fn scenario_acpi_backlight_off(mut t Test) {
 	entries := list_dir('/sys/class/backlight') or { []string{} }
-	t.check(entries.len == 0, '/sys/class/backlight lists ${entries.len} panels with vinix.acpi_backlight=off')
+	t.check(entries.len == 0, '/sys/class/backlight lists ${entries.len} panels with tulpar.acpi_backlight=off')
 	write_text('/sys/power/pm_test', 'devices') or { t.check(false, 'pm_test: ${err.msg()}') }
 	write_text('/sys/power/pm_test_delay_ms', '300') or { t.check(false, 'pm_test_delay_ms: ${err.msg()}') }
 	write_text('/sys/power/state', 'freeze') or { t.check(false, 'the rehearsal: ${err.msg()}') }

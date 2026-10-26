@@ -23,7 +23,7 @@ fn scrub_reference_fixture(sector u64, kind u32, flags u64, mut manifest DataMan
 
 fn scrub_reference_input(report &DataScrubReport) string {
 	mut changed := 0; for i in 0 .. report.count { if report.expected[i] != report.actual[i] { changed++ } }
-	mut text := 'format=VINIXSR1 operation=scrubbed-data disks=${report.disks} mappings=${report.count} matched=${report.count - changed} changed=${changed} algorithm=sha256 reference_sha256=' + hex.encode(report.reference[..]) + '\n'
+	mut text := 'format=TULPARSR1 operation=scrubbed-data disks=${report.disks} mappings=${report.count} matched=${report.count - changed} changed=${changed} algorithm=sha256 reference_sha256=' + hex.encode(report.reference[..]) + '\n'
 	for i in 0 .. report.count { row := report.rows[i]; text += 'disk=${report.indices[i]} slot=${row.slot} offset=${row.offset} bytes=${row.length} readonly=${row.flags} result=${if report.expected[i] == report.actual[i] { 'match' } else { 'changed' }} expected_sha256=' + hex.encode(report.expected[i][..]) + ' actual_sha256=' + hex.encode(report.actual[i][..]) + '\n' }
 	return text
 }
@@ -31,7 +31,7 @@ fn scrub_reference_input(report &DataScrubReport) string {
 fn scrub_reference_expected(manifest &DataManifest, report &DataScrubReport) string {
 	mut changed := 0; for i in 0 .. report.count { if report.expected[i] != report.actual[i] { changed++ } }
 	mut bytes := [11392]u8{}; size := encode_data_manifest(manifest, &bytes[0]); fingerprint := hex.encode(sha256.sum(bytes[..size]))
-	mut text := 'format=VINIXSR1 operation=verified-data-scrub-reference disks=${report.disks} mappings=${report.count} matched=${report.count - changed} changed=${changed} algorithm=sha256 reference_sha256=${fingerprint} report_sha256=' + sha256.hexhash(scrub_reference_input(report)) + '\n'
+	mut text := 'format=TULPARSR1 operation=verified-data-scrub-reference disks=${report.disks} mappings=${report.count} matched=${report.count - changed} changed=${changed} algorithm=sha256 reference_sha256=${fingerprint} report_sha256=' + sha256.hexhash(scrub_reference_input(report)) + '\n'
 	mut record := 0
 	for disk in 0 .. manifest.set.count {
 		key := manifest.set.plans[disk].key; identity := if key.kind == 1 { 'mbr:0000000${disk + 1}' } else { 'gpt:0000000${disk + 1}-0000-0000-0000-000000000083' }
@@ -102,5 +102,5 @@ fn test_scrub_reference_maximum_report_and_empty_saved_disks_cli() {
 	text := scrub_reference_input(&report); mut decoded := DataScrubReport{}; assert decode_data_scrub_report(text.str, text.len, mut decoded) && data_scrub_reference_matches(&manifest, &decoded)
 	for disk in 0 .. 64 { manifest.set.plans[disk].count = 0 }; manifest.set.regions = 0; manifest.set.slots = 0; manifest.digests.count = 0; report = DataScrubReport{disks: 64}
 	zero_size := encode_data_manifest(&manifest, &bytes[0]); assert zero_size > 0; scrub_reference_sha(bytes[..zero_size], mut report); assert encode_data_scrub_reference(&manifest, &report, &output[0]) > 0 && data_scrub_reference_matches(&manifest, &report)
-	unsafe { mut args := [&char(c'vinix-volume'), &char(c'verify-data-scrub-reference'), &char(c'/missing-manifest'), &char(c'/missing-report'), &char(c'extra'), &char(nil)]!; for count in [2, 3, 5, 6] { assert run(count, &args[0]) == 2 }; for i in [2, 3] { saved := args[i]; args[i] = &char(c''); assert run(4, &args[0]) == 2; args[i] = saved }; assert run(4, &args[0]) == 1 }
+	unsafe { mut args := [&char(c'tulpar-volume'), &char(c'verify-data-scrub-reference'), &char(c'/missing-manifest'), &char(c'/missing-report'), &char(c'extra'), &char(nil)]!; for count in [2, 3, 5, 6] { assert run(count, &args[0]) == 2 }; for i in [2, 3] { saved := args[i]; args[i] = &char(c''); assert run(4, &args[0]) == 2; args[i] = saved }; assert run(4, &args[0]) == 1 }
 }

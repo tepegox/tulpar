@@ -27,7 +27,7 @@ fn checked(binary string, profile string, cache string) ! {
 		mut argv := [binary, family, '--state-dir', work, '--build-only']
 		if mode.starts_with('guard') { argv << ['--arch', if arm { 'aarch64' } else { 'amd64' }, '--kernel', kernel] }
 		if mode == 'segments' { argv << '--segments' }
-		env['VINIX_AMD64_KERNEL'] = kernel + '/bin/vinix'
+		env['TULPAR_AMD64_KERNEL'] = kernel + '/bin/tulpar'
 		result := fixturehost.capture_both_preferred(argv, env, policyhost.caller_arch())!
 		os.write_file(work + '.log', result.stdout + result.stderr)!
 		if result.status != 0 { return error('Native target build failed: ' + mode + '\n' + result.stderr) }
@@ -35,7 +35,7 @@ fn checked(binary string, profile string, cache string) ! {
 		init := work + if mode == 'smt' { '/rootfs/sbin/init' } else { '/init' }
 		header := os.read_bytes(init)!
 		if header.len < 64 || header[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1] || int(header[18]) + (int(header[19]) << 8) != if arm { 183 } else { 62 } { return error('Invalid target ELF') }
-		if os.read_bytes(work + '/kernel/bin/vinix')! != os.read_bytes(kernel + '/bin/vinix')! { return error('Kernel snapshot differs') }
+		if os.read_bytes(work + '/kernel/bin/tulpar')! != os.read_bytes(kernel + '/bin/tulpar')! { return error('Kernel snapshot differs') }
 		mut recipe := strings(data['compile_command'] or { return error('Missing recipe') })
 		if mode != 'smt' {
 			source := hosttest.root() + '/tests/' + family + '/' + if mode == 'segments' { 'segments.c' } else { 'guest.c' }

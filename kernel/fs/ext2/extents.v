@@ -9,8 +9,8 @@ fn (mut inode EXT2Inode) extent_block(mut filesystem EXT2Filesystem, logical u32
 	mut position := u64(0)
 	mut capacity := u64(sizeof(inode.blocks))
 	mut expected_depth := -1
-	header := unsafe { &u8(C.vinix_stack_alloc(12)) }
-	entry := unsafe { &u8(C.vinix_stack_alloc(12)) }
+	header := unsafe { &u8(C.tulpar_stack_alloc(12)) }
+	entry := unsafe { &u8(C.tulpar_stack_alloc(12)) }
 	for _ in 0 .. 6 {
 		if position == 0 {
 			unsafe { C.memcpy(header, &inode.blocks[0], 12) }

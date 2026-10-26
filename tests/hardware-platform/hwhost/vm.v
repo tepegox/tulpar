@@ -116,8 +116,8 @@ fn qemu_command(host Host, scenario Scenario, media []string, state string, boot
 		// The devices scripts/run-aarch64.sh gives the machine: an entropy
 		// source, input, and ramfb for the firmware's framebuffer. The
 		// tests boot what that script boots, less the desktop.
-		command << ['-object', 'rng-random,filename=/dev/urandom,id=vinix-rng', '-device',
-			'virtio-rng-device,rng=vinix-rng']
+		command << ['-object', 'rng-random,filename=/dev/urandom,id=tulpar-rng', '-device',
+			'virtio-rng-device,rng=tulpar-rng']
 		command << media
 		if !scenario.other_input {
 			command << ['-device', 'virtio-keyboard-device', '-device', 'virtio-tablet-device']

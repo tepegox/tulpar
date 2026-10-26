@@ -30,9 +30,9 @@ fn C.__atomic_load_n(&u32, i32) u32
 fn C.__atomic_store_n(&u32, u32, i32)
 fn C.__atomic_exchange_n(&u32, u32, i32) u32
 fn C.__atomic_add_fetch(&u32, u32, i32) u32
-fn C.vinix_pci_config_read(u32, u32, u32, u32, u64, u32, &u32) i32
-fn C.vinix_pci_config_write(u32, u32, u32, u32, u64, u32, u32) i32
-fn C.vinix_pci_config_update_command(u32, u32, u32, u32, u16, u16) i32
+fn C.tulpar_pci_config_read(u32, u32, u32, u32, u64, u32, &u32) i32
+fn C.tulpar_pci_config_write(u32, u32, u32, u32, u64, u32, u32) i32
+fn C.tulpar_pci_config_update_command(u32, u32, u32, u32, u16, u16) i32
 // The actual C wrapper is registered with pthread, rather than its V function.
 fn C.pci_fixture_actor_run(voidptr) voidptr
 
@@ -68,16 +68,16 @@ __global pci_last_write_value u32
 
 // Only production-core allocator imports are redirected to these traps.
 // Fixture pthread/libc backing retains its original independent ownership.
-@[export: 'vinix_pci_test_malloc']
+@[export: 'tulpar_pci_test_malloc']
 fn trap_malloc(bytes usize) voidptr {
 	unsafe { C.__atomic_add_fetch(&pci_allocations, 1, C.__ATOMIC_RELAXED) }
 	return unsafe { nil }
 }
-@[export: 'vinix_pci_test_calloc']
+@[export: 'tulpar_pci_test_calloc']
 fn trap_calloc(count usize, bytes usize) voidptr { return trap_malloc(bytes) }
-@[export: 'vinix_pci_test_realloc']
+@[export: 'tulpar_pci_test_realloc']
 fn trap_realloc(old voidptr, bytes usize) voidptr { return trap_malloc(bytes) }
-@[export: 'vinix_pci_test_free']
+@[export: 'tulpar_pci_test_free']
 fn trap_free(pointer voidptr) {
 	unsafe { C.__atomic_add_fetch(&pci_allocations, 1, C.__ATOMIC_RELAXED) }
 }
@@ -102,7 +102,7 @@ fn find_device(bus u32, slot u32, function u32) &TestDevice {
 	}
 }
 fn check_locked() { unsafe { C.assert(C.pci_locked && !C.pci_interrupts && C.pci_pins == C.pci_saved_pins + 1) } }
-@[export: 'vinix_pci_config_lock']
+@[export: 'tulpar_pci_config_lock']
 fn transport_lock() {
 	unsafe {
 		C.assert(!C.pci_locked)
@@ -116,7 +116,7 @@ fn transport_lock() {
 		C.__atomic_add_fetch(&pci_locks, 1, C.__ATOMIC_RELAXED)
 	}
 }
-@[export: 'vinix_pci_config_unlock']
+@[export: 'tulpar_pci_config_unlock']
 fn transport_unlock() {
 	unsafe {
 		check_locked()
@@ -127,7 +127,7 @@ fn transport_unlock() {
 		C.pci_interrupts = C.pci_saved_interrupts
 	}
 }
-@[export: 'vinix_pci_config_limit']
+@[export: 'tulpar_pci_config_limit']
 fn transport_limit(bus u32) u32 {
 	unsafe {
 		check_locked()
@@ -154,7 +154,7 @@ fn select_address(bus u32, slot u32, function u32, offset u32, actual_offset &u3
 		return find_device((address >> 16) & 255, (address >> 11) & 31, (address >> 8) & 7)
 	}
 }
-@[export: 'vinix_pci_config_read_raw']
+@[export: 'tulpar_pci_config_read_raw']
 fn transport_read(bus u32, slot u32, function u32, offset u32, width u32) u32 {
 	unsafe {
 		mut actual_offset := u32(0)
@@ -169,7 +169,7 @@ fn transport_read(bus u32, slot u32, function u32, offset u32, width u32) u32 {
 		return value
 	}
 }
-@[export: 'vinix_pci_config_write_raw']
+@[export: 'tulpar_pci_config_write_raw']
 fn transport_write(bus u32, slot u32, function u32, offset u32, width u32, value u32) {
 	unsafe {
 		mut actual_offset := u32(0)
@@ -226,7 +226,7 @@ fn check_bad(domain u32, bus u32, slot u32, function u32, offset u64, width u32,
 		mut before := observe()
 		mut value := u32(0x12345678)
 		output := if result { &value } else { &u32(nil) }
-		C.assert(C.vinix_pci_config_read(domain, bus, slot, function, offset, width, output) == expected)
+		C.assert(C.tulpar_pci_config_read(domain, bus, slot, function, offset, width, output) == expected)
 		C.assert(value == 0x12345678)
 		preserved(before)
 		mut after := observe()
@@ -237,7 +237,7 @@ fn check_bad(domain u32, bus u32, slot u32, function u32, offset u64, width u32,
 		C.assert(after.limits - before.limits == u32(takes_lock))
 		if !result { return }
 		before = observe()
-		C.assert(C.vinix_pci_config_write(domain, bus, slot, function, offset, width, ~u32(0)) == expected)
+		C.assert(C.tulpar_pci_config_write(domain, bus, slot, function, offset, width, ~u32(0)) == expected)
 		preserved(before)
 		after = observe()
 		C.assert(after.reads == before.reads && after.writes == before.writes)
@@ -252,26 +252,26 @@ fn validation_tests() {
 		for state := u32(0); state < 2; state++ {
 			C.pci_interrupts = state == 0
 			C.pci_pins = if state != 0 { u32(2) } else { u32(0) }
-			check_bad(0, 0, 1, 0, 0, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, false, false)
-			check_bad(1, 0, 1, 0, 0, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, false, false)
-			check_bad(0, 256, 1, 0, 0, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false)
-			check_bad(0, ~u32(0), 1, 0, 0, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false)
-			check_bad(0, 0, 32, 0, 0, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false)
-			check_bad(0, 0, 1, 8, 0, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false)
+			check_bad(0, 0, 1, 0, 0, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, false, false)
+			check_bad(1, 0, 1, 0, 0, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, false, false)
+			check_bad(0, 256, 1, 0, 0, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false)
+			check_bad(0, ~u32(0), 1, 0, 0, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false)
+			check_bad(0, 0, 32, 0, 0, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false)
+			check_bad(0, 0, 1, 8, 0, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false)
 			invalid_widths := [u32(0), u32(3), u32(8), ~u32(0)]!
-			for i := usize(0); i < 4; i++ { check_bad(0, 0, 1, 0, 0, invalid_widths[i], C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false) }
-			check_bad(0, 0, 1, 0, 1, 2, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false)
-			check_bad(0, 0, 1, 0, 2, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false)
-			check_bad(1, 0, 1, 0, 0, 4, C.VINIX_PCI_CONFIG_UNAVAILABLE, true, false)
-			check_bad(~u32(0), 0, 1, 0, ~u64(0), 1, C.VINIX_PCI_CONFIG_UNAVAILABLE, true, false)
-			check_bad(1, 256, 1, 0, 0, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false)
-			check_bad(0, 3, 1, 0, 0, 4, C.VINIX_PCI_CONFIG_UNAVAILABLE, true, true)
-			check_bad(0, 0, 1, 0, 256, 1, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, true)
-			check_bad(0, 7, 31, 7, 4096, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, true)
-			check_bad(0, 0, 1, 0, u64(0x100000000), 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, true)
-			check_bad(0, 0, 1, 0, ~u64(0), 1, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, true)
-			check_bad(0, 0, 1, 0, ~u64(0) - 1, 2, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, true)
-			check_bad(0, 7, 31, 7, ~u64(0) - 3, 4, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, true)
+			for i := usize(0); i < 4; i++ { check_bad(0, 0, 1, 0, 0, invalid_widths[i], C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false) }
+			check_bad(0, 0, 1, 0, 1, 2, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false)
+			check_bad(0, 0, 1, 0, 2, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false)
+			check_bad(1, 0, 1, 0, 0, 4, C.TULPAR_PCI_CONFIG_UNAVAILABLE, true, false)
+			check_bad(~u32(0), 0, 1, 0, ~u64(0), 1, C.TULPAR_PCI_CONFIG_UNAVAILABLE, true, false)
+			check_bad(1, 256, 1, 0, 0, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false)
+			check_bad(0, 3, 1, 0, 0, 4, C.TULPAR_PCI_CONFIG_UNAVAILABLE, true, true)
+			check_bad(0, 0, 1, 0, 256, 1, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, true)
+			check_bad(0, 7, 31, 7, 4096, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, true)
+			check_bad(0, 0, 1, 0, u64(0x100000000), 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, true)
+			check_bad(0, 0, 1, 0, ~u64(0), 1, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, true)
+			check_bad(0, 0, 1, 0, ~u64(0) - 1, 2, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, true)
+			check_bad(0, 7, 31, 7, ~u64(0) - 3, 4, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, true)
 		}
 		C.pci_interrupts = true
 		C.pci_pins = 0
@@ -297,17 +297,17 @@ fn width_tests() {
 				for offset := u32(0); offset < limit; offset += width {
 					before := observe()
 					mut value := u32(0)
-					C.assert(C.vinix_pci_config_read(0, device.bus, device.slot, device.function, offset, width, &value) == 0)
+					C.assert(C.tulpar_pci_config_read(0, device.bus, device.slot, device.function, offset, width, &value) == 0)
 					C.assert(value == word(&device.bytes[offset], width))
 					preserved(before)
-					if width > 1 { check_bad(0, device.bus, device.slot, device.function, offset + 1, width, C.VINIX_PCI_CONFIG_BAD_REGISTER, true, false) }
+					if width > 1 { check_bad(0, device.bus, device.slot, device.function, offset + 1, width, C.TULPAR_PCI_CONFIG_BAD_REGISTER, true, false) }
 				}
 				mut expected := [4096]u8{}
 				C.memcpy(&expected[0], &device.bytes[0], sizeof(expected))
 				offset := limit - width
 				for i := u32(0); i < width; i++ { expected[offset + i] = u8(u32(0xa1b2c3d4) >> (8 * i)) }
 				before := observe()
-				C.assert(C.vinix_pci_config_write(0, device.bus, device.slot, device.function, offset, width, 0xa1b2c3d4) == 0)
+				C.assert(C.tulpar_pci_config_write(0, device.bus, device.slot, device.function, offset, width, 0xa1b2c3d4) == 0)
 				C.assert(C.memcmp(&expected[0], &device.bytes[0], sizeof(expected)) == 0)
 				C.assert(pci_last_write_width == width && pci_last_write_offset == offset)
 				preserved(before)
@@ -321,11 +321,11 @@ fn width_tests() {
 					expected[interior[i].offset + byte] = u8(interior[i].result >> (8 * byte))
 				}
 				before := observe()
-				C.assert(C.vinix_pci_config_write(0, device.bus, device.slot, device.function, interior[i].offset, interior[i].width, interior[i].value) == 0)
+				C.assert(C.tulpar_pci_config_write(0, device.bus, device.slot, device.function, interior[i].offset, interior[i].width, interior[i].value) == 0)
 				C.assert(C.memcmp(&expected[0], &device.bytes[0], sizeof(expected)) == 0)
 				C.assert(pci_last_write_width == interior[i].width && pci_last_write_offset == interior[i].offset && pci_last_write_value == interior[i].result)
 				mut result := u32(0)
-				C.assert(C.vinix_pci_config_read(0, device.bus, device.slot, device.function, interior[i].offset, interior[i].width, &result) == 0)
+				C.assert(C.tulpar_pci_config_read(0, device.bus, device.slot, device.function, interior[i].offset, interior[i].width, &result) == 0)
 				C.assert(result == interior[i].result)
 				preserved(before)
 			}
@@ -333,13 +333,13 @@ fn width_tests() {
 		pci_oversized_reads = true
 		for w := usize(0); w < 3; w++ {
 			mut value := u32(0)
-			C.assert(C.vinix_pci_config_read(0, 0, 1, 0, 16, widths[w], &value) == 0)
+			C.assert(C.tulpar_pci_config_read(0, 0, 1, 0, 16, widths[w], &value) == 0)
 			C.assert(value == word(&pci_devices[0].bytes[16], widths[w]))
-			C.assert(C.vinix_pci_config_read(0, 7, 30, 6, 0, widths[w], &value) == 0)
+			C.assert(C.tulpar_pci_config_read(0, 7, 30, 6, 0, widths[w], &value) == 0)
 			C.assert(value == if widths[w] == 1 { u32(0xff) } else if widths[w] == 2 { u32(0xffff) } else { ~u32(0) })
 			mut before := [4096]u8{}
 			C.memcpy(&before[0], &pci_devices[2].bytes[0], sizeof(before))
-			C.assert(C.vinix_pci_config_write(0, 7, 30, 6, 0, widths[w], ~u32(0)) == 0)
+			C.assert(C.tulpar_pci_config_write(0, 7, 30, 6, 0, widths[w], ~u32(0)) == 0)
 			C.assert(C.memcmp(&before[0], &pci_devices[2].bytes[0], sizeof(before)) == 0)
 		}
 		pci_oversized_reads = false
@@ -358,7 +358,7 @@ fn command_tests() {
 			device.bytes[6] = 0xa5
 			device.bytes[7] = 0x5a
 			before := observe()
-			C.assert(C.vinix_pci_config_update_command(0, 0, 1, 0, cases[i].clear, cases[i].set) == 0)
+			C.assert(C.tulpar_pci_config_update_command(0, 0, 1, 0, cases[i].clear, cases[i].set) == 0)
 			C.assert(word(&device.bytes[4], 2) == cases[i].expected)
 			C.assert(device.bytes[6] == 0xa5 && device.bytes[7] == 0x5a)
 			after := observe()
@@ -370,18 +370,18 @@ fn command_tests() {
 		}
 		pci_devices[0].bytes[6] = 0xff
 		pci_devices[0].bytes[7] = 0xff
-		C.assert(C.vinix_pci_config_write(0, 0, 1, 0, 6, 1, 0x0f) == 0)
+		C.assert(C.tulpar_pci_config_write(0, 0, 1, 0, 6, 1, 0x0f) == 0)
 		C.assert(pci_devices[0].bytes[6] == 0xf0 && pci_devices[0].bytes[7] == 0xff)
-		C.assert(C.vinix_pci_config_write(0, 0, 1, 0, 6, 2, 0xf00f) == 0)
+		C.assert(C.tulpar_pci_config_write(0, 0, 1, 0, 6, 2, 0xf00f) == 0)
 		C.assert(pci_devices[0].bytes[6] == 0xf0 && pci_devices[0].bytes[7] == 0x0f)
 		before := observe()
-		C.assert(C.vinix_pci_config_update_command(1, 0, 1, 0, 0, 1) == C.VINIX_PCI_CONFIG_UNAVAILABLE)
-		C.assert(C.vinix_pci_config_update_command(0, 256, 1, 0, 0, 1) == C.VINIX_PCI_CONFIG_BAD_REGISTER)
-		C.assert(C.vinix_pci_config_update_command(0, 0, 32, 0, 0, 1) == C.VINIX_PCI_CONFIG_BAD_REGISTER)
-		C.assert(C.vinix_pci_config_update_command(0, 0, 1, 8, 0, 1) == C.VINIX_PCI_CONFIG_BAD_REGISTER)
+		C.assert(C.tulpar_pci_config_update_command(1, 0, 1, 0, 0, 1) == C.TULPAR_PCI_CONFIG_UNAVAILABLE)
+		C.assert(C.tulpar_pci_config_update_command(0, 256, 1, 0, 0, 1) == C.TULPAR_PCI_CONFIG_BAD_REGISTER)
+		C.assert(C.tulpar_pci_config_update_command(0, 0, 32, 0, 0, 1) == C.TULPAR_PCI_CONFIG_BAD_REGISTER)
+		C.assert(C.tulpar_pci_config_update_command(0, 0, 1, 8, 0, 1) == C.TULPAR_PCI_CONFIG_BAD_REGISTER)
 		C.assert(observe().locks == before.locks && observe().reads == before.reads && observe().writes == before.writes)
-		C.assert(C.vinix_pci_config_update_command(0, 3, 1, 0, 0, 1) == C.VINIX_PCI_CONFIG_UNAVAILABLE)
-		C.assert(C.vinix_pci_config_update_command(0, 0, 30, 0, 1, 0) == 0)
+		C.assert(C.tulpar_pci_config_update_command(0, 3, 1, 0, 0, 1) == C.TULPAR_PCI_CONFIG_UNAVAILABLE)
+		C.assert(C.tulpar_pci_config_update_command(0, 0, 30, 0, 1, 0) == 0)
 		preserved(before)
 	}
 }
@@ -400,8 +400,8 @@ fn actor_run(argument voidptr) voidptr {
 		C.pci_interrupts = false
 		C.pci_pins = 2
 		before := observe()
-		if actor.command { C.assert(C.vinix_pci_config_update_command(0, 0, actor.slot, 0, 0, actor.set) == 0) }
-		else { C.assert(C.vinix_pci_config_read(0, 0, actor.slot, 0, 0x40, 4, &actor.value) == 0) }
+		if actor.command { C.assert(C.tulpar_pci_config_update_command(0, 0, actor.slot, 0, 0, actor.set) == 0) }
+		else { C.assert(C.tulpar_pci_config_read(0, 0, actor.slot, 0, 0x40, 4, &actor.value) == 0) }
 		preserved(before)
 		C.__atomic_store_n(&actor.done, 1, C.__ATOMIC_RELEASE)
 		return nil

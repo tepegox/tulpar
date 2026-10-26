@@ -46,18 +46,18 @@ pub fn host_workload(tools Tools, work string) ! {
 	audited_object(tools, [...cc, '-std=gnu11', '-O2', '-g', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter', '-fsanitize=address,undefined',
 		'-fno-omit-frame-pointer', '-ffreestanding', '-fno-builtin', '-fwrapv', '-fno-strict-aliasing',
-		'-DVINIX_V_RUNTIME', '-DVINIX_LINUXKPI_HOST_TEST', '-I' + root + '/kernel/c', '-c',
+		'-DTULPAR_V_RUNTIME', '-DTULPAR_LINUXKPI_HOST_TEST', '-I' + root + '/kernel/c', '-c',
 		work + '/compat.c', '-o', work + '/compat.o'], work + '/compat.o')!
 	println('LinuxKPI: V core has no implicit allocator imports')
 	for name in ['varargs', 'workqueue_abi', 'storage'] {
 		extra := if name == 'varargs' {
-			['-Dsnprintf=vinix_linuxkpi_format_test_snprintf',
-				'-Dscnprintf=vinix_linuxkpi_format_test_scnprintf',
-				'-Dsprintf=vinix_linuxkpi_format_test_sprintf']
+			['-Dsnprintf=tulpar_linuxkpi_format_test_snprintf',
+				'-Dscnprintf=tulpar_linuxkpi_format_test_scnprintf',
+				'-Dsprintf=tulpar_linuxkpi_format_test_sprintf']
 		} else {
 			[]string{}
 		}
-		tools.checked([...cc, '-DVINIX_LINUXKPI', '-I' + root + '/kernel/asm/' + assembly, ...extra,
+		tools.checked([...cc, '-DTULPAR_LINUXKPI', '-I' + root + '/kernel/asm/' + assembly, ...extra,
 			'-c', root + '/kernel/asm/' + assembly + '/linuxkpi_' + name + '.S', '-o',
 			work + '/' + name + '.o'], os.environ())!
 	}
@@ -73,13 +73,13 @@ pub fn host_workload(tools Tools, work string) ! {
 		'-fwrapv', '-fno-strict-aliasing', '-Wall', '-Wextra', '-Werror', '-Wno-unused-parameter',
 		'-Wno-unused-function', '-D_FORTIFY_SOURCE=0', '-D__sputc=vkh_header_sputc',
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-pthread',
-		...include.filter(it != '-DVINIX_LINUXKPI_FORMAT_HOST_TEST'), '-c', work + '/headercore.c',
+		...include.filter(it != '-DTULPAR_LINUXKPI_FORMAT_HOST_TEST'), '-c', work + '/headercore.c',
 		'-o', work + '/headercore.o'], work + '/headercore.o')!
 	println('LinuxKPI: native V header primitives have no implicit allocator imports')
 	tools.header_primitives(work + '/headerimpl.c', arch, true, true)!
 	tools.checked([...cc, ...flags, '-ffunction-sections', '-fdata-sections', '-D_FORTIFY_SOURCE=0',
 		'-D__sputc=vhp_header_sputc', '-pthread',
-		...include.filter(it != '-DVINIX_LINUXKPI_FORMAT_HOST_TEST'), '-c', work + '/headerimpl.c',
+		...include.filter(it != '-DTULPAR_LINUXKPI_FORMAT_HOST_TEST'), '-c', work + '/headerimpl.c',
 		'-o', work + '/headerimpl.o'], os.environ())!
 	for name in ['runtimefixture', 'cachefixture', 'pciconfigfixture', 'i915policyfixture',
 		'taskfixture', 'timefixture', 'timerfixture', 'syncfixture', 'wwfixture', 'iofixture',
@@ -94,10 +94,10 @@ pub fn host_workload(tools Tools, work string) ! {
 			'-o', work + '/' + name + '.o'], work + '/' + name + '.o')!
 	}
 	println('LinuxKPI: independent V fixtures have no implicit allocator imports')
-	tools.checked([...cc, '-DVINIX_LINUXKPI', '-I' + root + '/kernel/asm/' + assembly, '-c',
+	tools.checked([...cc, '-DTULPAR_LINUXKPI', '-I' + root + '/kernel/asm/' + assembly, '-c',
 		root + '/kernel/asm/' + assembly + '/linuxkpi_printk_fixture_abi.S', '-o',
 		work + '/printk_fixture_abi.o'], os.environ())!
-	tools.checked([...cc, '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-c',
+	tools.checked([...cc, '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-c',
 		root + '/kernel/asm/x86_64/linuxkpi_fixture_abi.S', '-o', work + '/fixture_storage.o'], os.environ())!
 	golden_parity(tools)!
 	tools.generate_module(root + '/tests/linuxkpi/policyhost', work + '/policyhost.c', arch, ['nofloat'])!
@@ -118,7 +118,7 @@ pub fn host_workload(tools Tools, work string) ! {
 		'-Wextra', '-Werror', '-Wno-unused-parameter', '-fsanitize=address,undefined',
 		'-fno-omit-frame-pointer', '-pthread',
 		...include.filter(it != '-iquote' && it != root + '/kernel/c'),
-		'-Dmain=vinix_linuxkpi_host_original_main',
+		'-Dmain=tulpar_linuxkpi_host_original_main',
 		if os.user_os() == 'macos' { '-Wl,-dead_strip' } else { '-Wl,--gc-sections' }, ...objects,
 		'@' + work + '/host-fixtures.rsp', ...upstream, '-include', 'linux/export.h', '-o', executable], environment)!
 	tools.checked([executable], environment)!

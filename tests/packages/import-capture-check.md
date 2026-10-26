@@ -63,7 +63,7 @@ V=/path/to/reviewed/v /tmp/import-capture-check /build/new-import-capture-host
 
 v -no-skip-unused -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/import-capture-runtime-check tests/packages/import-capture-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/import-capture-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-import-capture-arm
 ```

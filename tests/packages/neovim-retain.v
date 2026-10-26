@@ -49,7 +49,7 @@ fn retain() ! {
 	if host.firmware_vars != '' { required_inputs << host.firmware_vars }
 	if arch == 'x86_64' { for _, path in plainiso.inputs(root)! { required_inputs << path } }
 	else {
-		required_inputs << [os.getenv_opt('VINIX_LIMINE_BOOTAA64') or { hwhost.shared_path(root, 'boot-image/limine-bin/BOOTAA64.EFI') },
+		required_inputs << [os.getenv_opt('TULPAR_LIMINE_BOOTAA64') or { hwhost.shared_path(root, 'boot-image/limine-bin/BOOTAA64.EFI') },
 			root + '/build-support/limine.conf', os.find_abs_path_of_executable('mformat')!,
 			os.find_abs_path_of_executable('mmd')!, os.find_abs_path_of_executable('mcopy')!]
 	}
@@ -89,7 +89,7 @@ fn retain() ! {
 	mut required_outputs := ['inputs-before-build.json', 'inputs.json', 'inputs-verified.json', 'result.json',
 		'source/tests/packages/neovim-native-check.v', 'source/tests/packages/neovim-native/main.v',
 		'boot/initramfs.tar', 'boot/serial.log', 'boot/qemu.log', 'boot/qmp.log', 'boot/image.log']
-	for name in ['guest', 'vinix-account', 'vinix-session', 'vinix-package'] {
+	for name in ['guest', 'tulpar-account', 'tulpar-session', 'tulpar-package'] {
 		for file in [name, name + '.c', 'runtime.c', 'v.log', 'v.log.argv.json', 'cc.log', 'cc.log.argv.json'] {
 			required_outputs << 'build-' + name + '/' + file
 		}
@@ -108,7 +108,7 @@ fn retain() ! {
 		if path.ends_with('/build-guest/guest') { build_roots << path[..path.len - '/build-guest/guest'.len] }
 	}
 	if build_roots.len != 1 { return error('missing or ambiguous admitted build root') }
-	for product in ['guest', 'vinix-account', 'vinix-session', 'vinix-package'] {
+	for product in ['guest', 'tulpar-account', 'tulpar-session', 'tulpar-package'] {
 		for file in [product, product + '.c', 'runtime.c', 'v.log', 'v.log.argv.json', 'cc.log', 'cc.log.argv.json'] {
 			name := 'build-' + product + '/' + file
 			path := build_roots[0] + '/' + name

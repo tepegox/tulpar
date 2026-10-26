@@ -163,7 +163,7 @@ fn exercise_protected_copyup() {
 					check(C.unlink(&path[0]) == -1 && *C.__errno_location() == C.EPERM, 699)
 					if index != 7 {
 						check(C.open(&path[0], C.O_WRONLY) == -1 && *C.__errno_location() == C.EPERM, 699)
-						check(C.vinix_overlay_truncate(&path[0], 0) == -1 && *C.__errno_location() == C.EPERM, 699)
+						check(C.tulpar_overlay_truncate(&path[0], 0) == -1 && *C.__errno_location() == C.EPERM, 699)
 					}
 				}
 			}

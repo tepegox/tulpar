@@ -53,9 +53,9 @@ Linux sandbox launch, package/trust/policy reviews, runtime updates and rollback
 ```sh
 v -no-skip-unused -path '.|tests/hardware-platform|@vlib|@vmodules' \
   -o /tmp/linux-check tests/packages/linux-runtime-check.v
-V=/path/to/v VINIX_HWTEST_TCG=1 \
-  VINIX_LINUX_SANDBOX=/build/target-root/usr/bin/vinix-sandbox \
-  VINIX_MUSL_COPYRIGHT=/build/musl-COPYRIGHT \
+V=/path/to/v TULPAR_HWTEST_TCG=1 \
+  TULPAR_LINUX_SANDBOX=/build/target-root/usr/bin/tulpar-sandbox \
+  TULPAR_MUSL_COPYRIGHT=/build/musl-COPYRIGHT \
   /tmp/linux-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-offline-export-arm
 ```

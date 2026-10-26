@@ -150,7 +150,7 @@ pub fn sound_markers() []string {
 		'SOUND TEST PASS: handled signals do not interrupt writes',
 		'SOUND TEST PASS: writes are paced by playback',
 		'SOUND TEST PASS: a blocked writer can be killed', 'SOUND TEST PASS: reopened at another rate',
-		'VINIX SOUND TEST: GUEST DONE']
+		'TULPAR SOUND TEST: GUEST DONE']
 }
 
 fn sound(args []string) !int {
@@ -165,11 +165,11 @@ fn sound(args []string) !int {
 	build := options.has('--build-fixture')
 	if !build { required(options, ['--init', '--initramfs', '--state-dir'])! }
 	seconds := if build { env_timeout(options, 300)! } else { positive(options, '--timeout', 300)! }
-	state := state_dir(options, 'vinix-sound-')!
-	defer { if !options.has('--state-dir') && os.getenv('VINIX_SOUND_KEEP') != '1' {
+	state := state_dir(options, 'tulpar-sound-')!
+	defer { if !options.has('--state-dir') && os.getenv('TULPAR_SOUND_KEEP') != '1' {
 		private_cleanup(state, options)
 	} }
-	runner := resolve(options.value('--root', os.getenv_opt('VINIX_SOUND_ROOT') or { root() }))!
+	runner := resolve(options.value('--root', os.getenv_opt('TULPAR_SOUND_ROOT') or { root() }))!
 	init := if build { state + '/init' } else { resolve(options.value('--init', ''))! }
 	if build {
 		run([...compiler('aarch64'), '-static', '-O2', '-fno-stack-protector', '-Wall', '-Wextra',
@@ -180,19 +180,19 @@ fn sound(args []string) !int {
 	} else {
 		resolve(options.value('--initramfs', ''))!
 	}
-	kernel := snapshot(state, options.value('--kernel-dir', os.getenv_opt('VINIX_KERNEL_DIR') or { runner + '/kernel' }), 'aarch64')!
+	kernel := snapshot(state, options.value('--kernel-dir', os.getenv_opt('TULPAR_KERNEL_DIR') or { runner + '/kernel' }), 'aarch64')!
 	configured := guesthost.serial_arm_launch(init, archive, state, kernel, runner, 2048, '')!
 	mut argv := configured.command.clone()
-	argv << ['-audiodev', 'wav,id=vinix-audio,path=' + state + '/sound.wav', '-device',
-		'virtio-sound-device,audiodev=vinix-audio,streams=1']
+	argv << ['-audiodev', 'wav,id=tulpar-audio,path=' + state + '/sound.wav', '-device',
+		'virtio-sound-device,audiodev=tulpar-audio,streams=1']
 	receipt(state, guesthost.Launch{argv, configured.env}, kernel, init, archive, seconds)!
 	if options.has('--build-only') {
 		println('Prepared sound: ' + state)
 		return 0
 	}
 	println('==> Starting AArch64 QEMU sound boot')
-	failures := ['VINIX SOUND TEST: FAIL', 'SOUND TEST FAIL line', 'FATAL EXCEPTION', 'KERNEL PANIC']
-	result := guesthost.boot_session(argv, configured.env, state, guesthost.SessionPolicy{ pass: 'VINIX SOUND TEST: GUEST DONE', failures: failures, settle: 10, lookback: 65536, monitor_at_marker: true }, seconds, true)!
+	failures := ['TULPAR SOUND TEST: FAIL', 'SOUND TEST FAIL line', 'FATAL EXCEPTION', 'KERNEL PANIC']
+	result := guesthost.boot_session(argv, configured.env, state, guesthost.SessionPolicy{ pass: 'TULPAR SOUND TEST: GUEST DONE', failures: failures, settle: 10, lookback: 65536, monitor_at_marker: true }, seconds, true)!
 	mut problems := []string{}
 	for marker in sound_markers() {
 		if !result.text.contains(marker) { problems << 'missing guest result: ' + marker }

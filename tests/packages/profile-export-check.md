@@ -41,7 +41,7 @@ FFmpeg publication additionally uses the complete previously reviewed 8.0.1
 source archive and its production digest/size check.
 
 Run [the host controller](profile-export-check.v) with `V` set to a reviewed
-compiler, `VINIX_PROFILE_EXPORT_SOURCE` naming that retained FFmpeg source
+compiler, `TULPAR_PROFILE_EXPORT_SOURCE` naming that retained FFmpeg source
 archive and a new work directory. It runs eighteen build/test checks: the new
 fixture normally and with clang ASan/UBSan, all five existing profile suites,
 atomic metadata tests and captured-export retirement tests. Host C builds use
@@ -55,7 +55,7 @@ the same source archive environment and ordinary pinned native inputs,
 sandbox, compilers, kernel and fresh short state directory. It boots production
 staging, runs four separate sixteen-case fixture processes for each profile,
 then maintains real native SDK applications. The first process also checks the
-baseline and three saved-output failures for its profile. On Vinix, six-second
+baseline and three saved-output failures for its profile. On Tulpar, six-second
 waits separate test phases, allowing the kernel's five-second removed-node
 grace period to expire. The complete image checks all 320 substitutions and
 fifteen saved-output cases with a 900-second functional deadline. It records both

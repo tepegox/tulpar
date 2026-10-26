@@ -53,15 +53,15 @@ headless UI overlay, and a UI source directory containing calculator examples:
 ```sh
 V_MACOS_V3_NO_FALLBACK=1 /path/to/v -no-skip-unused \
   -o /tmp/distribution-check tests/packages/distribution-check.v
-V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/vinix/desktop \
-  VINIX_PACKAGE_TEST_UI2=/path/to/headless/modules \
-  VINIX_PACKAGE_TEST_DESKTOP=/path/to/generated/desktop-assets \
-  VINIX_UI2_SOURCE=/path/to/qualified/ui-source \
+V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 CPATH=/path/to/tulpar/desktop \
+  TULPAR_PACKAGE_TEST_UI2=/path/to/headless/modules \
+  TULPAR_PACKAGE_TEST_DESKTOP=/path/to/generated/desktop-assets \
+  TULPAR_UI2_SOURCE=/path/to/qualified/ui-source \
   /tmp/distribution-check --direct-tests --cross --desktop
 ```
 
-[The guest controller](window-check.v) requires `VINIX_HWTEST_TCG=1`, a matching
-retained native sandbox through `VINIX_WINDOW_SANDBOX`, the target kernel, and a
+[The guest controller](window-check.v) requires `TULPAR_HWTEST_TCG=1`, a matching
+retained native sandbox through `TULPAR_WINDOW_SANDBOX`, the target kernel, and a
 new `--state-dir`. It freshly builds the counter/service/init/account/session
 programs and hashes admitted inputs before boot. Kernels/sandboxes are retained.
 

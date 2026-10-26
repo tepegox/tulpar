@@ -24,17 +24,17 @@ fn sigreturn_command(args []string) !int {
 	if os.exists(work_path) { return error_with_code('Use a fresh state directory to preserve prior evidence', 2) }
 	kernel := resolve(parsed.options['--kernel-dir'] or { root() + '/kernel' })!
 	loader := resolve(parsed.options['--musl'] or {
-		root() + '/build-aarch64-android/aarch64/staging/opt/vinix-android-aarch64/lib/ld-musl-aarch64.so.1'
+		root() + '/build-aarch64-android/aarch64/staging/opt/tulpar-android-aarch64/lib/ld-musl-aarch64.so.1'
 	})!
 	repo := resolve(parsed.options['--runner-root'] or { root() })!
 	timeout := positive_option(parsed, '--timeout', 90)!
-	for source in [kernel + '/bin/vinix', loader, repo + '/build-support/build-aarch64-iso.sh'] {
+	for source in [kernel + '/bin/tulpar', loader, repo + '/build-support/build-aarch64-iso.sh'] {
 		if !os.is_file(source) { return error_with_code('Built kernel, genuine musl image and native runner required: ' + source, 2) }
 	}
 	cc := os.find_abs_path_of_executable(parsed.options['--cc'] or {
-		os.getenv_opt('VINIX_AARCH64_CC') or { 'aarch64-linux-musl-gcc' }
+		os.getenv_opt('TULPAR_AARCH64_CC') or { 'aarch64-linux-musl-gcc' }
 	}) or { return error_with_code('ARM64 musl compiler unavailable: ' + err.msg(), 2) }
-	work := hosttest.work_dir(work_path, 'vinix-sigreturn-')!
+	work := hosttest.work_dir(work_path, 'tulpar-sigreturn-')!
 	flags := ['-O2', '-g', '-Wall', '-Wextra', '-Werror', '-fno-stack-protector', '-Wl,-z,max-page-size=65536']
 	commands := [
 		[cc, ...flags, root() + '/tests/aarch64-sigreturn/probe.c', '-ldl', '-o', work + '/signal-return-probe'],
@@ -65,10 +65,10 @@ fn sigreturn_command(args []string) !int {
 	mut inputs := map[string]string{}
 	for path in [root() + '/tests/aarch64-sigreturn/probe.c', root() + '/tests/aarch64-sigreturn/init.c',
 		root() + '/tests/aarch64-sigreturn/run', root() + '/build-support/native-compat-tools/compathost/sigreturn.v',
-		loader, kernel + '/bin/vinix', repo + '/build-support/build-aarch64-iso.sh',
+		loader, kernel + '/bin/tulpar', repo + '/build-support/build-aarch64-iso.sh',
 		root() + '/tests/native-guest-tools/guesthost/pty.v'] { inputs[path] = hosttest.sha(path)! }
 	mut outputs := map[string]string{}
-	for name in ['signal-return-probe', 'init', 'kernel/bin/vinix', 'initramfs.tar'] { outputs[name] = hosttest.sha(work + '/' + name)! }
+	for name in ['signal-return-probe', 'init', 'kernel/bin/tulpar', 'initramfs.tar'] { outputs[name] = hosttest.sha(work + '/' + name)! }
 	hosttest.write_json(work + '/build.json', {
 		'kind': json2.Any('genuine-dynamic-musl-signal-return')
 		'commands': string_rows(commands)
@@ -88,7 +88,7 @@ fn sigreturn_command(args []string) !int {
 		'failures': json2.Any(hosttest.strings(failures.filter(serial.contains(it))))
 		'build_sha256': json2.Any(hosttest.sha(work + '/build.json')!)
 		'serial_sha256': json2.Any(hosttest.sha(work + '/serial.log')!)
-		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/vinix')!)
+		'kernel_sha256': json2.Any(hosttest.sha(private_kernel + '/bin/tulpar')!)
 		'probe_sha256': json2.Any(hosttest.sha(work + '/signal-return-probe')!)
 	})!
 	return verdict

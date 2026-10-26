@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_ERR_H
-#define VINIX_LINUX_ERR_H
+#ifndef TULPAR_LINUX_ERR_H
+#define TULPAR_LINUX_ERR_H
 #include <linux/types.h>
 #define MAX_ERRNO 4095
 void *ERR_PTR(long);

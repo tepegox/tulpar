@@ -13,7 +13,7 @@ import lib
 // found when the disks came up, and is this system's to write to.
 pub fn unavailable_reason() string {
 	if device_name().len == 0 {
-		return 'no device was named for the image (vinix.hibernate=)'
+		return 'no device was named for the image (tulpar.hibernate=)'
 	}
 	if !hib_boot_looked {
 		return 'the device named for the image was never looked for'

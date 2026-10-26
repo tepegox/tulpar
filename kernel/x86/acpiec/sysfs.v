@@ -141,7 +141,7 @@ fn show_status(context voidptr, mut text lib.Text) {
 // The path of `name` in the controller's own directory, relative to /sys.
 // The caller frees it.
 fn status_path(name string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(96) }
 	text.add(acpiec_wiring.device.sysfs_path)
 	text.add('/ec/')

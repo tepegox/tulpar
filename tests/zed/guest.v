@@ -59,18 +59,18 @@ fn main() {
 	os.setenv('PATH', '/usr/bin:/bin:/usr/sbin:/sbin', true)
 	os.setenv('TERM', 'linux', true)
 	os.setenv('LD_LIBRARY_PATH', '/usr/lib:/lib:/usr/lib/xorg/modules', true)
-	os.write_file('/root/.vinix-user', 'version=1\nname=56696e6978\nkdf=scrypt\nn=16384\nr=8\np=1\nsalt=00112233445566778899aabbccddeeff\nhash=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n') or { panic(err) }
-	os.chmod('/root/.vinix-user', 0o600) or { panic(err) }
-	os.write_file('/root/hello.v', "module main\n\nfn main() {\n\tprintln('Hello from Zed on Vinix!')\n}\n") or { panic(err) }
-	println('ZED GUEST: starting Vinix desktop with Zed')
-	mut desktop := os.new_process('/usr/bin/vinix-desktop')
+	os.write_file('/root/.tulpar-user', 'version=1\nname=56696e6978\nkdf=scrypt\nn=16384\nr=8\np=1\nsalt=00112233445566778899aabbccddeeff\nhash=00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff\n') or { panic(err) }
+	os.chmod('/root/.tulpar-user', 0o600) or { panic(err) }
+	os.write_file('/root/hello.v', "module main\n\nfn main() {\n\tprintln('Hello from Zed on Tulpar!')\n}\n") or { panic(err) }
+	println('ZED GUEST: starting Tulpar desktop with Zed')
+	mut desktop := os.new_process('/usr/bin/tulpar-desktop')
 	desktop.set_args(['--open=Zed'])
 	desktop.run()
 	mut seen := map[string]int{}
 	for {
 		time.sleep(2 * time.second)
 		for name in os.ls('/tmp') or { []string{} } {
-			if !name.starts_with('vinix-zed-') || !name.ends_with('.log') { continue }
+			if !name.starts_with('tulpar-zed-') || !name.ends_with('.log') { continue }
 			path := '/tmp/${name}'
 			log := os.read_file(path) or { continue }
 			previous := seen[path]

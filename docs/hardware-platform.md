@@ -32,7 +32,7 @@ shutdown walk the devices last to first, resume first to last.
 ```
 /sys/devices/pci0000:00/0000:00:03.0/   vendor device class revision config modalias uevent
                                         driver -> ../../../bus/pci/drivers/e1000
-                                        state health dma        (Vinix's)
+                                        state health dma        (Tulpar's)
                                         reset remove            (write 1)
                                         power/wakeup power/wakeup_count power/runtime_status
 /sys/bus/pci/devices/0000:00:03.0 ->    the same directory
@@ -81,7 +81,7 @@ Through a sleep the controller is left in D0 and goes on being asked, so
 that a key ends a suspend to idle; after a sleep that cut its power it is
 found halted and set up again from nothing, its pages given back.
 `/sys/bus/usb/xhci` counts what it has and what it has said.
-`vinix.usb=off` leaves the controller to firmware.
+`tulpar.usb=off` leaves the controller to firmware.
 
 Startup requests firmware ownership before resetting the controller, forces
 the BIOS semaphore clear after a one-second handoff timeout, and disables
@@ -101,7 +101,7 @@ What it does not do, each of which a real machine will meet:
 - **Firmware's own keyboard.** Taking the controller from firmware (the
   legacy-support handoff) ends firmware's emulation of a PS/2 keyboard for
   USB ones. A keyboard that worked through that emulation and sits behind a
-  hub stops working; `vinix.usb=off` gives it back.
+  hub stops working; `tulpar.usb=off` gives it back.
 - A second controller, interrupts instead of polling, anything that is not a
   keyboard or a pointer, and isolation behind an IOMMU (the controller is
   allowed all of memory).
@@ -182,7 +182,7 @@ second for it; a bridge that arrives is listed and nothing behind it is
 found (no bus numbers or windows are made for it); ports are not given more
 room than firmware gave them; a device that arrives on the root bus is found
 but given no addresses; on AArch64 the ports are watched only in QEMU unless
-`vinix.pci_hotplug=1` says otherwise, because what a slot's power switch
+`tulpar.pci_hotplug=1` says otherwise, because what a slot's power switch
 feeds on Apple hardware is not known here. Only the `e1000` has been taken
 through an arrival and a departure: the other PCI drivers have no `remove`
 and would be left holding a device that is gone.
@@ -205,7 +205,7 @@ each device's page tables in step with its list. Two are implemented:
   command buffer and event log, a domain per requester id, IVMD unity ranges
   kept, events published in `/sys/class/iommu/ivhdN/`.
 
-Translation is **off unless the kernel command line has `vinix.iommu=1`**. A
+Translation is **off unless the kernel command line has `tulpar.iommu=1`**. A
 unit that is on blocks every device behind it that has no domain, and takes
 over the machine's firmware-owned DMA; neither has been tried on a physical
 PC, so it is opt-in until one has. With the option, `e1000` and `ahci` run in
@@ -415,7 +415,7 @@ What this is not:
   ordinary kernel has only been shown ports where nothing answers. How a
   particular laptop's controller behaves -- how long it takes, what it does
   when asked twice, whether it wants the queries Linux gives Samsung's
-  (`vinix.ec=clear`) -- is unknown until one is tried.
+  (`tulpar.ec=clear`) -- is unknown until one is tried.
 - One controller is driven. A second `PNP0C09` device gets a handler that
   refuses its regions.
 - Not the SMBus host controller some firmware puts behind the embedded
@@ -474,7 +474,7 @@ prefers told from the list. Firmware's brightness keys are a Notify to the
 panel -- brighter, dimmer, around, darkest -- and are acted on in the kernel,
 so they work with nothing running; the bus is told (`_DOS`) that brightness
 is not firmware's to change. `bl_power` 4 is the dimmest level, which
-firmware rarely makes dark. `vinix.acpi_backlight=off` leaves the panels
+firmware rarely makes dark. `tulpar.acpi_backlight=off` leaves the panels
 alone.
 
 A panel whose `_BCM` hands the work to the graphics driver -- Intel's, through
@@ -532,7 +532,7 @@ goes down: it was run once by hand with the 82574L in the machine of
 is in, `power/d3_count` how many sleeps it has spent in D3hot, and
 `/sys/power/pci_d3` what the last sleep and all sleeps did: functions put
 down, functions that refused, functions that did not come back, registers
-found changed and written back. `vinix.pci_d3=off` keeps every function in
+found changed and written back. `tulpar.pci_d3=off` keeps every function in
 D0.
 
 What is tested, and what is not:
@@ -542,7 +542,7 @@ What is tested, and what is not:
   controller asks QEMU for its memory map, and the card's registers are not
   in it; before and after, they are (`pci-d3`, both architectures, for a
   rehearsal and a suspend to idle, and on x86-64 a suspend to RAM entered
-  from D3hot). With `vinix.pci_d3=off` they stay (`pci-d3-off`).
+  from D3hot). With `tulpar.pci_d3=off` they stay (`pci-d3-off`).
 - QEMU's NVMe controller has the capability too: `nvme-sleep` takes it
   through the same three sleeps in D3hot. Its AHCI, IDE and HD Audio
   controllers and its 82540EM have none and stay in D0.
@@ -681,9 +681,9 @@ mode registers are read out before the sleep and written back after it
 any sleep: put away and painted black before the machine goes down, and
 copied back once it is awake -- which for a suspend to RAM is after the mode
 is back. On any other machine with a screen `mem_sleep` lists `s2idle`
-alone, and `/sys/power/deep_sleep` says why. `vinix.deep_sleep=force` offers
+alone, and `/sys/power/deep_sleep` says why. `tulpar.deep_sleep=force` offers
 it anyway, for a machine run without a screen or whose firmware restores the
-mode; the screen is then whatever firmware leaves. `vinix.deep_sleep=off`
+mode; the screen is then whatever firmware leaves. `tulpar.deep_sleep=off`
 never offers it.
 
 **What may end it** is the platform's to carry out, and has to be arranged
@@ -699,7 +699,7 @@ through `_DSW` (or the older `_PSW`), and has its event left enabled; after
 the machine is back it is told it need not any more. A power resource
 switched on for this is left on. The embedded controller's event is marked
 by its own driver. `/sys/power/acpi_wakeup` lists the devices, how each is
-told and how often it has been armed; `vinix.acpi_wake=off` leaves all of it
+told and how often it has been armed; `tulpar.acpi_wake=off` leaves all of it
 undone. After every sleep a lid is asked where it is: firmware does not
 always say that it was opened while the machine was down.
 
@@ -711,7 +711,7 @@ suspended the test's controller reads the event enable register, which
 holds the lid's and the sleep button's bits and no other, and with the lid
 not allowed only the button's; the methods write what they were called with
 to a port QEMU records, and the record is compared. With
-`vinix.acpi_wake=off` the register holds nothing and no method runs
+`tulpar.acpi_wake=off` the register holds nothing and no method runs
 (`suspend-deep-wake-off`). PCI devices are not armed (PME), and a USB
 keyboard ends a suspend to idle but not a suspend to RAM: its controller is
 without power like the rest.
@@ -790,7 +790,7 @@ been without power. It is offered only when the kernel command line names a
 device for the image:
 
 ```
-vinix.hibernate=sd1        the name the device has in /dev, with or without /dev/:
+tulpar.hibernate=sd1        the name the device has in /dev, with or without /dev/:
                            a whole disk or a partition
 ```
 
@@ -812,7 +812,7 @@ and how it comes back.
 
 **The device** is the image's and nothing else's, and is the only thing
 hibernation ever writes. The kernel does not choose one: with no
-`vinix.hibernate=` there is no `disk` state, writing it fails, and no disk
+`tulpar.hibernate=` there is no `disk` state, writing it fails, and no disk
 is written to. What is named is found once, when the disk drivers have
 brought their disks up, and reached through its node's resource -- the read
 and write an open of `/dev/sd1` ends in, with no filesystem or cache between.
@@ -821,7 +821,7 @@ its first and last megabyte, or already carrying a header of this system's.
 A device with anything else on it is left exactly as it is and `disk` is not
 offered, so a root filesystem named by mistake is not written over; it is
 looked at again before every image, once userspace is frozen. The installer that takes a blank disk
-for the system (`vinix.disk=auto`) never takes the named one. Its node is
+for the system (`tulpar.disk=auto`) never takes the named one. Its node is
 made mode 0600, and so is the disk a named partition is on: **the image is a
 copy of memory with every secret the kernel had, it is not encrypted, and
 whoever can read the device can read them** -- root, and anybody with the
@@ -923,7 +923,7 @@ an image is entered once, and a crash on the way in cannot be gone back
 into.
 
 **An image nobody went back into.** A start that is not told of the image
--- no `vinix.hibernate=`, or the name now belongs to another disk -- would
+-- no `tulpar.hibernate=`, or the name now belongs to another disk -- would
 mount the system's disk, change it, and leave behind an image that a later
 start goes back into: a kernel that then corrupts the disk from what it
 remembers. So every start that has its disks up and has not gone back into
@@ -988,7 +988,7 @@ boot had not yet set, are written from the kernel's own record of them.
   machine that is switched off and on gets its mode from firmware and the
   boot loader as on any start, and what the image needs -- the same
   framebuffer in the same place -- is one of the things a boot is compared
-  on. `vinix.deep_sleep=` has no part in it.
+  on. `tulpar.deep_sleep=` has no part in it.
 - An IOMMU is handed over, not refused: the loading kernel switches its
   units off before it enters the image, and the kernel inside switches them
   on with its own tables before any device may use the bus, as after S3.
@@ -1117,8 +1117,8 @@ exactly what has and has not executed.
 In short: under QEMU the idle driver is `halt` or `wfi` and the frequency
 driver is `none`. The masked MWAIT entry, every state deeper than C1 and
 every frequency register have never run. On a physical Apple machine the
-idle loop still polls instead of waiting (`vinix.apple_idle=wfi` changes
-that, untried) and frequency control is off (`vinix.apple_cpufreq=1`,
+idle loop still polls instead of waiting (`tulpar.apple_idle=wfi` changes
+that, untried) and frequency control is off (`tulpar.apple_cpufreq=1`,
 untried).
 
 ## Thermal
@@ -1158,7 +1158,7 @@ trip at or below freezing or at 200 degrees or more is not a trip; and a
 reading at or past the critical trip is taken again a twentieth of a second
 later, the cooler of the two being the one acted on.
 `/sys/class/thermal/acpi_zones` counts what each zone had to disbelieve.
-`vinix.acpi_thermal=nocrt` takes the zones without their critical trips, and
+`tulpar.acpi_thermal=nocrt` takes the zones without their critical trips, and
 `=off` leaves firmware's zones and fans alone, for a machine whose firmware
 reports temperatures that are not.
 
@@ -1186,25 +1186,25 @@ itself, which the SMC keys Linux names do not include.
 
 | Option | Effect |
 | --- | --- |
-| `vinix.iommu=1` | switch on Intel VT-d or AMD-Vi units (default off) |
-| `vinix.iommu_igfx=1` | also switch on a VT-d unit that only covers integrated graphics |
-| `vinix.cpuidle=off\|halt\|mwait`, `vinix.max_cstate=N` | x86-64 idle driver and depth |
-| `vinix.cpufreq=off\|simulate` | no frequency driver, or one with memory for registers |
-| `vinix.apple_idle=wfi`, `vinix.apple_cpufreq=1` | Apple hardware only; untried |
-| `vinix.apple_battery=0` | Apple hardware only: do not drive the SMC at all |
-| `vinix.apple_smc=legacy` | Apple hardware only: the SMC as `/dev/battery` and `/dev/battery-power` alone, with nothing but reads of the percentage and the three telemetry keys sent to it. `nosensors` leaves out temperatures and fans, `nolimit` the charge limit key; the three combine with commas. Untried on a Mac, like the driver |
-| `vinix.thermal_sensors=0`, `vinix.tjmax=N` | skip the x86 sensor drivers; state TjMax |
-| `vinix.pci_hotplug=0\|1` | leave PCI Express hot-plug ports alone, or watch them where the kernel would not by itself |
-| `vinix.acpi_thermal=off\|nocrt` | leave firmware's thermal zones and fans alone, or take them without the trip that switches the machine off |
-| `vinix.ec=off` | do not drive the embedded controller |
-| `vinix.ec=clear` | at start and on resume, query the controller until it names no event, whatever its event bit says (Linux's `EC_FLAGS_CLEAR_ON_RESUME`); untried |
-| `vinix.ec=dsdt-gpe` | where the ECDT and `_GPE` name different events, use `_GPE` (Linux's `EC_FLAGS_TRUST_DSDT_GPE`); untried. The three combine with commas |
-| `vinix.deep_sleep=force\|off` | x86-64: offer suspend to RAM although the kernel cannot bring the display back; never offer it |
-| `vinix.pci_d3=off` | keep every PCI function in D0 through a sleep |
-| `vinix.acpi_wake=off` | x86-64: do not arm the lid, buttons and keyboard to end a suspend to RAM |
-| `vinix.acpi_backlight=off` | x86-64: leave the panels whose backlight firmware sets alone |
-| `vinix.usb=off` | leave the xHCI controller, and with it any USB keyboard, to firmware |
-| `vinix.hibernate=<device>` | x86-64: the block device, by its name in `/dev`, that an image of memory is written to for a suspend to disk. It is overwritten, and looked at for an image at every start. Without the option there is no `disk` state and no disk is written to |
+| `tulpar.iommu=1` | switch on Intel VT-d or AMD-Vi units (default off) |
+| `tulpar.iommu_igfx=1` | also switch on a VT-d unit that only covers integrated graphics |
+| `tulpar.cpuidle=off\|halt\|mwait`, `tulpar.max_cstate=N` | x86-64 idle driver and depth |
+| `tulpar.cpufreq=off\|simulate` | no frequency driver, or one with memory for registers |
+| `tulpar.apple_idle=wfi`, `tulpar.apple_cpufreq=1` | Apple hardware only; untried |
+| `tulpar.apple_battery=0` | Apple hardware only: do not drive the SMC at all |
+| `tulpar.apple_smc=legacy` | Apple hardware only: the SMC as `/dev/battery` and `/dev/battery-power` alone, with nothing but reads of the percentage and the three telemetry keys sent to it. `nosensors` leaves out temperatures and fans, `nolimit` the charge limit key; the three combine with commas. Untried on a Mac, like the driver |
+| `tulpar.thermal_sensors=0`, `tulpar.tjmax=N` | skip the x86 sensor drivers; state TjMax |
+| `tulpar.pci_hotplug=0\|1` | leave PCI Express hot-plug ports alone, or watch them where the kernel would not by itself |
+| `tulpar.acpi_thermal=off\|nocrt` | leave firmware's thermal zones and fans alone, or take them without the trip that switches the machine off |
+| `tulpar.ec=off` | do not drive the embedded controller |
+| `tulpar.ec=clear` | at start and on resume, query the controller until it names no event, whatever its event bit says (Linux's `EC_FLAGS_CLEAR_ON_RESUME`); untried |
+| `tulpar.ec=dsdt-gpe` | where the ECDT and `_GPE` name different events, use `_GPE` (Linux's `EC_FLAGS_TRUST_DSDT_GPE`); untried. The three combine with commas |
+| `tulpar.deep_sleep=force\|off` | x86-64: offer suspend to RAM although the kernel cannot bring the display back; never offer it |
+| `tulpar.pci_d3=off` | keep every PCI function in D0 through a sleep |
+| `tulpar.acpi_wake=off` | x86-64: do not arm the lid, buttons and keyboard to end a suspend to RAM |
+| `tulpar.acpi_backlight=off` | x86-64: leave the panels whose backlight firmware sets alone |
+| `tulpar.usb=off` | leave the xHCI controller, and with it any USB keyboard, to firmware |
+| `tulpar.hibernate=<device>` | x86-64: the block device, by its name in `/dev`, that an image of memory is written to for a suspend to disk. It is overwritten, and looked at for an image at every start. Without the option there is no `disk` state and no disk is written to |
 
 ## What is not done
 
@@ -1278,8 +1278,8 @@ machine from S3 and starts it again after a suspend to disk),
 AArch64 `virt` under HVF with 4 CPUs. The two are not comparable in speed.
 
 ```sh
-tests/hardware-platform/run --arch x86_64 --kernel build-amd64-kernel/bin/vinix
-tests/hardware-platform/run --arch aarch64 --kernel kernel/bin/vinix
+tests/hardware-platform/run --arch x86_64 --kernel build-amd64-kernel/bin/tulpar
+tests/hardware-platform/run --arch aarch64 --kernel kernel/bin/tulpar
 ```
 
 | Scenario | x86-64 | AArch64 |
@@ -1290,7 +1290,7 @@ tests/hardware-platform/run --arch aarch64 --kernel kernel/bin/vinix
 | `suspend`: rehearsal, alarm, key, power button, a source not allowed to wake | pass | pass |
 | `acpi-power`: scripted battery, charger and lid | pass | -- |
 | `acpi-thermal`: a scripted thermal zone, four fans of every kind, the passive limit, critical power-off | pass | -- |
-| `acpi-backlight`, `acpi-backlight-off`: two scripted panels -- levels, brightness keys, off and on, down for a sleep and back, what firmware was told read off a recorded port -- and none of it with `vinix.acpi_backlight=off` | pass | -- |
+| `acpi-backlight`, `acpi-backlight-off`: two scripted panels -- levels, brightness keys, off and on, down for a sleep and back, what firmware was told read off a recorded port -- and none of it with `tulpar.acpi_backlight=off` | pass | -- |
 | `acpi-ec-absent`, `acpi-ec-off`: a described embedded controller that nothing answers for; the driver switched off | pass | -- |
 | `iommu-intel`, `iommu-amd`, `iommu-off` | pass | -- |
 | `cpu-power`, `cpu-power-simulated` | pass | pass |
@@ -1302,14 +1302,14 @@ tests/hardware-platform/run --arch aarch64 --kernel kernel/bin/vinix
 | `pci-hotplug-acpi`: the same, announced and asked back by firmware | pass | -- |
 | `pci-hotplug-iommu`: the same behind Intel VT-d, the card isolated each time it arrives | pass | -- |
 | `pci-d3`: a card put into D3hot for a rehearsal, a suspend to idle and (x86-64) a suspend to RAM; QEMU asked for its memory map while the machine is down; 40 more sleeps leave the heap flat | pass | pass |
-| `pci-d3-off`: `vinix.pci_d3=off`, the card left in D0 and on the bus | pass | pass |
+| `pci-d3-off`: `tulpar.pci_d3=off`, the card left in D0 and on the bus | pass | pass |
 | `suspend-deep`: suspend to RAM with 4 CPUs -- two rehearsals, wakes by `system_wakeup`, alarm and key, five more sleeps; every CPU, memory, disk, network, clocks, keyboard, mouse, power button; the screen dark while down and as drawn afterwards | pass | -- |
 | `suspend-deep-xapic`, `suspend-deep-bridge`: the same without x2APIC, and with the card behind a watched hot-plug port | pass | -- |
 | `suspend-deep-iommu`, `suspend-deep-iommu-amd`: the same behind VT-d and AMD-Vi, the unit found off and brought back each time | pass | -- |
 | `suspend-deep-arrival`: a card put into a watched slot while the machine is suspended to RAM, found after the wake; a sleep with it in; the slot gives it up afterwards | pass | -- |
 | `suspend-deep-departure`: with firmware keeping the ports, a card taken during one sleep is removed after it, and a card put in during the next is found | pass | -- |
 | `suspend-deep-undrawable`, `suspend-deep-forced`, `suspend-deep-headless`: when deep is offered | pass | -- |
-| `suspend-deep-wake`, `suspend-deep-wake-off`: a lid and a sleep button armed to end a suspend to RAM -- their events left enabled, firmware told, the lid found open afterwards -- and none of it with `vinix.acpi_wake=off` | pass | -- |
+| `suspend-deep-wake`, `suspend-deep-wake-off`: a lid and a sleep button armed to end a suspend to RAM -- their events left enabled, firmware told, the lid found open afterwards -- and none of it with `tulpar.acpi_wake=off` | pass | -- |
 | `drivers-sleep`: HD Audio playing and an IDE disk through a rehearsal, a suspend to idle and a suspend to RAM; the recording and the disk image checked afterwards | pass | -- |
 | `hibernate`: suspend to disk twice with 4 CPUs, three boots of one machine; the same process returns from its write each time with its memory, threads, files, descriptors, pipe and child as they were; every CPU, the clocks, disk, network, screen and power button afterwards; no image left on the device | pass | -- |
 | `hibernate-xapic`: the same with page tables four levels deep and no x2APIC | pass | -- |
@@ -1326,7 +1326,7 @@ tests/hardware-platform/run --arch aarch64 --kernel kernel/bin/vinix
 | `nvme-sleep` (kernel built with `PROD=false`): an NVMe disk through the same three sleeps | pass | -- |
 | `pci-d3-selftest` (kernel built with `-d pci_d3_selftest`): the same card made to forget its address and command registers in D3hot, which are written back | pass | pass |
 | `apple-smc-selftest` (kernel built with `-d applesmc_selftest`: a simulated Apple SMC; run 2026-10-11): battery, charger, four temperatures and a fan in `/sys` and in the device nodes; garbage readings that change nothing; the charge limit; a sleep; low, critical and the power-off request; an SMC that stops answering | -- | pass |
-| `apple-smc-selftest-bare`, `-options`, `-legacy` (the same kernel): no fan and no charge limit; `vinix.apple_smc=nosensors,nolimit`; `vinix.apple_smc=legacy` | -- | pass |
+| `apple-smc-selftest-bare`, `-options`, `-legacy` (the same kernel): no fan and no charge limit; `tulpar.apple_smc=nosensors,nolimit`; `tulpar.apple_smc=legacy` | -- | pass |
 
 Host unit tests: `tests/hardware-platform/hwhost` (10 files),
 `tests/power-supply/run`, `sh tests/cpu-power/run.sh`, `sh tests/thermal/run.sh`,

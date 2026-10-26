@@ -22,36 +22,36 @@ import stat
 import time
 import usercopy
 
-struct C.vinix_socket {}
+struct C.tulpar_socket {}
 
-fn C.vinix_net_init()
-fn C.vinix_net_poll(now_ms u32)
-fn C.vinix_net_attach(mac &u8, driver i32) i32
-fn C.vinix_net_link(mac &u8, mtu &u32) i32
-fn C.vinix_net_set_link(driver i32, up i32)
-fn C.vinix_net_carrier() i32
-fn C.vinix_net_detach()
-fn C.vinix_net_owner() i32
-fn C.vinix_net_input(frame voidptr, length u64) i32
-fn C.vinix_net_counters(index i32, fields &u64) i32
-fn C.vinix_net_config(address &u32, netmask &u32, gateway &u32, dns &u32) i32
-fn C.vinix_socket_free(socket &C.vinix_socket)
-fn C.vinix_socket_pending(socket &C.vinix_socket) i32
-fn C.vinix_socket_abort_close(socket &C.vinix_socket)
-fn C.vinix_socket_bind(socket &C.vinix_socket, address u32, port u16) i32
-fn C.vinix_socket_connect(socket &C.vinix_socket, address u32, port u16) i32
-fn C.vinix_socket_listen(socket &C.vinix_socket, backlog i32) i32
-fn C.vinix_socket_accept(socket &C.vinix_socket) &C.vinix_socket
-fn C.vinix_socket_send(socket &C.vinix_socket, data voidptr, length u64, address u32, port u16, has_address i32) i32
-fn C.vinix_socket_recv(socket &C.vinix_socket, data voidptr, length u64, address &u32, port &u16) i32
-fn C.vinix_socket_shutdown(socket &C.vinix_socket, how i32) i32
-fn C.vinix_socket_local(socket &C.vinix_socket, address &u32, port &u16) i32
-fn C.vinix_socket_peer(socket &C.vinix_socket, address &u32, port &u16) i32
-fn C.vinix_socket_ready(socket &C.vinix_socket) i32
-fn C.vinix_socket_error(socket &C.vinix_socket, clear i32) i32
-fn C.vinix_socket_available(socket &C.vinix_socket) i32
-fn C.vinix_socket_set_option(socket &C.vinix_socket, level i32, option i32, value i32) i32
-fn C.vinix_socket_get_option(socket &C.vinix_socket, level i32, option i32, value &i32) i32
+fn C.tulpar_net_init()
+fn C.tulpar_net_poll(now_ms u32)
+fn C.tulpar_net_attach(mac &u8, driver i32) i32
+fn C.tulpar_net_link(mac &u8, mtu &u32) i32
+fn C.tulpar_net_set_link(driver i32, up i32)
+fn C.tulpar_net_carrier() i32
+fn C.tulpar_net_detach()
+fn C.tulpar_net_owner() i32
+fn C.tulpar_net_input(frame voidptr, length u64) i32
+fn C.tulpar_net_counters(index i32, fields &u64) i32
+fn C.tulpar_net_config(address &u32, netmask &u32, gateway &u32, dns &u32) i32
+fn C.tulpar_socket_free(socket &C.tulpar_socket)
+fn C.tulpar_socket_pending(socket &C.tulpar_socket) i32
+fn C.tulpar_socket_abort_close(socket &C.tulpar_socket)
+fn C.tulpar_socket_bind(socket &C.tulpar_socket, address u32, port u16) i32
+fn C.tulpar_socket_connect(socket &C.tulpar_socket, address u32, port u16) i32
+fn C.tulpar_socket_listen(socket &C.tulpar_socket, backlog i32) i32
+fn C.tulpar_socket_accept(socket &C.tulpar_socket) &C.tulpar_socket
+fn C.tulpar_socket_send(socket &C.tulpar_socket, data voidptr, length u64, address u32, port u16, has_address i32) i32
+fn C.tulpar_socket_recv(socket &C.tulpar_socket, data voidptr, length u64, address &u32, port &u16) i32
+fn C.tulpar_socket_shutdown(socket &C.tulpar_socket, how i32) i32
+fn C.tulpar_socket_local(socket &C.tulpar_socket, address &u32, port &u16) i32
+fn C.tulpar_socket_peer(socket &C.tulpar_socket, address &u32, port &u16) i32
+fn C.tulpar_socket_ready(socket &C.tulpar_socket) i32
+fn C.tulpar_socket_error(socket &C.tulpar_socket, clear i32) i32
+fn C.tulpar_socket_available(socket &C.tulpar_socket) i32
+fn C.tulpar_socket_set_option(socket &C.tulpar_socket, level i32, option i32, value i32) i32
+fn C.tulpar_socket_get_option(socket &C.tulpar_socket, level i32, option i32, value &i32) i32
 
 const max_sockets = 256
 const ready_read = 1
@@ -98,7 +98,7 @@ pub mut:
 	can_mmap bool
 	event    eventstruct.Event
 
-	handle     &C.vinix_socket = unsafe { nil }
+	handle     &C.tulpar_socket = unsafe { nil }
 	socktype   int
 	protocol   int
 	family     int
@@ -146,7 +146,7 @@ pub fn initialise() {
 	// set up.
 	krandom.initialise()
 	net_lock.acquire()
-	C.vinix_net_init()
+	C.tulpar_net_init()
 	net_lock.release()
 	fs.register_net_tcp_snapshot(proc_net_tcp_text)
 	fs.register_net_dev_snapshot(proc_net_dev_text)
@@ -154,9 +154,9 @@ pub fn initialise() {
 }
 
 // Linux tools match the inode in /proc/net/tcp with /proc/<pid>/fd links.
-// Both views must describe the same live Vinix socket.
+// Both views must describe the same live Tulpar socket.
 fn proc_net_tcp_text() string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(4096) }
 	text.add('  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n')
 	net_lock.acquire()
@@ -172,12 +172,12 @@ fn proc_net_tcp_text() string {
 		}
 		mut local_address := u32(0)
 		mut local_port := u16(0)
-		if C.vinix_socket_local(socket.handle, &local_address, &local_port) != 0 || local_port == 0 {
+		if C.tulpar_socket_local(socket.handle, &local_address, &local_port) != 0 || local_port == 0 {
 			continue
 		}
 		mut remote_address := u32(0)
 		mut remote_port := u16(0)
-		connected := C.vinix_socket_peer(socket.handle, &remote_address, &remote_port) == 0
+		connected := C.tulpar_socket_peer(socket.handle, &remote_address, &remote_port) == 0
 		if !connected && !socket.listening {
 			continue
 		}
@@ -242,7 +242,7 @@ fn refresh_registered_sockets() {
 }
 
 fn (mut this InetSocket) refresh_status() {
-	is_ready := C.vinix_socket_ready(this.handle)
+	is_ready := C.tulpar_socket_ready(this.handle)
 	mut status := int(0)
 	if is_ready & ready_read != 0 {
 		status |= file.pollin
@@ -256,8 +256,8 @@ fn (mut this InetSocket) refresh_status() {
 	if is_ready & ready_hangup != 0 {
 		status |= file.pollhup
 	}
-	pending := C.vinix_socket_pending(this.handle)
-	available := C.vinix_socket_available(this.handle)
+	pending := C.tulpar_socket_pending(this.handle)
+	available := C.tulpar_socket_available(this.handle)
 	if status != this.status || pending != this.last_pending || available != this.last_available {
 		this.last_pending = pending
 		this.last_available = available
@@ -291,8 +291,8 @@ pub fn poll() {
 		// Somebody is inside the stack. It will be polled on the next tick.
 		return
 	}
-	C.vinix_net_poll(now_ms)
-	has_configuration := C.vinix_net_config(&address, &netmask, &gateway, &dns[0]) != 0
+	C.tulpar_net_poll(now_ms)
+	has_configuration := C.tulpar_net_config(&address, &netmask, &gateway, &dns[0]) != 0
 	refresh_registered_sockets()
 	net_lock.release()
 
@@ -351,7 +351,7 @@ fn is_cmdline_space(c u8) bool {
 	return c == ` ` || c == `\t` || c == `\r` || c == `\n`
 }
 
-// `vinix.nameservers=A.B.C.D[,A.B.C.D]` on the command line names resolvers to
+// `tulpar.nameservers=A.B.C.D[,A.B.C.D]` on the command line names resolvers to
 // list after DHCP's. QEMU's user network answers DNS at 10.0.2.3 by asking
 // only the first resolver the host has; when that one does not answer -- one
 // set by hand for another network -- the guest resolved nothing while the
@@ -362,7 +362,7 @@ fn read_extra_nameservers() {
 		return
 	}
 	text := unsafe { &u8(kernel_file.cmdline) }
-	key := 'vinix.nameservers='
+	key := 'tulpar.nameservers='
 	mut index := 0
 	for unsafe { text[index] } != 0 {
 		if is_cmdline_space(unsafe { text[index] }) {
@@ -454,7 +454,7 @@ pub fn publish_resolver() {
 
 pub fn attach(mac &[6]u8, driver int) bool {
 	net_lock.acquire()
-	ret := unsafe { C.vinix_net_attach(&mac[0], driver) }
+	ret := unsafe { C.tulpar_net_attach(&mac[0], driver) }
 	if ret == 0 {
 		network_ready = false
 		last_address = 0
@@ -467,7 +467,7 @@ pub fn attach(mac &[6]u8, driver int) bool {
 
 pub fn attach_if_idle(mac &[6]u8, driver int) bool {
 	net_lock.acquire()
-	ret := if C.vinix_net_owner() == driver_none { unsafe { C.vinix_net_attach(&mac[0], driver) } } else { -16 }
+	ret := if C.tulpar_net_owner() == driver_none { unsafe { C.tulpar_net_attach(&mac[0], driver) } } else { -16 }
 	if ret == 0 { network_ready = false; last_address = 0; resolver_published = false; pending_resolver = '' }
 	net_lock.release()
 	return ret == 0
@@ -476,20 +476,20 @@ pub fn attach_if_idle(mac &[6]u8, driver int) bool {
 // Drivers call this outside send(), which already runs under net_lock.
 pub fn set_link(driver int, up bool) {
 	net_lock.acquire()
-	C.vinix_net_set_link(driver, if up { 1 } else { 0 })
+	C.tulpar_net_set_link(driver, if up { 1 } else { 0 })
 	net_lock.release()
 }
 
 pub fn carrier() bool {
 	net_lock.acquire()
-	up := C.vinix_net_carrier() != 0
+	up := C.tulpar_net_carrier() != 0
 	net_lock.release()
 	return up
 }
 
 pub fn detach() {
 	net_lock.acquire()
-	C.vinix_net_detach()
+	C.tulpar_net_detach()
 	net_lock.release()
 	network_ready = false
 	last_address = 0
@@ -499,7 +499,7 @@ pub fn detach() {
 
 pub fn owner() int {
 	net_lock.acquire()
-	driver := C.vinix_net_owner()
+	driver := C.tulpar_net_owner()
 	net_lock.release()
 	return driver
 }
@@ -507,8 +507,8 @@ pub fn owner() int {
 // Ownership and detach are checked under the same lock as attach.
 pub fn detach_owned(driver int) {
 	net_lock.acquire()
-	if C.vinix_net_owner() == driver {
-		C.vinix_net_detach()
+	if C.tulpar_net_owner() == driver {
+		C.tulpar_net_detach()
 		network_ready = false
 		last_address = 0
 		resolver_published = false
@@ -519,21 +519,21 @@ pub fn detach_owned(driver int) {
 
 pub fn receive_owned(driver int, frame voidptr, length u64) bool {
 	net_lock.acquire()
-	ret := if C.vinix_net_owner() == driver { C.vinix_net_input(frame, uint(length)) } else { -19 }
+	ret := if C.tulpar_net_owner() == driver { C.tulpar_net_input(frame, uint(length)) } else { -19 }
 	net_lock.release()
 	return ret == 0
 }
 
 pub fn receive(frame voidptr, length u64) bool {
 	net_lock.acquire()
-	ret := C.vinix_net_input(frame, length)
+	ret := C.tulpar_net_input(frame, length)
 	net_lock.release()
 	return ret == 0
 }
 
 pub fn configuration(address &u32, netmask &u32, gateway &u32, dns &[3]u32) bool {
 	net_lock.acquire()
-	ret := unsafe { C.vinix_net_config(address, netmask, gateway, &dns[0]) }
+	ret := unsafe { C.tulpar_net_config(address, netmask, gateway, &dns[0]) }
 	net_lock.release()
 	return ret != 0
 }
@@ -542,7 +542,7 @@ pub fn configuration(address &u32, netmask &u32, gateway &u32, dns &[3]u32) bool
 // attached one.
 pub fn link_info(mac &[6]u8, mtu &u32) bool {
 	net_lock.acquire()
-	ret := C.vinix_net_link(&mac[0], mtu)
+	ret := C.tulpar_net_link(&mac[0], mtu)
 	net_lock.release()
 	return ret != 0
 }
@@ -555,13 +555,13 @@ fn set_error(code int) {
 	}
 }
 
-fn new_with_handle(handle &C.vinix_socket, socktype int, protocol int, family int) ?&InetSocket {
+fn new_with_handle(handle &C.tulpar_socket, socktype int, protocol int, family int) ?&InetSocket {
 	if handle == unsafe { nil } {
 		errno.set(errno.enomem)
 		return none
 	}
 	charge := proc.reserve_kernel(.socket, 128 * 1024) or {
-		net_lock.acquire(); C.vinix_socket_free(handle); net_lock.release()
+		net_lock.acquire(); C.tulpar_socket_free(handle); net_lock.release()
 		return none
 	}
 	// The descriptor made from it holds the only reference, so closing the
@@ -580,7 +580,7 @@ fn new_with_handle(handle &C.vinix_socket, socktype int, protocol int, family in
 	socket.stat.mode = stat.ifsock | 0o777
 	if !register(mut socket) {
 		net_lock.acquire()
-		C.vinix_socket_free(handle)
+		C.tulpar_socket_free(handle)
 		net_lock.release()
 		kbudget.release(charge)
 		unsafe { free(socket) }
@@ -639,7 +639,7 @@ pub fn create_family(@type int, protocol int, family int) ?&InetSocket {
 		17
 	}
 	net_lock.acquire()
-	handle := C.vinix_socket_new_family(socktype, actual_protocol, family)
+	handle := C.tulpar_socket_new_family(socktype, actual_protocol, family)
 	net_lock.release()
 	return new_with_handle(handle, socktype, actual_protocol, family)
 }
@@ -732,7 +732,7 @@ fn (mut this InetSocket) read(handle voidptr, buf voidptr, _loc u64, count u64) 
 	deadline := deadline_after(this.recv_timeout_ns)
 	for {
 		net_lock.acquire()
-		ret := C.vinix_socket_recv(this.handle, buf, count, unsafe { nil }, unsafe { nil })
+		ret := C.tulpar_socket_recv(this.handle, buf, count, unsafe { nil }, unsafe { nil })
 		this.refresh_status()
 		net_lock.release()
 		if ret >= 0 {
@@ -760,7 +760,7 @@ fn (mut this InetSocket) write(handle voidptr, buf voidptr, _loc u64, count u64)
 	deadline := deadline_after(this.send_timeout_ns)
 	for {
 		net_lock.acquire()
-		ret := C.vinix_socket_send(this.handle, buf, count, 0, 0, 0)
+		ret := C.tulpar_socket_send(this.handle, buf, count, 0, 0, 0)
 		refresh_registered_sockets()
 		net_lock.release()
 		if ret >= 0 {
@@ -781,7 +781,7 @@ fn (mut this InetSocket) write(handle voidptr, buf voidptr, _loc u64, count u64)
 pub fn (mut this InetSocket) sendto(handle voidptr, buf voidptr, count u64, _addr voidptr, addrlen u32) ?i64 {
 	this.check_raw_pledge()?
 	open_handle := unsafe { &file.Handle(handle) }
-	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
+	mut endpoint := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
 	mut has_address := 0
 	if _addr != unsafe { nil } {
 		fill_endpoint(_addr, addrlen, this.family, mut endpoint)?
@@ -794,7 +794,7 @@ pub fn (mut this InetSocket) sendto(handle voidptr, buf voidptr, count u64, _add
 	deadline := deadline_after(this.send_timeout_ns)
 	for {
 		net_lock.acquire()
-		ret := C.vinix_socket_send_endpoint(this.handle, buf, count, endpoint, has_address)
+		ret := C.tulpar_socket_send_endpoint(this.handle, buf, count, endpoint, has_address)
 		refresh_registered_sockets()
 		net_lock.release()
 		if ret >= 0 {
@@ -821,7 +821,7 @@ pub fn (mut this InetSocket) recvfrom_flags(handle voidptr, buf voidptr, count u
 	open_handle := unsafe { &file.Handle(handle) }
 	this.l.acquire()
 	defer { this.l.release() }
-	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
+	mut endpoint := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
 	deadline := deadline_after(this.recv_timeout_ns)
 	peek := flags & 2 != 0
 	waitall := this.socktype == sock_pub.sock_stream && flags & 0x100 != 0 && open_handle.flags & resource.o_nonblock == 0
@@ -830,10 +830,10 @@ pub fn (mut this InetSocket) recvfrom_flags(handle voidptr, buf voidptr, count u
 		net_lock.acquire()
 		// A wait-all peek must not repeat the same packet into successive slots.
 		// Wait for the requested prefix or EOF, then copy without consuming it.
-		available := C.vinix_socket_available(this.handle)
+		available := C.tulpar_socket_available(this.handle)
 		mut ret := i32(-int(errno.eagain))
 		if !peek || !waitall || available >= i32(count) || available == 0 || this.status & file.pollhup != 0 {
-			ret = C.vinix_socket_recv_endpoint_flags(this.handle, unsafe { voidptr(u64(buf) + done) }, count - done, endpoint, flags)
+			ret = C.tulpar_socket_recv_endpoint_flags(this.handle, unsafe { voidptr(u64(buf) + done) }, count - done, endpoint, flags)
 		}
 		this.refresh_status()
 		generation := event.generation(mut this.event)
@@ -859,7 +859,7 @@ pub fn (mut this InetSocket) recvfrom_flags(handle voidptr, buf voidptr, count u
 }
 
 fn (mut this InetSocket) bind(_handle voidptr, _addr voidptr, addrlen u32) ? {
-	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
+	mut endpoint := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
 	fill_endpoint(_addr, addrlen, this.family, mut endpoint)?
 	// Ports below 1024 are the system's: a service on one of them is taken
 	// for the machine's own. Only CAP_NET_BIND_SERVICE binds them, as on
@@ -872,7 +872,7 @@ fn (mut this InetSocket) bind(_handle voidptr, _addr voidptr, addrlen u32) ? {
 		return none
 	}
 	net_lock.acquire()
-	ret := C.vinix_socket_bind_endpoint(this.handle, endpoint)
+	ret := C.tulpar_socket_bind_endpoint(this.handle, endpoint)
 	this.refresh_status()
 	net_lock.release()
 	if ret != 0 {
@@ -883,7 +883,7 @@ fn (mut this InetSocket) bind(_handle voidptr, _addr voidptr, addrlen u32) ? {
 
 fn (mut this InetSocket) connect(handle voidptr, _addr voidptr, addrlen u32) ? {
 	this.check_raw_pledge()?
-	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
+	mut endpoint := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
 	fill_endpoint(_addr, addrlen, this.family, mut endpoint)?
 	open_handle := unsafe { &file.Handle(handle) }
 	this.l.acquire()
@@ -891,7 +891,7 @@ fn (mut this InetSocket) connect(handle voidptr, _addr voidptr, addrlen u32) ? {
 		this.l.release()
 	}
 	net_lock.acquire()
-	ret := C.vinix_socket_connect_endpoint(this.handle, endpoint)
+	ret := C.tulpar_socket_connect_endpoint(this.handle, endpoint)
 	refresh_registered_sockets()
 	net_lock.release()
 	if ret == 0 {
@@ -916,7 +916,7 @@ fn (mut this InetSocket) connect(handle voidptr, _addr voidptr, addrlen u32) ? {
 			return none
 		}
 		net_lock.acquire()
-		error_code := C.vinix_socket_error(this.handle, 0)
+		error_code := C.tulpar_socket_error(this.handle, 0)
 		this.refresh_status()
 		connected := this.status & file.pollout != 0
 		net_lock.release()
@@ -932,7 +932,7 @@ fn (mut this InetSocket) connect(handle voidptr, _addr voidptr, addrlen u32) ? {
 
 fn (mut this InetSocket) listen(_handle voidptr, backlog int) ? {
 	net_lock.acquire()
-	ret := C.vinix_socket_listen(this.handle, backlog)
+	ret := C.tulpar_socket_listen(this.handle, backlog)
 	this.refresh_status()
 	net_lock.release()
 	if ret != 0 {
@@ -955,7 +955,7 @@ fn (mut this InetSocket) accept(handle voidptr) ?&resource.Resource {
 	deadline := deadline_after(this.recv_timeout_ns)
 	for {
 		net_lock.acquire()
-		child_handle := C.vinix_socket_accept(this.handle)
+		child_handle := C.tulpar_socket_accept(this.handle)
 		this.refresh_status()
 		net_lock.release()
 		if child_handle != unsafe { nil } {
@@ -984,9 +984,9 @@ fn socket_name(mut this InetSocket, peer bool, _addr voidptr, addrlen &u32) ? {
 		errno.set(errno.efault)
 		return none
 	}
-	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
+	mut endpoint := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
 	net_lock.acquire()
-	ret := C.vinix_socket_name_endpoint(this.handle, endpoint, if peer { 1 } else { 0 })
+	ret := C.tulpar_socket_name_endpoint(this.handle, endpoint, if peer { 1 } else { 0 })
 	net_lock.release()
 	if ret != 0 {
 		set_error(ret)
@@ -1005,7 +1005,7 @@ fn (mut this InetSocket) sockname(_handle voidptr, _addr voidptr, addrlen &u32) 
 
 fn (mut this InetSocket) shutdown(_handle voidptr, how int) ? {
 	net_lock.acquire()
-	ret := C.vinix_socket_shutdown(this.handle, how)
+	ret := C.tulpar_socket_shutdown(this.handle, how)
 	this.refresh_status()
 	net_lock.release()
 	if ret != 0 {
@@ -1064,7 +1064,7 @@ fn (mut this InetSocket) getsockopt(_handle voidptr, level int, optname int) ?in
 			sock_pub.so_type { return this.socktype }
 			sock_pub.so_error {
 				net_lock.acquire()
-				value := C.vinix_socket_error(this.handle, 1)
+				value := C.tulpar_socket_error(this.handle, 1)
 				this.refresh_status()
 				net_lock.release()
 				return value
@@ -1078,7 +1078,7 @@ fn (mut this InetSocket) getsockopt(_handle voidptr, level int, optname int) ?in
 		&& (optname == ipv6_v6only || optname == ipv6_unicast_hops) {
 		mut value := i32(0)
 		net_lock.acquire()
-		ret := C.vinix_socket_get_option(this.handle, level, optname, unsafe { &value })
+		ret := C.tulpar_socket_get_option(this.handle, level, optname, unsafe { &value })
 		net_lock.release()
 		if ret == 0 { return int(value) }
 		set_error(ret)
@@ -1088,7 +1088,7 @@ fn (mut this InetSocket) getsockopt(_handle voidptr, level int, optname int) ?in
 	}
 	mut value := i32(0)
 	net_lock.acquire()
-	ret := C.vinix_socket_get_option(this.handle, level, optname, &value)
+	ret := C.tulpar_socket_get_option(this.handle, level, optname, &value)
 	net_lock.release()
 	if ret != 0 {
 		set_error(ret)
@@ -1105,7 +1105,7 @@ fn (mut this InetSocket) setsockopt(_handle voidptr, level int, optname int, val
 		return
 	}
 	net_lock.acquire()
-	ret := C.vinix_socket_set_option(this.handle, level, optname, value)
+	ret := C.tulpar_socket_set_option(this.handle, level, optname, value)
 	this.refresh_status()
 	net_lock.release()
 	if ret != 0 {
@@ -1121,7 +1121,7 @@ fn (mut this InetSocket) ioctl(handle voidptr, request u64, argp voidptr) ?int {
 			return none
 		}
 		net_lock.acquire()
-		value := C.vinix_socket_available(this.handle)
+		value := C.tulpar_socket_available(this.handle)
 		net_lock.release()
 		queued := i32(value)
 		if !usercopy.copy_to_user(u64(argp), voidptr(&queued), sizeof(i32)) {
@@ -1150,18 +1150,18 @@ fn (mut this InetSocket) unref(_handle voidptr) ? {
 		deadline := deadline_after(u64(this.linger_seconds) * 1000000000)
 		for {
 			net_lock.acquire()
-			pending := C.vinix_socket_pending(this.handle)
+			pending := C.tulpar_socket_pending(this.handle)
 			net_lock.release()
 			if this.linger_seconds == 0 || (pending != 0 && time.monotonic_ns() >= deadline) {
 				net_lock.acquire()
-				C.vinix_socket_abort_close(this.handle)
+				C.tulpar_socket_abort_close(this.handle)
 				net_lock.release()
 				break
 			}
 			if pending == 0 { break }
 			if !wait_for_event(mut this, deadline) {
 				net_lock.acquire()
-				C.vinix_socket_abort_close(this.handle)
+				C.tulpar_socket_abort_close(this.handle)
 				net_lock.release()
 				break
 			}
@@ -1170,7 +1170,7 @@ fn (mut this InetSocket) unref(_handle voidptr) ? {
 	}
 	unregister(this)
 	net_lock.acquire()
-	C.vinix_socket_free(this.handle)
+	C.tulpar_socket_free(this.handle)
 	net_lock.release()
 	kbudget.release(this.kernel_charge)
 	unsafe {

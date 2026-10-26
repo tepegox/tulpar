@@ -5,7 +5,7 @@ module virtio_gpu
 
 // Minimal VirtIO-GPU/VirGL DRM driver for QEMU's ARM `virt` machine.
 //
-// QEMU exposes the device through legacy VirtIO-MMIO so Vinix does not need
+// QEMU exposes the device through legacy VirtIO-MMIO so Tulpar does not need
 // ARM64 PCI ECAM just to use the virtual GPU. Commands are deliberately
 // synchronous: this keeps GEM lifetime and CPU readback ordering exact while
 // still executing every Gallium command on virglrenderer and the host GPU.
@@ -472,7 +472,7 @@ fn ensure_context(mut file VirtioFile) bool {
 		name_length:  5
 		context_init: file.capset_id
 	}
-	name := 'vinix'
+	name := 'tulpar'
 	for i in 0 .. name.len {
 		request.debug_name[i] = name[i]
 	}
@@ -1253,7 +1253,7 @@ pub fn initialise(hhdm u64) bool {
 fn register_driver() bool {
 	mut driver := &drm.DrmDriver{
 		name:            'virtio_gpu'
-		desc:            'Vinix VirtIO-GPU VirGL'
+		desc:            'Tulpar VirtIO-GPU VirGL'
 		major:           0
 		minor:           0
 		patchlevel:      1

@@ -17,7 +17,7 @@ Build the static ARM64 fixture from the repository root:
 
 ```sh
 CC=clang tests/listen-backlog/run --arch aarch64 --build-only \
-  --state-dir /tmp/vinix-listen-backlog-build
+  --state-dir /tmp/tulpar-listen-backlog-build
 ```
 
 The runner uses the native libc declarations in `backlog-native-abi.h` and
@@ -26,7 +26,7 @@ isolated guest with a separately built kernel:
 
 ```sh
 tests/listen-backlog/run --arch aarch64 \
-  --state-dir /tmp/vinix-listen-backlog-build-2 \
+  --state-dir /tmp/tulpar-listen-backlog-build-2 \
   --kernel-dir /path/to/worktree/kernel --guest-state-dir /tmp/vlb-arm
 ```
 

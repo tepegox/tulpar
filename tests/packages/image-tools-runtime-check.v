@@ -23,10 +23,10 @@ fn suite() hwhost.Suite {
 fn qualify() !int {
 	options := hwhost.parse_options(os.args[1..])!; definition := suite()
 	if options.help || options.list { return hwhost.run_suite(definition, os.args[1..], @FILE) }
-	stage := os.getenv('VINIX_IMAGE_TOOLS_STAGE')
+	stage := os.getenv('TULPAR_IMAGE_TOOLS_STAGE')
 	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir) || os.is_link(options.state_dir)
-		|| os.getenv('VINIX_HWTEST_TCG') != '1' || !os.is_executable(stage) {
-		return error('provide VINIX_HWTEST_TCG=1, VINIX_IMAGE_TOOLS_STAGE, --kernel and a new --state-dir')
+		|| os.getenv('TULPAR_HWTEST_TCG') != '1' || !os.is_executable(stage) {
+		return error('provide TULPAR_HWTEST_TCG=1, TULPAR_IMAGE_TOOLS_STAGE, --kernel and a new --state-dir')
 	}
 	repository := hwhost.find_root(@FILE)!; host := hwhost.find_host(repository, options.arch, options.qemu)!
 	selection := hwhost.select_scenarios(definition.scenarios, options.arch, options.scenarios)!
@@ -39,7 +39,7 @@ fn qualify() !int {
 		{'V': host.v, 'VFLAGS': '-nocache'}, work + '/stage.log', 600)!
 	mut artifacts := [artifact('kernel', work + '/kernel')!, artifact('guest-init', guest)!, artifact('host-stage', stage)!,
 		artifact('fixture', root + '/usr/share/package-fixtures/image-tools')!, artifact('stage-log', work + '/stage.log')!]
-	for path in ['usr/bin/vinix-package', 'usr/sbin/vinix-session', 'usr/libexec/vinix/vinix-linux-runner', 'etc/vinix-packages/config.json']! {
+	for path in ['usr/bin/tulpar-package', 'usr/sbin/tulpar-session', 'usr/libexec/tulpar/tulpar-linux-runner', 'etc/tulpar-packages/config.json']! {
 		artifacts << artifact(path, root + '/' + path)!
 	}
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: work + '/kernel', guest: guest, extras: root,

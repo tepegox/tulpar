@@ -14,9 +14,9 @@ struct FfmpegBuilderLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn builder_selected(name string) bool {
@@ -32,20 +32,20 @@ fn builder_descriptors() int {
 }
 
 fn builder_archive() !string {
-	path := os.getenv('VINIX_PROFILE_EXPORT_SOURCE')
+	path := os.getenv('TULPAR_PROFILE_EXPORT_SOURCE')
 	if !os.is_file(path) || os.file_size(path) != ffmpeg_source_bytes || hash_file(path)! != ffmpeg_source_digest {
-		return error('provide VINIX_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive')
+		return error('provide TULPAR_PROFILE_EXPORT_SOURCE with the reviewed FFmpeg 8.0.1 source archive')
 	}
 	return path
 }
 
 fn builder_fixture() !string {
 	archive := builder_archive()!
-	path := os.real_path(os.temp_dir()) + '/vinix-ffmpeg-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	path := os.real_path(os.temp_dir()) + '/tulpar-ffmpeg-owner-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64']! {
 		root := path + '/roots/' + architecture
 		for name in ['bin', 'lib', 'licenses', 'sources']! { os.mkdir_all(root + '/' + name)! }
-		for name in ['bin/ffmpeg', 'bin/ffprobe', 'bin/vinix-linux-runner', 'lib/libc.so', ...ffmpeg_libraries] {
+		for name in ['bin/ffmpeg', 'bin/ffprobe', 'bin/tulpar-linux-runner', 'lib/libc.so', ...ffmpeg_libraries] {
 			os.write_file_array(root + '/' + name, elffixture.image(architecture, ffmpeg_elf_kind(name)))!; os.chmod(root + '/' + name, 0o755)!
 		}
 		for name in ffmpeg_notices { os.write_file(root + '/' + name, name)! }
@@ -74,24 +74,24 @@ fn builder_corrupt_source(path string) ! {
 }
 
 fn builder_checkpoint(phase string, stage string) ! {
-	mode := os.getenv('VINIX_FFMPEG_OWNER_MODE'); defer { unsafe { mode.free() } }
-	if phase == 'created' { assert C.setenv(c'VINIX_FFMPEG_OWNER_STAGE', stage.str, 1) == 0 }
+	mode := os.getenv('TULPAR_FFMPEG_OWNER_MODE'); defer { unsafe { mode.free() } }
+	if phase == 'created' { assert C.setenv(c'TULPAR_FFMPEG_OWNER_STAGE', stage.str, 1) == 0 }
 	if mode == phase { return error('injected FFmpeg builder checkpoint refusal') }
 	if mode.starts_with('packed-') && phase == 'packed' {
 		index := int(mode[7] - `1`)
-		ids := ['org.ffmpeg.cli-aarch64', 'org.ffmpeg.probe-aarch64', 'org.vinix.ffmpeg-runtime-aarch64', 'org.ffmpeg.cli-x86_64', 'org.ffmpeg.probe-x86_64', 'org.vinix.ffmpeg-runtime-x86_64']!
+		ids := ['org.ffmpeg.cli-aarch64', 'org.ffmpeg.probe-aarch64', 'org.tulpar.ffmpeg-runtime-aarch64', 'org.ffmpeg.cli-x86_64', 'org.ffmpeg.probe-x86_64', 'org.tulpar.ffmpeg-runtime-x86_64']!
 		version := if index % 3 == 2 { '1.0.0' } else { '8.0.1' }
 		path := stage + '/inventory/manifests/' + ids[index] + '-' + version + '.json'; defer { unsafe { path.free() } }
 		if publisher_entry_exists(path) { return error('injected FFmpeg builder checkpoint refusal') }
 	}
 	if phase == 'created' && mode in ['root-replaced', 'inventory-replaced', 'lock-replaced']! {
-		saved := os.getenv('VINIX_FFMPEG_OWNER_SAVED'); defer { unsafe { saved.free() } }
+		saved := os.getenv('TULPAR_FFMPEG_OWNER_SAVED'); defer { unsafe { saved.free() } }
 		child := if mode == 'inventory-replaced' { 'inventory' } else { 'lock' }
 		path := if mode == 'root-replaced' { stage.clone() } else { stage + '/' + child }
 		defer { unsafe { path.free() } }; builder_replace(path, saved)!
 	}
 	if phase == 'created' && mode.starts_with('import-') {
-		roots := os.getenv('VINIX_FFMPEG_OWNER_ROOTS'); defer { unsafe { roots.free() } }
+		roots := os.getenv('TULPAR_FFMPEG_OWNER_ROOTS'); defer { unsafe { roots.free() } }
 		child := if mode == 'import-elf' { 'bin/ffmpeg' } else if mode == 'import-source' { 'sources/ffmpeg.tar.xz' } else { 'licenses/ffmpeg-COPYING.LGPLv2.1' }
 		path := roots + '/x86_64/' + child
 		defer { unsafe { path.free() } }
@@ -107,13 +107,13 @@ fn builder_checkpoint(phase string, stage string) ! {
 		path := stage + '/lock/catalog.json'; defer { unsafe { path.free() } }; builder_write(path, '{}')!
 	}
 	if phase == 'ready' && mode == 'raced-target' {
-		path := os.getenv('VINIX_FFMPEG_OWNER_TARGET'); defer { unsafe { path.free() } }; assert C.mkdir(path.str, 0o700) == 0
+		path := os.getenv('TULPAR_FFMPEG_OWNER_TARGET'); defer { unsafe { path.free() } }; assert C.mkdir(path.str, 0o700) == 0
 		keep := path + '/keep'; defer { unsafe { keep.free() } }; builder_write(keep, 'preserved replacement')!
 	}
 }
 
 fn builder_space(path string) !u64 {
-	mode := os.getenv('VINIX_FFMPEG_OWNER_MODE'); parent := os.getenv('VINIX_FFMPEG_OWNER_PARENT')
+	mode := os.getenv('TULPAR_FFMPEG_OWNER_MODE'); parent := os.getenv('TULPAR_FFMPEG_OWNER_PARENT')
 	defer { unsafe { mode.free(); parent.free() } }
 	if mode == 'space-error' { return error('injected FFmpeg space query refusal') }
 	if (mode == 'no-output-space' && path == parent) || (mode == 'no-temp-space' && path != parent) { return 0 }
@@ -121,10 +121,10 @@ fn builder_space(path string) !u64 {
 }
 
 fn builder_flush(fd int) int {
-	mode := os.getenv('VINIX_FFMPEG_OWNER_MODE'); defer { unsafe { mode.free() } }
+	mode := os.getenv('TULPAR_FFMPEG_OWNER_MODE'); defer { unsafe { mode.free() } }
 	if mode == 'flush' { return -1 }
 	if mode == 'cleanup' {
-		stage := os.getenv('VINIX_FFMPEG_OWNER_STAGE'); saved := os.getenv('VINIX_FFMPEG_OWNER_SAVED')
+		stage := os.getenv('TULPAR_FFMPEG_OWNER_STAGE'); saved := os.getenv('TULPAR_FFMPEG_OWNER_SAVED')
 		path := stage + '/inventory'; defer { unsafe { stage.free(); saved.free(); path.free() } }
 		builder_replace(path, saved) or { panic(err) }
 	}
@@ -137,7 +137,7 @@ fn builder_remove(path string) ! {
 
 fn builder_reset(fixture string, target string) ! {
 	builder_remove(target)!; builder_remove(fixture + '/saved')!
-	for name in os.ls(fixture)! { if name.starts_with('.vinix-ffmpeg-profile-') { os.rmdir_all(fixture + '/' + name)! } }
+	for name in os.ls(fixture)! { if name.starts_with('.tulpar-ffmpeg-profile-') { os.rmdir_all(fixture + '/' + name)! } }
 }
 
 fn builder_prepare(mode string, fixture string) ! {
@@ -195,7 +195,7 @@ fn builder_attempt(mode string, roots string, target string) {
 }
 
 fn test_complete_ffmpeg_builder_retires_success_partial_import_and_publication_refusal_storage() {
-	defer { for key in ['MODE', 'ROOTS', 'TARGET', 'PARENT', 'STAGE', 'SAVED']! { os.unsetenv('VINIX_FFMPEG_OWNER_' + key) } }
+	defer { for key in ['MODE', 'ROOTS', 'TARGET', 'PARENT', 'STAGE', 'SAVED']! { os.unsetenv('TULPAR_FFMPEG_OWNER_' + key) } }
 	for mode in ['complete', 'nested', 'closure-needed', 'version', 'runtime-range', 'missing-root', 'missing-architecture', 'wrong-target', 'wrong-mode',
 		'missing-notice', 'empty-notice', 'notice-directory', 'missing-source', 'source-size', 'source-executable', 'source-pin', 'import-source',
 		'no-output-space', 'no-temp-space', 'space-error', 'created',
@@ -206,9 +206,9 @@ fn test_complete_ffmpeg_builder_retires_success_partial_import_and_publication_r
 		roots := fixture + '/roots'; target := fixture + if mode == 'nested' { '/new/parent/lock' } else { '/lock' }
 		// Initialize JSON metadata outside the complete-call measurement.
 		mut warm := ffmpeg_catalog('1.0.0', roots, target)!; $if !ffmpeg_owner_baseline ? { warm.close(); warm.close() }; builder_remove(target)!
-		os.setenv('VINIX_FFMPEG_OWNER_MODE', mode, true); os.setenv('VINIX_FFMPEG_OWNER_ROOTS', roots, true)
-		os.setenv('VINIX_FFMPEG_OWNER_TARGET', target, true); os.setenv('VINIX_FFMPEG_OWNER_PARENT', os.dir(target), true)
-		os.setenv('VINIX_FFMPEG_OWNER_SAVED', fixture + '/saved', true); builder_prepare(mode, fixture)!
+		os.setenv('TULPAR_FFMPEG_OWNER_MODE', mode, true); os.setenv('TULPAR_FFMPEG_OWNER_ROOTS', roots, true)
+		os.setenv('TULPAR_FFMPEG_OWNER_TARGET', target, true); os.setenv('TULPAR_FFMPEG_OWNER_PARENT', os.dir(target), true)
+		os.setenv('TULPAR_FFMPEG_OWNER_SAVED', fixture + '/saved', true); builder_prepare(mode, fixture)!
 		mut original := FfmpegBuilderLimit{}; assert C.getrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		limit := FfmpegBuilderLimit{ current: 32, maximum: original.maximum }; assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 		before := builder_descriptors(); mut maximum := u64(0); mut records := u32(0)
@@ -217,10 +217,10 @@ fn test_complete_ffmpeg_builder_retires_success_partial_import_and_publication_r
 			if mode == 'nested' { builder_remove(fixture + '/new')! }
 			if mode == 'occupied' { os.write_file(target, 'preserved replacement')! }
 			if mode.starts_with('import-') { builder_restore(fixture)! }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			builder_attempt(mode, roots, target)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if count > records { records = count }
 			}
 			assert builder_descriptors() == before
@@ -230,21 +230,21 @@ fn test_complete_ffmpeg_builder_retires_success_partial_import_and_publication_r
 			if mode == 'occupied' { assert os.read_file(target)! == 'preserved replacement' }
 			if mode == 'raced-target' { assert os.read_file(target + '/keep')! == 'preserved replacement' }
 			if mode in ['cleanup', 'root-replaced', 'inventory-replaced', 'lock-replaced']! {
-				stage := os.getenv('VINIX_FFMPEG_OWNER_STAGE'); saved := fixture + '/saved'; assert os.is_dir(saved)
+				stage := os.getenv('TULPAR_FFMPEG_OWNER_STAGE'); saved := fixture + '/saved'; assert os.is_dir(saved)
 				path := if mode == 'root-replaced' { stage.clone() } else { stage + '/' + if mode == 'lock-replaced' { 'lock' } else { 'inventory' } }
 				assert os.read_file(path + '/keep')! == 'preserved replacement'
-			} else { assert os.ls(fixture)!.all(!it.starts_with('.vinix-ffmpeg-profile-')) }
+			} else { assert os.ls(fixture)!.all(!it.starts_with('.tulpar-ffmpeg-profile-')) }
 		}
 		assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		$if track_heap ? {
 			println('FFMPEG OWNER case=' + mode + ' retained=' + maximum.str() + ' allocations=' + records.str())
 			$if !ffmpeg_owner_baseline ? { assert maximum == 0 && records == 0 }
 		}
-		builder_reset(fixture, target)!; builder_restore(fixture)!; os.unsetenv('VINIX_FFMPEG_OWNER_MODE')
+		builder_reset(fixture, target)!; builder_restore(fixture)!; os.unsetenv('TULPAR_FFMPEG_OWNER_MODE')
 		mut retried := ffmpeg_catalog('1.0.0', roots, target)!; $if !ffmpeg_owner_baseline ? { retried.close(); retried.close() }
 		assert index_digest(os.read_file(target + '/catalog.json')!) == '52e1ce43f7e52205655ea33fde374a623df23063dcd1a6275a785be61416b2f8'
 		assert os.read_file(roots + '/aarch64/licenses/ffmpeg-COPYING.LGPLv2.1')! == 'licenses/ffmpeg-COPYING.LGPLv2.1'
-		assert os.read_bytes(roots + '/aarch64/bin/vinix-linux-runner')! == elffixture.image('aarch64', 'static')
+		assert os.read_bytes(roots + '/aarch64/bin/tulpar-linux-runner')! == elffixture.image('aarch64', 'static')
 		println('FFMPEG OWNER ' + mode + ' canonical retry, saved output, source and descriptor preservation PASS')
 	}
 }

@@ -3,7 +3,7 @@ module planguest
 
 fn enrollment_plans(path &char, first &char, second &char, preview bool, expected i32, output &char) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'),
+		args := [&char(c'/usr/sbin/tulpar-volume'),
 			if preview { &char(c'plan-preview-enroll-batch') } else { &char(c'plan-enroll-batch') },
 			path, first, second, &char(nil)]!
 		if output == nil { run_utility(&args[0], expected); return }
@@ -51,9 +51,9 @@ fn planned_enrollment_batch(parent &char, other &char) {
 		size := C.read(fd, &original[0], 8768)
 		check(fd >= 0 && size == 432 && C.close(fd) == 0, c'enrollment batch baseline')
 		copy_plan(c'/root/saved.vset', c'/root/enrollment-baseline.vset')
-		first := status(c'/dev/mapper/vinix12').generation
-		second := status(c'/dev/mapper/vinix9').generation
-		held := C.open(c'/dev/mapper/vinix12', C.O_RDONLY)
+		first := status(c'/dev/mapper/tulpar12').generation
+		second := status(c'/dev/mapper/tulpar9').generation
+		held := C.open(c'/dev/mapper/tulpar12', C.O_RDONLY)
 		check(held >= 0, c'hold view across batch enrollment')
 		mut output := [4096]char{}
 		for preview in [false, true]! {
@@ -96,7 +96,7 @@ fn planned_enrollment_batch(parent &char, other &char) {
 		check(contains(&output[0], c'request=0 disk=1 action=keep mappings=2') && contains(&output[0], c'request=1 disk=0 action=keep mappings=3'), c'reverse existing identities retain disk indices')
 		enrollment_plans(c'/root/saved.vset', c'/root/enroll-other.vmap', c'/root/enroll-primary.vmap', false, 0, nil)
 		bundle_unchanged(c'/root/saved.vset', &original[0], size)
-		check(status(c'/dev/mapper/vinix12').generation == first && status(c'/dev/mapper/vinix9').generation == second, c'enrollment preserves live generations')
+		check(status(c'/dev/mapper/tulpar12').generation == first && status(c'/dev/mapper/tulpar9').generation == second, c'enrollment preserves live generations')
 		mut bytes := [4096]u8{}
 		check(C.pread(held, &bytes[0], 4096, 0) == 4096 && C.close(held) == 0, c'held enrollment view readable')
 		for byte in bytes { check(byte == 0xe7, c'enrollment preserves disk data') }
@@ -110,7 +110,7 @@ fn enrollment_boot_prepare(parent &char, other &char) {
 	mut original := [8768]u8{}
 	size := C.read(fd, &original[0], 8768)
 	check(fd >= 0 && size == 536 && C.close(fd) == 0, c'boot enrollment baseline')
-	second := status(c'/dev/mapper/vinix9').generation
+	second := status(c'/dev/mapper/tulpar9').generation
 	simple(c'save', parent, c'/root/enroll-primary.vmap', 0)
 	simple(c'save', other, c'/root/enroll-other.vmap', 0)
 	tool(c'pool-remove', c'/root/saved.vset', c'4', c'0', unsafe { nil }, 0)
@@ -123,20 +123,20 @@ fn enrollment_boot_prepare(parent &char, other &char) {
 	pool_order(c'/root/saved.vset', c'3', c'1', c'0', false, 0, unsafe { nil })
 	pool_members_batch(c'/root/saved.vset', c'4', c'0', c'16777216', c'25165824', unsafe { nil }, unsafe { nil }, unsafe { nil }, false, false, 0, unsafe { nil })
 	bundle_unchanged(c'/root/saved.vset', &original[0], size)
-	check(status(c'/dev/mapper/vinix9').generation == second, c'boot reenrollment retains live generation')
+	check(status(c'/dev/mapper/tulpar9').generation == second, c'boot reenrollment retains live generation')
 	C.printf(c'PLAN ENROLLMENT BATCH SAVED: real physical member reimported with matching primary before boot replay\n')
 }
 
 fn enrollment_boot_check() {
-	fd := C.open(c'/etc/vinix/volumes.vset', C.O_RDONLY)
+	fd := C.open(c'/etc/tulpar/volumes.vset', C.O_RDONLY)
 	mut original := [8768]u8{}
 	size := C.read(fd, &original[0], 8768)
 	check(fd >= 0 && size == 536 && C.close(fd) == 0, c'persistent enrollment bundle')
 	mut output := [4096]char{}
-	enrollment_plans(c'/etc/vinix/volumes.vset', c'/root/enroll-other.vmap', c'/root/enroll-primary.vmap', true, 0, &output[0])
+	enrollment_plans(c'/etc/tulpar/volumes.vset', c'/root/enroll-other.vmap', c'/root/enroll-primary.vmap', true, 0, &output[0])
 	check(contains(&output[0], c'request=0 disk=1 action=keep mappings=2 bytes=16777216')
 		&& contains(&output[0], c'request=1 disk=0 action=keep mappings=5 bytes=25165824'), c'enrollment disk indices/rows survive reboot')
-	enrollment_plans(c'/etc/vinix/volumes.vset', c'/root/enroll-other.vmap', c'/root/enroll-primary.vmap', false, 0, unsafe { nil })
-	bundle_unchanged(c'/etc/vinix/volumes.vset', &original[0], size)
+	enrollment_plans(c'/etc/tulpar/volumes.vset', c'/root/enroll-other.vmap', c'/root/enroll-primary.vmap', false, 0, unsafe { nil })
+	bundle_unchanged(c'/etc/tulpar/volumes.vset', &original[0], size)
 	C.printf(c'PLAN ENROLLMENT BATCH BOOT PRESERVED\n')
 }

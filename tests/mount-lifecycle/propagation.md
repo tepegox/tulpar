@@ -14,10 +14,10 @@ That stable version checks that a propagation target remains mounted and
 requires administrative authority in its namespace's user namespace. It permits
 an active foreign root when that authority exists. The reference probe uses
 the initial privileged account; per-user-namespace propagation authorization
-remains unqualified in Vinix. The existing mount capability and policy gates
+remains unqualified in Tulpar. The existing mount capability and policy gates
 run before the new validation, including for malformed requests.
 
-Vinix still accepts valid propagation requests without implementing their
+Tulpar still accepts valid propagation requests without implementing their
 propagation effects. Its namespace override/fall-through arrangement remains
 unchanged. This change qualifies request validation and dispatch, not shared
 peer groups, recursive mode changes, private isolation or OCI runtime support.

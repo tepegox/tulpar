@@ -9,7 +9,7 @@ import time
 fn dispatch() ! {
 	args := os.args[1..]
 	if args.len == 0 || args == ['--help'] {
-		println('Usage: vinix-jobs init PLAN.json FRESH-STATE | run-due|watch|status|service-unit STATE | acknowledge-interrupted STATE JOB')
+		println('Usage: tulpar-jobs init PLAN.json FRESH-STATE | run-due|watch|status|service-unit STATE | acknowledge-interrupted STATE JOB')
 		return
 	}
 	if args.len == 3 && args[0] == 'init' {

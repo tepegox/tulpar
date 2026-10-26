@@ -12,7 +12,7 @@ fn C.reboot(int) int
 fn C.usleep(u32) int
 
 fn check() ! {
-	os.setenv('VINIX_LAUNCH_SERVICE_GUEST', '1', true)
+	os.setenv('TULPAR_LAUNCH_SERVICE_GUEST', '1', true)
 	for name in ['launch-service', 'coordination', 'state-schema', 'session', 'command']! {
 		mut child := os.new_process('/usr/share/package-fixtures/' + name)
 		child.set_redirect_stdio_merged(); child.run()

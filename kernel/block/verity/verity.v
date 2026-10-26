@@ -14,7 +14,7 @@ import resource
 import stat
 
 __global (
-	boot_geometry C.vinix_verity
+	boot_geometry C.tulpar_verity
 	boot_device [128]u8
 	boot_selection int
 	boot_parsed bool
@@ -46,7 +46,7 @@ pub mut:
 	status int
 	can_mmap bool
 	backing &resource.Resource = unsafe { nil }
-	geometry C.vinix_verity
+	geometry C.tulpar_verity
 	data_physical voidptr
 	hash_physical voidptr
 	data voidptr

@@ -29,7 +29,7 @@ fn image_input_check() ! {
 	mut checks := []ImageInputResult{}
 	stage := work + '/stage'
 	checks << image_input_task('stage-compile', [v, ...flags, '-o', stage, repository + '/tools/packages/stage.v'], work)!
-	os.setenv('VINIX_PACKAGE_STAGE_CHECK_CLI', stage, true)
+	os.setenv('TULPAR_PACKAGE_STAGE_CHECK_CLI', stage, true)
 	for name in ['image_check', 'image_repositories', 'image_configuration', 'release', 'mirror', 'policy', 'catalog', 'publisher_schema'] {
 		binary := work + '/' + name
 		checks << image_input_task(name + '-compile', [v, ...flags, '-o', binary, repository + '/tools/packages/pkgcore/' + name + '_test.v'], work)!
@@ -39,7 +39,7 @@ fn image_input_check() ! {
 		'-ldflags', '-fsanitize=address,undefined', '-o', work + '/image-check-sanitize', repository + '/tools/packages/pkgcore/image_check_test.v'], work)!
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	checks << image_input_task('image_check-sanitize-run', [work + '/image-check-sanitize'], work)!
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << image_input_task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
 	checks << image_input_task('distribution-cli-compile', [v, ...flags, '-o', work + '/distribution-cli', repository + '/tests/packages/distribution-cli.v'], work)!
 	checks << image_input_task('distribution-cli-run', [work + '/distribution-cli', cli], work)!

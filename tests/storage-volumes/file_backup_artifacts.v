@@ -11,7 +11,7 @@ fn backup_archive(data []u8, changed bool, base []u8) []u8 {
 		at := index * 65536; n := if data.len - at < 65536 { data.len - at } else { 65536 }
 		mut record := []u8{len: 16}; backup_put(mut record, 0, 8, u64(index)); backup_put(mut record, 8, 4, u64(n)); body << record; body << data[at..at + n]
 	}
-	mut header := []u8{len: 256}; copy(mut header, 'VINIXBK1'.bytes())
+	mut header := []u8{len: 256}; copy(mut header, 'TULPARBK1'.bytes())
 	for field in [[8, 4, 1], [12, 4, int(changed)], [16, 4, 65536], [24, 8, 131089], [32, 4, if changed { 0o604 } else { 0o640 }], [48, 8, if changed { 1700002345 } else { 1700001234 }], [128, 8, count]] { backup_put(mut header, field[0], field[1], u64(field[2])) }
 	content := sha256.sum(data); digest := sha256.sum(body); for i in 0 .. 32 { header[64 + i] = content[i]; header[136 + i] = digest[i] }
 	if changed { sum := sha256.sum(base); for i in 0 .. 32 { header[96 + i] = sum[i] } }
@@ -24,7 +24,7 @@ fn main() {
 	original := []u8{len: 131089, init: u8(0x31 + index / 65536)}; mut changed := original.clone(); changed[0] = 0x77
 	full := backup_archive(original, false, []u8{}); delta := backup_archive(changed, true, full)
 	assert full.len == 131393 && delta.len == 65808
-	debugfs := os.getenv_opt('VINIX_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
+	debugfs := os.getenv_opt('TULPAR_DEBUGFS') or { '/opt/homebrew/opt/e2fsprogs/sbin/debugfs' }
 	mut manifest := ''; names := ['file-source', 'file-full.vbackup', 'file-delta.vbackup', 'file-restored-full', 'file-restored-delta', 'file-boot-full', 'file-boot-delta']
 	for name in names {
 		r := os.exec([debugfs, '-R', 'dump /root/' + name + ' ' + output + '/' + name, work + '/config.ext2']); assert r.exit_code == 0, r.output

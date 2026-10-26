@@ -90,7 +90,7 @@ fn stage() ! {
 	configured_v := os.getenv('V')
 	v := os.find_abs_path_of_executable(if configured_v == '' { 'v' } else { configured_v })!
 	repository := os.dir(os.dir(os.dir(@FILE)))
-	work := os.join_path(os.temp_dir(), 'vinix-accounts-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-accounts-${os.getpid()}')
 	os.mkdir(work, mode: 0o700)!
 	defer { os.rmdir_all(work) or {} }
 	mut proof := stagecore.Installer{}
@@ -138,26 +138,26 @@ fn stage() ! {
 			} {
 			return error('compiler produced a wrong-architecture account executable')
 		}
-		installer.put(binary, 'usr/' + if program == 'auth' { 'bin' } else { 'sbin' } + '/vinix-' + program, 0o755)!
+		installer.put(binary, 'usr/' + if program == 'auth' { 'bin' } else { 'sbin' } + '/tulpar-' + program, 0o755)!
 		if evidence != '' {
 			proof.put(source, program + '/' + program + '.c', 0o644)!
-			proof.put(binary, program + '/vinix-' + program, 0o755)!
+			proof.put(binary, program + '/tulpar-' + program, 0o755)!
 			argv := work + '/argv.json'
 			os.write_file(argv, json2.encode({
 				'v': [v, ...v_argv]
 				'c': [compiler, ...c_argv]
 			}))!
 			proof.put(argv, program + '/argv.json', 0o644)!
-			for name in [program + '.c', 'vinix-' + program, 'argv.json'] {
+			for name in [program + '.c', 'tulpar-' + program, 'argv.json'] {
 				outputs[program + '/' + name] = file_digest(evidence + '/' + program + '/' + name)!
 			}
 		}
 	}
 	for action in os.ls(repository + '/tools/accounts/actions')! {
 		installer.put(repository + '/tools/accounts/actions/' + action,
-			'usr/share/vinix/actions/' + action, 0o644)!
+			'usr/share/tulpar/actions/' + action, 0o644)!
 		if evidence != '' {
-			outputs['installed-action/' + action] = file_digest(staging + '/usr/share/vinix/actions/' + action)!
+			outputs['installed-action/' + action] = file_digest(staging + '/usr/share/tulpar/actions/' + action)!
 			if outputs['installed-action/' + action] != input_hashes['action/' + action] {
 				return error('installed account action differs from its input: ' + action)
 			}

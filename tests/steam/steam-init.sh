@@ -18,23 +18,23 @@ export XDG_RUNTIME_DIR=/run/user/0
 export SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 fail() {
-	echo "VINIX STEAM: FAIL $*"
-	echo "VINIX STEAM TEST: FAIL"
+	echo "TULPAR STEAM: FAIL $*"
+	echo "TULPAR STEAM TEST: FAIL"
 	exit 1
 }
 
 echo
-echo "VINIX STEAM TEST: START"
+echo "TULPAR STEAM TEST: START"
 
 [ -x /usr/bin/steam ] || fail "no /usr/bin/steam"
 [ -x /usr/bin/steam-smoke ] || fail "no /usr/bin/steam-smoke"
-[ -x /usr/bin/vinix-wine-host ] || fail "no /usr/bin/vinix-wine-host"
+[ -x /usr/bin/tulpar-wine-host ] || fail "no /usr/bin/tulpar-wine-host"
 [ -x /usr/bin/qemu-i386 ] || fail "no /usr/bin/qemu-i386"
 
 mkdir -p /tmp /run /dev/shm /var/log /var/lib/xkb
 # A disk-root test keeps its large client on ext2. Clear runtime sockets and
 # PID files at each boot, and give Xvfb temporary socket and framebuffer space.
-if [ -f /.vinix-image-id ]; then
+if [ -f /.tulpar-image-id ]; then
 	mount -t tmpfs tmpfs /run || fail "could not mount temporary runtime storage"
 	mount -t tmpfs tmpfs /tmp || fail "could not mount temporary X11 storage"
 fi
@@ -49,51 +49,51 @@ if [ ! -s /etc/resolv.conf ]; then
 fi
 
 /usr/bin/steam-smoke 2>&1 | tee /tmp/steam-smoke.log
-grep -q '^VINIX STEAM SMOKE TEST: PASS$' /tmp/steam-smoke.log ||
+grep -q '^TULPAR STEAM SMOKE TEST: PASS$' /tmp/steam-smoke.log ||
 	fail "the runtime smoke test failed"
-echo "VINIX STEAM PASS: translated glibc runtime"
+echo "TULPAR STEAM PASS: translated glibc runtime"
 
 # Steam's thread synchronisation uses System V semaphores. Check the value
 # operations and a real cross-process wake before waiting for its updater.
 /usr/bin/steam-syscall-probe semaphores || fail "System V semaphore operations failed"
-echo "VINIX STEAM PASS: System V semaphore wake"
+echo "TULPAR STEAM PASS: System V semaphore wake"
 
 # Chromium uses eventfd for its completion ports, and the client reads large
 # files into pages that have not been faulted in yet. Exercise both syscall
 # paths before the long client startup so an EFAULT regression fails promptly.
 /usr/bin/steam-syscall-probe lazy-buffer || fail "eventfd or file buffer copy failed"
-echo "VINIX STEAM PASS: eventfd and lazy file buffer"
+echo "TULPAR STEAM PASS: eventfd and lazy file buffer"
 
 # A closed Chromium IPC peer leaves EPOLLHUP ready. recvmsg must drain its
 # buffered bytes and then return EOF, or the browser loops on EAGAIN forever.
 /usr/bin/steam-syscall-probe unix-hangup || fail "Unix recvmsg hangup failed"
-echo "VINIX STEAM PASS: Unix recvmsg hangup"
+echo "TULPAR STEAM PASS: Unix recvmsg hangup"
 
 # QEMU translates IPv4 recvmsg control messages. Return the actual ancillary
 # length (zero here) so it never interprets the caller's spare buffer as data.
 /bin/busybox timeout 5 /usr/bin/steam-syscall-probe ipv4-ancillary || fail "IPv4 recvmsg ancillary length failed"
-echo "VINIX STEAM PASS: IPv4 recvmsg ancillary length"
+echo "TULPAR STEAM PASS: IPv4 recvmsg ancillary length"
 
 # A browser thread may use an empty ppoll as a timed sleep. Returning at once
 # makes its event loop spin and can starve the translated client.
 /bin/busybox timeout 5 /usr/bin/steam-syscall-probe ppoll || fail "empty ppoll sleep failed"
-echo "VINIX STEAM PASS: empty ppoll sleeps"
+echo "TULPAR STEAM PASS: empty ppoll sleeps"
 
 # Chromium creates shared-memory segments above 16 MiB. They must live on
 # tmpfs: devtmpfs regular files grow as one contiguous allocation and can
 # stall when its heap cannot extend one to the requested size.
 /usr/bin/steam-syscall-probe shared-mapping || fail "large shared-memory file failed"
-echo "VINIX STEAM PASS: large shared-memory mapping"
+echo "TULPAR STEAM PASS: large shared-memory mapping"
 
 # A persistent /root can shadow the copy the image ships there.
-if [ -x /usr/share/vinix/x-window-check ]; then
-	x_window_check=/usr/share/vinix/x-window-check
+if [ -x /usr/share/tulpar/x-window-check ]; then
+	x_window_check=/usr/share/tulpar/x-window-check
 else
 	x_window_check=/root/x-window-check
 fi
 
 display=:99
-surface=/tmp/vinix-steam
+surface=/tmp/tulpar-steam
 steam_log=/tmp/steam.log
 # The bridge treats end of file on stdin as "the window closed", so its input
 # pipe has to stay open for as long as the test runs. The disk image already
@@ -108,11 +108,11 @@ export SDL_JOYSTICK_DISABLE_UDEV=1
 exec /usr/bin/steam-hosted -noverifyfiles -nobootstrapperupdate
 STEAM_TEST_FAST
 chmod 0755 /tmp/steam-test-fast
-sleep 3600 | /usr/bin/vinix-wine-host "$display" "$surface" 1280x900x24 \
+sleep 3600 | /usr/bin/tulpar-wine-host "$display" "$surface" 1280x900x24 \
 	/tmp/steam-test-fast >"$steam_log" 2>&1 &
 host_pid=$!
 
-echo "VINIX STEAM: launching the client through the desktop's X11 bridge"
+echo "TULPAR STEAM: launching the client through the desktop's X11 bridge"
 
 # Keep one X11 connection open while waiting. Reopening the GLX display for
 # every check makes its server retain memory on each client disconnect.
@@ -137,7 +137,7 @@ while [ "$i" -lt 1800 ]; do
 	fi
 	if [ "$surfaced" != true ] && [ -e "$surface/Xvfb_screen0" ]; then
 		surfaced=true
-		echo "VINIX STEAM PASS: the hosted display has a framebuffer"
+		echo "TULPAR STEAM PASS: the hosted display has a framebuffer"
 	fi
 	if grep -q '^WINDOW=' "$window_log" 2>/dev/null; then
 		mapped=true
@@ -165,8 +165,8 @@ if [ "$mapped" = true ]; then
 	if grep -Eq 'Fatal [Ee]rror:|Fatal assert; application exiting|Could not load module|Failed to load steamui\.so|qemu: uncaught target signal' "$steam_log" 2>/dev/null; then
 		fail "the mapped window is a client startup error"
 	fi
-	echo "VINIX STEAM PASS: client window mapped after ${i}s"
-	echo "VINIX STEAM TEST: PASS"
+	echo "TULPAR STEAM PASS: client window mapped after ${i}s"
+	echo "TULPAR STEAM TEST: PASS"
 elif [ "$exited" = true ]; then
 	fail "the client exited after ${i}s without showing a window"
 else

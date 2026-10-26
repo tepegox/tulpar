@@ -22,12 +22,12 @@ fn abi_headers(tools Tools, work string) ! {
 		['overflow', 'integer_policy']] {
 		schema := adapter[0]
 		header := adapter[1]
-		hosttest.generate_abi(tools.root + '/kernel/linuxkpi/abi/' + schema + '.json', tools.root + '/kernel/linuxkpi', work + '/include/vinix/' + header + '.h')!
+		hosttest.generate_abi(tools.root + '/kernel/linuxkpi/abi/' + schema + '.json', tools.root + '/kernel/linuxkpi', work + '/include/tulpar/' + header + '.h')!
 	}
 }
 
 fn c_includes(tools Tools, work string, source string) []string {
-	return ['-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-DVINIX_LINUXKPI_FORMAT_HOST_TEST',
+	return ['-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-DTULPAR_LINUXKPI_FORMAT_HOST_TEST',
 		'-D__KERNEL__', '-include', tools.root + '/tests/linuxkpi/host_types.h', '-include',
 		'linux/kconfig.h', '-include', source + '/include/linux/compiler_types.h', '-iquote',
 		tools.root + '/kernel/c', '-I' + work + '/include',
@@ -84,7 +84,7 @@ pub fn native_host(tools Tools, work string, arch string) ! {
 	} else {
 		[]string{}
 	}
-	tools.checked([...cc, ...flags, ...core_warnings, '-DVINIX_V_RUNTIME', '-DVINIX_LINUXKPI_HOST_TEST',
+	tools.checked([...cc, ...flags, ...core_warnings, '-DTULPAR_V_RUNTIME', '-DTULPAR_LINUXKPI_HOST_TEST',
 		'-I' + tools.root + '/kernel/c', '-c', work + '/compat.c', '-o', work + '/compat.o'], os.environ())!
 	tools.header_primitives(work + '/headercore.c', v_arch, true, false)!
 	tools.checked([...cc, ...flags, ...core_warnings, ...include, '-c', work + '/headercore.c',
@@ -104,18 +104,18 @@ pub fn native_host(tools Tools, work string, arch string) ! {
 		work + '/policyhost.o'], os.environ())!
 	for name in ['linuxkpi_varargs', 'linuxkpi_workqueue_abi', 'linuxkpi_storage'] {
 		extra := if name == 'linuxkpi_varargs' {
-			['-Dsnprintf=vinix_linuxkpi_format_test_snprintf',
-				'-Dscnprintf=vinix_linuxkpi_format_test_scnprintf',
-				'-Dsprintf=vinix_linuxkpi_format_test_sprintf']
+			['-Dsnprintf=tulpar_linuxkpi_format_test_snprintf',
+				'-Dscnprintf=tulpar_linuxkpi_format_test_scnprintf',
+				'-Dsprintf=tulpar_linuxkpi_format_test_sprintf']
 		} else {
 			[]string{}
 		}
 		assembly := tools.root + '/kernel/asm/' + arch + '/' + name + '.S'
-		tools.checked([...cc, '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST',
+		tools.checked([...cc, '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST',
 			'-I' + tools.root + '/kernel/asm/' + arch, ...extra, '-c', assembly, '-o',
 			work + '/' + name + '.o'], os.environ())!
 	}
-	tools.checked([...cc, '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-c',
+	tools.checked([...cc, '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-c',
 		tools.root + '/kernel/asm/x86_64/linuxkpi_fixture_abi.S', '-o', work + '/fixture_storage.o'], os.environ())!
 	mut environment := os.environ()
 	environment['CC'] = hosttest.shell_join([...cc, ...if arch == 'x86_64' {

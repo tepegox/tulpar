@@ -33,7 +33,7 @@ fn irqwork_interrupt(vector u32, _frame &cpulocal.GPRState) {
 	if C.vkiw_ready() { C.vkiw_drain(u32(cpulocal.current().cpu_number)) }
 }
 
-@[export: 'vinix_linuxkpi_irqwork_send_ipi']
+@[export: 'tulpar_linuxkpi_irqwork_send_ipi']
 fn irqwork_send_ipi(target u32) {
 	if katomic.load(&irqwork_vector_ready) == 0 || !C.vkiw_ready()
 		|| target >= u32(cpu_locals.len) || katomic.load(&cpu_locals[target].online) == 0 {
@@ -51,7 +51,7 @@ fn irqwork_send_ipi(target u32) {
 
 // Called only by the actual PIT maskable handler, before its clock promotion.
 // Generic time hooks also run from ordinary syscalls and must not call here.
-@[export: 'vinix_linuxkpi_irqwork_pit_tick']
+@[export: 'tulpar_linuxkpi_irqwork_pit_tick']
 fn irqwork_pit_tick() {
 	// Do not enter any compatibility export from cold PIT delivery. The boot
 	// owner installs this gate after ordinary RCU has warmed module exports.
@@ -63,9 +63,9 @@ fn irqwork_pit_tick() {
 	C.vkiw_tick_all()
 }
 
-@[export: 'vinix_linuxkpi_irqwork_tick_count']
+@[export: 'tulpar_linuxkpi_irqwork_tick_count']
 fn irqwork_tick_count() u64 { return katomic.load(&irqwork_pit_ticks) }
-@[export: 'vinix_linuxkpi_irqwork_ipi_count']
+@[export: 'tulpar_linuxkpi_irqwork_ipi_count']
 fn irqwork_ipi_count(target u32) u64 {
 	if target >= u32(cpu_locals.len) { return 0 }
 	return katomic.load(&irqwork_ipi_sends[target])

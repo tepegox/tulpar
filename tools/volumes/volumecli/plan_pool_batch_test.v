@@ -181,7 +181,7 @@ fn test_batch_full_slots_disks_and_near_u64_regions_roundtrip_and_retry() {
 	mut decoded := PlanSet{}
 	assert decode_bundle(&bytes[0], 8768, mut decoded) && decoded == set
 	assert bundle_pool_batch(mut set, 63, &batch, mut placements) && set == decoded && placements.keep == u64(-1)
-	work := os.join_path(os.temp_dir(), 'vinix-pool-batch-full-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-batch-full-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/full.vset'
@@ -189,7 +189,7 @@ fn test_batch_full_slots_disks_and_near_u64_regions_roundtrip_and_retry() {
 	unsafe {
 		mut args := [197]&char{}
 		mut numbers := [64][4]char{}
-		args[0] = &char(c'vinix-volume'); args[1] = &char(c'pool-allocate-batch')
+		args[0] = &char(c'tulpar-volume'); args[1] = &char(c'pool-allocate-batch')
 		args[2] = path.str; args[3] = &char(c'63')
 		for i in 0 .. 64 {
 			C.snprintf(&numbers[i][0], 4, c'%u', batch.rows[i].slot)
@@ -222,7 +222,7 @@ fn test_batch_keeps_manual_sector_aligned_row_and_rejects_invalid_complete_sets(
 }
 
 fn test_batch_commands_preview_without_publication_and_reject_bad_files_and_cli_arguments() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-batch-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-batch-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/pool.vset'
@@ -249,7 +249,7 @@ fn test_batch_commands_preview_without_publication_and_reject_bad_files_and_cli_
 	for preview in [false, true] { assert batch_pool_plan(path.str, 3, &batch, preview) == 1 && os.read_bytes(path)! == broken }
 	unsafe {
 		mut args := [197]&char{}
-		args[0] = &char(c'vinix-volume')
+		args[0] = &char(c'tulpar-volume')
 		args[2] = &char(c'/unused')
 		args[3] = &char(c'3')
 		args[4] = &char(c'20'); args[5] = &char(c'8192'); args[6] = &char(c'ro')

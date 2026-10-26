@@ -71,12 +71,12 @@ fn check_cleanup_report_boundaries() ! {
 
 fn software_cleanup_service_fixture(args []string) bool {
 	if args[1..] == ['cleanup-review'] {
-		mode := os.getenv('VINIX_SOFTWARE_CLEANUP_MODE')
+		mode := os.getenv('TULPAR_SOFTWARE_CLEANUP_MODE')
 		if mode == 'slow' { time.sleep(3 * time.second) }
 		if mode == 'failed' { eprintln('generation lease is damaged; retain storage for inspection'); exit(21) }
 		if mode == 'invalid' { println('{"format":1,"architecture":"aarch64"}'); return true }
 		review := fixture_cleanup_review()
-		println(json2.encode(pkgprotocol.CleanupReview{ ...review, generations: if os.exists(os.getenv('VINIX_SOFTWARE_CLEANUP_RECEIPT')) { []u64{} } else { review.generations } }))
+		println(json2.encode(pkgprotocol.CleanupReview{ ...review, generations: if os.exists(os.getenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT')) { []u64{} } else { review.generations } }))
 		return true
 	}
 	admin := args.len > 1 && args[1] == 'admin'
@@ -93,16 +93,16 @@ fn software_cleanup_service_fixture(args []string) bool {
 		assert unsafe { tos(&bytes[0], count) } == 'fixture secret é'
 	}
 	time.sleep(30 * time.millisecond)
-	if os.getenv('VINIX_SOFTWARE_CLEANUP_MODE') == 'stale' { eprintln('generation cleanup review is stale; review cleanup again'); exit(29) }
-	os.write_file(os.getenv('VINIX_SOFTWARE_CLEANUP_RECEIPT'), 'reviewed generations only') or { panic(err) }
+	if os.getenv('TULPAR_SOFTWARE_CLEANUP_MODE') == 'stale' { eprintln('generation cleanup review is stale; review cleanup again'); exit(29) }
+	os.write_file(os.getenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT'), 'reviewed generations only') or { panic(err) }
 	println('Obsolete generation cleanup completed.')
 	return true
 }
 
 fn check_software_cleanup() ! {
-	receipt := os.temp_dir() + '/vinix-software-cleanup-' + os.getpid().str()
-	os.setenv('VINIX_SOFTWARE_CLEANUP_RECEIPT', receipt, true)
-	defer { os.rm(receipt) or {}; os.unsetenv('VINIX_SOFTWARE_CLEANUP_RECEIPT'); os.unsetenv('VINIX_SOFTWARE_CLEANUP_MODE') }
+	receipt := os.temp_dir() + '/tulpar-software-cleanup-' + os.getpid().str()
+	os.setenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT', receipt, true)
+	defer { os.rm(receipt) or {}; os.unsetenv('TULPAR_SOFTWARE_CLEANUP_RECEIPT'); os.unsetenv('TULPAR_SOFTWARE_CLEANUP_MODE') }
 	mut app := SoftwareApp{ service_path: os.executable(), administration_required: true,
 		output: []u8{cap: 8192}, query: 'editor'.bytes(), filter: 2, selected: 0,
 		rows: [SoftwareRow{ id: 'editor', name: 'Editor', installed_version: '1.0.0' }] }
@@ -128,7 +128,7 @@ fn check_software_cleanup() ! {
 	app.handle(packagecore.request_prefix + '{"id":"editor"}')!
 	app.handle('software.install')!; app.paste_input('ignored')
 	assert app.launch_request == '' && app.worker == unsafe { nil } && app.cleanup_ready && editor_bytes_text(app.query) == 'editor'
-	os.setenv('VINIX_SOFTWARE_CLEANUP_MODE', 'stale', true)
+	os.setenv('TULPAR_SOFTWARE_CLEANUP_MODE', 'stale', true)
 	app.handle('software.cleanup.confirm')!
 	assert app.admin_prompt && app.worker.args == ['admin', 'cleanup-apply', 'd'.repeat(64)] && !app.cleanup_ready
 	app.key_input('fixture secret é'); app.key_input('\r')
@@ -138,7 +138,7 @@ fn check_software_cleanup() ! {
 	assert !app.cleanup_ready && app.cleanup_snapshot.generations.len == 0 && app.failure_pages.len > 0 && app.status.contains('stale')
 	assert !os.exists(receipt)
 	app.handle('software.cleanup.confirm')!; assert app.worker == unsafe { nil }
-	os.unsetenv('VINIX_SOFTWARE_CLEANUP_MODE')
+	os.unsetenv('TULPAR_SOFTWARE_CLEANUP_MODE')
 	app.handle('software.cleanup.reload')!; wait_for_software(mut app)
 	assert app.cleanup_ready
 	app.handle('software.cleanup.confirm')!; app.key_input('fixture secret é'); app.key_input('\r')
@@ -150,13 +150,13 @@ fn check_software_cleanup() ! {
 	app.handle('software.cleanup.confirm')!; assert app.worker == unsafe { nil }
 	app.key_input('\x1b'); assert !app.cleanup_mode
 	for mode in ['invalid', 'failed'] {
-		os.setenv('VINIX_SOFTWARE_CLEANUP_MODE', mode, true)
+		os.setenv('TULPAR_SOFTWARE_CLEANUP_MODE', mode, true)
 		app.handle('software.cleanup')!; wait_for_software(mut app)
 		assert !app.cleanup_ready
 		app.handle('software.cleanup.confirm')!; assert app.worker == unsafe { nil }
 		app.handle('software.cleanup.back')!
 	}
-	os.setenv('VINIX_SOFTWARE_CLEANUP_MODE', 'slow', true)
+	os.setenv('TULPAR_SOFTWARE_CLEANUP_MODE', 'slow', true)
 	app.handle('software.cleanup')!; assert app.prepare_close()
 	app.close_app(); assert app.worker == unsafe { nil }
 	check_cleanup_report_boundaries()!
@@ -171,7 +171,7 @@ fn check_software_cleanup_memory() ! {
 		mut app := SoftwareApp{ cleanup_mode: true, output: text.bytes() }
 		defer { app.close_app(); unsafe { text.free() } }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.load_cleanup_review(); assert app.cleanup_ready
 				free_window_tree(app.build(ui2.rect(0, 0, 640, 610))!)
@@ -183,7 +183,7 @@ fn check_software_cleanup_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'cleanup view retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'cleanup view retained ${kept} bytes'
 		println('SOFTWARE CLEANUP 1000 owned decode/page/render/compact/retirement cycles retain zero tracked bytes PASS')
 		println('Software cleanup reader: 1000 decode/read/page/resize/back/retirement cycles retain zero tracked bytes')
 	}

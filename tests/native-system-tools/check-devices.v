@@ -404,7 +404,7 @@ fn checked() ! {
 	}
 	guard := policyhost.own_commands()
 	defer { guard.close() }
-	work := if provided { os.args[1] } else { hosttest.work_dir('', 'vinix-device-host-')! }
+	work := if provided { os.args[1] } else { hosttest.work_dir('', 'tulpar-device-host-')! }
 	os.mkdir_all(work)!
 	defer { if !provided { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } } }
 	export_checks(work)!

@@ -2,7 +2,7 @@
 
 The native profile packages Neovim 0.12.5 (upstream commit
 `5885a30e1e1225349079e7a1c4a3848aa8e43e42`) and its complete installed runtime
-as `org.neovim.editor` plus `org.vinix.neovim-runtime`, for AArch64 and x86-64.
+as `org.neovim.editor` plus `org.tulpar.neovim-runtime`, for AArch64 and x86-64.
 `neovim-build.v` pins eight upstream source archives and retains their licenses,
 build commands, source inventories, generated adapter C and target ELF digests.
 Static GCC runtime helpers also carry the pinned upstream GCC 14.2.0
@@ -10,10 +10,10 @@ Static GCC runtime helpers also carry the pinned upstream GCC 14.2.0
 generators and target musl builds; target generators and Python
 are not executed. Each target output extracts fresh source trees.
 
-For Vinix, the builder selects libuv 1.52.1's existing no-io_uring branch with
-the libuv-only `VINIX_LIBUV_NO_IO_URING=1` define. `UV_USE_IO_URING=0` is
+For Tulpar, the builder selects libuv 1.52.1's existing no-io_uring branch with
+the libuv-only `TULPAR_LIBUV_NO_IO_URING=1` define. `UV_USE_IO_URING=0` is
 insufficient: upstream probes an io_uring ring for epoll batching before
-consulting that variable for SQPOLL. Vinix's package sandbox refuses that
+consulting that variable for SQPOLL. Tulpar's package sandbox refuses that
 syscall. The V helper requires one exact original branch, refuses drift and
 duplicate application, and changes only its preprocessor condition. The
 upstream archives retain their original SHA pins; separate upstream/patched
@@ -44,8 +44,8 @@ Build the V tools with the selected compiler's C backend:
 v -backend c -prod -gc none -manualfree -path '@vlib|tools/packages|@vmodules' -o neovim-build tools/packages/neovim-build.v
 neovim-build --cache=SOURCE_CACHE --arch=aarch64 --out=NEW_BUILD --root=REPOSITORY --prepared=PREPARED_ROOTS
 neovim-build --cache=SOURCE_CACHE --arch=x86_64 --out=OTHER_NEW_BUILD --root=REPOSITORY --prepared=PREPARED_ROOTS
-vinix-package neovim-catalog 1.0.0 PREPARED_ROOTS NEW_CATALOG
-vinix-package pack-catalog NEW_CATALOG/catalog.json PREPARED_ROOTS NEW_PUBLISHER_ROOT
+tulpar-package neovim-catalog 1.0.0 PREPARED_ROOTS NEW_CATALOG
+tulpar-package pack-catalog NEW_CATALOG/catalog.json PREPARED_ROOTS NEW_PUBLISHER_ROOT
 ```
 
 The builder records the local cross-tool paths it uses. The retained executable

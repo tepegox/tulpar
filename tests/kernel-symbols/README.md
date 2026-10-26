@@ -23,13 +23,13 @@ controller drains both pipes and reaps children.
 v -cc cc test tests/kernel-symbols/symbolcore
 v -cc cc -o /tmp/kernel-sites tests/kernel-allocs/sites.v
 v -cc cc -o /tmp/user-sites tests/user-access/sites.v
-VINIX_ALLOC_SITES_TOOL=/tmp/kernel-sites VINIX_USER_SITES_TOOL=/tmp/user-sites \
+TULPAR_ALLOC_SITES_TOOL=/tmp/kernel-sites TULPAR_USER_SITES_TOOL=/tmp/user-sites \
   v -cc cc test tests/kernel-symbols/symbolcore
 ```
 
 Tests cover parsing, Unicode, wide addresses, zero spellings, frame filtering,
 inlining, ARM/x86 chain construction, deduplication, empty logs, stdin and child
 exit status. Optional command checks run separately compiled host executables.
-Set `VINIX_SYMBOLIZER_REAL=1` to build isolated ARM and x86 ELF debug fixtures
+Set `TULPAR_SYMBOLIZER_REAL=1` to build isolated ARM and x86 ELF debug fixtures
 with Clang/LLD and check both reporting policies using the real LLVM symbolizer.
 These are host reporting checks, not new kernel allocation or usercopy results.

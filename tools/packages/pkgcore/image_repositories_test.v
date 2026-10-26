@@ -12,7 +12,7 @@ fn C.mkfifo(&char, u32) int
 struct ImageCaptureLimit { current u64 maximum u64 }
 
 fn image_bundle_fixture(restricted bool) !(string, string) {
-	work := os.real_path(os.temp_dir()) + '/vinix-image-bundle-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-image-bundle-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir(work, mode: 0o700)!
 	key := keygen(work + '/seed')!
 	os.mkdir_all(work + '/payload/share')!
@@ -82,21 +82,21 @@ fn test_image_bundle_failed_publication_preserves_replaced_stage_root() {
 	mut plan := unsafe { &configuration }.prepare_repositories(work + '/bundle')!; defer { plan.close() }
 	mut refused := false
 	unsafe { &plan }.publish_with(ImageRepositoriesOptions{ checkpoint: image_bundle_replace_failed_stage }) or { refused = err.msg().contains('injected image export refusal') }
-	parent := root + '/usr/share/vinix-packages'
-	stages := os.ls(parent)!.filter(it.starts_with('.vinix-image-repositories-'))
+	parent := root + '/usr/share/tulpar-packages'
+	stages := os.ls(parent)!.filter(it.starts_with('.tulpar-image-repositories-'))
 	preserved := stages.len == 1 && os.read_file(parent + '/' + stages[0] + '/keep') or { '' } == 'replacement must survive'
 	println('IMAGE CAPTURE baseline publication refused=' + refused.str() + ' replacement-preserved=' + preserved.str())
 	assert refused && preserved && os.is_dir(parent + '/saved-stage/native') && !os.exists(root + image_repositories_path)
 }
 
-fn image_bundle_test_scratch() string { return os.getenv('VINIX_IMAGE_CAPTURE_CASE') + '/scratch' }
+fn image_bundle_test_scratch() string { return os.getenv('TULPAR_IMAGE_CAPTURE_CASE') + '/scratch' }
 
 fn image_bundle_substitute(phase string, stage string) ! {
-	if phase != os.getenv('VINIX_IMAGE_CAPTURE_PHASE') { return }
-	work := os.getenv('VINIX_IMAGE_CAPTURE_CASE')
+	if phase != os.getenv('TULPAR_IMAGE_CAPTURE_PHASE') { return }
+	work := os.getenv('TULPAR_IMAGE_CAPTURE_CASE')
 	if os.exists(work + '/stage-path') { return }
 	os.write_file(work + '/stage-path', stage)!
-	kind := os.getenv('VINIX_IMAGE_CAPTURE_KIND')
+	kind := os.getenv('TULPAR_IMAGE_CAPTURE_KIND')
 	if kind == 'parent' { os.rename(os.dir(stage), work + '/saved-parent')!; os.mkdir(os.dir(stage))! }
 	else { os.rename(stage, work + '/saved-stage')! }
 	match kind {
@@ -109,7 +109,7 @@ fn image_bundle_substitute(phase string, stage string) ! {
 		'clone' { os.cp_all(work + '/saved-stage', stage, true)! }
 		else { panic('unknown image capture substitution') }
 	}
-	if os.getenv('VINIX_IMAGE_CAPTURE_FAIL') == 'yes' { return error('injected image capture refusal') }
+	if os.getenv('TULPAR_IMAGE_CAPTURE_FAIL') == 'yes' { return error('injected image capture refusal') }
 }
 
 fn image_bundle_assert_replacement(work string, kind string, index string) ! {
@@ -132,7 +132,7 @@ fn test_image_bundle_capture_and_publication_substitutions_preserve_inputs_and_r
 	limit := ImageCaptureLimit{ current: 32, maximum: original.maximum }
 	assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 	defer { assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0 }
-	defer { for name in ['VINIX_IMAGE_CAPTURE_CASE', 'VINIX_IMAGE_CAPTURE_PHASE', 'VINIX_IMAGE_CAPTURE_KIND', 'VINIX_IMAGE_CAPTURE_FAIL']! { os.unsetenv(name) } }
+	defer { for name in ['TULPAR_IMAGE_CAPTURE_CASE', 'TULPAR_IMAGE_CAPTURE_PHASE', 'TULPAR_IMAGE_CAPTURE_KIND', 'TULPAR_IMAGE_CAPTURE_FAIL']! { os.unsetenv(name) } }
 	mut cases := 0
 	for architecture in ['aarch64', 'x86_64']! {
 		work, key := image_bundle_fixture(false)!; defer { os.rmdir_all(work) or {} }
@@ -145,7 +145,7 @@ fn test_image_bundle_capture_and_publication_substitutions_preserve_inputs_and_r
 					case := work + '/case-' + cases.str()
 					os.mkdir_all(case + '/scratch')!; os.mkdir(case + '/image')!; os.mkdir(case + '/outside')!
 					os.chmod(case + '/outside', 0o700)!; os.write_file(case + '/outside/keep', 'preserved')!
-					for name, value in {'VINIX_IMAGE_CAPTURE_CASE': case, 'VINIX_IMAGE_CAPTURE_PHASE': phase, 'VINIX_IMAGE_CAPTURE_KIND': kind, 'VINIX_IMAGE_CAPTURE_FAIL': fail} { os.setenv(name, value, true) }
+					for name, value in {'TULPAR_IMAGE_CAPTURE_CASE': case, 'TULPAR_IMAGE_CAPTURE_PHASE': phase, 'TULPAR_IMAGE_CAPTURE_KIND': kind, 'TULPAR_IMAGE_CAPTURE_FAIL': fail} { os.setenv(name, value, true) }
 					mut configuration := prepare_image_configuration(case + '/image', architecture, source)!
 					mut plan := ImageRepositories{}
 					mut message := ''
@@ -198,13 +198,13 @@ fn image_bundle_flush_refusal(_ int) int { return -1 }
 
 fn image_bundle_replace_capture_while_staged(phase string, _ string) ! {
 	if phase != 'staged' { return }
-	path := os.getenv('VINIX_IMAGE_LATE_CAPTURE')
+	path := os.getenv('TULPAR_IMAGE_LATE_CAPTURE')
 	os.rename(path, path + '-saved')!
 	os.cp_all(path + '-saved', path, true)!
 }
 
 fn test_image_bundle_rechecks_original_capture_after_publication_copy() {
-	defer { os.unsetenv('VINIX_IMAGE_LATE_CAPTURE') }
+	defer { os.unsetenv('TULPAR_IMAGE_LATE_CAPTURE') }
 	for architecture in ['aarch64', 'x86_64']! {
 		work, key := image_bundle_fixture(false)!; defer { os.rmdir_all(work) or {} }
 		root := work + '/image'; os.mkdir(root)!
@@ -213,11 +213,11 @@ fn test_image_bundle_rechecks_original_capture_after_publication_copy() {
 		mut plan := unsafe { &configuration }.prepare_repositories(work + '/bundle')!
 		capture := plan.capture.clone()
 		defer { os.rmdir_all(capture) or {}; os.rmdir_all(capture + '-saved') or {} }
-		os.setenv('VINIX_IMAGE_LATE_CAPTURE', capture, true)
+		os.setenv('TULPAR_IMAGE_LATE_CAPTURE', capture, true)
 		mut message := ''
 		unsafe { &plan }.publish_with(ImageRepositoriesOptions{ checkpoint: image_bundle_replace_capture_while_staged }) or { message = err.msg() }
 		assert message.contains('staging root identity changed') && !os.exists(root + image_repositories_path)
-		assert os.ls(root + '/usr/share/vinix-packages')!.len == 0
+		assert os.ls(root + '/usr/share/tulpar-packages')!.len == 0
 		mut refused := false
 		plan.retire() or { refused = true }
 		assert refused && os.is_dir(capture + '/native') && os.is_dir(capture + '-saved/native')
@@ -244,7 +244,7 @@ fn test_image_bundle_post_publication_flush_failure_retains_output_and_capture_r
 	assert refused && plan.capture == '' && os.is_dir(capture + '/native')
 	plan.close(); plan.retire()!
 	os.chmod(capture, 0o700)!; os.rmdir_all(capture)!
-	assert os.ls(root + '/usr/share/vinix-packages')! == ['repositories']
+	assert os.ls(root + '/usr/share/tulpar-packages')! == ['repositories']
 	println('IMAGE CAPTURE flush refusal retains complete output; unsafe capture retirement preserves recovery, reports refusal, closes metadata and permits repeated close PASS')
 }
 
@@ -264,13 +264,13 @@ fn test_image_bundle_capture_publish_retry_and_real_offline_consumer() {
 		assert unsafe { &configuration }.publish()!
 		plan.close(); plan.close()
 		assert !os.exists(capture)
-		bytes := os.read_file(root + '/etc/vinix-packages/config.json')!
+		bytes := os.read_file(root + '/etc/tulpar-packages/config.json')!
 		assert bytes == os.read_file(source)!
 		assert !os.exists(root + '/var')
 		// A host consumer points at the published image export; the image's own
 		// file URL has its intended meaning after booting the target filesystem.
-		consumer := work + '/consumer'; os.mkdir_all(consumer + '/etc/vinix-packages')!
-		os.write_file(consumer + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: architecture,
+		consumer := work + '/consumer'; os.mkdir_all(consumer + '/etc/tulpar-packages')!
+		os.write_file(consumer + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: architecture,
 			policy: Policy{ offline: true, reserve_bytes: 0 }, repositories: [Repository{ id: 'native',
 			url: 'file://' + root + image_repositories_path + '/native', public_key: key }] }))!
 		service := Service{ root: consumer }
@@ -287,7 +287,7 @@ fn test_image_bundle_capture_publish_retry_and_real_offline_consumer() {
 		assert !unsafe { &same }.publish()!
 		same.close()
 		assert !unsafe { &existing }.publish()!
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == bytes
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == bytes
 	}
 	println('PACKAGE IMAGE BUNDLE captured signed closure atomic publication offline dependency install both architectures PASS')
 }
@@ -379,7 +379,7 @@ fn test_image_bundle_disk_capture_and_publication_failures_preserve_destination(
 	if _ := unsafe { &plan }.publish_with(ImageRepositoriesOptions{ available_space: image_bundle_no_space }) { assert false } else {}
 	assert os.ls(root)!.len == 0
 	if _ := unsafe { &plan }.publish_with(ImageRepositoriesOptions{ checkpoint: image_bundle_corrupt_stage }) { assert false } else {}
-	parent := root + '/usr/share/vinix-packages'
+	parent := root + '/usr/share/tulpar-packages'
 	assert os.ls(parent)!.len == 0
 	if _ := unsafe { &plan }.publish_with(ImageRepositoriesOptions{ checkpoint: image_bundle_race_target }) { assert false } else {}
 	assert os.read_file(parent + '/repositories/keep')! == 'concurrent owner data'
@@ -396,22 +396,22 @@ fn test_image_bundle_rechecks_configuration_root_parents_and_retained_state() {
 	defer { configuration.close() }
 	mut plan := unsafe { &configuration }.prepare_repositories(work + '/bundle')!
 	defer { plan.close() }
-	os.mkdir_all(root + '/var/lib/vinix-packages')!
-	os.write_file(root + '/var/lib/vinix-packages/trust-history.json', 'retained')!
+	os.mkdir_all(root + '/var/lib/tulpar-packages')!
+	os.write_file(root + '/var/lib/tulpar-packages/trust-history.json', 'retained')!
 	if _ := unsafe { &plan }.publish() { assert false } else {}
 	assert !os.exists(root + '/usr')
 	os.rmdir_all(root + '/var')!
 	assert unsafe { &configuration }.publish()!
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	original := os.read_file(path)!
 	os.write_file(path, original.replace('"offline":false', '"offline":true'))!
 	if _ := unsafe { &plan }.publish() { assert false } else {}
 	os.write_file(path, original)!
 	os.mkdir_all(root + '/usr/share')!; os.mkdir(work + '/outside')!
-	os.symlink(work + '/outside', root + '/usr/share/vinix-packages')!
+	os.symlink(work + '/outside', root + '/usr/share/tulpar-packages')!
 	if _ := unsafe { &plan }.publish() { assert false } else {}
 	assert os.ls(work + '/outside')!.len == 0
-	os.rm(root + '/usr/share/vinix-packages')!
+	os.rm(root + '/usr/share/tulpar-packages')!
 	os.rename(root, root + '-saved')!; os.mkdir(root)!
 	if _ := unsafe { &plan }.publish() { assert false } else {}
 	assert os.ls(root)!.len == 0

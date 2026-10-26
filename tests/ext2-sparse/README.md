@@ -8,7 +8,7 @@ geometry; e2fsprogs is required. See [external mount tests](../ext-mount/README.
 
 ```sh
 V=/path/to/v sh tests/ext2-sparse/run-host.sh
-V=/path/to/v VINIX_HOST_SANITIZE=1 ASAN_OPTIONS=detect_leaks=0 \
+V=/path/to/v TULPAR_HOST_SANITIZE=1 ASAN_OPTIONS=detect_leaks=0 \
   sh tests/ext2-sparse/run-host.sh
 V=/path/to/v sh tests/pagecache/run.sh
 ```
@@ -39,17 +39,17 @@ transition is tested too. A 500-cycle grow/write/truncate loop measures retained
 slab objects and runtime; traversal depends on allocated tables, not hole length.
 
 ```sh
-VINIX_VM_RUNNER_ROOT=/path/to/main/vinix VINIX_QEMU_RT_NO_BUILD=1 \
-VINIX_KERNEL_DIR=/path/to/saved-arm-build \
-VINIX_AARCH64_SYSROOT=/path/to/aarch64/sysroot \
+TULPAR_VM_RUNNER_ROOT=/path/to/main/tulpar TULPAR_QEMU_RT_NO_BUILD=1 \
+TULPAR_KERNEL_DIR=/path/to/saved-arm-build \
+TULPAR_AARCH64_SYSROOT=/path/to/aarch64/sysroot \
   tests/ext2-sparse/run --arch=aarch64
-VINIX_VM_RUNNER_ROOT=/path/to/main/vinix \
-VINIX_AMD64_KERNEL=/path/to/saved-amd-build/bin/vinix \
+TULPAR_VM_RUNNER_ROOT=/path/to/main/tulpar \
+TULPAR_AMD64_KERNEL=/path/to/saved-amd-build/bin/tulpar \
   tests/ext2-sparse/run --arch=amd64
 ```
 
 Both saved binaries must match the tested source. The build directory for ARM
-needs `bin/vinix`; AMD boots the supplied kernel using the disk-root path.
+needs `bin/tulpar`; AMD boots the supplied kernel using the disk-root path.
 
 The runner uses native V power-cut supervision and snapshots the supplied
 already-built kernel. `--kernel DIR|ELF` overrides the environment input;
@@ -75,7 +75,7 @@ original memory/runtime limits. The current fixture has a 32-class heap bank
 to include every ARM class, explicitly allocates its diagnostic structs on the
 stack and settles for seven seconds. It also drains closed unlinked inode
 references before final synchronization and the power-cut marker. The original
-memory/runtime limits remain. `VINIX_V_COMPILER` selects the compiler.
+memory/runtime limits remain. `TULPAR_V_COMPILER` selects the compiler.
 `--state-dir` retains a fresh disk and inputs; `--prebuilt-init` runs a frozen
 independent control without replacing the maintained V source.
 

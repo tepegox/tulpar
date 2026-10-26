@@ -23,18 +23,18 @@ fn check() ! {
 		for explicit in [false, true]! {
 			for mode in ['install', 'upgrade', 'install-kept', 'repair', 'damaged-repair', 'remove', 'file-download',
 				'offline-missing', 'stale-review', 'rollback', 'rollback-unavailable', 'rollback-revoked']! {
-				os.setenv('VINIX_ACTIVATION_CASE', architecture + (if explicit { ' explicit ' } else { ' service ' }) + mode, true)
+				os.setenv('TULPAR_ACTIVATION_CASE', architecture + (if explicit { ' explicit ' } else { ' service ' }) + mode, true)
 				child('/usr/share/package-fixtures/request', 'ACTIVATION REQUEST selected case PASS', ceiling)!
 			}
 		}
 		for mode in ['upgrade-noop', 'blocked-remove', 'empty-deploy', 'resume-download', 'missing-source', 'disk-refusal', 'interrupted',
 			'prepare-damage', 'published-damage', 'bad-state', 'bad-cache', 'bad-history', 'unsafe-stage', 'counter-exhausted',
 			'busy', 'bad-config', 'invalid-root', 'deployment-legacy', 'deployment-lock', 'deployment-empty', 'deployment-stale', 'deployment-malformed']! {
-			os.setenv('VINIX_ACTIVATION_CASE', architecture + ' service ' + mode, true)
+			os.setenv('TULPAR_ACTIVATION_CASE', architecture + ' service ' + mode, true)
 			child('/usr/share/package-fixtures/request', 'ACTIVATION REQUEST selected case PASS', ceiling)!
 		}
 	}
-	os.unsetenv('VINIX_ACTIVATION_CASE')
+	os.unsetenv('TULPAR_ACTIVATION_CASE')
 	println('ACTIVATION REQUEST 92 cases with 64 measured calls after 2 warmups PASS')
 	child('/usr/share/package-fixtures/lifetime', 'ACTIVATION REQUEST independent nested replies', ceiling)!
 	for name in ['service', 'rollback', 'empty', 'admission']! { child('/usr/share/package-fixtures/' + name, '', ceiling)! }

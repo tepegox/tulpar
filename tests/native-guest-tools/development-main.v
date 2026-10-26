@@ -29,7 +29,7 @@ struct Job {
 	interval_seconds int               = 3600
 	timeout_seconds  int               = 10
 	environment      map[string]string = {
-		'VINIX_DEVELOPMENT_PAYLOAD': '1'
+		'TULPAR_DEVELOPMENT_PAYLOAD': '1'
 	}
 	credential_files map[string]string
 }
@@ -62,7 +62,7 @@ struct BuildPlan {
 	epoch           i64               = 1700000000
 	timeout_seconds int               = 10
 	environment     map[string]string = {
-		'VINIX_DEVELOPMENT_PAYLOAD': 'build'
+		'TULPAR_DEVELOPMENT_PAYLOAD': 'build'
 	}
 	steps           []BuildStep = [BuildStep{}]
 }
@@ -226,21 +226,21 @@ fn run() !int {
 	}
 	arch := os.args[1]
 	if arch !in ['aarch64', 'x86_64'] { return error('unsupported architecture') }
-	reference := referencecore.options(os.getenv('VINIX_DEVELOPMENT_REFERENCE_SDK'),
-		os.getenv('VINIX_DEVELOPMENT_REFERENCE_PROFILES'), arch)!
-	jit_value := os.getenv('VINIX_DEVELOPMENT_REFERENCE_JIT')
-	if jit_value !in ['', '0', '1'] { return error('VINIX_DEVELOPMENT_REFERENCE_JIT must be 0 or 1') }
+	reference := referencecore.options(os.getenv('TULPAR_DEVELOPMENT_REFERENCE_SDK'),
+		os.getenv('TULPAR_DEVELOPMENT_REFERENCE_PROFILES'), arch)!
+	jit_value := os.getenv('TULPAR_DEVELOPMENT_REFERENCE_JIT')
+	if jit_value !in ['', '0', '1'] { return error('TULPAR_DEVELOPMENT_REFERENCE_JIT must be 0 or 1') }
 	reference_jit := jit_value == '1'
-	reference_ci := cicore.options(os.getenv('VINIX_DEVELOPMENT_REFERENCE_CI'), reference.profiles)!
+	reference_ci := cicore.options(os.getenv('TULPAR_DEVELOPMENT_REFERENCE_CI'), reference.profiles)!
 	if reference_jit && reference.profiles != ['java'] { return error('reference JIT mode requires only the prepared Java profile') }
 	if reference.root != '' && os.args.len != 5 {
 		return error('reference SDK mode uses only the base arguments; prepare one complete reference SDK instead of mixing runtimes')
 	}
-	selfhost_option := os.getenv('VINIX_DEVELOPMENT_SELFHOST_V')
-	if selfhost_option !in ['', '0', '1'] { return error('VINIX_DEVELOPMENT_SELFHOST_V must be 0 or 1') }
+	selfhost_option := os.getenv('TULPAR_DEVELOPMENT_SELFHOST_V')
+	if selfhost_option !in ['', '0', '1'] { return error('TULPAR_DEVELOPMENT_SELFHOST_V must be 0 or 1') }
 	selfhost_v := selfhost_option == '1'
 	if selfhost_v && os.args.len != 8 { return error('native V self-hosting requires the complete SDK, V root and shell arguments') }
-	if os.args.len == 8 && os.getenv('VINIX_DEVELOPMENT_V_SMOKE_ROOT') != '' {
+	if os.args.len == 8 && os.getenv('TULPAR_DEVELOPMENT_V_SMOKE_ROOT') != '' {
 		return error('use either the native V build gate or the prepared V smoke root')
 	}
 	kernel := os.real_path(os.args[2])
@@ -253,14 +253,14 @@ fn run() !int {
 	}
 	os.mkdir_all(state)!
 	os.mkdir_all(state + '/kernel/bin')!
-	os.cp(kernel + '/bin/vinix', state + '/kernel/bin/vinix')!
+	os.cp(kernel + '/bin/tulpar', state + '/kernel/bin/tulpar')!
 	init := guesthost.compile_init(guesthost.root() + '/tests/development/guestfixture/core.v', state, arch, false)!
 	root := state + '/rootfs'
 	os.mkdir_all(root + '/usr/bin')!
 	os.mkdir_all(root + '/home/developer')!
 	mut hashes := map[string]string{}
 	mut v_smoke_hash := ''
-	for tool in ['vinix-build', 'vinix-qualify', 'vinix-vm', 'vinix-jobs'] {
+	for tool in ['tulpar-build', 'tulpar-qualify', 'tulpar-vm', 'tulpar-jobs'] {
 		binary := stage + '/usr/bin/' + tool
 		hash := digest(binary)!
 		if manifest.binaries[tool] != hash { return error('staged tool changed: ' + tool) }
@@ -277,10 +277,10 @@ fn run() !int {
 		os.chmod(root + '/usr/bin/' + tool, 0o755)!
 		hashes[tool] = hash
 	}
-	if broker := os.getenv_opt('VINIX_DEVELOPMENT_SERVICE_BROKER') {
+	if broker := os.getenv_opt('TULPAR_DEVELOPMENT_SERVICE_BROKER') {
 		for name, hash in servicecore.stage(broker, root, arch)! { hashes[name] = hash }
 	}
-	if source := os.getenv_opt('VINIX_DEVELOPMENT_V_SMOKE_ROOT') {
+	if source := os.getenv_opt('TULPAR_DEVELOPMENT_V_SMOKE_ROOT') {
 		v_root := os.real_path(source)
 		os.mkdir_all(root + '/usr/lib')!
 		mut hash := sha256.new()
@@ -296,7 +296,7 @@ fn run() !int {
 		os.symlink('/usr/lib/vlang/v', root + '/usr/bin/v-smoke')!
 	}
 	// Optional prepared ELF smoke coverage is kept distinct from native builds.
-	if cpu_binary := os.getenv_opt('VINIX_DEVELOPMENT_CPU_BINARY') {
+	if cpu_binary := os.getenv_opt('TULPAR_DEVELOPMENT_CPU_BINARY') {
 		binary := os.real_path(cpu_binary)
 		header := os.read_bytes(binary)!
 		if header.len < 20 || header[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1]
@@ -331,7 +331,7 @@ fn run() !int {
 		if name == 'fifo-jobs' { fifo_plan_sha = sha256.sum(text.bytes()).hex() }
 		os.write_file(root + '/home/developer/' + name + '.json', text)!
 	}
-	os.write_file(root + '/home/developer/token', 'vinix-native-fixture-secret')!
+	os.write_file(root + '/home/developer/token', 'tulpar-native-fixture-secret')!
 	mut lifecycle_plans := map[string]string{}
 	for name in ['deadline', 'term', 'int', 'watch', 'interrupted', 'service'] {
 		plan := Plan{jobs: [Job{
@@ -339,8 +339,8 @@ fn run() !int {
 			interval_seconds: if name == 'service' { 1 } else if name == 'watch' { 2 } else { 3600 }
 			timeout_seconds: if name == 'deadline' { 1 } else { 30 }
 			environment: {
-				'VINIX_DEVELOPMENT_PAYLOAD': if name == 'service' { 'service-linger' } else if name == 'watch' { 'tick' } else if name == 'interrupted' { 'recover' } else { 'linger' }
-				'VINIX_JOB_PROOF_PREFIX': '/home/developer/' + name
+				'TULPAR_DEVELOPMENT_PAYLOAD': if name == 'service' { 'service-linger' } else if name == 'watch' { 'tick' } else if name == 'interrupted' { 'recover' } else { 'linger' }
+				'TULPAR_JOB_PROOF_PREFIX': '/home/developer/' + name
 			}
 			credential_files: { 'TEST_TOKEN': '/home/developer/token' }
 		}]}
@@ -406,22 +406,22 @@ fn run() !int {
 		os.mkdir(source, mode: 0o755)!
 		os.write_file(source + '/profiles.txt', reference.profiles.join(',') + '\n')!
 		os.chmod(source + '/profiles.txt', 0o644)!
-		steps << BuildStep{ name: 'qualify', argv: ['{qualifier}', '--require-vinix', '{work}/qualification', reference.profiles.join(',')],
+		steps << BuildStep{ name: 'qualify', argv: ['{qualifier}', '--require-tulpar', '{work}/qualification', reference.profiles.join(',')],
 			artifacts: referencecore.artifacts(reference.profiles) }
 		mut tools := reference_tools.clone()
-		tools['qualifier'] = Pin{'/usr/bin/vinix-qualify', hashes['vinix-qualify']}
-		mut environment := { 'PATH': '/opt/reference/bin:/usr/bin:/bin', 'VINIX_QUALIFY_TIMEOUT_SECONDS': '600' }
+		tools['qualifier'] = Pin{'/usr/bin/tulpar-qualify', hashes['tulpar-qualify']}
+		mut environment := { 'PATH': '/opt/reference/bin:/usr/bin:/bin', 'TULPAR_QUALIFY_TIMEOUT_SECONDS': '600' }
 		if reference_ci {
 			tools['ci_proof'] = Pin{'/usr/bin/development-payload', digest(init)!}
-			environment['VINIX_DEVELOPMENT_PAYLOAD'] = 'ci-check'
+			environment['TULPAR_DEVELOPMENT_PAYLOAD'] = 'ci-check'
 			steps.prepend(BuildStep{name: 'ci-isolation', argv: ['{ci_proof}'], artifacts: ['ci-account.json']})
-			ci_plan := Plan{jobs: [Job{id: 'ci', executable: Pin{'/usr/bin/vinix-build', hashes['vinix-build']},
+			ci_plan := Plan{jobs: [Job{id: 'ci', executable: Pin{'/usr/bin/tulpar-build', hashes['tulpar-build']},
 				arguments: ['build', '/home/developer/reference-build.json', '/home/developer/ci-{attempt}'], expand_attempt: true,
 				interval_seconds: 1, timeout_seconds: 1800, environment: {}, credential_files: {'CI_TOKEN': '/home/developer/token'}}]}
 			os.write_file(root + '/home/developer/ci-jobs.json', json2.encode(ci_plan))!
 		}
 		if reference_jit {
-			environment['VINIX_QUALIFY_JIT'] = '1'
+			environment['TULPAR_QUALIFY_JIT'] = '1'
 			os.write_file(root + '/home/developer/reference-jit', 'java\n')!
 		}
 		reference_plan = BuildPlan{
@@ -495,7 +495,7 @@ fn run() !int {
 			userland := root + '/home/developer/native-source'
 			os.mkdir(userland)!
 			source_revision = sourcecore.revision(guesthost.root())!
-			sourcecore.export(guesthost.root(), source_revision, ['util-vinix', 'init',
+			sourcecore.export(guesthost.root(), source_revision, ['util-tulpar', 'init',
 				'tools/packages/main.v', 'tools/packages/pkgcore', 'tools/packages/pkgprotocol', 'tools/packages/signing'], userland, build_source)!
 			os.write_file(userland + '/SOURCE_REVISION', source_revision + '\n')!
 			os.write_file(userland + '/assert-failure.v', 'fn main() {\n    assert 1 == 2\n}\n')!
@@ -551,7 +551,7 @@ fn run() !int {
 				artifacts: ['assert-bin']
 			}
 			for name in ['fetch', 'mount', 'chsh', 'lscpu', 'init'] {
-				input := if name == 'init' { '/init' } else { '/util-vinix/' + name }
+				input := if name == 'init' { '/init' } else { '/util-tulpar/' + name }
 				steps << BuildStep{
 					name: 'compile-' + name
 					argv: [project_v, '-new-compiler', '-nocache', '-no-retry-compilation', '-no-parallel',
@@ -565,13 +565,13 @@ fn run() !int {
 			steps << BuildStep{ name: 'prepare-payload', argv: ['{toolbox}', 'mkdir', '-p', '{work}/payload/bin'], artifacts: []string{} }
 			steps << BuildStep{ name: 'copy-payload', argv: ['{toolbox}', 'cp', '{work}/lscpu-bin', '{work}/payload/bin/lscpu'], artifacts: ['payload/bin/lscpu'] }
 			os.write_file(userland + '/package.json', json2.encode(pkgcore.Package{
-				id: 'org.vinix.native-lscpu', version: '1.0.0', architecture: arch, name: 'Native lscpu fixture',
+				id: 'org.tulpar.native-lscpu', version: '1.0.0', architecture: arch, name: 'Native lscpu fixture',
 				license: 'GPL-2.0-or-later', kind: 'native', entrypoint: 'bin/lscpu', permissions: ['files'],
 			}))!
 			// Public deterministic fixture data, never a production signing key.
 			os.write_file(root + '/home/developer/publisher.seed', '00'.repeat(32) + '\n')!
 			steps << BuildStep{ name: 'pack-package', argv: ['{work}/package-bin', 'pack', '{work}/package.json', '{work}/payload', '{work}/repository'],
-				artifacts: ['repository/manifests/org.vinix.native-lscpu-' + arch + '-1.0.0.json'] }
+				artifacts: ['repository/manifests/org.tulpar.native-lscpu-' + arch + '-1.0.0.json'] }
 			steps << BuildStep{ name: 'publish-package', argv: ['{work}/package-bin', 'publish-release', '{work}/repository',
 				'development-fixture', '/home/developer/publisher.seed', '1', '2000000000', '{work}/release'],
 				artifacts: ['release/index.json', 'release/index.sig'] }
@@ -588,7 +588,7 @@ fn run() !int {
 					'toolbox': Pin{'/bin/busybox', hashes['sh']}
 				}
 				timeout_seconds: if selfhost_v { 1800 } else { 600 }
-				environment: { 'VJOBS': '1', 'V_C_ERROR_BUG_REPORT_DISABLED': '1', 'VINIX_V_ROOT': '/usr/lib/vlang' }
+				environment: { 'VJOBS': '1', 'V_C_ERROR_BUG_REPORT_DISABLED': '1', 'TULPAR_V_ROOT': '/usr/lib/vlang' }
 				steps: steps
 			}
 			os.write_file(root + '/home/developer/native-build.json', json2.encode(native_plan))!
@@ -604,7 +604,7 @@ fn run() !int {
 	os.rm(archive)!
 	mut command := launch.command.clone()
 	if arch == 'x86_64' {
-		if cpu := os.getenv_opt('VINIX_QEMU_CPU') { command[command.index('-cpu') + 1] = cpu }
+		if cpu := os.getenv_opt('TULPAR_QEMU_CPU') { command[command.index('-cpu') + 1] = cpu }
 	}
 	if sdk_hash != '' || reference_hash != '' {
 		for i, argument in command { if argument == '-m' {
@@ -632,9 +632,9 @@ fn run() !int {
 	if 'http' in reference.profiles { expected << 'DEVELOPMENT HTTP PASS:' }
 	if 'lscpu-smoke' in hashes { expected << 'DEVELOPMENT CPU PASS:' }
 	if 'v-smoke' in hashes { expected << 'DEVELOPMENT V SMOKE PASS:' }
-	if 'vinix-desktop' in hashes { expected << 'DEVELOPMENT SERVICE LIFECYCLE PASS:' }
+	if 'tulpar-desktop' in hashes { expected << 'DEVELOPMENT SERVICE LIFECYCLE PASS:' }
 	result := guesthost.boot(command, launch.env, state, expected,
-		['DEVELOPMENT GUEST FAIL', 'KERNEL PANIC', 'vinix-native-fixture-secret'], if selfhost_v { 7200 } else if v_root_hash != '' { 2400 } else { 900 }, true)!
+		['DEVELOPMENT GUEST FAIL', 'KERNEL PANIC', 'tulpar-native-fixture-secret'], if selfhost_v { 7200 } else if v_root_hash != '' { 2400 } else { 900 }, true)!
 	mut receipts := map[string]string{}
 	for line in os.read_lines(state + '/serial.log')! {
 		if !line.starts_with('DEVELOPMENT RECEIPT ') { continue }
@@ -667,7 +667,7 @@ fn run() !int {
 		receipts[path] = body
 	}
 	base_receipts := 2 + if reference_ci { 22 } else if 'http' in reference.profiles { 19 } else if reference_hash != '' { 17 } else if sdk_hash == '' { 12 } else if v_root_hash == '' { 13 } else { 20 }
-	if result == 0 && receipts.len != base_receipts + if 'vinix-desktop' in hashes { 4 } else { 0 } {
+	if result == 0 && receipts.len != base_receipts + if 'tulpar-desktop' in hashes { 4 } else { 0 } {
 		return error('missing native workflow receipts')
 	}
 	if result == 0 {
@@ -687,7 +687,7 @@ fn run() !int {
 		}
 		if reference_ci {
 			cicore.verify(receipts['/home/developer/ci-state/plan.json'], receipts['/home/developer/ci-completed.json'],
-				receipts['/home/developer/ci-state/state.json'], hashes['vinix-build'])!
+				receipts['/home/developer/ci-state/state.json'], hashes['tulpar-build'])!
 		}
 		if reference_hash != '' {
 			mut common := map[string]string{}
@@ -697,7 +697,7 @@ fn run() !int {
 				work := '/home/developer/' + output + '/work'
 				receipt := json2.decode[NativeBuild](receipts['/home/developer/' + output + '/receipt.json'], strict: true)!
 				if receipt.schema != 1 || receipt.plan_sha256 != reference_plan_sha
-					|| !receipt.complete || receipt.uid != 1000 || receipt.kernel != 'Vinix' || receipt.epoch != 1700000000
+					|| !receipt.complete || receipt.uid != 1000 || receipt.kernel != 'Tulpar' || receipt.epoch != 1700000000
 					|| receipt.source != reference_plan.source || receipt.inputs != reference_plan.inputs || receipt.tools != reference_plan.tools
 					|| receipt.steps.len != reference_plan.steps.len || receipt.steps.any(it.exit_code != 0 || it.detail != '') {
 					return error('reference SDK build inputs, account or completion failed validation')
@@ -721,7 +721,7 @@ fn run() !int {
 					}
 				}
 				referencecore.verify_report_jit(receipts[work + '/qualification/report.json'], arch, reference.profiles,
-					hashes['vinix-qualify'], tool_pins, work, receipt.steps.last().artifacts, reference_jit)!
+					hashes['tulpar-qualify'], tool_pins, work, receipt.steps.last().artifacts, reference_jit)!
 				if reference_ci {
 					if receipts[work + '/ci-account.json'] + '\n' != cicore.account_proof
 						|| receipt.steps[0].artifacts['ci-account.json'] != sha256.sum(cicore.account_proof.bytes()).hex() {
@@ -761,7 +761,7 @@ fn run() !int {
 				return error('native job deadline, signal, watch or recovery state failed validation')
 			}
 		}
-		if 'vinix-session' in hashes {
+		if 'tulpar-session' in hashes {
 			servicecore.verify(receipts['/home/developer/service-proof.json'])!
 			for cycle in 1 .. 4 {
 				job_record := json2.decode[NativeSchedule](receipts['/home/developer/service-stop-${cycle}.json'], strict: true)!
@@ -780,7 +780,7 @@ fn run() !int {
 			receipt := json2.decode[NativeBuild](receipts['/home/developer/' + name + '/receipt.json'],
 				strict: true
 			)!
-			if !receipt.complete || receipt.uid != 1000 || receipt.kernel != 'Vinix'
+			if !receipt.complete || receipt.uid != 1000 || receipt.kernel != 'Tulpar'
 				|| receipt.epoch != 1700000000 || receipt.steps.len != 1
 				|| receipt.steps[0].exit_code != 0 || receipt.steps[0].artifacts['artifact.txt'] != expected_artifact {
 				return error('native build receipt failed independent artifact check')
@@ -790,9 +790,9 @@ fn run() !int {
 			report := json2.decode[NativeQualification](receipts['/home/developer/qualification/report.json'],
 				strict: true
 			)!
-			if report.schema != 1 || report.kernel != 'Vinix' || report.architecture != arch || report.command_timeout_seconds != 600
-				|| report.runner_sha256 != hashes['vinix-qualify']
-				|| !report.complete || !report.all_selected_passed || report.uid != 1000 || report.context != 'vinix-native'
+			if report.schema != 1 || report.kernel != 'Tulpar' || report.architecture != arch || report.command_timeout_seconds != 600
+				|| report.runner_sha256 != hashes['tulpar-qualify']
+				|| !report.complete || !report.all_selected_passed || report.uid != 1000 || report.context != 'tulpar-native'
 				|| report.requested != profiles || report.results.len != profiles.len
 				|| report.results.any(it.status != 'passed' || it.commands.len != 2) {
 				return error('native compiler project qualification failed')
@@ -810,7 +810,7 @@ fn run() !int {
 			mut artifacts := map[string]string{}
 			for output in ['native-a', 'native-b'] {
 				receipt := json2.decode[NativeBuild](receipts['/home/developer/' + output + '/receipt.json'], strict: true)!
-				if !receipt.complete || receipt.uid != 1000 || receipt.kernel != 'Vinix' || receipt.epoch != 1700000000
+				if !receipt.complete || receipt.uid != 1000 || receipt.kernel != 'Tulpar' || receipt.epoch != 1700000000
 					|| receipt.source != native_plan.source || receipt.inputs != native_plan.inputs || receipt.tools != native_plan.tools
 					|| receipt.steps.len != native_plan.steps.len || receipt.steps.any(it.exit_code != 0 || it.detail != '') {
 					return error('native userland build inputs or steps failed validation')
@@ -843,7 +843,7 @@ fn run() !int {
 				index := pkgcore.verify_index(pkgcore.Repository{id: 'development-fixture', public_key: public_key},
 					index_text, proof.signature, time.now().unix())!
 				if index.sequence != 1 || index.expires != 2000000000 || index.packages.len != 1
-					|| index.packages[0].id != 'org.vinix.native-lscpu' || index.packages[0].architecture != arch
+					|| index.packages[0].id != 'org.tulpar.native-lscpu' || index.packages[0].architecture != arch
 					|| index.packages[0].files.len != 1 || index.packages[0].files[0].path != 'bin/lscpu'
 					|| !index.packages[0].files[0].executable || index.packages[0].files[0].sha256 != artifacts['lscpu-bin']
 					|| index.packages[0].files[0].sha256 != proof.object_sha256 || index.packages[0].files[0].bytes != proof.object_bytes
@@ -856,7 +856,7 @@ fn run() !int {
 	}
 	os.write_file(state + '/receipt.json', json2.encode(Receipt{
 		arch:            arch
-		kernel_sha256:   digest(state + '/kernel/bin/vinix')!
+		kernel_sha256:   digest(state + '/kernel/bin/tulpar')!
 		fixture_sha256:  digest(init)!
 		sdk_sha256:      sdk_hash
 		v_root_sha256:   v_root_hash

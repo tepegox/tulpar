@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native declarations and widths only; the guest policy checks are V. */
-#ifndef VINIX_SECURELEVEL_FIXTURE_NATIVE_ABI_H
-#define VINIX_SECURELEVEL_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_SECURELEVEL_FIXTURE_NATIVE_ABI_H
+#define TULPAR_SECURELEVEL_FIXTURE_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

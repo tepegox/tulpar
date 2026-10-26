@@ -108,15 +108,15 @@ fn stage_sources(work string) ![]string {
 	atomic_path := os.join_path(root, 'kernel/linuxkpi/headercore/primitive.v')
 	owned << [primitive, bitmap, atomic_path]
 	mut bindings := '@[translated]\nmodule compatcore\n#include "linuxkpi_irq_work_v_primitives.h"\nstruct C.irq_work{}\n' +
-		'fn C.vkm_cpu_masks_ready()bool\nfn C.vkm_cpu_ids()u32\nfn C.vkm_online_count()u32\nfn C.vks_smp_ready()bool\nfn C.vinix_linuxkpi_smp_boot_context()bool\nfn C.vinix_linuxkpi_smp_task_present()bool\nfn C.vinix_linuxkpi_cpu_id()u32\nfn C.vinix_linuxkpi_maskable_irq_depth()u32\nfn C.vinix_linuxkpi_preempt_count()u32\nfn C.vinix_linuxkpi_preempt_disable()\nfn C.vinix_linuxkpi_preempt_enable()\n' +
-		'fn C.vinix_linuxkpi_bug(&char,i32)\nfn C.vinix_linuxkpi_irq_flags()u64\nfn C.vinix_linuxkpi_irq_save()u64\nfn C.vinix_linuxkpi_irq_restore(u64)\nfn C.vinix_linuxkpi_may_sleep()bool\nfn C.vinix_linuxkpi_spin_wait()\nfn C.vinix_linuxkpi_cond_resched()i32\nfn C.vkp_spin_init(voidptr)\nfn C.vkp_spin_lock_irqsave(voidptr)u64\nfn C.vkp_spin_unlock_irqrestore(voidptr,u64)\n'
+		'fn C.vkm_cpu_masks_ready()bool\nfn C.vkm_cpu_ids()u32\nfn C.vkm_online_count()u32\nfn C.vks_smp_ready()bool\nfn C.tulpar_linuxkpi_smp_boot_context()bool\nfn C.tulpar_linuxkpi_smp_task_present()bool\nfn C.tulpar_linuxkpi_cpu_id()u32\nfn C.tulpar_linuxkpi_maskable_irq_depth()u32\nfn C.tulpar_linuxkpi_preempt_count()u32\nfn C.tulpar_linuxkpi_preempt_disable()\nfn C.tulpar_linuxkpi_preempt_enable()\n' +
+		'fn C.tulpar_linuxkpi_bug(&char,i32)\nfn C.tulpar_linuxkpi_irq_flags()u64\nfn C.tulpar_linuxkpi_irq_save()u64\nfn C.tulpar_linuxkpi_irq_restore(u64)\nfn C.tulpar_linuxkpi_may_sleep()bool\nfn C.tulpar_linuxkpi_spin_wait()\nfn C.tulpar_linuxkpi_cond_resched()i32\nfn C.vkp_spin_init(voidptr)\nfn C.vkp_spin_lock_irqsave(voidptr)u64\nfn C.vkp_spin_unlock_irqrestore(voidptr,u64)\n'
 	for name in ['require', 'is_null', 'native_hweight_long'] {
 		bindings += hosttest.v_function(os.read_file(primitive)!, name)!
 	}
 	bindings += hosttest.v_function(os.read_file(bitmap)!, 'bitmap_weight')!
 	bindings += '__global vkiw_host_guard_anchor i32=-1\n'
 	os.write_file(os.join_path(work, 'compatcore/bindings.v'), bindings)!
-	os.write_file(os.join_path(work, 'headercore/bindings.v'), '@[translated]\nmodule headercore\n#include "linuxkpi_header_primitive_v_contract.h"\nfn C.vinix_linuxkpi_cpu_id()u32\n@[typedef]\nstruct C.atomic_t{counter i32}\n@[typedef]\nstruct C.vhp_const_atomicp{}\nfn C.test_bit(i32,voidptr)bool\n' +
+	os.write_file(os.join_path(work, 'headercore/bindings.v'), '@[translated]\nmodule headercore\n#include "linuxkpi_header_primitive_v_contract.h"\nfn C.tulpar_linuxkpi_cpu_id()u32\n@[typedef]\nstruct C.atomic_t{counter i32}\n@[typedef]\nstruct C.vhp_const_atomicp{}\nfn C.test_bit(i32,voidptr)bool\n' +
 		"@[c:'__atomic_load_n']\nfn C.vhp_load32(&i32,i32)i32\n@[c:'__atomic_store_n']\nfn C.vhp_store32(&i32,i32,i32)\n" + hosttest.v_function(os.read_file(atomic_path)!, 'atomic_read')! + hosttest.v_function(os.read_file(atomic_path)!, 'atomic_set')!)!
 	return owned
 }
@@ -189,7 +189,7 @@ fn profile(work string, linux string, compiler []string, standard string) []stri
 		'-fno-strict-aliasing', '-ffunction-sections', '-fdata-sections', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-sign-compare',
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-D_FORTIFY_SOURCE=0',
-		'-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
+		'-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__', '-include',
 		os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h', '-include',
 		os.join_path(linux, 'include/linux/compiler_types.h')]
 	for directory in [os.join_path(work, 'include'),
@@ -207,7 +207,7 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
-	work := hosttest.work_dir(keep, 'vinix-irq-work-')!
+	work := hosttest.work_dir(keep, 'tulpar-irq-work-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut env := os.environ()
 	env['VCACHE'] = os.join_path(work, 'vcache')
@@ -251,7 +251,7 @@ fn run_profile(keep string) ! {
 		'spinlock':        'spinlock_adapters'
 	} {
 		hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema + '.json'),
-			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'vinix', name + '.h'))!
+			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'tulpar', name + '.h'))!
 	}
 	mut proofs := []json2.Any{}
 	for name in ['compatcore', 'headercore'] {
@@ -297,7 +297,7 @@ fn run_profile(keep string) ! {
 		for group in ['compatcore', 'headercore'] {
 			obj := os.join_path(work, standard + '-' + group + '.o')
 			mut group_flags := base.clone()
-			if group == 'compatcore' { group_flags << '-DVINIX_V_RUNTIME' }
+			if group == 'compatcore' { group_flags << '-DTULPAR_V_RUNTIME' }
 			inputs << compile_input(group_flags, os.join_path(work, group + '-selected.c'), obj,
 				os.join_path(work, standard + '-' + group + '-compile.log'), env)!
 			imports := command([hosttest.tool('llvm-nm'), '-u', obj], '', env)!.stdout

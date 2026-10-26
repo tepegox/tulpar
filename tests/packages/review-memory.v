@@ -5,8 +5,8 @@ import json2
 import tools.packages.pkgprotocol
 
 #include "@VMODROOT/../../tests/support/heap_tracker.h"
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn consume(kind int, text string, expected bool) {
 	mut accepted := true
@@ -55,12 +55,12 @@ fn main() {
 		}
 	}
 	for warmup in 0 .. 2 {
-		if warmup == 1 { C.vinix_heap_begin() }
+		if warmup == 1 { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			for kind, text in texts { consume(kind, text, true); consume(kind, invalid[kind], false) }
 		}
 	}
-	kept := C.vinix_heap_end()
+	kept := C.tulpar_heap_end()
 	assert kept == 0, 'metadata review readers retained ${kept} bytes'
 	println('Package/repository/offline review readers: 1000 wide valid/partial-invalid decode/close cycles retain zero tracked bytes')
 }

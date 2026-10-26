@@ -68,7 +68,7 @@ fn build() ! {
 	mut commands := [][]string{}
 	mut artifacts := []Artifact{}
 	for architecture in ['aarch64', 'x86_64'] {
-		cc := os.find_abs_path_of_executable(os.getenv_opt('VINIX_MUSL_CC_' + architecture.to_upper()) or { architecture + '-linux-musl-gcc' })!
+		cc := os.find_abs_path_of_executable(os.getenv_opt('TULPAR_MUSL_CC_' + architecture.to_upper()) or { architecture + '-linux-musl-gcc' })!
 		root := output + '/roots/' + architecture
 		work := output + '/build-' + architecture
 		for directory in ['bin', 'lib', 'licenses', 'sources'] { os.mkdir_all(root + '/' + directory)! }
@@ -103,7 +103,7 @@ fn build() ! {
 		generated := work + '/runner.c'
 		generate := [v, '-os', 'linux', '-arch', if architecture == 'aarch64' { 'arm64' } else { 'amd64' },
 			'-gc', 'none', '-d', 'no_backtrace', '-d', 'no_segfault_handler', '-o', generated, repository + '/tools/packages/linux-runner.v']
-		link := [cc, '-static', '-O2', '-std=gnu11', '-D_GNU_SOURCE', generated, '-o', root + '/bin/vinix-linux-runner', '-lm', '-lpthread']
+		link := [cc, '-static', '-O2', '-std=gnu11', '-D_GNU_SOURCE', generated, '-o', root + '/bin/tulpar-linux-runner', '-lm', '-lpthread']
 		commands << generate
 		run(generate, '', work + '/runner-generate.log')!
 		commands << link
@@ -112,7 +112,7 @@ fn build() ! {
 		for path in os.walk_ext(root + '/lib', '') { os.chmod(path, 0o755)! }
 		for name in ['LICENSE.md', 'COPYING.LGPLv2.1'] { os.cp(output + '/source/' + name, root + '/licenses/ffmpeg-' + name)! }
 		os.cp(repository + '/build-support/musl/COPYRIGHT', root + '/licenses/musl-COPYRIGHT')!
-		os.cp(repository + '/LICENSE', root + '/licenses/vinix-COPYING')!
+		os.cp(repository + '/LICENSE', root + '/licenses/tulpar-COPYING')!
 		os.cp(os.dir(v) + '/LICENSE', root + '/licenses/v-COPYRIGHT')!
 		os.cp(output + '/ffmpeg.tar.xz', root + '/sources/ffmpeg.tar.xz')!
 		os.cp(repository + '/tools/packages/linux-runner.v', root + '/sources/linux-runner.v')!

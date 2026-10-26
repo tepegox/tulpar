@@ -6,7 +6,7 @@ import hosttest
 import os
 
 fn main() {
-	work := hosttest.work_dir('', 'vinix-policy-guest-build-check-') or { panic(err) }
+	work := hosttest.work_dir('', 'tulpar-policy-guest-build-check-') or { panic(err) }
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for arch in ['aarch64', 'x86_64'] {
 		for family in ['tracker', 'print', 'diagnostic', 'hooks'] {

@@ -1,13 +1,13 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_LINUXKPI_RUNTIME_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_RUNTIME_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_RUNTIME_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_RUNTIME_V_PRIMITIVES_H
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 /* Native ABI declarations only; implementations and cursor access are V. */
-struct vinix_linuxkpi_printk_record;
-typedef const struct vinix_linuxkpi_printk_record vkr_const_printk_record;
-#ifndef VINIX_V_RUNTIME
+struct tulpar_linuxkpi_printk_record;
+typedef const struct tulpar_linuxkpi_printk_record vkr_const_printk_record;
+#ifndef TULPAR_V_RUNTIME
 int vkr_arg_int(void *);
 unsigned int vkr_arg_uint(void *);
 long vkr_arg_long(void *);
@@ -27,8 +27,8 @@ struct vkr_pci_match {
 };
 struct vkr_pci_match *vkr_tigerlake_table(size_t *);
 #endif
-void *vinix_linuxkpi_alloc_pages(size_t, bool);
-#ifndef VINIX_V_RUNTIME
+void *tulpar_linuxkpi_alloc_pages(size_t, bool);
+#ifndef TULPAR_V_RUNTIME
 void *vkr_log_lifecycle(void);
 void *vkr_log_ready(void);
 void vkr_log_reinit(void *);
@@ -47,19 +47,19 @@ void vkr_log_call_sink(void *, void *, void *);
 void vkr_log_write(void *, size_t);
 bool vkr_log_key(void *);
 #endif
-#ifdef VINIX_LINUXKPI_HOST_TEST
-#define VINIX_LINUXKPI_LOG_HOST 1
+#ifdef TULPAR_LINUXKPI_HOST_TEST
+#define TULPAR_LINUXKPI_LOG_HOST 1
 #else
-#define VINIX_LINUXKPI_LOG_HOST 0
+#define TULPAR_LINUXKPI_LOG_HOST 0
 #endif
 void pthread_exit(void *);
-void vinix_linuxkpi_host_logger_enter(void);
-void vinix_linuxkpi_host_logger_leave(void);
-#ifndef VINIX_V_RUNTIME
-unsigned long long vinix_linuxkpi_log_caller(void);
+void tulpar_linuxkpi_host_logger_enter(void);
+void tulpar_linuxkpi_host_logger_leave(void);
+#ifndef TULPAR_V_RUNTIME
+unsigned long long tulpar_linuxkpi_log_caller(void);
 #endif
 void msleep(unsigned int);
-#ifndef VINIX_V_RUNTIME
+#ifndef TULPAR_V_RUNTIME
 unsigned long __msecs_to_jiffies(unsigned int);
 #endif
 #endif

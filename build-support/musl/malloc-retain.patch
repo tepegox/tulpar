@@ -5,11 +5,11 @@
  
  #define MMAP_THRESHOLD 131052
 +
-+/* Vinix anonymous mappings cost page tables, zeroing and TLB maintenance.
++/* Tulpar anonymous mappings cost page tables, zeroing and TLB maintenance.
 + * Reuse a bounded number of ordinary groups and large mappings. Set this
 + * to zero at build time to retain upstream release policy. */
-+#ifndef VINIX_MALLOC_RETAIN
-+#define VINIX_MALLOC_RETAIN 1
++#ifndef TULPAR_MALLOC_RETAIN
++#define TULPAR_MALLOC_RETAIN 1
 +#endif
 +#define LARGE_CACHE_COUNT 5
 +#define LARGE_CACHE_MAX_PAGES 512
@@ -185,7 +185,7 @@
 + * cached. Metadata stays owned by the cache until it is reused or trimmed. */
 +static inline int large_cache_index(size_t maplen)
 +{
-+	if (!VINIX_MALLOC_RETAIN || maplen < 32 || maplen > LARGE_CACHE_MAX_PAGES)
++	if (!TULPAR_MALLOC_RETAIN || maplen < 32 || maplen > LARGE_CACHE_MAX_PAGES)
 +		return -1;
 +	int i = 0;
 +	for (size_t upper = 32; maplen > upper; upper <<= 1) i++;
@@ -202,7 +202,7 @@
 +	/* A cache should cover a modest burst before allocating another map.
 +	 * Keep upstream's larger usage-driven groups; only raise small groups.
 +	 * The storage budget caps both the minimum and retained map footprint. */
-+	int retain_cnt = VINIX_MALLOC_RETAIN ? (RETAIN_GROUP_MAX_BYTES-UNIT)/size : 0;
++	int retain_cnt = TULPAR_MALLOC_RETAIN ? (RETAIN_GROUP_MAX_BYTES-UNIT)/size : 0;
 +	if (retain_cnt > 8) retain_cnt = 8;
 +	if (cnt < retain_cnt) cnt = retain_cnt;
 +
@@ -265,7 +265,7 @@
 +	/* Every coarse-eligible class is below 32, with stride at most
 +	 * 8176 bytes. The 128 KiB retained budget gives each at least eight
 +	 * slots, so coarsening saves no storage under this policy. */
-+	if (!VINIX_MALLOC_RETAIN && !g && sc>=4 && sc<32 && sc!=6 && !(sc&1)
++	if (!TULPAR_MALLOC_RETAIN && !g && sc>=4 && sc<32 && sc!=6 && !(sc&1)
 +	    && !ctx.usage_by_class[sc]) {
  		size_t usage = ctx.usage_by_class[sc|1];
  		// if a new group may be allocated, count it toward
@@ -320,7 +320,7 @@
 -}
 +	/* Cached large mappings contain the previous caller's data. calloc
 +	 * must clear them; fresh large mappings take the same safe path. */
-+	return (!VINIX_MALLOC_RETAIN && g->sizeclass >= 48) ||
++	return (!TULPAR_MALLOC_RETAIN && g->sizeclass >= 48) ||
 +		(g->sizeclass < 48 && get_stride(g) < UNIT*size_classes[g->sizeclass]);
 +}
 --- a/src/malloc/mallocng/free.c
@@ -359,7 +359,7 @@
 +	/* Keep only the final ordinary group in a class. Nested small groups
 +	 * are cheap in bytes but rebuilding their metadata on every free is
 +	 * expensive. Multiple groups still consolidate via upstream policy. */
-+	if (VINIX_MALLOC_RETAIN && (g->next == g || (!g->next && !ctx.active[sc])) &&
++	if (TULPAR_MALLOC_RETAIN && (g->next == g || (!g->next && !ctx.active[sc])) &&
 +	    (g->maplen ? g->maplen*4096UL :
 +	     UNIT + UNIT*size_classes[sc]*(g->last_idx+1)) <= RETAIN_GROUP_MAX_BYTES)
 +		return 0;
@@ -400,7 +400,7 @@
 +	 * queue maintenance or reclamation. Keep the normal freed-mask
 +	 * publication so activation still rotates through all its slots.
 +	 * Metadata, redzones and the caller header were checked above. */
-+	if (VINIX_MALLOC_RETAIN && !MT && g->sizeclass < 48 && g->next == g &&
++	if (TULPAR_MALLOC_RETAIN && !MT && g->sizeclass < 48 && g->next == g &&
 +	    stride >= info.class_stride &&
 +	    (g->maplen ? g->maplen*4096UL : UNIT + stride*(g->last_idx+1))
 +	    <= RETAIN_GROUP_MAX_BYTES) {

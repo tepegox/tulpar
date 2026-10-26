@@ -18,7 +18,7 @@ fn select_source(raw string) !string {
 		line := body.all_before('\n')
 		if hosttest.named_body(body, 'main') && !body.contains('rawtscfixture__run') { continue }
 		if ['linuxkpi__', 'headercore__', 'cpu__', 'rawtscfixture__', 'rawtscspy__'].any(line.contains(it))
-			|| ['rdtsc', 'vinix_linuxkpi_raw_tsc', 'vinix_linuxkpi_cpu_has', 'main',
+			|| ['rdtsc', 'tulpar_linuxkpi_raw_tsc', 'tulpar_linuxkpi_cpu_has', 'main',
 				'_vno_main_init_caller'].any(hosttest.named_body(body, it)) {
 			bodies << body
 		}
@@ -53,7 +53,7 @@ fn select_source(raw string) !string {
 }
 
 fn native_objects(work string, raw string, env map[string]string, compiler string) !json2.Any {
-	names := ['cpu__rdtsc', 'linuxkpi__raw_tsc', 'vinix_linuxkpi_raw_tsc', 'headercore__rdtsc',
+	names := ['cpu__rdtsc', 'linuxkpi__raw_tsc', 'tulpar_linuxkpi_raw_tsc', 'headercore__rdtsc',
 		'rdtsc']
 	mut bodies := []string{}
 	mut hashes := map[string]string{}
@@ -105,11 +105,11 @@ fn run(keep string, reference_receipt string) ! {
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', root + '/third_party/linux-i915/linux-6.6.157')
 	pin := hosttest.upstream_pin()!
 	hosttest.verify_upstream(linux, pin)!
-	work := hosttest.work_dir(keep, 'vinix-raw-tsc-v-')!
+	work := hosttest.work_dir(keep, 'tulpar-raw-tsc-v-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	production := ['kernel/linuxkpi/raw_tsc_amd64_d_linuxkpi.v', 'kernel/linuxkpi/headercore/tsc.v',
 		'kernel/c/linuxkpi_tsc_v_contract.h', 'kernel/linuxkpi/include/asm/msr.h',
-		'kernel/linuxkpi/include/asm/processor.h', 'kernel/linuxkpi/include/vinix/runtime.h',
+		'kernel/linuxkpi/include/asm/processor.h', 'kernel/linuxkpi/include/tulpar/runtime.h',
 		'kernel/linuxkpi/include/asm/cpufeature.h', 'kernel/linuxkpi/include/generated/autoconf.h',
 		'kernel/linuxkpi/headercore/primitive.v', 'kernel/x86/cpu/cpu.v']
 	mut inputs := [@FILE, root + '/kernel/linuxkpi/upstream.json']
@@ -169,7 +169,7 @@ fn run(keep string, reference_receipt string) ! {
 	reference_generation[reference_generation.len - 1] = reference
 	hosttest.command(reference_generation, work + '/native-reference-generation.log', 120, env)!
 	reference_raw := os.read_file(reference_path)!
-	for name in ['linuxkpi__raw_tsc', 'vinix_linuxkpi_raw_tsc', 'headercore__rdtsc', 'rdtsc'] {
+	for name in ['linuxkpi__raw_tsc', 'tulpar_linuxkpi_raw_tsc', 'headercore__rdtsc', 'rdtsc'] {
 		require(hosttest.extract_body(raw, name)! == hosttest.extract_body(reference_raw, name)!,
 			'Host generation changed actual isolated production body: ' + name)!
 	}
@@ -179,7 +179,7 @@ fn run(keep string, reference_receipt string) ! {
 		record := json2.decode[json2.Any](os.read_file(path)!)!.as_map()
 		require(record['compiler_sha256']!.str() == hosttest.sha(compiler_v)!, 'Reference used a different native V compiler')!
 		expected := record['actual_generated_bodies']!.as_map()
-		for name in ['cpu__rdtsc', 'linuxkpi__raw_tsc', 'vinix_linuxkpi_raw_tsc', 'headercore__rdtsc',
+		for name in ['cpu__rdtsc', 'linuxkpi__raw_tsc', 'tulpar_linuxkpi_raw_tsc', 'headercore__rdtsc',
 			'rdtsc'] {
 			require(hosttest.text_sha(hosttest.extract_body(reference_raw, name)!) == expected[name]!.str(),
 				'Actual isolated body differs from independent author receipt: ' + name)!
@@ -206,7 +206,7 @@ fn run(keep string, reference_receipt string) ! {
 	$if macos {
 		common << ['-arch', 'x86_64']
 	}
-	mut includes := ['-D__KERNEL__', '-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-include',
+	mut includes := ['-D__KERNEL__', '-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-include',
 		root + '/tests/linuxkpi/host_types.h', '-include', 'linux/kconfig.h', '-include',
 		linux + '/include/linux/compiler_types.h']
 	for path in [root + '/tests/linuxkpi/rawtscfixture', work + '/abi',

@@ -47,7 +47,7 @@ pub fn scheduler_ready() {
 	katomic.store(mut &scheduler_available, u32(1))
 }
 
-@[export: 'vinix_acpi_sync_thread_id']
+@[export: 'tulpar_acpi_sync_thread_id']
 pub fn thread_id() u64 {
 	// Before SMP and the scheduler exist, AML runs only on the boot thread.
 	// Do not read GS/TPIDR or dereference a Thread before that initialization.
@@ -58,7 +58,7 @@ pub fn thread_id() u64 {
 	return if current == unsafe { nil } { 1 } else { u64(voidptr(current)) }
 }
 
-@[export: 'vinix_acpi_sync_create']
+@[export: 'tulpar_acpi_sync_create']
 pub fn create(mutex bool) voidptr {
 	allocation := memory.malloc_packed_fallible(sizeof(Gate))
 	if allocation == unsafe { nil } {
@@ -73,7 +73,7 @@ pub fn create(mutex bool) voidptr {
 
 // The host must quiesce every user before destruction. Refuse destruction
 // when that contract is observably violated, rather than free live listeners.
-@[export: 'vinix_acpi_sync_destroy']
+@[export: 'tulpar_acpi_sync_destroy']
 pub fn destroy(handle voidptr) bool {
 	if handle == unsafe { nil } {
 		return true
@@ -97,7 +97,7 @@ pub fn destroy(handle voidptr) bool {
 
 // uACPI status numbers: OK=0, INVALID_ARGUMENT=7, INTERNAL_ERROR=10,
 // TIMEOUT=18, DENIED=20. A timeout of zero never allocates or schedules.
-@[export: 'vinix_acpi_sync_wait']
+@[export: 'tulpar_acpi_sync_wait']
 pub fn wait(handle voidptr, timeout u16) int {
 	return wait_for(handle, timeout, true)
 }
@@ -120,7 +120,7 @@ pub fn wait(handle voidptr, timeout u16) int {
 // that program has a signal coming is no reason for the method to fail half
 // way: here such a thread takes turns with the others until the mutex is
 // free, which is as long as its holder needs and no longer.
-@[export: 'vinix_acpi_sync_acquire']
+@[export: 'tulpar_acpi_sync_acquire']
 pub fn acquire(handle voidptr, timeout u16) int {
 	return wait_for(handle, timeout, false)
 }
@@ -227,7 +227,7 @@ fn wait_for(handle voidptr, timeout u16, strict bool) int {
 	return 10
 }
 
-@[export: 'vinix_acpi_sync_sleep']
+@[export: 'tulpar_acpi_sync_sleep']
 pub fn sleep(msec u64) {
 	if msec == 0 {
 		return
@@ -251,7 +251,7 @@ pub fn sleep(msec u64) {
 	}
 }
 
-@[export: 'vinix_acpi_sync_signal']
+@[export: 'tulpar_acpi_sync_signal']
 pub fn signal(handle voidptr) bool {
 	if handle == unsafe { nil } {
 		return false
@@ -279,7 +279,7 @@ pub fn signal(handle voidptr) bool {
 // and with two threads reading at once those are different threads. Refused,
 // that mutex stayed taken for good and every later evaluation waited on it
 // for ever. False when the mutex is not held at all.
-@[export: 'vinix_acpi_sync_release']
+@[export: 'tulpar_acpi_sync_release']
 pub fn release(handle voidptr) bool {
 	if handle == unsafe { nil } {
 		return false
@@ -310,7 +310,7 @@ pub fn held_by_caller(handle voidptr) bool {
 	return held
 }
 
-@[export: 'vinix_acpi_sync_reset']
+@[export: 'tulpar_acpi_sync_reset']
 pub fn reset(handle voidptr) {
 	if handle == unsafe { nil } {
 		return
@@ -323,12 +323,12 @@ pub fn reset(handle voidptr) {
 	gate.lock.release()
 }
 
-fn C.vinix_acpi_sync_native_test() i32
-fn C.vinix_acpi_sync_boot_test() i32
+fn C.tulpar_acpi_sync_native_test() i32
+fn C.tulpar_acpi_sync_boot_test() i32
 
 pub fn test_boot() {
 	$if acpi_sync_test ? {
-		if C.vinix_acpi_sync_boot_test() != 0 {
+		if C.tulpar_acpi_sync_boot_test() != 0 {
 			panic('ACPI synchronization bootstrap test failed')
 		}
 	}
@@ -336,7 +336,7 @@ pub fn test_boot() {
 
 pub fn test_native() {
 	$if acpi_sync_test ? {
-		if C.vinix_acpi_sync_native_test() != 0 {
+		if C.tulpar_acpi_sync_native_test() != 0 {
 			panic('ACPI synchronization native test failed')
 		}
 	}

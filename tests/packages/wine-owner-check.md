@@ -77,12 +77,12 @@ freedom; no kernel code or lifetimes change here.
 
 ```sh
 v -nocache -o /tmp/wine-owner-check tests/packages/wine-owner-check.v
-VINIX_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
+TULPAR_PROFILE_EXPORT_SOURCE=/reviewed/ffmpeg-8.0.1.tar.xz V=/path/to/reviewed/v \
   /tmp/wine-owner-check /build/new-wine-owner-host
 
 v -nocache -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/wine-owner-runtime tests/packages/wine-owner-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/wine-owner-runtime --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-wine-owner-arm
 ```

@@ -5,9 +5,9 @@ module devcore
 import limine
 
 // The value the kernel command line gives `name`, which ends in its `=`:
-// boot_option('vinix.iommu=') is "1" for "vinix.iommu=1". A view into the
+// boot_option('tulpar.iommu=') is "1" for "tulpar.iommu=1". A view into the
 // command line, good for the life of the machine; none when the option is not
-// there. The last one wins, as it does for every other vinix. option.
+// there. The last one wins, as it does for every other tulpar. option.
 pub fn boot_option(name string) ?string {
 	kernel_file := limine.kernel_file()
 	if kernel_file == unsafe { nil } || kernel_file.cmdline == unsafe { nil } {

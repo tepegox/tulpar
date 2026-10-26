@@ -1,5 +1,5 @@
 description = Apply the reviewed package administration request
 auth = admin
-exec = /usr/bin/vinix-package
+exec = /usr/bin/tulpar-package
 arg = admin-authorize
 input = secret

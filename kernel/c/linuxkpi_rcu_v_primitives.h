@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_RCU_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_RCU_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_RCU_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_RCU_V_PRIMITIVES_H
 #include "linuxkpi_v_primitives.h"
 #include "linuxkpi_wait_v_primitives.h"
 
@@ -35,26 +35,26 @@ void vkr_rcu_thread_exit(void);
 void *vkr_rcu_get_current(void);
 void vkr_rcu_put_task(void *);
 bool vkr_rcu_task_retired(void *);
-bool vinix_linuxkpi_test_thread_reap_ready(void *);
+bool tulpar_linuxkpi_test_thread_reap_ready(void *);
 
 bool vkm_cpu_masks_ready(void);
 uint32_t vkm_cpu_ids(void);
 uint32_t vkm_online_count(void);
 bool vks_smp_ready(void);
-bool vinix_linuxkpi_smp_boot_context(void);
-bool vinix_linuxkpi_smp_task_present(void);
-void vinix_linuxkpi_rcu_force_quiescence(void);
-uint32_t vinix_linuxkpi_maskable_irq_depth(void);
-uint32_t vinix_linuxkpi_preempt_count(void);
-void vinix_linuxkpi_preempt_disable(void);
-void vinix_linuxkpi_preempt_enable(void);
-unsigned long vinix_linuxkpi_irq_flags(void);
-int vinix_linuxkpi_cond_resched(void);
+bool tulpar_linuxkpi_smp_boot_context(void);
+bool tulpar_linuxkpi_smp_task_present(void);
+void tulpar_linuxkpi_rcu_force_quiescence(void);
+uint32_t tulpar_linuxkpi_maskable_irq_depth(void);
+uint32_t tulpar_linuxkpi_preempt_count(void);
+void tulpar_linuxkpi_preempt_disable(void);
+void tulpar_linuxkpi_preempt_enable(void);
+unsigned long tulpar_linuxkpi_irq_flags(void);
+int tulpar_linuxkpi_cond_resched(void);
 
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 void msleep(unsigned int);
 #endif
-#ifdef VINIX_LINUXKPI_HOST_TEST
+#ifdef TULPAR_LINUXKPI_HOST_TEST
 /* Transport/context observations only, implemented in the host V fixture. */
 void vkr_rcu_host_worker_enter(void);
 void vkr_rcu_host_worker_leave(void);

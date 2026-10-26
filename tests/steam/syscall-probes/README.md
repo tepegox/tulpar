@@ -22,7 +22,7 @@ The three embedded launcher timeout blocks also use V. `hosted-command/run`
 invokes a native command owner with the original 20-second bound. The existing
 launcher fixtures still test initial installation, an installed client and an
 updater retry, including exact arguments and stylesheet changes. Tests can set
-`VINIX_STEAM_HOSTED_COMMAND` to a freshly compiled profile executable.
+`TULPAR_STEAM_HOSTED_COMMAND` to a freshly compiled profile executable.
 
 ```sh
 build-support/run-v-tool.sh tests/steam/qualify-probes.v \
@@ -46,7 +46,7 @@ or Python. `steam_probe_sdk` enables only the private test boot mode, mounts
 guest tmpfs/procfs, enables guest loopback and powers that VM off after passing.
 
 These are real Linux syscall and cleanup checks. They establish reference SDK
-behavior; they do not establish a new Vinix-kernel, Steam-client or graphical
+behavior; they do not establish a new Tulpar-kernel, Steam-client or graphical
 runtime pass. Host sanitizers instrument the native host tools; the Linux probe
 ELFs use the normal static musl build. The nine embedded blocks receive zero
 Python-file retirement credit because their containing files were Shell.

@@ -253,7 +253,7 @@ fn check_pmd() bool {
 	return bits(unsafe { &prior }, 8) == next && bits(unsafe { &storage }, 8) == seed
 }
 
-@[export: 'vinix_linuxkpi_aggregate_fixture_queries']
+@[export: 'tulpar_linuxkpi_aggregate_fixture_queries']
 pub fn queries() i32 {
 	if !check_record1() { return 1 }
 	if !check_record2() { return 2 }

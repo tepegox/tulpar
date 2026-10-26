@@ -12,7 +12,7 @@ not exist, it says so.
 
 1. **Acknowledge.** Whoever receives a report answers within three working
    days, even if only to say it has been read.
-2. **Reproduce and classify.** Against the current `master`, on the
+2. **Reproduce and classify.** Against the current `main`, on the
    architecture reported. The classes:
 
    | Class | What it means | Example |
@@ -47,7 +47,7 @@ for a week, and no later than 90 days after the report whether or not there
 is a fix. An advisory says which revisions are affected, what an attacker
 needed and got, how to tell whether a machine has the fix, and who found it.
 
-Vinix has no CVE numbering authority and has not requested identifiers for
+Tulpar has no CVE numbering authority and has not requested identifiers for
 anything. An advisory on GitHub can request one; whether to is decided per
 advisory.
 
@@ -55,12 +55,11 @@ advisory.
 
 What exists:
 
-- **Releases** are images built from a revision
-  ([`README.md`](../README.md#download-an-image)). An image records its
-  revision in `/etc/vinix-release`.
-- **The desktop checks for a newer release** and says so: it compares
-  `/etc/vinix-release` with the version published at `vinix-os.org`. It
-  tells the user; it does not install anything.
+- **Development images** are built from source with the commands in
+  [`README.md`](../README.md#build-and-run). Record the source revision with
+  `git rev-parse HEAD` when building or reporting a problem.
+- **Repository changes and advisories** can be followed in the
+  [Tulpar repository](https://github.com/tepegox/tulpar).
 
 What does not exist, and is why this cannot yet be called an update
 process:
@@ -74,12 +73,11 @@ process:
   ([`docs/security.md`](security.md#authenticated-uefi-images)), but
   release images are not signed with a project key, and nothing checks a
   signature when an image is downloaded.
-- **No security-only releases.** A release is the whole of `master` at a
+- **No security-only releases.** A release is the whole of `main` at a
   revision. A fix cannot be shipped without everything else that changed.
 - **No supported old versions.** Only the newest release gets fixes.
-- **No channel for telling users.** The release check carries a version,
-  not a reason; someone who reads the advisories knows that an update is a
-  security update, and nobody else does.
+- **No automatic update notifications.** The terminal base has no desktop
+  release checker. Users must follow repository changes and advisories.
 
 Until those exist, the honest instruction for a serious vulnerability is:
 install the new image, or do not use the affected feature.

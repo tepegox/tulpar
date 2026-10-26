@@ -7,9 +7,9 @@ import tools.packages.signing
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 // Compatibility oracle only: the production verifier previously used these
 // exact trim/hex operations. Their private scratch stays outside measured frames.
@@ -125,10 +125,10 @@ fn test_repeated_signature_decoding_releases_all_success_and_failure_scratch() {
 			'0X!', base + '!', '', 'a'.repeat(1024 * 1024), 'a'.repeat(1024 * 1024) + '!']
 		for input in inputs {
 			for _ in 0 .. 16 {
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 				if decoded := decode_repository_signature('fixture', input) { unsafe { decoded.free() } }
 				else { message := err.msg(); unsafe { message.free(); err.free() } }
-				kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				assert kept == 0 && count == 0, '${kept} bytes / ${count} allocations retained'
 			}
 		}

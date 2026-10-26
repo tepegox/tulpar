@@ -50,7 +50,7 @@ pub:
 // per guess on an M1. That is less work than the parameter sets OWASP's
 // password storage guidance lists (it asks for p = 3 at this N); three times
 // the wait at every login and unlock was judged too much for what V's
-// implementation costs. /etc/vinix/auth.conf can ask for more.
+// implementation costs. /etc/tulpar/auth.conf can ask for more.
 pub const default_cost = Cost{}
 
 fn (c Cost) valid() bool {
@@ -367,7 +367,7 @@ pub fn login_name_for(display string) string {
 // The cost new password records are made at: the default, or what the
 // administrator's settings file asks for.
 //
-//	# /etc/vinix/auth.conf
+//	# /etc/tulpar/auth.conf
 //	scrypt_ln = 16
 //	scrypt_p = 2
 //

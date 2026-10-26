@@ -1,6 +1,6 @@
 # Personal application data purge
 
-`vinix-package purge-data ID` and the additive SDK 1 `Service.purge_data(id) !`
+`tulpar-package purge-data ID` and the additive SDK 1 `Service.purge_data(id) !`
 erase a removed application's data for the calling ordinary account. Root and
 alternate installation roots are refused. Uninstall/rollback continue to retain
 personal data until this explicit command.
@@ -12,7 +12,7 @@ files are removed. This is conservative: another account/application using the
 same generation also blocks purge. The reader lock prevents reinstall and
 collection races; new launches cannot enter a removed application.
 
-The home and `.local/share/vinix-apps` components are opened individually without
+The home and `.local/share/tulpar-apps` components are opened individually without
 following symlinks and must be caller-owned, with no write access for other
 accounts. The deletion walk uses directory descriptors, rechecks identities
 before unlinking directories, streams filenames and closes each child before

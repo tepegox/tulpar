@@ -108,7 +108,7 @@ fn test_what_is_not_a_recording_is_refused() {
 }
 
 fn test_a_recording_is_judged_from_its_file() {
-	state := os.join_path(os.temp_dir(), 'vinix-hwtest-sound-${os.getpid()}')
+	state := os.join_path(os.temp_dir(), 'tulpar-hwtest-sound-${os.getpid()}')
 	os.mkdir_all(state)!
 	defer {
 		os.rmdir_all(state) or {}

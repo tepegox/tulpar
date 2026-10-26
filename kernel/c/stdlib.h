@@ -14,7 +14,7 @@
 // generated C parses, and being unreferenced they never become link errors.
 
 // Match V's exported definition in its generated translation unit.
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 int atoi(char *text);
 #else
 int atoi(const char *text);

@@ -40,7 +40,7 @@ pub fn set_native_disk_id(index u32, id u64) {
 
 // ANS also serves its native filesystems through C, bypassing V block
 // resources. Its low-level command completion uses the same physical counter.
-@[export: 'vinix_account_disk_transfer']
+@[export: 'tulpar_account_disk_transfer']
 fn account_disk_completion(index u32, bytes u64, write int) {
 	account_disk_transfer(bytes, write != 0)
 	if index < u32(native_disk_ids.len) { account_disk_io(native_disk_ids[index], bytes, write != 0) }

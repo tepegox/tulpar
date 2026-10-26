@@ -106,7 +106,7 @@ pub fn syscall_getrusage(_ voidptr, who int, usage u64) (u64, u64) {
 		return errno.err, errno.einval
 	}
 	if usage == 0 { return errno.err, errno.efault }
-	mut result := unsafe { &proc.Rusage(C.vinix_stack_alloc(sizeof(proc.Rusage))) }
+	mut result := unsafe { &proc.Rusage(C.tulpar_stack_alloc(sizeof(proc.Rusage))) }
 	unsafe { *result = proc.Rusage{} }
 	if !proc.fill_rusage(mut result, who, time.monotonic_ns()) {
 		return errno.err, errno.einval

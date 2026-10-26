@@ -3,8 +3,8 @@ module pkgadmin
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 const owner_nonce = '0123456789abcdef0123456789abcdef'
@@ -12,7 +12,7 @@ const owner_fingerprint = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 fn admin_error(err IError) { message := err.msg(); unsafe { message.free(); err.free() } }
 fn admin_window(label string) {
 	$if track_heap ? {
-		kept := C.vinix_heap_end(); assert kept == 0, kept.str()
+		kept := C.tulpar_heap_end(); assert kept == 0, kept.str()
 		println('ADMIN ENVELOPE ' + label + ' retained 0 bytes PASS')
 	} $else { println('ADMIN ENVELOPE ' + label + ' PASS') }
 }
@@ -62,7 +62,7 @@ fn test_owned_admin_envelopes_and_receipts_retire_storage() {
 	// Prime only shared JSON type metadata outside the tracked window.
 	text := requests[0].encode()!; mut warm := decode(text)!; warm.close(); unsafe { text.free() }
 	for request in requests {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for cycle in 0 .. 1000 {
 			encoded := request.encode()!
 			mut decoded := decode(encoded)!; mut sibling := decode(encoded)!
@@ -106,13 +106,13 @@ fn test_partial_and_noncanonical_admin_requests_retire_every_field() {
 	// Every truncated prefix of the largest legal request, including late
 	// failures after an owned nonce and partially decoded strings.
 	maximum := requests[15].encode()!; defer { unsafe { maximum.free() } }
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for cut in 0 .. maximum.len {
 		if mut decoded := decode(unsafe { tos(maximum.str, cut) }) { decoded.close(); assert false } else { admin_error(err) }
 	}
 	admin_window('all 4096 truncated prefixes')
 	for text in invalid {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			if mut decoded := decode(text) { decoded.close(); assert false } else { admin_error(err) }
 		}
@@ -132,7 +132,7 @@ fn test_partial_and_noncanonical_admin_requests_retire_every_field() {
 	defer { unsafe { long_path.free(); (&array(&overflow.arguments)).free() } }
 	batch := requests[14].encode()!; many := batch.replace(']}', ',"another"]}')
 	defer { unsafe { batch.free(); many.free() } }
-	$if track_heap ? { C.vinix_heap_begin() }
+	$if track_heap ? { C.tulpar_heap_begin() }
 	for _ in 0 .. 1000 {
 		if value := bad.encode() { unsafe { value.free() }; assert false } else { admin_error(err) }
 		assert bad.receipt(0) == ''
@@ -156,7 +156,7 @@ fn test_admin_receipt_refusals_retire_hash_and_error_scratch() {
 		Request{ nonce: owner_nonce, arguments: other }.receipt(0), '', 'x'.repeat(16385)]
 	defer { unsafe { bad.free() } }
 	for value in bad {
-		$if track_heap ? { C.vinix_heap_begin() }
+		$if track_heap ? { C.tulpar_heap_begin() }
 		for _ in 0 .. 1000 {
 			if _ := request.result(value) { assert false } else { admin_error(err) }
 		}

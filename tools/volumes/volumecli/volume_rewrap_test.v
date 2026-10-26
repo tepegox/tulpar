@@ -4,7 +4,7 @@ module volumecli
 import os
 
 fn test_volume_rewrap_preserves_authenticated_metadata_and_key_with_binary_credentials() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-rewrap-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-rewrap-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	old := []u8{len: 1024, init: u8(index * 11 + 1)}
 	next := [u8(0), u8(10), u8(0xe2), u8(0x82), u8(0xac), u8(0xff)]
@@ -59,12 +59,12 @@ fn test_volume_rewrap_preserves_authenticated_metadata_and_key_with_binary_crede
 	}
 	assert os.read_bytes(work + '/source')! == source[..] && os.read_bytes(work + '/alias')! == source[..]
 	assert os.read_bytes(work + '/result')! == result && os.read_bytes(work + '/old')! == old && os.read_bytes(work + '/next')! == next
-	assert os.ls(work)!.all(!it.starts_with('.vinix-key-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-key-'))
 }
 
 fn test_volume_rewrap_cli_rejects_bad_arity_and_empty_paths_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'rewrap-volume'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'rewrap-volume'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 		for count in [2, 3, 4, 5, 7] { assert run(count, &args[0]) == 2 }
 		for at in 2 .. 6 { args[at] = &char(c''); assert run(6, &args[0]) == 2; args[at] = &char(c'/unused') }
 	}

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_SLAB_H
-#define VINIX_LINUX_SLAB_H
+#ifndef TULPAR_LINUX_SLAB_H
+#define TULPAR_LINUX_SLAB_H
 #include <linux/types.h>
 /* Use the actual upstream flag definitions, including their numeric values. */
 #include <linux/gfp_types.h>
@@ -69,7 +69,7 @@ unsigned int kmem_cache_size(struct kmem_cache *);
 void *kmem_cache_zalloc(struct kmem_cache *, gfp_t);
 
 #define ZERO_SIZE_PTR ((void *)16UL)
-#include <vinix/integer_policy.h>
+#include <tulpar/integer_policy.h>
 void *kmalloc(size_t, gfp_t) __must_check;
 void *kzalloc(size_t, gfp_t) __must_check;
 void *kmalloc_array(size_t, size_t, gfp_t) __must_check;

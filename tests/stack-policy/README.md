@@ -6,7 +6,7 @@ only their currently readable+writable, non-executable portions authorize a
 syscall stack pointer. The initial main stack is tagged automatically. Existing
 split/fork/remap paths retain the mapping flags.
 
-`prctl(0x56490001, action, 0, 0, 0)` provides a Vinix loader/runtime contract:
+`prctl(0x56490001, action, 0, 0, 0)` provides a Tulpar loader/runtime contract:
 
 - 0: query mode (0 disabled, 1 audit, 2 enforce).
 - 1: enable audit; invalid entries increment a counter and calls still run.

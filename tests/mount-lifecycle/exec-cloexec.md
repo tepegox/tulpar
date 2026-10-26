@@ -3,14 +3,14 @@
 An empty-path `execveat` of a valid script now returns `ENOENT` when its
 descriptor has `FD_CLOEXEC`. The interpreter needs the synthesized
 `/proc/self/fd/N` name after execution; closing that descriptor would make
-the script inaccessible. Previously Vinix started the interpreter anyway.
+the script inaccessible. Previously Tulpar started the interpreter anyway.
 Native ELF images can still execute through close-on-exec descriptors, which
 are closed before the new image runs. Clearing the flag makes scripts usable
 again, and `dup` retains its independent descriptor flags.
 
 [Linux v6.12 script loading](https://github.com/torvalds/linux/blob/v6.12/fs/binfmt_script.c)
 checks script syntax before refusing an inaccessible descriptor-derived name
-with `ENOENT`. The Vinix check likewise follows shebang parsing and the existing
+with `ENOENT`. The Tulpar check likewise follows shebang parsing and the existing
 mount, permission, MAC and W^X checks. Malformed shebangs retain `ENOEXEC`.
 
 Both architecture loaders use the syscall's existing pinned descriptor. The
@@ -83,7 +83,7 @@ V Clang wrapper refer to the previous qualification area. `tool-inputs.json`,
 `compiler-recovery.json` retain their pins/provenance. Shared dependencies
 are not private source copies frozen before these builds. Host V generates
 the x86 sampler from the baseline generator and builds the probes/controllers.
-These remain host inputs, not native Vinix toolchain qualification.
+These remain host inputs, not native Tulpar toolchain qualification.
 
 Native ARM uses HVF/four CPUs; x86 uses TCG/two, each with 1024 MiB.
 Linux uses HVF/TCG, two CPUs and 512 MiB. Networking is disabled; each

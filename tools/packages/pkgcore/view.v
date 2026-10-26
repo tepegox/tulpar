@@ -218,7 +218,7 @@ fn read_software_view(root string, offline bool) !SoftwareView {
 	current := read_state(directory, config.architecture)!
 	defer { if current.generation != 0 { close_decoded_state(current) } }
 	mut catalog_error := if config.repositories.len == 0 {
-		'No trusted repositories are configured. An administrator must enroll a publisher with vinix-package repo-enroll.'
+		'No trusted repositories are configured. An administrator must enroll a publisher with tulpar-package repo-enroll.'
 	} else {
 		''
 	}

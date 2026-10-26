@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef VINIX_STRING_TOKENS_HOST_V_CONTRACT_H
-#define VINIX_STRING_TOKENS_HOST_V_CONTRACT_H
+#ifndef TULPAR_STRING_TOKENS_HOST_V_CONTRACT_H
+#define TULPAR_STRING_TOKENS_HOST_V_CONTRACT_H
 #include "host_model_v_contract.h"
 _Static_assert(sizeof(vmh_const_char_p)==sizeof(char *), "native readonly pointer width");
 struct vmt_pbrk_call { char *(*volatile value)(const char *, const char *); };

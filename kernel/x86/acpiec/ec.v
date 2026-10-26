@@ -78,7 +78,7 @@
 // off unless asked for. With wakeup disabled for the device its event is
 // switched off for the sleep and whatever it raised is asked for on resume.
 //
-// Boot options, in vinix.ec= as a comma-separated list:
+// Boot options, in tulpar.ec= as a comma-separated list:
 //
 //	off        do not drive the controller
 //	clear      on start and on resume, query the controller until it says it
@@ -320,7 +320,7 @@ fn setup() {
 		return
 	}
 	acpiec_wiring.set_up = true
-	if options := devcore.boot_option('vinix.ec=') {
+	if options := devcore.boot_option('tulpar.ec=') {
 		acpiec_wiring.disabled = listed(options, 'off')
 		acpiec_wiring.clear = listed(options, 'clear')
 		acpiec_wiring.trust_device_gpe = listed(options, 'dsdt-gpe')

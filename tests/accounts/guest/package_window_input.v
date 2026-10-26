@@ -20,10 +20,10 @@ fn qualify_package_window_input(mut t Test) ! {
 	os.mkdir_all('/tmp/package-publisher', mode: 0o700)!
 	key := pkgcore.keygen('/tmp/package-publisher/memo-seed')!
 	pkgcore.publish(repository, 'memo-publisher', '/tmp/package-publisher/memo-seed', 1, time.now().unix() + 3600)!
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'alex',
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'alex',
 		policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['repo-enroll', 'memo-publisher', 'file://' + repository, key])!
 	package_success(['update'])!
 	package_success(['install', p.id])!
@@ -39,42 +39,42 @@ fn qualify_package_window_input(mut t Test) ! {
 		appsdk.WindowEvent{ format: 2, kind: 'close', sequence: 3 }] {
 		input += event.encode()! + '\n'
 	}
-	launched := run(['/usr/bin/vinix-package', 'run-window', p.id], input, none, none)
+	launched := run(['/usr/bin/tulpar-package', 'run-window', p.id], input, none, none)
 	assert launched.status == 0, launched.output
 	mut frames := window_guest_frames(launched.output)!
 	defer { for mut frame in frames { frame.close() } }
 	assert frames.len == 3 && frames[0].format == 2 && frames[2].sequence == 3
 	assert frames[0].elements[1].text == '' && frames[1].elements[1].text == memo && frames[2].elements[1].text == memo
 	assert frames[1].elements[3].text.contains('Press Save') && frames[2].elements[3].text.contains('Saved')
-	data := '/home/alex/.local/share/vinix-apps/' + p.id + '/memo.txt'
+	data := '/home/alex/.local/share/tulpar-apps/' + p.id + '/memo.txt'
 	assert os.read_file(data)! == memo && owner_of(data) == 1000
-	assert !os.exists('/tmp/.X11-unix') && !os.exists('/home/alex/.local/share/vinix-apps/' + p.id + '/memo.txt.new')
+	assert !os.exists('/tmp/.X11-unix') && !os.exists('/home/alex/.local/share/tulpar-apps/' + p.id + '/memo.txt.new')
 	t.say('PACKAGE WINDOW INPUT signed-native ordinary-account UTF-8 literal-text frame-bound explicit-save PASS')
 	// EOF closes without persisting an unsaved replacement.
 	unsaved := appsdk.WindowEvent{ format: 2, kind: 'text', sequence: 1, id: 'memo', text: 'unsaved' }.encode()! + '\n'
-	assert run(['/usr/bin/vinix-package', 'run-window', p.id], unsaved, none, none).status == 0
+	assert run(['/usr/bin/tulpar-package', 'run-window', p.id], unsaved, none, none).status == 0
 	assert os.read_file(data)! == memo
 	empty := appsdk.WindowEvent{ format: 2, kind: 'text', sequence: 1, id: 'memo' }.encode()! + '\n'
 		+ appsdk.WindowEvent{ format: 2, kind: 'click', sequence: 2, id: 'save' }.encode()! + '\n'
-	assert run(['/usr/bin/vinix-package', 'run-window', p.id], empty, none, none).status == 0
+	assert run(['/usr/bin/tulpar-package', 'run-window', p.id], empty, none, none).status == 0
 	assert os.read_file(data)! == '' && owner_of(data) == 1000
 	package_success(['remove', p.id])!
-	assert !os.exists('/var/lib/vinix-packages/current/share/applications/vinix-' + p.id + '.desktop')
+	assert !os.exists('/var/lib/tulpar-packages/current/share/applications/tulpar-' + p.id + '.desktop')
 	assert os.read_file(data)! == ''
 	package_success(['rollback'])!
-	reopened := run(['/usr/bin/vinix-package', 'run-window', p.id], '', none, none)
+	reopened := run(['/usr/bin/tulpar-package', 'run-window', p.id], '', none, none)
 	assert reopened.status == 0, reopened.output
 	mut reopened_frames := window_guest_frames(reopened.output)!
 	defer { for mut frame in reopened_frames { frame.close() } }
 	assert reopened_frames.len == 1 && reopened_frames[0].elements[1].text == ''
 	original := pkgcore.load_config('')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ ...original,
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ ...original,
 		policy: pkgcore.Policy{ ...original.policy, permissions: [] } }))!
-	denied := run(['/usr/bin/vinix-package', 'run-window', p.id], '', none, none)
+	denied := run(['/usr/bin/tulpar-package', 'run-window', p.id], '', none, none)
 	assert denied.status != 0 && denied.output.contains('permissions blocked'), denied.output
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(original))!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(original))!
 	package_success(['repo-revoke', 'memo-publisher'])!
-	revoked := run(['/usr/bin/vinix-package', 'run-window', p.id], '', none, none)
+	revoked := run(['/usr/bin/tulpar-package', 'run-window', p.id], '', none, none)
 	assert revoked.status != 0 && revoked.output.contains('revoked'), revoked.output
 	t.say('PACKAGE WINDOW INPUT empty-replacement rollback retained-data EOF-close policy-denial publisher-revocation PASS')
 }

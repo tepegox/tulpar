@@ -11,7 +11,7 @@
 #define timezone vks_linux_timezone
 #define ffs vks_linux_ffs
 #define fls vks_linux_fls
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmacro-redefined"
 #endif
@@ -23,7 +23,7 @@
 
 typedef volatile u32 vks_volatile_u32;
 typedef volatile int vks_volatile_int;
-#if defined(__clang__) && defined(VINIX_LINUXKPI_HOST_TEST)
+#if defined(__clang__) && defined(TULPAR_LINUXKPI_HOST_TEST)
 #pragma clang diagnostic pop
 #endif
 #undef fls

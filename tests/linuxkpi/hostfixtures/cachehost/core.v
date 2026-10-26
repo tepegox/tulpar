@@ -13,13 +13,13 @@ fn C.kmem_cache_alloc(&C.kmem_cache,u32) voidptr
 fn C.kmem_cache_free(&C.kmem_cache,voidptr)
 fn C.kmem_cache_size(&C.kmem_cache) usize
 fn C.kmem_cache_shrink(&C.kmem_cache) i32
-fn C.vinix_linuxkpi_alloc_gfp_pages(usize,u32) voidptr
-fn C.vinix_linuxkpi_free_pages(voidptr,usize)
-fn C.vinix_linuxkpi_page_size() usize
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_alloc_gfp_pages(usize,u32) voidptr
+fn C.tulpar_linuxkpi_free_pages(voidptr,usize)
+fn C.tulpar_linuxkpi_page_size() usize
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
 fn C.memchr_inv(voidptr,i32,usize) voidptr
 fn C.atomic_read(&C.atomic_t) i32
 fn C.pthread_cond_wait(&C.pthread_cond_t,&C.pthread_mutex_t) i32
@@ -37,14 +37,14 @@ struct CacheGeometry { size u32 hardware_alignment u32 }
 const cases = [CacheGeometry{1,16},CacheGeometry{7,16},CacheGeometry{16,16},CacheGeometry{17,32},CacheGeometry{32,32},CacheGeometry{33,64},CacheGeometry{64,64},CacheGeometry{65,64},CacheGeometry{4095,64},CacheGeometry{4096,64},CacheGeometry{4097,64},CacheGeometry{8193,64}]!
 fn cache_test_page_policy() { unsafe {
  before:=C.vmh_live_pages; C.__atomic_store_n(&C.vmh_last_reclaim,false,0); C.__atomic_store_n(&C.vmh_allocation_failure_after,i32(1),0)
- C.assert(C.vinix_linuxkpi_alloc_gfp_pages(0,C.GFP_KERNEL)==nil)
- C.assert(C.vinix_linuxkpi_alloc_gfp_pages(~usize(0)/C.vinix_linuxkpi_page_size()+1,C.GFP_KERNEL)==nil)
- C.assert(C.vinix_linuxkpi_alloc_gfp_pages(1,C.GFP_KERNEL|C.__GFP_DMA32)==nil)
+ C.assert(C.tulpar_linuxkpi_alloc_gfp_pages(0,C.GFP_KERNEL)==nil)
+ C.assert(C.tulpar_linuxkpi_alloc_gfp_pages(~usize(0)/C.tulpar_linuxkpi_page_size()+1,C.GFP_KERNEL)==nil)
+ C.assert(C.tulpar_linuxkpi_alloc_gfp_pages(1,C.GFP_KERNEL|C.__GFP_DMA32)==nil)
  C.assert(C.__atomic_load_n(&C.vmh_allocation_failure_after,0)==1)
  C.assert(C.__atomic_load_n(&C.vmh_last_reclaim,0)==0 && C.vmh_live_pages==before)
  C.__atomic_store_n(&C.vmh_allocation_failure_after,i32(-1),0)
  flags:=[u32(C.GFP_KERNEL),u32(C.GFP_ATOMIC),u32(C.GFP_NOWAIT),u32(C.GFP_NOFS),u32(C.GFP_NOIO)]!
- for i:=u32(0); i<flags.len; i++ { pages:=C.vinix_linuxkpi_alloc_gfp_pages(1,flags[i]); C.assert(pages!=nil && (C.__atomic_load_n(&C.vmh_last_reclaim,0)!=0)==(i==0)); C.vinix_linuxkpi_free_pages(pages,1) }
+ for i:=u32(0); i<flags.len; i++ { pages:=C.tulpar_linuxkpi_alloc_gfp_pages(1,flags[i]); C.assert(pages!=nil && (C.__atomic_load_n(&C.vmh_last_reclaim,0)!=0)==(i==0)); C.tulpar_linuxkpi_free_pages(pages,1) }
  C.assert(C.vmh_live_pages==before)
 } }
 @[export:'vmc_cache_ctor']
@@ -75,7 +75,7 @@ fn cache_test_basic() { unsafe {
  rejected:=[usize(C.SLAB_TYPESAFE_BY_RCU),usize(C.SLAB_RECLAIM_ACCOUNT),usize(C.SLAB_CACHE_DMA),usize(C.SLAB_CACHE_DMA32),usize(C.SLAB_PANIC),usize(C.SLAB_RED_ZONE),usize(C.SLAB_POISON),usize(C.SLAB_STORE_USER),usize(C.SLAB_TRACE),usize(C.SLAB_NO_MERGE),usize(C.SLAB_NO_USER_FLAGS)]!
  for i:=u32(0); i<rejected.len; i++ { C.assert(C.kmem_cache_create(c'unsupported',97,0,rejected[i],CacheCtor(nil))==nil) }
  C.assert(C.kmem_cache_create(nil,97,0,0,CacheCtor(nil))==nil); C.assert(C.kmem_cache_create(c'empty',0,0,0,CacheCtor(nil))==nil); C.assert(C.kmem_cache_create(c'unaligned',97,3,0,CacheCtor(nil))==nil)
- mut irq:=C.vinix_linuxkpi_irq_save(); C.assert(C.kmem_cache_create(c'atomic-create',97,0,0,CacheCtor(nil))==nil); C.vinix_linuxkpi_irq_restore(irq)
+ mut irq:=C.tulpar_linuxkpi_irq_save(); C.assert(C.kmem_cache_create(c'atomic-create',97,0,0,CacheCtor(nil))==nil); C.tulpar_linuxkpi_irq_restore(irq)
  for stage:=i32(0); stage<2; stage++ { C.__atomic_store_n(&C.vmh_allocation_failure_after,stage,0); C.assert(C.kmem_cache_create(c'create-rollback',97,0,0,CacheCtor(nil))==nil); C.__atomic_store_n(&C.vmh_allocation_failure_after,i32(-1),0); C.assert(C.vmh_live_pages==before) }
  alignments:=[u32(0),16,64,256,4096,8192]!
  for i:=u32(0); i<alignments.len; i++ {
@@ -85,14 +85,14 @@ fn cache_test_basic() { unsafe {
   C.assert(C.kmem_cache_shrink(cache)==1); C.assert(C.memchr_inv(object,0xe1,97)==nil); C.kmem_cache_free(cache,object); C.kmem_cache_free(cache,nil); C.assert(C.kmem_cache_shrink(cache)==0); C.kmem_cache_destroy(cache); C.assert(C.vmh_live_pages==before)
  }
  atomic_cache:=C.kmem_cache_create(c'atomic-refill',sizeof(CacheObject),0,0,C.vmc_cache_ctor); C.assert(atomic_cache!=nil)
- mut calls_before:=vmc_ctor_calls; irq_calls_before:=vmc_irq_ctor_calls; irq=C.vinix_linuxkpi_irq_save()
+ mut calls_before:=vmc_ctor_calls; irq_calls_before:=vmc_irq_ctor_calls; irq=C.tulpar_linuxkpi_irq_save()
  mut atomic_object:=&CacheObject(C.kmem_cache_alloc(atomic_cache,C.GFP_KERNEL)); C.assert(atomic_object!=nil && atomic_object.magic==magic)
- C.assert(!C.vmh_interrupts && C.vmh_preempt_depth==0 && C.__atomic_load_n(&C.vmh_last_reclaim,0)==0); C.vinix_linuxkpi_irq_restore(irq)
+ C.assert(!C.vmh_interrupts && C.vmh_preempt_depth==0 && C.__atomic_load_n(&C.vmh_last_reclaim,0)==0); C.tulpar_linuxkpi_irq_restore(irq)
  C.assert(vmc_ctor_calls>calls_before); C.assert(vmc_ctor_calls-calls_before==vmc_irq_ctor_calls-irq_calls_before)
  C.kmem_cache_free(atomic_cache,atomic_object); C.assert(C.kmem_cache_shrink(atomic_cache)==0)
- calls_before=vmc_ctor_calls; pinned_calls_before:=vmc_preempt_ctor_calls; C.vinix_linuxkpi_preempt_disable()
+ calls_before=vmc_ctor_calls; pinned_calls_before:=vmc_preempt_ctor_calls; C.tulpar_linuxkpi_preempt_disable()
  atomic_object=&CacheObject(C.kmem_cache_alloc(atomic_cache,C.GFP_KERNEL)); C.assert(atomic_object!=nil && C.vmh_interrupts && C.vmh_preempt_depth==1)
- C.assert(C.__atomic_load_n(&C.vmh_last_reclaim,0)==0); C.vinix_linuxkpi_preempt_enable()
+ C.assert(C.__atomic_load_n(&C.vmh_last_reclaim,0)==0); C.tulpar_linuxkpi_preempt_enable()
  C.assert(vmc_ctor_calls>calls_before); C.assert(vmc_ctor_calls-calls_before==vmc_preempt_ctor_calls-pinned_calls_before)
  C.kmem_cache_free(atomic_cache,atomic_object); C.kmem_cache_destroy(atomic_cache); C.assert(C.vmh_live_pages==before)
  mut objects:=[256]&CacheObject{}
@@ -107,7 +107,7 @@ fn cache_test_basic() { unsafe {
  only_free:=objects[0]; C.kmem_cache_free(cache,only_free)
  bad_gfp:=[u32(C.GFP_KERNEL|C.__GFP_DMA32),u32(C.GFP_KERNEL|C.__GFP_NOFAIL),u32(C.GFP_KERNEL|C.__GFP_ACCOUNT),u32(C.GFP_KERNEL|C.__GFP_HIGHMEM)]!
  for i:=u32(0); i<bad_gfp.len; i++ { C.assert(C.kmem_cache_alloc(cache,bad_gfp[i])==nil) }
- irq=C.vinix_linuxkpi_irq_save(); objects[0]=&CacheObject(C.kmem_cache_alloc(cache,C.GFP_KERNEL)); C.assert(usize(objects[0])==usize(only_free) && !C.vmh_interrupts && C.vmh_preempt_depth==0); C.vinix_linuxkpi_irq_restore(irq)
+ irq=C.tulpar_linuxkpi_irq_save(); objects[0]=&CacheObject(C.kmem_cache_alloc(cache,C.GFP_KERNEL)); C.assert(usize(objects[0])==usize(only_free) && !C.vmh_interrupts && C.vmh_preempt_depth==0); C.tulpar_linuxkpi_irq_restore(irq)
  C.assert(objects[0].magic==magic && objects[0].generation==17); C.assert(C.memchr_inv(&objects[0].payload[0],0xb7,sizeof(objects[0].payload))==nil); C.assert(C.kmem_cache_shrink(cache)==1)
  for i:=u32(0); i<count; i++ { C.kmem_cache_free(cache,objects[i]) }; C.assert(C.vmh_live_pages>descriptor_pages); C.assert(C.kmem_cache_shrink(cache)==0 && C.vmh_live_pages==descriptor_pages); C.assert(C.kmem_cache_alloc(cache,C.GFP_NOWAIT)==nil); C.__atomic_store_n(&C.vmh_allocation_failure_after,i32(-1),0)
  warnings:=C.atomic_read(&C.vmh_time_warnings); mut zeroed:=&CacheObject(C.kmem_cache_zalloc(cache,C.GFP_KERNEL))
@@ -149,9 +149,9 @@ pub fn cache_test_stress_thread(argument voidptr) voidptr { unsafe {
  test:=&CacheStress(argument); C.vmh_current_cpu=test.index
  for C.__atomic_load_n(test.start,2)==0 { C.sched_yield() }
  for repeat:=u32(0); repeat<100; repeat++ { mut objects:=[16]&CacheObject{}
-  for i:=u32(0); i<objects.len; i++ { mut irq:=usize(0); if repeat&1!=0 { irq=C.vinix_linuxkpi_irq_save() }
+  for i:=u32(0); i<objects.len; i++ { mut irq:=usize(0); if repeat&1!=0 { irq=C.tulpar_linuxkpi_irq_save() }
    objects[i]=&CacheObject(C.kmem_cache_alloc(test.cache,if repeat&1!=0 { u32(C.GFP_ATOMIC) } else { u32(C.GFP_KERNEL) })); C.assert(objects[i]!=nil && objects[i].magic==magic)
-   C.assert(C.vmh_interrupts==(repeat&1==0) && C.vmh_preempt_depth==0); if repeat&1!=0 { C.vinix_linuxkpi_irq_restore(irq) }
+   C.assert(C.vmh_interrupts==(repeat&1==0) && C.vmh_preempt_depth==0); if repeat&1!=0 { C.tulpar_linuxkpi_irq_restore(irq) }
    objects[i].generation=test.index+1; C.memset(&objects[i].payload[0],i32(test.index),sizeof(objects[i].payload))
   }
   for i:=u32(0); i<objects.len; i++ { C.assert(objects[i].generation==test.index+1); C.assert(C.memchr_inv(&objects[i].payload[0],i32(test.index),sizeof(objects[i].payload))==nil); C.kmem_cache_free(test.cache,objects[i]) }; C.sched_yield()

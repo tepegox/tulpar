@@ -10,7 +10,7 @@ import memory
 import proc
 
 // OpenBSD's LP64 uvm_map_hint() randomizes placement inside a bounded 4 GiB
-// spacing window. Vinix uses the same entropy scale while leaving its existing
+// spacing window. Tulpar uses the same entropy scale while leaving its existing
 // hole finder in charge of collision resolution.
 const mmap_aslr_span = u64(4 * 1024 * 1024 * 1024)
 

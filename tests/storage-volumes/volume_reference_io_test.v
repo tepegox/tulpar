@@ -15,7 +15,7 @@ fn volume_reference_check(before string, after string, fault int, expected i32) 
 	saved := C.dup(1); fd := C.open(output.str, C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	assert saved >= 0 && fd >= 0 && C.dup2(fd, 1) == 1 && C.close(fd) == 0
 	unsafe {
-		args := [&char(c'vinix-volume'), if after == '' { &char(c'show-volume-reference') } else { &char(c'compare-volume-references') }, before.str, after.str, &char(nil)]!
+		args := [&char(c'tulpar-volume'), if after == '' { &char(c'show-volume-reference') } else { &char(c'compare-volume-references') }, before.str, after.str, &char(nil)]!
 		assert run(if after == '' { 3 } else { 4 }, &args[0]) == expected
 	}
 	assert C.fflush(C.stdout) == 0 && C.dup2(saved, 1) == 1 && C.close(saved) == 0
@@ -28,7 +28,7 @@ fn volume_reference_check(before string, after string, fault int, expected i32) 
 fn test_reference_queries_private_complete_inputs_no_devices_and_exact_full_width_output() {
 	volume_scrub_model = true; volume_scrub_offline = true; ciphertext_model = true
 	defer { volume_scrub_model = false; volume_scrub_offline = false; ciphertext_model = false }
-	work := os.join_path(os.temp_dir(), 'vinix-reference-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-reference-${os.getpid()}'); os.mkdir(work)!; os.chmod(work, 0o700)!; defer { os.rmdir_all(work) or {} }
 	before := work + '/before'; after := work + '/after'
 	for sector in [u64(512), u64(4096)] { for kind in [u32(1), u32(2)] { for flags in [u64(0), u64(1)] {
 		mut disk := DiskKey{bytes: u64(-1) - (sector - 1), sector: sector, kind: kind}; disk.id[0] = 1; if kind == 2 { disk.id[15] = 0x83 }
@@ -40,8 +40,8 @@ fn test_reference_queries_private_complete_inputs_no_devices_and_exact_full_widt
 			os.write_file_array(before, records[i][..])!; os.write_file_array(after, records[j][..])!; os.chmod(before, 0o600)!; os.chmod(after, 0o600)!
 			old_hash := hex.encode(sha256.sum(records[i][..])[..]); new_hash := hex.encode(sha256.sum(records[j][..])[..])
 			old_digest := hex.encode(records[i][80..112]); new_digest := hex.encode(records[j][80..112])
-			expected := 'format=VINIXCH1 operation=compared-ciphertext-references mappings=1 stable=${int(i == j)} changed=${int(i != j)} algorithm=sha256 before_reference_sha256=${old_hash} after_reference_sha256=${new_hash}\n' + geometry + ' result=${if i == j { 'stable' } else { 'changed' }} before_sha256=${old_digest} after_sha256=${new_digest}\n'
-			shown := 'format=VINIXCH1 operation=show-ciphertext-reference mappings=1 algorithm=sha256 reference_sha256=${old_hash}\n' + geometry + ' sha256=${old_digest}\n'
+			expected := 'format=TULPARCH1 operation=compared-ciphertext-references mappings=1 stable=${int(i == j)} changed=${int(i != j)} algorithm=sha256 before_reference_sha256=${old_hash} after_reference_sha256=${new_hash}\n' + geometry + ' result=${if i == j { 'stable' } else { 'changed' }} before_sha256=${old_digest} after_sha256=${new_digest}\n'
+			shown := 'format=TULPARCH1 operation=show-ciphertext-reference mappings=1 algorithm=sha256 reference_sha256=${old_hash}\n' + geometry + ' sha256=${old_digest}\n'
 			for fault in [0, 1, 2, 3, 4, 5, 21, 22, 32, 33] {
 				shown_text := volume_reference_check(before, '', fault, if fault <= 1 { 0 } else { 1 })
 				if fault <= 1 { assert shown_text == shown }

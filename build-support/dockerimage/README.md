@@ -13,7 +13,7 @@ root ownership, fixed epoch 1735689600 and USTAR's 10 KiB record padding.
 v -cc cc test build-support/tarcore
 v -cc cc test build-support/dockerimage
 v -cc cc -o /tmp/make-docker-image build-support/make-docker-image.v
-VINIX_DOCKERIMAGE_TOOL=/tmp/make-docker-image v -cc cc test build-support/dockerimage
+TULPAR_DOCKERIMAGE_TOOL=/tmp/make-docker-image v -cc cc test build-support/dockerimage
 ```
 
 Native checks inspect every header and payload independently of the archive

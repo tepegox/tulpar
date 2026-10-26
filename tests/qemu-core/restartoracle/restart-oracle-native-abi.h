@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
-#ifndef VINIX_QEMU_CORE_RESTART_ORACLE_NATIVE_ABI_H
-#define VINIX_QEMU_CORE_RESTART_ORACLE_NATIVE_ABI_H
+#ifndef TULPAR_QEMU_CORE_RESTART_ORACLE_NATIVE_ABI_H
+#define TULPAR_QEMU_CORE_RESTART_ORACLE_NATIVE_ABI_H
 #include <restartfixture_v_contract.h>
 #include <assert.h>
 #include <fcntl.h>

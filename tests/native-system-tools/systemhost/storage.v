@@ -20,7 +20,7 @@ pub fn pattern_file(path string, size int, seed int) ! {
 }
 
 fn storage_compiler(runner string) []string {
-	sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { runner + '/build-aarch64-userland/sysroot' }
+	sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { runner + '/build-aarch64-userland/sysroot' }
 	mut argv := [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk]
 	gcc_root := runner + '/build-aarch64-userland/staging/usr/lib/gcc/aarch64-alpine-linux-musl'
 	if os.is_dir(gcc_root) {
@@ -38,7 +38,7 @@ fn storage_init(family string, state string, runner string, options guesthost.Op
 		return init
 	}
 	cc := storage_compiler(runner)
-	sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { runner + '/build-aarch64-userland/sysroot' }
+	sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { runner + '/build-aarch64-userland/sysroot' }
 	compile := [...cc, '-O2', '-fno-stack-protector', '-Wall', '-Wextra', '-Werror']
 	if family == 'fsync-scope' {
 		object := state + '/fixture.o'
@@ -144,7 +144,7 @@ fn storage_guest(family string, args []string) !int {
 	} else if family == 'fsync-scope' {
 		root() + '/build/fsync-scope'
 	} else {
-		hosttest.work_dir('', 'vinix-dota2-export-')!
+		hosttest.work_dir('', 'tulpar-dota2-export-')!
 	}
 	if family == 'virtio-ro' && (os.exists(state) || os.is_link(state)) {
 		return error('Use a fresh work directory')
@@ -207,7 +207,7 @@ fn storage_guest(family string, args []string) !int {
 	}
 	unused.close()
 	mut report := map[string]json2.Any{}
-	report['kernel_sha256'] = json2.Any(hosttest.sha(kernel + '/bin/vinix')!)
+	report['kernel_sha256'] = json2.Any(hosttest.sha(kernel + '/bin/tulpar')!)
 	report['native_init_sha256'] = json2.Any(hosttest.sha(init)!)
 	report['advertised_read_only'] = json2.Any(family != 'fsync-scope')
 	if family == 'virtio-ro' {
@@ -229,10 +229,10 @@ fn storage_guest(family string, args []string) !int {
 	}, 120000)!
 	defer { server.close() }
 	configured := guesthost.launch_from(init, archive, state, kernel, 'aarch64', false, runner)!
-	arm_config(state, runner, 'vinix.qemu_platform=1 vinix.qemu_persist=1 ' + os.getenv('VINIX_CMDLINE'))!
+	arm_config(state, runner, 'tulpar.qemu_platform=1 tulpar.qemu_persist=1 ' + os.getenv('TULPAR_CMDLINE'))!
 	mut argv := configured.command.clone()
 	// The original ARM launcher boots through PCI. QEMU assigns MMIO slots
-	// downwards and Vinix probes upwards, so NBD must be declared first to
+	// downwards and Tulpar probes upwards, so NBD must be declared first to
 	// preserve the original unused /dev/vda and exported /dev/vdb names.
 	boot_device := argv.index('virtio-blk-device,drive=guest-iso')
 	if boot_device < 0 { return error('Missing private boot device') }

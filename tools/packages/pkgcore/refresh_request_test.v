@@ -10,8 +10,8 @@ import tools.packages.pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn refresh_request_cycles() int {
 	$if refresh_request_baseline ? { return 2 }
@@ -47,13 +47,13 @@ fn refresh_request_call(service Service, config Config, directory string, explic
 
 fn refresh_request_scope(arch string, explicit bool, mode string) ! {
 	label := arch + (if explicit { ' explicit ' } else { ' service ' }) + mode
-	selection := os.getenv('VINIX_REFRESH_CASE')
+	selection := os.getenv('TULPAR_REFRESH_CASE')
 	defer { unsafe { selection.free(); label.free() } }
 	if selection != '' && selection != label { return }
-	work := os.temp_dir() + '/vinix-refresh-request-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-refresh-request-' + os.getpid().str()
 	defer { os.rmdir_all(work) or {} }
-	root := work + '/root'; path := root + '/etc/vinix-packages/config.json'; directory := state_directory(root)
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	root := work + '/root'; path := root + '/etc/tulpar-packages/config.json'; directory := state_directory(root)
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	private := signing.new_key_from_seed([]u8{len: 32, init: 7}); key := private.public_key().hex()
 	first := Repository{id: 'first', url: 'file://' + work + '/first', public_key: key}
 	second := Repository{id: 'second', url: if mode == 'offline' { 'https://example.invalid/second' } else { 'file://' + work + '/second' }, public_key: key}
@@ -91,7 +91,7 @@ fn refresh_request_scope(arch string, explicit bool, mode string) ! {
 			mut guard := Lock{fd: -1}
 			if mode == 'busy' { guard = acquire(directory)! }
 			if mode in ['busy', 'bad-config']! { os.write_file(path, '{broken configuration')! }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			mut refused := false
 			mut result := refresh_request_call(service, config, directory, explicit) or {
 				refused = true; message := err.msg()
@@ -116,7 +116,7 @@ fn refresh_request_scope(arch string, explicit bool, mode string) ! {
 				}
 				retire_refresh_reply(mut result)
 			}
-			mut kept := u64(0); $if track_heap ? { kept = C.vinix_heap_end() }
+			mut kept := u64(0); $if track_heap ? { kept = C.tulpar_heap_end() }
 			if pass == 1 { total += kept }
 			if guard.fd >= 0 { guard.release() }
 			assert refused == (mode !in ['fresh', 'cached', 'migrate', 'empty']!), label
@@ -145,7 +145,7 @@ fn test_complete_refresh_requests_retire_replies_and_success_refusal_scratch() {
 		for mode in ['bad-config', 'invalid-root']! { refresh_request_scope(arch, false, mode)! }
 	}
 	$if !refresh_request_baseline ? {
-		selection := os.getenv('VINIX_REFRESH_CASE')
+		selection := os.getenv('TULPAR_REFRESH_CASE')
 		defer { unsafe { selection.free() } }
 		if selection == '' { println('REFRESH REQUEST 72 service and explicit cases preserve signed metadata, lock order and owned replies across 64 measured calls PASS') }
 		else { println('REFRESH REQUEST selected case PASS') }
@@ -154,14 +154,14 @@ fn test_complete_refresh_requests_retire_replies_and_success_refusal_scratch() {
 
 fn test_refresh_replies_outlive_configuration_and_other_replies() {
 	$if !refresh_request_baseline ? {
-		work := os.temp_dir() + '/vinix-refresh-lifetime-' + os.getpid().str()
+		work := os.temp_dir() + '/tulpar-refresh-lifetime-' + os.getpid().str()
 		defer { os.rmdir_all(work) or {} }
-		root := work + '/root'; os.mkdir_all(root + '/etc/vinix-packages')!; os.mkdir_all(work + '/repository')!
+		root := work + '/root'; os.mkdir_all(root + '/etc/tulpar-packages')!; os.mkdir_all(work + '/repository')!
 		private := signing.new_key_from_seed([]u8{len: 32, init: 7}); key := private.public_key().hex()
 		repository := Repository{id: 'publisher', url: 'file://' + work + '/repository', public_key: key}
 		text, signature := refresh_request_signed(repository, 'aarch64', 'app', 7, time.now().unix() + 86400, '')!
 		os.write_file(work + '/repository/index.json', text)!; os.write_file(work + '/repository/index.sig', signature)!
-		save_configuration(root + '/etc/vinix-packages/config.json', Config{architecture: 'aarch64', repositories: [repository]})!
+		save_configuration(root + '/etc/tulpar-packages/config.json', Config{architecture: 'aarch64', repositories: [repository]})!
 		service := Service{root: root}; directory := state_directory(root)
 		owned_config := load_config(root)!
 		mut first := refresh(owned_config, directory)!; mut second := service.refresh()!
@@ -178,8 +178,8 @@ fn test_refresh_replies_outlive_configuration_and_other_replies() {
 
 fn refresh_request_publication_fault(event pkgprotocol.Progress) {
 	if event.phase != 'verify' { return }
-	directory := os.getenv('VINIX_REFRESH_FAULT_DIRECTORY')
-	mode := os.getenv('VINIX_REFRESH_FAULT_MODE')
+	directory := os.getenv('TULPAR_REFRESH_FAULT_DIRECTORY')
+	mode := os.getenv('TULPAR_REFRESH_FAULT_MODE')
 	path := directory + '/' + mode + '.json'
 	defer { unsafe { directory.free(); mode.free(); path.free() } }
 	assert C.remove(path.str) == 0 && C.mkdir(path.str, 0o755) == 0
@@ -187,16 +187,16 @@ fn refresh_request_publication_fault(event pkgprotocol.Progress) {
 
 fn test_refresh_workspace_retirement_and_publication_failures() {
 	$if !refresh_request_baseline ? {
-		work := os.temp_dir() + '/vinix-refresh-workspace-' + os.getpid().str()
+		work := os.temp_dir() + '/tulpar-refresh-workspace-' + os.getpid().str()
 		defer { os.rmdir_all(work) or {} }
 		root := work + '/root'; directory := state_directory(root)
-		os.mkdir_all(root + '/etc/vinix-packages')!; os.mkdir_all(work + '/repository')!
+		os.mkdir_all(root + '/etc/tulpar-packages')!; os.mkdir_all(work + '/repository')!
 		private := signing.new_key_from_seed([]u8{len: 32, init: 7}); key := private.public_key().hex()
 		repository := Repository{id: 'publisher', url: 'file://' + work + '/repository', public_key: key}
 		config := Config{architecture: 'aarch64', repositories: [repository]}
 		text, signature := refresh_request_signed(repository, 'aarch64', 'app', 7, time.now().unix() + 86400, '')!
 		os.write_file(work + '/repository/index.json', text)!; os.write_file(work + '/repository/index.sig', signature)!
-		save_configuration(root + '/etc/vinix-packages/config.json', config)!
+		save_configuration(root + '/etc/tulpar-packages/config.json', config)!
 		service := Service{root: root}; mut initial := service.refresh()!; initial.close()
 		cache := os.read_file(directory + '/catalog.json')!; history := os.read_file(directory + '/trust-history.json')!
 		workspace := directory + '/refresh'
@@ -216,22 +216,22 @@ fn test_refresh_workspace_retirement_and_publication_failures() {
 			if mode == 'alias' { os.rm(workspace)! } else { os.rmdir_all(workspace)! }
 		}
 		println('REFRESH WORKSPACE captured stale nested work retires; aliases and writable work preserve metadata and foreign files PASS')
-		os.setenv('VINIX_REFRESH_FAULT_DIRECTORY', directory, true)
-		defer { os.unsetenv('VINIX_REFRESH_FAULT_DIRECTORY'); os.unsetenv('VINIX_REFRESH_FAULT_MODE') }
+		os.setenv('TULPAR_REFRESH_FAULT_DIRECTORY', directory, true)
+		defer { os.unsetenv('TULPAR_REFRESH_FAULT_DIRECTORY'); os.unsetenv('TULPAR_REFRESH_FAULT_MODE') }
 		for mode in ['trust-history', 'catalog']! {
-			os.setenv('VINIX_REFRESH_FAULT_MODE', mode, true)
+			os.setenv('TULPAR_REFRESH_FAULT_MODE', mode, true)
 			failing := Service{root: root, progress: refresh_request_publication_fault}
 			mut total := u64(0)
 			for pass in 0 .. 2 {
 				for _ in 0 .. 64 {
 					os.write_file(directory + '/catalog.json', cache)!; os.write_file(directory + '/trust-history.json', history)!
-					$if track_heap ? { C.vinix_heap_begin() }
+					$if track_heap ? { C.tulpar_heap_begin() }
 					mut refused := false
 					failing.refresh() or {
 						refused = true; message := err.msg(); assert message.contains('cannot atomically replace package metadata')
 						unsafe { message.free(); err.free() }
 					}
-					mut kept := u64(0); $if track_heap ? { kept = C.vinix_heap_end() }
+					mut kept := u64(0); $if track_heap ? { kept = C.tulpar_heap_end() }
 					if pass == 1 { total += kept }
 					assert refused && !os.exists(workspace)
 					assert os.read_file(directory + '/' + (if mode == 'catalog' { 'trust-history' } else { 'catalog' }) + '.json')! == if mode == 'catalog' { history } else { cache }

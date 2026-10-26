@@ -40,7 +40,7 @@ fn retain() ! {
 		assert !output.contains('HWTEST FAIL') && !output.contains('V panic:') && !output.contains('Out of memory')
 		save(serial, prefix + architecture + '.serial.txt', mut evidence)!
 		for path in ['guest/init', 'guest/program-0/core', 'guest/program-1/producer', 'guest/build.log', 'guest/program-0/build.log', 'guest/program-1/build.log']! { inputs << pin(native + '/' + path)! }
-		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/vinix')!
+		inputs << pin(root + '/build/package-software-persistence-work/kernel-' + (if i == 0 { 'arm' } else { 'x86' }) + '/kernel/bin/tulpar')!
 		inputs << pin(os.find_abs_path_of_executable(architecture + '-linux-musl-gcc')!)!
 		report := root + '/build/package-https-diagnostics-work/guest-' + architecture + '-2.txt'
 		assert os.read_file(report)!.contains('1 passed, 0 failed, 0 skipped'); save(report, prefix + architecture + '.txt', mut evidence)!

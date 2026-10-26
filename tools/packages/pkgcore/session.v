@@ -55,7 +55,7 @@ fn launch_session_request(config Config, executable string, id string, input Lau
 		for argument in input.arguments { argv << argument.clone() }
 	} else { for document in input.documents { argv << document.clone() } }
 	return Launch{
-		program:   '/usr/sbin/vinix-session'
+		program:   '/usr/sbin/tulpar-session'
 		directory: '/'
 		arguments: argv
 	}

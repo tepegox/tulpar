@@ -69,8 +69,8 @@ fn stage_command(args []string, security bool) !int {
 		return error_with_code('staging must be an existing target filesystem', 2)
 	}
 	mut compiler := parsed.options['--cc']
-	if compiler == '' && security { compiler = os.getenv('VINIX_SECURITY_CC_' + arch.to_upper()) }
-	if compiler == '' { compiler = os.getenv('VINIX_MUSL_CC_' + arch.to_upper()) }
+	if compiler == '' && security { compiler = os.getenv('TULPAR_SECURITY_CC_' + arch.to_upper()) }
+	if compiler == '' { compiler = os.getenv('TULPAR_MUSL_CC_' + arch.to_upper()) }
 	if compiler == '' { compiler = arch + '-linux-musl-gcc' }
 	cc := hosttest.shell_split(compiler)!
 	if cc.len == 0 { return error_with_code('Target musl compiler is missing', 2) }
@@ -82,19 +82,19 @@ fn stage_command(args []string, security bool) !int {
 		return error_with_code('Compiler architecture mismatch: ' + machine, 2)
 	}
 	work := hosttest.work_dir('', if security {
-		'vinix-security-tools-'
+		'tulpar-security-tools-'
 	} else {
-		'vinix-volume-tool-'
+		'tulpar-volume-tool-'
 	})!
 	defer { retire(work) }
 	tools := if security { ['sandbox', 'mac', 'audit'] } else { ['volume'] }
 	for tool in tools {
 		module_path, headers, destination := match tool {
-			'sandbox' { '', root() + '/tools/sandbox', '/usr/bin/vinix-sandbox' }
-			'mac' { '', root() + '/tools/security-mac', '/usr/sbin/vinix-mac' }
-			'audit' { '', root() + '/tools/security-audit', '/usr/sbin/vinix-security-audit' }
+			'sandbox' { '', root() + '/tools/sandbox', '/usr/bin/tulpar-sandbox' }
+			'mac' { '', root() + '/tools/security-mac', '/usr/sbin/tulpar-mac' }
+			'audit' { '', root() + '/tools/security-audit', '/usr/sbin/tulpar-security-audit' }
 			else {
-				root() + '/tools/volumes/volumecli', root() + '/tools/volumes/volumecli', '/usr/sbin/vinix-volume'
+				root() + '/tools/volumes/volumecli', root() + '/tools/volumes/volumecli', '/usr/sbin/tulpar-volume'
 			}
 		}
 		source := work + '/' + tool + '.c'
@@ -109,12 +109,12 @@ fn stage_command(args []string, security bool) !int {
 		if !security {
 			flags << ['-Wno-unused-function', '-Wno-unused-parameter', '-Wno-unused-label']
 		}
-		run([...flags, '-D_GNU_SOURCE', '-DVINIX_V_RUNTIME', '-I', headers, source, '-o', binary])!
+		run([...flags, '-D_GNU_SOURCE', '-DTULPAR_V_RUNTIME', '-I', headers, source, '-o', binary])!
 		elf_arch(binary, arch)!
 		install(binary, staging + destination, 0o755, if security {
 			'.security-tool-'
 		} else {
-			'.vinix-volume-'
+			'.tulpar-volume-'
 		})!
 	}
 	if security {
@@ -126,14 +126,14 @@ fn stage_command(args []string, security bool) !int {
 		// distribution in the same native V build path on both architectures.
 		run(['sh', root() + '/build-support/run-v-tool.sh', root() + '/tools/packages/stage.v',
 			'--arch', arch, '--staging', staging, '--cc-argv', json2.encode(cc)])!
-		install(root() + '/build-support/security-audit/run-collector', staging + '/usr/libexec/vinix-security-audit-supervise', 0o755, '.security-tool-')!
-		log := staging + '/var/log/vinix-audit'
+		install(root() + '/build-support/security-audit/run-collector', staging + '/usr/libexec/tulpar-security-audit-supervise', 0o755, '.security-tool-')!
+		log := staging + '/var/log/tulpar-audit'
 		if os.is_link(log) { return error('Audit log staging directory cannot be a symlink') }
 		os.mkdir_all(log)!
 		os.chmod(log, 0o700)!
-		println('Staged Vinix sandbox, mandatory policy and audit utilities (' + arch + ').')
+		println('Staged Tulpar sandbox, mandatory policy and audit utilities (' + arch + ').')
 	} else {
-		println('Staged vinix-volume (' + arch + ').')
+		println('Staged tulpar-volume (' + arch + ').')
 	}
 	return 0
 }

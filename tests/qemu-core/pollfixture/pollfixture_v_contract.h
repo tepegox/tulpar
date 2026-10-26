@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: BSD-2-Clause */
-#ifndef VINIX_QEMU_CORE_POLL_FIXTURE_NATIVE_ABI_H
-#define VINIX_QEMU_CORE_POLL_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_QEMU_CORE_POLL_FIXTURE_NATIVE_ABI_H
+#define TULPAR_QEMU_CORE_POLL_FIXTURE_NATIVE_ABI_H
 #include <errno.h>
 #include <poll.h>
 #include <stddef.h>

@@ -20,9 +20,9 @@ fn creation_group(prefix string) bool {
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn creation_error(cause IError, expected string) {
@@ -35,7 +35,7 @@ fn creation_hashed(phase string, path string) ! { if phase == 'hashed' && path =
 fn creation_copied(phase string, path string) ! { if phase == 'copied' && path == 'd/data-9' { return error('injected creation refusal') } }
 
 fn creation_fixture(count int) !(string, string, string) {
-	work := os.real_path(os.temp_dir()) + '/vinix-create-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-create-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	root := work + '/source'; manifest := work + '/manifest.json'; os.mkdir_all(root + '/d')!
 	for index in 0 .. count {
 		digits := index.str(); path := root + '/d/data-' + digits; data := 'payload-' + digits
@@ -76,10 +76,10 @@ fn test_creation_component_paths_retire_new_parents_and_refusal_scratch() {
 			mut maximum := u64(0); mut records := u32(0)
 			for _ in 0 .. 128 {
 				if os.exists(base) { os.rmdir_all(base)! }; os.mkdir(base)!
-				$if track_heap ? { C.vinix_heap_begin() }
+				$if track_heap ? { C.tulpar_heap_begin() }
 				creation_once(mode, path)!
 				$if track_heap ? {
-					kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+					kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 					if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 				}
 				assert os.exists(path) == (mode != 'export')
@@ -99,10 +99,10 @@ fn test_creation_component_paths_retire_new_parents_and_refusal_scratch() {
 			'create-failure' { 'failed/' + 'x'.repeat($if macos { 300 } $else { 8192 }) + '/child' } else { mode } }
 		mut maximum := u64(0); mut records := u32(0)
 		for _ in 0 .. 128 {
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			creation_once(mode, path)!
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 			}
 		}
@@ -143,7 +143,7 @@ fn test_creation_preserves_parent_alias_dotdot_umask_existing_modes_and_partial_
 	refused = false
 	make_package_directories('file/child', 0o755) or { refused = true; creation_error(err, 'parent must be a directory') }
 	assert refused && os.read_file('file')! == 'preserved'
-	// Vinix bounds copied syscall paths at PATH_MAX; its tmpfs does not
+	// Tulpar bounds copied syscall paths at PATH_MAX; its tmpfs does not
 	// enforce the host's short component limit. Exceed a native bound on each.
 	failed := 'partial/' + 'x'.repeat($if macos { 300 } $else { 8192 }) + '/child'
 	refused = false
@@ -171,11 +171,11 @@ fn test_creation_first_packing_calls_and_late_refusals_retire_all_call_storage()
 				mut maximum := u64(0); mut records := u32(0)
 				for _ in 0 .. 16 {
 					if os.exists(base) { os.rmdir_all(base)! }; os.mkdir(base)!
-					$if track_heap ? { C.vinix_heap_begin() }
+					$if track_heap ? { C.tulpar_heap_begin() }
 					if result := pack_with(manifest, source, repository, options) { mut p := result; p.close(); p.close(); assert mode == 'complete' }
 					else { assert mode != 'complete'; creation_error(err, 'injected creation refusal') }
 					$if track_heap ? {
-						kept := C.vinix_heap_end(); allocations := C.vinix_heap_count()
+						kept := C.tulpar_heap_end(); allocations := C.tulpar_heap_count()
 						if kept > maximum { maximum = kept }; if allocations > records { records = allocations }
 					}
 					// A refused cold copy leaves verified objects/partials available.

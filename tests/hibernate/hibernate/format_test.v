@@ -58,7 +58,7 @@ fn header_of(bytes []u8) Header {
 
 fn test_the_signatures_are_text() {
 	magic := image_magic
-	assert unsafe { tos(&u8(&magic), 8) } == 'VINIXHIB'
+	assert unsafe { tos(&u8(&magic), 8) } == 'TULPARHIB'
 	handover := handover_magic
 	assert unsafe { tos(&u8(&handover), 8) } == 'HANDOVER'
 }

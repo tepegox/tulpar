@@ -1,6 +1,6 @@
 # AArch64 QEMU core regression
 
-This test boots a freshly built Vinix kernel with a static test program as PID
+This test boots a freshly built Tulpar kernel with a static test program as PID
 1 and a disposable 64 MiB EXT2 `/root`. It checks secure random initialization,
 copy-on-write fork, cached EXT2 I/O and shared mappings, synchronization,
 namespace persistence, permissions, file locks, resource limits, inotify,
@@ -17,8 +17,8 @@ Build the AArch64 userland once to provide the musl test sysroot, then run:
 tests/qemu-core/run.sh
 ```
 
-Set `VINIX_QEMU_CORE_NO_BUILD=1` to reuse `kernel/bin/vinix`, or
-`VINIX_QEMU_TIMEOUT` to change the default 300-second deadline. The boot and
+Set `TULPAR_QEMU_CORE_NO_BUILD=1` to reuse `kernel/bin/tulpar`, or
+`TULPAR_QEMU_TIMEOUT` to change the default 300-second deadline. The boot and
 EXT2 images are isolated in temporary directories and removed after the run.
 
 `run.sh` invokes the native V `run-vm` controller. Its direct ARM options are
@@ -74,8 +74,8 @@ an explicit Linux free-memory timeline. The native comparison uses the target
 SDK's actual barrier, memory accounting and `MAP_POPULATE` behavior.
 
 Each tool also accepts `--native-build --arch arm64` or `--native-build --arch
-amd64` to compile its paired original/V guest. Set `VINIX_AARCH64_SYSROOT` and
-`CC` for ARM, or `CC_AMD64` for x86. Set `VINIX_V_COMPILER` to select the V
+amd64` to compile its paired original/V guest. Set `TULPAR_AARCH64_SYSROOT` and
+`CC` for ARM, or `CC_AMD64` for x86. Set `TULPAR_V_COMPILER` to select the V
 compiler. For example, after building the native signal comparison:
 
 ```sh
@@ -145,7 +145,7 @@ The latter retains `--prepare-only`, `--guest` and `--native-build` modes.
 `tests/qemu-core/compile-basefixture /tmp/base-sources --module-only --arch=amd64`
 generates only the V module/header; omitting `--module-only` additionally recovers
 the pinned C oracle, original declarations and full comparison source.
-Recovered originals remain outside the checkout. `VINIX_QEMU_BASE_GENERATOR`
+Recovered originals remain outside the checkout. `TULPAR_QEMU_BASE_GENERATOR`
 may select a prebuilt native generator for qualification.
 
 The base/memory scope covers 270 original lines and preserves all 76 `CHECK`

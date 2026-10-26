@@ -69,9 +69,9 @@ fn actual_cli(cli string, output string) ! {
 	os.write_file(fixtures + '/sentinel', 'preserve sibling files\n')!
 	for kind in ['corrupt', 'valid'] {
 		root := fixtures + '/' + kind
-		os.mkdir_all(root + '/etc/vinix-packages', mode: 0o755)!
+		os.mkdir_all(root + '/etc/tulpar-packages', mode: 0o755)!
 		os.write_file(root + '/sentinel', 'preserve unrelated root data\n')!
-		os.write_file(root + '/etc/vinix-packages/config.json', if kind == 'corrupt' {
+		os.write_file(root + '/etc/tulpar-packages/config.json', if kind == 'corrupt' {
 			'{not valid package configuration\n'
 		} else {
 			'{"format":1,"architecture":"aarch64","repositories":[],"policy":{"offline":true,"reserve_bytes":0}}\n'
@@ -95,7 +95,7 @@ fn actual_cli(cli string, output string) ! {
 					log := output + '/logs/' + kind + '-' + style + '-' + command + '-' + variant.str()
 					code, reply := invoke(argv, log)!
 					expected := if command == 'info' { 'info requires one package ID' } else { command + ' takes no arguments' }
-					require(code == 1 && reply == 'vinix-package: ' + expected + '\n', 'invalid operands did not fail before package I/O; see ' + log)!
+					require(code == 1 && reply == 'tulpar-package: ' + expected + '\n', 'invalid operands did not fail before package I/O; see ' + log)!
 					unchanged(fixtures, before)!
 					refusals++
 				}
@@ -103,7 +103,7 @@ fn actual_cli(cli string, output string) ! {
 		}
 		progress_code, progress_reply := invoke([cli, '--root', root, '--progress', 'verify', 'org.example.editor'],
 			output + '/logs/' + kind + '-progress-verify')!
-		require(progress_code == 1 && progress_reply == 'vinix-package: verify takes no arguments\n', 'progress verify bypassed operand admission')!
+		require(progress_code == 1 && progress_reply == 'tulpar-package: verify takes no arguments\n', 'progress verify bypassed operand admission')!
 		unchanged(fixtures, before)!
 		refusals++
 		for command in ['view', 'updates', 'status', 'list', 'verify', 'info', 'search'] {
@@ -129,7 +129,7 @@ fn actual_cli(cli string, output string) ! {
 				require(view.generation == 0 && view.architecture == 'aarch64' && view.rows.len == 0
 					&& view.catalog_error.contains('No trusted repositories are configured'), 'fresh image enrollment diagnostic changed')!
 			} else if command == 'info' {
-				require(code == 1 && reply == 'vinix-package: package not found: org.example.editor\n', 'info with one ID did not reach existing lookup')!
+				require(code == 1 && reply == 'tulpar-package: package not found: org.example.editor\n', 'info with one ID did not reach existing lookup')!
 			} else {
 				require(code == 1 && reply.contains('No trusted repositories are configured'), 'search/updates no longer report missing enrollment')!
 			}

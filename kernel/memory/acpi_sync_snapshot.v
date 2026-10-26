@@ -1,6 +1,6 @@
 module memory
 
-@[export: 'vinix_acpi_sync_heap_snapshot']
+@[export: 'tulpar_acpi_sync_heap_snapshot']
 fn acpi_sync_heap_snapshot(out &u64) {
 	$if acpi_sync_test ? {
 		// Read the live object counters directly: no allocating observer.

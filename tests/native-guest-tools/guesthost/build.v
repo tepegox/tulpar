@@ -34,7 +34,7 @@ pub fn compile_init(source string, state string, arch string, fixed_sysroot bool
 		sdk := if fixed_sysroot {
 			root() + '/build-aarch64-userland/sysroot'
 		} else {
-			os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+			os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 		}
 		flags = [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk,
 			'-static', '-pthread', '-O2', '-fno-stack-protector', '-Wall', '-Wextra', '-Werror']
@@ -58,7 +58,7 @@ pub fn compile_init(source string, state string, arch string, fixed_sysroot bool
 		core := state + '/' + tool + '-core.c'
 		object := state + '/' + tool + '-core.o'
 		security_core(tool, core, arch)!
-		run([...flags, '-D_GNU_SOURCE', '-DVINIX_V_RUNTIME', '-I', root() +
+		run([...flags, '-D_GNU_SOURCE', '-DTULPAR_V_RUNTIME', '-I', root() +
 			if tool == 'sandbox' { '/tools/sandbox' } else { '/tools/security-audit' }, '-c', core,
 			'-o', object])!
 		objects << object
@@ -75,7 +75,7 @@ fn security_core(tool string, destination string, arch string) ! {
 	} else {
 		'/tools/security-audit/core'
 	}
-	work := hosttest.work_dir('', 'vinix-security-v-')!
+	work := hosttest.work_dir('', 'tulpar-security-v-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } }
 	hosttest.module_copy_tree(source, work + '/' + module_name)!
 	hosttest.module_write_text(work + '/v.mod', "Module { name: 'security_core' }\n")!
@@ -133,7 +133,7 @@ pub fn launch_from(init string, archive string, state string, kernel_dir string,
 
 fn launch_at(_init string, archive string, state string, kernel_dir string, arch string, no_network bool, repo string) !Launch {
 	mut env := policyhost.environment()
-	kernel := kernel_dir + '/bin/vinix'
+	kernel := kernel_dir + '/bin/tulpar'
 	if arch == 'aarch64' {
 		// The desktop launcher starts a Python package server even for a bare
 		// test init. Build this disposable ISO and own QEMU directly instead.
@@ -144,32 +144,32 @@ fn launch_at(_init string, archive string, state string, kernel_dir string, arch
 			os.mkdir_all(build)!
 			os.cp_all(cache, build + '/limine', false)!
 		}
-		env['VINIX_AARCH64_KERNEL'] = kernel
-		env['VINIX_AARCH64_INITRAMFS'] = archive
-		env['VINIX_AARCH64_ISO'] = iso
-		env['VINIX_AARCH64_ISO_BUILD_DIR'] = build
+		env['TULPAR_AARCH64_KERNEL'] = kernel
+		env['TULPAR_AARCH64_INITRAMFS'] = archive
+		env['TULPAR_AARCH64_ISO'] = iso
+		env['TULPAR_AARCH64_ISO_BUILD_DIR'] = build
 		if policyhost.commands_owned() {
 			policyhost.owned_inherited_environment([repo + '/build-support/build-aarch64-iso.sh'], env, policyhost.caller_arch(), '')!
 		} else {
 			fixturehost.inherited_command_environment_preferred([repo + '/build-support/build-aarch64-iso.sh'], env, policyhost.caller_arch())!
 		}
-		qemu := os.find_abs_path_of_executable(os.getenv_opt('VINIX_QEMU_BIN') or { 'qemu-system-aarch64' })!
+		qemu := os.find_abs_path_of_executable(os.getenv_opt('TULPAR_QEMU_BIN') or { 'qemu-system-aarch64' })!
 		share := os.dir(os.dir(qemu)) + '/share/qemu'
-		code := os.getenv_opt('VINIX_OVMF_CODE') or { share + '/edk2-aarch64-code.fd' }
-		variables := os.getenv_opt('VINIX_OVMF_VARS') or { share + '/edk2-arm-vars.fd' }
+		code := os.getenv_opt('TULPAR_OVMF_CODE') or { share + '/edk2-aarch64-code.fd' }
+		variables := os.getenv_opt('TULPAR_OVMF_VARS') or { share + '/edk2-arm-vars.fd' }
 		if !os.exists(state + '/efivars.fd') { copy_firmware_variables(variables, state + '/efivars.fd')! }
-		mut accel := ['-accel', 'tcg', '-cpu', os.getenv_opt('VINIX_QEMU_CPU') or { 'max' }]
+		mut accel := ['-accel', 'tcg', '-cpu', os.getenv_opt('TULPAR_QEMU_CPU') or { 'max' }]
 		$if macos {
 			if os.getenv('USE_TCG') != '1' { accel = ['-accel', 'hvf', '-cpu', 'host'] }
 		}
 		mut command := [qemu, '-machine', 'virt,gic-version=3', ...accel, '-m', '1024',
-			'-smp', os.getenv_opt('VINIX_QEMU_SMP') or { '4' }, '-object', 'rng-random,filename=/dev/urandom,id=vinix-rng',
-			'-device', 'virtio-rng-device,rng=vinix-rng', '-drive', 'if=pflash,format=raw,readonly=on,file=' + code,
+			'-smp', os.getenv_opt('TULPAR_QEMU_SMP') or { '4' }, '-object', 'rng-random,filename=/dev/urandom,id=tulpar-rng',
+			'-device', 'virtio-rng-device,rng=tulpar-rng', '-drive', 'if=pflash,format=raw,readonly=on,file=' + code,
 			'-drive', 'if=pflash,format=raw,file=' + state + '/efivars.fd', '-drive',
 			'if=none,format=raw,readonly=on,file=' + iso + ',id=guest-iso', '-device', 'virtio-blk-device,drive=guest-iso',
 			'-device', 'virtio-keyboard-device', '-device', 'virtio-tablet-device', '-device', 'ramfb',
 			'-display', 'none', '-serial', 'mon:stdio', '-qmp', 'unix:' + state + '/qmp.sock,server=on,wait=off', '-no-reboot']
-		if !no_network && os.getenv('VINIX_QEMU_NETWORK') != '0' {
+		if !no_network && os.getenv('TULPAR_QEMU_NETWORK') != '0' {
 			command << ['-netdev', 'user,id=net0', '-device', 'virtio-net-device,netdev=net0,mac=52:54:00:12:34:56']
 		}
 		return Launch{command, env}
@@ -181,17 +181,17 @@ fn launch_at(_init string, archive string, state string, kernel_dir string, arch
 		os.mkdir_all(iso_build)!
 		os.cp_all(cache, iso_build + '/limine', false)!
 	}
-	env['VINIX_AMD64_KERNEL'] = kernel
-	env['VINIX_AMD64_INITRAMFS'] = archive
-	env['VINIX_AMD64_ISO'] = iso
-	env['VINIX_AMD64_ISO_BUILD_DIR'] = iso_build
+	env['TULPAR_AMD64_KERNEL'] = kernel
+	env['TULPAR_AMD64_INITRAMFS'] = archive
+	env['TULPAR_AMD64_ISO'] = iso
+	env['TULPAR_AMD64_ISO_BUILD_DIR'] = iso_build
 	if policyhost.commands_owned() {
 		policyhost.owned_inherited_environment([repo + '/build-support/build-amd64-iso.sh'], env, policyhost.caller_arch(), '')!
 	} else {
 		fixturehost.inherited_command_environment_preferred([repo + '/build-support/build-amd64-iso.sh'], env, policyhost.caller_arch())!
 	}
-	qemu := os.find_abs_path_of_executable(os.getenv_opt('VINIX_QEMU_X86_64') or { 'qemu-system-x86_64' })!
-	firmware := os.getenv_opt('VINIX_OVMF_CODE') or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
+	qemu := os.find_abs_path_of_executable(os.getenv_opt('TULPAR_QEMU_X86_64') or { 'qemu-system-x86_64' })!
+	firmware := os.getenv_opt('TULPAR_OVMF_CODE') or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
 	mut command := [qemu, '-machine', 'q35,smm=off', '-accel', 'tcg', '-cpu', 'max', '-m', '1024',
 		'-smp', '2', '-drive', 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware, '-cdrom',
 		iso, '-display', 'none', '-monitor', 'none', '-qmp',
@@ -212,13 +212,13 @@ pub fn guest_with_cancel(source string, prebuilt string, state_arg string, kerne
 		return error('timeout and expected verdicts must be nonempty/positive')
 	}
 	state := if state_arg == '' {
-		hosttest.work_dir('', 'vinix-kernel-gaps-')!
+		hosttest.work_dir('', 'tulpar-kernel-gaps-')!
 	} else {
 		resolve(state_arg)!
 	}
 	os.mkdir_all(state)!
 	kernel_dir := resolve(kernel_arg)!
-	if !os.is_file(kernel_dir + '/bin/vinix') {
+	if !os.is_file(kernel_dir + '/bin/tulpar') {
 		return error('Build the requested kernel first: ' + kernel_dir)
 	}
 	init := if prebuilt == '' {

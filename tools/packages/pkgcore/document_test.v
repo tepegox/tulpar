@@ -30,7 +30,7 @@ fn test_document_grants_require_regular_targets_in_every_launch_mode() {
 			LaunchInput{ command: true, arguments: ['literal'] }, LaunchInput{ command: true, terminal: true, arguments: ['literal'] }] {
 			for name in ['regular with spaces', 'alias'] {
 				path := work + '/' + name
-				launch := application_launch_plan(config, '/var/lib/vinix-packages', state, 'app', '/home/user/data', 1000, 1000,
+				launch := application_launch_plan(config, '/var/lib/tulpar-packages', state, 'app', '/home/user/data', 1000, 1000,
 					LaunchInput{ ...input, documents: [path] })!
 				boundary := launch.arguments.index('--')
 				grant := launch.arguments.index(path)
@@ -40,7 +40,7 @@ fn test_document_grants_require_regular_targets_in_every_launch_mode() {
 			for path in [work + '/fifo', work + '/socket', work + '/directory', work + '/missing', work + '/dangling', work + '/cycle',
 				work + '/fifo-alias', work + '/socket-alias', work + '/directory-alias', work + '/device-alias', '/dev/null'] {
 				mut refused := false
-				application_launch_plan(config, '/var/lib/vinix-packages', state, 'app', '/home/user/data', 1000, 1000,
+				application_launch_plan(config, '/var/lib/tulpar-packages', state, 'app', '/home/user/data', 1000, 1000,
 					LaunchInput{ ...input, documents: [path] }) or {
 					refused = err.msg() == 'document must be an existing absolute regular file: ' + path
 				}

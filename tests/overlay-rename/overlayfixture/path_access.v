@@ -37,11 +37,11 @@ fn C.shutdown(int, int) int
 fn C.getsockname(int, &C.sockaddr, &u32) int
 fn C.getpeername(int, &C.sockaddr, &u32) int
 fn C.getsockopt(int, int, int, voidptr, &u32) int
-fn C.vinix_overlay_setsockopt(int, int, int, voidptr, u32) int
+fn C.tulpar_overlay_setsockopt(int, int, int, voidptr, u32) int
 fn C.recvfrom(int, voidptr, usize, int, &C.sockaddr, &u32) isize
-fn C.vinix_overlay_sendto(int, voidptr, usize, int, voidptr, u32) isize
+fn C.tulpar_overlay_sendto(int, voidptr, usize, int, voidptr, u32) isize
 fn C.recvmsg(int, &C.msghdr, int) isize
-fn C.vinix_overlay_sendmsg(int, voidptr, int) isize
+fn C.tulpar_overlay_sendmsg(int, voidptr, int) isize
 fn C.CMSG_SPACE(usize) usize
 fn C.CMSG_LEN(usize) usize
 fn C.CMSG_DATA(&C.cmsghdr) voidptr
@@ -65,7 +65,7 @@ fn socket_metadata_operations(fd int, target &C.sockaddr_un) {
 	unsafe {
 		bad_socket_operation(C.listen(fd, 1), 440)
 		bad_socket_operation(C.bind(fd, voidptr(target), u32(sizeof(C.sockaddr_un))), 441)
-		bad_socket_operation(C.vinix_overlay_connect(fd, voidptr(target), u32(sizeof(C.sockaddr_un))), 442)
+		bad_socket_operation(C.tulpar_overlay_connect(fd, voidptr(target), u32(sizeof(C.sockaddr_un))), 442)
 		bad_socket_operation(C.shutdown(fd, C.SHUT_RDWR), 443)
 		mut address := &C.sockaddr_un(C.alloca(sizeof(C.sockaddr_un)))
 		C.memset(address, 0x5a, sizeof(C.sockaddr_un))
@@ -81,10 +81,10 @@ fn socket_metadata_operations(fd int, target &C.sockaddr_un) {
 		bad_socket_operation(C.getsockopt(fd, C.SOL_SOCKET, C.SO_TYPE, value, length), 448)
 		check(*length == sizeof(i32) && *value == 0x5a5a, 449)
 		*value = 1
-		bad_socket_operation(C.vinix_overlay_setsockopt(fd, C.SOL_SOCKET, C.SO_KEEPALIVE, value, u32(sizeof(i32))), 450)
+		bad_socket_operation(C.tulpar_overlay_setsockopt(fd, C.SOL_SOCKET, C.SO_KEEPALIVE, value, u32(sizeof(i32))), 450)
 		byte := &char(C.alloca(1))
 		*byte = char(`Q`)
-		bad_socket_operation(C.vinix_overlay_sendto(fd, byte, 1, C.MSG_DONTWAIT | C.MSG_NOSIGNAL, nil, 0), 451)
+		bad_socket_operation(C.tulpar_overlay_sendto(fd, byte, 1, C.MSG_DONTWAIT | C.MSG_NOSIGNAL, nil, 0), 451)
 		bad_socket_operation(C.recvfrom(fd, byte, 1, C.MSG_DONTWAIT, nil, nil), 452)
 		check(*byte == char(`Q`), 453)
 		mut vector := &C.iovec(C.alloca(sizeof(C.iovec)))
@@ -97,7 +97,7 @@ fn socket_metadata_operations(fd int, target &C.sockaddr_un) {
 		mut header := &C.msghdr(C.alloca(sizeof(C.msghdr)))
 		*header = C.msghdr{ msg_iov: vector, msg_iovlen: 1, msg_control: control,
 			msg_controllen: C.CMSG_SPACE(sizeof(i32)), msg_flags: 0x5a5a }
-		bad_socket_operation(C.vinix_overlay_sendmsg(fd, header, C.MSG_DONTWAIT | C.MSG_NOSIGNAL), 454)
+		bad_socket_operation(C.tulpar_overlay_sendmsg(fd, header, C.MSG_DONTWAIT | C.MSG_NOSIGNAL), 454)
 		bad_socket_operation(C.recvmsg(fd, header, C.MSG_DONTWAIT), 455)
 		check(*byte == char(`Q`) && header.msg_flags == 0x5a5a
 			&& header.msg_controllen == C.CMSG_SPACE(sizeof(i32))
@@ -133,7 +133,7 @@ fn pass_socket_metadata(fd int) int {
 		mut header := &C.msghdr(C.alloca(sizeof(C.msghdr)))
 		*header = C.msghdr{ msg_iov: vector, msg_iovlen: 1, msg_control: control,
 			msg_controllen: C.CMSG_SPACE(sizeof(i32)) }
-		check(C.vinix_overlay_sendmsg(pair[0], header, C.MSG_NOSIGNAL) == 1 && C.close(fd) == 0, 458)
+		check(C.tulpar_overlay_sendmsg(pair[0], header, C.MSG_NOSIGNAL) == 1 && C.close(fd) == 0, 458)
 		*byte = char(0)
 		C.memset(control, 0, C.CMSG_SPACE(sizeof(i32)))
 		check(C.recvmsg(pair[1], header, C.MSG_CMSG_CLOEXEC) == 1 && *byte == char(`R`)

@@ -32,9 +32,9 @@ fn run() ! {
 fn main() {
  path := fixture_proc + "/123/cmdline"
  for _ in 0 .. 1000 {
-  os.write_file(path, "/usr/bin/vinix-package\x00run-window\x00org.vinix.counter\x00")!
+  os.write_file(path, "/usr/bin/tulpar-package\x00run-window\x00org.tulpar.counter\x00")!
   assert counter_child_present()!
-  os.write_file(path, "/var/lib/vinix-packages/generations/1/apps/org.vinix.counter/bin/counter\x00")!
+  os.write_file(path, "/var/lib/tulpar-packages/generations/1/apps/org.tulpar.counter/bin/counter\x00")!
   assert counter_child_present()!
   os.write_file(path, "/usr/bin/unrelated\x00")!
   assert !counter_child_present()!

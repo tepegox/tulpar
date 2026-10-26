@@ -1,5 +1,5 @@
-#ifndef VINIX_LWIP_ARCH_CC_H
-#define VINIX_LWIP_ARCH_CC_H
+#ifndef TULPAR_LWIP_ARCH_CC_H
+#define TULPAR_LWIP_ARCH_CC_H
 
 #include <stdint.h>
 
@@ -15,17 +15,17 @@
 #define SZT_F "lu"
 
 #define LWIP_PLATFORM_DIAG(x) do { } while (0)
-#ifdef VINIX_V_RUNTIME
-void vinix_lwip_assert(char *message, char *file, int line);
+#ifdef TULPAR_V_RUNTIME
+void tulpar_lwip_assert(char *message, char *file, int line);
 #else
-void vinix_lwip_assert(const char *message, const char *file, int line);
+void tulpar_lwip_assert(const char *message, const char *file, int line);
 #endif
 #define LWIP_PLATFORM_ASSERT(message) \
-    vinix_lwip_assert((message), __FILE__, __LINE__)
+    tulpar_lwip_assert((message), __FILE__, __LINE__)
 
 /* The kernel's ChaCha20 generator, through inet/net_random.v. */
-uint32_t vinix_net_random(void);
-#define LWIP_RAND() vinix_net_random()
+uint32_t tulpar_net_random(void);
+#define LWIP_RAND() tulpar_net_random()
 
 #define PACK_STRUCT_BEGIN
 #define PACK_STRUCT_END

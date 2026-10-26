@@ -12,7 +12,7 @@ import time
 fn C.kill(int, int) int
 
 fn test_due_job_runs_with_owned_credentials_and_no_credential_receipt() {
-	root := sourcecommand.temporary('vinix-jobs-test')!
+	root := sourcecommand.temporary('tulpar-jobs-test')!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/main.v', 'module main\nimport os\nfn main() { if os.getenv("TOKEN") != "private-token" { exit(1) }; os.write_file("job-output", "completed")!; println(os.getenv("TOKEN")) }\n')!
 	compiled := sourcecommand.capture([@VEXE, '-gc', 'none', '-cc', 'cc', '-o', root + '/job',
@@ -56,7 +56,7 @@ fn test_due_job_runs_with_owned_credentials_and_no_credential_receipt() {
 }
 
 fn test_credentials_reject_symlinks_public_modes_nuls_and_oversized_values() {
-	root := sourcecommand.temporary('vinix-jobs-secrets')!
+	root := sourcecommand.temporary('tulpar-jobs-secrets')!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/secret', 'value')!
 	os.chmod(root + '/secret', 0o600)!
@@ -89,7 +89,7 @@ fn test_credentials_reject_symlinks_public_modes_nuls_and_oversized_values() {
 }
 
 fn test_changed_executable_is_rejected_and_accounted_without_running_it() {
-	root := sourcecommand.temporary('vinix-jobs-pins')!
+	root := sourcecommand.temporary('tulpar-jobs-pins')!
 	defer { os.rmdir_all(root) or {} }
 	program := os.real_path(os.find_abs_path_of_executable('echo')!)
 	plan := Plan{ uid: os.getuid(), jobs: [Job{ id: 'bad', executable: devcore.Pin{program, '0'.repeat(64)}, directory: root, interval_seconds: 1 }] }
@@ -101,7 +101,7 @@ fn test_changed_executable_is_rejected_and_accounted_without_running_it() {
 }
 
 fn test_job_deadline_retires_child_and_records_failure() {
-	root := sourcecommand.temporary('vinix-jobs-timeout')!
+	root := sourcecommand.temporary('tulpar-jobs-timeout')!
 	defer { os.rmdir_all(root) or {} }
 	program := os.real_path(os.find_abs_path_of_executable('sleep')!)
 	plan := Plan{
@@ -122,15 +122,15 @@ fn test_job_deadline_retires_child_and_records_failure() {
 }
 
 fn test_watch_reexec_keeps_one_owner_and_repeats_due_jobs() {
-	root := sourcecommand.temporary('vinix-jobs-watch')!
+	root := sourcecommand.temporary('tulpar-jobs-watch')!
 	defer { os.rmdir_all(root) or {} }
 	compiled := sourcecommand.capture([@VEXE, '-enable-globals', '-gc', 'none', '-cc', 'cc', '-o',
-		root + '/vinix-jobs', os.dir(os.dir(@FILE)) + '/jobs.v'], os.environ(), 120, 65536, unsafe { nil })!
+		root + '/tulpar-jobs', os.dir(os.dir(@FILE)) + '/jobs.v'], os.environ(), 120, 65536, unsafe { nil })!
 	assert compiled.status == 0, compiled.stderr
 	program := os.real_path(os.find_abs_path_of_executable('true')!)
 	plan := Plan{ uid: os.getuid(), jobs: [Job{ id: 'tick', executable: devcore.Pin{program, devcore.file_hash(program)!}, directory: root, interval_seconds: 1 }] }
 	initialise(json2.encode(plan), root + '/state')!
-	mut owner := os.new_process(root + '/vinix-jobs')
+	mut owner := os.new_process(root + '/tulpar-jobs')
 	owner.set_args(['watch', root + '/state'])
 	owner.set_redirect_stdio()
 	owner.run()

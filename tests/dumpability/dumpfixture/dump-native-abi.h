@@ -1,6 +1,6 @@
 /* Native libc declarations for the independent process dumpability fixture. */
-#ifndef VINIX_DUMP_NATIVE_ABI_H
-#define VINIX_DUMP_NATIVE_ABI_H
+#ifndef TULPAR_DUMP_NATIVE_ABI_H
+#define TULPAR_DUMP_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

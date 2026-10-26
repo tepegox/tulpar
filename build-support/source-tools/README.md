@@ -12,7 +12,7 @@ build-support/source-tools/run test-directory COMPILER DIRECTORY [compiler flags
 
 Source reads retain strict UTF-8 and universal newline conversion. Selection
 keeps the original markers, public function prefixes, body bytes, import order
-and `VINIX_FILE_PAGES_HOST`/`VINIX_PAGING_HOST` variants. Missing markers fail
+and `TULPAR_FILE_PAGES_HOST`/`TULPAR_PAGING_HOST` variants. Missing markers fail
 before writing the selected output. The M1 fixture keeps its exact 64-byte
 header and 32-byte Limine MP request. No kernel implementation is changed.
 
@@ -43,8 +43,8 @@ existing merge output byte-for-byte with that reference, checks failure
 continuation and empty selections, and runs the actual clock/security-policy,
 EXT2 mapping, four private/file/paging combinations and disposable M1
 deployment workflows. All eight translated shell callers receive syntax
-checks. Full desktop UI suites and Vinix guests are outside this qualification;
-no Python, GUI application, live ESP or Vinix kernel executes.
+checks. Full desktop UI suites and Tulpar guests are outside this qualification;
+no Python, GUI application, live ESP or Tulpar kernel executes.
 
 The host helpers replace nine embedded Python blocks in five more callers:
 
@@ -74,7 +74,7 @@ are small; ZIP64 is outside this helper's scope. Plist whitespace and compressio
 bytes need not match old output while parsed properties and archive contents do.
 
 CPython SDK discovery reads `Python.h` and `patchlevel.h`; it never launches an
-interpreter. `VINIX_CPYTHON_INCLUDE` selects an explicit include directory.
+interpreter. `TULPAR_CPYTHON_INCLUDE` selects an explicit include directory.
 Otherwise the selected executable's symlink target, base prefix, `pyvenv.cfg`,
 versioned includes and framework Headers select a unique SDK. Apple's system
 launcher uses the active developer SDK, queried by native `xcode-select`.
@@ -90,7 +90,7 @@ real signed Calculator/2048 Mach-O bundles and both IPA archives. The Rosetta
 V controller checks native ARM reference children: the separate x86 Darwin
 overflow fixture raises SIGILL, which fails the original required SIGTRAP
 verdict. That verdict stays unchanged. No Python, interpreter initialization,
-Security/Keychain/credential fixture, Blender build, UI app or Vinix guest runs.
+Security/Keychain/credential fixture, Blender build, UI app or Tulpar guest runs.
 
 The ISO boot tester sends complete QMP JSON objects with the native command:
 
@@ -116,7 +116,7 @@ socket and private command group, with exit statuses 130/143. Existing checked,
 typed-request and performance QMP policies remain unchanged.
 
 The standalone CMake trimmer retains strict UTF-8, universal newlines and the
-prefix before the first `# Vinix execinfo compatibility` marker. A missing
+prefix before the first `# Tulpar execinfo compatibility` marker. A missing
 marker retains the complete text; invalid UTF-8 fails before writing. The guest
 producer links static AArch64/Linux with the existing musl SDK, checks its ELF
 headers, interpreter absence and 16 KiB segment congruence, records source and
@@ -129,4 +129,4 @@ and CLI/error/event/EOF/UTF-8/deadline/signal/descriptor cases, and reruns the
 original QMP, source and host regressions. Every profile cross-links the static
 guest ELF and verifies failure preserves both output kinds. Syntax and ISO help
 checks cover the callers. No Python, interpreter initialization, target ELF,
-Vinix guest, ISO boot or GUI application executes during this qualification.
+Tulpar guest, ISO boot or GUI application executes during this qualification.

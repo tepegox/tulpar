@@ -7,7 +7,7 @@ kept zero metadata ownership. Linux initializes socket inode ownership from
 [the calling filesystem credentials](https://github.com/torvalds/linux/blob/v6.12/net/socket.c#L594)
 and allocates a new socket inode during acceptance.
 
-Vinix now initializes unnamed and paired stat UID/GID from its existing effective
+Tulpar now initializes unnamed and paired stat UID/GID from its existing effective
 credential model. Acceptance assigns the accepting account's effective UID/GID
 before boxing the resource and publishing its FD. Captured listener and peer
 credentials retain their connection-time identities. Independent review checked
@@ -34,7 +34,7 @@ Results on 14 October 2026 are retained under `build/development17-20261013`:
 | State | Result |
 | --- | --- |
 | `socketowner-arm-before-c`, `socketowner-x86-before-c` | Previous permission kernels report UID/GID 0 and return `EPERM` for the ordinary creator's chmod; assertion 530 fails. |
-| `socketowner-arm-basic-a`, `socketowner-x86-basic-a` | Expanded disk-free ownership and inherited-listener probes pass in native Vinix. |
+| `socketowner-arm-basic-a`, `socketowner-x86-basic-a` | Expanded disk-free ownership and inherited-listener probes pass in native Tulpar. |
 | `socketowner-arm-linux-a`, `socketowner-x86-linux-a` | Each exact native probe ELF passes in the Linux 6.12.51-0-virt reference. |
 | `socketowner-arm-after-a`, `socketowner-x86-after-a` | Extended direct-ext2/overlay socket checks pass with flat repeated live allocations and clean remount. |
 | `socketowner-arm-all-a`, `socketowner-x86-all-a` | Existing atomic replacement, rollback, mixed lifetime, persistence, whiteout and opacity regressions pass. |

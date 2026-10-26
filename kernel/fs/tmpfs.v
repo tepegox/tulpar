@@ -209,7 +209,7 @@ fn (mut this TmpFSResource) materialize_locked(min_capacity u64) bool {
 }
 
 // tmpfs_borrow_storage installs immutable backing supplied by an initramfs
-// module.  Limine keeps executable-and-module memory reserved, and Vinix maps
+// module.  Limine keeps executable-and-module memory reserved, and Tulpar maps
 // it in the HHDM, so the bytes remain valid after boot.  Writes, truncation and
 // shared mappings transparently copy the file into owned tmpfs memory.
 pub fn tmpfs_borrow_storage(mut res resource.Resource, storage voidptr, size u64) bool {

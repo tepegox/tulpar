@@ -47,31 +47,31 @@ fn churn_checked(arguments []string) !int {
 	if parsed.has('--build-only') && !parsed.has('--state-dir') {
 		return SerialArgumentError{'--build-only needs --state-dir to retain artifacts'}
 	}
-	repo := resolve(parsed.value('--runner-root', os.getenv_opt('VINIX_VM_RUNNER_ROOT') or { root() }))!
+	repo := resolve(parsed.value('--runner-root', os.getenv_opt('TULPAR_VM_RUNNER_ROOT') or { root() }))!
 	mut base_archive := resolve(parsed.value('--image', repo + '/build-support/init-aarch64/initramfs-desktop.tar'))!
 	module_iso := if mode == 'exec' && parsed.has('--module-iso') { resolve(parsed.value('--module-iso', ''))! } else { '' }
 	if mode == 'exec' && (!os.is_file(base_archive) || module_iso == '' || !os.is_file(module_iso)) {
 		return SerialArgumentError{'exec cohorts require a populated desktop image and its module ISO'}
 	}
-	mut kernel := resolve(parsed.value('--kernel', os.getenv_opt('VINIX_KERNEL_DIR') or { root() + '/kernel' }))!
-	if os.is_dir(kernel) { kernel += '/bin/vinix' }
+	mut kernel := resolve(parsed.value('--kernel', os.getenv_opt('TULPAR_KERNEL_DIR') or { root() + '/kernel' }))!
+	if os.is_dir(kernel) { kernel += '/bin/tulpar' }
 	if !parsed.has('--build-only') { abi_validate_elf(kernel, arch)! }
-	for key, value in {'VINIX_KERNEL_DIR': os.dir(os.dir(kernel)), 'VINIX_QEMU_RT_NO_BUILD': '1',
-		'VINIX_QEMU_BASE_ARCHIVE': '', 'VINIX_QEMU_MODULE_MANIFEST': '', 'VINIX_QEMU_EXTRA_MODULES': '',
-		'VINIX_QEMU_ROOT_DISK': '0', 'VINIX_QEMU_PACKAGE_PERSIST': '0', 'VINIX_QEMU_HOST_SOURCE': '0',
-		'VINIX_QEMU_AUDIO': 'off'} { os.setenv(key, value, true) }
+	for key, value in {'TULPAR_KERNEL_DIR': os.dir(os.dir(kernel)), 'TULPAR_QEMU_RT_NO_BUILD': '1',
+		'TULPAR_QEMU_BASE_ARCHIVE': '', 'TULPAR_QEMU_MODULE_MANIFEST': '', 'TULPAR_QEMU_EXTRA_MODULES': '',
+		'TULPAR_QEMU_ROOT_DISK': '0', 'TULPAR_QEMU_PACKAGE_PERSIST': '0', 'TULPAR_QEMU_HOST_SOURCE': '0',
+		'TULPAR_QEMU_AUDIO': 'off'} { os.setenv(key, value, true) }
 	if mode == 'exec' {
-		os.setenv('VINIX_QEMU_MODULE_ISO', module_iso, true)
-		os.setenv('VINIX_INITRAMFS_COMPRESSED', '0', true)
+		os.setenv('TULPAR_QEMU_MODULE_ISO', module_iso, true)
+		os.setenv('TULPAR_INITRAMFS_COMPRESSED', '0', true)
 	} else {
-		os.unsetenv('VINIX_QEMU_MODULE_ISO')
-		os.unsetenv('VINIX_INITRAMFS_COMPRESSED')
+		os.unsetenv('TULPAR_QEMU_MODULE_ISO')
+		os.unsetenv('TULPAR_INITRAMFS_COMPRESSED')
 	}
 	keep := parsed.has('--state-dir')
 	state_arg := parsed.value('--state-dir', '.')
-	work := hosttest.work_dir(if keep { if state_arg == '' { '.' } else { state_arg } } else { '' }, 'vinix-process-churn-')!
+	work := hosttest.work_dir(if keep { if state_arg == '' { '.' } else { state_arg } } else { '' }, 'tulpar-process-churn-')!
 	defer { if !keep { hosttest.remove_work_dir(work) or { eprintln(err.msg()) } } }
-	sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/sysroot' }
+	sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { repo + '/build-aarch64-userland/sysroot' }
 	mut compiler := if arch == 'aarch64' {
 		['clang', '--target=aarch64-linux-musl', '--sysroot=' + sdk, '-L' + sdk + '/lib', '-fuse-ld=lld']
 	} else { [os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }] }
@@ -100,7 +100,7 @@ fn churn_checked(arguments []string) !int {
 	println('Process churn artifacts: ' + work)
 	if parsed.has('--build-only') { return 0 }
 	mkdir_literal(work + '/kernel/bin')!
-	os.cp(kernel, work + '/kernel/bin/vinix')!
+	os.cp(kernel, work + '/kernel/bin/tulpar')!
 	mkdir_literal(work + '/vm')!
 	mut command := []string{}
 	mut env := policyhost.environment()
@@ -112,11 +112,11 @@ fn churn_checked(arguments []string) !int {
 	} else {
 		configured := launch_from(work + '/init', base_archive, work + '/vm', work + '/kernel', arch, false, repo)!
 		qemu := configured.command[0]
-		firmware := os.getenv_opt('VINIX_OVMF_CODE_AMD64') or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
+		firmware := os.getenv_opt('TULPAR_OVMF_CODE_AMD64') or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
 		command = serial_x86_command(work + '/vm/test.iso', qemu, firmware, work + '/unused.pcap')
 		env = configured.env
 	}
-	receipt['kernel_sha256'] = json2.Any(digest(work + '/kernel/bin/vinix')!)
+	receipt['kernel_sha256'] = json2.Any(digest(work + '/kernel/bin/tulpar')!)
 	receipt['command'] = json2.Any(command.map(json2.Any(it)))
 	os.write_file(work + '/inputs.json', json2.encode(json2.Any(receipt), prettify: true) + '\n')!
 	policyhost.command_checkpoint()!

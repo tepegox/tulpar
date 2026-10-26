@@ -15,7 +15,7 @@ fatal signals leave through an owned kernel stack.
 After building an isolated AArch64 kernel with `LIMINE_MP=1` for SMP coverage, run:
 
 ```sh
-tests/kernel-cpu/run --repo=/path/to/vinix --kernel=/path/to/worktree/kernel --log=/tmp/cpu-regression.log
+tests/kernel-cpu/run --repo=/path/to/tulpar --kernel=/path/to/worktree/kernel --log=/tmp/cpu-regression.log
 ```
 
 The repository argument supplies the existing QEMU firmware, small shell

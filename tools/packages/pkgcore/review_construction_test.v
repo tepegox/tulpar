@@ -7,8 +7,8 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn construction_cycles() int {
 	$if review_construction_baseline ? { return 8 }
@@ -47,7 +47,7 @@ fn construction_failure(config Config, directory string, current State, plan Pla
 fn test_review_construction_and_refusals_retire_rows_counters_and_fingerprints() {
 	$if !track_heap ? { return }
 	$if track_heap ? {
-		root := os.temp_dir() + '/vinix-review-construction-' + os.getpid().str()
+		root := os.temp_dir() + '/tulpar-review-construction-' + os.getpid().str()
 		os.mkdir_all(root + '/generations/7')!; os.mkdir(root + '/generations/12')!; os.mkdir(root + '/generations/staging.tmp')!
 		defer { os.rmdir_all(root) or {}; unsafe { root.free() } }
 		for arch in ['aarch64', 'x86_64']! {
@@ -65,7 +65,7 @@ fn test_review_construction_and_refusals_retire_rows_counters_and_fingerprints()
 			defer { unsafe { fingerprint.free() } }
 			missing := root + '/missing'; defer { unsafe { missing.free() } }
 			for warmup in 0 .. 2 {
-				if warmup == 1 { C.vinix_heap_begin() }
+				if warmup == 1 { C.tulpar_heap_begin() }
 				for _ in 0 .. construction_cycles() {
 					mut value := review_plan(config, root, old, 'upgrade', [], plan, 0, [], fingerprint)!
 					assert value.rows.len == 17 && value.disk_needed > 0 && value.generation == 7
@@ -78,13 +78,13 @@ fn test_review_construction_and_refusals_retire_rows_counters_and_fingerprints()
 					construction_failure(config, root, old, overflow, fingerprint, 'requirement overflow')
 				}
 			}
-			kept := C.vinix_heap_end()
+			kept := C.tulpar_heap_end()
 			construction_check_bytes(arch + ' changed/no-op/space/validation cycles', kept)
 			for name in ['01', '18446744073709551615', '18446744073709551616']! {
 				path := root + '/generations/' + name; os.mkdir(path)!
-				C.vinix_heap_begin()
+				C.tulpar_heap_begin()
 				for _ in 0 .. construction_cycles() { construction_failure(config, root, old, plan, fingerprint, if name == '01' { 'canonical positive' } else if name == '18446744073709551615' { 'counter exhausted' } else { 'exceeds u64' }) }
-				retained := C.vinix_heap_end()
+				retained := C.tulpar_heap_end()
 				construction_check_bytes(arch + ' generation ' + name, retained)
 				os.rmdir(path)!; unsafe { path.free() }
 			}
@@ -118,21 +118,21 @@ fn test_review_fingerprints_match_old_encoding_and_retire_all_hash_storage() {
 	unsafe { previous.free(); expected.free(); actual.free() }
 	$if track_heap ? {
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. if construction_cycles() == 8 { 32 } else { 1000 } {
 				first := review_fingerprint(config, 'upgrade', [], old, plan, 0, [])
 				second := deployment_fingerprint(config, old, document, plan, [])
 				unsafe { first.free(); second.free() }
 			}
 		}
-		construction_check_bytes('ordinary/deployment fingerprint cycles', C.vinix_heap_end())
+		construction_check_bytes('ordinary/deployment fingerprint cycles', C.tulpar_heap_end())
 	}
 	$if !review_construction_baseline ? { println('REVIEW CONSTRUCTION ordinary/deployment identities retain exact prior JSON digests, repair domains and 1000 repeated hash retirements PASS') }
 }
 
 fn test_review_construction_owns_fingerprint_and_rows_after_borrowed_inputs_retire() {
 	$if review_construction_baseline ? { return }
-	root := os.temp_dir() + '/vinix-review-independent-' + os.getpid().str()
+	root := os.temp_dir() + '/tulpar-review-independent-' + os.getpid().str()
 	os.mkdir_all(root + '/generations/7')!
 	defer { os.rmdir_all(root) or {}; unsafe { root.free() } }
 	for arch in ['aarch64', 'x86_64']! {

@@ -4,7 +4,7 @@ module proc
 import katomic
 
 // Linux 6.12's four behavior/lock pairs. These belong to the calling task,
-// independently of the process-wide capability sets currently kept by Vinix.
+// independently of the process-wide capability sets currently kept by Tulpar.
 pub const secbit_noroot = u32(1)
 pub const secbit_no_setuid_fixup = u32(4)
 pub const secbit_keep_caps = u32(16)

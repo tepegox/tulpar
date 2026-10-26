@@ -68,7 +68,7 @@ directories must be fresh; default private directories retire on all exits.
 `check-regression-build.v CONTROLLER PROFILE CACHE` independently checks ten
 native target builds, immutable C bytes, ELF machine IDs, real PIE dynamic and
 interpreter headers, exact host greetings and byte-identical recipe replays.
-`V`, `VINIX_PROCESS_TEST_ARM_KERNEL` and `VINIX_PROCESS_TEST_X86_KERNEL` select
+`V`, `TULPAR_PROCESS_TEST_ARM_KERNEL` and `TULPAR_PROCESS_TEST_X86_KERNEL` select
 qualification inputs. `regression_test.v` covers original completion captures,
 large/negative counters and LLVM protection rules. `check-regression.v` covers
 fractional deadlines, incomplete/late output, nonzero child exits, TERM/KILL

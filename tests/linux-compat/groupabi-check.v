@@ -91,7 +91,7 @@ fn check_c(area string, suffix string) ! {
 		new_start := old_start
 		old := definition(before,old_start); new := definition(after,new_start)
 		assert old != new
-		for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','vinix_stack_alloc('] { assert old.count(token) == new.count(token), name + token }
+		for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','tulpar_stack_alloc('] { assert old.count(token) == new.count(token), name + token }
 		before = before.replace(old,''); after = after.replace(new,'')
 	}
 	unchanged := before == after; assert unchanged, 'Whole C differs outside six qualified functions; no compiler normalization permitted'
@@ -114,7 +114,7 @@ fn retained_diagnostics(area string, out string) ! {
 	assert log.count('LINUX GROUPABI FAIL: setup stage=15') == 2 && !log.contains('LINUX GROUPABI FINAL:')
 	assert log.contains('Attempted to kill init!')
 	old := os.read_file(area + 'exploratory-probe.v')!
-	final := os.read_file('/Users/alex/code/vinix/tests/linux-compat/groupabifixture/core.v')!
+	final := os.read_file('/Users/alex/code/tulpar/tests/linux-compat/groupabifixture/core.v')!
 	expected := old.replace('outsider_group <= 0 || outsider_session <= 0','outsider_group < 0 || outsider_session < 0 || outsider_session == self').replace('outsider=%d dead=%d\\n\',i32(ordinary),uid,self,self,a.pid,b.pid,outsider,dead)', 'outsider=%d dead=%d outsider_group=%d outsider_session=%d\\n\',i32(ordinary),uid,self,self,a.pid,b.pid,outsider,dead,outsider_group,outsider_session)')
 	exact := final == expected; assert exact, 'Only the legitimate zero outside identity precondition and its printed values may change'
 	for name,path in {
@@ -138,7 +138,7 @@ fn sdk_and_primary(area string, out string) ! {
 	assert primary['sha256']!.str() == 'e43eb875410d607ccf91ca00d88433052b58fdae4e4ccdd12c53c458f1ce1d69'
 	assert digest(area + 'linux-sys-v6.12.c') == primary['sha256']!.str()
 	assert digest(primary['cached_source']!.str()) == primary['sha256']!.str()
-	assert os.read_file('/Users/alex/.cache/vinix-linux-compat/niceabi-20261015/linux-source.sha256')!.trim_space() == primary['sha256']!.str() + ' ' + primary['source_url']!.str()
+	assert os.read_file('/Users/alex/.cache/tulpar-linux-compat/niceabi-20261015/linux-source.sha256')!.trim_space() == primary['sha256']!.str() + ' ' + primary['source_url']!.str()
 	assert os.read_file(area + 'initial-fetch.log')!.contains('error: 429')
 	for path in ['states/p3-before-arm/groupabi','states/p2-after-arm/groupabi','states/p2-after-arm/runtime','states/p2-after-arm/randomsignal','states/p2-reference-arm'] {
 		for file in ['fixture.o','serial.o','init'] {
@@ -266,7 +266,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -297,7 +297,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -322,12 +322,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/groupabi-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/groupabi-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/groupabireferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/groupabireferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -360,7 +360,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: groupabi-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	retained_diagnostics(area, out)!
@@ -373,7 +373,7 @@ fn main() {
 	os.write_file(area + 'scope-check.log', 'arm/x86: complete production C differs only in three syscall entry casts and three group/session helpers; exact signed32 normalization, query ESRCH and setpgid EINVAL/ESRCH precedence; existing table locking, borrowed processes, orphan stack descriptor and group mutation/notification are unchanged; no added allocation/free and no compiler normalization\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == 'fe594a9c126944d7848ac0f7f6a83fce7fe8ea99'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -479,7 +479,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + if phase == 'before' && suffix == 'arm' { 'p3-' } else { 'p2-' } + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['groupabi']
 			} else {
@@ -499,7 +499,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + if phase == 'before' { 'initial-build-' + suffix + '-before.log' } else { 'build-after-' + suffix + '-detached.log' }
 			assert os.read_file(producer)!.trim_space() == suffix + ' ' + phase + ' production build: PASS'
 			artifacts[phase + '_build_producer'] = digest(producer)

@@ -8,7 +8,7 @@ import x86.cpu
 // Each boot-online CPU owns its counters for its entire lifetime. The native
 // thunks call these with kernel GS installed and maskable interrupts disabled;
 // exceptions, NMI and software bottom halves have separate contracts.
-@[export: 'vinix_x86_maskable_irq_enter']
+@[export: 'tulpar_x86_maskable_irq_enter']
 pub fn maskable_irq_enter(vector u32, saved_cs u64) {
 	if cpu.interrupt_state() {
 		panic('x86: maskable IRQ entry requires disabled interrupts')
@@ -37,7 +37,7 @@ pub fn maskable_irq_enter(vector u32, saved_cs u64) {
 // Normal thunk returns and the scheduler's noreturn handoff each consume one
 // actual entry. The scheduler must consume its entry before changing GS or
 // abandoning its interrupt stack; it must not also return through this exit.
-@[export: 'vinix_x86_maskable_irq_exit']
+@[export: 'tulpar_x86_maskable_irq_exit']
 pub fn maskable_irq_exit(vector u32) {
 	if cpu.interrupt_state() {
 		panic('x86: maskable IRQ exit requires disabled interrupts')
@@ -55,7 +55,7 @@ pub fn maskable_irq_exit(vector u32) {
 // This synchronous CPU borrow preserves the caller's IF. It is valid only
 // after this CPU has installed kernel GS, including between runnable threads;
 // there is no pre-initialization zero fallback or postboot activation/reset.
-@[export: 'vinix_x86_maskable_irq_depth']
+@[export: 'tulpar_x86_maskable_irq_depth']
 pub fn maskable_irq_depth() u32 {
 	interrupts := cpu.interrupt_toggle(false)
 	depth := current().maskable_irq_depth

@@ -79,7 +79,7 @@ fn main() {
    for provider in packages[name].provides { providers[dep_name(provider)] = name }
   }
   // Acquisition only. APK performs the real dependency resolution and
-  // signature validation inside Vinix, against these unchanged signed indexes.
+  // signature validation inside Tulpar, against these unchanged signed indexes.
   mut pending := if version == 'v3.21' { ['sqlite', 'apk-tools', 'alpine-keys'] } else { ['sqlite'] }
   mut selected := map[string]Package{}
   for pending.len > 0 {
@@ -111,7 +111,7 @@ fn main() {
   os.write_file(os.dir(mirror) + '/sqlite.version', packages['sqlite'].version + '\n')!
  }
  root := output + '/root'
- // Restore the prepared Vinix interpreter in the boot root. The installed
+ // Restore the prepared Tulpar interpreter in the boot root. The installed
  // disk root will use the unmodified musl package selected by APK.
  for name in ['lib/ld-musl-' + arch + '.so.1', 'lib/libc.musl-' + arch + '.so.1'] {
   if os.exists(root + '/' + name) || os.is_link(root + '/' + name) { os.rm(root + '/' + name)! }
@@ -136,7 +136,7 @@ fn main() {
    os.chmod(path, mode)!
   }
  }
- os.cp(os.real_path(os.dir(@FILE) + '/../../../build-support/vinix-pkg'), root + '/usr/bin/pkg')!
+ os.cp(os.real_path(os.dir(@FILE) + '/../../../build-support/tulpar-pkg'), root + '/usr/bin/pkg')!
  os.chmod(root + '/usr/bin/pkg', 0o755)!
  os.write_file(output + '/packages.json', json2.encode(inputs, prettify: true) + '\n')!
 }

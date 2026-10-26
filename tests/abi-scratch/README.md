@@ -4,7 +4,7 @@
 userspace copying. `ppoll` copies its optional timeout and signal mask into
 caller-owned slots that stay alive across the wait. The timer copies its time
 value, and the signal path applies a scalar mask; neither retains these slots.
-Explicit `vinix_stack_alloc` storage prevents V escape analysis from promoting
+Explicit `tulpar_stack_alloc` storage prevents V escape analysis from promoting
 these synchronous locals to unfreed heap objects.
 
 Run `tests/abi-scratch/run` or add `--arch=amd64`, using the prebuilt
@@ -36,7 +36,7 @@ objects (908→956 KiB). With a conditional caller-stack scalar timeout,
 the expanded ABI guest passes all `SYS_poll` cases and stays exactly flat
 at 1,020 KiB; the ARM stat/`ppoll` loop stays flat at 1,536 KiB. Both production
 architecture builds pass, and the x86 generated `syscall_poll` has one
-conditional `vinix_stack_alloc` with no `memdup`.
+conditional `tulpar_stack_alloc` with no `memdup`.
 
 The [native V controller](../native-guest-tools/abi-guests.md) accepts
 `--state-dir FRESH-DIR` to retain artifacts and `--build-only` to qualify the

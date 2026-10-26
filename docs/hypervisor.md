@@ -1,12 +1,12 @@
 # Intel VT-x hypervisor
 
-This is Vinix's native hardware virtualization backend. It exposes the
-Vinix-specific `/dev/hypervisor` API, not Linux's `/dev/kvm` or `KVM_*` ioctls.
-QEMU's KVM accelerator cannot use this device. For running Vinix as a guest
+This is Tulpar's native hardware virtualization backend. It exposes the
+Tulpar-specific `/dev/hypervisor` API, not Linux's `/dev/kvm` or `KVM_*` ioctls.
+QEMU's KVM accelerator cannot use this device. For running Tulpar as a guest
 under Linux KVM, see [Virtualization and KVM support](virtualization.md).
 
-Vinix enables Intel VT-x on every x86_64 CPU during SMP bring-up. If the CPU,
-firmware, or outer hypervisor does not provide VMX, Vinix logs the reason and
+Tulpar enables Intel VT-x on every x86_64 CPU during SMP bring-up. If the CPU,
+firmware, or outer hypervisor does not provide VMX, Tulpar logs the reason and
 continues booting normally. On supported systems an EPT-backed real-mode guest
 is run as a boot-time self-test before `/dev/hypervisor` is registered.
 
@@ -20,16 +20,16 @@ userspace decides how to emulate each exit.
 
 ## Userspace API
 
-Include `<vinix/hypervisor.h>`, open `/dev/hypervisor` once per VM, then:
+Include `<tulpar/hypervisor.h>`, open `/dev/hypervisor` once per VM, then:
 
-1. Check `VINIX_HV_GET_API_VERSION`.
-2. Pass `struct vinix_hv_create` to `VINIX_HV_CREATE_VM`.
+1. Check `TULPAR_HV_GET_API_VERSION`.
+2. Pass `struct tulpar_hv_create` to `TULPAR_HV_CREATE_VM`.
 3. Load guest bytes with `write(2)` or a shared `mmap(2)` of the descriptor.
-4. Set the initial RIP, RSP, and RFLAGS with `VINIX_HV_SET_ENTRY`.
-5. Set general registers if needed with `VINIX_HV_SET_REGISTERS`.
-6. Call `VINIX_HV_RUN` and emulate the returned `struct vinix_hv_exit`.
+4. Set the initial RIP, RSP, and RFLAGS with `TULPAR_HV_SET_ENTRY`.
+5. Set general registers if needed with `TULPAR_HV_SET_REGISTERS`.
+6. Call `TULPAR_HV_RUN` and emulate the returned `struct tulpar_hv_exit`.
 7. For an emulated instruction, pass its reported length to
-   `VINIX_HV_ADVANCE_RIP` before running again.
+   `TULPAR_HV_ADVANCE_RIP` before running again.
 
 Guest memory supports unaligned reads/writes across physical-page boundaries.
 Only shared mappings within the rounded RAM size are accepted; private mappings
@@ -57,7 +57,7 @@ This example executes an `OUT 0xe9, AL` followed by `HLT`:
 #include <stdint.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
-#include <vinix/hypervisor.h>
+#include <tulpar/hypervisor.h>
 
 int main(void) {
     static const uint8_t guest[] = {
@@ -67,26 +67,26 @@ int main(void) {
         0xf4                    /* hlt */
     };
     int fd = open("/dev/hypervisor", O_RDWR);
-    struct vinix_hv_create create = { .memory_size = 64 * 1024 };
-    struct vinix_hv_entry entry = { .rip = 0x1000, .rsp = 0x8000, .rflags = 2 };
-    struct vinix_hv_exit exit;
+    struct tulpar_hv_create create = { .memory_size = 64 * 1024 };
+    struct tulpar_hv_entry entry = { .rip = 0x1000, .rsp = 0x8000, .rflags = 2 };
+    struct tulpar_hv_exit exit;
 
-    if (fd < 0 || ioctl(fd, VINIX_HV_GET_API_VERSION) != VINIX_HV_API_VERSION)
+    if (fd < 0 || ioctl(fd, TULPAR_HV_GET_API_VERSION) != TULPAR_HV_API_VERSION)
         return 1;
-    if (ioctl(fd, VINIX_HV_CREATE_VM, &create) ||
+    if (ioctl(fd, TULPAR_HV_CREATE_VM, &create) ||
         lseek(fd, 0x1000, SEEK_SET) < 0 ||
         write(fd, guest, sizeof(guest)) != sizeof(guest) ||
-        ioctl(fd, VINIX_HV_SET_ENTRY, &entry))
+        ioctl(fd, TULPAR_HV_SET_ENTRY, &entry))
         return 1;
 
     for (;;) {
-        if (ioctl(fd, VINIX_HV_RUN, &exit))
+        if (ioctl(fd, TULPAR_HV_RUN, &exit))
             return 1;
-        if (exit.reason == VINIX_HV_EXIT_HLT)
+        if (exit.reason == TULPAR_HV_EXIT_HLT)
             break;
-        if (exit.reason != VINIX_HV_EXIT_IO)
+        if (exit.reason != TULPAR_HV_EXIT_IO)
             return 1;
-        if (ioctl(fd, VINIX_HV_ADVANCE_RIP, &exit.instruction_length))
+        if (ioctl(fd, TULPAR_HV_ADVANCE_RIP, &exit.instruction_length))
             return 1;
     }
     close(fd);

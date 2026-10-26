@@ -1,12 +1,12 @@
 #!/bin/sh
-# Boot Vinix with the Docker engine and run tests/docker/smoke.sh inside it.
+# Boot Tulpar with the Docker engine and run tests/docker/smoke.sh inside it.
 set -eu
 
 repo=$(cd "$(dirname "$0")/../.." && pwd)
-userland=${VINIX_AARCH64_USERLAND_BUILD_DIR:-"$repo/build-aarch64-userland"}
-minirootfs=${VINIX_ALPINE_MINIROOTFS:-"$userland/downloads/alpine-minirootfs-3.21.7-aarch64.tar.gz"}
-docker_staging=${VINIX_DOCKER_STAGING:-"$repo/build-aarch64-docker/staging"}
-work=$(mktemp -d "${TMPDIR:-/tmp}/vinix-docker-test.XXXXXX")
+userland=${TULPAR_AARCH64_USERLAND_BUILD_DIR:-"$repo/build-aarch64-userland"}
+minirootfs=${TULPAR_ALPINE_MINIROOTFS:-"$userland/downloads/alpine-minirootfs-3.21.7-aarch64.tar.gz"}
+docker_staging=${TULPAR_DOCKER_STAGING:-"$repo/build-aarch64-docker/staging"}
+work=$(mktemp -d "${TMPDIR:-/tmp}/tulpar-docker-test.XXXXXX")
 
 cleanup() {
 	rm -rf "$work"
@@ -37,17 +37,17 @@ mkdir -p "$work/rootfs/dev" "$work/rootfs/proc" "$work/rootfs/sys" \
 chmod 1777 "$work/rootfs/tmp"
 COPYFILE_DISABLE=1 tar --format=ustar -cf "$work/initramfs.tar" -C "$work/rootfs" .
 
-set -- --init "${VINIX_DOCKER_GUEST_INIT:-$repo/tests/docker/guest-init.sh}" \
+set -- --init "${TULPAR_DOCKER_GUEST_INIT:-$repo/tests/docker/guest-init.sh}" \
 	--initramfs "$work/initramfs.tar" \
 	--state-dir "$work/vm" \
-	--timeout "${VINIX_QEMU_TIMEOUT:-900}" \
-	--mem "${VINIX_QEMU_MEM:-4096}" \
-	--pass-marker "VINIX DOCKER TEST: PASS" \
-	--fail-marker "VINIX DOCKER TEST: FAIL"
-if [ -n "${VINIX_DOCKER_TEST_LOG:-}" ]; then
-	set -- "$@" --log "$VINIX_DOCKER_TEST_LOG"
+	--timeout "${TULPAR_QEMU_TIMEOUT:-900}" \
+	--mem "${TULPAR_QEMU_MEM:-4096}" \
+	--pass-marker "TULPAR DOCKER TEST: PASS" \
+	--fail-marker "TULPAR DOCKER TEST: FAIL"
+if [ -n "${TULPAR_DOCKER_TEST_LOG:-}" ]; then
+	set -- "$@" --log "$TULPAR_DOCKER_TEST_LOG"
 fi
-if [ "${VINIX_DOCKER_TEST_NO_BUILD:-0}" = 1 ]; then
+if [ "${TULPAR_DOCKER_TEST_NO_BUILD:-0}" = 1 ]; then
 	set -- "$@" --no-build
 fi
 "$repo/tests/docker/run_vm" "$@"

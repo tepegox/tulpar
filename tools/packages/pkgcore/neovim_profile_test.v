@@ -6,11 +6,11 @@ import time
 import tests.packages.elffixture
 
 fn neovim_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-neovim-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-neovim-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for arch in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + arch
 		for directory in ['bin', 'lib', 'licenses', 'sources', 'share/nvim/runtime'] { os.mkdir_all(root + '/' + directory)! }
-		for path in ['bin/nvim', 'bin/vinix-neovim-runner'] {
+		for path in ['bin/nvim', 'bin/tulpar-neovim-runner'] {
 			os.write_file_array(root + '/' + path, elffixture.image(arch, neovim_kind(path)))!
 			os.chmod(root + '/' + path, 0o755)!
 		}
@@ -31,7 +31,7 @@ fn neovim_refusal(work string, expected string, options CatalogOptions) ! {
 		assert refused, err.msg()
 	}
 	assert refused && !os.exists(work + '/lock')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-neovim-profile-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-neovim-profile-'))
 }
 
 fn neovim_empty_runtime_after_preflight(phase string, stage string) ! {

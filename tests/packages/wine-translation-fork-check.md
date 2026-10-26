@@ -17,7 +17,7 @@ probe retains both arithmetic loops and their conditional back edges.
 The [controller](wine-translation-fork-check.v) builds a static x86_64 probe and
 a native AArch64 [guest](wine-translation-fork-guest/main.v). The guest verifies
 real, effective and saved UID/GID 1000, no supplementary groups, and an absent
-`VINIX_ALLOW_WX` before executing the pinned translator with its split RW/RX
+`TULPAR_ALLOW_WX` before executing the pinned translator with its split RW/RX
 patch. It does not run Wine. PID 1 waits with a bound and attempts group cleanup
 and descendant reaping on failure. The host stops and reaps QEMU; this fixture
 does not prove guest shutdown or complete descendant cleanup.
@@ -59,7 +59,7 @@ FORK_ROOT="$PWD/build/package-wine-calculator-worktree"
   "$FORK_ROOT/tests/packages/wine-translation-fork-check.v"
 build/wine-translation-fork-check "$FORK_ROOT" \
   "$PWD/build/package-wine-translation-fork-new" "$V" \
-  "$PWD/build/pty-kernels/aarch64/vinix" \
+  "$PWD/build/pty-kernels/aarch64/tulpar" \
   "$PWD/build-aarch64-x86-translation/staging/usr/bin/qemu-x86_64" \
   "$PWD/build-aarch64-x11/sysroot" \
   "$PWD/build-aarch64-userland/staging/usr/lib/gcc/aarch64-alpine-linux-musl/14.2.0" \

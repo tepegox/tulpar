@@ -11,7 +11,7 @@ fn C.mkfifo(&char, u32) int
 struct CatalogExportLimit { current u64 maximum u64 }
 
 fn catalog_export_fixture() !(string, []CatalogSource) {
-	work := os.real_path(os.temp_dir()) + '/vinix-catalog-export-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-catalog-export-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	mut sources := []CatalogSource{}
 	for id in ['alpha', 'beta']! {
 		root := work + '/roots/' + id + '/shared'
@@ -79,13 +79,13 @@ fn catalog_export_snapshot(directory string) !string {
 }
 
 fn catalog_export_substitute(phase string, stage string) ! {
-	if phase != os.getenv('VINIX_CATALOG_EXPORT_PHASE') { return }
-	work := os.getenv('VINIX_CATALOG_EXPORT_CASE')
+	if phase != os.getenv('TULPAR_CATALOG_EXPORT_PHASE') { return }
+	work := os.getenv('TULPAR_CATALOG_EXPORT_CASE')
 	if os.exists(work + '/stage-path') { return }
 	os.write_file(work + '/stage-path', stage)!
 	os.write_file(work + '/stage-inode', os.stat(stage)!.inode.str())!
 	os.write_file(work + '/stage-snapshot', catalog_export_snapshot(stage)!)!
-	kind := os.getenv('VINIX_CATALOG_EXPORT_KIND')
+	kind := os.getenv('TULPAR_CATALOG_EXPORT_KIND')
 	if kind == 'parent' { os.rename(os.dir(stage), work + '/saved-parent')!; os.mkdir(os.dir(stage))! }
 	else { os.rename(stage, work + '/saved-stage')! }
 	match kind {
@@ -98,7 +98,7 @@ fn catalog_export_substitute(phase string, stage string) ! {
 		'clone' { os.cp_all(work + '/saved-stage', stage, true)! }
 		else { panic('unknown catalog export substitution') }
 	}
-	if os.getenv('VINIX_CATALOG_EXPORT_FAIL') == 'yes' { return error('injected catalog export refusal') }
+	if os.getenv('TULPAR_CATALOG_EXPORT_FAIL') == 'yes' { return error('injected catalog export refusal') }
 }
 
 fn catalog_export_assert_replacement(work string, kind string) ! {
@@ -129,7 +129,7 @@ fn test_catalog_export_root_and_parent_substitutions_preserve_recovery_and_retry
 	limit := CatalogExportLimit{ current: 32, maximum: original.maximum }
 	assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 	defer { assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0 }
-	defer { for name in ['VINIX_CATALOG_EXPORT_CASE', 'VINIX_CATALOG_EXPORT_PHASE', 'VINIX_CATALOG_EXPORT_KIND', 'VINIX_CATALOG_EXPORT_FAIL']! { os.unsetenv(name) } }
+	defer { for name in ['TULPAR_CATALOG_EXPORT_CASE', 'TULPAR_CATALOG_EXPORT_PHASE', 'TULPAR_CATALOG_EXPORT_KIND', 'TULPAR_CATALOG_EXPORT_FAIL']! { os.unsetenv(name) } }
 	mut cases := 0
 	for operation in ['catalog', 'composition', 'aarch64', 'x86_64']! {
 		kind := if operation == 'catalog' { 'catalog' } else { 'composition' }
@@ -140,7 +140,7 @@ fn test_catalog_export_root_and_parent_substitutions_preserve_recovery_and_retry
 					case := work + '/case-' + cases.str()
 					os.mkdir_all(case + '/output')!; os.mkdir(case + '/outside')!; os.chmod(case + '/outside', 0o700)!
 					os.write_file(case + '/outside/keep', 'preserved')!
-					for name, value in {'VINIX_CATALOG_EXPORT_CASE': case, 'VINIX_CATALOG_EXPORT_PHASE': phase, 'VINIX_CATALOG_EXPORT_KIND': replacement, 'VINIX_CATALOG_EXPORT_FAIL': fail} { os.setenv(name, value, true) }
+					for name, value in {'TULPAR_CATALOG_EXPORT_CASE': case, 'TULPAR_CATALOG_EXPORT_PHASE': phase, 'TULPAR_CATALOG_EXPORT_KIND': replacement, 'TULPAR_CATALOG_EXPORT_FAIL': fail} { os.setenv(name, value, true) }
 					mut message := ''
 					catalog_export_run(kind, architecture, work, sources, case + '/output/export', CatalogOptions{ checkpoint: catalog_export_substitute }) or { message = err.msg() }
 					assert message != '' && !os.exists(case + '/output/export'), operation + '/' + phase + '/' + replacement + '/' + fail
@@ -165,7 +165,7 @@ fn test_catalog_export_root_and_parent_substitutions_preserve_recovery_and_retry
 fn catalog_export_no_flush(_ int) int { return -1 }
 
 fn catalog_export_move_parent(fd int) int {
-	work := os.getenv('VINIX_CATALOG_EXPORT_SAVED')
+	work := os.getenv('TULPAR_CATALOG_EXPORT_SAVED')
 	os.rename(work + '/output', work + '/saved-parent') or { return -1 }
 	os.mkdir(work + '/output') or { return -1 }
 	os.write_file(work + '/output/keep', 'replacement parent') or { return -1 }
@@ -173,14 +173,14 @@ fn catalog_export_move_parent(fd int) int {
 }
 
 fn test_catalog_export_post_publication_failures_preserve_saved_artifacts() {
-	work, sources := catalog_export_fixture()!; defer { os.rmdir_all(work) or {}; os.unsetenv('VINIX_CATALOG_EXPORT_SAVED') }
+	work, sources := catalog_export_fixture()!; defer { os.rmdir_all(work) or {}; os.unsetenv('TULPAR_CATALOG_EXPORT_SAVED') }
 	for operation in ['catalog', 'composition', 'aarch64', 'x86_64']! {
 		kind := if operation == 'catalog' { 'catalog' } else { 'composition' }
 		architecture := if operation in ['aarch64', 'x86_64']! { operation } else { '' }
 		for mode in ['flush', 'parent']! {
 			case := work + '/' + operation + '-' + mode
 			os.mkdir_all(case + '/output')!
-			os.setenv('VINIX_CATALOG_EXPORT_SAVED', case, true)
+			os.setenv('TULPAR_CATALOG_EXPORT_SAVED', case, true)
 			mut message := ''
 			catalog_export_run(kind, architecture, work, sources, case + '/output/export', CatalogOptions{ flush: if mode == 'flush' { catalog_export_no_flush } else { catalog_export_move_parent } }) or { message = err.msg() }
 			assert message.contains('published') && message.contains(if mode == 'flush' { 'directory flush failed' } else { 'parent path changed' })

@@ -31,7 +31,7 @@ fn suite() hwhost.Suite {
 			hwhost.Program{ source: 'tools/packages/pkglaunch/protocol_test.v', path: 'usr/share/package-fixtures/protocol' },
 			hwhost.Program{ source: 'tools/packages/pkglaunch/streams_test.v', path: 'usr/share/package-fixtures/streams' },
 			hwhost.Program{ source: 'tools/packages/pkgcore/command_test.v', path: 'usr/share/package-fixtures/command' },
-			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+			hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 		], scenarios: [hwhost.Scenario{ name: 'packages-launch-transport', arches: ['aarch64', 'x86_64'],
 			about: 'owned canonical launch envelopes, receipts and wire transfers as root and UID 1000 under allocation tracking',
 			required: ['HWTEST START packages-launch-transport',
@@ -53,7 +53,7 @@ fn check() !int {
 	args := os.args[1..]; options := hwhost.parse_options(args)!
 	if options.help || options.list { return hwhost.run_suite(suite(), args, @FILE) }
 	if !os.is_file(options.kernel) { return error('--kernel is not a file') }
-	work := os.temp_dir() + '/vinix-launch-transport-' + os.getpid().str()
+	work := os.temp_dir() + '/tulpar-launch-transport-' + os.getpid().str()
 	os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	os.cp(options.kernel, work + '/kernel')!
 	kernel := artifact('kernel', work + '/kernel')!
@@ -62,7 +62,7 @@ fn check() !int {
 		base := options.state_dir; root := base + '/guest/root/usr/share/package-fixtures/'
 		mut artifacts := [kernel, artifact('guest-init', base + '/guest/init')!]
 		for name in ['launch-transport', 'protocol', 'streams', 'command']! { artifacts << artifact(name, root + name)! }
-		artifacts << artifact('account-session', base + '/guest/root/usr/sbin/vinix-session')!
+		artifacts << artifact('account-session', base + '/guest/root/usr/sbin/tulpar-session')!
 		artifacts << artifact('serial-log', base + '/packages-launch-transport/serial.log')!
 		os.write_file(base + '/qualification.json', json2.encode(Receipt{ architecture: options.arch, completed_at: time.now().unix(), artifacts: artifacts }) + '\n')!
 	}

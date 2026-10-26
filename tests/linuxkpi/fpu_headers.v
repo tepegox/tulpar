@@ -37,13 +37,13 @@ fn platform_description() !string {
 
 fn run_profile(output_path string, selected_reference string) ! {
 	root := hosttest.root()
-	output := hosttest.work_dir(output_path, 'vinix-fpu-')!
+	output := hosttest.work_dir(output_path, 'tulpar-fpu-')!
 	// An explicit output belongs to the caller and is retained even on failure.
 	overlay := os.join_path(output, 'include/asm')
 	os.mkdir_all(os.join_path(overlay, 'fpu'))!
 	os.write_file(os.join_path(overlay, 'cpufeature.h'),
 		'#ifndef __always_inline\n#define __always_inline inline __attribute__((always_inline))\n#endif\n' +
-		'void vinix_linuxkpi_fpu_begin(void);\nvoid vinix_linuxkpi_fpu_end(void);\n')!
+		'void tulpar_linuxkpi_fpu_begin(void);\nvoid tulpar_linuxkpi_fpu_end(void);\n')!
 	header_path := 'kernel/linuxkpi/include/asm/fpu/api.h'
 	original := hosttest.capture_in(['git', 'show', selected_reference + ':' + header_path], '', -1, os.environ(), root)!
 	if original.code != 0 { return error(original.stderr) }

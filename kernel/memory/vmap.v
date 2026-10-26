@@ -40,7 +40,7 @@ __global (
 )
 
 // Read by ARM vector entry before it can touch an exhausted stack.
-@[export: 'vinix_stack_guard_bitmap']
+@[export: 'tulpar_stack_guard_bitmap']
 __global vmap_stack_guards [8192]u64
 
 fn vmap_contains(addr u64) bool {

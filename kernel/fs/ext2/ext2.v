@@ -233,7 +233,7 @@ fn (mut this EXT2Resource) mmap(_handle voidptr, page u64, flags int) voidptr {
 		errno.set(errno.enomem)
 		return unsafe { nil }
 	}
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *inode = EXT2Inode{} }
 	inode.read_entry(mut this.filesystem, u32(this.stat.ino)) or {
 		memory.pmm_free(physical, 1)
@@ -275,7 +275,7 @@ fn (mut this EXT2Resource) read(_handle voidptr, buf voidptr, loc u64, count u64
 	defer { this.l.release() }
 	this.filesystem.l.acquire()
 	defer { this.filesystem.l.release() }
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *inode = EXT2Inode{} }
 	inode.read_entry(mut this.filesystem, u32(this.stat.ino))?
 	file_size := inode.size()
@@ -344,7 +344,7 @@ fn (mut this EXT2Resource) write_locked(_handle voidptr, buf voidptr, loc u64, c
 	defer { this.filesystem.l.release() }
 	this.filesystem.begin_transaction()?
 	defer { this.filesystem.abort_transaction() }
-	mut current_inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut current_inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *current_inode = EXT2Inode{} }
 
 	current_inode.read_entry(mut this.filesystem, u32(this.stat.ino)) or { return none }
@@ -439,7 +439,7 @@ fn (mut this EXT2Resource) release_orphan() ? {
 	this.filesystem.l.acquire()
 	defer { this.filesystem.abort_transaction(); this.filesystem.l.release() }
 	this.filesystem.begin_transaction()?
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *inode = EXT2Inode{} }
 	inode.read_entry(mut this.filesystem, u32(this.stat.ino))?
 	this.filesystem.cleanup_inode(mut inode, u32(this.stat.ino))?
@@ -461,7 +461,7 @@ fn (mut this EXT2Resource) grow(handle voidptr, new_size u64) ? {
 		return none
 	}
 
-	mut current_inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut current_inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *current_inode = EXT2Inode{} }
 
 	current_inode.read_entry(mut this.filesystem, u32(this.stat.ino)) or { return none }
@@ -573,7 +573,7 @@ fn (mut this EXT2Filesystem) populate_checked(node &vfs.VFSNode) ? {
 }
 
 fn (mut this EXT2Filesystem) populate_checked_locked(node &vfs.VFSNode) ? {
-	mut parent := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut parent := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *parent = EXT2Inode{} }
 	parent.read_entry(mut this, u32(node.resource.stat.ino))?
 
@@ -585,7 +585,7 @@ fn (mut this EXT2Filesystem) populate_checked_locked(node &vfs.VFSNode) ? {
 	defer { memory.free(buffer) }
 	parent.read(mut this, buffer, 0, parent.size32l)?
 	// One reusable inode slot bounds directory-population stack usage.
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 
 	for i := u32(0); i < parent.size32l;  {
 		if parent.size32l - i < sizeof(EXT2DirectoryEntry) {
@@ -1011,7 +1011,7 @@ fn (mut inode EXT2Inode) free_entry(mut filesystem EXT2Filesystem, inode_index u
 }
 
 fn (mut filesystem EXT2Filesystem) allocate_block() ?u32 {
-	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.vinix_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
+	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.tulpar_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
 	unsafe { *bgd = EXT2BlockGroupDescriptor{} }
 
 	for i := u32(0); i < filesystem.bgd_cnt; i++ {
@@ -1040,7 +1040,7 @@ fn (mut filesystem EXT2Filesystem) allocate_block() ?u32 {
 }
 
 fn (mut filesystem EXT2Filesystem) allocate_inode() ?u64 {
-	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.vinix_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
+	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.tulpar_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
 	unsafe { *bgd = EXT2BlockGroupDescriptor{} }
 
 	for i := u32(0); i < filesystem.bgd_cnt; i++ {
@@ -1067,7 +1067,7 @@ fn (mut filesystem EXT2Filesystem) free_block(block u32) ?int {
 	if bitmap == unsafe { nil } { errno.set(errno.enomem); return none }
 	defer { memory.free(bitmap) }
 
-	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.vinix_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
+	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.tulpar_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
 	unsafe { *bgd = EXT2BlockGroupDescriptor{} }
 	if bgd.read_entry(mut filesystem, bgd_index) < 0 { return none }
 
@@ -1100,7 +1100,7 @@ fn (mut filesystem EXT2Filesystem) free_block(block u32) ?int {
 // count, but e2fsck checks it and Linux places new directories by it.
 fn (mut filesystem EXT2Filesystem) count_directory(inode_index u32, added bool) ? {
 	bgd_index := (inode_index - 1) / filesystem.superblock.inodes_per_group
-	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.vinix_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
+	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.tulpar_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
 	unsafe { *bgd = EXT2BlockGroupDescriptor{} }
 	if bgd.read_entry(mut filesystem, bgd_index) < 0 { return none }
 	if added {
@@ -1122,7 +1122,7 @@ fn (mut filesystem EXT2Filesystem) free_inode(inode u32) ?int {
 	if bitmap == unsafe { nil } { errno.set(errno.enomem); return none }
 	defer { memory.free(bitmap) }
 
-	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.vinix_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
+	mut bgd := unsafe { &EXT2BlockGroupDescriptor(C.tulpar_stack_alloc(sizeof(EXT2BlockGroupDescriptor))) }
 	unsafe { *bgd = EXT2BlockGroupDescriptor{} }
 	if bgd.read_entry(mut filesystem, bgd_index) < 0 { return none }
 
@@ -1167,7 +1167,7 @@ fn (mut bgd EXT2BlockGroupDescriptor) read_entry(mut filesystem EXT2Filesystem, 
 		return -1
 	}
 	if filesystem.descriptor_size >= 64 {
-		high := unsafe { &u8(C.vinix_stack_alloc(12)) }
+		high := unsafe { &u8(C.tulpar_stack_alloc(12)) }
 		filesystem.raw_device_read(high, position + 32, 12) or { return -1 }
 		if disk_u32(high, 0) != 0 || disk_u32(high, 4) != 0 || disk_u32(high, 8) != 0 {
 			errno.set(errno.eio); return -1
@@ -1402,7 +1402,7 @@ fn init_volume(backing_device &vfs.VFSNode, ext4 bool) (&EXT2Filesystem, bool) {
 			journal_store, journal_barrier, journal_publish,
 			u64(backing_device.resource.stat.size), !new_filesystem.read_only) or { return unsafe { nil }, false }
 	}
-	superblock_data := unsafe { &u8(C.vinix_stack_alloc(1024)) }
+	superblock_data := unsafe { &u8(C.tulpar_stack_alloc(1024)) }
 	new_filesystem.raw_device_read(superblock_data, 1024, 1024) or { return unsafe { nil }, false }
 	unsafe { C.memcpy(new_filesystem.superblock, superblock_data, sizeof(EXT2Superblock)) }
 	signature := new_filesystem.superblock.signature

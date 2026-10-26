@@ -62,7 +62,7 @@ fn health_exit(report &Health) i32 {
 @[direct_array_access]
 fn show_health(report &Health) i32 {
 	if !health_valid(report) {
-		C.printf(c'vinix-volume: invalid health report\n')
+		C.printf(c'tulpar-volume: invalid health report\n')
 		return 1
 	}
 	if report.protocol == 2 { return show_nvme_health(report) }
@@ -95,11 +95,11 @@ fn show_health(report &Health) i32 {
 
 fn query_health(path &char) i32 {
 	fd := C.open(path, C.O_RDONLY | C.O_CLOEXEC)
-	if fd < 0 { C.perror(c'vinix-volume: open health device'); return 1 }
+	if fd < 0 { C.perror(c'tulpar-volume: open health device'); return 1 }
 	defer { C.close(fd) }
 	mut report := Health{}
 	if C.ioctl(fd, u64(0x56560005), unsafe { &report }) != 0 {
-		C.perror(c'vinix-volume: health'); return 1
+		C.perror(c'tulpar-volume: health'); return 1
 	}
 	return show_health(unsafe { &report })
 }

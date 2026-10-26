@@ -80,10 +80,10 @@ fn C.sigaddset(&C.sigset_t, i32) i32
 fn C.sigprocmask(i32, &C.sigset_t, &C.sigset_t) i32
 fn C.sigaction(i32, &C.sigaction, &C.sigaction) i32
 fn C.signal(i32, fn (i32)) fn (i32)
-fn C.vinix_terminal_acquire_foreground(i32)
-fn C.vinix_terminal_caught(i32)
-fn C.vinix_terminal_transition_signal(i32)
-fn C.vinix_terminal_race_open(voidptr) voidptr
+fn C.tulpar_terminal_acquire_foreground(i32)
+fn C.tulpar_terminal_caught(i32)
+fn C.tulpar_terminal_transition_signal(i32)
+fn C.tulpar_terminal_race_open(voidptr) voidptr
 fn C.printf(&char, ...) i32
 fn C.puts(&char) i32
 fn C.open(&char, i32, ...) i32
@@ -140,7 +140,7 @@ fn C.atoi(&char) i32
 fn C.dup2(i32, i32) i32
 fn C.setvbuf(voidptr, voidptr, i32, usize) i32
 
-@[export:'vinix_terminal_acquire_foreground']
+@[export:'tulpar_terminal_acquire_foreground']
 pub fn acquire_foreground(number i32) {
 	unsafe {
 		caught_signal.value = number
@@ -154,12 +154,12 @@ pub fn acquire_foreground(number i32) {
 	}
 }
 
-@[export:'vinix_terminal_caught']
+@[export:'tulpar_terminal_caught']
 pub fn caught(number i32) {
 	unsafe { caught_signal.value = number }
 }
 
-@[export:'vinix_terminal_transition_signal']
+@[export:'tulpar_terminal_transition_signal']
 pub fn transition_signal(number i32) {
 	unsafe {
 		if number == C.SIGHUP { transition_state[0].value++ }
@@ -210,7 +210,7 @@ fn handler(number i32) {
 	unsafe {
 		action := &C.sigaction(C.__builtin_alloca(sizeof(C.sigaction)))
 		C.memset(action, 0, sizeof(C.sigaction))
-		action.sa_handler = C.vinix_terminal_caught
+		action.sa_handler = C.tulpar_terminal_caught
 		C.sigemptyset(&action.sa_mask)
 		C.sigaction(number, action, nil)
 	}
@@ -510,7 +510,7 @@ fn stop_cases(master i32, slave i32) {
 			restart_gate = gate[1]
 			action := &C.sigaction(C.__builtin_alloca(sizeof(C.sigaction)))
 			C.memset(action, 0, sizeof(C.sigaction))
-			action.sa_handler = C.vinix_terminal_acquire_foreground
+			action.sa_handler = C.tulpar_terminal_acquire_foreground
 			action.sa_flags = i32(C.SA_RESTART)
 			C.sigemptyset(&action.sa_mask)
 			C.sigaction(C.SIGTTIN, action, nil)
@@ -626,7 +626,7 @@ fn orphan_mutations() {
 					}
 					action := &C.sigaction(C.__builtin_alloca(sizeof(C.sigaction)))
 					C.memset(action, 0, sizeof(C.sigaction))
-					action.sa_handler = C.vinix_terminal_transition_signal
+					action.sa_handler = C.tulpar_terminal_transition_signal
 					C.sigemptyset(&action.sa_mask)
 					C.sigaction(C.SIGHUP, action, nil)
 					C.sigaction(C.SIGCONT, action, nil)
@@ -698,7 +698,7 @@ fn leader_hangup() bool {
 				if C.setpgid(0, 0) != 0 { C._exit(4) }
 				action := &C.sigaction(C.__builtin_alloca(sizeof(C.sigaction)))
 				C.memset(action, 0, sizeof(C.sigaction))
-				action.sa_handler = C.vinix_terminal_transition_signal
+				action.sa_handler = C.tulpar_terminal_transition_signal
 				C.sigemptyset(&action.sa_mask)
 				C.sigaction(C.SIGHUP, action, nil)
 				C.sigaction(C.SIGCONT, action, nil)
@@ -761,7 +761,7 @@ fn leader_hangup() bool {
 	}
 }
 
-@[export:'vinix_terminal_race_open']
+@[export:'tulpar_terminal_race_open']
 pub fn race_open(argument voidptr) voidptr {
 	unsafe {
 		worker := i32(isize(argument))
@@ -845,7 +845,7 @@ fn owned_open_cases() {
 		workers := &C.pthread_t(C.__builtin_alloca(3 * sizeof(C.pthread_t)))
 		mut created := i32(0)
 		for created < 3 {
-			if C.pthread_create(&workers[created], nil, C.vinix_terminal_race_open, voidptr(isize(created))) != 0 {
+			if C.pthread_create(&workers[created], nil, C.tulpar_terminal_race_open, voidptr(isize(created))) != 0 {
 				break
 			}
 			created++

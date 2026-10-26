@@ -34,7 +34,7 @@ pub const erofs = 30
 pub fn set(code u64) { last = code }
 pub fn get() u64 { return last }
 EOF
-if [ "${VINIX_HOST_SANITIZE:-0}" = 1 ]; then
+if [ "${TULPAR_HOST_SANITIZE:-0}" = 1 ]; then
     VMODULES="$work/modules" "${V:-v}" -cc clang -cflags '-fsanitize=address,undefined' -ldflags '-fsanitize=address,undefined' -enable-globals test "$work/journal"
 else
     VMODULES="$work/modules" "${V:-v}" -enable-globals test "$work/journal"

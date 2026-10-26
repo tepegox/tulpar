@@ -21,7 +21,7 @@
 //   ask 16 on   1 Wh left, 2%, and the battery says critical
 //
 // The static figures are a 50 Wh design, 48 Wh last full, 11.4 V, 123 cycles,
-// a lithium-ion pack called VNXBAT made by Vinix with serial 0042.
+// a lithium-ion pack called VNXBAT made by Tulpar with serial 0042.
 module hwhost
 
 pub const bench_design_mwh = 50000
@@ -80,7 +80,7 @@ fn power_bench() []u8 {
 						aml_string('VNXBAT'),
 						aml_string('0042'),
 						aml_string('LION'),
-						aml_string('Vinix'),
+						aml_string('Tulpar'),
 					])),
 				]),
 				aml_method('_BST', [
@@ -270,7 +270,7 @@ fn ec_power_devices(early bool, sta []u8) [][]u8 {
 				aml_string('VNXEC'),
 				aml_string('0062'),
 				aml_string('LION'),
-				aml_string('Vinix'),
+				aml_string('Tulpar'),
 			])),
 			sta,
 			aml_method('_BIX', [

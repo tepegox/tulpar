@@ -89,7 +89,7 @@ fn (mut suite Suite) browser(name string) ! {
 		suite.require_jit_mount(name, program)!
 		// Request only this child's exception. The kernel independently checks
 		// the administrator-approved mount at every exec, including helpers.
-		suite.environment['VINIX_ALLOW_WX'] = '1'
+		suite.environment['TULPAR_ALLOW_WX'] = '1'
 	}
 	suite.execute(program, ['--version'])!
 	profile := suite.work + '/' + name + '-profile'

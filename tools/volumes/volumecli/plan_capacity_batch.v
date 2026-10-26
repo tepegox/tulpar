@@ -90,7 +90,7 @@ fn capacity_batch_bundle_plan(path &char, batch &CapacityBatch, preview bool) i3
 	}
 	for i in 0 .. batch.count {
 		target := C.open(batch.devices[i], C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-		if target < 0 { C.perror(c'vinix-volume: open batch capacity disk'); return 1 }
+		if target < 0 { C.perror(c'tulpar-volume: open batch capacity disk'); return 1 }
 		pins.descriptors[i] = target; pins.count++
 		mut parent := Status{}
 		if !probe_disk(target, mut pins.keys.rows[i], mut parent) { return 1 }

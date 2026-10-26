@@ -27,9 +27,9 @@ fn normalize_checks() ! {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	mut checks := []NormalizeCheck{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << normalize_task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.setenv('VINIX_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true)
 	for name in ['catalog_normalize', 'catalog', 'composition', 'release', 'publisher_schema', 'catalog_decode',
 		'native_profile', 'sqlite_profile', 'ffmpeg_profile', 'wine_profile', 'apple_profile', 'resolve_search'] {
 		binary := work + '/' + name

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_FENCE_CONTAINER_HOST_CONTRACT_H
-#define VINIX_FENCE_CONTAINER_HOST_CONTRACT_H
+#ifndef TULPAR_FENCE_CONTAINER_HOST_CONTRACT_H
+#define TULPAR_FENCE_CONTAINER_HOST_CONTRACT_H
 /* Metadata, compiler intrinsics and unchanged original-inline adapters only. */
 #include "../freefixture/contract.h"
 #include "linuxkpi_dma_fence_v_contract.h"
@@ -44,7 +44,7 @@ extern uint32_t compatcore__vkiw_guard;
 #define fch_work_flags(w) atomic_read(&(w)->node.a_flags)
 #define fch_real_compare_prev(p,expected,replacement) __sync_val_compare_and_swap((p),(expected),(replacement))
 void *fch_compare_prev(void **,void *,void *);
-#ifdef VINIX_FENCE_CONTAINER_CAS_TRANSPORT
+#ifdef TULPAR_FENCE_CONTAINER_CAS_TRANSPORT
 /* The same fully ordered atomic operation, with a V scheduling/observation
  * boundary only. Queue, walk, reference and return-value logic stays in V. */
 #undef vfc_compare_prev

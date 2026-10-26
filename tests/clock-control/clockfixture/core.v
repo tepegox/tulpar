@@ -213,7 +213,7 @@ pub fn main_entry() i32 {
 	unsafe {
 		C.setvbuf(C.stdout, nil, C._IONBF, 0)
 		result := tests()
-		C.puts(if result != 0 { c'VINIX CLOCK CONTROL: FAIL' } else { c'VINIX CLOCK CONTROL: PASS' })
+		C.puts(if result != 0 { c'TULPAR CLOCK CONTROL: FAIL' } else { c'TULPAR CLOCK CONTROL: PASS' })
 		for { C.pause() }
 		return 0
 	}

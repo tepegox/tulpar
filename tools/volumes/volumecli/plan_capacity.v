@@ -63,7 +63,7 @@ fn capacity_bundle_plan(path &char, disk int, device &char, expected u64) i32 {
 	previous := set.plans[disk].key.bytes
 	target := C.open(device, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
 	if target < 0 {
-		C.perror(c'vinix-volume: open capacity disk')
+		C.perror(c'tulpar-volume: open capacity disk')
 		return 1
 	}
 	defer { C.close(target) }

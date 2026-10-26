@@ -38,7 +38,7 @@ fn descriptor_flags_matrix(fd int, fresh int, readonly bool) {
 		if child == 0 {
 			check(C.setgroups(0, nil) == 0 && C.setgid(1000) == 0 && C.setuid(1000) == 0, 591)
 			for wanted in [0x20, 0x10, 0x30, 0]! {
-				// Preserve Vinix's capability-before-mount error ordering.
+				// Preserve Tulpar's capability-before-mount error ordering.
 				mount_flags_set(fd, wanted, C.EPERM)
 				if fresh >= 0 { mount_flags_set(fresh, wanted, C.EPERM) }
 				check(mount_flags_get(fd) == 0 && (fresh < 0 || mount_flags_get(fresh) == 0), 591)

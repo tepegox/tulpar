@@ -18,7 +18,7 @@ fn C.setrlimit(int, voidptr) int
 struct MirrorAdmissionLimit { current u64 maximum u64 }
 
 fn mirror_fixture() !(string, Config, []Package) {
-	work := os.real_path(os.temp_dir()) + '/vinix-mirror-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-mirror-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/repository/objects')!
 	key := keygen(work + '/seed')!
 	app_bytes := 'application payload'
@@ -45,7 +45,7 @@ fn mirror_fixture() !(string, Config, []Package) {
 }
 
 fn mirror_stages(parent string) ![]string {
-	return os.ls(parent)!.filter(it.starts_with('.vinix-mirror-'))
+	return os.ls(parent)!.filter(it.starts_with('.tulpar-mirror-'))
 }
 
 fn mirror_replace_failed_stage(phase string, stage string) ! {
@@ -73,13 +73,13 @@ fn test_mirror_failed_export_preserves_a_replaced_stage_root() {
 }
 
 fn mirror_retirement_replace(phase string, input string) ! {
-	if phase != os.getenv('VINIX_EXPORT_REPLACE_PHASE') { return }
-	work := os.getenv('VINIX_EXPORT_REPLACE_WORK')
+	if phase != os.getenv('TULPAR_EXPORT_REPLACE_PHASE') { return }
+	work := os.getenv('TULPAR_EXPORT_REPLACE_WORK')
 	if os.exists(work + '/stage-path') { return }
 	stage := if phase == 'copied' { os.dir(os.dir(os.dir(input))) } else { input }
 	os.write_file(work + '/stage-path', stage)!
 	os.write_file(stage + '/original', 'retained original')!
-	kind := os.getenv('VINIX_EXPORT_REPLACE_KIND')
+	kind := os.getenv('TULPAR_EXPORT_REPLACE_KIND')
 	if kind == 'parent' {
 		os.rename(os.dir(stage), work + '/saved-parent')!
 		os.mkdir(os.dir(stage))!
@@ -94,20 +94,20 @@ fn mirror_retirement_replace(phase string, input string) ! {
 		'clone' { os.cp_all(work + '/saved-stage', stage, true)! }
 		else { panic('unknown export replacement') }
 	}
-	if os.getenv('VINIX_EXPORT_REPLACE_FAIL') == 'yes' { return error('injected export refusal') }
+	if os.getenv('TULPAR_EXPORT_REPLACE_FAIL') == 'yes' { return error('injected export refusal') }
 }
 
 fn test_mirror_root_and_parent_substitution_refuse_without_deleting_replacements() {
 	work, config, _ := mirror_fixture()!; defer { os.rmdir_all(work) or {} }
 	store := work + '/store'; catalog := os.read_file(store + '/catalog.json')!; history := os.read_file(store + '/trust-history.json')!
-	defer { for name in ['VINIX_EXPORT_REPLACE_PHASE', 'VINIX_EXPORT_REPLACE_WORK', 'VINIX_EXPORT_REPLACE_KIND', 'VINIX_EXPORT_REPLACE_FAIL', 'VINIX_MIRROR_PROGRESS_TEST']! { os.unsetenv(name) } }
+	defer { for name in ['TULPAR_EXPORT_REPLACE_PHASE', 'TULPAR_EXPORT_REPLACE_WORK', 'TULPAR_EXPORT_REPLACE_KIND', 'TULPAR_EXPORT_REPLACE_FAIL', 'TULPAR_MIRROR_PROGRESS_TEST']! { os.unsetenv(name) } }
 	mut cases := 0
 	for phase in ['created', 'copied', 'ready']! {
 		for kind in ['directory', 'alias', 'dangling', 'fifo', 'file', 'missing', 'clone', 'parent']! {
 			for fail in ['yes', 'no']! {
 				case := work + '/case-' + cases.str(); os.mkdir_all(case + '/output')!
 				os.mkdir(case + '/outside')!; os.write_file(case + '/outside/keep', 'preserved')!; os.chmod(case + '/outside', 0o700)!
-				for key, value in {'VINIX_EXPORT_REPLACE_PHASE': phase, 'VINIX_EXPORT_REPLACE_WORK': case, 'VINIX_EXPORT_REPLACE_KIND': kind, 'VINIX_EXPORT_REPLACE_FAIL': fail, 'VINIX_MIRROR_PROGRESS_TEST': case + '/events'} { os.setenv(key, value, true) }
+				for key, value in {'TULPAR_EXPORT_REPLACE_PHASE': phase, 'TULPAR_EXPORT_REPLACE_WORK': case, 'TULPAR_EXPORT_REPLACE_KIND': kind, 'TULPAR_EXPORT_REPLACE_FAIL': fail, 'TULPAR_MIRROR_PROGRESS_TEST': case + '/events'} { os.setenv(key, value, true) }
 				os.write_file(case + '/events', '')!
 				mut message := ''
 				mirror_export(config, store, case + '/output/export', ['app'], MirrorOptions{ checkpoint: mirror_retirement_replace, progress: mirror_report }) or { message = err.msg() }
@@ -269,8 +269,8 @@ fn test_mirror_space_preflight_and_abrupt_exit_leave_final_name_retryable() {
 fn mirror_service() !(string, Service, Config, []Package) {
 	work, config, packages := mirror_fixture()!
 	root := work + '/client'
-	os.mkdir_all(root + '/etc/vinix-packages')!
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	os.mkdir_all(os.dir(state_directory(root)))!
 	os.rename(work + '/store', state_directory(root))!
 	return work, Service{ root: root }, config, packages
@@ -296,11 +296,11 @@ fn test_mirror_review_is_read_only_and_binds_destination_policy_and_signed_metad
 		assert refused && !os.exists(os.dir(target)) && os.ls(store + '/objects')!.len == 0
 	}
 	changed := Config{ ...config, policy: Policy{ ...config.policy, reserve_bytes: 1 } }
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(changed))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(changed))!
 	mut refused := false
 	service.apply_mirror(destination, ['app'], review.review.fingerprint) or { refused = err.msg().contains('stale') }
 	assert refused && !os.exists(work + '/missing')
-	os.write_file(service.root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	publish(work + '/repository', 'fixture', work + '/seed', 2, time.now().unix() + 3600)!
 	service.refresh()!
 	refused = false
@@ -337,7 +337,7 @@ fn test_mirror_review_refuses_replaced_media_and_cross_command_fingerprints() {
 
 fn mirror_report(event pkgprotocol.Progress) {
 	event.validate() or { panic(err) }
-	path := os.getenv('VINIX_MIRROR_PROGRESS_TEST')
+	path := os.getenv('TULPAR_MIRROR_PROGRESS_TEST')
 	defer { unsafe { path.free() } }
 	mut file := os.open_file(path, 'a') or { panic(err) }
 	defer { file.close() }
@@ -346,9 +346,9 @@ fn mirror_report(event pkgprotocol.Progress) {
 
 fn test_mirror_progress_and_cache_recovery_do_not_invalidate_review_or_complete_on_failure() {
 	work, service, config, packages := mirror_service()!
-	defer { os.unsetenv('VINIX_MIRROR_PROGRESS_TEST'); os.rmdir_all(work) or {} }
+	defer { os.unsetenv('TULPAR_MIRROR_PROGRESS_TEST'); os.rmdir_all(work) or {} }
 	os.write_file(work + '/events', '')!
-	os.setenv('VINIX_MIRROR_PROGRESS_TEST', work + '/events', true)
+	os.setenv('TULPAR_MIRROR_PROGRESS_TEST', work + '/events', true)
 	mut review := service.review_mirror(work + '/export', ['app'])!
 	defer { review.close() }
 	missing := work + '/repository/objects/' + packages[1].files[0].sha256
@@ -396,12 +396,12 @@ fn test_mirror_late_metadata_change_refuses_publication_and_retries_verified_cac
 }
 
 fn mirror_admission_mutate(phase string, input string) ! {
-	if phase != os.getenv('VINIX_MIRROR_ADMISSION_PHASE') { return }
-	work := os.getenv('VINIX_MIRROR_ADMISSION_WORK')
+	if phase != os.getenv('TULPAR_MIRROR_ADMISSION_PHASE') { return }
+	work := os.getenv('TULPAR_MIRROR_ADMISSION_WORK')
 	if os.exists(work + '/mutated') { return }
 	stage := if phase == 'copied' { os.dir(os.dir(os.dir(input))) } else { input }
-	subject := os.getenv('VINIX_MIRROR_ADMISSION_SUBJECT')
-	kind := os.getenv('VINIX_MIRROR_ADMISSION_KIND')
+	subject := os.getenv('TULPAR_MIRROR_ADMISSION_SUBJECT')
+	kind := os.getenv('TULPAR_MIRROR_ADMISSION_KIND')
 	path := stage + '/' + subject
 	os.write_file(work + '/mutated', 'once')!
 	match kind {
@@ -427,9 +427,9 @@ fn test_mirror_whole_stage_refuses_late_changes_and_unreviewed_namespace_without
 	os.write_file(work + '/outside', 'preserved')!; os.chmod(work + '/outside', 0o600)!
 	os.mkdir(work + '/outside-dir')!; os.chmod(work + '/outside-dir', 0o700)!
 	os.write_file(work + '/outside-dir/keep', 'preserved')!
-	os.setenv('VINIX_MIRROR_ADMISSION_WORK', work, true)
-	os.setenv('VINIX_MIRROR_PROGRESS_TEST', work + '/events', true)
-	defer { for name in ['VINIX_MIRROR_ADMISSION_WORK', 'VINIX_MIRROR_ADMISSION_PHASE', 'VINIX_MIRROR_ADMISSION_SUBJECT', 'VINIX_MIRROR_ADMISSION_KIND', 'VINIX_MIRROR_PROGRESS_TEST'] { os.unsetenv(name) } }
+	os.setenv('TULPAR_MIRROR_ADMISSION_WORK', work, true)
+	os.setenv('TULPAR_MIRROR_PROGRESS_TEST', work + '/events', true)
+	defer { for name in ['TULPAR_MIRROR_ADMISSION_WORK', 'TULPAR_MIRROR_ADMISSION_PHASE', 'TULPAR_MIRROR_ADMISSION_SUBJECT', 'TULPAR_MIRROR_ADMISSION_KIND', 'TULPAR_MIRROR_PROGRESS_TEST'] { os.unsetenv(name) } }
 	store := work + '/store'
 	catalog := os.read_file(store + '/catalog.json')!; history := os.read_file(store + '/trust-history.json')!
 	mut cases := 0
@@ -442,7 +442,7 @@ fn test_mirror_whole_stage_refuses_late_changes_and_unreviewed_namespace_without
 				else if phase == 'copied' { ['rewrite', 'missing', 'alias'] }
 				else { ['rewrite', 'missing', 'alias', 'fifo', 'link', 'mode'] }
 			for kind in kinds {
-				for key, value in {'VINIX_MIRROR_ADMISSION_PHASE': phase, 'VINIX_MIRROR_ADMISSION_SUBJECT': subject, 'VINIX_MIRROR_ADMISSION_KIND': kind} { os.setenv(key, value, true) }
+				for key, value in {'TULPAR_MIRROR_ADMISSION_PHASE': phase, 'TULPAR_MIRROR_ADMISSION_SUBJECT': subject, 'TULPAR_MIRROR_ADMISSION_KIND': kind} { os.setenv(key, value, true) }
 				os.write_file(work + '/events', '')!
 				mut message := ''
 				mirror_export(config, store, work + '/export', ['app'], MirrorOptions{ checkpoint: mirror_admission_mutate, progress: mirror_report }) or { message = err.msg() }

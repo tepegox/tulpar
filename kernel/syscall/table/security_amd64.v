@@ -11,11 +11,11 @@ import memory.mmap
 
 // kernel/memory/mmap uses this bit only to account the reserved brk arena
 // differently from ordinary mappings. It is never part of either userspace ABI.
-const vinix_private_map_brk_reservation = u64(0x20000000)
+const tulpar_private_map_brk_reservation = u64(0x20000000)
 
 fn syscall_linux_mmap_hardened(gpr_state voidptr, addr voidptr, length u64, prot int,
 	flags int, fdnum int, offset i64) (u64, u64) {
-	if u64(u32(flags)) & vinix_private_map_brk_reservation != 0 {
+	if u64(u32(flags)) & tulpar_private_map_brk_reservation != 0 {
 		return errno.err, errno.einval
 	}
 	return syscall_linux_mmap_aslr(gpr_state, addr, length, prot, flags, fdnum, offset)

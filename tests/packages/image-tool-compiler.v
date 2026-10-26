@@ -13,12 +13,12 @@ fn main() {
 	for i in 0 .. args.len - 1 { if args[i] == '-o' { output = args[i + 1] } }
 	assert output != ''
 	name := os.file_name(output).all_before_last('.c')
-	names := ['vinix-package', 'vinix-session', 'vinix-linux-runner']
+	names := ['tulpar-package', 'tulpar-session', 'tulpar-linux-runner']
 	index := names.index(name)
 	assert index >= 0
 	role := if output.ends_with('.c') { 'v' } else { 'c' }
-	work := os.getenv('VINIX_IMAGE_TOOL_CLI_WORK')
-	fault := os.getenv('VINIX_IMAGE_TOOL_FAULT')
+	work := os.getenv('TULPAR_IMAGE_TOOL_CLI_WORK')
+	fault := os.getenv('TULPAR_IMAGE_TOOL_FAULT')
 	mut log := os.open_append(work + '/calls.jsonl') or { panic(err) }
 	log.writeln(json2.encode(os.args)) or { panic(err) }; log.close()
 	if fault == role + '-' + index.str() { eprintln('injected compiler failure: ' + role + ' ' + name); exit(37) }
@@ -41,5 +41,5 @@ fn main() {
 	if fault == 'wrong-' + index.str() { architecture = if architecture == 'aarch64' { 'x86_64' } else { 'aarch64' } }
 	mut data := elffixture.image(architecture, 'static'); data[400] = u8(index + 1)
 	os.write_file_array(output, data) or { panic(err) }; os.chmod(output, 0o755) or { panic(err) }
-	if fault == 'corrupt-previous' && index == 2 { os.write_file(os.dir(output) + '/vinix-package', 'late invalid compiler output') or { panic(err) } }
+	if fault == 'corrupt-previous' && index == 2 { os.write_file(os.dir(output) + '/tulpar-package', 'late invalid compiler output') or { panic(err) } }
 }

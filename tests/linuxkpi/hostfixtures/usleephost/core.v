@@ -4,10 +4,10 @@
 module usleephost
 #include "usleephost_v_contract.h"
 
-fn C.vinix_linuxkpi_time_tick(u64)
-fn C.vinix_linuxkpi_time_waiters() usize
-fn C.vinix_linuxkpi_clock_ns() u64
-fn C.vinix_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_time_tick(u64)
+fn C.tulpar_linuxkpi_time_waiters() usize
+fn C.tulpar_linuxkpi_clock_ns() u64
+fn C.tulpar_linuxkpi_irq_flags() usize
 fn C.usleep_range(usize, usize)
 fn C.usleep_idle_range(usize, usize)
 fn C.usleep_range_state(usize, usize, u32)
@@ -40,7 +40,7 @@ struct Test {
 }
 fn advance(nanoseconds u64) {
  now := u64(C.__atomic_add_fetch(&C.vmh_u64(&C.vmh_host_clock_ns), nanoseconds, 4))
- C.vinix_linuxkpi_time_tick(now)
+ C.tulpar_linuxkpi_time_tick(now)
 }
 @[export: 'vmh_usleep_first_sample']
 pub fn first_sample() {
@@ -56,7 +56,7 @@ pub fn first_sample() {
 pub fn expire_before_park() {
  unsafe {
   test := &Test(C.vmh_usleep_host_current)
-  if C.vinix_linuxkpi_time_waiters() == 0 {
+  if C.tulpar_linuxkpi_time_waiters() == 0 {
    C.vmh_host_irq_restore_hook = C.vmh_usleep_expire_before_park
    return
   }
@@ -70,19 +70,19 @@ pub fn worker(argument voidptr) voidptr {
   C.vmh_native_task = &test.model
   C.vmh_current_cpu = 3
   task := C.current
-  flags := C.vinix_linuxkpi_irq_flags()
+  flags := C.tulpar_linuxkpi_irq_flags()
   depth := C.vmh_preempt_depth
-  test.begin = C.vinix_linuxkpi_clock_ns()
+  test.begin = C.tulpar_linuxkpi_clock_ns()
   C.vmh_usleep_host_current = test
   C.vmh_host_clock_read_hook = C.vmh_usleep_first_sample
   if test.expire_before_park { C.vmh_host_irq_restore_hook = C.vmh_usleep_expire_before_park }
   if test.call == .ordinary { C.usleep_range(test.min, test.max) }
   else if test.call == .idle { C.usleep_idle_range(test.min, test.max) }
   else { C.usleep_range_state(test.min, test.max, test.state) }
-  test.end = C.vinix_linuxkpi_clock_ns()
+  test.end = C.tulpar_linuxkpi_clock_ns()
   C.assert(test.end - test.begin >= test.min * C.NSEC_PER_USEC)
   C.assert(usize(C.current) == usize(task) && C.task_is_running(task) && C.vmh_current_cpu == 3)
-  C.assert(C.vinix_linuxkpi_irq_flags() == flags && C.vmh_preempt_depth == depth)
+  C.assert(C.tulpar_linuxkpi_irq_flags() == flags && C.vmh_preempt_depth == depth)
   C.assert(C.vmh_host_clock_read_hook == nil && C.vmh_host_irq_restore_hook == nil)
   C.vmh_usleep_host_current = nil
   C.__atomic_store_n(&test.done, u32(1), 3)
@@ -119,7 +119,7 @@ fn parked(test &Test, total usize) {
  unsafe {
   for spin in u32(0)..u32(10000000) {
    if C.__atomic_load_n(&test.model.parked, 2) == 1 &&
-    !C.vinix_linuxkpi_task_queued(&test.model) && C.vinix_linuxkpi_time_waiters() == total {
+    !C.tulpar_linuxkpi_task_queued(&test.model) && C.tulpar_linuxkpi_time_waiters() == total {
     task := &C.task_struct(&test.model.storage[0])
     C.assert(C.__atomic_load_n(&task.__state, 2) == test.state)
     return
@@ -137,14 +137,14 @@ fn join(test &Test, worker C.pthread_t, remaining usize) {
   }
   C.assert(C.__atomic_load_n(&test.done, 2) != 0)
   C.assert(C.pthread_join(worker, nil) == 0)
-  C.assert(C.vinix_linuxkpi_time_waiters() == remaining)
+  C.assert(C.tulpar_linuxkpi_time_waiters() == remaining)
   C.vmh_sync_model_destroy(&test.model)
  }
 }
 @[export: 'vmh_usleep_range_tests']
 pub fn tests() {
  unsafe {
-  C.assert(C.vmh_native_task == nil && C.vinix_linuxkpi_time_waiters() == 0)
+  C.assert(C.vmh_native_task == nil && C.tulpar_linuxkpi_time_waiters() == 0)
   pages := C.vmh_live_pages
   C.vmh_fail_allocation = true
   mut test := Test{}
@@ -163,8 +163,8 @@ pub fn tests() {
      parked(&test, 1)
      advance(test.min * C.NSEC_PER_USEC - 1)
      C.assert(C.__atomic_load_n(&test.done, 2) == 0)
-     C.assert(!C.vinix_linuxkpi_task_queued(&test.model))
-     C.assert(C.vinix_linuxkpi_time_waiters() == 1)
+     C.assert(!C.tulpar_linuxkpi_task_queued(&test.model))
+     C.assert(C.tulpar_linuxkpi_time_waiters() == 1)
      advance(1)
     }
     join(&test, worker, 0)
@@ -222,7 +222,7 @@ pub fn tests() {
    C.assert(C.pthread_create(&worker, nil, C.vmh_usleep_host_worker, &test) == 0)
    join(&test, worker, 0)
    C.assert(test.model.dequeued == 0 && test.model.parked == 0)
-   C.vinix_linuxkpi_time_tick(C.vinix_linuxkpi_clock_ns())
+   C.tulpar_linuxkpi_time_tick(C.tulpar_linuxkpi_clock_ns())
   }
   mut second := Test{}
   mut second_worker := C.pthread_t{}

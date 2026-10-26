@@ -235,9 +235,9 @@ fn ppoll(fds &PollFD, nfds u64, tmo_p &time.TimeSpec, sigmask &u64) (u64, u64) {
 		// The event only lives for this synchronous wait. V promoted the local
 		// Event when its address escaped through the listener list, retaining
 		// one slab object on every interrupted poll(NULL, 0, ...).
-		mut sleeper := unsafe { &eventstruct.Event(C.vinix_stack_alloc(sizeof(eventstruct.Event))) }
+		mut sleeper := unsafe { &eventstruct.Event(C.tulpar_stack_alloc(sizeof(eventstruct.Event))) }
 		unsafe { *sleeper = eventstruct.Event{} }
-		mut sleep_storage := unsafe { &&eventstruct.Event(C.vinix_stack_alloc(sizeof(voidptr))) }
+		mut sleep_storage := unsafe { &&eventstruct.Event(C.tulpar_stack_alloc(sizeof(voidptr))) }
 		unsafe { *sleep_storage = sleeper }
 		mut timer := &time.Timer(unsafe { nil })
 		if voidptr(tmo_p) != unsafe { nil } {
@@ -389,7 +389,7 @@ pub fn syscall_ppoll(_ voidptr, user_fds u64, nfds u64, user_timeout u64, user_s
 	// Fixed-array locals escape to the heap when their elements' addresses
 	// reach another function, even through unsafe. The wait is synchronous;
 	// these explicit caller-stack slots remain live across its sleep.
-	timeout_storage := unsafe { &time.TimeSpec(C.vinix_stack_alloc(sizeof(time.TimeSpec))) }
+	timeout_storage := unsafe { &time.TimeSpec(C.tulpar_stack_alloc(sizeof(time.TimeSpec))) }
 	mut timeout_ptr := &time.TimeSpec(unsafe { nil })
 	if user_timeout != 0 {
 		if !usercopy.copy_from_user(voidptr(timeout_storage), user_timeout, sizeof(time.TimeSpec)) {
@@ -398,7 +398,7 @@ pub fn syscall_ppoll(_ voidptr, user_fds u64, nfds u64, user_timeout u64, user_s
 		timeout_ptr = timeout_storage
 	}
 
-	sigmask_storage := unsafe { &u64(C.vinix_stack_alloc(sizeof(u64))) }
+	sigmask_storage := unsafe { &u64(C.tulpar_stack_alloc(sizeof(u64))) }
 	mut sigmask_ptr := &u64(unsafe { nil })
 	if user_sigmask != 0 {
 		if !usercopy.copy_from_user(voidptr(sigmask_storage), user_sigmask, sizeof(u64)) {
@@ -431,7 +431,7 @@ pub fn syscall_poll(_ voidptr, user_fds u64, nfds u64, timeout_ms u64) (u64, u64
 
 	// The C int arrives in a 64-bit register; only its low half is defined.
 	milliseconds := i64(i32(u32(timeout_ms)))
-	timeout_storage := unsafe { &time.TimeSpec(C.vinix_stack_alloc(sizeof(time.TimeSpec))) }
+	timeout_storage := unsafe { &time.TimeSpec(C.tulpar_stack_alloc(sizeof(time.TimeSpec))) }
 	unsafe { *timeout_storage = time.TimeSpec{
 		tv_sec: milliseconds / 1000
 		tv_nsec: (milliseconds % 1000) * 1000000
@@ -1350,7 +1350,7 @@ pub fn pwrite_pinned_descriptor(mut fd FD, buf voidptr, count u64, offset i64) (
 	return done, 0
 }
 
-// fallocate(mode=0) guarantees that the requested range exists.  Vinix has no
+// fallocate(mode=0) guarantees that the requested range exists.  Tulpar has no
 // delayed allocation or hole-punching yet, so extending the resource provides
 // that guarantee; unsupported Linux mode bits are rejected explicitly.
 pub fn syscall_fallocate(_ voidptr, fdnum int, mode int, offset i64, length i64) (u64, u64) {
@@ -1811,7 +1811,7 @@ pub fn adopt_passed_handle(handle &Handle) ?&FD {
 fn release_unopened_resource(mut res resource.Resource, flags int) {
 	// FIFO open counted an end and an owned device open may have side effects.
 	// Use caller-stack Handle storage while returning that adopted reference.
-	handle := unsafe { &Handle(C.vinix_stack_alloc(sizeof(Handle))) }
+	handle := unsafe { &Handle(C.tulpar_stack_alloc(sizeof(Handle))) }
 	unsafe { *handle = Handle{flags: flags & resource.file_status_flags_mask} }
 	res.unref(voidptr(handle)) or {}
 }

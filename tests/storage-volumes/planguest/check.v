@@ -7,7 +7,7 @@ fn preview(command &char, grow bool, expected i32, output &char) {
 	fd := C.open(c'/root/check-output', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 	check(fd >= 0, c'open preview output')
 	unsafe {
-		arguments := [&char(c'/usr/sbin/vinix-volume'), command, &char(c'/root/saved.vset'), if grow {
+		arguments := [&char(c'/usr/sbin/tulpar-volume'), command, &char(c'/root/saved.vset'), if grow {
 			&char(c'grow')
 		} else {
 			&char(nil)
@@ -38,7 +38,7 @@ fn contains(output &char, text &char) bool {
 
 fn check_planned_bundle() {
 	mut output := [4096]char{}
-	first := status(c'/dev/mapper/vinix2').generation
+	first := status(c'/dev/mapper/tulpar2').generation
 	preview(c'show-bundle', false, 0, &output[0])
 	check(contains(&output[0], c'identity=mbr:12345678')
 		&& contains(&output[0], c'identity=mbr:12345679')
@@ -52,8 +52,8 @@ fn check_planned_bundle() {
 		&& contains(&output[0], c'current_bytes=4096 planned_bytes=8192')
 		&& contains(&output[0], c'checked disks=2 create=0 keep=2 grow=1'),
 		c'checked growth report')
-	check(status(c'/dev/mapper/vinix2').bytes == 4096
-		&& status(c'/dev/mapper/vinix2').generation == first,
+	check(status(c'/dev/mapper/tulpar2').bytes == 4096
+		&& status(c'/dev/mapper/tulpar2').generation == first,
 		c'preview preserves live generation and capacity')
 }
 
@@ -63,13 +63,13 @@ fn check_missing_bundle() {
 	check(contains(&output[0], c'slot=9 action=create')
 		&& contains(&output[0], c'checked disks=2 create=1 keep=1 grow=1'),
 		c'checked missing view report')
-	missing(c'/dev/mapper/vinix9')
-	check(status(c'/dev/mapper/vinix2').bytes == 4096, c'preview creates and grows nothing')
+	missing(c'/dev/mapper/tulpar9')
+	check(status(c'/dev/mapper/tulpar2').bytes == 4096, c'preview creates and grows nothing')
 }
 
 fn check_conflicting_bundle() {
 	mut output := [4096]char{}
 	preview(c'check-bundle', true, 1, &output[0])
 	check(!contains(&output[0], c'action='), c'later conflict prevents all preview actions')
-	check(status(c'/dev/mapper/vinix2').bytes == 4096, c'failed preview leaves capacity unchanged')
+	check(status(c'/dev/mapper/tulpar2').bytes == 4096, c'failed preview leaves capacity unchanged')
 }

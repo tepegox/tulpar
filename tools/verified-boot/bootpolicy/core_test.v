@@ -49,12 +49,12 @@ fn test_disk_selectors_and_substring_bypasses() {
 }
 
 fn test_commandline_injection() {
-	for value in ['quiet\n    cmdline: vinix.disk=auto', 'quiet\rhidden', '\${ARCH}', 'quiet\x00hidden',
-		'é', 'a'.repeat(2049), 'vinix.verity=1,/dev/vda,2,' + '0'.repeat(64),
-		'x=vinix.verity=1,/dev/vda,2,' + '0'.repeat(64)] {
+	for value in ['quiet\n    cmdline: tulpar.disk=auto', 'quiet\rhidden', '\${ARCH}', 'quiet\x00hidden',
+		'é', 'a'.repeat(2049), 'tulpar.verity=1,/dev/vda,2,' + '0'.repeat(64),
+		'x=tulpar.verity=1,/dev/vda,2,' + '0'.repeat(64)] {
 		assert_invalid(fn [value] () ! { check_cmdline(value, '')! })
 	}
-	assert check_cmdline(' vinix.qemu_platform=1 quiet ', '')! == 'vinix.qemu_platform=1 quiet'
+	assert check_cmdline(' tulpar.qemu_platform=1 quiet ', '')! == 'tulpar.qemu_platform=1 quiet'
 }
 
 fn test_pe_architecture_field_and_signed_section() {

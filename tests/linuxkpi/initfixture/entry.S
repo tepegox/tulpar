@@ -5,7 +5,7 @@
 _start:
     xor %ebp, %ebp
     and $-16, %rsp
-    call vinix_linuxkpi_guest_start
+    call tulpar_linuxkpi_guest_start
     ud2
 .size _start,.-_start
 .section .note.GNU-stack,"",@progbits

@@ -14,7 +14,7 @@ module accountcore
 
 import os
 
-pub const throttle_directory = '/run/vinix/auth/failures'
+pub const throttle_directory = '/run/tulpar/auth/failures'
 
 // Wrong passwords before any wait at all.
 pub const free_attempts = 3

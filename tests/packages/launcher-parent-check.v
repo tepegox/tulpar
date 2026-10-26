@@ -23,9 +23,9 @@ fn review(binary string, root string) !pkgprotocol.Review {
 
 fn check_case(work string, binary string, part string, alias bool) ! {
 	root := work + '/root'; architecture := $if arm64 { 'aarch64' } $else { 'x86_64' }
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	key := pkgcore.keygen(work + '/seed')!
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
 		policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 },
 		repositories: [pkgcore.Repository{ id: 'trusted', url: 'file://' + work + '/repository', public_key: key }] }))!
 	os.mkdir_all(work + '/source/bin')!
@@ -43,7 +43,7 @@ fn check_case(work string, binary string, part string, alias bool) ! {
 	service := pkgcore.Service{ root: root }; service.refresh()!
 	initial := service.transact('install', ['app', 'utility'], pkgcore.TransactionOptions{})!
 	store := pkgcore.state_directory(root); generation := store + '/generations/1'; path := generation + '/' + part
-	app_entry := os.read_file(generation + '/share/applications/vinix-app.desktop')!
+	app_entry := os.read_file(generation + '/share/applications/tulpar-app.desktop')!
 	state := os.read_file(generation + '/state.json')!; catalog := os.read_file(store + '/catalog.json')!; history := os.read_file(store + '/trust-history.json')!
 	mut healthy := review(binary, root)!; defer { healthy.close() }
 	assert healthy.rows.all(it.action == 'keep') && healthy.disk_needed == 0
@@ -64,17 +64,17 @@ fn check_case(work string, binary string, part string, alias bool) ! {
 	refused = false; command(binary, root, ['apply', damaged.fingerprint, 'repair']) or { refused = true; unsafe { err.free() } }; assert refused && os.exists(stage)
 	if alias { os.rename(path, work + '/outside')!; os.symlink(work + '/outside', path)! } else { os.chmod(path, 0o777)! }
 	os.rename(work + '/repository/objects', work + '/unreachable-objects')!
-	personal := root + '/home/user/.local/share/vinix-apps/app'; os.mkdir_all(personal)!; os.write_file(personal + '/memo', 'personal data')!
+	personal := root + '/home/user/.local/share/tulpar-apps/app'; os.mkdir_all(personal)!; os.write_file(personal + '/memo', 'personal data')!
 	command(binary, root, ['apply', damaged.fingerprint, 'repair'])!
 	repaired := service.verify()!
 	assert repaired.generation == 2 && repaired.previous == 1 && repaired.packages == initial.packages && repaired.requested == initial.requested
 	assert os.read_file(store + '/generations/1/state.json')! == state
-	assert os.read_file(store + '/current/share/applications/vinix-app.desktop')! == app_entry
+	assert os.read_file(store + '/current/share/applications/tulpar-app.desktop')! == app_entry
 	assert !os.is_link(store + '/current/share') && !os.is_link(store + '/current/share/applications')
 	assert os.lstat(store + '/current/share')!.mode & 0o7777 == 0o755 && os.lstat(store + '/current/share/applications')!.mode & 0o7777 == 0o755
 	assert os.read_file(store + '/catalog.json')! == catalog && os.read_file(store + '/trust-history.json')! == history
 	if alias {
-		outside_entry := work + '/outside/' + if part == 'share' { 'applications/' } else { '' } + 'vinix-app.desktop'
+		outside_entry := work + '/outside/' + if part == 'share' { 'applications/' } else { '' } + 'tulpar-app.desktop'
 		assert os.read_file(outside_entry)! == app_entry && os.lstat(work + '/outside')!.mode & 0o7777 == 0o755
 	}
 	mut clean := service.health()!; assert clean.rows.all(it.issue == ''); clean.close()

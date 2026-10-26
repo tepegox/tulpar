@@ -4,7 +4,7 @@ Run the unchanged production journal engine on the host:
 
 ```sh
 V=/path/to/v sh tests/fs-journal/run-host.sh
-V=/path/to/v VINIX_HOST_SANITIZE=1 ASAN_OPTIONS=detect_leaks=0 \
+V=/path/to/v TULPAR_HOST_SANITIZE=1 ASAN_OPTIONS=detect_leaks=0 \
   sh tests/fs-journal/run-host.sh
 ```
 
@@ -24,14 +24,14 @@ retention check (`ALLOC_TRACK=1`). Production builds have none of these ioctls.
 Run both architectures:
 
 ```sh
-VINIX_KERNEL_DIR=/path/to/arm/kernel tests/fs-journal/run --arch=aarch64
-VINIX_AMD64_KERNEL=/path/to/x86/kernel/bin/vinix \
+TULPAR_KERNEL_DIR=/path/to/arm/kernel tests/fs-journal/run --arch=aarch64
+TULPAR_AMD64_KERNEL=/path/to/x86/kernel/bin/tulpar \
   tests/fs-journal/run --arch=amd64
-VINIX_KERNEL_DIR=/path/to/arm/kernel \
+TULPAR_KERNEL_DIR=/path/to/arm/kernel \
   tests/fs-journal/run --arch=aarch64 --format --cases=full
-VINIX_AMD64_KERNEL=/path/to/x86/kernel/bin/vinix \
+TULPAR_AMD64_KERNEL=/path/to/x86/kernel/bin/tulpar \
   tests/fs-journal/run --arch=amd64 --format --cases=full
-VINIX_AMD64_KERNEL=/path/to/ordinary/kernel/bin/vinix \
+TULPAR_AMD64_KERNEL=/path/to/ordinary/kernel/bin/tulpar \
   tests/fs-journal/run --arch=amd64 --production --cases=full
 ```
 

@@ -180,7 +180,7 @@ fn release_locked(repository string, id string, seed_path string, sequence u64, 
 	parent := os.dir(target)
 	defer { unsafe { parent.free() } }
 	disk_check(options.available_space(parent)!, needed, 64 * 1024 * 1024)!
-	mut exporting := create_export_stage(parent, '.vinix-release', 'publisher release')!
+	mut exporting := create_export_stage(parent, '.tulpar-release', 'publisher release')!
 	defer { exporting.close() }
 	write_release_stage(repository, text, signature, objects, remembered, options, target, mut exporting) or {
 		return exporting.failure(err)

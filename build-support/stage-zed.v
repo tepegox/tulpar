@@ -67,7 +67,7 @@ fn stage(directory string) ! {
 	}
 	resolved := alpinecore.resolve(packages, requests)!
 	println('Alpine Zed ${zed_version}: ${resolved.len} private runtime packages')
-	root := '${output}/staging/usr/libexec/vinix-zed/root'
+	root := '${output}/staging/usr/libexec/tulpar-zed/root'
 	os.mkdir_all(root)!
 	mut pins := []PackagePin{}
 	for package in resolved {
@@ -81,7 +81,7 @@ fn stage(directory string) ! {
 	run('tar', ['-xzf', archive, '-C', root])!
 	icd := '${root}/usr/share/vulkan/icd.d/lvp_icd.aarch64.json'
 	os.write_file(icd, os.read_file(icd)!.replace('"/usr/lib/libvulkan_lvp.so"',
-		'"/usr/libexec/vinix-zed/root/usr/lib/libvulkan_lvp.so"'))!
+		'"/usr/libexec/tulpar-zed/root/usr/lib/libvulkan_lvp.so"'))!
 	os.write_file('${output}/packages.json', json2.encode(pins))!
 	os.write_file('${output}/zed-package.txt', metadata.output)!
 	println('Staged unchanged Alpine ARM64 Zed at ${root}/usr/libexec/zed-editor')

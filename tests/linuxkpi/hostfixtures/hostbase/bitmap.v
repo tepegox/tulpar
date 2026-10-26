@@ -74,7 +74,7 @@ __global shared_bits [2]usize
 __global bit_lock_count u32
 @[export:'vmh_bit_worker']
 pub fn bit_worker(argument voidptr) voidptr { unsafe {
- index:=*(&usize(argument));for i:=u32(0);i<20000;i++ { C.set_bit(index,&shared_bits[0]);for C.test_and_set_bit_lock(65,&shared_bits[0]) { C.vinix_linuxkpi_spin_wait() };bit_lock_count++;C.clear_bit_unlock(65,&shared_bits[0]) };return nil
+ index:=*(&usize(argument));for i:=u32(0);i<20000;i++ { C.set_bit(index,&shared_bits[0]);for C.test_and_set_bit_lock(65,&shared_bits[0]) { C.tulpar_linuxkpi_spin_wait() };bit_lock_count++;C.clear_bit_unlock(65,&shared_bits[0]) };return nil
 } }
 @[export:'vmh_bit_concurrency_tests']
 pub fn bit_concurrency_tests() { unsafe {

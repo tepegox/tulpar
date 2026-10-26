@@ -26,7 +26,7 @@ fn qualify() ! {
 	os.mkdir(work + '/tmp')!
 	root := os.real_path(os.dir(@FILE) + '/../..')
 	mut environment := os.environ()
-	for key, value in {'V': compiler, 'VINIX_V_COMPILER': compiler, 'VTMP': work + '/tmp',
+	for key, value in {'V': compiler, 'TULPAR_V_COMPILER': compiler, 'VTMP': work + '/tmp',
 		'TMPDIR': work + '/tmp', 'V_C_ERROR_BUG_REPORT_DISABLED': '1', 'V_MACOS_V3_NO_FALLBACK': '1',
 		'ASAN_OPTIONS': 'detect_leaks=0:detect_stack_use_after_return=1:abort_on_error=1',
 		'UBSAN_OPTIONS': 'halt_on_error=1:print_stacktrace=1'} { environment[key] = value }
@@ -56,7 +56,7 @@ fn qualify() ! {
 	// Compare the existing merge profile against its unchanged, frozen V source.
 	legacy := work + '/reference'
 	os.mkdir_all(legacy + '/utilitysource')!
-	base := '/Users/alex/.cache/vinix-source-tools-native-20261013/originals/'
+	base := '/Users/alex/.cache/tulpar-source-tools-native-20261013/originals/'
 	os.write_file(legacy + '/utilitysource/core.v', os.read_file(base + 'desktop/tools/utilitysource/core.v.source')!)!
 	os.write_file(legacy + '/main.v', os.read_file(base + 'desktop/tools/native-utility-source.v.source')!)!
 	checked([compiler, '-nocache', '-cc', '/usr/bin/clang', ...flags, '-o', work + '/reference-utility', legacy], environment, work + '/reference-build.log')!
@@ -68,7 +68,7 @@ fn qualify() ! {
 	os.write_file(wrapper, '#!/bin/sh\nif [ "$1" = version ]; then exec "' + compiler + '" version; fi\nexec /usr/bin/env -u CFLAGS -u LDFLAGS "' + compiler + '" -nocache -cc /usr/bin/clang ' + wrapper_flags + '"$@"\n')!
 	os.chmod(wrapper, 0o755)!
 	environment['V'] = wrapper
-	environment['VINIX_V_COMPILER'] = wrapper
+	environment['TULPAR_V_COMPILER'] = wrapper
 	// Failure must not skip the next independently staged test file.
 	os.mkdir(work + '/driver-tests')!
 	os.write_file(work + '/driver-tests/a_test.v', 'module main\nfn test_failure() { assert false }\n')!
@@ -86,8 +86,8 @@ fn qualify() ! {
 	for file_pages in ['0', '1'] {
 		for paging in ['0', '1'] {
 			if file_pages == '0' && paging == '0' { continue }
-			environment['VINIX_FILE_PAGES_HOST'] = file_pages
-			environment['VINIX_PAGING_HOST'] = paging
+			environment['TULPAR_FILE_PAGES_HOST'] = file_pages
+			environment['TULPAR_PAGING_HOST'] = paging
 			checked(['/bin/sh', root + '/tests/private-pages/run-host.sh'], environment, work + '/private-pages-' + file_pages + '-' + paging + '.log')!
 		}
 	}
@@ -100,7 +100,7 @@ fn qualify() ! {
 	os.write_file(work + '/qualification.json', json2.encode(json2.Any({'status': json2.Any('PASS'),
 		'profile': json2.Any(profile), 'receipts': json2.Any(receipts),
 		'default_merge_sha256': json2.Any(sha256.hexhash(os.read_file(work + '/native-merged.v')!)),
-		'limits': json2.Any('Native source behavior and unchanged clock/security-policy, ext2 mapping, private/file/paging host models plus disposable M1 deployment. Frozen V default merge matches byte-for-byte. No Python, live ESP, GUI application, Vinix kernel/guest or new kernel lifetime claim. Desktop UI tests are preserved; this qualification checks their preparation, not complete UI suites.')}), prettify: true) + '\n')!
+		'limits': json2.Any('Native source behavior and unchanged clock/security-policy, ext2 mapping, private/file/paging host models plus disposable M1 deployment. Frozen V default merge matches byte-for-byte. No Python, live ESP, GUI application, Tulpar kernel/guest or new kernel lifetime claim. Desktop UI tests are preserved; this qualification checks their preparation, not complete UI suites.')}), prettify: true) + '\n')!
 	println('PASS native source-tool qualification ' + profile)
 }
 

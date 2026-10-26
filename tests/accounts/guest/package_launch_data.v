@@ -9,16 +9,16 @@ import time
 import tools.packages.pkgcore
 
 fn launch_data_guest_success(db accountcore.Database, user accountcore.User) ! {
-	reply := run(['/usr/bin/vinix-package', 'run', 'launch-data-app'], '', db, user)
+	reply := run(['/usr/bin/tulpar-package', 'run', 'launch-data-app'], '', db, user)
 	assert reply.status == 0 && reply.output.contains('PACKAGE LAUNCH DATA PROBE uid=${user.uid}'), reply.output
-	data := user.home + '/.local/share/vinix-apps/launch-data-app'
+	data := user.home + '/.local/share/tulpar-apps/launch-data-app'
 	for path in [data, data + '/tmp'] { assert owner_of(path) == user.uid && os.stat(path)!.mode & 0o777 == 0o700 }
 	assert os.read_file(data + '/kept')! == 'retained application data'
 	assert os.read_file(data + '/tmp/temporary')! == 'private temporary data'
 }
 
 fn launch_data_guest_refusal(db accountcore.Database, user accountcore.User, diagnostic string) {
-	reply := run(['/usr/bin/vinix-package', 'run', 'launch-data-app'], '', db, user)
+	reply := run(['/usr/bin/tulpar-package', 'run', 'launch-data-app'], '', db, user)
 	assert reply.status != 0 && reply.output.contains(diagnostic), reply.output
 	assert !reply.output.contains('PACKAGE LAUNCH DATA PROBE'), reply.output
 }
@@ -41,16 +41,16 @@ fn qualify_package_launch_data(mut t Test) ! {
 	os.mkdir_all('/tmp/package-publisher', mode: 0o700)!
 	key := pkgcore.keygen('/tmp/package-publisher/launch-data-seed')!
 	pkgcore.publish(repository, 'launch-data', '/tmp/package-publisher/launch-data-seed', 1, time.now().unix() + 3600)!
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture,
 		launch_user: 'sam', policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['repo-enroll', 'launch-data', 'file://' + repository, key])!
 	package_success(['update'])!
 	package_success(['install', 'launch-data-app'])!
 	for user in [alex, sam] {
 		launch_data_guest_success(db, user)!
-		data := user.home + '/.local/share/vinix-apps/launch-data-app'
+		data := user.home + '/.local/share/tulpar-apps/launch-data-app'
 		outside := '/tmp/launch-data-outside-' + user.name
 		os.mkdir(outside)!
 		os.chmod(outside, 0o755)!
@@ -83,13 +83,13 @@ fn qualify_package_launch_data(mut t Test) ! {
 	}
 	t.say('PACKAGE LAUNCH DATA ordinary-admin-standard aliases-special-files-ownership-shared-modes refused-before-probe targets-preserved PASS')
 	package_success(['remove', 'launch-data-app'])!
-	for user in [alex, sam] { assert os.read_file(user.home + '/.local/share/vinix-apps/launch-data-app/kept')! == 'retained application data' }
+	for user in [alex, sam] { assert os.read_file(user.home + '/.local/share/tulpar-apps/launch-data-app/kept')! == 'retained application data' }
 	package_success(['install', 'launch-data-app'])!
 	for user in [alex, sam] { launch_data_guest_success(db, user)! }
 	package_success(['remove', 'launch-data-app'])!
 	for user in [alex, sam] {
-		deleted := run(['/usr/bin/vinix-package', 'purge-data', 'launch-data-app'], '', db, user)
-		assert deleted.status == 0 && !os.exists(user.home + '/.local/share/vinix-apps/launch-data-app'), deleted.output
+		deleted := run(['/usr/bin/tulpar-package', 'purge-data', 'launch-data-app'], '', db, user)
+		assert deleted.status == 0 && !os.exists(user.home + '/.local/share/tulpar-apps/launch-data-app'), deleted.output
 	}
 	t.say('PACKAGE LAUNCH DATA sdk-private-data-tmp retained-relaunch-offline-reinstall own-account-purge PASS')
 }

@@ -8,38 +8,38 @@ import x86.cpu.local as cpulocal
 
 #include "linuxkpi_conststring_fixture_v_primitives.h"
 
-fn C.vinix_linuxkpi_conststring_fixture_dup(voidptr, u32) voidptr
-fn C.vinix_linuxkpi_conststring_fixture_free(voidptr)
-fn C.vinix_linuxkpi_conststring_fixture_alloc(uint) voidptr
-fn C.vinix_linuxkpi_conststring_fixture_gfp() u32
-fn C.vinix_linuxkpi_conststring_fixture_literal() voidptr
-fn C.vinix_linuxkpi_conststring_fixture_address(u32) uint
-fn C.vinix_linuxkpi_conststring_fixture_rodata(voidptr) bool
+fn C.tulpar_linuxkpi_conststring_fixture_dup(voidptr, u32) voidptr
+fn C.tulpar_linuxkpi_conststring_fixture_free(voidptr)
+fn C.tulpar_linuxkpi_conststring_fixture_alloc(uint) voidptr
+fn C.tulpar_linuxkpi_conststring_fixture_gfp() u32
+fn C.tulpar_linuxkpi_conststring_fixture_literal() voidptr
+fn C.tulpar_linuxkpi_conststring_fixture_address(u32) uint
+fn C.tulpar_linuxkpi_conststring_fixture_rodata(voidptr) bool
 
 // Only actual read-only pointers enter the ownership fast path. In particular,
 // boundary probes below call the classifier alone, never strlen or kfree.
 fn const_string_test_borrowed(ptr voidptr) bool {
-	first := C.vinix_linuxkpi_conststring_fixture_dup(ptr, u32(-1))
-	defer { C.vinix_linuxkpi_conststring_fixture_free(first) }
+	first := C.tulpar_linuxkpi_conststring_fixture_dup(ptr, u32(-1))
+	defer { C.tulpar_linuxkpi_conststring_fixture_free(first) }
 	if first != ptr { return false }
-	second := C.vinix_linuxkpi_conststring_fixture_dup(ptr, C.vinix_linuxkpi_conststring_fixture_gfp())
-	defer { C.vinix_linuxkpi_conststring_fixture_free(second) }
-	return second == ptr && C.vinix_linuxkpi_conststring_fixture_rodata(ptr)
+	second := C.tulpar_linuxkpi_conststring_fixture_dup(ptr, C.tulpar_linuxkpi_conststring_fixture_gfp())
+	defer { C.tulpar_linuxkpi_conststring_fixture_free(second) }
+	return second == ptr && C.tulpar_linuxkpi_conststring_fixture_rodata(ptr)
 }
 
 fn const_string_test_fast_batch() bool {
-	literal := C.vinix_linuxkpi_conststring_fixture_literal()
-	first := C.vinix_linuxkpi_conststring_fixture_address(0)
-	end := C.vinix_linuxkpi_conststring_fixture_address(1)
-	text := C.vinix_linuxkpi_conststring_fixture_address(2)
+	literal := C.tulpar_linuxkpi_conststring_fixture_literal()
+	first := C.tulpar_linuxkpi_conststring_fixture_address(0)
+	end := C.tulpar_linuxkpi_conststring_fixture_address(1)
+	text := C.tulpar_linuxkpi_conststring_fixture_address(2)
 	if first == 0 || first >= end || text == 0 { return false }
-	if !C.vinix_linuxkpi_conststring_fixture_rodata(voidptr(first))
-		|| !C.vinix_linuxkpi_conststring_fixture_rodata(voidptr(end - 1))
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(voidptr(first - 1))
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(voidptr(end))
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(unsafe { nil })
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(voidptr(uint(-1)))
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(voidptr(text)) { return false }
+	if !C.tulpar_linuxkpi_conststring_fixture_rodata(voidptr(first))
+		|| !C.tulpar_linuxkpi_conststring_fixture_rodata(voidptr(end - 1))
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(voidptr(first - 1))
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(voidptr(end))
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(unsafe { nil })
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(voidptr(uint(-1)))
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(voidptr(text)) { return false }
 	unsafe {
 		bytes := &u8(literal)
 		if bytes[0] != `v` || bytes[6] != `c` || bytes[21] != 0 { return false }
@@ -48,8 +48,8 @@ fn const_string_test_fast_batch() bool {
 		if !const_string_test_borrowed(literal)
 			|| !const_string_test_borrowed(voidptr(uint(literal) + 6))
 			|| !const_string_test_borrowed(voidptr(uint(literal) + 21)) { return false }
-		empty := C.vinix_linuxkpi_conststring_fixture_dup(unsafe { nil }, C.vinix_linuxkpi_conststring_fixture_gfp())
-		C.vinix_linuxkpi_conststring_fixture_free(empty)
+		empty := C.tulpar_linuxkpi_conststring_fixture_dup(unsafe { nil }, C.tulpar_linuxkpi_conststring_fixture_gfp())
+		C.tulpar_linuxkpi_conststring_fixture_free(empty)
 		if empty != unsafe { nil } { return false }
 	}
 	return true
@@ -107,21 +107,21 @@ fn const_string_test_owned_operation(round u32) bool {
 		// A failing duplicate-identity check must not free a stack source or
 		// release an aliased owner twice. Successful duplicates own one result.
 		if other != stack_ptr && other != empty_ptr && other != source && other != copy {
-			C.vinix_linuxkpi_conststring_fixture_free(other)
+			C.tulpar_linuxkpi_conststring_fixture_free(other)
 		}
 		if copy != stack_ptr && copy != empty_ptr && copy != source {
-			C.vinix_linuxkpi_conststring_fixture_free(copy)
+			C.tulpar_linuxkpi_conststring_fixture_free(copy)
 		}
-		C.vinix_linuxkpi_conststring_fixture_free(source)
+		C.tulpar_linuxkpi_conststring_fixture_free(source)
 		owner.linuxkpi_alloc_fail_after = gate
 	}
 	owner.linuxkpi_alloc_fail_after = -1
-	flags := C.vinix_linuxkpi_conststring_fixture_gfp()
-	if C.vinix_linuxkpi_conststring_fixture_rodata(stack_ptr)
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(empty_ptr) { return false }
-	copy = C.vinix_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
+	flags := C.tulpar_linuxkpi_conststring_fixture_gfp()
+	if C.tulpar_linuxkpi_conststring_fixture_rodata(stack_ptr)
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(empty_ptr) { return false }
+	copy = C.tulpar_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
 	if copy == unsafe { nil } || copy == stack_ptr
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(copy) { return false }
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(copy) { return false }
 	unsafe {
 		bytes := &u8(copy)
 		if bytes[0] != stack[0] || bytes[1] != `b` || bytes[2] != `c` || bytes[3] != 0 { return false }
@@ -129,53 +129,53 @@ fn const_string_test_owned_operation(round u32) bool {
 		bytes[1] = `z`
 		if bytes[0] != u8(`a`) + u8(round % 26) || stack[1] != `b` { return false }
 	}
-	C.vinix_linuxkpi_conststring_fixture_free(copy)
+	C.tulpar_linuxkpi_conststring_fixture_free(copy)
 	copy = unsafe { nil }
-	copy = C.vinix_linuxkpi_conststring_fixture_dup(empty_ptr, flags)
+	copy = C.tulpar_linuxkpi_conststring_fixture_dup(empty_ptr, flags)
 	if copy == unsafe { nil } || copy == empty_ptr
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(copy) { return false }
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(copy) { return false }
 	empty[0] = `!`
 	if unsafe { *&u8(copy) } != 0 { return false }
-	C.vinix_linuxkpi_conststring_fixture_free(copy)
+	C.tulpar_linuxkpi_conststring_fixture_free(copy)
 	copy = unsafe { nil }
-	source = C.vinix_linuxkpi_conststring_fixture_alloc(4)
-	if source == unsafe { nil } || C.vinix_linuxkpi_conststring_fixture_rodata(source) { return false }
+	source = C.tulpar_linuxkpi_conststring_fixture_alloc(4)
+	if source == unsafe { nil } || C.tulpar_linuxkpi_conststring_fixture_rodata(source) { return false }
 	unsafe {
 		bytes := &u8(source)
 		bytes[0] = `o`; bytes[1] = `w`; bytes[2] = `n`; bytes[3] = 0
 	}
-	copy = C.vinix_linuxkpi_conststring_fixture_dup(source, flags)
+	copy = C.tulpar_linuxkpi_conststring_fixture_dup(source, flags)
 	if copy == unsafe { nil } || copy == source
-		|| C.vinix_linuxkpi_conststring_fixture_rodata(copy) { return false }
+		|| C.tulpar_linuxkpi_conststring_fixture_rodata(copy) { return false }
 	unsafe { *&u8(source) = `!` }
-	C.vinix_linuxkpi_conststring_fixture_free(source)
+	C.tulpar_linuxkpi_conststring_fixture_free(source)
 	source = unsafe { nil }
 	// The source owner is already freed before these reads of its duplicate.
 	unsafe {
 		bytes := &u8(copy)
 		if bytes[0] != `o` || bytes[1] != `w` || bytes[2] != `n` || bytes[3] != 0 { return false }
 	}
-	C.vinix_linuxkpi_conststring_fixture_free(copy)
+	C.tulpar_linuxkpi_conststring_fixture_free(copy)
 	copy = unsafe { nil }
 	owner.linuxkpi_alloc_fail_after = 0
-	copy = C.vinix_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
+	copy = C.tulpar_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
 	if copy != unsafe { nil } || owner.linuxkpi_alloc_fail_after != -1 { return false }
 	owner.linuxkpi_alloc_fail_after = 1
-	other = C.vinix_linuxkpi_conststring_fixture_dup(stack_ptr, u32(-1))
+	other = C.tulpar_linuxkpi_conststring_fixture_dup(stack_ptr, u32(-1))
 	if other != unsafe { nil } || owner.linuxkpi_alloc_fail_after != 1 { return false }
-	literal := C.vinix_linuxkpi_conststring_fixture_literal()
-	other = C.vinix_linuxkpi_conststring_fixture_dup(literal, u32(-1))
+	literal := C.tulpar_linuxkpi_conststring_fixture_literal()
+	other = C.tulpar_linuxkpi_conststring_fixture_dup(literal, u32(-1))
 	if other != literal || owner.linuxkpi_alloc_fail_after != 1 { return false }
-	C.vinix_linuxkpi_conststring_fixture_free(other)
+	C.tulpar_linuxkpi_conststring_fixture_free(other)
 	other = unsafe { nil }
-	other = C.vinix_linuxkpi_conststring_fixture_dup(unsafe { nil }, flags)
+	other = C.tulpar_linuxkpi_conststring_fixture_dup(unsafe { nil }, flags)
 	if other != unsafe { nil } || owner.linuxkpi_alloc_fail_after != 1 { return false }
-	copy = C.vinix_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
+	copy = C.tulpar_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
 	if copy == unsafe { nil } || copy == stack_ptr || owner.linuxkpi_alloc_fail_after != 0 { return false }
-	C.vinix_linuxkpi_conststring_fixture_free(copy)
+	C.tulpar_linuxkpi_conststring_fixture_free(copy)
 	copy = unsafe { nil }
 	if owner.linuxkpi_alloc_fail_after != 0 { return false }
-	other = C.vinix_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
+	other = C.tulpar_linuxkpi_conststring_fixture_dup(stack_ptr, flags)
 	return other == unsafe { nil } && owner.linuxkpi_alloc_fail_after == -1 && may_sleep()
 }
 

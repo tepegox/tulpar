@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_V_PRIMITIVES_H
-#define VINIX_LINUXKPI_V_PRIMITIVES_H
+#ifndef TULPAR_LINUXKPI_V_PRIMITIVES_H
+#define TULPAR_LINUXKPI_V_PRIMITIVES_H
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
@@ -10,27 +10,27 @@ typedef const void vks_const_void;
 void *kmalloc(size_t, unsigned int);
 void *kzalloc(size_t, unsigned int);
 void *kmalloc_array(size_t, size_t, unsigned int);
-#ifdef VINIX_V_RUNTIME
+#ifdef TULPAR_V_RUNTIME
 void kfree(void *);
 #else
 void kfree(const void *);
 #endif
-#ifdef VINIX_V_RUNTIME
-void vinix_linuxkpi_bug(char *, int);
+#ifdef TULPAR_V_RUNTIME
+void tulpar_linuxkpi_bug(char *, int);
 #else
-void vinix_linuxkpi_bug(const char *, int);
+void tulpar_linuxkpi_bug(const char *, int);
 #endif
-size_t vinix_linuxkpi_page_size(void);
+size_t tulpar_linuxkpi_page_size(void);
 size_t vkr_page_allocation_size(void *);
 void vkr_kvfree(void *);
 /* Ordered compiler loads preserve the byte discriminator before a tag word
  * that must never be read from uninitialized packed-cache padding. */
 #define vkr_page_owner_byte(p) __atomic_load_n((const unsigned char *)(p), __ATOMIC_ACQUIRE)
 #define vkr_page_owner_tag(p) __atomic_load_n((const uint64_t *)(p), __ATOMIC_ACQUIRE)
-bool vinix_linuxkpi_may_sleep(void);
-bool vinix_linuxkpi_gfp_supported(unsigned int);
-void *vinix_linuxkpi_alloc_gfp_pages(size_t, unsigned int);
-void vinix_linuxkpi_free_pages(void *, size_t);
+bool tulpar_linuxkpi_may_sleep(void);
+bool tulpar_linuxkpi_gfp_supported(unsigned int);
+void *tulpar_linuxkpi_alloc_gfp_pages(size_t, unsigned int);
+void tulpar_linuxkpi_free_pages(void *, size_t);
 void vkp_spin_init(void *);
 void vkp_spin_lock(void *);
 void vkp_spin_unlock(void *);
@@ -47,7 +47,7 @@ long vkp_schedule_timeout(long);
 bool vkp_signal_pending(int);
 unsigned long vkp_jiffies(void);
 unsigned long vkp_bit_timeout(void *);
-unsigned int vinix_linuxkpi_iowait_count(unsigned int);
+unsigned int tulpar_linuxkpi_iowait_count(unsigned int);
 void vkp_warn(const char *, int);
 void vkp_refcount_warning(int);
 void vkp_warn_note(const char *, int);

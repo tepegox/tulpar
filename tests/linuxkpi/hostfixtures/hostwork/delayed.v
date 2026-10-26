@@ -18,8 +18,8 @@ fn C.cancel_delayed_work_sync(&C.delayed_work) bool
 fn C.flush_delayed_work(&C.delayed_work) bool
 fn C.delayed_work_pending(&C.delayed_work) bool
 fn C.timer_pending(&C.timer_list) bool
-fn C.vinix_linuxkpi_timer_dispatch() i32
-fn C.vinix_linuxkpi_timer_active() usize
+fn C.tulpar_linuxkpi_timer_dispatch() i32
+fn C.tulpar_linuxkpi_timer_active() usize
 fn C.time_after_eq(usize,usize) bool
 fn C.vmh_host_time_advance(C.vmh_u64)
 fn C.vmh_delayed_callback(&C.work_struct)
@@ -31,7 +31,7 @@ fn C.vmh_delayed_dispatch_thread(voidptr) voidptr
 @[c_extern] __global C.WORK_BUSY_PENDING u32
 struct TimerGate { mut: timer &C.timer_list = unsafe { nil } entered u32 release u32 }
 __global delayed_gate &TimerGate = unsafe { nil }
-@[export:'vinix_linuxkpi_host_delayed_timer_gate']
+@[export:'tulpar_linuxkpi_host_delayed_timer_gate']
 pub fn timer_gate(timer &C.timer_list) { unsafe {
  gate:=&TimerGate(C.__atomic_load_n(&delayed_gate,2))
  if gate==nil || usize(gate.timer)!=usize(timer) { return }
@@ -57,7 +57,7 @@ struct DelayedTest { mut:
 @[export:'vmh_delayed_callback']
 pub fn delayed_callback(work &C.work_struct) { unsafe {
  test:=&DelayedTest(C.to_delayed_work(work))
- C.assert(C.vinix_linuxkpi_may_sleep() && usize(C.current_work())==usize(work))
+ C.assert(C.tulpar_linuxkpi_may_sleep() && usize(C.current_work())==usize(work))
  C.assert(C.__atomic_fetch_add(&test.active,u32(1),4)==0)
  C.assert(C.time_after_eq(C.jiffies,test.earliest))
  calls:=u32(C.__atomic_add_fetch(&test.calls,u32(1),4))
@@ -73,7 +73,7 @@ fn delayed_init(test &DelayedTest,wq &C.workqueue_struct) { unsafe {
  C.init_completion(&test.entered);C.init_completion(&test.gate)
 } }
 fn advance_time(ticks u64) { mut native:=C.vmh_u64{};unsafe { C.memcpy(&native,&ticks,8) };C.vmh_host_time_advance(native) }
-fn advance_delayed(ticks u32) { advance_time(ticks);C.vinix_linuxkpi_timer_dispatch() }
+fn advance_delayed(ticks u32) { advance_time(ticks);C.tulpar_linuxkpi_timer_dispatch() }
 @[cinit] __global (
  static_delayed_calls u32
  static_delayed C.delayed_work = C.__DELAYED_WORK_INITIALIZER(static_delayed,C.vmh_static_delayed_callback,u32(0))
@@ -97,14 +97,14 @@ struct DelayedOperation { mut:
 @[export:'vmh_delayed_operation_thread']
 pub fn delayed_operation_thread(argument voidptr) voidptr { unsafe {
  operation:=&DelayedOperation(argument);C.vmh_native_task=&operation.model
- flags:=if operation.irq_off { C.vinix_linuxkpi_irq_save() } else { usize(1)<<9 }
+ flags:=if operation.irq_off { C.tulpar_linuxkpi_irq_save() } else { usize(1)<<9 }
  C.vmh_timer_sync_spins=&operation.spins;C.__atomic_store_n(&operation.started,u32(1),3)
  if operation.mode==.modify { operation.result=C.mod_delayed_work(operation.wq,&operation.test.work,operation.delay) }
  if operation.mode==.cancel { operation.result=C.cancel_delayed_work(&operation.test.work) }
  if operation.mode==.cancel_sync { operation.result=C.cancel_delayed_work_sync(&operation.test.work) }
  if operation.mode==.flush { operation.result=C.flush_delayed_work(&operation.test.work) }
  C.assert(C.vmh_interrupts==!operation.irq_off && C.vmh_preempt_depth==0)
- if operation.irq_off { C.vinix_linuxkpi_irq_restore(flags) }
+ if operation.irq_off { C.tulpar_linuxkpi_irq_restore(flags) }
  C.vmh_timer_sync_spins=nil;C.__atomic_store_n(&operation.done,u32(1),3)
  C.vmh_native_task=nil;return nil
 } }
@@ -142,15 +142,15 @@ fn delayed_queue_tests(a &C.workqueue_struct,b &C.workqueue_struct) { unsafe {
  C.assert(C.queue_delayed_work(a,&test.work,0));C.assert(C.cancel_delayed_work_sync(&test.work))
  C.complete(&held.gate);C.drain_workqueue(a);C.assert(test.calls==3)
  C.assert(C.queue_delayed_work(a,&test.work,1));advance_time(1)
- C.assert(C.cancel_delayed_work(&test.work));C.assert(C.vinix_linuxkpi_timer_dispatch()==0 && test.calls==3)
+ C.assert(C.cancel_delayed_work(&test.work));C.assert(C.tulpar_linuxkpi_timer_dispatch()==0 && test.calls==3)
  C.assert(C.queue_delayed_work(a,&static_delayed,1));advance_delayed(1);C.flush_workqueue(a);C.assert(static_delayed_calls==1)
  C.assert(!C.cancel_delayed_work_sync(&static_delayed));delayed_init(&test,a)
  warnings:=C.atomic_read(&C.vmh_time_warnings)
  C.assert(!C.queue_delayed_work_on(4,a,&test.work,1));C.assert(!C.mod_delayed_work_on(4,a,&test.work,1))
  C.assert(C.atomic_read(&C.vmh_time_warnings)==warnings+2 && !C.delayed_work_pending(&test.work))
- flags:=C.vinix_linuxkpi_irq_save();C.assert(C.queue_delayed_work(a,&test.work,10))
+ flags:=C.tulpar_linuxkpi_irq_save();C.assert(C.queue_delayed_work(a,&test.work,10))
  C.assert(C.mod_delayed_work(a,&test.work,5));C.assert(C.cancel_delayed_work(&test.work))
- C.assert(!C.vmh_interrupts && C.vmh_preempt_depth==0);C.vinix_linuxkpi_irq_restore(flags)
+ C.assert(!C.vmh_interrupts && C.vmh_preempt_depth==0);C.tulpar_linuxkpi_irq_restore(flags)
 } }
 fn delayed_flush_tests(wq &C.workqueue_struct) { unsafe {
  mut test:=DelayedTest{};delayed_init(&test,wq);test.hold=true;test.limit=2;test.delay=100
@@ -169,7 +169,7 @@ fn delayed_cancel_tests(wq &C.workqueue_struct) { unsafe {
   C.assert(operation.done==0 && !C.queue_delayed_work(wq,&test.work,1))
   C.assert(C.mod_delayed_work(wq,&test.work,1));C.complete(&test.gate);delayed_operation_join(&operation)
   C.assert(operation.result==(requeue!=0) && test.calls==1 && C.work_busy(&test.work.work)==0)
-  C.assert(!C.timer_pending(&test.work.timer) && C.vinix_linuxkpi_timer_active()==0)
+  C.assert(!C.timer_pending(&test.work.timer) && C.tulpar_linuxkpi_timer_active()==0)
   C.assert(C.queue_delayed_work(wq,&test.work,1));advance_delayed(1);C.flush_workqueue(wq)
   C.assert(test.calls==2 && !C.cancel_delayed_work_sync(&test.work))
  }
@@ -178,7 +178,7 @@ struct DelayedDispatch { mut: model C.native_task_model result i32 }
 @[export:'vmh_delayed_dispatch_thread']
 pub fn delayed_dispatch_thread(argument voidptr) voidptr { unsafe {
  dispatch:=&DelayedDispatch(argument);C.vmh_native_task=&dispatch.model
- dispatch.result=C.vinix_linuxkpi_timer_dispatch();C.vmh_native_task=nil;return nil
+ dispatch.result=C.tulpar_linuxkpi_timer_dispatch();C.vmh_native_task=nil;return nil
 } }
 fn delayed_transfer_tests(a &C.workqueue_struct,b &C.workqueue_struct) { unsafe {
  for mode:=u32(0);mode<4;mode++ {
@@ -199,7 +199,7 @@ fn delayed_transfer_tests(a &C.workqueue_struct,b &C.workqueue_struct) { unsafe 
    C.assert(usize(test.work.wq)==usize(b) && C.timer_pending(&test.work.timer))
    advance_delayed(9);C.flush_workqueue(b);C.assert(test.calls==0)
    advance_delayed(1);C.flush_workqueue(b);C.assert(test.calls==1)
-  } else { C.assert(!C.delayed_work_pending(&test.work) && C.vinix_linuxkpi_timer_active()==0) }
+  } else { C.assert(!C.delayed_work_pending(&test.work) && C.tulpar_linuxkpi_timer_active()==0) }
   if mode!=3 { C.complete(&held.gate) };C.drain_workqueue(a);C.assert(!C.cancel_delayed_work_sync(&test.work))
  }
 } }
@@ -208,12 +208,12 @@ struct DelayedProducer { mut: model C.native_task_model test &DelayedTest = unsa
 pub fn delayed_producer_thread(argument voidptr) voidptr { unsafe {
  producer:=&DelayedProducer(argument);C.vmh_native_task=&producer.model
  for i:=u32(0);i<500;i++ {
-  flags:=if i&1!=0 { C.vinix_linuxkpi_irq_save() } else { usize(1)<<9 }
+  flags:=if i&1!=0 { C.tulpar_linuxkpi_irq_save() } else { usize(1)<<9 }
   if i%3==0 { C.queue_delayed_work(producer.wq,&producer.test.work,usize(i&3)) }
   if i%3==1 { C.mod_delayed_work(producer.wq,&producer.test.work,usize(i&3)) }
   if i%3==2 { C.cancel_delayed_work(&producer.test.work) }
   C.assert(C.vmh_interrupts==(i&1==0) && C.vmh_preempt_depth==0)
-  if i&1!=0 { C.vinix_linuxkpi_irq_restore(flags) };C.sched_yield()
+  if i&1!=0 { C.tulpar_linuxkpi_irq_restore(flags) };C.sched_yield()
  }
  C.__atomic_store_n(&producer.done,u32(1),3);C.vmh_native_task=nil;return nil
 } }
@@ -223,7 +223,7 @@ fn delayed_race_tests(a &C.workqueue_struct,b &C.workqueue_struct) { unsafe {
  for { advance_delayed(1);mut finished:=u32(0);for i:=u32(0);i<4;i++ { finished+=u32(C.__atomic_load_n(&producers[i].done,2)) };C.sched_yield();if finished==4 { break } }
  for i:=u32(0);i<4;i++ { C.assert(C.pthread_join(threads[i],nil)==0);C.vmh_sync_model_destroy(&producers[i].model) }
  C.cancel_delayed_work_sync(&shared.work);C.flush_workqueue(a);C.flush_workqueue(b)
- C.assert(C.work_busy(&shared.work.work)==0 && shared.active==0 && C.vinix_linuxkpi_timer_active()==0)
+ C.assert(C.work_busy(&shared.work.work)==0 && shared.active==0 && C.tulpar_linuxkpi_timer_active()==0)
  calls:=shared.calls;C.assert(C.queue_delayed_work(b,&shared.work,1));advance_delayed(1);C.flush_workqueue(b)
  C.assert(shared.calls==calls+1 && !C.cancel_delayed_work_sync(&shared.work))
 } }
@@ -234,7 +234,7 @@ pub fn delayed_work_tests() { unsafe {
  a:=C.alloc_ordered_workqueue(c'delayed-a',u32(0));b:=C.alloc_ordered_workqueue(c'delayed-b',u32(0));C.assert(a!=nil && b!=nil)
  delayed_queue_tests(a,b);delayed_flush_tests(a);delayed_cancel_tests(a);delayed_transfer_tests(a,b);delayed_race_tests(a,b)
  mut freed:=u32(0)
- for i:=u32(0);i<200;i++ { test:=&DelayedTest(C.kzalloc(sizeof(DelayedTest),C.GFP_KERNEL));C.assert(test!=nil);delayed_init(test,a);test.free_self=true;set_delayed_freed(test,&freed);C.assert(C.queue_delayed_work(a,&test.work,1));advance_delayed(1);C.flush_workqueue(a);C.assert(C.vinix_linuxkpi_timer_active()==0) }
+ for i:=u32(0);i<200;i++ { test:=&DelayedTest(C.kzalloc(sizeof(DelayedTest),C.GFP_KERNEL));C.assert(test!=nil);delayed_init(test,a);test.free_self=true;set_delayed_freed(test,&freed);C.assert(C.queue_delayed_work(a,&test.work,1));advance_delayed(1);C.flush_workqueue(a);C.assert(C.tulpar_linuxkpi_timer_active()==0) }
  C.assert(freed==200);C.destroy_workqueue(a);C.destroy_workqueue(b)
  C.assert(C.vmh_live_pages==before && C.atomic_read(&work_workers)==0)
  C.vmh_native_task=nil;C.vmh_sync_model_destroy(&parent)

@@ -17,7 +17,7 @@ fn verify_navigation_frame(complete bool) string {
 }
 
 fn software_verify_navigation_service_fixture(args []string) !bool {
-	mode := os.getenv('VINIX_SOFTWARE_VERIFY_NAVIGATION')
+	mode := os.getenv('TULPAR_SOFTWARE_VERIFY_NAVIGATION')
 	if mode == '' || args.len < 2 { return false }
 	if mode.starts_with('protected-') && args[1] in ['update', 'apply', 'run']! {
 		if args[1] == 'update' { assert os.args[1..] == ['--progress', 'update'] }
@@ -66,13 +66,13 @@ fn wait_for_verify_navigation_output(mut app SoftwareApp, mode string) {
 }
 
 fn check_software_verify_navigation() ! {
-	defer { os.unsetenv('VINIX_SOFTWARE_VERIFY_NAVIGATION') }
+	defer { os.unsetenv('TULPAR_SOFTWARE_VERIFY_NAVIGATION') }
 	mut app := verify_navigation_app(true)
 	defer { app.close_app() }
 	for mode in ['partial', 'live', 'complete']! {
 		for action in ['software.verify.stop', 'software.cancel', 'escape']! {
 			app.focus = true; app.select_all = true
-			os.setenv('VINIX_SOFTWARE_VERIFY_NAVIGATION', mode, true); app.handle('software.verify')!
+			os.setenv('TULPAR_SOFTWARE_VERIFY_NAVIGATION', mode, true); app.handle('software.verify')!
 			pid := app.worker.pid
 			wait_for_verify_navigation_output(mut app, mode)
 			assert app.verification_running() && app.prepare_close() && !app.admin_prompt && !app.focus && !app.select_all
@@ -104,7 +104,7 @@ fn check_software_verify_navigation() ! {
 		}
 	}
 	for mode in ['failed', 'healthy']! {
-		os.setenv('VINIX_SOFTWARE_VERIFY_NAVIGATION', mode, true); app.handle('software.verify')!
+		os.setenv('TULPAR_SOFTWARE_VERIFY_NAVIGATION', mode, true); app.handle('software.verify')!
 		wait_for_verify_navigation_output(mut app, mode)
 		assert app.status.contains('waiting for the service to exit') && app.worker != unsafe { nil }
 		app.worker.stdin_write('x'); wait_for_software(mut app)
@@ -119,11 +119,11 @@ fn check_software_verify_navigation() ! {
 			app.stop_verification(); assert app.status.contains('files and launchers verified')
 		}
 	}
-	os.unsetenv('VINIX_SOFTWARE_VERIFY_NAVIGATION')
+	os.unsetenv('TULPAR_SOFTWARE_VERIFY_NAVIGATION')
 	for operation in ['update', 'apply', 'run']! {
 		mut protected := verify_navigation_app(false)
 		if operation == 'apply' { protected.begin_review('install', ['editor']); wait_for_software(mut protected) }
-		os.setenv('VINIX_SOFTWARE_VERIFY_NAVIGATION', 'protected-' + operation, true)
+		os.setenv('TULPAR_SOFTWARE_VERIFY_NAVIGATION', 'protected-' + operation, true)
 		if operation == 'apply' { protected.handle('software.confirm')! }
 		else if operation == 'run' { protected.start(['run', 'editor'], false); protected.worker_run = true }
 		else { protected.handle('software.refresh')! }
@@ -137,7 +137,7 @@ fn check_software_verify_navigation() ! {
 		protected.handle('software.verify.stop')!; protected.handle('software.cancel')!; protected.key_input('\x1b'); protected.stop_verification()
 		assert protected.worker.pid == pid && C.kill(pid, 0) == 0
 		protected.worker.stdin_write('x'); wait_for_software(mut protected); protected.close_app()
-		os.unsetenv('VINIX_SOFTWARE_VERIFY_NAVIGATION')
+		os.unsetenv('TULPAR_SOFTWARE_VERIFY_NAVIGATION')
 	}
 	println('Software verification navigation: partial/live/complete-before-exit Stop/Cancel/Escape, pending completion despite human success text, kill/reap and buffer retirement, fresh retry and late failure, compact diagnostics, frozen catalog state and protected verify-phase transactions/launches passed')
 }
@@ -151,7 +151,7 @@ fn check_software_verify_navigation_memory() ! {
 		mut app := verify_navigation_app(true)
 		defer { app.close_app() }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				// Allocate an unstarted descriptor: never launch a process in this
 				// allocation measurement. Functional barriers above use real children.
@@ -168,7 +168,7 @@ fn check_software_verify_navigation_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end(); assert kept == 0, 'verification navigation retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'verification navigation retained ${kept} bytes'
 		println('Software verification navigation: 1000 fragmented/live/complete/wait/full/compact/stop/failure/descriptor-retirement cycles retain zero tracked bytes')
 	}
 }

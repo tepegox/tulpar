@@ -28,7 +28,7 @@ retains the previous saved-byte calculation and decimal rounding.
 v -cc cc test build-support/tarstream
 v -cc cc test build-support/tarlink
 v -cc cc -o /tmp/link-duplicate-files build-support/link-duplicate-files.v
-VINIX_TARLINK_TOOL=/tmp/link-duplicate-files v -cc cc test build-support/tarlink
+TULPAR_TARLINK_TOOL=/tmp/link-duplicate-files v -cc cc test build-support/tarlink
 ```
 
 Native checks cover all eligible prefixes, excluded paths/small files, owner

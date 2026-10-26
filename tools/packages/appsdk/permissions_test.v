@@ -13,12 +13,12 @@ fn test_permission_sets_support_every_subset_and_keep_context_environment_canoni
 			assert valid_permissions(values)
 			context := Context{id: 'app', version: '1.0.0', architecture: architecture, kind: 'native', generation: 1,
 				repository: 'publisher', public_key: key, sequence: 1,
-				app_directory: '/var/lib/vinix-packages/generations/1/apps/app', data_directory: '/home/user/data',
-				runtime_version: '1.0.0', runtime_directory: '/var/lib/vinix-packages/generations/1/apps/app', permissions: values}
+				app_directory: '/var/lib/tulpar-packages/generations/1/apps/app', data_directory: '/home/user/data',
+				runtime_version: '1.0.0', runtime_directory: '/var/lib/tulpar-packages/generations/1/apps/app', permissions: values}
 			mut environment := context.environment()!
 			mut sorted := values.clone(); sorted.sort()
 			text := sorted.join(' ')
-			expected := 'VINIX_APP_PERMISSIONS=' + text
+			expected := 'TULPAR_APP_PERMISSIONS=' + text
 			assert expected in environment
 			free_values(mut environment)
 			free_values(mut values)

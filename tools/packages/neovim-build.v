@@ -227,7 +227,7 @@ fn (b Build) prepared(roots string) ! {
 	os.mkdir(root, mode: 0o700)!
 	copy_payload(b.prefix + '/bin/nvim', root + '/bin/nvim', true)!
 	for name in ['neovim-runner'] {
-		b.adapter(name, b.repository + '/tools/packages/' + name + '.v', root + '/bin/vinix-' + name)!
+		b.adapter(name, b.repository + '/tools/packages/' + name + '.v', root + '/bin/tulpar-' + name)!
 		copy_payload(b.output + '/adapters/' + name + '/' + name + '.v', root + '/sources/' + name + '.v', false)!
 	}
 	// Materialize only ordinary data. The signed import never depends on
@@ -243,8 +243,8 @@ fn (b Build) prepared(roots string) ! {
 		copy_payload(b.sources[name] + '/' + license_path, root + '/licenses/' + name + '-' + label, false)!
 	}
 	for name, path in {'musl': b.repository + '/build-support/musl/COPYRIGHT',
-		'vinix': b.repository + '/LICENSE', 'v': b.v_license} {
-		copy_payload(path, root + '/licenses/' + name + '-' + if name == 'vinix' { 'COPYING' } else { 'COPYRIGHT' }, false)!
+		'tulpar': b.repository + '/LICENSE', 'v': b.v_license} {
+		copy_payload(path, root + '/licenses/' + name + '-' + if name == 'tulpar' { 'COPYING' } else { 'COPYRIGHT' }, false)!
 	}
 	for source in sources() { copy_payload(b.archives[source.name], root + '/sources/' + source.name + '.tar.gz', false)! }
 	for notice in runtime_notices() { copy_payload(b.archives[notice.name], root + '/licenses/' + notice.name, false)! }
@@ -292,8 +292,8 @@ fn build(root string, output string, architecture string, archives map[string]st
 		'set(CMAKE_FIND_ROOT_PATH "' + output + '/prefix;' + sysroot + '")\n' +
 		'set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)\nset(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)\n' +
 		'set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)\nset(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)\n')!
-	v := os.real_path(os.getenv_opt('VINIX_NEOVIM_V') or { return error('VINIX_NEOVIM_V must name the pinned V compiler') })
-	v_license := os.real_path(os.getenv_opt('VINIX_NEOVIM_V_LICENSE') or { os.dir(v) + '/LICENSE' })
+	v := os.real_path(os.getenv_opt('TULPAR_NEOVIM_V') or { return error('TULPAR_NEOVIM_V must name the pinned V compiler') })
+	v_license := os.real_path(os.getenv_opt('TULPAR_NEOVIM_V_LICENSE') or { os.dir(v) + '/LICENSE' })
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	b := Build{repository: repository, arch: architecture, output: output, prefix: output + '/prefix', sysroot: sysroot,
 		gcc: gcc, toolchain: toolchain, sources: inputs, archives: archives, v: v, v_license: v_license}

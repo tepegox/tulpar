@@ -30,7 +30,7 @@ fn stack_mix64(value u64) u64 {
 // The declarations in stack_protector.h give this body and its ABI wrapper
 // no_stack_protector. Changing the guard under a protected frame would make
 // that frame's own return fail. Only the boot CPU calls it, before SMP starts.
-@[export: 'vinix_stack_guard_init']
+@[export: 'tulpar_stack_guard_init']
 fn stack_guard_init() {
 	mut guard := stack_boot_entropy()
 	// Borrow the address of the stack local without moving it to the heap.

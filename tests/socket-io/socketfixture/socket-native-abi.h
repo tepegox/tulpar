@@ -1,6 +1,6 @@
 /* Native libc/socket ABI declarations; the independent workload is V. */
-#ifndef VINIX_SOCKET_IO_NATIVE_ABI_H
-#define VINIX_SOCKET_IO_NATIVE_ABI_H
+#ifndef TULPAR_SOCKET_IO_NATIVE_ABI_H
+#define TULPAR_SOCKET_IO_NATIVE_ABI_H
 #include <errno.h>
 #include <fcntl.h>
 #include <pthread.h>

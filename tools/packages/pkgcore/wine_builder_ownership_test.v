@@ -15,9 +15,9 @@ struct WineBuilderLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn builder_selected(name string) bool {
@@ -80,7 +80,7 @@ fn owner_fixture_recipe(architecture string, application bool) RootRecipe {
 }
 
 fn owner_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-wine-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-wine-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64'] {
 		root := work + '/roots/' + architecture
 		for directory in ['app', 'runtime', 'licenses'] { os.mkdir_all(root + '/' + directory)! }
@@ -112,8 +112,8 @@ fn builder_replace(path string, saved string) ! {
 }
 
 fn builder_checkpoint(phase string, stage string) ! {
-	mode := os.getenv('VINIX_WINE_OWNER_MODE'); defer { unsafe { mode.free() } }
-	if phase == 'created' { assert C.setenv(c'VINIX_WINE_OWNER_STAGE', stage.str, 1) == 0 }
+	mode := os.getenv('TULPAR_WINE_OWNER_MODE'); defer { unsafe { mode.free() } }
+	if phase == 'created' { assert C.setenv(c'TULPAR_WINE_OWNER_STAGE', stage.str, 1) == 0 }
 	if mode == phase { return error('injected Wine builder checkpoint refusal') }
 	if mode.starts_with('packed-') && phase == 'packed' {
 		index := int(mode[7] - `1`)
@@ -123,13 +123,13 @@ fn builder_checkpoint(phase string, stage string) ! {
 		if publisher_entry_exists(path) { return error('injected Wine builder checkpoint refusal') }
 	}
 	if phase == 'created' && mode in ['root-replaced', 'inventory-replaced', 'lock-replaced']! {
-		saved := os.getenv('VINIX_WINE_OWNER_SAVED'); defer { unsafe { saved.free() } }
+		saved := os.getenv('TULPAR_WINE_OWNER_SAVED'); defer { unsafe { saved.free() } }
 		child := if mode == 'inventory-replaced' { 'inventory' } else { 'lock' }
 		path := if mode == 'root-replaced' { stage.clone() } else { stage + '/' + child }
 		defer { unsafe { path.free() } }; builder_replace(path, saved)!
 	}
 	if phase == 'created' && mode.starts_with('import-') {
-		roots := os.getenv('VINIX_WINE_OWNER_ROOTS'); defer { unsafe { roots.free() } }
+		roots := os.getenv('TULPAR_WINE_OWNER_ROOTS'); defer { unsafe { roots.free() } }
 		child := if mode == 'import-pe' { 'app/program.exe' } else if mode == 'import-elf' || mode == 'import-mode' { 'runtime/runner' } else { 'licenses/runtime-LICENSE.txt' }
 		path := roots + '/x86_64/' + child; defer { unsafe { path.free() } }
 		if mode in ['import-pe', 'import-elf']! {
@@ -140,7 +140,7 @@ fn builder_checkpoint(phase string, stage string) ! {
 		else { assert C.unlinkat(C.AT_FDCWD, path.str, 0) == 0; assert C.mkdir(path.str, 0o700) == 0 }
 	}
 	if phase == 'created' && mode == 'changed-template' {
-		root := os.getenv('VINIX_WINE_OWNER_RECIPES'); path := root + '/x86_64/application.json'
+		root := os.getenv('TULPAR_WINE_OWNER_RECIPES'); path := root + '/x86_64/application.json'
 		defer { unsafe { root.free(); path.free() } }; builder_write(path, '{}')!
 	}
 
@@ -148,13 +148,13 @@ fn builder_checkpoint(phase string, stage string) ! {
 		path := stage + '/lock/catalog.json'; defer { unsafe { path.free() } }; builder_write(path, '{}')!
 	}
 	if phase == 'ready' && mode == 'raced-target' {
-		path := os.getenv('VINIX_WINE_OWNER_TARGET'); defer { unsafe { path.free() } }; assert C.mkdir(path.str, 0o700) == 0
+		path := os.getenv('TULPAR_WINE_OWNER_TARGET'); defer { unsafe { path.free() } }; assert C.mkdir(path.str, 0o700) == 0
 		keep := path + '/keep'; defer { unsafe { keep.free() } }; builder_write(keep, 'preserved replacement')!
 	}
 }
 
 fn builder_space(path string) !u64 {
-	mode := os.getenv('VINIX_WINE_OWNER_MODE'); parent := os.getenv('VINIX_WINE_OWNER_PARENT')
+	mode := os.getenv('TULPAR_WINE_OWNER_MODE'); parent := os.getenv('TULPAR_WINE_OWNER_PARENT')
 	defer { unsafe { mode.free(); parent.free() } }
 	if mode == 'space-error' { return error('injected Wine space query refusal') }
 	if (mode == 'no-output-space' && path == parent) || (mode == 'no-temp-space' && path != parent) { return 0 }
@@ -162,10 +162,10 @@ fn builder_space(path string) !u64 {
 }
 
 fn builder_flush(fd int) int {
-	mode := os.getenv('VINIX_WINE_OWNER_MODE'); defer { unsafe { mode.free() } }
+	mode := os.getenv('TULPAR_WINE_OWNER_MODE'); defer { unsafe { mode.free() } }
 	if mode == 'flush' { return -1 }
 	if mode == 'cleanup' {
-		stage := os.getenv('VINIX_WINE_OWNER_STAGE'); saved := os.getenv('VINIX_WINE_OWNER_SAVED')
+		stage := os.getenv('TULPAR_WINE_OWNER_STAGE'); saved := os.getenv('TULPAR_WINE_OWNER_SAVED')
 		path := stage + '/inventory'; defer { unsafe { stage.free(); saved.free(); path.free() } }
 		builder_replace(path, saved) or { panic(err) }
 	}
@@ -178,7 +178,7 @@ fn builder_remove(path string) ! {
 
 fn builder_reset(fixture string, target string) ! {
 	builder_remove(target)!; builder_remove(fixture + '/saved')!
-	for name in os.ls(fixture)! { if name.starts_with('.vinix-wine-profile-') { os.rmdir_all(fixture + '/' + name)! } }
+	for name in os.ls(fixture)! { if name.starts_with('.tulpar-wine-profile-') { os.rmdir_all(fixture + '/' + name)! } }
 }
 
 fn builder_prepare(mode string, fixture string) ! {
@@ -248,7 +248,7 @@ fn builder_attempt(mode string, recipes string, roots string, target string) {
 }
 
 fn test_complete_wine_builder_retires_success_partial_import_and_publication_refusal_storage() {
-	defer { for key in ['MODE', 'ROOTS', 'TARGET', 'PARENT', 'STAGE', 'SAVED', 'RECIPES']! { os.unsetenv('VINIX_WINE_OWNER_' + key) } }
+	defer { for key in ['MODE', 'ROOTS', 'TARGET', 'PARENT', 'STAGE', 'SAVED', 'RECIPES']! { os.unsetenv('TULPAR_WINE_OWNER_' + key) } }
 	for mode in ['complete', 'nested', 'missing-recipes', 'missing-recipe', 'invalid-json', 'invalid-schema', 'wrong-architecture', 'pinned-template', 'firmware', 'app-kind', 'unbounded-runtime', 'missing-selector', 'runtime-grants', 'host-mismatch', 'runtime-mismatch',
 		'missing-root', 'missing-architecture', 'wrong-pe', 'wrong-target', 'wrong-mode', 'missing-notice', 'empty-notice', 'notice-directory', 'no-output-space', 'no-temp-space', 'space-error', 'created',
 		'packed-1', 'packed-2', 'packed-3', 'packed-4', 'ready', 'import-pe', 'import-elf', 'import-mode', 'import-notice', 'import-directory', 'changed-template', 'changed-lock', 'occupied', 'raced-target', 'flush', 'cleanup', 'root-replaced', 'inventory-replaced', 'lock-replaced']! {
@@ -257,10 +257,10 @@ fn test_complete_wine_builder_retires_success_partial_import_and_publication_ref
 		recipes := fixture + '/recipes'; roots := fixture + '/roots'; target := fixture + if mode == 'nested' { '/new/parent/lock' } else { '/lock' }
 		// Initialize JSON metadata outside the complete-call measurement.
 		mut warm := wine_catalog(recipes, roots, target)!; $if !wine_owner_baseline ? { warm.close(); warm.close() }; builder_remove(target)!
-		os.setenv('VINIX_WINE_OWNER_MODE', mode, true); os.setenv('VINIX_WINE_OWNER_ROOTS', roots, true)
-		os.setenv('VINIX_WINE_OWNER_TARGET', target, true); os.setenv('VINIX_WINE_OWNER_PARENT', os.dir(target), true)
-		os.setenv('VINIX_WINE_OWNER_RECIPES', recipes, true)
-		os.setenv('VINIX_WINE_OWNER_SAVED', fixture + '/saved', true); builder_prepare(mode, fixture)!
+		os.setenv('TULPAR_WINE_OWNER_MODE', mode, true); os.setenv('TULPAR_WINE_OWNER_ROOTS', roots, true)
+		os.setenv('TULPAR_WINE_OWNER_TARGET', target, true); os.setenv('TULPAR_WINE_OWNER_PARENT', os.dir(target), true)
+		os.setenv('TULPAR_WINE_OWNER_RECIPES', recipes, true)
+		os.setenv('TULPAR_WINE_OWNER_SAVED', fixture + '/saved', true); builder_prepare(mode, fixture)!
 		mut original := WineBuilderLimit{}; assert C.getrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		limit := WineBuilderLimit{ current: 32, maximum: original.maximum }; assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 		before := builder_descriptors(); mut maximum := u64(0); mut records := u32(0)
@@ -269,10 +269,10 @@ fn test_complete_wine_builder_retires_success_partial_import_and_publication_ref
 			if mode == 'nested' { builder_remove(fixture + '/new')! }
 			if mode == 'occupied' { os.write_file(target, 'preserved replacement')! }
 			if mode.starts_with('import-') || mode == 'changed-template' { builder_restore(fixture)! }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			builder_attempt(mode, recipes, roots, target)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if count > records { records = count }
 			}
 			assert builder_descriptors() == before
@@ -282,17 +282,17 @@ fn test_complete_wine_builder_retires_success_partial_import_and_publication_ref
 			if mode == 'occupied' { assert os.read_file(target)! == 'preserved replacement' }
 			if mode == 'raced-target' { assert os.read_file(target + '/keep')! == 'preserved replacement' }
 			if mode in ['cleanup', 'root-replaced', 'inventory-replaced', 'lock-replaced']! {
-				stage := os.getenv('VINIX_WINE_OWNER_STAGE'); saved := fixture + '/saved'; assert os.is_dir(saved)
+				stage := os.getenv('TULPAR_WINE_OWNER_STAGE'); saved := fixture + '/saved'; assert os.is_dir(saved)
 				path := if mode == 'root-replaced' { stage.clone() } else { stage + '/' + if mode == 'lock-replaced' { 'lock' } else { 'inventory' } }
 				assert os.read_file(path + '/keep')! == 'preserved replacement'
-			} else { assert os.ls(fixture)!.all(!it.starts_with('.vinix-wine-profile-')) }
+			} else { assert os.ls(fixture)!.all(!it.starts_with('.tulpar-wine-profile-')) }
 		}
 		assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		$if track_heap ? {
 			println('WINE OWNER case=' + mode + ' retained=' + maximum.str() + ' allocations=' + records.str())
 			$if !wine_owner_baseline ? { assert maximum == 0 && records == 0 }
 		}
-		builder_reset(fixture, target)!; builder_restore(fixture)!; os.unsetenv('VINIX_WINE_OWNER_MODE')
+		builder_reset(fixture, target)!; builder_restore(fixture)!; os.unsetenv('TULPAR_WINE_OWNER_MODE')
 		mut retried := wine_catalog(recipes, roots, target)!; $if !wine_owner_baseline ? { retried.close(); retried.close() }
 		assert index_digest(os.read_file(target + '/catalog.json')!) == '90db70b6721ee1375480ecdefb080c3d51d5cb3251b419ad942fc305065d3f35'
 		assert os.read_file(roots + '/aarch64/licenses/runtime-LICENSE.txt')! == 'Fixture runtime license.'

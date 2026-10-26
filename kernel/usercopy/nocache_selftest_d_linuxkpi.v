@@ -33,7 +33,7 @@ fn nocache_test_source_unchanged(alias voidptr, start u64) bool {
 // prefix remains a sentinel, including both destination alignment guards.
 fn nocache_test_case(pagemap &memory.Pagemap, source u64, length u64,
 	alignment u64, prefix u64, pattern_offset u64) bool {
-	buffer := C.vinix_stack_alloc(uint(nocache_test_buffer_size))
+	buffer := C.tulpar_stack_alloc(uint(nocache_test_buffer_size))
 	unsafe { C.memset(buffer, 0xcc, nocache_test_buffer_size) }
 	displacement := u64(16) + alignment
 	if length > nocache_test_buffer_size - displacement { return false }
@@ -56,22 +56,22 @@ fn nocache_test_case(pagemap &memory.Pagemap, source u64, length u64,
 
 fn nocache_test_context(pagemap &memory.Pagemap, source u64, length u64,
 	prefix u64, pattern_offset u64, mode int) bool {
-	flags := C.vinix_linuxkpi_irq_save()
-	if mode & 1 == 0 { C.vinix_linuxkpi_irq_restore(flags) }
-	if mode & 2 != 0 { C.vinix_linuxkpi_preempt_disable() }
+	flags := C.tulpar_linuxkpi_irq_save()
+	if mode & 1 == 0 { C.tulpar_linuxkpi_irq_restore(flags) }
+	if mode & 2 != 0 { C.tulpar_linuxkpi_preempt_disable() }
 	if mode & 4 != 0 { C.pagefault_disable(); C.pagefault_disable() }
 	defer {
 		if mode & 4 != 0 { C.pagefault_enable(); C.pagefault_enable() }
-		if mode & 2 != 0 { C.vinix_linuxkpi_preempt_enable() }
-		if mode & 1 != 0 { C.vinix_linuxkpi_irq_restore(flags) }
+		if mode & 2 != 0 { C.tulpar_linuxkpi_preempt_enable() }
+		if mode & 1 != 0 { C.tulpar_linuxkpi_irq_restore(flags) }
 	}
 	depth := if mode & 4 != 0 { u32(2) } else { u32(0) }
-	preempt := C.vinix_linuxkpi_preempt_count()
+	preempt := C.tulpar_linuxkpi_preempt_count()
 	irq_enabled := mode & 1 == 0
 	return fault_test_depth(depth) && fault_test_irq_state(irq_enabled)
 		&& nocache_test_case(pagemap, source, length, 3, prefix, pattern_offset)
 		&& fault_test_depth(depth) && fault_test_irq_state(irq_enabled)
-		&& scalar_test_require(C.vinix_linuxkpi_preempt_count() == preempt,
+		&& scalar_test_require(C.tulpar_linuxkpi_preempt_count() == preempt,
 			c'nocache preserves the actual native preemption count')
 }
 

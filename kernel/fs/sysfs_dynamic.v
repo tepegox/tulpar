@@ -6,7 +6,7 @@
 // A device, a driver, a battery or a thermal zone is described where Linux
 // describes it -- /sys/bus/pci/devices, /sys/class/power_supply/BAT0,
 // /sys/power/state -- so that a program which already reads those files needs
-// nothing written for Vinix. The module that owns the thing publishes it with
+// nothing written for Tulpar. The module that owns the thing publishes it with
 // the calls below; nothing in here knows what any of the files mean.
 //
 // An attribute is a file whose text its owner makes when it is read (`show`)
@@ -107,7 +107,7 @@ fn (mut this SysFSResource) attribute_text() ?string {
 	}
 	// On the stack: a builder made as a local value is moved to the heap when
 	// it is handed to the owner, and left there by every read.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(128) }
 	if this.show != unsafe { nil } {
 		this.show(this.context, mut text)

@@ -18,10 +18,10 @@ fn C.waitpid(i32, &i32, i32) i32
 fn C.WIFEXITED(i32) bool
 fn C.WEXITSTATUS(i32) i32
 fn C.puts(&char) i32
-fn C.vinix_stack_guard_init()
+fn C.tulpar_stack_guard_init()
 
 @[noreturn]
-@[export: 'vinix_stack_test_panic']
+@[export: 'tulpar_stack_test_panic']
 pub fn panic(message &char) {
 	C.assert(unsafe { C.strcmp(message, c'stack protector: a stack frame was overwritten past its buffers') == 0 })
 	C._Exit(99)
@@ -46,7 +46,7 @@ pub fn run() i32 {
 		C.assert(C.__stack_chk_guard == usize(0x595e9fbd94fda700))
 		for i in u32(0) .. u32(1000) {
 			old := C.__stack_chk_guard
-			C.vinix_stack_guard_init()
+			C.tulpar_stack_guard_init()
 			C.assert(C.__stack_chk_guard != 0 && C.__stack_chk_guard != old && (C.__stack_chk_guard & 0xff) == 0)
 			mut expected := u32(0)
 			for j in u32(0) .. u32(64) { expected += u8(i + j) }

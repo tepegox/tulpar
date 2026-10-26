@@ -82,7 +82,7 @@ V=/path/to/reviewed/v /tmp/pack-ownership-check /build/new-pack-owner-host
 
 v -path '@vlib|@vmodules|.|tools/accounts|tests/hardware-platform' \
   -o /tmp/pack-ownership-runtime-check tests/packages/pack-ownership-runtime-check.v
-VINIX_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
+TULPAR_HWTEST_TCG=1 V=/path/to/reviewed/v VFLAGS=-nocache \
   /tmp/pack-ownership-runtime-check --arch aarch64 --kernel /build/aarch64-kernel \
   --state-dir /build/new-pack-owner-arm
 ```

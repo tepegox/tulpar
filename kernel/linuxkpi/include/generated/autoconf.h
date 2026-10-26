@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* This compatibility build has an explicit, fixed x86-64 target. */
-#ifndef VINIX_LINUX_AUTOCONF_H
-#define VINIX_LINUX_AUTOCONF_H
+#ifndef TULPAR_LINUX_AUTOCONF_H
+#define TULPAR_LINUX_AUTOCONF_H
 #define CONFIG_64BIT 1
 #define CONFIG_X86 1
 #define CONFIG_X86_64 1
@@ -53,7 +53,7 @@
 #define CONFIG_HZ 1000
 /* Pinned i915 Kconfig.profile default; no fence execution is implied. */
 #define CONFIG_DRM_I915_FENCE_TIMEOUT 10000
-#if defined(VINIX_LINUXKPI_HOST_TEST) && defined(__APPLE__)
+#if defined(TULPAR_LINUXKPI_HOST_TEST) && defined(__APPLE__)
 /* Mach-O has no ELF .data..cacheline_aligned section. Keep its alignment. */
 #define __cacheline_aligned __attribute__((__aligned__(64)))
 #endif

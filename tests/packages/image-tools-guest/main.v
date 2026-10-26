@@ -17,10 +17,10 @@ fn child(path string, args []string, expected int, marker string) ! {
 
 fn check() ! {
 	child('/usr/share/package-fixtures/image-tools', [], 0, 'IMAGE TOOLS 58')!
-	child('/usr/bin/vinix-package', ['--help'], 0, 'usage: vinix-package')!
-	child('/usr/bin/vinix-package', ['--json', 'status'], 0, '"architecture":')!
-	child('/usr/sbin/vinix-session', [], 2, 'usage: vinix-session')!
-	child('/usr/libexec/vinix/vinix-linux-runner', [], 126, 'usage: vinix-linux-runner')!
+	child('/usr/bin/tulpar-package', ['--help'], 0, 'usage: tulpar-package')!
+	child('/usr/bin/tulpar-package', ['--json', 'status'], 0, '"architecture":')!
+	child('/usr/sbin/tulpar-session', [], 2, 'usage: tulpar-session')!
+	child('/usr/libexec/tulpar/tulpar-linux-runner', [], 126, 'usage: tulpar-linux-runner')!
 	println('IMAGE TOOLS native production-staged package/session/Linux-runner execution PASS')
 	before := os.read_file('/proc/kernel-resources')!; println('IMAGE TOOLS resources before grace:\n' + before)
 	C.sleep(6)

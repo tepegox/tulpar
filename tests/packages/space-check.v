@@ -14,14 +14,14 @@ fn invoke(arguments []string) ! {
 fn check() ! {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	v := os.find_abs_path_of_executable(os.getenv_opt('V') or { 'v' })!
-	parent := os.getenv_opt('VINIX_PACKAGE_SPACE_WORK') or { os.temp_dir() }
-	work := parent + '/vinix-space-' + os.getpid().str()
+	parent := os.getenv_opt('TULPAR_PACKAGE_SPACE_WORK') or { os.temp_dir() }
+	work := parent + '/tulpar-space-' + os.getpid().str()
 	os.mkdir_all(work)!
 	defer { os.rmdir_all(work) or {} }
 	header := work + '/statvfs-fixture.h'
 	// Include guards keep later production includes from changing the ABI. A
 	// function-like macro leaves uses of `struct statvfs` untouched.
-	os.write_file(header, '#include <sys/statvfs.h>\n#define statvfs(...) vinix_package_fixture_statvfs(__VA_ARGS__)\n')!
+	os.write_file(header, '#include <sys/statvfs.h>\n#define statvfs(...) tulpar_package_fixture_statvfs(__VA_ARGS__)\n')!
 	mut flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree',
 		'-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts',
 		'-cflags', '-include ' + header]

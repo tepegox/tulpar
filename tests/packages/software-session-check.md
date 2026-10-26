@@ -1,12 +1,12 @@
 # Ordinary-account broker and framebuffer transport
 
 The session broker and external framebuffer clients share the numeric runtime
-`/run/user/<uid>/vinix-session.<uid>` for ordinary accounts. The account service
+`/run/user/<uid>/tulpar-session.<uid>` for ordinary accounts. The account service
 prepares `/run/user/<uid>` before dropping privileges. Both transports validate
 the private leaf and its trusted parent chain with `lstat`, refuse symlinks and
 unsafe ownership or permissions, and ignore an inherited `XDG_RUNTIME_DIR`.
-Root retains `/run/vinix-session.0`; explicit `VINIX_SESSION_RUNTIME` and
-`VINIX_WINDOW_SOCKET` development overrides retain their existing behavior.
+Root retains `/run/tulpar-session.0`; explicit `TULPAR_SESSION_RUNTIME` and
+`TULPAR_WINDOW_SOCKET` development overrides retain their existing behavior.
 Generic private service log directories retain their previous leaf policy.
 
 `desktop/tools/test-session-runtime.v` runs eight host tests: three shared-path
@@ -19,19 +19,19 @@ owned `stat` allocation is freed. Run from the repository root:
 
 ```sh
 v -o /tmp/test-session-runtime desktop/tools/test-session-runtime.v
-V=/path/to/pinned/v VINIX_SESSION_RUNTIME_KEEP=1 /tmp/test-session-runtime
+V=/path/to/pinned/v TULPAR_SESSION_RUNTIME_KEEP=1 /tmp/test-session-runtime
 ```
 
 `tests/desktop-session-runtime/check.v` boots a fresh production compositor and
 fresh session, time and runner services from the same frozen desktop build.
 PID 1 creates two standard accounts and starts the compositor through
-`vinix-session run --seat alex`. An independent UID-1000 client must connect to
+`tulpar-session run --seat alex`. An independent UID-1000 client must connect to
 the actual default broker, verify its peer credentials, receive `ok` for `ping`,
 and present three frames through the actual default framebuffer socket. Each
 frame must receive the compositor's acknowledgement. A separate UID-1001 client
 must select its own numeric paths and fail to connect to either victim socket.
 The guest checks socket type, owner and private permissions, and refuses any
-ordinary `/run/vinix-session.<uid>` directory. The forged XDG path must have no
+ordinary `/run/tulpar-session.<uid>` directory. The forged XDG path must have no
 effect. The compositor must publish its own UID-1000 readiness marker in the
 account runtime without a precreated fixture marker or global ready file.
 
@@ -46,16 +46,16 @@ mkdir -p build/software-session-runtime-tools
 v -prod -path '@vlib|.|tests/hardware-platform|@vmodules' \
   -o build/software-session-runtime-tools/check tests/desktop-session-runtime/check.v
 V=/path/to/pinned/v CC_AARCH64=/path/to/aarch64-cross-wrapper \
-VINIX_AARCH64_SYSROOT=/path/to/aarch64-musl-sysroot \
+TULPAR_AARCH64_SYSROOT=/path/to/aarch64-musl-sysroot \
   build/software-session-runtime-tools/check --arch=aarch64 --out=/build/new-runtime-arm \
-  --desktop=/build/frozen-desktop-arm/vinix-desktop \
+  --desktop=/build/frozen-desktop-arm/tulpar-desktop \
   --kernel=/build/arm-kernel --rootfs=/build/native-arm/guest/root \
   --cross-driver=/path/to/aarch64-linux-musl-gcc
 v -prod -path '@vlib|.|tests/hardware-platform|@vmodules' \
   -o build/software-session-runtime-tools/retain tests/desktop-session-runtime/retain.v
 V=/path/to/pinned/v CC_AARCH64=/path/to/aarch64-cross-wrapper \
   build/software-session-runtime-tools/retain /build/new-runtime-arm \
-  /build/frozen-desktop-arm/vinix-desktop /build/arm-kernel \
+  /build/frozen-desktop-arm/tulpar-desktop /build/arm-kernel \
   build/software-session-runtime-tools/check /build/retained aarch64 \
   /path/to/aarch64-linux-musl-gcc
 ```
@@ -72,7 +72,7 @@ Compiler fallback and automatic compiler reports are disabled.
 The frozen x86 kernel predates gzip initramfs support. This fixture uses the
 V `plainiso` helper to assemble UEFI media with a plain USTAR archive; production
 image scripts retain their compression policy. Limine 12.9.3 loaders and
-`xorriso` are hashed inputs; `VINIX_PLAIN_ISO_LIMINE` can name another loader
+`xorriso` are hashed inputs; `TULPAR_PLAIN_ISO_LIMINE` can name another loader
 directory explicitly. The ISO, generated configuration and exact assembly
 arguments are retained with the native evidence.
 

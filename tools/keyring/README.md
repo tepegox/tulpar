@@ -1,22 +1,22 @@
 # The credential store
 
-`vinix-keyring` keeps an account's secrets -- passwords for networks and
+`tulpar-keyring` keeps an account's secrets -- passwords for networks and
 sites, tokens, keys -- in a file nothing can read without the account's
 password. `keyringcore/core.v` is the format and the cryptography;
 `keyring.v` is the service that holds the store open for a session and the
 commands that ask it.
 
-    vinix-keyring status
-    vinix-keyring init                       # prints the recovery key, once
-    vinix-keyring set SERVICE ACCOUNT        # the secret on standard input
-    vinix-keyring get SERVICE ACCOUNT
-    vinix-keyring list
-    vinix-keyring delete SERVICE ACCOUNT
-    vinix-keyring lock | unlock
-    vinix-keyring change-password            # the old password, then the new
-    vinix-keyring recover                    # the recovery key, then a new password
+    tulpar-keyring status
+    tulpar-keyring init                       # prints the recovery key, once
+    tulpar-keyring set SERVICE ACCOUNT        # the secret on standard input
+    tulpar-keyring get SERVICE ACCOUNT
+    tulpar-keyring list
+    tulpar-keyring delete SERVICE ACCOUNT
+    tulpar-keyring lock | unlock
+    tulpar-keyring change-password            # the old password, then the new
+    tulpar-keyring recover                    # the recovery key, then a new password
 
-    tools/keyring/build aarch64|x86_64 ROOT  # installs ROOT/usr/bin/vinix-keyring
+    tools/keyring/build aarch64|x86_64 ROOT  # installs ROOT/usr/bin/tulpar-keyring
 
 ## How it is protected
 
@@ -39,7 +39,7 @@ open this one.
 
 | Event | What happens |
 | --- | --- |
-| Login | The session manager hands the password that was typed to `vinix-keyring daemon --unlock-stdin`, started inside the new session as the account, and waits until it is listening before the session's first program starts. The store is open by the time anything asks. |
+| Login | The session manager hands the password that was typed to `tulpar-keyring daemon --unlock-stdin`, started inside the new session as the account, and waits until it is listening before the session's first program starts. The store is open by the time anything asks. |
 | The password is changed | `change-password` re-wraps the store key. No secret is touched. It asks for the old password even when the store is open. |
 | An administrator sets a new password | The store does not open with it: the administrator never knew the old one, and that is the point. `recover` opens it with the recovery key, sets the new password, and replaces the recovery key -- one that has been typed somewhere is used up. |
 | Password and recovery key both lost | The secrets are gone. There is no other way in, by design. |
@@ -56,14 +56,14 @@ swapped, answers only its own account, and makes wrong passwords wait.
   application may read which item needs applications to have identities,
   which needs confinement by default.
 - **No hardware.** The store key is not sealed to a TPM or a secure enclave;
-  Vinix has no driver for either. A copy of the file and the password is
+  Tulpar has no driver for either. A copy of the file and the password is
   the store, on any machine.
 - **The login password and the store password are two records.** They are
   the same string because the same thing sets both, not because one is
   derived from the other: `vinix-auth passwd` changes the login,
-  `vinix-keyring change-password` the store, and until something does both
+  `tulpar-keyring change-password` the store, and until something does both
   a login after only the first leaves the store locked (the service says so
-  and stays up; `vinix-keyring unlock` with the old password opens it).
+  and stays up; `tulpar-keyring unlock` with the old password opens it).
 - **Nothing makes a store.** `init` is a command someone runs; a login does
   not create one, because the recovery key has to be shown to a person and
   there is no login screen to show it.

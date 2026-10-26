@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native declarations/layouts only; independent policy and ownership are V. */
-#ifndef VINIX_MAC_POLICY_FIXTURE_NATIVE_ABI_H
-#define VINIX_MAC_POLICY_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_MAC_POLICY_FIXTURE_NATIVE_ABI_H
+#define TULPAR_MAC_POLICY_FIXTURE_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
@@ -54,6 +54,6 @@ _Static_assert(sizeof(struct msghdr)==56 && sizeof(struct cmsghdr)==16 && sizeof
 _Static_assert(sizeof(((struct msghdr *)0)->msg_iovlen)==4 && sizeof(((struct msghdr *)0)->msg_controllen)==4 && sizeof(((struct cmsghdr *)0)->cmsg_len)==4, "native ancillary narrow fields");
 _Static_assert(sizeof(struct mac_sched_attr)==48 && _Alignof(struct mac_sched_attr)==8 && offsetof(struct mac_sched_attr,runtime)==24, "original scheduler record");
 _Static_assert(sizeof(cpu_set_t)==128 && _Alignof(cpu_set_t)==8 && sizeof(struct rlimit)==16 && _Alignof(struct rlimit)==8, "native affinity/limit records");
-void *vinix_mac_policy_blocked_thread(void *);
-void *vinix_mac_policy_close_exec_descriptor(void *);
+void *tulpar_mac_policy_blocked_thread(void *);
+void *tulpar_mac_policy_close_exec_descriptor(void *);
 #endif

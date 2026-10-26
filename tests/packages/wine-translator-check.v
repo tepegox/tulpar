@@ -83,10 +83,10 @@ fn check() ! {
 	}
 	test := os.read_file(root + '/tools/packages/wineadapter/patch_test.v')!
 	defer { unsafe { test.free() } }
-	if !test.contains('for _ in 0 .. 64 {') || !test.contains('assert C.vinix_heap_end() == 0') {
+	if !test.contains('for _ in 0 .. 64 {') || !test.contains('assert C.tulpar_heap_end() == 0') {
 		return error('translator test must measure actual patch and refusal cycles')
 	}
-	os.setenv('VINIX_WINE_PATCH_INPUT', input, true)
+	os.setenv('TULPAR_WINE_PATCH_INPUT', input, true)
 	mut runs := []TranslatorRun{}
 	for name in ['normal', 'sanitized']! {
 		directory := out + '/' + name

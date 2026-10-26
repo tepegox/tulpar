@@ -9,8 +9,8 @@ fn C.mkfifo(&char, u32) int
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn mirror_ownership_plan() Plan {
@@ -26,31 +26,31 @@ fn mirror_ownership_plan() Plan {
 
 fn test_mirror_preflight_retires_path_space_and_prepared_metadata_scratch() {
 	$if track_heap ? {
-		work := os.real_path(os.temp_dir()) + '/vinix-mirror-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+		work := os.real_path(os.temp_dir()) + '/tulpar-mirror-owned-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 		os.mkdir_all(work + '/store/objects')!
 		defer { os.rmdir_all(work) or {} }
 		store := work + '/store'; destination := work + '/missing/parents/export'
 		plan := mirror_ownership_plan()
 		config := Config{ architecture: 'aarch64', policy: Policy{ reserve_bytes: 0 } }
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			target, parent := mirror_location(destination)!
 			assert target == destination && parent == work
 			unsafe { target.free(); parent.free() }
 		}
-		paths := C.vinix_heap_end()
-		C.vinix_heap_begin()
+		paths := C.tulpar_heap_end()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { exported, acquired := mirror_space(plan, [], store)!; assert exported > 0 && acquired > 0 }
-		space := C.vinix_heap_end()
+		space := C.tulpar_heap_end()
 		mut warm := prepare_mirror_plan(config, store, destination, plan.requested, plan, '', '')!
 		warm.close()
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			mut prepared := prepare_mirror_plan(config, store, destination, plan.requested, plan, '', '')!
 			assert prepared.plan.packages.len == 16 && prepared.fingerprint.len == 64
 			prepared.close(); prepared.close()
 		}
-		metadata := C.vinix_heap_end()
+		metadata := C.tulpar_heap_end()
 		println('MIRROR OWNERSHIP preflight: 1000 path cycles retained ${paths} bytes; 1000 space cycles retained ${space} bytes; 1000 warmed prepared metadata cycles retained ${metadata} bytes')
 		assert paths == 0 && space == 0 && metadata == 0
 	}
@@ -65,16 +65,16 @@ fn test_mirror_paths_preserve_normalization_aliases_and_owned_inputs() {
 		unsafe { expected.free(); actual.free() }
 	}
 	$if track_heap ? {
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { path := mirror_absolute_path('missing/../export')!; unsafe { path.free() } }
-		kept := C.vinix_heap_end(); assert kept == 0, 'relative path retained ${kept} bytes'
+		kept := C.tulpar_heap_end(); assert kept == 0, 'relative path retained ${kept} bytes'
 	}
 	assert os.getwd() == cwd
 	println('MIRROR OWNERSHIP relative/absolute dot, backlink, repeated/trailing separator normalization and 1000 relative-path retirements PASS')
 }
 
 fn test_mirror_reviews_own_fields_after_prepared_storage_is_retired() {
-	work := os.real_path(os.temp_dir()) + '/vinix-mirror-review-owned-' + os.getpid().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-mirror-review-owned-' + os.getpid().str()
 	os.mkdir_all(work + '/store/objects')!
 	defer { os.rmdir_all(work) or {} }
 	store := work + '/store'; destination := work + '/new-export'
@@ -90,9 +90,9 @@ fn test_mirror_reviews_own_fields_after_prepared_storage_is_retired() {
 	mut live := prepare_mirror_plan(config, store, destination, plan.requested, plan, '', '')!
 	defer { live.close() }
 	$if track_heap ? {
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 { mut result := mirror_review(config, store, destination, plan.requested, live)!; result.close() }
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('MIRROR OWNERSHIP 1000 independent review build/retirement cycles retained ${kept} bytes')
 		assert kept == 0
 	}
@@ -112,7 +112,7 @@ fn mirror_ownership_refused(config Config, store string, destination string, pla
 }
 
 fn test_mirror_preparation_failures_preserve_paths_and_retire_partial_storage() {
-	work := os.real_path(os.temp_dir()) + '/vinix-mirror-fail-owned-' + os.getpid().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-mirror-fail-owned-' + os.getpid().str()
 	os.mkdir_all(work + '/store/objects')!
 	defer { os.rmdir_all(work) or {} }
 	store := work + '/store'; destination := work + '/missing/export'
@@ -136,12 +136,12 @@ fn test_mirror_preparation_failures_preserve_paths_and_retire_partial_storage() 
 		files: [Payload{ ...plan.packages[0].package.files[0], bytes: ~u64(0) }] } }] }
 	assert mirror_ownership_refused(config, store, destination, oversized, 'requirement overflow')
 	$if track_heap ? {
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			assert mirror_ownership_refused(config, missing_store, destination, plan, 'cannot inspect offline mirror filesystems')
 			assert mirror_ownership_refused(config, store, destination, oversized, 'requirement overflow')
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		println('MIRROR OWNERSHIP 2000 filesystem/overflow failure cycles retained ${kept} bytes')
 		assert kept == 0
 	}
@@ -157,7 +157,7 @@ fn test_mirror_preparation_failures_preserve_paths_and_retire_partial_storage() 
 }
 
 fn test_mirror_snapshot_selection_and_fingerprint_preserve_exact_identity() {
-	work := os.real_path(os.temp_dir()) + '/vinix-mirror-identity-owned-' + os.getpid().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-mirror-identity-owned-' + os.getpid().str()
 	os.mkdir_all(work + '/physical/store/objects')!
 	defer { os.rmdir_all(work) or {} }
 	os.symlink(work + '/physical', work + '/alias')!
@@ -179,7 +179,7 @@ fn test_mirror_snapshot_selection_and_fingerprint_preserve_exact_identity() {
 		mut info := C.stat{}
 		assert C.fstatat(C.AT_FDCWD, prepared.ancestor.str, unsafe { &info }, 0) == 0
 		identity := MirrorIdentity{ config: config, names: plan.requested, plan: plan, snapshots: prepared.snapshots,
-			domain: if deployment == '' { 'vinix-mirror-review-1' } else { 'vinix-deployment-mirror-review-1' },
+			domain: if deployment == '' { 'tulpar-mirror-review-1' } else { 'tulpar-deployment-mirror-review-1' },
 			destination: destination, target: prepared.target, ancestor: prepared.ancestor, device: u64(info.st_dev), inode: u64(info.st_ino),
 			deployment: deployment, deployment_sha256: if captured == '' { '' } else { index_digest(captured) } }
 		assert prepared.fingerprint == index_digest(json2.encode(identity))

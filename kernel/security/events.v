@@ -105,7 +105,7 @@ pub fn event(kind u32, denied bool, arg u64, label string) {
 	p := t.process
 	// The ring copies this record synchronously. A local value passed to the
 	// mutable helpers is otherwise promoted to an unfreed heap allocation.
-	mut record := unsafe { &SecurityEvent(C.vinix_stack_alloc(sizeof(SecurityEvent))) }
+	mut record := unsafe { &SecurityEvent(C.tulpar_stack_alloc(sizeof(SecurityEvent))) }
 	unsafe { *record = SecurityEvent{
 		kind:      kind
 		denied:    denied
@@ -135,7 +135,7 @@ pub fn event_report(pid int, denied bool, label string) {
 	reporter := proc.current_thread().process.pid
 	uid, euid := proc.process_uids(pid)
 	login_uid, session := proc.login_identity(pid)
-	mut record := unsafe { &SecurityEvent(C.vinix_stack_alloc(sizeof(SecurityEvent))) }
+	mut record := unsafe { &SecurityEvent(C.tulpar_stack_alloc(sizeof(SecurityEvent))) }
 	unsafe { *record = SecurityEvent{
 		kind:      event_service
 		denied:    denied

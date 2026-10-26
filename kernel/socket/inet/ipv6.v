@@ -8,9 +8,9 @@ import socket.public as sock_pub
 import usercopy
 
 // The full socket header defines the V ABI before the endpoint declarations.
-#include "vinix_net.h"
+#include "tulpar_net.h"
 
-struct C.vinix_net_endpoint {
+struct C.tulpar_net_endpoint {
 mut:
 	words  [4]u32
 	scope  u32
@@ -27,21 +27,21 @@ pub mut:
 	sin6_scope_id u32
 }
 
-fn C.vinix_socket_new_family(@type i32, protocol i32, family i32) &C.vinix_socket
-fn C.vinix_socket_bind_endpoint(socket &C.vinix_socket, endpoint &C.vinix_net_endpoint) i32
-fn C.vinix_socket_connect_endpoint(socket &C.vinix_socket, endpoint &C.vinix_net_endpoint) i32
-fn C.vinix_socket_send_endpoint(socket &C.vinix_socket, data voidptr, length u64, endpoint &C.vinix_net_endpoint, has_address i32) i32
-fn C.vinix_socket_recv_endpoint(socket &C.vinix_socket, data voidptr, length u64, endpoint &C.vinix_net_endpoint) i32
-fn C.vinix_socket_recv_endpoint_flags(socket &C.vinix_socket, data voidptr, length u64, endpoint &C.vinix_net_endpoint, flags i32) i32
-fn C.vinix_socket_name_endpoint(socket &C.vinix_socket, endpoint &C.vinix_net_endpoint, peer i32) i32
-fn C.vinix_socket_membership(socket &C.vinix_socket, endpoint &C.vinix_net_endpoint, interface_address u32, join i32) i32
-fn C.vinix_socket_multicast_interface(socket &C.vinix_socket, family i32, index u32, interface_address u32) i32
-fn C.vinix_net_ipv6_address(index u32, slot u32, endpoint &C.vinix_net_endpoint, state &u32, valid &u32, preferred &u32) i32
+fn C.tulpar_socket_new_family(@type i32, protocol i32, family i32) &C.tulpar_socket
+fn C.tulpar_socket_bind_endpoint(socket &C.tulpar_socket, endpoint &C.tulpar_net_endpoint) i32
+fn C.tulpar_socket_connect_endpoint(socket &C.tulpar_socket, endpoint &C.tulpar_net_endpoint) i32
+fn C.tulpar_socket_send_endpoint(socket &C.tulpar_socket, data voidptr, length u64, endpoint &C.tulpar_net_endpoint, has_address i32) i32
+fn C.tulpar_socket_recv_endpoint(socket &C.tulpar_socket, data voidptr, length u64, endpoint &C.tulpar_net_endpoint) i32
+fn C.tulpar_socket_recv_endpoint_flags(socket &C.tulpar_socket, data voidptr, length u64, endpoint &C.tulpar_net_endpoint, flags i32) i32
+fn C.tulpar_socket_name_endpoint(socket &C.tulpar_socket, endpoint &C.tulpar_net_endpoint, peer i32) i32
+fn C.tulpar_socket_membership(socket &C.tulpar_socket, endpoint &C.tulpar_net_endpoint, interface_address u32, join i32) i32
+fn C.tulpar_socket_multicast_interface(socket &C.tulpar_socket, family i32, index u32, interface_address u32) i32
+fn C.tulpar_net_ipv6_address(index u32, slot u32, endpoint &C.tulpar_net_endpoint, state &u32, valid &u32, preferred &u32) i32
 
 // Every endpoint lives in its public caller's stack slot. lwIP copies it
 // synchronously; a blocking retry never allocates another endpoint.
-fn fill_endpoint(addr voidptr, addrlen u32, family int, mut endpoint C.vinix_net_endpoint) ? {
-	unsafe { C.memset(endpoint, 0, sizeof(C.vinix_net_endpoint)) }
+fn fill_endpoint(addr voidptr, addrlen u32, family int, mut endpoint C.tulpar_net_endpoint) ? {
+	unsafe { C.memset(endpoint, 0, sizeof(C.tulpar_net_endpoint)) }
 	if addr == unsafe { nil } {
 		errno.set(errno.efault)
 		return none
@@ -81,9 +81,9 @@ fn fill_endpoint(addr voidptr, addrlen u32, family int, mut endpoint C.vinix_net
 	}
 }
 
-fn copy_endpoint_out(endpoint &C.vinix_net_endpoint, addr voidptr, addrlen &u32) {
+fn copy_endpoint_out(endpoint &C.tulpar_net_endpoint, addr voidptr, addrlen &u32) {
 	if addr == unsafe { nil } || addrlen == unsafe { nil } { return }
-	storage := C.vinix_stack_alloc(sizeof(SockaddrIn6))
+	storage := C.tulpar_stack_alloc(sizeof(SockaddrIn6))
 	unsafe { C.memset(storage, 0, sizeof(SockaddrIn6)) }
 	if endpoint.family == sock_pub.af_inet {
 		mut target := unsafe { &SockaddrIn(storage) }
@@ -109,7 +109,7 @@ pub fn is_structured_ip_option(level int, option int) bool {
 }
 
 pub fn (mut this InetSocket) set_structured_ip_option(level int, option int, value u64, length u32) ? {
-	storage := C.vinix_stack_alloc(20)
+	storage := C.tulpar_stack_alloc(20)
 	unsafe { C.memset(storage, 0, 20) }
 	minimum := if level == 41 && (option == 20 || option == 21) {
 		u32(20)
@@ -154,8 +154,8 @@ pub fn (mut this InetSocket) set_structured_ip_option(level int, option int, val
 		this.setsockopt(unsafe { nil }, level, option, number)?
 		return
 	}
-	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
-	unsafe { C.memset(endpoint, 0, sizeof(C.vinix_net_endpoint)) }
+	mut endpoint := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
+	unsafe { C.memset(endpoint, 0, sizeof(C.tulpar_net_endpoint)) }
 	endpoint.family = if level == 41 { u16(10) } else { u16(2) }
 	mut interface_address := u32(0)
 	if level == 41 {
@@ -176,9 +176,9 @@ pub fn (mut this InetSocket) set_structured_ip_option(level int, option int, val
 	}
 	net_lock.acquire()
 	result := if level == 0 && option == 32 {
-		C.vinix_socket_multicast_interface(this.handle, 2, endpoint.scope, interface_address)
+		C.tulpar_socket_multicast_interface(this.handle, 2, endpoint.scope, interface_address)
 	} else {
-		C.vinix_socket_membership(this.handle, endpoint, interface_address,
+		C.tulpar_socket_membership(this.handle, endpoint, interface_address,
 			if option == 35 || option == 20 { 1 } else { 0 })
 	}
 	refresh_registered_sockets()
@@ -190,17 +190,17 @@ pub fn (mut this InetSocket) set_structured_ip_option(level int, option int, val
 }
 
 fn proc_net_if_inet6_text() string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(1024) }
-	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
-	scalar := C.vinix_stack_alloc(12)
+	mut endpoint := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
+	scalar := C.tulpar_stack_alloc(12)
 	state := unsafe { &u32(scalar) }
 	valid := unsafe { &u32(voidptr(u64(scalar) + 4)) }
 	preferred := unsafe { &u32(voidptr(u64(scalar) + 8)) }
 	net_lock.acquire()
 	for index := u32(1); index <= 2; index++ {
 		for slot := u32(0); slot < 6; slot++ {
-			if C.vinix_net_ipv6_address(index, slot, endpoint, state, valid, preferred) == 0 {
+			if C.tulpar_net_ipv6_address(index, slot, endpoint, state, valid, preferred) == 0 {
 				continue
 			}
 			address_state := unsafe { *state }
@@ -239,11 +239,11 @@ fn proc_net_if_inet6_text() string {
 }
 
 fn proc_net_tcp6_text() string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(4096) }
 	text.add('  sl  local_address rem_address   st tx_queue rx_queue tr tm->when retrnsmt   uid  timeout inode\n')
-	mut local := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
-	mut remote := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
+	mut local := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
+	mut remote := unsafe { &C.tulpar_net_endpoint(C.tulpar_stack_alloc(sizeof(C.tulpar_net_endpoint))) }
 	net_lock.acquire()
 	sockets_lock.acquire()
 	mut row := 0
@@ -251,11 +251,11 @@ fn proc_net_tcp6_text() string {
 		if sockets[i] == unsafe { nil } { continue }
 		socket := unsafe { &InetSocket(sockets[i]) }
 		if socket.family != 10 || socket.socktype != sock_pub.sock_stream { continue }
-		if C.vinix_socket_name_endpoint(socket.handle, local, 0) != 0 || local.port == 0 {
+		if C.tulpar_socket_name_endpoint(socket.handle, local, 0) != 0 || local.port == 0 {
 			continue
 		}
-		unsafe { C.memset(remote, 0, sizeof(C.vinix_net_endpoint)) }
-		connected := C.vinix_socket_name_endpoint(socket.handle, remote, 1) == 0
+		unsafe { C.memset(remote, 0, sizeof(C.tulpar_net_endpoint)) }
+		connected := C.tulpar_socket_name_endpoint(socket.handle, remote, 1) == 0
 		if !connected && !socket.listening { continue }
 		text.add_unsigned(u64(row))
 		text.add(': ')

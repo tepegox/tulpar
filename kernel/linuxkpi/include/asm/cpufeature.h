@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_ASM_CPUFEATURE_H
-#define VINIX_ASM_CPUFEATURE_H
+#ifndef TULPAR_ASM_CPUFEATURE_H
+#define TULPAR_ASM_CPUFEATURE_H
 #include <asm/cpufeatures.h>
 #include <linux/build_bug.h>
-#include <vinix/runtime.h>
+#include <tulpar/runtime.h>
 /* Exact original configured-feature selection. The original cpufeatures.h
  * imports required/disabled masks; native capability queries remain bounded. */
 #define CHECK_BIT_IN_MASK_WORD(maskname, word, bit)	\
@@ -37,7 +37,7 @@
 
 #define cpu_feature_enabled(bit)	\
 	(__builtin_constant_p(bit) && DISABLED_MASK_BIT_SET(bit) ? 0 : static_cpu_has(bit))
-#define boot_cpu_has(feature) vinix_linuxkpi_cpu_has(feature)
-#define static_cpu_has(feature) vinix_linuxkpi_cpu_has(feature)
-#define boot_cpu_has_bug(bug) vinix_linuxkpi_boot_cpu_has_bug(bug)
+#define boot_cpu_has(feature) tulpar_linuxkpi_cpu_has(feature)
+#define static_cpu_has(feature) tulpar_linuxkpi_cpu_has(feature)
+#define boot_cpu_has_bug(bug) tulpar_linuxkpi_boot_cpu_has_bug(bug)
 #endif

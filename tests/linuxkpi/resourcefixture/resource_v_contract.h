@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
 /* Native metadata only; all executable checks live in the maintained V module. */
-#ifndef VINIX_RESOURCE_V_CONTRACT_H
-#define VINIX_RESOURCE_V_CONTRACT_H
+#ifndef TULPAR_RESOURCE_V_CONTRACT_H
+#define TULPAR_RESOURCE_V_CONTRACT_H
 #include "../scalarfixture/scalar_host_resource.h"
 #include <linux/resource.h>
 #include <asm/resource.h>

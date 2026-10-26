@@ -13,14 +13,14 @@ import x86.hpet as migration_clock
 
 #include "linuxkpi_migration_fixture_v_primitives.h"
 
-struct C.vinix_migration_completion {}
+struct C.tulpar_migration_completion {}
 
-fn C.vinix_linuxkpi_migration_fixture_disable()
-fn C.vinix_linuxkpi_migration_fixture_enable()
-fn C.vinix_linuxkpi_migration_fixture_sleep(i64) i64
-fn C.vinix_linuxkpi_migration_fixture_init_completion(voidptr)
-fn C.vinix_linuxkpi_migration_fixture_complete(voidptr)
-fn C.vinix_linuxkpi_migration_fixture_wait(voidptr)
+fn C.tulpar_linuxkpi_migration_fixture_disable()
+fn C.tulpar_linuxkpi_migration_fixture_enable()
+fn C.tulpar_linuxkpi_migration_fixture_sleep(i64) i64
+fn C.tulpar_linuxkpi_migration_fixture_init_completion(voidptr)
+fn C.tulpar_linuxkpi_migration_fixture_complete(voidptr)
+fn C.tulpar_linuxkpi_migration_fixture_wait(voidptr)
 
 // Actor controls, completion backing and the IRQ work have boot lifetime.
 // Observer references keep every Thread readable until actual off-stack join.
@@ -36,8 +36,8 @@ mut:
 	final_cpu                    u32
 	idle_seen                    bool
 	stress_cycles                [3]u32
-	completion                   C.vinix_migration_completion
-	irq                          C.vinix_irqwork_fixture
+	completion                   C.tulpar_migration_completion
+	irq                          C.tulpar_irqwork_fixture
 	irq_ready                    bool
 	irq_done                     bool
 	irq_queued                   bool
@@ -79,7 +79,7 @@ fn migration_test_state(target u32, depth u32, expected_if bool, expected_preemp
 
 fn migration_test_unpin() {
 	for katomic.load(&proc.current_thread().linuxkpi_migration_pin) != 0 {
-		C.vinix_linuxkpi_migration_fixture_enable()
+		C.tulpar_linuxkpi_migration_fixture_enable()
 	}
 }
 
@@ -98,8 +98,8 @@ fn migration_test_reach(target u32) bool {
 
 fn migration_test_pinned_case(mode u32) bool {
 	if worker_bind(1) != 0 || !migration_test_state(1, 0, true, 0) { return false }
-	C.vinix_linuxkpi_migration_fixture_disable()
-	if mode == 1 { C.vinix_linuxkpi_migration_fixture_disable() }
+	C.tulpar_linuxkpi_migration_fixture_disable()
+	if mode == 1 { C.tulpar_linuxkpi_migration_fixture_disable() }
 	defer { migration_test_unpin() }
 	expected_depth := if mode == 1 { u32(2) } else { u32(1) }
 	mut valid := migration_test_state(1, expected_depth, true, 0) && may_sleep()
@@ -115,22 +115,22 @@ fn migration_test_pinned_case(mode u32) bool {
 	katomic.store(mut &migration_test_ledger.entered, true)
 	// The controller waits for actual off-queue park and changes the ordinary
 	// requested mask to CPU2 before completing this real wait from CPU0.
-	C.vinix_linuxkpi_migration_fixture_wait(unsafe { &migration_test_ledger.completion })
+	C.tulpar_linuxkpi_migration_fixture_wait(unsafe { &migration_test_ledger.completion })
 	valid = valid && migration_test_state(1, expected_depth, true, 0)
 		&& katomic.load(&proc.current_thread().affinity_mask) == u64(4)
 	migration_test_ledger.woken_cpu = 1
 	if mode == 1 {
-		C.vinix_linuxkpi_migration_fixture_enable()
+		C.tulpar_linuxkpi_migration_fixture_enable()
 		for _ in 0 .. 8 {
 			sched.reschedule()
 			valid = valid && migration_test_state(1, 1, true, 0)
 		}
-		valid = valid && C.vinix_linuxkpi_migration_fixture_sleep(5) == 0
+		valid = valid && C.tulpar_linuxkpi_migration_fixture_sleep(5) == 0
 			&& migration_test_state(1, 1, true, 0)
-		C.vinix_linuxkpi_migration_fixture_enable()
+		C.tulpar_linuxkpi_migration_fixture_enable()
 	} else if mode == 2 {
 		ints := cpu.interrupt_toggle(false)
-		C.vinix_linuxkpi_migration_fixture_enable()
+		C.tulpar_linuxkpi_migration_fixture_enable()
 		valid = valid && ints && migration_test_state(1, 0, false, 0) && preempt_pending[1]
 		for _ in 0 .. 1000 { spin_wait() }
 		valid = valid && migration_test_state(1, 0, false, 0)
@@ -139,7 +139,7 @@ fn migration_test_pinned_case(mode u32) bool {
 		preempt_disable()
 		preempt_disable()
 		before := katomic.load(&preempt_deferrals[1])
-		C.vinix_linuxkpi_migration_fixture_enable()
+		C.tulpar_linuxkpi_migration_fixture_enable()
 		valid = valid && migration_test_state(1, 0, true, 2) && preempt_pending[1]
 		start := migration_clock.nanoseconds()
 		for katomic.load(&preempt_deferrals[1]) == before {
@@ -166,13 +166,13 @@ fn migration_test_irq(_work &C.irq_work) {
 	mut valid := !cpu.interrupt_state() && local.cpu_number == 1 && local.maskable_irq_depth != 0
 		&& depth != 0 && uint(owner) == uint(migration_test_ledger.owners[0])
 		&& katomic.load(&owner.linuxkpi_migration_pin) == 0
-	C.vinix_linuxkpi_migration_fixture_disable()
-	C.vinix_linuxkpi_migration_fixture_disable()
+	C.tulpar_linuxkpi_migration_fixture_disable()
+	C.tulpar_linuxkpi_migration_fixture_disable()
 	valid = valid && katomic.load(&owner.linuxkpi_migration_pin) == ((u64(2) << 32) | u64(2))
 		&& !cpu.interrupt_state() && preempt_depth[1] == depth
-	C.vinix_linuxkpi_migration_fixture_enable()
+	C.tulpar_linuxkpi_migration_fixture_enable()
 	valid = valid && katomic.load(&owner.linuxkpi_migration_pin) == ((u64(1) << 32) | u64(2))
-	C.vinix_linuxkpi_migration_fixture_enable()
+	C.tulpar_linuxkpi_migration_fixture_enable()
 	valid = valid && katomic.load(&owner.linuxkpi_migration_pin) == 0 && !cpu.interrupt_state()
 		&& preempt_depth[1] == depth && preempt_pending[1]
 		&& cpulocal.current().cpu_number == 1 && local.maskable_irq_depth != 0
@@ -222,11 +222,11 @@ fn migration_test_actor(argument voidptr) {
 		} else {
 			target := if index == 1 { u32(1) } else { u32(2) }
 			valid = worker_bind(target) == 0 && migration_test_state(target, 0, true, 0)
-			C.vinix_linuxkpi_migration_fixture_disable()
+			C.tulpar_linuxkpi_migration_fixture_disable()
 			valid = valid && migration_test_state(target, 1, true, 0)
-				&& C.vinix_linuxkpi_migration_fixture_sleep(2) == 0
+				&& C.tulpar_linuxkpi_migration_fixture_sleep(2) == 0
 				&& migration_test_state(target, 1, true, 0)
-			C.vinix_linuxkpi_migration_fixture_enable()
+			C.tulpar_linuxkpi_migration_fixture_enable()
 			valid = valid && migration_test_state(target, 0, true, 0) && worker_bind(3) == 0
 		}
 		if !valid { migration_test_fail(u32(2) << index) }
@@ -248,20 +248,20 @@ fn migration_test_contention(index u32) bool {
 	cpu.interrupt_toggle(ints)
 	mut valid := true
 	for cycle in 0 .. 200 {
-		C.vinix_linuxkpi_migration_fixture_disable()
+		C.tulpar_linuxkpi_migration_fixture_disable()
 		word := katomic.load(&owner.linuxkpi_migration_pin)
 		target := u32(word) - 1
 		valid = valid && migration_test_state(target, 1, true, 0) && may_sleep()
-		C.vinix_linuxkpi_migration_fixture_disable()
+		C.tulpar_linuxkpi_migration_fixture_disable()
 		sched.reschedule()
 		valid = valid && migration_test_state(target, 2, true, 0)
-		C.vinix_linuxkpi_migration_fixture_enable()
+		C.tulpar_linuxkpi_migration_fixture_enable()
 		if cycle % 16 == 0 {
-			valid = valid && C.vinix_linuxkpi_migration_fixture_sleep(1) == 0
+			valid = valid && C.tulpar_linuxkpi_migration_fixture_sleep(1) == 0
 		}
 		sched.reschedule()
 		valid = valid && migration_test_state(target, 1, true, 0)
-		C.vinix_linuxkpi_migration_fixture_enable()
+		C.tulpar_linuxkpi_migration_fixture_enable()
 		migration_test_ledger.stress_cycles[index]++
 		sched.reschedule()
 	}
@@ -277,7 +277,7 @@ fn migration_test_parked() bool {
 	owner := unsafe { &proc.Thread(migration_test_ledger.owners[0]) }
 	start := migration_clock.nanoseconds()
 	for !(katomic.load(&migration_test_ledger.entered)
-		&& C.vinix_linuxkpi_dmafence_fixture_task_state(unsafe { &owner.linuxkpi_task[0] }) == 2
+		&& C.tulpar_linuxkpi_dmafence_fixture_task_state(unsafe { &owner.linuxkpi_task[0] }) == 2
 		&& !katomic.load(&owner.is_in_queue) && katomic.load(&owner.running_on) == u64(-1)
 		&& !katomic.load(&owner.is_in_queue)) {
 		if migration_clock.nanoseconds() - start >= dmafence_test_timeout_ns { return false }
@@ -287,13 +287,13 @@ fn migration_test_parked() bool {
 }
 
 fn migration_test_case(mode u32) bool {
-	C.vinix_linuxkpi_migration_fixture_init_completion(unsafe { &migration_test_ledger.completion })
+	C.tulpar_linuxkpi_migration_fixture_init_completion(unsafe { &migration_test_ledger.completion })
 	katomic.store(mut &migration_test_ledger.entered, false)
 	migration_test_ledger.woken_cpu = 0
 	migration_test_ledger.final_cpu = 0
 	migration_test_start(0, mode)
 	defer {
-		C.vinix_linuxkpi_migration_fixture_complete(unsafe { &migration_test_ledger.completion })
+		C.tulpar_linuxkpi_migration_fixture_complete(unsafe { &migration_test_ledger.completion })
 		if !migration_test_wait(&migration_test_ledger.done[0]) {
 			lib.kpanic(unsafe { nil }, c'linuxkpi: migration actor cleanup deadline')
 		}
@@ -314,7 +314,7 @@ fn migration_test_case(mode u32) bool {
 		}
 		migration_test_ledger.idle_seen = true
 	}
-	C.vinix_linuxkpi_migration_fixture_complete(unsafe { &migration_test_ledger.completion })
+	C.tulpar_linuxkpi_migration_fixture_complete(unsafe { &migration_test_ledger.completion })
 	return migration_test_wait(&migration_test_ledger.done[0])
 		&& migration_test_ledger.woken_cpu == 1 && migration_test_ledger.final_cpu == 2
 		&& katomic.load(&migration_test_ledger.failures) == 0
@@ -323,13 +323,13 @@ fn migration_test_case(mode u32) bool {
 fn migration_test_run_irq() bool {
 	katomic.store(mut &migration_test_ledger.irq_ready, false)
 	katomic.store(mut &migration_test_ledger.irq_done, false)
-	if C.vinix_linuxkpi_irqwork_fixture_init(unsafe { &migration_test_ledger.irq }, migration_test_irq, 0) != 0 {
+	if C.tulpar_linuxkpi_irqwork_fixture_init(unsafe { &migration_test_ledger.irq }, migration_test_irq, 0) != 0 {
 		return false
 	}
 	migration_test_start(0, 4)
 	defer {
 		if migration_test_ledger.irq_queued {
-			C.vinix_linuxkpi_irqwork_fixture_sync(unsafe { &migration_test_ledger.irq })
+			C.tulpar_linuxkpi_irqwork_fixture_sync(unsafe { &migration_test_ledger.irq })
 			migration_test_ledger.irq_queued = false
 		}
 		katomic.store(mut &migration_test_ledger.irq_done, true)
@@ -340,7 +340,7 @@ fn migration_test_run_irq() bool {
 	if !migration_test_wait(&migration_test_ledger.irq_ready) || test_worker_route(migration_test_ledger.owners[0], 2) != 0 {
 		return false
 	}
-	migration_test_ledger.irq_queued = C.vinix_linuxkpi_irqwork_fixture_queue(unsafe { &migration_test_ledger.irq }, 1)
+	migration_test_ledger.irq_queued = C.tulpar_linuxkpi_irqwork_fixture_queue(unsafe { &migration_test_ledger.irq }, 1)
 	return migration_test_ledger.irq_queued && migration_test_wait(&migration_test_ledger.irq_done)
 		&& migration_test_wait(&migration_test_ledger.done[0]) && katomic.load(&migration_test_ledger.failures) == 0
 }
@@ -358,10 +358,10 @@ fn migration_test_lifecycle(fail_after int, fail_stage int) bool {
 		sched.test_kernel_thread_failure(0)
 		migration_test_unpin()
 		if completion_live {
-			C.vinix_linuxkpi_migration_fixture_complete(unsafe { &migration_test_ledger.completion })
+			C.tulpar_linuxkpi_migration_fixture_complete(unsafe { &migration_test_ledger.completion })
 		}
 		if migration_test_ledger.irq_queued {
-			C.vinix_linuxkpi_irqwork_fixture_sync(unsafe { &migration_test_ledger.irq })
+			C.tulpar_linuxkpi_irqwork_fixture_sync(unsafe { &migration_test_ledger.irq })
 		}
 		katomic.store(mut &migration_test_ledger.irq_done, true)
 		katomic.store(mut &migration_test_ledger.quit, true)
@@ -376,10 +376,10 @@ fn migration_test_lifecycle(fail_after int, fail_stage int) bool {
 		return false
 	}
 	migration_test_ledger = MigrationTestLedger{}
-	C.vinix_linuxkpi_migration_fixture_init_completion(unsafe { &migration_test_ledger.completion })
+	C.tulpar_linuxkpi_migration_fixture_init_completion(unsafe { &migration_test_ledger.completion })
 	completion_live = true
 	// New workers made while their creator is pinned must start with zero.
-	C.vinix_linuxkpi_migration_fixture_disable()
+	C.tulpar_linuxkpi_migration_fixture_disable()
 	for i in 0 .. 3 {
 		if i == fail_after { sched.test_kernel_thread_failure(fail_stage) }
 		mut actor := sched.try_new_kernel_thread(voidptr(migration_test_actor), voidptr(i)) or {
@@ -400,7 +400,7 @@ fn migration_test_lifecycle(fail_after int, fail_stage int) bool {
 		migration_test_ledger.owners[i] = actor
 		created++
 	}
-	C.vinix_linuxkpi_migration_fixture_enable()
+	C.tulpar_linuxkpi_migration_fixture_enable()
 	for i in 0 .. 3 { if !migration_test_wait(&migration_test_ledger.ready[i]) { return false } }
 	for i in 0 .. 3 { migration_test_start(u32(i), 5) }
 	for i in 0 .. 3 {

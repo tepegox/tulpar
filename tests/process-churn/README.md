@@ -30,7 +30,7 @@ tests/process-churn/run --mode slabinfo \
   --runner-root /path/to/main-checkout --kernel /path/to/arm-kernel \
   > /tmp/slabinfo-arm.log 2>&1
 tests/process-churn/run --mode slabinfo --arch amd64 \
-  --runner-root /path/to/main-checkout --kernel /path/to/amd64-kernel/bin/vinix \
+  --runner-root /path/to/main-checkout --kernel /path/to/amd64-kernel/bin/tulpar \
   > /tmp/slabinfo-amd64.log 2>&1
 tests/process-churn/check-results /tmp/slabinfo-arm.log \
   --mode slabinfo --expect-flat-slabinfo
@@ -42,7 +42,7 @@ tests/process-churn/run --runner-root /path/to/main-checkout \
   --kernel /path/to/arm-kernel --image /path/to/initramfs-desktop.tar \
   --module-iso /path/to/initramfs-desktop.iso > /tmp/exec-cohorts.log 2>&1
 tests/process-churn/check-results /tmp/exec-cohorts.log
-tests/kernel-allocs/sites /path/to/arm-kernel/bin/vinix \
+tests/kernel-allocs/sites /path/to/arm-kernel/bin/tulpar \
   < /tmp/exec-cohorts.log
 
 # Generated-C check on each actual tracked build.
@@ -94,7 +94,7 @@ come from the end-of-cohort sample.
 The generated C promoted the local `lib.Text` descriptor through `memdup`.
 `Text.str()` already clones the returned bytes and frees its formatting buffer,
 but the promoted descriptor had no owner. The fix gives that descriptor a
-caller-stack slot, using the established `vinix_stack_alloc` pattern. The
+caller-stack slot, using the established `tulpar_stack_alloc` pattern. The
 returned owned string, the class snapshot array's free, and proc-file string
 ownership are preserved. No process/VFS retirement rule or additional free
 was introduced. The descriptor's synchronous use and returned-string lifetime
@@ -197,8 +197,8 @@ design with independent lifetime review before those nodes or names can be freed
 This diagnostic preserves the current rule and exposes the retained allocation.
 
 The standalone evidence is saved as
-`/tmp/vinix-process-churn-{waits,pipes,sampling}-{arm,amd64}.log` and
-`/tmp/vinix-process-churn-directories-arm{,-sites}.log`. Incomplete x86 fork attempts
+`/tmp/tulpar-process-churn-{waits,pipes,sampling}-{arm,amd64}.log` and
+`/tmp/tulpar-process-churn-directories-arm{,-sites}.log`. Incomplete x86 fork attempts
 remain separate from successful cohort results; the checker rejects missing DONE
 or missing measured cohorts.
 
@@ -265,22 +265,22 @@ local category disappears; no allowance, failing category, or failing count
 was added. The audit's known x86 scratch-copy compilation failure remains
 distinct from the successful x86 production build.
 
-Logs are `/tmp/vinix-process-churn-select-{arm,amd64}-{baseline,fixed}.log`,
-`/tmp/vinix-process-churn-select-{arm,amd64}-build.log`,
-`/tmp/vinix-process-churn-waits-{arm,amd64}-fixed.log`,
-`/tmp/vinix-process-churn-waits-amd64-fixed-sites.log`,
-`/tmp/vinix-process-churn-waits-amd64-final.log`, and
-`/tmp/vinix-process-churn-operation-alloc-audit.log`. Both fixed ELFs and generated
+Logs are `/tmp/tulpar-process-churn-select-{arm,amd64}-{baseline,fixed}.log`,
+`/tmp/tulpar-process-churn-select-{arm,amd64}-build.log`,
+`/tmp/tulpar-process-churn-waits-{arm,amd64}-fixed.log`,
+`/tmp/tulpar-process-churn-waits-amd64-fixed-sites.log`,
+`/tmp/tulpar-process-churn-waits-amd64-final.log`, and
+`/tmp/tulpar-process-churn-operation-alloc-audit.log`. Both fixed ELFs and generated
 C, the exact two-file kernel patch, and hashes are saved under
-`/tmp/vinix-process-churn-artifacts/operation-fixes/`. The root integration run
+`/tmp/tulpar-process-churn-artifacts/operation-fixes/`. The root integration run
 validates the final combined kernel's core and desktop workloads separately.
 
-The validation logs are `/tmp/vinix-process-churn-{arm,amd64}-build.log`,
-`/tmp/vinix-process-churn-slabinfo-{arm,amd64}-{baseline,fixed}.log`,
-`/tmp/vinix-process-churn-arm-{baseline,fixed}.log`,
-`/tmp/vinix-process-churn-alloc-audit.log`, and
-`/tmp/vinix-process-churn-desktop.{log,json}`. The matching fixed ELFs and
-generated C are saved under `/tmp/vinix-process-churn-artifacts/`.
+The validation logs are `/tmp/tulpar-process-churn-{arm,amd64}-build.log`,
+`/tmp/tulpar-process-churn-slabinfo-{arm,amd64}-{baseline,fixed}.log`,
+`/tmp/tulpar-process-churn-arm-{baseline,fixed}.log`,
+`/tmp/tulpar-process-churn-alloc-audit.log`, and
+`/tmp/tulpar-process-churn-desktop.{log,json}`. The matching fixed ELFs and
+generated C are saved under `/tmp/tulpar-process-churn-artifacts/`.
 
 The native command migration and current qualification limits are recorded in
 [serial-tools.md](../native-guest-tools/serial-tools.md).

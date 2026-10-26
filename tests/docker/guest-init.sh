@@ -5,11 +5,11 @@ export PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 export TERM=linux
 
 echo
-echo "VINIX DOCKER TEST: START"
+echo "TULPAR DOCKER TEST: START"
 if /root/docker-smoke.sh; then
-	echo "VINIX DOCKER TEST: PASS"
+	echo "TULPAR DOCKER TEST: PASS"
 else
-	echo "VINIX DOCKER TEST: FAIL"
+	echo "TULPAR DOCKER TEST: FAIL"
 fi
 sync
 /sbin/poweroff -f 2>/dev/null

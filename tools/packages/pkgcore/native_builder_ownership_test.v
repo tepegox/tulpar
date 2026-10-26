@@ -14,9 +14,9 @@ struct NativeBuilderLimit { current u64 maximum u64 }
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
-	fn C.vinix_heap_count() u32
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
+	fn C.tulpar_heap_count() u32
 }
 
 fn builder_selected(name string) bool {
@@ -32,7 +32,7 @@ fn builder_descriptors() int {
 }
 
 fn builder_fixture() !string {
-	path := os.real_path(os.temp_dir()) + '/vinix-native-builder-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	path := os.real_path(os.temp_dir()) + '/tulpar-native-builder-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	for architecture in ['aarch64', 'x86_64']! {
 		root := path + '/roots/' + architecture
 		os.mkdir_all(root + '/bin')!; os.mkdir(root + '/licenses')!
@@ -57,24 +57,24 @@ fn builder_replace(path string, saved string) ! {
 }
 
 fn builder_checkpoint(phase string, stage string) ! {
-	mode := os.getenv('VINIX_NATIVE_BUILDER_MODE'); defer { unsafe { mode.free() } }
-	if phase == 'created' { assert C.setenv(c'VINIX_NATIVE_BUILDER_STAGE', stage.str, 1) == 0 }
+	mode := os.getenv('TULPAR_NATIVE_BUILDER_MODE'); defer { unsafe { mode.free() } }
+	if phase == 'created' { assert C.setenv(c'TULPAR_NATIVE_BUILDER_STAGE', stage.str, 1) == 0 }
 	if mode == phase { return error('injected native builder checkpoint refusal') }
 	if mode.starts_with('packed-') && phase == 'packed' {
 		index := int(mode[7] - `1`)
-		ids := ['org.vinix.package-hello-aarch64', 'org.vinix.counter-aarch64', 'org.vinix.memo-aarch64',
-			'org.vinix.package-hello-x86_64', 'org.vinix.counter-x86_64', 'org.vinix.memo-x86_64']!
+		ids := ['org.tulpar.package-hello-aarch64', 'org.tulpar.counter-aarch64', 'org.tulpar.memo-aarch64',
+			'org.tulpar.package-hello-x86_64', 'org.tulpar.counter-x86_64', 'org.tulpar.memo-x86_64']!
 		path := stage + '/inventory/manifests/' + ids[index] + '-1.0.0.json'; defer { unsafe { path.free() } }
 		if publisher_entry_exists(path) { return error('injected native builder checkpoint refusal') }
 	}
 	if phase == 'created' && mode in ['root-replaced', 'inventory-replaced', 'lock-replaced']! {
-		saved := os.getenv('VINIX_NATIVE_BUILDER_SAVED'); defer { unsafe { saved.free() } }
+		saved := os.getenv('TULPAR_NATIVE_BUILDER_SAVED'); defer { unsafe { saved.free() } }
 		child := if mode == 'inventory-replaced' { 'inventory' } else { 'lock' }
 		path := if mode == 'root-replaced' { stage.clone() } else { stage + '/' + child }
 		defer { unsafe { path.free() } }; builder_replace(path, saved)!
 	}
 	if phase == 'created' && mode.starts_with('import-') {
-		roots := os.getenv('VINIX_NATIVE_BUILDER_ROOTS'); defer { unsafe { roots.free() } }
+		roots := os.getenv('TULPAR_NATIVE_BUILDER_ROOTS'); defer { unsafe { roots.free() } }
 		child := if mode == 'import-elf' { 'bin/memo' } else { 'licenses/musl-MIT.txt' }
 		path := roots + '/x86_64/' + child
 		defer { unsafe { path.free() } }
@@ -89,13 +89,13 @@ fn builder_checkpoint(phase string, stage string) ! {
 		path := stage + '/lock/catalog.json'; defer { unsafe { path.free() } }; builder_write(path, '{}')!
 	}
 	if phase == 'ready' && mode == 'raced-target' {
-		path := os.getenv('VINIX_NATIVE_BUILDER_TARGET'); defer { unsafe { path.free() } }; assert C.mkdir(path.str, 0o700) == 0
+		path := os.getenv('TULPAR_NATIVE_BUILDER_TARGET'); defer { unsafe { path.free() } }; assert C.mkdir(path.str, 0o700) == 0
 		keep := path + '/keep'; defer { unsafe { keep.free() } }; builder_write(keep, 'preserved replacement')!
 	}
 }
 
 fn builder_space(path string) !u64 {
-	mode := os.getenv('VINIX_NATIVE_BUILDER_MODE'); parent := os.getenv('VINIX_NATIVE_BUILDER_PARENT')
+	mode := os.getenv('TULPAR_NATIVE_BUILDER_MODE'); parent := os.getenv('TULPAR_NATIVE_BUILDER_PARENT')
 	defer { unsafe { mode.free(); parent.free() } }
 	if mode == 'space-error' { return error('injected native space query refusal') }
 	if (mode == 'no-output-space' && path == parent) || (mode == 'no-temp-space' && path != parent) { return 0 }
@@ -103,10 +103,10 @@ fn builder_space(path string) !u64 {
 }
 
 fn builder_flush(fd int) int {
-	mode := os.getenv('VINIX_NATIVE_BUILDER_MODE'); defer { unsafe { mode.free() } }
+	mode := os.getenv('TULPAR_NATIVE_BUILDER_MODE'); defer { unsafe { mode.free() } }
 	if mode == 'flush' { return -1 }
 	if mode == 'cleanup' {
-		stage := os.getenv('VINIX_NATIVE_BUILDER_STAGE'); saved := os.getenv('VINIX_NATIVE_BUILDER_SAVED')
+		stage := os.getenv('TULPAR_NATIVE_BUILDER_STAGE'); saved := os.getenv('TULPAR_NATIVE_BUILDER_SAVED')
 		path := stage + '/inventory'; defer { unsafe { stage.free(); saved.free(); path.free() } }
 		builder_replace(path, saved) or { panic(err) }
 	}
@@ -119,7 +119,7 @@ fn builder_remove(path string) ! {
 
 fn builder_reset(fixture string, target string) ! {
 	builder_remove(target)!; builder_remove(fixture + '/saved')!
-	for name in os.ls(fixture)! { if name.starts_with('.vinix-native-profile-') { os.rmdir_all(fixture + '/' + name)! } }
+	for name in os.ls(fixture)! { if name.starts_with('.tulpar-native-profile-') { os.rmdir_all(fixture + '/' + name)! } }
 }
 
 fn builder_prepare(mode string, fixture string) ! {
@@ -166,7 +166,7 @@ fn builder_attempt(mode string, roots string, target string) {
 }
 
 fn test_complete_native_builder_retires_success_partial_import_and_publication_refusal_storage() {
-	defer { for key in ['MODE', 'ROOTS', 'TARGET', 'PARENT', 'STAGE', 'SAVED']! { os.unsetenv('VINIX_NATIVE_BUILDER_' + key) } }
+	defer { for key in ['MODE', 'ROOTS', 'TARGET', 'PARENT', 'STAGE', 'SAVED']! { os.unsetenv('TULPAR_NATIVE_BUILDER_' + key) } }
 	for mode in ['complete', 'nested', 'version', 'missing-root', 'missing-architecture', 'wrong-target', 'wrong-mode',
 		'missing-notice', 'empty-notice', 'notice-directory', 'no-output-space', 'no-temp-space', 'space-error', 'created',
 		'packed-1', 'packed-2', 'packed-3', 'packed-4', 'packed-5', 'packed-6', 'ready', 'import-elf', 'import-notice',
@@ -176,9 +176,9 @@ fn test_complete_native_builder_retires_success_partial_import_and_publication_r
 		roots := fixture + '/roots'; target := fixture + if mode == 'nested' { '/new/parent/lock' } else { '/lock' }
 		// Initialize JSON metadata outside the complete-call measurement.
 		mut warm := native_catalog('1.0.0', roots, target)!; warm.close(); warm.close(); builder_remove(target)!
-		os.setenv('VINIX_NATIVE_BUILDER_MODE', mode, true); os.setenv('VINIX_NATIVE_BUILDER_ROOTS', roots, true)
-		os.setenv('VINIX_NATIVE_BUILDER_TARGET', target, true); os.setenv('VINIX_NATIVE_BUILDER_PARENT', os.dir(target), true)
-		os.setenv('VINIX_NATIVE_BUILDER_SAVED', fixture + '/saved', true); builder_prepare(mode, fixture)!
+		os.setenv('TULPAR_NATIVE_BUILDER_MODE', mode, true); os.setenv('TULPAR_NATIVE_BUILDER_ROOTS', roots, true)
+		os.setenv('TULPAR_NATIVE_BUILDER_TARGET', target, true); os.setenv('TULPAR_NATIVE_BUILDER_PARENT', os.dir(target), true)
+		os.setenv('TULPAR_NATIVE_BUILDER_SAVED', fixture + '/saved', true); builder_prepare(mode, fixture)!
 		mut original := NativeBuilderLimit{}; assert C.getrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		limit := NativeBuilderLimit{ current: 32, maximum: original.maximum }; assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &limit }) == 0
 		before := builder_descriptors(); mut maximum := u64(0); mut records := u32(0)
@@ -187,10 +187,10 @@ fn test_complete_native_builder_retires_success_partial_import_and_publication_r
 			if mode == 'nested' { builder_remove(fixture + '/new')! }
 			if mode == 'occupied' { os.write_file(target, 'preserved replacement')! }
 			if mode.starts_with('import-') { builder_restore(fixture)! }
-			$if track_heap ? { C.vinix_heap_begin() }
+			$if track_heap ? { C.tulpar_heap_begin() }
 			builder_attempt(mode, roots, target)
 			$if track_heap ? {
-				kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+				kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 				if kept > maximum { maximum = kept }; if count > records { records = count }
 			}
 			assert builder_descriptors() == before
@@ -200,17 +200,17 @@ fn test_complete_native_builder_retires_success_partial_import_and_publication_r
 			if mode == 'occupied' { assert os.read_file(target)! == 'preserved replacement' }
 			if mode == 'raced-target' { assert os.read_file(target + '/keep')! == 'preserved replacement' }
 			if mode in ['cleanup', 'root-replaced', 'inventory-replaced', 'lock-replaced']! {
-				stage := os.getenv('VINIX_NATIVE_BUILDER_STAGE'); saved := fixture + '/saved'; assert os.is_dir(saved)
+				stage := os.getenv('TULPAR_NATIVE_BUILDER_STAGE'); saved := fixture + '/saved'; assert os.is_dir(saved)
 				path := if mode == 'root-replaced' { stage.clone() } else { stage + '/' + if mode == 'lock-replaced' { 'lock' } else { 'inventory' } }
 				assert os.read_file(path + '/keep')! == 'preserved replacement'
-			} else { assert os.ls(fixture)!.all(!it.starts_with('.vinix-native-profile-')) }
+			} else { assert os.ls(fixture)!.all(!it.starts_with('.tulpar-native-profile-')) }
 		}
 		assert C.setrlimit(C.RLIMIT_NOFILE, unsafe { &original }) == 0
 		$if track_heap ? {
 			println('NATIVE BUILDER case=' + mode + ' retained=' + maximum.str() + ' allocations=' + records.str())
 			$if !native_builder_baseline ? { assert maximum == 0 && records == 0 }
 		}
-		builder_reset(fixture, target)!; builder_restore(fixture)!; os.unsetenv('VINIX_NATIVE_BUILDER_MODE')
+		builder_reset(fixture, target)!; builder_restore(fixture)!; os.unsetenv('TULPAR_NATIVE_BUILDER_MODE')
 		mut retried := native_catalog('1.0.0', roots, target)!; retried.close(); retried.close()
 		assert index_digest(os.read_file(target + '/catalog.json')!) == '249d6bfb150918c4586f86d68da6b6394800d150f7385c3654fadb7ab19a3fce'
 		assert os.read_file(roots + '/aarch64/licenses/musl-MIT.txt')! == 'musl-MIT.txt'

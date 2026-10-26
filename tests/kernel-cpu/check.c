@@ -243,7 +243,7 @@ static void limits(void) {
             for (unsigned i = 0; i < 100000; i++) computation += i;
         }
         // Do not require a handler to call write(), which is not async safe
-        // under every Vinix libc path. Mark repeat-soft delivery from here.
+        // under every Tulpar libc path. Mark repeat-soft delivery from here.
         char ok = 'S';
         if (write(channel[1], &ok, 1) != 1) _exit(4);
         for (;;) {

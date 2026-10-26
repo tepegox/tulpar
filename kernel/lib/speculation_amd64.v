@@ -2,14 +2,14 @@
 module lib
 
 $if speculation_test ? {
-	fn C.vinix_spec_test_cpuid(leaf u32, subleaf u32, a &u32, b &u32, c &u32, d &u32)
-	fn C.vinix_spec_test_rdmsr(msr u32) u64
-	fn C.vinix_spec_test_wrmsr(msr u32, value u64)
+	fn C.tulpar_spec_test_cpuid(leaf u32, subleaf u32, a &u32, b &u32, c &u32, d &u32)
+	fn C.tulpar_spec_test_rdmsr(msr u32) u64
+	fn C.tulpar_spec_test_wrmsr(msr u32, value u64)
 }
 
 fn speculation_cpuid(leaf u32, subleaf u32, a &u32, b &u32, c &u32, d &u32) {
 	$if speculation_test ? {
-		C.vinix_spec_test_cpuid(leaf, subleaf, a, b, c, d)
+		C.tulpar_spec_test_cpuid(leaf, subleaf, a, b, c, d)
 	} $else {
 		mut eax := u32(0)
 		mut ebx := u32(0)
@@ -30,7 +30,7 @@ fn speculation_cpuid(leaf u32, subleaf u32, a &u32, b &u32, c &u32, d &u32) {
 
 fn speculation_rdmsr(msr u32) u64 {
 	$if speculation_test ? {
-		return C.vinix_spec_test_rdmsr(msr)
+		return C.tulpar_spec_test_rdmsr(msr)
 	} $else {
 		mut low := u32(0)
 		mut high := u32(0)
@@ -47,7 +47,7 @@ fn speculation_rdmsr(msr u32) u64 {
 
 fn speculation_wrmsr(msr u32, value u64) {
 	$if speculation_test ? {
-		C.vinix_spec_test_wrmsr(msr, value)
+		C.tulpar_spec_test_wrmsr(msr, value)
 	} $else {
 		asm volatile amd64 {
 			wrmsr
@@ -59,7 +59,7 @@ fn speculation_wrmsr(msr u32, value u64) {
 	}
 }
 
-@[export: 'vinix_speculation_init']
+@[export: 'tulpar_speculation_init']
 fn speculation_init(cpu_number u64) u64 {
 	mut a := u32(0)
 	mut b := u32(0)
@@ -94,7 +94,7 @@ fn speculation_init(cpu_number u64) u64 {
 	return policy
 }
 
-@[export: 'vinix_speculation_switch']
+@[export: 'tulpar_speculation_switch']
 fn speculation_switch(policy u64) {
 	if policy & spec_compat_ibpb != 0 { speculation_wrmsr(0x49, 1) }
 }

@@ -1,5 +1,5 @@
 description = Turn the computer off
 auth = session
-exec = /usr/sbin/vinix-system
+exec = /usr/sbin/tulpar-system
 arg = power
 arg = off

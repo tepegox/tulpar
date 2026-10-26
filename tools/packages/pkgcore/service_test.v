@@ -6,9 +6,9 @@ import os
 import time
 
 fn service_fixture(label string) !(string, Service, Config) {
-	work := os.temp_dir() + '/vinix-service-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.temp_dir() + '/tulpar-service-' + label + '-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	root := work + '/root'
-	os.mkdir_all(root + '/etc/vinix-packages')!
+	os.mkdir_all(root + '/etc/tulpar-packages')!
 	os.mkdir_all(work + '/source/bin')!
 	os.write_file(work + '/source/bin/app', 'signed application\n')!
 	os.chmod(work + '/source/bin/app', 0o755)!
@@ -18,7 +18,7 @@ fn service_fixture(label string) !(string, Service, Config) {
 		repositories: [Repository{ id: 'fixture', url: 'file://' + work + '/repository', public_key: key }]
 		policy: Policy{ reserve_bytes: 0 }
 	}
-	os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 	p := Package{ id: 'app', version: '1.0.0', architecture: 'aarch64', name: 'Application',
 		license: 'MIT', kind: 'native', entrypoint: 'bin/app', permissions: ['files'] }
 	os.write_file(work + '/manifest.json', json2.encode(p))!
@@ -33,7 +33,7 @@ fn test_service_reloads_policy_trust_and_architecture_for_each_locked_operation(
 	work, service, initial := service_fixture('freshness')!
 	defer { os.rmdir_all(work) or {} }
 	directory := state_directory(service.root)
-	path := service.root + '/etc/vinix-packages/config.json'
+	path := service.root + '/etc/tulpar-packages/config.json'
 	mut review := service.review('install', ['app'])!
 	defer { review.close() }
 	// The client existed before this administration change. Its apply must
@@ -78,7 +78,7 @@ fn service_busy_errors(service Service) ![]string {
 	defer { guard.release() }
 	// Loading this first would yield a JSON/configuration error. Every service
 	// entry point must report the held writer lock before touching configuration.
-	os.write_file(service.root + '/etc/vinix-packages/config.json', '{broken configuration')!
+	os.write_file(service.root + '/etc/tulpar-packages/config.json', '{broken configuration')!
 	mut messages := []string{}
 	service.refresh() or { messages << err.msg() }
 	service.transact('install', ['app'], TransactionOptions{}) or { messages << err.msg() }
@@ -102,7 +102,7 @@ fn test_service_locks_before_configuration_reads_and_releases_on_errors() {
 	mut invalid := false
 	service.state() or { invalid = !err.msg().contains('transaction') }
 	assert invalid
-	save_configuration(service.root + '/etc/vinix-packages/config.json', config)!
+	save_configuration(service.root + '/etc/tulpar-packages/config.json', config)!
 	assert service.state()!.generation == 0
 	service.refresh()!
 	service.transact('install', ['app'], TransactionOptions{})!
@@ -112,7 +112,7 @@ fn test_service_locks_before_configuration_reads_and_releases_on_errors() {
 fn test_service_offline_overlay_fresh_status_and_unsafe_lock() {
 	work, service, initial := service_fixture('offline')!
 	defer { os.rmdir_all(work) or {} }
-	path := service.root + '/etc/vinix-packages/config.json'
+	path := service.root + '/etc/tulpar-packages/config.json'
 	save_configuration(path, Config{ ...initial, repositories: [Repository{ ...initial.repositories[0], url: 'https://example.invalid' }] })!
 	offline := Service{ root: service.root, offline: true }
 	mut refused := false
@@ -120,8 +120,8 @@ fn test_service_offline_overlay_fresh_status_and_unsafe_lock() {
 	assert refused && !load_config(service.root)!.policy.offline
 	assert read_snapshots(state_directory(service.root))!.len == 1
 	fresh_root := work + '/fresh'
-	os.mkdir_all(fresh_root + '/etc/vinix-packages')!
-	os.write_file(fresh_root + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: 'x86_64' }))!
+	os.mkdir_all(fresh_root + '/etc/tulpar-packages')!
+	os.write_file(fresh_root + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: 'x86_64' }))!
 	fresh := Service{ root: fresh_root }
 	assert fresh.state()!.generation == 0 && fresh.verify()!.packages.len == 0
 	assert !os.exists(state_directory(fresh_root))
@@ -142,7 +142,7 @@ fn test_service_refuses_ambiguous_configuration_before_mutating_package_state() 
 	work, service, config := service_fixture('configuration-schema')!
 	defer { os.rmdir_all(work) or {} }
 	directory := state_directory(service.root)
-	path := service.root + '/etc/vinix-packages/config.json'
+	path := service.root + '/etc/tulpar-packages/config.json'
 	service.transact('install', ['app'], TransactionOptions{})!
 	service.transact('remove', ['app'], TransactionOptions{})!
 	mut review := service.review('install', ['app'])!
@@ -198,7 +198,7 @@ fn test_service_history_refusal_preserves_state_payloads_and_recovery_stages() {
 	for file in os.ls(directory + '/objects')! { retained << 'objects/' + file }
 	mut hashes := []string{}
 	for file in retained { hashes << hash_file(directory + '/' + file)! }
-	configuration := os.read_file(service.root + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(service.root + '/etc/tulpar-packages/config.json')!
 	os.mkdir_all(directory + '/generations/.stage-history-sentinel')!
 	for invalid in ['null', '{"format":1}', '{"format":1,"repositories":null}',
 		original.replace('"sequence":1', '"sequence":0,"sequ\\u0065nce":1')] {
@@ -212,7 +212,7 @@ fn test_service_history_refusal_preserves_state_payloads_and_recovery_stages() {
 		enroll_repository(service.root, config.repositories[0], true) or { errors << err.msg() }
 		assert errors.len == 6 && errors.all(it.contains('invalid repository trust history:')), errors.str()
 		assert os.read_file(path)! == invalid && service.state()!.generation == 2
-		assert os.read_file(service.root + '/etc/vinix-packages/config.json')! == configuration
+		assert os.read_file(service.root + '/etc/tulpar-packages/config.json')! == configuration
 		for i, file in retained { assert hash_file(directory + '/' + file)! == hashes[i] }
 		assert os.is_dir(directory + '/generations/.stage-history-sentinel')
 		assert !os.exists(directory + '/refresh') && !os.exists(directory + '/enrollment')

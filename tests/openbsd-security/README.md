@@ -1,10 +1,10 @@
 # OpenBSD security features
 
-`test.c` checks Vinix's OpenBSD mitigations from userspace (see
+`test.c` checks Tulpar's OpenBSD mitigations from userspace (see
 [docs/openbsd-security.md](../../docs/openbsd-security.md)). Each case runs in
 a child process, so a pledge violation that kills the child is something the
 parent can check. The test runs as PID 1 and prints
-`VINIX OPENBSD SECURITY: PASS` or `FAIL` on the serial console.
+`TULPAR OPENBSD SECURITY: PASS` or `FAIL` on the serial console.
 
 The memory-layout cases check that changing credentials disables inspection
 by another process, including one with the same UID. A target may explicitly
@@ -24,14 +24,14 @@ tests/openbsd-security/run.sh amd64
 ```
 
 The aarch64 run compiles against the musl sysroot from
-`./scripts/build-userland-aarch64.sh` (or `VINIX_AARCH64_SYSROOT`) and directly
+`./scripts/build-userland-aarch64.sh` (or `TULPAR_AARCH64_SYSROOT`) and directly
 owns QEMU with its own boot ISO, EFI variables and persistent volume.
 The amd64 run compiles with `x86_64-linux-musl-gcc` (or
-`CC_AMD64`), builds a throwaway ISO around `build-amd64-kernel/bin/vinix`, and
+`CC_AMD64`), builds a throwaway ISO around `build-amd64-kernel/bin/tulpar`, and
 boots it under TCG. The V controller copies the selected prebuilt kernel before
 packaging. `--kernel-dir DIR` overrides the default, `--state-dir DIR` retains
 artifacts and serial output, and `--build-only` prepares without booting.
-Default scratch directories are removed. `VINIX_QEMU_TIMEOUT` changes the
+Default scratch directories are removed. `TULPAR_QEMU_TIMEOUT` changes the
 default 600-second deadline. See [native controller details](controller.md).
 
 The runner records the guest's network traffic with QEMU's `filter-dump`
@@ -40,7 +40,7 @@ sends to the host, 10.0.2.2, once DHCP has given it an address.
 
 The kernel runs with SMAP or PAN enforcing, its default, so a kernel path the
 test reaches that still touches user memory directly stops the run.
-`VINIX_CMDLINE=vinix.user_access=audit` has it logged instead, for
+`TULPAR_CMDLINE=tulpar.user_access=audit` has it logged instead, for
 [`tests/user-access/sites`](../user-access/sites) to name.
 
 On aarch64 the runner also expects the kernel's report of a violation on

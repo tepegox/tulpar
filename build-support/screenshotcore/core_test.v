@@ -10,7 +10,7 @@ import os
 fn C.mkdtemp(&char) &char
 
 fn temporary_directory() !string {
-	mut pattern := (os.temp_dir() + '/vinix-screenshot-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir() + '/tulpar-screenshot-XXXXXX\x00').bytes()
 	unsafe {
 		path := C.mkdtemp(&char(pattern.data))
 		if path == nil { return error('cannot create test directory') }
@@ -209,7 +209,7 @@ fn invoke(tool string, args []string) Result {
 
 // Run against each separately built host executable without compiling in a test.
 fn test_command_exit_codes_and_output() {
-	tool := os.getenv('VINIX_SCREENSHOT_TOOL')
+	tool := os.getenv('TULPAR_SCREENSHOT_TOOL')
 	if tool == '' { return }
 	work := temporary_directory()!
 	defer { os.rmdir_all(work) or { panic(err) } }

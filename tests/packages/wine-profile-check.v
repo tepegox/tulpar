@@ -44,9 +44,9 @@ fn wine_checks() ! {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	mut checks := []WineCheck{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << wine_check_task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.setenv('VINIX_PACKAGE_WINE_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_WINE_CLI', cli, true)
 	for name in ['wine_profile', 'elf_profile', 'catalog', 'composition'] {
 		binary := work + '/' + name
 		checks << wine_check_task(name + '-compile', [v, ...flags, '-o', binary, repository + '/tools/packages/pkgcore/' + name + '_test.v'], work)!

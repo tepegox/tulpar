@@ -5,7 +5,7 @@ import os
 
 fn main() {
 	root := os.real_path(os.join_path(os.dir(@FILE), '..', '..'))
-	work := os.join_path(os.temp_dir(), 'vinix-initramfs-writes-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-initramfs-writes-${os.getpid()}')
 	os.mkdir_all(work + '/resource') or { panic(err) }
 	defer { os.rmdir_all(work) or {} }
 	os.write_file(work + '/v.mod', "Module { name: 'initramfs_write_fixture' }\n") or { panic(err) }

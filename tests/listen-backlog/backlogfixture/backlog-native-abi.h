@@ -1,6 +1,6 @@
 /* Native declarations for the independent listen backlog regression. */
-#ifndef VINIX_BACKLOG_NATIVE_ABI_H
-#define VINIX_BACKLOG_NATIVE_ABI_H
+#ifndef TULPAR_BACKLOG_NATIVE_ABI_H
+#define TULPAR_BACKLOG_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

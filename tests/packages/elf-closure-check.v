@@ -61,7 +61,7 @@ fn compile_library(cc string, root string, source string, soname string, extra [
 
 fn run() ! {
 	$if prod { return error('compile the ELF closure check without -prod; assertions are required') }
-	if os.args.len !in [3, 7] { return error('usage: elf-closure-check VINIX_PACKAGE NEW_WORK_DIRECTORY [SQLITE_ROOTS SQLITE_LOCK FFMPEG_ROOTS FFMPEG_LOCK]') }
+	if os.args.len !in [3, 7] { return error('usage: elf-closure-check TULPAR_PACKAGE NEW_WORK_DIRECTORY [SQLITE_ROOTS SQLITE_LOCK FFMPEG_ROOTS FFMPEG_LOCK]') }
 	cli := os.real_path(os.args[1]); work := os.abs_path(os.args[2])
 	if os.exists(work) || os.is_link(work) { return error('qualification work directory must be new') }
 	os.mkdir(work)!
@@ -88,14 +88,14 @@ fn run() ! {
 		os.write_file(source + '/library.c', 'extern int getpid(void); int sqlite_fixture(void) { return getpid(); }\n')!
 		os.write_file(source + '/transitive.c', 'extern int leaf(void); int sqlite_fixture(void) { return leaf(); }\n')!
 		os.write_file(source + '/leaf.c', 'int leaf(void) { return 7; }\n')!
-		command(cc, ['-static', '-no-pie', '-o', root + '/bin/vinix-linux-runner', source + '/runner.c'])!
+		command(cc, ['-static', '-no-pie', '-o', root + '/bin/tulpar-linux-runner', source + '/runner.c'])!
 		command(cc, ['-shared', '-fPIC', '-Wl,-soname,libleaf.so.1', '-o', root + '/lib/libleaf.so.1', source + '/leaf.c'])!
 		compile_library(cc, root, source + '/library.c', 'libsqlite3.so.0', []string{})!
 		command(cc, ['-fPIE', '-pie', '-o', root + '/bin/sqlite3', source + '/app.c', '-L' + root + '/lib', '-Wl,--no-as-needed', '-l:libsqlite3.so.0'])!
 		libc := command(cc, ['-print-file-name=libc.so'])!
 		os.cp(os.real_path(libc), root + '/lib/libc.so')!
-		for notice in ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'vinix-COPYING'] { os.write_file(root + '/licenses/' + notice, 'ELF admission fixture only; not an application release.\n')! }
-		for file in ['bin/sqlite3', 'bin/vinix-linux-runner', 'lib/libsqlite3.so.0', 'lib/libc.so', 'lib/libleaf.so.1'] { pins[architecture + '/' + file] = digest(root + '/' + file)! }
+		for notice in ['sqlite-COPYRIGHT', 'musl-COPYRIGHT', 'tulpar-COPYING'] { os.write_file(root + '/licenses/' + notice, 'ELF admission fixture only; not an application release.\n')! }
+		for file in ['bin/sqlite3', 'bin/tulpar-linux-runner', 'lib/libsqlite3.so.0', 'lib/libc.so', 'lib/libleaf.so.1'] { pins[architecture + '/' + file] = digest(root + '/' + file)! }
 	}
 	baseline := work + '/baseline'
 	command(cli, ['sqlite-catalog', '3.53.4', '1.0.0', work + '/roots', baseline])!
@@ -122,7 +122,7 @@ fn run() ! {
 				else { 'ELF closure refuses a search path outside' }
 			assert status == 1 && diagnostic.contains(expected), diagnostic
 			assert !os.exists(destination) && !os.is_link(destination)
-			assert os.ls(work)!.all(!it.starts_with('.vinix-'))
+			assert os.ls(work)!.all(!it.starts_with('.tulpar-'))
 			cases << ClosureCase{architecture, fault, status, diagnostic.trim_space()}
 			os.write_file_array(root + '/bin/sqlite3', original_app)!; os.write_file_array(root + '/lib/libsqlite3.so.0', original_library)!
 			command(cli, ['sqlite-catalog', '3.53.4', '1.0.0', work + '/roots', destination])!

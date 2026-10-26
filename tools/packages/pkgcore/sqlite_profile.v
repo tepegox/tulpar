@@ -4,9 +4,9 @@ module pkgcore
 import os
 
 pub const sqlite_application_id = 'org.sqlite.cli'
-pub const sqlite_runtime_id = 'org.vinix.sqlite-runtime'
+pub const sqlite_runtime_id = 'org.tulpar.sqlite-runtime'
 
-const sqlite_notices = ['licenses/sqlite-COPYRIGHT', 'licenses/musl-COPYRIGHT', 'licenses/vinix-COPYING']
+const sqlite_notices = ['licenses/sqlite-COPYRIGHT', 'licenses/musl-COPYRIGHT', 'licenses/tulpar-COPYING']
 
 pub struct SqliteProfileInfo {
 pub:
@@ -92,7 +92,7 @@ fn sqlite_profile_templates(architecture string, sqlite_version string, runtime_
 			manifest: Package{ id: sqlite_application_id, version: sqlite_version, architecture: architecture,
 				name: 'SQLite', description: 'Interactive SQLite command line. Run from Terminal; the default database is retained in this application\'s personal data directory.',
 				homepage: 'https://www.sqlite.org/', license: 'SQLite-Public-Domain', kind: 'linux',
-				runtime: sqlite_runtime_id, entrypoint: 'bin/vinix-linux-runner',
+				runtime: sqlite_runtime_id, entrypoint: 'bin/tulpar-linux-runner',
 				arguments: ['@RUNTIME@/lib/ld-musl-' + architecture + '.so.1', '@APP@/bin/sqlite3', '@DATA@/database.sqlite3'],
 				dependencies: [Dependency{ id: sqlite_runtime_id, minimum: '1.0.0', before: '2.0.0' }] }
 			entries: [RootEntry{ source: 'bin/sqlite3', path: 'bin/sqlite3' },
@@ -102,13 +102,13 @@ fn sqlite_profile_templates(architecture string, sqlite_version string, runtime_
 			manifest: Package{ id: sqlite_runtime_id, version: runtime_version, architecture: architecture,
 				name: 'SQLite isolated runtime', description: 'Explicit musl loader, SQLite library and static SDK runner for the SQLite CLI profile.',
 				homepage: 'https://www.sqlite.org/', license: 'GPL-2.0-or-later AND MIT AND SQLite-Public-Domain', kind: 'runtime' }
-			entries: [RootEntry{ source: 'bin/vinix-linux-runner', path: 'bin/vinix-linux-runner' },
+			entries: [RootEntry{ source: 'bin/tulpar-linux-runner', path: 'bin/tulpar-linux-runner' },
 				RootEntry{ source: 'lib/libc.so', path: 'lib/libc.so' },
 				RootEntry{ source: 'lib/libc.so', path: 'lib/ld-musl-' + architecture + '.so.1' },
 				RootEntry{ source: 'lib/libsqlite3.so.0', path: 'lib/libsqlite3.so.0' },
 				RootEntry{ source: 'licenses/sqlite-COPYRIGHT', path: 'licenses/sqlite-COPYRIGHT' },
 				RootEntry{ source: 'licenses/musl-COPYRIGHT', path: 'licenses/musl-COPYRIGHT' },
-				RootEntry{ source: 'licenses/vinix-COPYING', path: 'licenses/vinix-COPYING' }]
+				RootEntry{ source: 'licenses/tulpar-COPYING', path: 'licenses/tulpar-COPYING' }]
 		},
 	]
 }
@@ -136,7 +136,7 @@ fn sqlite_catalog_with(sqlite_version string, runtime_version string, source_roo
 		if fd < 0 { return error('SQLite profile requires both ordinary architecture roots: ${architecture}') }
 		roots[architecture] = fd
 		mut root_bytes := u64(0)
-		for index, path in ['bin/sqlite3', 'bin/vinix-linux-runner', 'lib/libc.so', 'lib/libsqlite3.so.0']! {
+		for index, path in ['bin/sqlite3', 'bin/tulpar-linux-runner', 'lib/libc.so', 'lib/libsqlite3.so.0']! {
 			kind := if index == 0 { 'pie' } else if index == 1 { 'static' } else { 'shared' }
 			profile_elf(fd, path, architecture, kind, true)!
 			node := import_node(fd, path)!
@@ -160,7 +160,7 @@ fn sqlite_catalog_with(sqlite_version string, runtime_version string, source_roo
 	scratch = mirror_cost(scratch, scratch)!
 	disk_check(options.available_space(parent)!, mirror_cost(needed, scratch)!, 64 * 1024 * 1024)!
 	disk_check(options.available_space(temporary)!, scratch, 64 * 1024 * 1024)!
-	mut exporting := create_profile_stage(parent, '.vinix-sqlite-profile', 'SQLite profile')!
+	mut exporting := create_profile_stage(parent, '.tulpar-sqlite-profile', 'SQLite profile')!
 	defer { exporting.close() }
 	canonical := write_sqlite_profile(sqlite_version, runtime_version, roots, target, options, mut exporting) or { return exporting.failure(err) }
 	defer { unsafe { canonical.free() } }
@@ -186,7 +186,7 @@ fn write_sqlite_profile(sqlite_version string, runtime_version string, roots map
 		objects := C.open(object_path.str, C.O_RDONLY | C.O_DIRECTORY | C.O_CLOEXEC | C.O_NOFOLLOW)
 		if objects < 0 { return error('cannot inspect SQLite profile inventory') }
 		for file in p.files {
-			kind := if file.path == 'bin/sqlite3' { 'pie' } else if file.path == 'bin/vinix-linux-runner' { 'static' }
+			kind := if file.path == 'bin/sqlite3' { 'pie' } else if file.path == 'bin/tulpar-linux-runner' { 'static' }
 				else if file.path.starts_with('lib/') { 'shared' } else { '' }
 			if kind == '' { continue }
 			if !file.executable { C.close(objects); return error('SQLite profile payload is not executable: ${file.path}') }

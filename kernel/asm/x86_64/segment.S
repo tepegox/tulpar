@@ -118,8 +118,8 @@ syscall32_entry:
     push %rax
     mov %ds, %eax
     push %rax
-    VINIX_RSB_FILL
-    VINIX_SPEC_ENTER
+    TULPAR_RSB_FILL
+    TULPAR_SPEC_ENTER
     lfence
     sti
     mov %rsp, %rdi

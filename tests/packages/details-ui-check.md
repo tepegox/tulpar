@@ -36,7 +36,7 @@ Run the Software suite with the pinned compiler and a staged headless ui2 module
 
 ```sh
 V_MACOS_V3_NO_FALLBACK=1 V=/path/to/pinned/v CPATH="$PWD/desktop" \
-VINIX_PACKAGE_TEST_UI2=/path/to/staged/modules \
+TULPAR_PACKAGE_TEST_UI2=/path/to/staged/modules \
 /path/to/pinned/v -no-skip-unused run tests/packages/distribution-check.v \
   --software-only --direct-tests
 ```

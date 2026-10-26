@@ -226,7 +226,7 @@ fn check_software_failure_memory() ! {
 		for byte in 'Cause: é🚀 long path and escaped controls\x1b\xff\n'.repeat(20) { app.output << byte }
 		arguments := ['install', 'diagnostic-app']
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				app.capture_failure(arguments, 27)
 				app.handle('software.failure')!
@@ -249,7 +249,7 @@ fn check_software_failure_memory() ! {
 				status_reader_cycle(mut app)!
 			}
 		}
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		app.close_app()
 		assert kept == 0, 'failure details retained ${kept} bytes'
 		println('Software failure details: 1000 capture/full/compact/all-short-pages/keys/resize/back/replace/clear cycles retain zero tracked bytes')

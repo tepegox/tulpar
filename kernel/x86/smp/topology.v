@@ -45,7 +45,7 @@ fn smt_enabled() bool {
 		length := index - start
 		if length < 10 { continue }
 		mut matched := true
-		for offset, byte in 'vinix.smt=' {
+		for offset, byte in 'tulpar.smt=' {
 			if unsafe { text[start + offset] } != byte { matched = false; break }
 		}
 		if matched { enabled = length == 11 && unsafe { text[start + 10] } == `1` }

@@ -70,26 +70,26 @@ fn command(label &char, args [8]&char, expected &char, contains bool, audit bool
 fn check_host(audit bool) i32 {
 	mut failures := i32(0)
 	unsafe {
-		failures += command(c'uname -s', [c'/bin/uname', c'-s', nil, nil, nil, nil, nil, nil]!, c'Vinix\n', false, audit)
-		failures += command(c'uname -o', [c'/bin/uname', c'-o', nil, nil, nil, nil, nil, nil]!, c'Vinix\n', false, audit)
+		failures += command(c'uname -s', [c'/bin/uname', c'-s', nil, nil, nil, nil, nil, nil]!, c'Tulpar\n', false, audit)
+		failures += command(c'uname -o', [c'/bin/uname', c'-o', nil, nil, nil, nil, nil, nil]!, c'Tulpar\n', false, audit)
 		failures += command(c'uname -r', [c'/bin/uname', c'-r', nil, nil, nil, nil, nil, nil]!, c'0.1.0\n', false, audit)
-		failures += command(c'uname -a', [c'/usr/bin/uname', c'-a', nil, nil, nil, nil, nil, nil]!, c'Vinix ', false, audit)
-		failures += command(c'BusyBox uname -s', [c'/bin/busybox', c'uname', c'-s', nil, nil, nil, nil, nil]!, c'Vinix\n', false, audit)
+		failures += command(c'uname -a', [c'/usr/bin/uname', c'-a', nil, nil, nil, nil, nil, nil]!, c'Tulpar ', false, audit)
+		failures += command(c'BusyBox uname -s', [c'/bin/busybox', c'uname', c'-s', nil, nil, nil, nil, nil]!, c'Tulpar\n', false, audit)
 		// The imported applet's -o describes its build platform. The ordinary
-		// uname command above supplies Vinix's host operating-system label.
+		// uname command above supplies Tulpar's host operating-system label.
 		failures += command(c'BusyBox build label (-o)', [c'/bin/busybox', c'uname', c'-o', nil, nil, nil, nil, nil]!, c'Linux\n', false, audit)
-		failures += command(c'sysctl kernel.ostype', [c'/bin/busybox', c'sysctl', c'-n', c'kernel.ostype', nil, nil, nil, nil]!, c'Vinix\n', false, audit)
+		failures += command(c'sysctl kernel.ostype', [c'/bin/busybox', c'sysctl', c'-n', c'kernel.ostype', nil, nil, nil, nil]!, c'Tulpar\n', false, audit)
 		failures += command(c'sysctl kernel.osrelease', [c'/bin/busybox', c'sysctl', c'-n', c'kernel.osrelease', nil, nil, nil, nil]!, c'0.1.0\n', false, audit)
-		failures += command(c'/proc/version', [c'/bin/busybox', c'cat', c'/proc/version', nil, nil, nil, nil, nil]!, c'Vinix version 0.1.0 ', false, audit)
+		failures += command(c'/proc/version', [c'/bin/busybox', c'cat', c'/proc/version', nil, nil, nil, nil, nil]!, c'Tulpar version 0.1.0 ', false, audit)
 		for path in [&char(c'/etc/os-release'), &char(c'/usr/lib/os-release')]! {
-			failures += command(path, [c'/bin/busybox', c'cat', path, nil, nil, nil, nil, nil]!, c'ID=vinix\n', true, audit)
+			failures += command(path, [c'/bin/busybox', c'cat', path, nil, nil, nil, nil, nil]!, c'ID=tulpar\n', true, audit)
 		}
-		failures += command(c'/etc/lsb-release', [c'/bin/busybox', c'cat', c'/etc/lsb-release', nil, nil, nil, nil, nil]!, c'DISTRIB_ID=Vinix\n', false, audit)
-		failures += command(c'login issue', [c'/bin/busybox', c'cat', c'/etc/issue', nil, nil, nil, nil, nil]!, c'Welcome to Vinix\n', false, audit)
-		failures += command(c'login motd', [c'/bin/busybox', c'cat', c'/etc/motd', nil, nil, nil, nil, nil]!, c'Welcome to Vinix!\n', false, audit)
+		failures += command(c'/etc/lsb-release', [c'/bin/busybox', c'cat', c'/etc/lsb-release', nil, nil, nil, nil, nil]!, c'DISTRIB_ID=Tulpar\n', false, audit)
+		failures += command(c'login issue', [c'/bin/busybox', c'cat', c'/etc/issue', nil, nil, nil, nil, nil]!, c'Welcome to Tulpar\n', false, audit)
+		failures += command(c'login motd', [c'/bin/busybox', c'cat', c'/etc/motd', nil, nil, nil, nil, nil]!, c'Welcome to Tulpar!\n', false, audit)
 		machine := $if arm64 { &char(c'aarch64\n') } $else { &char(c'x86_64\n') }
 		failures += command(c'arch', [c'/bin/busybox', c'arch', nil, nil, nil, nil, nil, nil]!, machine, false, audit)
-		failures += command(c'hostname', [c'/bin/busybox', c'hostname', nil, nil, nil, nil, nil, nil]!, c'vinix\n', false, audit)
+		failures += command(c'hostname', [c'/bin/busybox', c'hostname', nil, nil, nil, nil, nil, nil]!, c'tulpar\n', false, audit)
 	}
 	return failures
 }
@@ -103,10 +103,10 @@ fn check_container() i32 {
 			mut failed := i32(0)
 			failed += command(c'container uname -s', [c'/bin/uname', c'-s', nil, nil, nil, nil, nil, nil]!, c'Linux\n', false, false)
 			failed += command(c'container uname -o', [c'/bin/uname', c'-o', nil, nil, nil, nil, nil, nil]!, c'Linux\n', false, false)
-			failed += command(c'container uname -r', [c'/bin/uname', c'-r', nil, nil, nil, nil, nil, nil]!, c'5.15.0-vinix\n', false, false)
+			failed += command(c'container uname -r', [c'/bin/uname', c'-r', nil, nil, nil, nil, nil, nil]!, c'5.15.0-tulpar\n', false, false)
 			failed += command(c'container sysctl ostype', [c'/bin/busybox', c'sysctl', c'-n', c'kernel.ostype', nil, nil, nil, nil]!, c'Linux\n', false, false)
-			failed += command(c'container sysctl osrelease', [c'/bin/busybox', c'sysctl', c'-n', c'kernel.osrelease', nil, nil, nil, nil]!, c'5.15.0-vinix\n', false, false)
-			failed += command(c'container /proc/version', [c'/bin/busybox', c'cat', c'/proc/version', nil, nil, nil, nil, nil]!, c'Linux version 5.15.0-vinix ', false, false)
+			failed += command(c'container sysctl osrelease', [c'/bin/busybox', c'sysctl', c'-n', c'kernel.osrelease', nil, nil, nil, nil]!, c'5.15.0-tulpar\n', false, false)
+			failed += command(c'container /proc/version', [c'/bin/busybox', c'cat', c'/proc/version', nil, nil, nil, nil, nil]!, c'Linux version 5.15.0-tulpar ', false, false)
 			C._exit(if failed == 0 { 0 } else { 1 })
 		}
 		if pid < 0 { return 1 }

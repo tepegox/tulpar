@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUX_PAGEFAULT_H
-#define VINIX_LINUX_PAGEFAULT_H
+#ifndef TULPAR_LINUX_PAGEFAULT_H
+#define TULPAR_LINUX_PAGEFAULT_H
 
 #include <stdbool.h>
 

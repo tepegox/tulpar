@@ -6,7 +6,7 @@
 //
 // A container runtime makes a cgroup by creating a directory, joins a process
 // to it by writing the pid into cgroup.procs, and sets limits by writing the
-// controller files. Vinix keeps the tree and the membership faithfully -- a
+// controller files. Tulpar keeps the tree and the membership faithfully -- a
 // process belongs to exactly one group, its children are born into it, and
 // cgroup.procs and cgroup.events report who is there -- and cgroup.kill kills a
 // group's processes, which is how a runtime tears a container down.
@@ -377,7 +377,7 @@ pub fn process_cgroup_text(pid int) string {
 	}
 	group := cgroup_of_process(process)
 	root := cgroup_namespace_root(calling_process())
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(64) }
 	text.add('0::')
 	add_cgroup_path(mut text, group, root)
@@ -465,7 +465,7 @@ fn cgroup_memory_bytes(group &CGroup) u64 {
 
 // The CPUs or memory nodes a group may use: the ones its cpuset names, or
 // failing that its parent's, and at the root every one there is: `last` and
-// all below it. Vinix does not confine a group to them.
+// all below it. Tulpar does not confine a group to them.
 fn cgroup_cpuset_effective(group &CGroup, file_name string, last int) string {
 	mut current := unsafe { group }
 	for current != unsafe { nil } {
@@ -477,7 +477,7 @@ fn cgroup_cpuset_effective(group &CGroup, file_name string, last int) string {
 		}
 		current = current.parent
 	}
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(24) }
 	text.add_byte(`0`)
 	if last > 0 {
@@ -490,7 +490,7 @@ fn cgroup_cpuset_effective(group &CGroup, file_name string, last int) string {
 
 // `line` and a newline, as a new string.
 fn text_line(line string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(line.len + 1) }
 	text.add(line)
 	text.add_byte(`\n`)
@@ -499,7 +499,7 @@ fn text_line(line string) string {
 
 // `value` in decimal after `label`, and a newline, as a new string.
 fn labelled_decimal(label string, value u64) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(label.len + 24) }
 	text.add(label)
 	text.add_unsigned(value)
@@ -509,7 +509,7 @@ fn labelled_decimal(label string, value u64) string {
 
 // The names in `names`, space separated, and a newline.
 fn joined_line(names []string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(names.len * 8 + 1) }
 	for i, name in names {
 		if i > 0 {
@@ -720,7 +720,7 @@ fn (mut this CGroupResource) contents() string {
 			// Frozen by its own cgroup.freeze or an ancestor's. runc pause polls
 			// for this once it has written cgroup.freeze.
 			frozen := if group.account != unsafe { nil } && group.account.is_frozen() { 1 } else { 0 }
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(32) }
 			text.add('populated ')
 			text.add_decimal(i64(populated))
@@ -777,7 +777,7 @@ fn (mut this CGroupResource) contents() string {
 				return text_line(this.text)
 			}
 			account := group.account
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(96) }
 			sample := cgcontrol.snapshot(proc.cgroup_control(account))
 			text.add('low 0\nhigh ')
@@ -804,7 +804,7 @@ fn (mut this CGroupResource) contents() string {
 			return labelled_decimal('', cgroup_memory_bytes(group))
 		}
 		'memory.stat' {
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(64) }
 			text.add('anon ')
 			current := cgroup_memory_bytes(group)
@@ -830,7 +830,7 @@ fn (mut this CGroupResource) contents() string {
 			cgroup_hierarchy_lock.acquire()
 			descendants := group.descendants
 			cgroup_hierarchy_lock.release()
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(48) }
 			text.add('nr_descendants ')
 			text.add_decimal(i64(descendants))
@@ -990,7 +990,7 @@ fn (mut this CGroupResource) write(_handle voidptr, buf voidptr, _loc u64, count
 			}
 			mut account := group.account
 			account.set_cpu_max(quota_us * 1000, period_us * 1000)
-			mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+			mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 			unsafe { *text = lib.new_text(48) }
 			if quota_us == 0 {
 				text.add('max')
@@ -1078,7 +1078,7 @@ fn (mut this CGroupResource) write(_handle voidptr, buf voidptr, _loc u64, count
 
 // `value` in decimal, as a new string.
 fn decimal_text(value u64) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(24) }
 	text.add_unsigned(value)
 	return text.str()

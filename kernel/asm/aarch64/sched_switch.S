@@ -26,7 +26,7 @@ sched_switch_context:
 
     // A saved mode of EL0t is exact and must remain EL0t. A non-zero mode
     // denotes kernel context, but its exception level cannot be hard-coded:
-    // QEMU/OVMF enters Vinix at EL1 while Apple Silicon enters it as a VHE EL2
+    // QEMU/OVMF enters Tulpar at EL1 while Apple Silicon enters it as a VHE EL2
     // host. Returning to EL1h from the latter is illegal when HCR_EL2.TGE is
     // set, producing EC=0x0e at the first instruction of a new thread.
     // Preserve every flag above M[3:0] and synthesize current-EL handler mode:
@@ -177,7 +177,7 @@ yield_dispatch:
     add sp, sp, #288
     ret
 
-// vinix_enter_idle(stack_top, entry, thread)
+// tulpar_enter_idle(stack_top, entry, thread)
 // x0 = stack top (16-byte aligned), x1 = function to run there,
 // x2 = argument passed to it after changing stacks.
 //
@@ -185,9 +185,9 @@ yield_dispatch:
 // CPU has just released the thread whose stack it is standing on -- another CPU
 // may already be running that thread, so there is nothing here to return to.
 // Does not return.
-.global vinix_enter_idle
-.type vinix_enter_idle, %function
-vinix_enter_idle:
+.global tulpar_enter_idle
+.type tulpar_enter_idle, %function
+tulpar_enter_idle:
     mov sp, x0
     mov x0, x2
     br x1

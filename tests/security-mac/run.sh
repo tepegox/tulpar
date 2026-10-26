@@ -8,16 +8,16 @@ case "$arch" in
   amd64|x86_64) arch=x86_64 ;;
   *) echo "usage: $0 [aarch64|x86_64]" >&2; exit 2 ;;
 esac
-kernel=${VINIX_KERNEL_DIR:-"$repo/kernel"}
-if [ -n "${VINIX_MAC_STATE_DIR:-}" ]; then
+kernel=${TULPAR_KERNEL_DIR:-"$repo/kernel"}
+if [ -n "${TULPAR_MAC_STATE_DIR:-}" ]; then
   exec "$repo/tests/kernel-gaps/run-native" \
     --source "$repo/tests/security-mac/guestfixture/core.v" --arch "$arch" \
-    --kernel-dir "$kernel" --state-dir "$VINIX_MAC_STATE_DIR" --no-network \
+    --kernel-dir "$kernel" --state-dir "$TULPAR_MAC_STATE_DIR" --no-network \
     --expect 'SECURITY MAC PASS' --fail 'SECURITY MAC FAIL' \
-    --timeout "${VINIX_QEMU_TIMEOUT:-300}"
+    --timeout "${TULPAR_QEMU_TIMEOUT:-300}"
 fi
 exec "$repo/tests/kernel-gaps/run-native" \
   --source "$repo/tests/security-mac/guestfixture/core.v" --arch "$arch" \
   --kernel-dir "$kernel" --no-network \
   --expect 'SECURITY MAC PASS' --fail 'SECURITY MAC FAIL' \
-  --timeout "${VINIX_QEMU_TIMEOUT:-300}"
+  --timeout "${TULPAR_QEMU_TIMEOUT:-300}"

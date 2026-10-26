@@ -7,7 +7,7 @@ module compatcore
 
 struct C.vkt_task_view {
 mut:
-	vinix_thread voidptr
+	tulpar_thread voidptr
 	pid i32
 	tgid i32
 	flags u32
@@ -17,21 +17,21 @@ mut:
 	initial_comm [16]char
 	in_iowait u32
 }
-fn C.vinix_linuxkpi_task_dequeue(voidptr)
-fn C.vinix_linuxkpi_task_enqueue(voidptr) bool
-fn C.vinix_linuxkpi_task_is_dead(voidptr) bool
-fn C.vinix_linuxkpi_task_park()
-fn C.vinix_linuxkpi_task_signal_pending(voidptr, bool) bool
-fn C.vinix_linuxkpi_iowait_block(voidptr)
-fn C.vinix_linuxkpi_cond_resched() i32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_irq_save() u64
-fn C.vinix_linuxkpi_irq_flags() u64
-fn C.vinix_linuxkpi_irq_restore(u64)
-fn C.vinix_linuxkpi_spin_wait()
+fn C.tulpar_linuxkpi_task_dequeue(voidptr)
+fn C.tulpar_linuxkpi_task_enqueue(voidptr) bool
+fn C.tulpar_linuxkpi_task_is_dead(voidptr) bool
+fn C.tulpar_linuxkpi_task_park()
+fn C.tulpar_linuxkpi_task_signal_pending(voidptr, bool) bool
+fn C.tulpar_linuxkpi_iowait_block(voidptr)
+fn C.tulpar_linuxkpi_cond_resched() i32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_irq_save() u64
+fn C.tulpar_linuxkpi_irq_flags() u64
+fn C.tulpar_linuxkpi_irq_restore(u64)
+fn C.tulpar_linuxkpi_spin_wait()
 fn C.vkt_guest_enter()
 fn C.vkt_guest_exit()
 @[c: '__atomic_fetch_or']
@@ -49,12 +49,12 @@ fn vkt_copy_comm(destination &char, name &char, length uint) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_task_init']
+@[export: 'tulpar_linuxkpi_task_init']
 pub fn task_init(storage voidptr, thread voidptr, pid i32, tgid i32, name &char, length uint) {
 	unsafe {
 		require(!is_null(storage) && !is_null(thread))
 		mut task := &C.vkt_task_view(storage)
-		task.vinix_thread = thread
+		task.tulpar_thread = thread
 		task.pid = pid
 		task.tgid = tgid
 		task.flags = 0
@@ -66,18 +66,18 @@ pub fn task_init(storage voidptr, thread voidptr, pid i32, tgid i32, name &char,
 	}
 }
 
-@[export: 'vinix_linuxkpi_task_inherit']
+@[export: 'tulpar_linuxkpi_task_inherit']
 pub fn task_inherit(storage voidptr, thread voidptr, pid i32, tgid i32, source voidptr) {
 	unsafe { parent := &C.vkt_task_view(source)
 		task_init(storage, thread, pid, tgid, &parent.comm[0], 16) }
 }
 
-@[export: 'vinix_linuxkpi_task_view']
+@[export: 'tulpar_linuxkpi_task_view']
 pub fn task_view(storage voidptr, thread voidptr, pid i32, tgid i32, name &char, length uint, exiting bool) voidptr {
 	unsafe {
 		require(!is_null(storage) && !is_null(thread))
 		mut task := &C.vkt_task_view(storage)
-		require(task.vinix_thread == thread && task.pid == pid && task.tgid == tgid)
+		require(task.tulpar_thread == thread && task.pid == pid && task.tgid == tgid)
 		if exiting { C.vkt_or32(&task.flags, 4, 0) }
 		if length != 0 { vkt_copy_comm(&task.comm[0], name, length) }
 		else { C.memcpy(&task.comm[0], &task.initial_comm[0], 16) }
@@ -85,7 +85,7 @@ pub fn task_view(storage voidptr, thread voidptr, pid i32, tgid i32, name &char,
 	}
 }
 
-@[export: 'vinix_linuxkpi_task_dead']
+@[export: 'tulpar_linuxkpi_task_dead']
 pub fn task_dead(storage voidptr) {
 	unsafe {
 		mut task := &C.vkt_task_view(storage)
@@ -96,7 +96,7 @@ pub fn task_dead(storage voidptr) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_set_task_state']
+@[export: 'tulpar_linuxkpi_set_task_state']
 pub fn set_task_state(state u32) {
 	unsafe {
 		require(state == 0 || state == 1 || state == 2 || state == 258 || state == 1026)
@@ -107,13 +107,13 @@ pub fn set_task_state(state u32) {
 
 fn vkt_signal_pending(state u32, task &C.vkt_task_view) bool {
 	if (state & 257) == 0 { return false }
-	return C.vinix_linuxkpi_task_signal_pending(task.vinix_thread, (state & 1) == 0)
+	return C.tulpar_linuxkpi_task_signal_pending(task.tulpar_thread, (state & 1) == 0)
 }
 
 @[export: 'schedule']
 pub fn task_schedule() {
 	unsafe {
-		require(C.vinix_linuxkpi_may_sleep())
+		require(C.tulpar_linuxkpi_may_sleep())
 		mut task := &C.vkt_task_view(C.vkp_current())
 		mut first := true
 		for {
@@ -122,19 +122,19 @@ pub fn task_schedule() {
 			require(state != 128)
 			if state == 0 {
 				C.vkp_spin_unlock_irqrestore(&task.wait_lock, flags)
-				if first { C.vinix_linuxkpi_cond_resched() }
+				if first { C.tulpar_linuxkpi_cond_resched() }
 				return
 			}
-			C.vinix_linuxkpi_task_dequeue(task.vinix_thread)
+			C.tulpar_linuxkpi_task_dequeue(task.tulpar_thread)
 			if vkt_signal_pending(state, task) {
-				require(C.vinix_linuxkpi_task_enqueue(task.vinix_thread))
+				require(C.tulpar_linuxkpi_task_enqueue(task.tulpar_thread))
 				C.vkp_store32(&task.state, 0, 0)
 				C.vkp_spin_unlock_irqrestore(&task.wait_lock, flags)
 				return
 			}
-			if task_in_iowait(task) { C.vinix_linuxkpi_iowait_block(task.vinix_thread) }
+			if task_in_iowait(task) { C.tulpar_linuxkpi_iowait_block(task.tulpar_thread) }
 			C.vkp_spin_unlock_irqrestore(&task.wait_lock, flags)
-			C.vinix_linuxkpi_task_park()
+			C.tulpar_linuxkpi_task_park()
 			first = false
 		}
 	}
@@ -148,11 +148,11 @@ pub fn task_wake_state(storage voidptr, state u32) i32 {
 		C.vkt_fence(5)
 		previous := C.vkp_load32(&task.state, 0)
 		mut woke := i32(0)
-		if (previous & state) != 0 && (previous & 3) != 0 && !C.vinix_linuxkpi_task_is_dead(task.vinix_thread) {
+		if (previous & state) != 0 && (previous & 3) != 0 && !C.tulpar_linuxkpi_task_is_dead(task.tulpar_thread) {
 			C.vkp_store32(&task.state, 0, 0)
-			if C.vinix_linuxkpi_task_enqueue(task.vinix_thread) { woke = 1 }
+			if C.tulpar_linuxkpi_task_enqueue(task.tulpar_thread) { woke = 1 }
 			else {
-				require(C.vinix_linuxkpi_task_is_dead(task.vinix_thread))
+				require(C.tulpar_linuxkpi_task_is_dead(task.tulpar_thread))
 				C.vkt_or32(&task.flags, 4, 0)
 				C.vkp_store32(&task.state, 128, 3)
 			}
@@ -165,7 +165,7 @@ pub fn task_wake_state(storage voidptr, state u32) i32 {
 @[export: 'wake_up_process']
 pub fn task_wake_process(storage voidptr) i32 { return task_wake_state(storage, 3) }
 
-@[export: 'vinix_linuxkpi_task_selftest']
+@[export: 'tulpar_linuxkpi_task_selftest']
 pub fn task_selftest() i32 {
 	unsafe {
 		mut task := &C.vkt_task_view(C.vkp_current())
@@ -174,15 +174,15 @@ pub fn task_selftest() i32 {
 		if task.comm[0] == 0 || strnlen(&task.comm[0], 16) == 16 { return -5 }
 		original_flags := C.vkt_or32(&task.flags, 0x40000000, 0)
 		C.vkt_guest_enter()
-		C.vinix_linuxkpi_preempt_disable()
-		cpu := C.vinix_linuxkpi_cpu_id()
+		C.tulpar_linuxkpi_preempt_disable()
+		cpu := C.tulpar_linuxkpi_cpu_id()
 		mut result := i32(0)
-		if C.vinix_linuxkpi_cpu_id() != cpu || C.vinix_linuxkpi_cpu_id() != cpu || C.vinix_linuxkpi_cond_resched() != 0 { result = -5 }
-		C.vinix_linuxkpi_preempt_enable()
-		flags := C.vinix_linuxkpi_irq_save()
-		if C.vinix_linuxkpi_cond_resched() != 0 { result = -5 }
-		C.vinix_linuxkpi_irq_restore(flags)
-		if C.vinix_linuxkpi_cond_resched() != 1 || C.vkp_current() != voidptr(task) || task.pid != pid || task.tgid != tgid { result = -5 }
+		if C.tulpar_linuxkpi_cpu_id() != cpu || C.tulpar_linuxkpi_cpu_id() != cpu || C.tulpar_linuxkpi_cond_resched() != 0 { result = -5 }
+		C.tulpar_linuxkpi_preempt_enable()
+		flags := C.tulpar_linuxkpi_irq_save()
+		if C.tulpar_linuxkpi_cond_resched() != 0 { result = -5 }
+		C.tulpar_linuxkpi_irq_restore(flags)
+		if C.tulpar_linuxkpi_cond_resched() != 1 || C.vkp_current() != voidptr(task) || task.pid != pid || task.tgid != tgid { result = -5 }
 		if (C.vkp_load32(&task.flags, 0) & 0x40000001) != 0x40000001 { result = -5 }
 		C.vkt_guest_exit()
 		if (C.vkp_load32(&task.flags, 0) & 0x40000001) != 0x40000000 { result = -5 }

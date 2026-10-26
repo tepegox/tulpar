@@ -16,15 +16,15 @@ Build tracked kernels, then boot from an isolated worktree:
 
 ```sh
 VINIX_VM_RUNNER_ROOT=/Users/alex/code/vinix \
-VINIX_KERNEL_DIR="$PWD/kernel" \
+TULPAR_KERNEL_DIR="$PWD/kernel" \
 VINIX_AARCH64_SYSROOT=/Users/alex/code/vinix/build-aarch64-userland/sysroot \
-VINIX_QEMU_RT_NO_BUILD=1 VINIX_QEMU_AUDIO=off \
+TULPAR_QEMU_RT_NO_BUILD=1 TULPAR_QEMU_AUDIO=off \
 tests/syscall-policy/run
 
 VINIX_VM_RUNNER_ROOT=/Users/alex/code/vinix \
-VINIX_KERNEL_DIR="$PWD/kernel" \
-VINIX_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/vinix" \
-VINIX_QEMU_RT_NO_BUILD=1 VINIX_QEMU_AUDIO=off \
+TULPAR_KERNEL_DIR="$PWD/kernel" \
+TULPAR_AMD64_KERNEL="$PWD/build-amd64-kernel/bin/tulpar" \
+TULPAR_QEMU_RT_NO_BUILD=1 TULPAR_QEMU_AUDIO=off \
 tests/syscall-policy/run --arch=amd64
 ```
 

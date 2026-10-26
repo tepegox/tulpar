@@ -459,7 +459,7 @@ fn mount_request(parent &VFSNode, source string, target string, fstype string, _
 fn validate_mount_propagation(parent &VFSNode, target string, flags u64) ? {
 	vfs_lock.acquire()
 	defer { vfs_lock.release() }
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	node := get_node_and_mount(parent, target, true, identity)?
 	entry := namespace_mount(lib.mount_context_top(identity))
 	type_flags := flags & ~(ms_rec | ms_silent)
@@ -534,7 +534,7 @@ fn new_mount(parent &VFSNode, source string, target string, fstype string, flags
 		return none
 	}
 
-	target_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	target_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(parent, target_mount) { return none }
 	parent_of_tgt_node, mut target_node, final_component := walk_path_on_mount(parent, target, 0, true, target_mount)
 	if target_node == unsafe { nil } {
@@ -709,7 +709,7 @@ fn mount_devpts(parent &VFSNode, target string, flags u64, options string) ? {
 	vfs_lock.acquire()
 	mut resolving := true
 	defer { if resolving { vfs_lock.release() } }
-	target_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	target_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(parent, target_mount) { return none }
 	_, mut target_node, _ := walk_path_on_mount(parent, target, 0, true, target_mount)
 	if target_node == unsafe { nil } {
@@ -749,14 +749,14 @@ fn mount_devpts(parent &VFSNode, target string, flags u64, options string) ? {
 fn bind_mount(parent &VFSNode, source string, target string, flags u64) ? {
 	vfs_lock.acquire()
 	defer { vfs_lock.release() }
-	source_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	source_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	source_node := get_node_and_mount(parent, source, true, source_mount)?
 	mut table := table_of(calling_process())
 	if attached_namespace_mount(mut table, lib.mount_context_top(source_mount)) == unsafe { nil } {
 		errno.set(errno.einval)
 		return none
 	}
-	target_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	target_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(parent, target_mount) { return none }
 	_, mut target_node, _ := walk_path_on_mount(parent, target, 0, true, target_mount)
 	if target_node == unsafe { nil } {
@@ -1030,7 +1030,7 @@ fn validate_mount_move(mut table MountTable, entry &Mount, target_mount &lib.Mou
 fn move_mount(parent &VFSNode, source string, target string) ? {
 	vfs_lock.acquire()
 	defer { vfs_lock.release() }
-	source_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	source_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	source_root := get_node_and_mount(parent, source, true, source_mount)?
 	mut table := table_of(calling_process())
 	mut entry := attached_namespace_mount(mut table, lib.mount_context_top(source_mount))
@@ -1038,7 +1038,7 @@ fn move_mount(parent &VFSNode, source string, target string) ? {
 		errno.set(errno.einval)
 		return none
 	}
-	target_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	target_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	if !starting_mount(parent, target_mount) { return none }
 	_, mut target_node, _ := walk_path_on_mount(parent, target, 0, true, target_mount)
 	if target_node == unsafe { nil } {
@@ -1070,7 +1070,7 @@ fn move_mount(parent &VFSNode, source string, target string) ? {
 fn remount(parent &VFSNode, target string, flags u64, options string) ? {
 	vfs_lock.acquire()
 	defer { vfs_lock.release() }
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	node := get_node_and_mount(parent, target, true, identity)?
 	mut table := table_of(calling_process())
 	mut entry := attached_namespace_mount(mut table, lib.mount_context_top(identity))
@@ -1125,7 +1125,7 @@ pub fn syscall_umount(_ voidptr, tgt charptr, flags u64) (u64, u64) {
 fn unmount(parent &VFSNode, target string, flags u64) ? {
 	vfs_lock.acquire()
 	defer { vfs_lock.release() }
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	node := get_node_and_mount(parent, target, flags & umount_nofollow == 0, identity)?
 	mut table := table_of(calling_process())
 	mut entry := attached_namespace_mount(mut table, lib.mount_context_top(identity))
@@ -1198,7 +1198,7 @@ pub fn syscall_chroot(_ voidptr, _path charptr) (u64, u64) {
 	if path.len == 0 {
 		return errno.err, errno.enoent
 	}
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	node := get_node_and_mount(calling_directory(), path, true, identity) or { return errno.err, errno.get() }
 	if !stat.isdir(node.resource.stat.mode) {
 		return errno.err, errno.enotdir
@@ -1239,16 +1239,16 @@ pub fn syscall_pivot_root(_ voidptr, _new_root charptr, _put_old charptr) (u64, 
 	vfs_lock.acquire()
 	defer { vfs_lock.release() }
 	directory := calling_directory()
-	new_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	new_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	mut new_root := get_node_and_mount(directory, new_path, true, new_mount) or { return errno.err, errno.get() }
-	put_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	put_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	mut put_old := get_node_and_mount(directory, old_path, true, put_mount) or { return errno.err, errno.get() }
 	if !stat.isdir(new_root.resource.stat.mode) || !stat.isdir(put_old.resource.stat.mode) {
 		return errno.err, errno.enotdir
 	}
 
 	mut process := calling_process()
-	old_mount := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	old_mount := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	old_directory := proc.snapshot_root_directory(process, old_mount)
 	old_root := if old_directory == unsafe { nil } { vfs_root } else { unsafe { &VFSNode(old_directory) } }
 	if old_mount.depth == 0 && !native_context(old_root, old_mount) { return errno.err, errno.get() }
@@ -1531,7 +1531,7 @@ pub fn record_root_switch(root &VFSNode, fstype string) {
 			old.free()
 		}
 	}
-	identity := unsafe { &lib.MountContext(C.vinix_stack_alloc(sizeof(lib.MountContext))) }
+	identity := unsafe { &lib.MountContext(C.tulpar_stack_alloc(sizeof(lib.MountContext))) }
 	for name in names {
 		if is_dot_name(name) {
 			continue

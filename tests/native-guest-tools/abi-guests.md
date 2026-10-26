@@ -19,18 +19,18 @@ tests/execute-only/run --arch aarch64 --expect-readable \
 ```
 
 `--arch` defaults to `aarch64`; `amd64` and `x86_64` select the same x86
-target. `--kernel-dir` contains a matching ELF64 `bin/vinix`. Without it,
-ARM uses `VINIX_KERNEL_DIR` or `kernel`; x86 uses `VINIX_AMD64_KERNEL` or
-`kernel/bin/vinix` (`build-amd64-kernel/bin/vinix` for procfs-mount).
+target. `--kernel-dir` contains a matching ELF64 `bin/tulpar`. Without it,
+ARM uses `TULPAR_KERNEL_DIR` or `kernel`; x86 uses `TULPAR_AMD64_KERNEL` or
+`kernel/bin/tulpar` (`build-amd64-kernel/bin/tulpar` for procfs-mount).
 Build the desired kernel separately, in an isolated worktree when needed.
 Every boot snapshots that binary into private state before making an ISO.
 The native runner always uses this existing binary, including when the legacy
-`VINIX_QEMU_RT_NO_BUILD` setting is absent.
+`TULPAR_QEMU_RT_NO_BUILD` setting is absent.
 
 State directories must be fresh. Without one the private workspace is removed
 on success, failure or interruption. `--build-only` requires `--state-dir`
 (or procfs-mount's `--work`) to keep its artifacts. `--timeout` overrides the
-original `VINIX_QEMU_TIMEOUT` setting and 300-second default.
+original `TULPAR_QEMU_TIMEOUT` setting and 300-second default.
 
 The original per-suite strict C flags, V object warning exceptions, ASM
 inputs, source controls and rootfs data remain in effect. Socket-io and
@@ -45,12 +45,12 @@ ARM boots with 2,048 MiB, four CPUs by default, and a private 64 MiB ext2
 `/root`, using the original filesystem formatting flags. x86 keeps 1,024
 MiB, two CPUs and its e1000 packet capture; terminal-jobs requires four CPUs
 on both architectures. Securelevel's x86 block fixture gets a private writable
-disk. ARM retains `USE_TCG`, `VINIX_QEMU_CPU`, `VINIX_QEMU_SMP`,
-`VINIX_QEMU_EXTRA`, `VINIX_QEMU_NETWORK`, firmware and QEMU executable
-overrides. x86 retains `VINIX_QEMU_ACCEL`, `VINIX_QEMU_X86_64` and
-`VINIX_OVMF_CODE_AMD64`. Both retain `VINIX_CMDLINE`; the private ARM ISO
-also requests the ext2 home mount. `VINIX_VM_RUNNER_ROOT` selects prepared
-ISO support/cache files, and procfs-mount retains `VINIX_LIMINE_CACHE`.
+disk. ARM retains `USE_TCG`, `TULPAR_QEMU_CPU`, `TULPAR_QEMU_SMP`,
+`TULPAR_QEMU_EXTRA`, `TULPAR_QEMU_NETWORK`, firmware and QEMU executable
+overrides. x86 retains `TULPAR_QEMU_ACCEL`, `TULPAR_QEMU_X86_64` and
+`TULPAR_OVMF_CODE_AMD64`. Both retain `TULPAR_CMDLINE`; the private ARM ISO
+also requests the ext2 home mount. `TULPAR_VM_RUNNER_ROOT` selects prepared
+ISO support/cache files, and procfs-mount retains `TULPAR_LIMINE_CACHE`.
 These paths launch QEMU directly from a disposable ISO.
 
 Every feature and final pass marker must occur exactly once. ARM requests

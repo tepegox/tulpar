@@ -4,7 +4,7 @@ module abiargs
 
 #include "varargs_abi.h"
 
-struct C.vinix_va_aapcs64 {
+struct C.tulpar_va_aapcs64 {
 mut:
 	stack   voidptr
 	gr_top  voidptr
@@ -13,7 +13,7 @@ mut:
 	vr_offs i32
 }
 
-struct C.vinix_va_sysv64 {
+struct C.tulpar_va_sysv64 {
 mut:
 	gp_offset         u32
 	fp_offset         u32
@@ -23,8 +23,8 @@ mut:
 
 fn slot(cursor voidptr) voidptr {
 	unsafe {
-		if C.VINIX_VA_ABI == 2 {
-			list := &C.vinix_va_aapcs64(cursor)
+		if C.TULPAR_VA_ABI == 2 {
+			list := &C.tulpar_va_aapcs64(cursor)
 			offset := list.gr_offs
 			if offset < 0 {
 				list.gr_offs = offset + 8
@@ -36,7 +36,7 @@ fn slot(cursor voidptr) voidptr {
 			list.stack = voidptr(stack + 8)
 			return voidptr(stack)
 		}
-		list := &C.vinix_va_sysv64(cursor)
+		list := &C.tulpar_va_sysv64(cursor)
 		if list.gp_offset < 48 {
 			address := uint(list.reg_save_area) + uint(list.gp_offset)
 			list.gp_offset += 8
@@ -61,6 +61,6 @@ pub fn parameter(args voidptr, _local &voidptr) voidptr {
 }
 
 pub fn native_size() uint {
-	if C.VINIX_VA_ABI == 2 { return sizeof(C.vinix_va_aapcs64) }
-	return sizeof(C.vinix_va_sysv64)
+	if C.TULPAR_VA_ABI == 2 { return sizeof(C.tulpar_va_aapcs64) }
+	return sizeof(C.tulpar_va_sysv64)
 }

@@ -19,7 +19,7 @@ fn C.utimensat(int, &char, &C.timespec, int) int
 fn C.kill(int, int) int
 
 fn command(kind string, args []string) []string {
-	if directory := os.getenv_opt('VINIX_ARCHIVE_TOOLS_DIR') {
+	if directory := os.getenv_opt('TULPAR_ARCHIVE_TOOLS_DIR') {
 		name := match kind {
 			'parts' { 'split-qemu-initramfs' }
 			'desktop' { 'split-desktop-initramfs' }
@@ -115,7 +115,7 @@ fn check_lock(kind string, work string) ! {
 	argv := [os.executable(), '--worker', kind, ...args]
 	ready := work + '/worker-ready'
 	mut env := os.environ()
-	env['VINIX_ARCHIVE_WORKER_READY'] = ready
+	env['TULPAR_ARCHIVE_WORKER_READY'] = ready
 	mut child := os.new_process(argv[0])
 	defer {
 		if child.is_alive() {
@@ -315,7 +315,7 @@ fn fake_xorriso() ! {
 	index := os.args.index('-o')
 	assert index > 0 && index + 1 < os.args.len
 	source := os.args.last().all_after('boot/initramfs.tar=')
-	mode := os.getenv('VINIX_FAKE_ISO_MODE')
+	mode := os.getenv('TULPAR_FAKE_ISO_MODE')
 	if mode == 'fail' {
 		eprintln('fixture xorriso failed')
 		exit(17)
@@ -354,13 +354,13 @@ fn check_iso(work string) ! {
 	old_path := os.getenv('PATH')
 	defer {
 		os.setenv('PATH', old_path, true)
-		os.unsetenv('VINIX_FAKE_ISO_MODE')
+		os.unsetenv('TULPAR_FAKE_ISO_MODE')
 	}
 	os.mkdir(work + '/bin')!
 	os.symlink(os.executable(), work + '/bin/xorriso')!
 	os.setenv('PATH', work + '/bin:' + old_path, true)
 	for mode in ['fail', 'small', 'changed'] {
-		os.setenv('VINIX_FAKE_ISO_MODE', mode, true)
+		os.setenv('TULPAR_FAKE_ISO_MODE', mode, true)
 		failed := invoke('iso', args)!
 		assert failed.code == 1
 		assert failed.stderr.contains(match mode {
@@ -403,7 +403,7 @@ pub fn run(kind string) {
 		return
 	}
 	if os.args.len >= 3 && os.args[1] == '--worker' {
-		if ready := os.getenv_opt('VINIX_ARCHIVE_WORKER_READY') {
+		if ready := os.getenv_opt('TULPAR_ARCHIVE_WORKER_READY') {
 			os.write_file(ready, 'ready') or { panic(err) }
 		}
 		archivehost.run(os.args[2], os.args[3..])
@@ -417,7 +417,7 @@ pub fn run(kind string) {
 }
 
 fn check(kind string) ! {
-	work := hosttest.resolve_path(hosttest.work_dir('', 'vinix-archive-${kind}-')!)!
+	work := hosttest.resolve_path(hosttest.work_dir('', 'tulpar-archive-${kind}-')!)!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	check_cli(kind, work)!
 	match kind {

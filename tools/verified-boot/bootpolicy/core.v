@@ -11,8 +11,8 @@ import verityimage
 fn C.fstat(i32, &C.stat) i32
 
 pub const config_marker = '++CONFIG_B2SUM_SIGNATURE++'
-pub const disk_options = ['vinix.disk=', 'vinix.qemu_persist=', 'vinix.qemu_root=', 'vinix.apple_ans=',
-	'vinix.ans_rw=', 'vinix.persist=', 'vinix.root', 'root=']
+pub const disk_options = ['tulpar.disk=', 'tulpar.qemu_persist=', 'tulpar.qemu_root=', 'tulpar.apple_ans=',
+	'tulpar.ans_rw=', 'tulpar.persist=', 'tulpar.root', 'root=']
 
 pub struct InvalidBundle {
 pub:
@@ -103,10 +103,10 @@ pub fn check_cmdline(value string, verity_token string) !string {
 	if verity_token != '' {
 		verityimage.parse_command_line(verity_token) or { return invalid(err.msg()) }
 		tokens := value.split(' ').filter(it != '')
-		if tokens.len == 0 || tokens.last() != verity_token || tokens.filter(it == verity_token).len != 1 || tokens[..tokens.len - 1].join(' ').contains('vinix.verity') {
+		if tokens.len == 0 || tokens.last() != verity_token || tokens.filter(it == verity_token).len != 1 || tokens[..tokens.len - 1].join(' ').contains('tulpar.verity') {
 			return invalid('verified root policy must contain exactly one generated final token')
 		}
-	} else if value.contains('vinix.verity') {
+	} else if value.contains('tulpar.verity') {
 		return invalid('verified block roots require the explicit --verity-root options')
 	}
 	return value.trim(' ')
@@ -218,8 +218,8 @@ pub fn check_kernel(path string, arch string) ! {
 
 pub fn config_text(kernel_hash string, module_hashes []string, cmdline string, dtb_hash string, verity_token string) !string {
 	mut lines := ['timeout: 0', 'verbose: yes', 'serial: yes', 'editor_enabled: no',
-		'hash_mismatch_panic: yes', '', '/Vinix verified initramfs', '    protocol: limine',
-		'    path: boot():/boot/vinix#${kernel_hash}',
+		'hash_mismatch_panic: yes', '', '/Tulpar verified initramfs', '    protocol: limine',
+		'    path: boot():/boot/tulpar#${kernel_hash}',
 		'    cmdline: ${check_cmdline(cmdline, verity_token)!}', '    resolution: 1024x768x32',
 		'    kaslr: yes']
 	for index, hash in module_hashes {

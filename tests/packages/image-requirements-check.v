@@ -29,7 +29,7 @@ fn image_requirements_check() ! {
 	mut checks := []ImageRequirementsResult{}
 	stage := work + '/stage'
 	checks << image_requirements_task('stage-compile', [v, ...flags, '-o', stage, repository + '/tools/packages/stage.v'], work)!
-	os.setenv('VINIX_PACKAGE_STAGE_CHECK_CLI', stage, true)
+	os.setenv('TULPAR_PACKAGE_STAGE_CHECK_CLI', stage, true)
 	checks << image_requirements_task('desktop-cache-compile', [v, ...flags, '-o', work + '/desktop-cache', repository + '/build-support/cachekey/desktop_test.v'], work)!
 	checks << image_requirements_task('desktop-cache-run', [work + '/desktop-cache'], work)!
 	for name in ['image_applications', 'image_check', 'image_repositories', 'image_configuration', 'deployment', 'resolve_search', 'release', 'mirror', 'policy', 'catalog', 'publisher_schema'] {
@@ -41,7 +41,7 @@ fn image_requirements_check() ! {
 		'-ldflags', '-fsanitize=address,undefined', '-o', work + '/image-applications-sanitize', repository + '/tools/packages/pkgcore/image_applications_test.v'], work)!
 	os.setenv('ASAN_OPTIONS', 'detect_leaks=0', true); os.setenv('UBSAN_OPTIONS', 'halt_on_error=1', true)
 	checks << image_requirements_task('image_applications-sanitize-run', [work + '/image-applications-sanitize'], work)!
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << image_requirements_task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
 	checks << image_requirements_task('distribution-cli-compile', [v, ...flags, '-o', work + '/distribution-cli', repository + '/tests/packages/distribution-cli.v'], work)!
 	checks << image_requirements_task('distribution-cli-run', [work + '/distribution-cli', cli], work)!

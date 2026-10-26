@@ -23,7 +23,7 @@ fn plan_grow_volume_recovery(device &char, input &char, recovery &char, capacity
 		|| !encode_volume_recovery(&work.disk, &work.request, &work.wrapping[0], &work.random[0], &work.envelope[0]) { return 1 }
 	erase_key(&work.wrapping[0], 64); erase_key(&work.request.key[0], 64)
 	fd := C.open(device, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-	if fd < 0 { C.perror(c'vinix-volume: open recovery growth parent'); return 1 }; defer { C.close(fd) }
+	if fd < 0 { C.perror(c'tulpar-volume: open recovery growth parent'); return 1 }; defer { C.close(fd) }
 	if !probe_disk(fd, mut work.after, mut work.status) || !key_matches(&work.disk, &work.after) {
 		return plan_error(c'recovery growth disk identity, native sectors or declared capacity do not match')
 	}

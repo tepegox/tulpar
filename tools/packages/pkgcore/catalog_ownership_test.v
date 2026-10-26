@@ -10,12 +10,12 @@ import tools.packages.signing
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn catalog_ownership_fixture() !(string, Config) {
-	directory := os.temp_dir() + '/vinix-catalog-ownership-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-catalog-ownership-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(directory)!
 	private := signing.new_key_from_seed([]u8{len: 32, init: 7})
 	repository := Repository{ id: 'trusted', url: 'file:///unused-catalog-source', public_key: private.public_key().hex() }
@@ -48,10 +48,10 @@ fn test_repeated_catalog_loads_bound_retained_scratch_after_retiring_the_owned_r
 		warm := load_catalog(config, directory)!; close_authenticated_catalog(warm)
 		mut maximum := u64(0); mut maximum_count := u32(0)
 		for _ in 0 .. 64 {
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			catalog := load_catalog(config, directory)!
 			close_authenticated_catalog(catalog)
-			kept := C.vinix_heap_end(); count := C.vinix_heap_count()
+			kept := C.tulpar_heap_end(); count := C.tulpar_heap_count()
 			assert kept <= u64(12 * 1024 + directory.len * 2) && count <= 110, 'catalog scratch: ${kept} bytes / ${count} allocations'
 			if kept > maximum { maximum = kept }; if count > maximum_count { maximum_count = count }
 		}

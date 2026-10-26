@@ -1,6 +1,6 @@
 # Complete installed health reports
 
-`Service.health()` and `vinix-package [--json] health` inspect every installed
+`Service.health()` and `tulpar-package [--json] health` inspect every installed
 package under one reader lock. Unlike fail-fast Verify, a damaged app does not
 hide damage in another runtime, data dependency or launcher. Each owned row
 records installed provenance and the first namespace, payload or registration

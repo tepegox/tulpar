@@ -9,7 +9,7 @@ import strconv
 fn C.mkdtemp(&char) &char
 
 fn temporary_directory() !string {
-	mut pattern := (os.temp_dir() + '/vinix-dockerimage-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir() + '/tulpar-dockerimage-XXXXXX\x00').bytes()
 	unsafe {
 		path := C.mkdtemp(&char(pattern.data))
 		if path == nil { return error('cannot create test directory') }
@@ -64,7 +64,7 @@ fn check_archive(path string, busybox []u8) {
 					'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/:/bin/false\n'
 				}
 				'etc/group' { 'root:x:0:\nnogroup:x:65534:\n' }
-				'etc/os-release' { 'NAME="Vinix busybox"\nID=vinix-busybox\n' }
+				'etc/os-release' { 'NAME="Tulpar busybox"\nID=tulpar-busybox\n' }
 				else { panic('unexpected member: ${name}') }
 			}
 			assert body.bytestr() == expected
@@ -134,7 +134,7 @@ fn test_missing_input_does_not_create_output() {
 }
 
 fn test_native_entrypoint_options_output_and_failures() {
-	tool := os.getenv('VINIX_DOCKERIMAGE_TOOL')
+	tool := os.getenv('TULPAR_DOCKERIMAGE_TOOL')
 	if tool == '' { return }
 	work := temporary_directory()!
 	defer { os.rmdir_all(work) or { panic(err) } }

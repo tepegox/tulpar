@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_SMP_CALL_HOST_CONTRACT_H
-#define VINIX_SMP_CALL_HOST_CONTRACT_H
+#ifndef TULPAR_SMP_CALL_HOST_CONTRACT_H
+#define TULPAR_SMP_CALL_HOST_CONTRACT_H
 /* Host context and original-record compiler metadata only. Transport and all
  * assertions are V; the production backend alone owns queue algorithms. */
 #include <pthread.h>

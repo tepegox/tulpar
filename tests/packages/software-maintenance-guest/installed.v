@@ -5,9 +5,9 @@ import crypto.sha256
 import json2
 import os
 
-const installed_id = 'vinix-software-maintenance-installed-1'
+const installed_id = 'tulpar-software-maintenance-installed-1'
 const observation_path = '/root/software-maintenance-retained.json'
-const counter_path = '/home/alex/.local/share/vinix-apps/org.vinix.counter/counter.txt'
+const counter_path = '/home/alex/.local/share/tulpar-apps/org.tulpar.counter/counter.txt'
 
 struct InstalledFile {
 	path string
@@ -24,7 +24,7 @@ struct InstalledObservation {
 }
 
 fn require_uninstalled() ! {
-	base := '/var/lib/vinix-packages'
+	base := '/var/lib/tulpar-packages'
 	for name in ['state.json', 'current'] {
 		if os.exists(base + '/' + name) || os.is_link(base + '/' + name) {
 			return error('graphical acquisition requires no installed package state: ' + name)
@@ -33,7 +33,7 @@ fn require_uninstalled() ! {
 	if os.is_dir(base + '/generations') && os.ls(base + '/generations')!.len != 0 {
 		return error('graphical acquisition requires no existing package generations')
 	}
-	if (os.read_file('/var/log/vinix/auth.log') or { '' }).contains('run packages-change') {
+	if (os.read_file('/var/log/tulpar/auth.log') or { '' }).contains('run packages-change') {
 		return error('graphical acquisition requires no previous package approval audit')
 	}
 }
@@ -52,7 +52,7 @@ fn installed_root() !bool {
 		it.fields()[0] == '/dev/root' && it.fields()[1] == '/' && it.fields()[2] == 'ext2') {
 		return error('graphical installed check requires the installer-selected disk root')
 	}
-	if os.read_file('/.vinix-image-id')!.trim_space() != installed_id {
+	if os.read_file('/.tulpar-image-id')!.trim_space() != installed_id {
 		return error('unexpected installed image identity')
 	}
 	proof := json2.decode[map[string]string](os.read_file('/usr/share/software-maintenance-installed.json')!)!
@@ -69,7 +69,7 @@ fn installed_root() !bool {
 		os.write_file('/root/software-maintenance-disk-canary', 'Created on the installed system disk\n')!
 	} else {
 		previous := json2.decode[InstalledObservation](os.read_file(observation_path)!)!
-		if os.readlink('/var/lib/vinix-packages/current')! != previous.current {
+		if os.readlink('/var/lib/tulpar-packages/current')! != previous.current {
 			return error('installed package generation changed across cold boot')
 		}
 		for file in previous.files {
@@ -85,14 +85,14 @@ fn installed_root() !bool {
 
 fn retain_installed() ! {
 	mut files := []InstalledFile{}
-	for path in ['/etc/passwd', '/etc/group', '/etc/shadow', '/etc/vinix-packages/config.json',
-		'/var/lib/vinix-packages/current/state.json', '/var/lib/vinix-packages/catalog.json',
-		'/var/lib/vinix-packages/trust-history.json', counter_path,
-		'/root/software-maintenance-disk-canary', '/var/log/vinix/auth.log',
+	for path in ['/etc/passwd', '/etc/group', '/etc/shadow', '/etc/tulpar-packages/config.json',
+		'/var/lib/tulpar-packages/current/state.json', '/var/lib/tulpar-packages/catalog.json',
+		'/var/lib/tulpar-packages/trust-history.json', counter_path,
+		'/root/software-maintenance-disk-canary', '/var/log/tulpar/auth.log',
 		media + '/index.json', media + '/index.sig'] {
 		files << observed_file(path)!
 	}
 	os.write_file(observation_path, json2.encode(InstalledObservation{
-		current: os.readlink('/var/lib/vinix-packages/current')!, files: files}) + '\n')!
+		current: os.readlink('/var/lib/tulpar-packages/current')!, files: files}) + '\n')!
 }
 

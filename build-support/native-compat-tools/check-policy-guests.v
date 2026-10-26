@@ -31,7 +31,7 @@ fn checked(binary string, profile string, cache string) ! {
 			if family == 'resource-groups' {
 				mut expected := []string{}
 				if arch == 'aarch64' {
-					sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { hosttest.root() + '/build-aarch64-userland/sysroot' }
+					sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { hosttest.root() + '/build-aarch64-userland/sysroot' }
 					expected = [os.getenv_opt('CC') or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk, '-L' + sdk + '/lib', '-fuse-ld=lld', '-fno-stack-protector']
 				} else { expected = [os.getenv_opt('CC_AMD64') or { 'x86_64-linux-musl-gcc' }] }
 				expected << ['-static', '-pthread', '-O2', '-Wall', '-Wextra', '-Werror', work + '/serial.o', hosttest.root() + '/tests/resource-groups/guest.c', '-o', init]

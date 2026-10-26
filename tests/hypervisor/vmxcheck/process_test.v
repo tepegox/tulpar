@@ -19,9 +19,9 @@ fn restore(owners []DescriptorOwner) {
 }
 
 fn test_native_capture_descriptor_states_text_errors_and_retirement() {
-	probe := os.getenv('VINIX_VMX_PROBE')
+	probe := os.getenv('TULPAR_VMX_PROBE')
 	if probe == '' { return }
-	work := hosttest.work_dir('', 'vinix-vmx-process-')!
+	work := hosttest.work_dir('', 'tulpar-vmx-process-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	path := join(work, 'snapshot')
 	c := Config{ caller: if os.uname().machine in ['arm64', 'aarch64'] { 'arm64' } else { 'amd64' }, env: os.environ() }

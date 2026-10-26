@@ -7,7 +7,7 @@ import os
 
 fn main() {
 	if os.args.len < 4 || !os.args[1].starts_with('--lease-fd=') || os.args[2] != '--' {
-		eprintln('Usage: vinix-service-runner --lease-fd=FD -- /absolute/program [ARGUMENTS...]')
+		eprintln('Usage: tulpar-service-runner --lease-fd=FD -- /absolute/program [ARGUMENTS...]')
 		exit(2)
 	}
 	fd := int(sessioncore.number(os.args[1]['--lease-fd='.len..], 3, 2147483647)!)

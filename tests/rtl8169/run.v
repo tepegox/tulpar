@@ -5,7 +5,7 @@ import os
 
 fn main() {
 	root := os.real_path(os.join_path(os.dir(@FILE), '..', '..'))
-	work := os.join_path(os.temp_dir(), 'vinix-rtl8169-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-rtl8169-${os.getpid()}')
 	os.mkdir_all(work) or { panic(err) }
 	defer { os.rmdir_all(work) or {} }
 	for source in os.ls(os.join_path(root, 'kernel/dev/rtl8169')) or { panic(err) } {

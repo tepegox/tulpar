@@ -3,9 +3,9 @@
 
 /* Abandon the bootstrap/current stack and enter the permanent idle stack.
  * The tail transfer keeps the same compiler-independent retpoline. */
-.global vinix_enter_idle
-.type vinix_enter_idle, @function
-vinix_enter_idle:
+.global tulpar_enter_idle
+.type tulpar_enter_idle, @function
+tulpar_enter_idle:
     cli
     mov %rdi, %rsp
     and $-16, %rsp
@@ -13,44 +13,44 @@ vinix_enter_idle:
     movq $0, (%rsp)
     mov %rdx, %rdi
     jmp __x86_indirect_thunk_rsi
-.size vinix_enter_idle, .-vinix_enter_idle
+.size tulpar_enter_idle, .-tulpar_enter_idle
 
 /* Opt-in recovery recognizes only the exact PC and address of each probe. */
-.global vinix_guard_probe_read
-.type vinix_guard_probe_read, @function
-vinix_guard_probe_read:
-.global vinix_guard_read_fault
-vinix_guard_read_fault:
+.global tulpar_guard_probe_read
+.type tulpar_guard_probe_read, @function
+tulpar_guard_probe_read:
+.global tulpar_guard_read_fault
+tulpar_guard_read_fault:
     movb (%rdi), %al
-.global vinix_guard_read_resume
-vinix_guard_read_resume:
+.global tulpar_guard_read_resume
+tulpar_guard_read_resume:
     mov $1, %eax
     ret
-.size vinix_guard_probe_read, .-vinix_guard_probe_read
+.size tulpar_guard_probe_read, .-tulpar_guard_probe_read
 
-.global vinix_guard_probe_write
-.type vinix_guard_probe_write, @function
-vinix_guard_probe_write:
-.global vinix_guard_write_fault
-vinix_guard_write_fault:
+.global tulpar_guard_probe_write
+.type tulpar_guard_probe_write, @function
+tulpar_guard_probe_write:
+.global tulpar_guard_write_fault
+tulpar_guard_write_fault:
     movb $0, (%rdi)
-.global vinix_guard_write_resume
-vinix_guard_write_resume:
+.global tulpar_guard_write_resume
+tulpar_guard_write_resume:
     mov $1, %eax
     ret
-.size vinix_guard_probe_write, .-vinix_guard_probe_write
+.size tulpar_guard_probe_write, .-tulpar_guard_probe_write
 
-.global vinix_guard_probe_stack
-.type vinix_guard_probe_stack, @function
-vinix_guard_probe_stack:
+.global tulpar_guard_probe_stack
+.type tulpar_guard_probe_stack, @function
+tulpar_guard_probe_stack:
     mov %rsp, %r11
     mov %rdi, %rsp
-.global vinix_guard_stack_fault
-vinix_guard_stack_fault:
+.global tulpar_guard_stack_fault
+tulpar_guard_stack_fault:
     pushq $0
-.global vinix_guard_stack_resume
-vinix_guard_stack_resume:
+.global tulpar_guard_stack_resume
+tulpar_guard_stack_resume:
     mov %r11, %rsp
     mov $1, %eax
     ret
-.size vinix_guard_probe_stack, .-vinix_guard_probe_stack
+.size tulpar_guard_probe_stack, .-tulpar_guard_probe_stack

@@ -1,12 +1,12 @@
 # Application SDK 1
 
-The public boundary is format-1 repositories/manifests, `vinix-package` commands
+The public boundary is format-1 repositories/manifests, `tulpar-package` commands
 and versioned JSON, and the isolated launch contract below. Publishers do not
 link desktop internals or write the database. Breaking changes require a new
 `format`/`sdk` value; unknown versions are rejected. This does not freeze kernel,
 Apple or internal compositor interfaces.
 
-Call `vinix-package capabilities` to discover accepted package, application SDK,
+Call `tulpar-package capabilities` to discover accepted package, application SDK,
 native window and deployment versions before choosing an interface. The command
 always emits JSON, reads no configuration and changes no package state. Match
 versions by exact membership; compatibility still requires ordinary package,
@@ -143,7 +143,7 @@ and total arithmetic overflow is refused. See
 
 ## Administrator package transport
 
-`vinix-package admin [--progress] [--offline] COMMAND ...` is the ordinary-account
+`tulpar-package admin [--progress] [--offline] COMMAND ...` is the ordinary-account
 client for authenticated package administration. The current account must be an
 administrator and provide its own password through standard input (without echo
 on a terminal). Software uses the same client with a masked, bounded password
@@ -153,7 +153,7 @@ before normal Software close. Forced client retirement closes its output stream
 and leaves the approved worker to finish under the existing package journal.
 
 The installed `packages-change` action is `auth = admin`, invokes only
-`/usr/bin/vinix-package admin-authorize`, takes no caller arguments, and uses one
+`/usr/bin/tulpar-package admin-authorize`, takes no caller arguments, and uses one
 bounded input field. Its canonical format-1 request contains a fresh 128-bit
 nonce and literal argument vector, at most 4,096 encoded bytes/69 arguments.
 Unknown/duplicate keys and noncanonical transport are refused. Software accepts
@@ -217,7 +217,7 @@ the actual Software prompt/progress/credential-retirement code.
 
 `tools/packages/stage.v --arch ARCH --staging ROOT --config FILE` initializes a
 fresh image with the release builder's reviewed format-1 `Config`. The existing
-desktop/security staging path also reads `VINIX_PACKAGE_IMAGE_CONFIG`; an explicit
+desktop/security staging path also reads `TULPAR_PACKAGE_IMAGE_CONFIG`; an explicit
 `--config` wins. Use an absolute source path. The desktop image cache key includes
 both that selection and the source contents.
 
@@ -264,8 +264,8 @@ tool. Retrying a full build remains necessary before distribution. See
 
 Custom V image builders may use `configuration.prepare_tool_build()`, obtain an
 owned workspace path with `build.directory()!`, and call `build.check()!` before
-and after every compiler invocation. Write `vinix-package`, `vinix-session` and
-`vinix-linux-runner` there, then call `build.publish()!` and checked
+and after every compiler invocation. Write `tulpar-package`, `tulpar-session` and
+`tulpar-linux-runner` there, then call `build.publish()!` and checked
 `build.retire()!`. Close on every path with `build.close()`; retirement and close
 are repeatable. On compilation/publication refusal, return `build.failure(err)`
 to combine the primary error with cleanup diagnostics and release the plan.
@@ -302,7 +302,7 @@ login/runtime acceptance remain release responsibilities.
 `tests/packages/native-catalog-check.v --software` additionally exercises the
 actual Software controller as ordinary administrator and standard accounts
 against those staged services and real native applications. It requires headless
-ui2 through `VINIX_PACKAGE_TEST_UI2`; see [the integration check](../../tests/packages/software-image-check.md).
+ui2 through `TULPAR_PACKAGE_TEST_UI2`; see [the integration check](../../tests/packages/software-image-check.md).
 Its UI trees and service transports are qualified separately from graphical
 login, compositor presentation and foreign display/audio brokers.
 
@@ -325,14 +325,14 @@ foreign runtime services and broader device/crash acceptance remain open.
 ### Offline repository bundles in release images
 
 Add `--repositories DIRECTORY` to the staging command, or set
-`VINIX_PACKAGE_IMAGE_REPOSITORIES` to its absolute path in the desktop image
+`TULPAR_PACKAGE_IMAGE_REPOSITORIES` to its absolute path in the desktop image
 builder. The explicit option wins. With no input, staging retains its existing
 configuration-only behavior. The desktop cache hashes the selected directory and
 all its contents, including payload bytes; timestamp restoration cannot hide a
 changed object.
 
 The reviewed configuration must explicitly enroll each bundled publisher at
-`file:///usr/share/vinix-packages/repositories/ID`. Put its complete
+`file:///usr/share/tulpar-packages/repositories/ID`. Put its complete
 `publish-release` export under `DIRECTORY/ID`, containing only `index.json`,
 `index.sig` and `objects/HASH`. Every configuration entry using that fixed prefix
 must be present, and unconfigured bundle entries refuse. Other configured online
@@ -464,7 +464,7 @@ Repeat `--require-app ID` for every application an image release advertises:
 ```sh
 v run tools/packages/stage.v --check --arch aarch64 --staging /build/fresh-root \
   --config /release/reviewed-packages.json --repositories /release/bundle \
-  --require-app org.vinix.counter --require-app org.vinix.memo
+  --require-app org.tulpar.counter --require-app org.tulpar.memo
 ```
 
 Requirements work in both check and normal staging modes. They are evaluated
@@ -488,7 +488,7 @@ canonical format-2 lock with sorted roots and closure, exact versions/architectu
 publisher IDs/keys, minimum signed sequences and complete manifest digests.
 Reviewers can save that field as a deployment document and distribute it with
 the release or organization policy. Ordinary Software deployment review, or
-`vinix-package deployment-review FILE` followed by its approved apply, still
+`tulpar-package deployment-review FILE` followed by its approved apply, still
 authenticates the current catalog, checks current policy and requires fresh
 authorization. The report does not install or authorize applications, save a
 deployment file, or change the image's configuration/state.
@@ -502,13 +502,13 @@ runtime, graphical and device compatibility must still be qualified. See
 
 ### Application requirements files in desktop builds
 
-Use `--applications FILE`, or set `VINIX_PACKAGE_IMAGE_APPLICATIONS` to an
+Use `--applications FILE`, or set `TULPAR_PACKAGE_IMAGE_APPLICATIONS` to an
 absolute file path, to carry the release's advertised application set through
 the existing desktop/security package staging path. The file is an existing
 **format-1 deployment root manifest**, with all three fields required:
 
 ```json
-{"format":1,"architecture":"aarch64","packages":["org.vinix.counter","org.vinix.memo"]}
+{"format":1,"architecture":"aarch64","packages":["org.tulpar.counter","org.tulpar.memo"]}
 ```
 
 Select the matching architecture for each build. The set must contain 1–4096
@@ -611,9 +611,9 @@ free the text and close both image plans. See
 ### Declare release applications in an image
 
 Normal staging with selected `--applications FILE`,
-`VINIX_PACKAGE_IMAGE_APPLICATIONS` or repeated `--require-app ID` now publishes
+`TULPAR_PACKAGE_IMAGE_APPLICATIONS` or repeated `--require-app ID` now publishes
 the jointly resolved format-2 lock at
-`/usr/share/vinix-packages/applications.json`. It captures the exact lock before
+`/usr/share/tulpar-packages/applications.json`. It captures the exact lock before
 compiler lookup and publishes it after the matching authenticated bundle and
 configuration. Changing or removing the original input files cannot redirect
 that plan. Staging creates no installed application generation or deployment
@@ -689,10 +689,10 @@ only for a newly created file. See
 ## Build and publish
 
 ```sh
-v -path '@vlib|@vmodules|.|tools/accounts' -o /tmp/vinix-package tools/packages/main.v
-/tmp/vinix-package keygen /secure/publisher.seed
-/tmp/vinix-package pack manifest.json /build/payload /build/new-repository
-/tmp/vinix-package publish-release /build/new-repository company /secure/publisher.seed 1 2000000000 /srv/releases/company-1
+v -path '@vlib|@vmodules|.|tools/accounts' -o /tmp/tulpar-package tools/packages/main.v
+/tmp/tulpar-package keygen /secure/publisher.seed
+/tmp/tulpar-package pack manifest.json /build/payload /build/new-repository
+/tmp/tulpar-package publish-release /build/new-repository company /secure/publisher.seed 1 2000000000 /srv/releases/company-1
 ```
 
 `pack` captures an ordinary source directory before creating repository output.
@@ -747,7 +747,7 @@ mode-0600 `.package-key-*.tmp`; inspect the owned directory before retrying.
 
 A failure after publication explicitly says **signing seed saved**. Preserve
 that seed and inspect its path and storage before retrying. After verifying
-the ordinary private file, `vinix-package key-public SEED_FILE` prints its existing
+the ordinary private file, `tulpar-package key-public SEED_FILE` prints its existing
 public key without creating a new key or modifying the seed. It uses the same
 captured, private, bounded seed admission as publishing; it accepts no public,
 aliased, foreign-owned or hard-linked seed. No administrative transport exposes
@@ -853,7 +853,7 @@ continue to try the newest version first. See
 [preference qualification](../../tests/packages/resolver-preference-check.md).
 
 The command verifies and deduplicates objects, checks destination space with a
-64 MiB reserve, creates a private `.vinix-release-*` sibling tree, verifies copied
+64 MiB reserve, creates a private `.tulpar-release-*` sibling tree, verifies copied
 bytes and flushes the tree. Exclusive atomic rename publishes the complete new
 directory and refuses every existing destination, including one created during
 the export. Output objects/metadata are 0644 and directories 0755. Filesystems
@@ -973,7 +973,7 @@ enforced. Complete prepared-root/profile construction remains separate.
 selection from a prepared upstream root. Verify upstream signatures and obtain
 redistribution permission before preparing that root. This command does not
 authenticate upstream packages, solve their dependencies, run install scripts or
-infer licenses. Record the complete app/runtime dependency closure in the Vinix
+infer licenses. Record the complete app/runtime dependency closure in the Tulpar
 manifest and include the upstream copyright/license files among the selectors.
 
 ```json
@@ -988,7 +988,7 @@ manifest and include the upstream copyright/license files among the selectors.
     "kind": "runtime"
   },
   "entries": [
-    {"source": "bin/vinix-linux-runner", "path": "bin/vinix-linux-runner"},
+    {"source": "bin/tulpar-linux-runner", "path": "bin/tulpar-linux-runner"},
     {"source": "lib", "path": "lib"},
     {"source": "usr/lib", "path": "usr/lib"},
     {"source": "licenses", "path": "licenses"}
@@ -1165,7 +1165,7 @@ manifests, objects and canonical recipe again. Success atomically publishes a
 new 0700 workspace containing `objects`, `manifests` and `catalog.json`; an
 existing destination is never replaced. Failed builds retire their captured
 ordinary staging directory. An abrupt process kill can leave an unpublished private
-`.vinix-catalog-*` directory; inspect/remove that owned directory and retry with
+`.tulpar-catalog-*` directory; inspect/remove that owned directory and retry with
 a new destination. A reported parent-directory flush failure means the workspace
 is already visible and needs storage verification before signing.
 
@@ -1216,8 +1216,8 @@ ownership has its [separate check](../../tests/packages/release-owner-check.md);
 broader application acceptance remains open.
 
 ```sh
-vinix-package pack-catalog catalog.json /build/prepared-roots /build/new-workspace
-vinix-package publish-release /build/new-workspace company /secure/publisher-seed 1 EXPIRES_UNIX /build/new-release
+tulpar-package pack-catalog catalog.json /build/prepared-roots /build/new-workspace
+tulpar-package publish-release /build/new-workspace company /secure/publisher-seed 1 EXPIRES_UNIX /build/new-release
 ```
 
 Expose the release directory to consumers and enroll its authenticated public key
@@ -1276,11 +1276,11 @@ prepared roots into these directories while preserving their file modes):
 ```
 
 ```sh
-vinix-package sqlite-catalog 3.53.4 1.0.0 /build/roots/sqlite /build/sqlite-lock
-vinix-package ffmpeg-catalog 1.0.0 /build/roots/media /build/media-lock
-vinix-package compose-catalog /build/combined-lock sqlite /build/sqlite-lock/catalog.json media /build/media-lock/catalog.json
-vinix-package pack-catalog /build/combined-lock/catalog.json /build/roots /build/combined-workspace
-vinix-package publish-release /build/combined-workspace company /secure/publisher.seed 1 EXPIRES_UNIX /build/combined-release
+tulpar-package sqlite-catalog 3.53.4 1.0.0 /build/roots/sqlite /build/sqlite-lock
+tulpar-package ffmpeg-catalog 1.0.0 /build/roots/media /build/media-lock
+tulpar-package compose-catalog /build/combined-lock sqlite /build/sqlite-lock/catalog.json media /build/media-lock/catalog.json
+tulpar-package pack-catalog /build/combined-lock/catalog.json /build/roots /build/combined-workspace
+tulpar-package publish-release /build/combined-workspace company /secure/publisher.seed 1 EXPIRES_UNIX /build/combined-release
 ```
 
 The composer checks destination space plus a 64 MiB reserve and atomically
@@ -1311,7 +1311,7 @@ See [composition ownership qualification](../../tests/packages/composition-owner
 for tracked planning/refusal lifetimes and target checks.
 
 An existing destination is never replaced. Failures remove the private staging
-directory; an abrupt kill can leave an unpublished `.vinix-composition-*`
+directory; an abrupt kill can leave an unpublished `.tulpar-composition-*`
 directory. A parent-flush diagnostic after publication requires storage
 verification. No payload acquisition, consumer state/trust changes, signing or
 license acceptance occur. A composed release uses its publisher's one key;
@@ -1393,7 +1393,7 @@ The service preflights destination and temporary-filesystem space, inventories
 payload hashes, canonicalizes complete target coverage and atomically publishes
 only `catalog.json` to a new private lock directory. Failures remove the private
 staging workspace; abrupt termination can leave an unpublished
-`.vinix-native-profile-*` directory. A directory-flush error after publication
+`.tulpar-native-profile-*` directory. A directory-flush error after publication
 requires checking the named published destination before retrying.
 
 Use the [combined V builder](../../examples/package-catalog/README.md) to compile
@@ -1401,8 +1401,8 @@ all six applications and produce prepared roots, the reviewed lock, a private
 publisher workspace and an artifact receipt. For separately prepared roots:
 
 ```sh
-vinix-package native-catalog 1.0.0 PREPARED_ROOTS NEW_NATIVE_LOCK
-vinix-package pack-catalog NEW_NATIVE_LOCK/catalog.json PREPARED_ROOTS NEW_WORKSPACE
+tulpar-package native-catalog 1.0.0 PREPARED_ROOTS NEW_NATIVE_LOCK
+tulpar-package pack-catalog NEW_NATIVE_LOCK/catalog.json PREPARED_ROOTS NEW_WORKSPACE
 ```
 
 The lock also works with `compose-catalog` alongside SQLite and FFmpeg profiles;
@@ -1420,12 +1420,12 @@ with these ordinary payloads and redistribution notices:
 
 ```text
 bin/sqlite3                 musl PIE command-line executable
-bin/vinix-linux-runner      static SDK 1 runner
+bin/tulpar-linux-runner      static SDK 1 runner
 lib/libc.so                musl shared loader/libc
 lib/libsqlite3.so.0         shared SQLite library
 licenses/sqlite-COPYRIGHT
 licenses/musl-COPYRIGHT
-licenses/vinix-COPYING
+licenses/tulpar-COPYING
 ```
 
 The profile applies the same ELF64 target, segment, entry and interpreter
@@ -1449,7 +1449,7 @@ numeric SQLite version and a runtime version in `>=1.0.0,<2.0.0`, and must build
 and qualify that closure before signing it.
 
 The lock contains four pinned packages: `org.sqlite.cli` and
-`org.vinix.sqlite-runtime` for each architecture. The application contains the
+`org.tulpar.sqlite-runtime` for each architecture. The application contains the
 CLI and SQLite notice. Its separate runtime contains the runner, library, musl
 loader/libc and all three notices; the same musl bytes are also installed at
 `lib/ld-musl-ARCH.so.1`. The application declares a runtime dependency in
@@ -1460,7 +1460,7 @@ and firmware disclosures are explicitly false for this profile.
 
 The CLI requests no optional permissions or associations. In Software, select
 the installed SQLite application and choose **Launch in Terminal**. From an
-existing Terminal, use `vinix-package run-terminal org.sqlite.cli`; it opens
+existing Terminal, use `tulpar-package run-terminal org.sqlite.cli`; it opens
 `@DATA@/database.sqlite3` in the ordinary account's private app data directory.
 SQLite WAL, journals and temporary files stay inside the existing sandbox
 contract. The baseline file operations include advisory locks (`flock`), which
@@ -1475,7 +1475,7 @@ and returns format-1 JSON with `profile: "sqlite-cli"`, `directory`, `catalog`,
 `catalog_sha256`, both versions and `architectures`. No key, signed index or
 consumer enrollment is created. The usual captured-root import, free-space
 checks, canonical metadata and no-overwrite rules apply. Handled failures remove
-temporary payloads; an abrupt kill can leave a private `.vinix-sqlite-profile-*`
+temporary payloads; an abrupt kill can leave a private `.tulpar-sqlite-profile-*`
 directory for inspection and removal. Keep prepared roots stable and review the
 lock; `pack-catalog` rejects changes to its pinned inputs.
 
@@ -1489,9 +1489,9 @@ retirement and reply/error disposal after one-time JSON metadata initialization.
 Other complete publisher/catalog/release builders remain separate boundaries.
 
 ```sh
-vinix-package sqlite-catalog 3.53.4 1.0.0 /build/sqlite-roots /build/sqlite-lock
-vinix-package pack-catalog /build/sqlite-lock/catalog.json /build/sqlite-roots /build/sqlite-workspace
-vinix-package publish-release /build/sqlite-workspace company /secure/publisher-seed 1 EXPIRES_UNIX /build/sqlite-release
+tulpar-package sqlite-catalog 3.53.4 1.0.0 /build/sqlite-roots /build/sqlite-lock
+tulpar-package pack-catalog /build/sqlite-lock/catalog.json /build/sqlite-roots /build/sqlite-workspace
+tulpar-package publish-release /build/sqlite-workspace company /secure/publisher-seed 1 EXPIRES_UNIX /build/sqlite-release
 ```
 
 The maintained [SQLite qualification](../../tests/packages/sqlite-profile-check.md)
@@ -1527,7 +1527,7 @@ repository or an enrollment decision for users.
 
 IDs begin with lowercase ASCII and contain lowercase letters, digits, dot, dash
 or underscore, at most 128 bytes. Versions have three numeric components without
-leading zeros/prereleases. Architecture is the **Vinix host target**, `aarch64` or
+leading zeros/prereleases. Architecture is the **Tulpar host target**, `aarch64` or
 `x86_64`. Only data declares `all`; publish binaries for the actual qualified
 host/runtime combination. No implicit architecture aliases/fallback exist.
 
@@ -1564,7 +1564,7 @@ dependencies and external solver hooks are outside format 1.
 `ffmpeg-catalog RUNTIME_VERSION PREPARED_ROOTS NEW_LOCK_DIRECTORY` inventories
 the pinned FFmpeg **8.0.1** local media profile on AArch64 and x86_64. Its three
 packages are `org.ffmpeg.cli`, `org.ffmpeg.probe` and
-`org.vinix.ffmpeg-runtime`. Both applications declare only `files`, share the
+`org.tulpar.ffmpeg-runtime`. Both applications declare only `files`, share the
 runtime in the compatible `>=1.0.0,<2.0.0` range, and use the packaged static
 Linux runner and musl loader. Firmware/proprietary flags remain false.
 
@@ -1572,13 +1572,13 @@ Each `PREPARED_ROOTS/aarch64` and `PREPARED_ROOTS/x86_64` contains:
 
 ```text
 bin/ffmpeg, bin/ffprobe                 ELF64 musl PIE applications
-bin/vinix-linux-runner                  static target V SDK runner
+bin/tulpar-linux-runner                  static target V SDK runner
 lib/libc.so                            target musl loader/library
 lib/libavcodec.so.62, libavdevice.so.62
 lib/libavfilter.so.11, libavformat.so.62
 lib/libavutil.so.60, libswresample.so.6, libswscale.so.9
 licenses/ffmpeg-LICENSE.md, ffmpeg-COPYING.LGPLv2.1
-licenses/musl-COPYRIGHT, vinix-COPYING, v-COPYRIGHT
+licenses/musl-COPYRIGHT, tulpar-COPYING, v-COPYRIGHT
 sources/ffmpeg.tar.xz                   exact pinned upstream source archive
 sources/build.json                     retained build command vectors
 sources/linux-runner.v, ffmpeg-build.v, ffmpeg-source.json
@@ -1622,9 +1622,9 @@ full reviewed source archive. Other profile/catalog/release owners remain separa
 
 ```sh
 ffmpeg-build /secure/ffmpeg-8.0.1.tar.xz /build/new-ffmpeg-inputs
-vinix-package ffmpeg-catalog 1.0.0 /build/new-ffmpeg-inputs/roots /build/new-ffmpeg-lock
-vinix-package pack-catalog /build/new-ffmpeg-lock/catalog.json /build/new-ffmpeg-inputs/roots /build/new-ffmpeg-workspace
-vinix-package publish-release /build/new-ffmpeg-workspace company /secure/publisher.seed 1 EXPIRES_UNIX /srv/new-ffmpeg-release
+tulpar-package ffmpeg-catalog 1.0.0 /build/new-ffmpeg-inputs/roots /build/new-ffmpeg-lock
+tulpar-package pack-catalog /build/new-ffmpeg-lock/catalog.json /build/new-ffmpeg-inputs/roots /build/new-ffmpeg-workspace
+tulpar-package publish-release /build/new-ffmpeg-workspace company /secure/publisher.seed 1 EXPIRES_UNIX /srv/new-ffmpeg-release
 ```
 
 The source pin records exact bytes from the official upstream HTTPS archive;
@@ -1637,7 +1637,7 @@ covers the retained compiler/kernel tuple and enabled media subset.
 
 `neovim-catalog RUNTIME_VERSION PREPARED_ROOTS NEW_LOCK_DIRECTORY` pins Neovim
 **0.12.5** as `org.neovim.editor` and its separately versioned
-`org.vinix.neovim-runtime` on AArch64 and x86_64. The application declares
+`org.tulpar.neovim-runtime` on AArch64 and x86_64. The application declares
 `files` and `process`, requires runtime `>=1.0.0,<2.0.0`, and requests no network
 or display access. Both editor and V adapter must be static target ELF files;
 the profile checks their captured load/entry structure and refuses dynamic
@@ -1647,7 +1647,7 @@ The [V builder](neovim-build.v) acquires eight SHA-pinned upstream archives,
 extracts fresh target source trees and builds with host generators and target
 musl tools. It retains source inventories, literal build commands and licenses,
 including the GCC runtime exception. Each prepared architecture root contains
-`bin/nvim`, `bin/vinix-neovim-runner`, the complete installed
+`bin/nvim`, `bin/tulpar-neovim-runner`, the complete installed
 `share/nvim/runtime`, redistribution notices and the pinned sources/build tools.
 The profile checks required runtime data, nonexecutable data modes, bounded
 notices and exact archive pins through the captured importer. `pack-catalog`
@@ -1776,9 +1776,9 @@ and at most 1 MiB. The runtime's license expression and notices must cover its
 complete closure; the profile cannot determine redistribution rights.
 
 ```sh
-vinix-package wine-catalog /build/recipes /build/roots /build/new-wine-lock
-vinix-package pack-catalog /build/new-wine-lock/catalog.json /build/roots /build/new-wine-workspace
-vinix-package publish-release /build/new-wine-workspace company /secure/publisher.seed 1 EXPIRES_UNIX /srv/new-wine-release
+tulpar-package wine-catalog /build/recipes /build/roots /build/new-wine-lock
+tulpar-package pack-catalog /build/new-wine-lock/catalog.json /build/roots /build/new-wine-workspace
+tulpar-package publish-release /build/new-wine-workspace company /secure/publisher.seed 1 EXPIRES_UNIX /srv/new-wine-release
 ```
 
 Success returns format-1 JSON with `profile: "wine-win64"`, `directory`,
@@ -1788,7 +1788,7 @@ file selectors, space and required notices are checked before staging. Imported
 PE/launcher bytes and complete inventories are checked again before canonical
 lock publication. A handled failure removes private staging and leaves no new
 lock; existing/concurrently created destinations are preserved. An abrupt kill
-can leave a private `.vinix-wine-profile-*` staging directory for inspection.
+can leave a private `.tulpar-wine-profile-*` staging directory for inspection.
 
 The runtime remains an ordinary signed dependency. Updating its version within
 the declared compatibility interval need not change the application; normal
@@ -1869,7 +1869,7 @@ update to present these apps.
 `run-window ID [ABSOLUTE_DOCUMENT...]` is the broker/client stream boundary.
 It repeats current policy/trust/payload validation and holds the normal generation
 lease until the child exits. Root delegates through `launch_user`; the ordinary
-process gets `VINIX_WINDOW_PROTOCOL=1` alongside its normal SDK context. This mode
+process gets `TULPAR_WINDOW_PROTOCOL=1` alongside its normal SDK context. This mode
 does not unveil X11 sockets or add TTY/display-device access. The separate
 `process` grant still permits local Unix IPC. Documents
 still require declared `files` permission and ordinary-account accessibility.
@@ -1877,7 +1877,7 @@ Do not combine this stream with terminal mode or shell commands.
 
 Use `appsdk.WindowFrame`, `WindowElement`, `publish_window_frame`,
 `read_window_event` and `WindowEvent`. A frame is one stdout line prefixed by
-`VINIX-WINDOW-FRAME ` followed by JSON. Human diagnostics use stderr. The maximum
+`TULPAR-WINDOW-FRAME ` followed by JSON. Human diagnostics use stderr. The maximum
 JSON frame is 65,536 bytes; publishers send complete frames with increasing,
 positive u64 `sequence`. Every field below is required:
 
@@ -1924,7 +1924,7 @@ records the host renderer/codec/ownership checks and both native guest tuples.
 ### Native window protocol 2: text entry
 
 Declare signed `"window_protocol":2` with native kind and display permission.
-The launch service sets `VINIX_WINDOW_PROTOCOL=2`; Software admits only format-2
+The launch service sets `TULPAR_WINDOW_PROTOCOL=2`; Software admits only format-2
 frames for that installed declaration. SDK/context and package-format versions
 remain 1. Protocol 1 keeps its original encoding, event limit and reader.
 Publishers using protocol 2 must require a package-tools/Software release that
@@ -1976,7 +1976,7 @@ foreign runtime compatibility and complete installed login acceptance remain ope
 | Kind | Requirements |
 | --- | --- |
 | `native` | Executable entrypoint in its own payload or explicit runtime. Static V is the initial portable case. |
-| `linux` | Explicit target loader/library runtime and executable runner, qualified against Vinix's syscall/ABI subset. |
+| `linux` | Explicit target loader/library runtime and executable runner, qualified against Tulpar's syscall/ABI subset. |
 | `windows` | Explicit target Wine/translation runtime and runner; executable/resources remain in the app payload. |
 | `runtime` | Target-specific immutable runtime files, updated as a normal dependency, with no app launcher. |
 | `data` | Assets/docs or explicitly licensed firmware payloads; no app launcher. |
@@ -1989,15 +1989,15 @@ Use `pack-root` to materialize a verified prepared runtime's symlinks, or supply
 ordinary files directly to `pack`.
 
 For a dynamically linked **musl** Linux application, package the target static
-[`vinix-linux-runner`](linux-runner.v) inside its runtime. Package staging builds
-the SDK artifact at `/usr/libexec/vinix/vinix-linux-runner`; the installed app
+[`tulpar-linux-runner`](linux-runner.v) inside its runtime. Package staging builds
+the SDK artifact at `/usr/libexec/tulpar/tulpar-linux-runner`; the installed app
 must declare its signed runtime copy as the entrypoint. For an AArch64 example:
 
 ```json
 {
   "kind": "linux",
   "runtime": "org.example.musl-runtime",
-  "entrypoint": "bin/vinix-linux-runner",
+  "entrypoint": "bin/tulpar-linux-runner",
   "arguments": ["@RUNTIME@/lib/ld-musl-aarch64.so.1", "@APP@/bin/application"],
   "dependencies": [{"id":"org.example.musl-runtime","minimum":"1.0.0","before":"2.0.0"}]
 }
@@ -2051,7 +2051,7 @@ uses its own identity. Display-capable foreign packages can use the
 runtime compatibility remain separate qualification boundaries.
 
 For hosted X11, Software creates an exclusive 0700 surface beneath
-`/run/user/UID/vinix-hosted-x11/` and a 0600 `Xauthority` with a fresh kernel-random
+`/run/user/UID/tulpar-hosted-x11/` and a 0600 `Xauthority` with a fresh kernel-random
 MIT cookie. Xvfb receives `-auth`; the launcher validates the authority and
 selected local display socket before granting those exact paths. The isolated
 account request uses format 2 only for `run`/`run-args` with a canonical local
@@ -2076,7 +2076,7 @@ Ordinary login sessions retain their account memberships. If the package CLI
 finds supplementary groups, every launch mode automatically uses the fixed
 `packages-launch` action with `auth = account`. The authentication service checks
 the kernel peer's ordinary account without requesting a password. The root-only
-`vinix-session package-launch` helper loads that same account from the trusted
+`tulpar-session package-launch` helper loads that same account from the trusted
 database and accepts only `run`, `run-terminal`, `run-window`, `run-args` or
 `run-terminal-args` for a valid installed-package ID. No selected identity,
 executable, environment, root directory or administrative operation is accepted.
@@ -2105,7 +2105,7 @@ after the credential handoff. Later revocation prevents new launches; an already
 admitted process retains its validated snapshot and lease until exit.
 
 After trust, payload and document admission, launch prepares private data through
-captured directory descriptors. The account home and every `.local/share/vinix-apps`
+captured directory descriptors. The account home and every `.local/share/tulpar-apps`
 component must be ordinary caller-owned directories without write access for
 other accounts. Missing data parents are created with mode `0700`; the existing
 home and parent modes are retained. App data and its `tmp` child must also be
@@ -2122,14 +2122,14 @@ contracts. Third-party ui2 clients need compositor adapter qualification. Import
 ### Personal data cleanup
 
 Personal data survives uninstall and rollback. An ordinary account can use
-`vinix-package purge-data ID` after uninstall, or the additive SDK 1 method
+`tulpar-package purge-data ID` after uninstall, or the additive SDK 1 method
 `Service.purge_data(id) !`, to erase only its own data. Root and alternate
 installation roots are refused. Cleanup holds the package reader lock and
 checks all retained generations containing the ID for live leases; any app
 using one of those generations blocks purge until it exits. This prevents
 deleting an uninstalled app's still-active data or racing reinstall/collection.
 
-The home and `.local/share/vinix-apps` parents must be ordinary caller-owned
+The home and `.local/share/tulpar-apps` parents must be ordinary caller-owned
 directories without write access for other accounts. Cleanup opens every
 component without following links, walks captured descriptors and refuses
 filesystem crossings. Nested links are unlinked without touching their targets;
@@ -2142,7 +2142,7 @@ The additive SDK 1 method `Service.personal_data() !pkgprotocol.PersonalDataStat
 and CLI `--json data-list` return `{format:1,rows:[{id,installed,diagnostic}]}` for
 the calling ordinary account. Root, alternate roots and extra positional
 arguments are refused. Rows are sorted by ID; all fields are present. The list
-comes from captured, caller-owned `~/.local/share/vinix-apps` descriptors and
+comes from captured, caller-owned `~/.local/share/tulpar-apps` descriptors and
 installed state, so repository availability does not affect retained-data
 discovery. Valid package IDs absent from the catalog are included. Names that
 are not valid package IDs are ignored, but count towards the 4096-directory-entry
@@ -2190,10 +2190,10 @@ grants; it unveils no device directory. Plain `run` retains its existing promise
 set and batch behavior. Manifests, signatures and metadata digests are unchanged.
 
 Software exposes **Launch in Terminal** for installed applications. Its trusted
-Terminal implementation starts `/usr/bin/vinix-package run-terminal ID` on a
+Terminal implementation starts `/usr/bin/tulpar-package run-terminal ID` on a
 new PTY through literal `execve` arguments, with an explicit environment and no
 shell. The child claims the controlling terminal and receives only descriptors
-0, 1 and 2. Linux/Vinix closes all higher descriptors with `close_range`; host
+0, 1 and 2. Linux/Tulpar closes all higher descriptors with `close_range`; host
 fixtures enumerate their open descriptors before fork. Geometry is set before
 execution, reads are nonblocking, and ordinary Terminal input/paste, resizing,
 UTF-8/VT rendering and bounded scrollback apply.
@@ -2211,8 +2211,8 @@ See [qualification](../../tests/packages/terminal-check.md).
 ### Literal command arguments
 
 ```text
-vinix-package run-args ID [--data-cwd] [--file ABSOLUTE_FILE]... -- [LITERAL_ARGUMENT...]
-vinix-package run-terminal-args ID [--data-cwd] [--file ABSOLUTE_FILE]... -- [LITERAL_ARGUMENT...]
+tulpar-package run-args ID [--data-cwd] [--file ABSOLUTE_FILE]... -- [LITERAL_ARGUMENT...]
+tulpar-package run-terminal-args ID [--data-cwd] [--file ABSOLUTE_FILE]... -- [LITERAL_ARGUMENT...]
 ```
 
 These additive SDK 1 commands keep the signed entrypoint and fixed manifest
@@ -2241,8 +2241,8 @@ The ordinary child validates the request again after the credential handoff.
 For example, after installing the FFmpeg profile as an administrator:
 
 ```sh
-vinix-package run-args org.ffmpeg.cli -- -version
-vinix-package run-args org.ffmpeg.cli --data-cwd -- -f lavfi -i testsrc2=size=64x48:duration=1 -c:v mpeg4 -threads 2 "example with spaces.avi"
+tulpar-package run-args org.ffmpeg.cli -- -version
+tulpar-package run-args org.ffmpeg.cli --data-cwd -- -f lavfi -i testsrc2=size=64x48:duration=1 -c:v mpeg4 -threads 2 "example with spaces.avi"
 vinix-package run-args org.ffmpeg.cli -- -f lavfi -i testsrc2=size=64x48:rate=10:duration=1 -c:v mpeg4 -threads 2 /home/alex/.local/share/vinix-apps/org.ffmpeg.cli/example.avi
 vinix-package run-args org.ffmpeg.probe --file /home/alex/.local/share/vinix-apps/org.ffmpeg.cli/example.avi -- -v error -show_streams /home/alex/.local/share/vinix-apps/org.ffmpeg.cli/example.avi
 ```
@@ -2320,7 +2320,7 @@ on success and refusal. The 772-value, 512 KiB envelope and existing command
 limits are unchanged, including literal non-NUL argument bytes. See
 [launch-transport checks](../../tests/packages/launch-transport-check.md).
 
-On Vinix, a peer's write shutdown remains readable after buffered input drains,
+On Tulpar, a peer's write shutdown remains readable after buffered input drains,
 so a partial launch frame reports interruption without waiting for its input
 deadline. See [socket EOF and resource recovery](../../tests/packages/launch-socket-check.md)
 for both-architecture regression coverage and the deferred socket-budget limit.
@@ -2355,7 +2355,7 @@ explicitly among the app arguments. Duplicate paths are refused, files can be
 paged and removed, and an unfinished file entry must be added or cleared before
 launch. **Working folder: private app data** is the default in this form; its
 relative outputs are saved under the ordinary account's
-`~/.local/share/vinix-apps/ID`. Choose **installed app** for apps needing their
+`~/.local/share/tulpar-apps/ID`. Choose **installed app** for apps needing their
 packaged assets as the working folder. **Run** shows captured diagnostics;
 **Run in Terminal** transfers the exact vector to Software's PTY. Input, grants
 and working-folder choice cannot change while a worker is active. Returning to
@@ -2385,20 +2385,20 @@ Every package launch supplies these additive SDK-1 environment fields from the
 admitted installed manifest and generation. They are the same for ordinary,
 literal-argument and terminal launches, including the root-to-account handoff.
 The sandbox starts with an empty environment and the service supplies these
-values explicitly; ambient `VINIX_APP_*` values from the caller are discarded.
+values explicitly; ambient `TULPAR_APP_*` values from the caller are discarded.
 
 | Variable | Meaning |
 | --- | --- |
-| `VINIX_APP_SDK` | Context interface version, currently `1`. |
-| `VINIX_APP_ID`, `VINIX_APP_VERSION` | Installed application ID and numeric three-component version. |
-| `VINIX_APP_ARCHITECTURE`, `VINIX_APP_KIND` | Host target (`aarch64`/`x86_64`) and installed `native`/`linux`/`windows` kind. |
-| `VINIX_APP_GENERATION` | Canonical positive decimal generation counter. |
-| `VINIX_APP_REPOSITORY`, `VINIX_APP_PUBLIC_KEY`, `VINIX_APP_SEQUENCE` | The application's admitted publisher ID, lowercase Ed25519 key and positive index sequence. |
-| `VINIX_APP_DIR` | Absolute immutable app directory in the admitted generation. |
-| `VINIX_APP_DATA` | Absolute ordinary-account private data directory; equals `HOME`, with `TMPDIR` at its `tmp` child. |
-| `VINIX_APP_RUNTIME_ID` | Explicit runtime dependency ID, or empty for a self-contained app. |
-| `VINIX_APP_RUNTIME_VERSION`, `VINIX_APP_RUNTIME_DIR` | Installed runtime version and directory in the same generation; for a self-contained app these equal its own version and directory. |
-| `VINIX_APP_PERMISSIONS` | Sorted, space-separated declared permission names; empty when none are declared. |
+| `TULPAR_APP_SDK` | Context interface version, currently `1`. |
+| `TULPAR_APP_ID`, `TULPAR_APP_VERSION` | Installed application ID and numeric three-component version. |
+| `TULPAR_APP_ARCHITECTURE`, `TULPAR_APP_KIND` | Host target (`aarch64`/`x86_64`) and installed `native`/`linux`/`windows` kind. |
+| `TULPAR_APP_GENERATION` | Canonical positive decimal generation counter. |
+| `TULPAR_APP_REPOSITORY`, `TULPAR_APP_PUBLIC_KEY`, `TULPAR_APP_SEQUENCE` | The application's admitted publisher ID, lowercase Ed25519 key and positive index sequence. |
+| `TULPAR_APP_DIR` | Absolute immutable app directory in the admitted generation. |
+| `TULPAR_APP_DATA` | Absolute ordinary-account private data directory; equals `HOME`, with `TMPDIR` at its `tmp` child. |
+| `TULPAR_APP_RUNTIME_ID` | Explicit runtime dependency ID, or empty for a self-contained app. |
+| `TULPAR_APP_RUNTIME_VERSION`, `TULPAR_APP_RUNTIME_DIR` | Installed runtime version and directory in the same generation; for a self-contained app these equal its own version and directory. |
+| `TULPAR_APP_PERMISSIONS` | Sorted, space-separated declared permission names; empty when none are declared. |
 
 The context reports the admitted snapshot. Upgrade/rollback/removal changes the
 context of new launches. A running process retains its original fields and
@@ -2859,7 +2859,7 @@ For live operation progress, pass `--progress` to `update`, `install`, `remove`,
 `mirror` or `mirror-apply`. Health supports a separate stderr channel described
 below. Other progress commands refuse `--json`. Ordinary human output/diagnostics are retained;
 presentation records occupy complete stdout lines prefixed by
-`VINIX-PACKAGE-PROGRESS ` followed by a format-1 JSON object. The producer flushes
+`TULPAR-PACKAGE-PROGRESS ` followed by a format-1 JSON object. The producer flushes
 each frame. Readers must handle frames split across pipe reads and multiple
 frames in one read. These events neither authorize changes nor replace exit
 status, payload verification or the installed-state protocol.
@@ -3718,7 +3718,7 @@ The format-1 `DeploymentMirrorReview` envelope requires `format`, literal
 `deployment` filename, `deployment_sha256` and a nested `mirror` with all fields
 of `MirrorReview`. The nested rows describe the exact authenticated versions,
 permissions, licenses and runtimes in the lock. Its fingerprint has the separate
-`vinix-deployment-mirror-review-1` domain and additionally binds the original
+`tulpar-deployment-mirror-review-1` domain and additionally binds the original
 filename and exact document digest. Whitespace edits also require a fresh review.
 The input is captured once; its parsed pins, digest and exported bytes describe
 one snapshot. Cache recovery does not stale that snapshot.
@@ -3919,7 +3919,7 @@ inspector changes no package state or repository trust. See the
 native payload. `v run examples/package-hello/build.v /build/new-example-repository`
 cross-compiles and packs both ELF targets using the matching musl compilers.
 Sign/enroll the repository, then install/verify/run/remove
-on an ordinary Vinix session. Run [the V fixtures](../../tests/packages/distribution-check.v)
+on an ordinary Tulpar session. Run [the V fixtures](../../tests/packages/distribution-check.v)
 before publishing, and advertise only host/runtime/app tuples with retained guest
 qualification receipts.
 

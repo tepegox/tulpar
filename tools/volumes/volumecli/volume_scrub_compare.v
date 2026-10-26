@@ -29,7 +29,7 @@ fn show_volume_scrub_comparison(before &u8, after &u8, disk &DiskKey, row &Reque
 	old_changed := get_le(before, 16, 4) != 0; new_changed := get_le(after, 16, 4) != 0
 	result := if !changed { &char(c'stable') } else if !new_changed { &char(c'restored') }
 		else if !old_changed { &char(c'new-change') } else { &char(c'changed-again') }
-	return C.printf(c'format=VINIXCS1 operation=compared-ciphertext mappings=1 stable=%lu changed=%lu algorithm=sha256 reference_sha256=%s\n', u64(!changed), u64(changed), &fingerprint[0]) >= 0
+	return C.printf(c'format=TULPARCS1 operation=compared-ciphertext mappings=1 stable=%lu changed=%lu algorithm=sha256 reference_sha256=%s\n', u64(!changed), u64(changed), &fingerprint[0]) >= 0
 		&& C.printf(c'disk_bytes=%lu sector=%lu identity=%s slot=%u offset=%lu bytes=%lu readonly=%lu before=%s after=%s result=%s expected_sha256=%s before_sha256=%s after_sha256=%s\n',
 			disk.bytes, disk.sector, &identity[0], row.slot, row.offset, row.length, row.flags,
 			if old_changed { &char(c'changed') } else { &char(c'match') }, if new_changed { &char(c'changed') } else { &char(c'match') }, result, &expected[0], &old_digest[0], &new_digest[0]) >= 0

@@ -19,12 +19,12 @@ fn C.timer_delete_sync(&C.timer_list) i32
 fn C.try_to_del_timer_sync(&C.timer_list) i32
 fn C.timer_shutdown(&C.timer_list) i32
 fn C.timer_shutdown_sync(&C.timer_list) i32
-fn C.vinix_linuxkpi_timer_selftest() i32
-fn C.vinix_linuxkpi_timer_dispatch() i32
-fn C.vinix_linuxkpi_timer_active() usize
-fn C.vinix_linuxkpi_irq_flags() usize
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_timer_selftest() i32
+fn C.tulpar_linuxkpi_timer_dispatch() i32
+fn C.tulpar_linuxkpi_timer_active() usize
+fn C.tulpar_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
 fn C.preempt_count() u32
 fn C.time_after_eq(usize, usize) bool
 fn C.vmh_host_time_advance(C.vmh_u64)
@@ -66,8 +66,8 @@ struct TimerTest {
 pub fn callback(timer &C.timer_list) {
  unsafe {
   test := &TimerTest(timer)
-  C.assert(!C.vinix_linuxkpi_may_sleep() && C.preempt_count() != 0)
-  C.assert((C.vinix_linuxkpi_irq_flags() & (usize(1) << 9) != 0) != test.irq_safe)
+  C.assert(!C.tulpar_linuxkpi_may_sleep() && C.preempt_count() != 0)
+  C.assert((C.tulpar_linuxkpi_irq_flags() & (usize(1) << 9) != 0) != test.irq_safe)
   C.assert(!C.timer_pending(timer) && C.time_after_eq(C.jiffies, timer.expires))
   C.__atomic_fetch_add(&test.calls, u32(1), 3)
   C.assert(C.try_to_del_timer_sync(timer) == -1)
@@ -110,7 +110,7 @@ fn queue_tests() {
  unsafe {
   mut test := TimerTest{}
   test_init(&test, .count, false)
-  C.assert(C.vinix_linuxkpi_timer_selftest() == 0)
+  C.assert(C.tulpar_linuxkpi_timer_selftest() == 0)
   C.assert(!C.timer_pending(&test.timer) && C.mod_timer_pending(&test.timer, C.jiffies) == 0)
   expires := C.jiffies + 10
   C.assert(C.mod_timer(&test.timer, expires) == 0 && C.timer_pending(&test.timer))
@@ -122,20 +122,20 @@ fn queue_tests() {
   C.assert(C.timer_reduce(&test.timer, expires - 1) == 1 && test.timer.expires == expires - 1)
   C.assert(C.mod_timer_pending(&test.timer, expires) == 1 && test.timer.expires == expires)
   advance(9)
-  C.assert(C.vinix_linuxkpi_timer_dispatch() == 0 && test.calls == 0)
+  C.assert(C.tulpar_linuxkpi_timer_dispatch() == 0 && test.calls == 0)
   advance(1)
-  C.assert(C.timer_pending(&test.timer) && C.vinix_linuxkpi_timer_active() == 1)
-  C.assert(C.vinix_linuxkpi_timer_dispatch() == 1 && test.calls == 1)
+  C.assert(C.timer_pending(&test.timer) && C.tulpar_linuxkpi_timer_active() == 1)
+  C.assert(C.tulpar_linuxkpi_timer_dispatch() == 1 && test.calls == 1)
   C.assert(!C.timer_pending(&test.timer) && C.timer_delete(&test.timer) == 0)
   test.timer.expires = C.jiffies - 3
   C.add_timer(&test.timer)
-  C.assert(C.vinix_linuxkpi_timer_dispatch() == 0)
+  C.assert(C.tulpar_linuxkpi_timer_dispatch() == 0)
   advance(1)
-  C.assert(C.vinix_linuxkpi_timer_dispatch() == 1 && test.calls == 2)
+  C.assert(C.tulpar_linuxkpi_timer_dispatch() == 1 && test.calls == 2)
   C.assert(C.mod_timer(&test.timer, C.jiffies + 2) == 0)
   advance(2)
   C.assert(C.timer_delete(&test.timer) == 1)
-  C.assert(C.vinix_linuxkpi_timer_dispatch() == 0)
+  C.assert(C.tulpar_linuxkpi_timer_dispatch() == 0)
   C.assert(C.timer_reduce(&test.timer, C.jiffies + 2) == 0)
   C.assert(C.timer_shutdown_sync(&test.timer) == 1 && test.timer.function == nil)
   C.assert(C.mod_timer(&test.timer, C.jiffies) == 0 && C.mod_timer_pending(&test.timer, C.jiffies) == 0)
@@ -149,15 +149,15 @@ fn queue_tests() {
   static_timer.expires = C.jiffies + 1
   C.add_timer(&static_timer)
   advance(1)
-  C.assert(C.vinix_linuxkpi_timer_dispatch() == 1 && static_timer_calls == 1)
+  C.assert(C.tulpar_linuxkpi_timer_dispatch() == 1 && static_timer_calls == 1)
   C.assert(C.timer_shutdown_sync(&static_timer) == 0)
   for safe in u32(0)..u32(2) {
    test_init(&test, .rearm, safe != 0)
    C.assert(C.mod_timer(&test.timer, C.jiffies) == 0)
    for i in u32(1)..u32(21) {
     advance(1)
-    C.assert(C.vinix_linuxkpi_timer_dispatch() == 1 && test.calls == i)
-    C.assert(C.vinix_linuxkpi_timer_dispatch() == 0 && C.timer_pending(&test.timer))
+    C.assert(C.tulpar_linuxkpi_timer_dispatch() == 1 && test.calls == i)
+    C.assert(C.tulpar_linuxkpi_timer_dispatch() == 0 && C.timer_pending(&test.timer))
    }
    C.assert(C.timer_shutdown_sync(&test.timer) == 1)
    C.assert(C.vmh_interrupts && C.vmh_preempt_depth == 0)
@@ -165,15 +165,15 @@ fn queue_tests() {
   test_init(&test, .stop, false)
   C.assert(C.mod_timer(&test.timer, C.jiffies) == 0)
   advance(1)
-  C.assert(C.vinix_linuxkpi_timer_dispatch() == 1 && test.timer.function == nil)
+  C.assert(C.tulpar_linuxkpi_timer_dispatch() == 1 && test.timer.function == nil)
   test_init(&test, .count, true)
   C.assert(C.mod_timer(&test.timer, C.jiffies + 10) == 0)
-  flags := C.vinix_linuxkpi_irq_save()
+  flags := C.tulpar_linuxkpi_irq_save()
   C.assert(C.timer_delete_sync(&test.timer) == 1 && !C.vmh_interrupts && C.vmh_preempt_depth == 0)
   C.assert(C.timer_shutdown_sync(&test.timer) == 0 && !C.vmh_interrupts && C.vmh_preempt_depth == 0)
-  C.vinix_linuxkpi_irq_restore(flags)
+  C.tulpar_linuxkpi_irq_restore(flags)
   C.assert(C.vmh_interrupts && C.vmh_preempt_depth == 0)
-  C.assert(C.vinix_linuxkpi_timer_active() == 0)
+  C.assert(C.tulpar_linuxkpi_timer_active() == 0)
  }
 }
 struct ThreadTest {
@@ -190,7 +190,7 @@ pub fn dispatch_thread(argument voidptr) voidptr {
  unsafe {
   test := &ThreadTest(argument)
   C.vmh_native_task = &test.model
-  test.result = C.vinix_linuxkpi_timer_dispatch()
+  test.result = C.tulpar_linuxkpi_timer_dispatch()
   C.vmh_native_task = nil
   return nil
  }
@@ -227,7 +227,7 @@ fn running_tests() {
     for C.__atomic_load_n(&test.entered, 2) == 0 { C.sched_yield() }
     C.assert(C.try_to_del_timer_sync(&test.timer) == -1)
     advance(1)
-    C.assert(C.vinix_linuxkpi_timer_dispatch() == 0)
+    C.assert(C.tulpar_linuxkpi_timer_dispatch() == 0)
     C.assert(C.pthread_create(&deleter, nil, C.vmh_timer_delete_thread, &deletion) == 0)
     for C.__atomic_load_n(&deletion.spins, 2) == 0 { C.sched_yield() }
     C.assert(C.__atomic_load_n(&deletion.finished, 2) == 0)
@@ -238,7 +238,7 @@ fn running_tests() {
     C.assert(!C.timer_pending(&test.timer) && (test.timer.function != nil) != (shutdown != 0))
     C.vmh_sync_model_destroy(&dispatch.model); C.vmh_sync_model_destroy(&deletion.model)
     advance(20)
-    C.assert(C.vinix_linuxkpi_timer_dispatch() == 0 && C.vinix_linuxkpi_timer_active() == 0)
+    C.assert(C.tulpar_linuxkpi_timer_dispatch() == 0 && C.tulpar_linuxkpi_timer_active() == 0)
    }
   }
   mut test := TimerTest{}
@@ -263,7 +263,7 @@ struct RaceWorker {
  done u32
 }
 @[export: 'vmh_timer_race_callback']
-pub fn race_callback(timer &C.timer_list) { C.assert(!C.vinix_linuxkpi_may_sleep() && C.vmh_interrupts) }
+pub fn race_callback(timer &C.timer_list) { C.assert(!C.tulpar_linuxkpi_may_sleep() && C.vmh_interrupts) }
 @[export: 'vmh_timer_race_thread']
 pub fn race_thread(argument voidptr) voidptr {
  unsafe {
@@ -293,7 +293,7 @@ fn race_tests() {
   }
   for {
    advance(1)
-   C.vinix_linuxkpi_timer_dispatch()
+   C.tulpar_linuxkpi_timer_dispatch()
    mut finished := u32(0)
    for i in u32(0)..u32(4) { finished += u32(C.__atomic_load_n(&workers[i].done, 2)) }
    C.sched_yield()
@@ -304,7 +304,7 @@ fn race_tests() {
    C.vmh_sync_model_destroy(&workers[i].model)
   }
   C.timer_shutdown_sync(&shared); C.destroy_timer_on_stack(&shared)
-  C.assert(C.vinix_linuxkpi_timer_active() == 0)
+  C.assert(C.tulpar_linuxkpi_timer_active() == 0)
  }
 }
 @[export: 'vmh_timer_tests']
@@ -321,9 +321,9 @@ pub fn timer_tests() {
    set_free_count(test, &freed)
    C.assert(C.mod_timer(&test.timer, C.jiffies) == 0)
    advance(1)
-   C.assert(C.vinix_linuxkpi_timer_dispatch() == 1)
+   C.assert(C.tulpar_linuxkpi_timer_dispatch() == 1)
    advance(20)
-   C.assert(C.vinix_linuxkpi_timer_dispatch() == 0 && C.vinix_linuxkpi_timer_active() == 0)
+   C.assert(C.tulpar_linuxkpi_timer_dispatch() == 0 && C.tulpar_linuxkpi_timer_active() == 0)
    C.assert(C.vmh_live_pages == C.vmh_permanent_pages)
   }
   C.assert(freed == 200)

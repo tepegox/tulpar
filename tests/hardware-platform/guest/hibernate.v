@@ -5,7 +5,7 @@
 // of the machine.
 //
 // `echo disk > /sys/power/state` writes an image of memory to the device the
-// kernel command line names (vinix.hibernate=sd1) and switches the machine
+// kernel command line names (tulpar.hibernate=sd1) and switches the machine
 // off. The controller starts the machine again on the same disks. A kernel
 // that finds the image, and finds the machine to be the one it was taken on,
 // goes back into it: the write to `state` then returns, in this same process,
@@ -136,7 +136,7 @@ fn hib_image_header() (string, u64) {
 // The device holds a header of this system's that describes no image.
 fn hib_check_no_image(mut t Test, when string) {
 	signature, pages := hib_image_header()
-	t.check(signature == 'VINIXHIB' && pages == 0, '${when}: the image device says "${signature}" with ${pages} pages; it was to hold no image')
+	t.check(signature == 'TULPARHIB' && pages == 0, '${when}: the image device says "${signature}" with ${pages} pages; it was to hold no image')
 }
 
 fn hib_file_byte(index int) u8 {
@@ -585,7 +585,7 @@ fn scenario_hibernate_foreign(mut t Test) {
 // filesystem unpacked into RAM, and no filesystem on a disk is mounted when
 // the image is taken. That is not what a suspend to disk is for. In the two
 // below the machine has a third disk, blank and large enough for the kernel
-// to install the system onto at its first start (vinix.disk=auto, which the
+// to install the system onto at its first start (tulpar.disk=auto, which the
 // boot medium always asks for), so that the root is an ext2 volume on sd2
 // and the image holds that filesystem's state.
 
@@ -733,6 +733,6 @@ fn scenario_hibernate_waiting(mut t Test) {
 	t.check(!os.exists(hib_proof_a), 'the file on the system\'s disk is there: the disk was mounted by a kernel that had not gone back into the image')
 	t.check(hib_number('disk writes since boot') == 0, '${hib_number('disk writes since boot')} writes went to a disk')
 	signature, pages := hib_image_header()
-	t.check(signature == 'VINIXHIB' && pages > 0, 'the image device says "${signature}" with ${pages} pages: the image was to be left as it was')
+	t.check(signature == 'TULPARHIB' && pages > 0, 'the image device says "${signature}" with ${pages} pages: the image was to be left as it was')
 	t.info('started without the option: an image of ${pages} pages found waiting on ${hib_line('waiting')}; running from memory, ${hib_number('disk writes since boot')} writes to disks')
 }

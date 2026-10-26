@@ -50,15 +50,15 @@ fn prepare_command(argv []string, environment map[string]string, _ bool, pointer
 
 fn prepare_iso(root string, environment map[string]string, pointer voidptr) !bool {
 	context := unsafe { &VmFixture(pointer) }
-	assert root == context.root && environment['VINIX_AMD64_INITRAMFS'].ends_with('/initramfs.tar') && environment['VINIX_AMD64_KERNEL'] == context.work + '/kernel'
-	os.write_file(environment['VINIX_AMD64_ISO'], 'controlled native image fixture')!
+	assert root == context.root && environment['TULPAR_AMD64_INITRAMFS'].ends_with('/initramfs.tar') && environment['TULPAR_AMD64_KERNEL'] == context.work + '/kernel'
+	os.write_file(environment['TULPAR_AMD64_ISO'], 'controlled native image fixture')!
 	return true
 }
 
 fn mock_qemu() !bool {
 	if !os.executable().ends_with('/mock-qemu') { return false }
-	work := os.getenv('VINIX_KPI_VM_WORK')
-	mode := os.getenv('VINIX_KPI_VM_MODE')
+	work := os.getenv('TULPAR_KPI_VM_WORK')
+	mode := os.getenv('TULPAR_KPI_VM_MODE')
 	assert os.args[1..4] == ['-M', 'q35,smm=off', '-m']
 	assert '-smp' in os.args && os.args[os.args.index('-smp') + 1] == '4'
 	serial := os.args[os.args.index('-serial') + 1].all_after('file:')
@@ -101,12 +101,12 @@ fn cases(work string) ! {
 		state := work + '/case-' + index.str()
 		os.rm(work + '/qemu.pid') or {}
 		mut environment := os.environ()
-		environment['VINIX_KPI_VM_WORK'] = work
-		environment['VINIX_KPI_VM_MODE'] = mode
+		environment['TULPAR_KPI_VM_WORK'] = work
+		environment['TULPAR_KPI_VM_MODE'] = mode
 		encoded := environment.keys().map(it + '=' + environment[it]).join('\x00')
 		// The real process primitive inherits the caller's environment.
-		os.setenv('VINIX_KPI_VM_WORK', work, true)
-		os.setenv('VINIX_KPI_VM_MODE', mode, true)
+		os.setenv('TULPAR_KPI_VM_WORK', work, true)
+		os.setenv('TULPAR_KPI_VM_MODE', mode, true)
 		row := {
 			'root':              json2.Any(hex.encode(root.bytes()))
 			'kernel':            json2.Any(hex.encode((work + '/kernel').bytes()))
@@ -154,8 +154,8 @@ fn cases(work string) ! {
 		println('WHOLE NATIVE LINUX GUEST / original flags, marker policy, failure and PID/FD retirement: PASS ' + mode)
 		flush_stdout()
 	}
-	os.unsetenv('VINIX_KPI_VM_WORK')
-	os.unsetenv('VINIX_KPI_VM_MODE')
+	os.unsetenv('TULPAR_KPI_VM_WORK')
+	os.unsetenv('TULPAR_KPI_VM_MODE')
 	os.write_file(work + '/passed', 'PASS 13\n')!
 }
 

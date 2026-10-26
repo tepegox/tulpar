@@ -108,13 +108,13 @@ fn storage(log string, arch string, phase string) {
 }
 fn failure(log string, arch string) { assert log.contains('LINUX RRABI DETAIL:'), 'rrabi baseline failure markers required'; semantics(log, 'before', arch, false) }
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
-	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array(); assert rows.len == names.len
 	mut artifacts := {'receipt': digest(state + '/receipt.json'), 'aggregate': digest(state + '.log')}
 	for index, row in rows {
 		entry := row.as_map(); name := entry['name']!.str(); assert name == names[index] && entry['exit_code']!.int() == if failing && index == 0 { 1 } else { 0 } && entry['detail']!.str() == ''
 		for label, path in {'source': state + '/sources/' + name + 'fixture/core.v', 'init': state + '/' + name + '/init', 'iso': state + '/' + name + '/test.iso'} { hash := digest(path); key := if label == 'source' { 'source_sha256' } else if label == 'init' { 'init_sha256' } else { 'iso_sha256' }; assert hash == entry[key]!.str(); artifacts[name + '_' + label] = hash }
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c'); artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 { assert os.read_file(state + '/' + name + '/serial.log')!.contains('LINUX ' + name.to_upper() + ': PASS') }
 	}; return artifacts
@@ -122,8 +122,8 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 fn reference_receipt(state string, arch string, init string) !map[string]string {
 	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['passed']!.bool() && value['finished']!.bool() && value['forced']!.bool() && value['status']!.int() == 0
 	artifacts := value['artifacts']!.as_map_of_strings(); command := value['command']!.as_array().map(it.str()); assert command.contains('-kernel') && command.contains('-initrd') && command.contains('-no-reboot')
-	for label, path in {'kernel': state + '/linux', 'probe': state + '/probe', 'wrapper_source': state + '/source/rrabireferenceinit/core.v', 'wrapper_c': state + '/fixture.c', 'wrapper_elf': state + '/init', 'initramfs': state + '/initramfs.cpio', 'serial': state + '/serial.log', 'serial_adapter_c': state + '/serial.c', 'controller_source': '/Users/alex/code/vinix/tests/linux-compat/rrabi-reference.v', 'qemu': command[0]} { assert artifacts[label] == digest(path) }
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/rrabireferenceinit/core.v')
+	for label, path in {'kernel': state + '/linux', 'probe': state + '/probe', 'wrapper_source': state + '/source/rrabireferenceinit/core.v', 'wrapper_c': state + '/fixture.c', 'wrapper_elf': state + '/init', 'initramfs': state + '/initramfs.cpio', 'serial': state + '/serial.log', 'serial_adapter_c': state + '/serial.c', 'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/rrabi-reference.v', 'qemu': command[0]} { assert artifacts[label] == digest(path) }
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/rrabireferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true); return artifacts
 }
 fn scope(area string) {
@@ -144,7 +144,7 @@ fn scope(area string) {
 }
 fn preparation(area string, out string, arch string, suffix string, kernel string) !map[string]string {
 	state := area + 'states/p1-after-' + suffix
-	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array(); assert rows.len == if suffix == 'arm' { 6 } else { 5 }
 	mut artifacts := {'interrupted_receipt':digest(state + '/receipt.json')}
 	for index, name in ['rrabi','runtime','schedabi','schext','open'] {
@@ -168,12 +168,12 @@ fn main() {
 	if '--negative-control' in os.args { assert false,'rrabi assertions must execute'; return }
 	if '--negative-pass-control' in os.args { failure(os.read_file(os.args[2])!,os.args[3]); return }
 	assert os.args.len == 2,'Usage: rrabi-check.v EVIDENCE-AREA (compile without -prod)'
-	area := os.args[1].trim_right('/') + '/'; states := area + 'states/'; root := '/Users/alex/code/vinix/'; out := root + 'tests/linux-compat/results/2026-10-14/'
+	area := os.args[1].trim_right('/') + '/'; states := area + 'states/'; root := '/Users/alex/code/tulpar/'; out := root + 'tests/linux-compat/results/2026-10-14/'
 	os.write_file(area + 'assertion-control.log',control(['--negative-control'],'rrabi assertions must execute'))!
 	os.write_file(area + 'passing-log-control.log',control(['--negative-pass-control',states + 'p1-reference-arm/serial.log','aarch64'],'rrabi baseline failure markers required'))!
 	scope(area)
 	base := os.read_file(area + 'base.txt')!.trim_space(); assert base == '509d83f1903c9b968bd942a487754f16356e2a73'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'; compiler := compiler_root + 'compiler/v'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'; compiler := compiler_root + 'compiler/v'
 	mut pins := map[string]string{}; for path, value in object(compiler_root + 'compiler-inputs.json')! { pins[path] = value.str() }; assert pins.len == 15146
 	assert pins['v'] == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
 	for path, hash in pins { assert digest(compiler_root + 'compiler/' + path) == hash,path }
@@ -191,16 +191,16 @@ fn main() {
 		assert digest(area + 'comment-preparation-after-' + suffix + '.c') == digest(area + 'after-' + suffix + '.c')
 		artifacts['comment_rebuild_c'] = digest(area + 'comment-preparation-after-' + suffix + '.c')
 		artifacts['comment_rebuild_log'] = digest(area + 'comment-preparation-build-after-' + suffix + '.log')
-		for key, hash in preparation(area,out,arch,suffix,digest(tree + 'kernel/bin/vinix'))! { artifacts[key] = hash }
+		for key, hash in preparation(area,out,arch,suffix,digest(tree + 'kernel/bin/tulpar'))! { artifacts[key] = hash }
 		mut identity := map[string]string{}
 		for phase in ['before','after'] {
-			state := states + if phase == 'after' { 'p2-' } else { 'p1-' } + phase + '-' + suffix; kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			state := states + if phase == 'after' { 'p2-' } else { 'p1-' } + phase + '-' + suffix; kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' { ['rrabi'] } else { ['rrabi','runtime','schedabi','schext','open','fcntlabi'] }
 			captured := receipt(state,arch,digest(kernel),names,phase == 'before')!
 			for key, value in captured { artifacts[phase + '_' + key] = value }
 			for key in ['rrabi_source','rrabi_init','rrabi_c'] { if phase == 'before' { identity[key] = captured[key] } else { assert identity[key] == captured[key] } }
 			text := os.read_file(state + '/rrabi/serial.log')!; semantics(text,phase,arch,false); storage(text,arch,phase)
-			build := area + 'build-' + phase + '-' + suffix + '.log'; text_build := os.read_file(build)!; assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			build := area + 'build-' + phase + '-' + suffix + '.log'; text_build := os.read_file(build)!; assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			artifacts[phase + '_kernel'] = digest(kernel); artifacts[phase + '_kernel_c'] = digest(area + phase + '-' + suffix + '.c')
 			for label, path in {'receipt':state + '/receipt.json','aggregate':state + '.log','native':state + '/rrabi/serial.log','build':build} { publish(path,out + 'rrabi-' + phase + '-' + arch + '-' + label + if label == 'receipt' { '.json' } else { '.log' })! }
 		}

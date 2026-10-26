@@ -40,7 +40,7 @@ fn launch_child_failure(fd int, stage i32, code i32) {
 fn launch_wait(pid int) !int {
 	mut status := i32(0)
 	for {
-		waited := C.vinix_package_waitpid(pid, unsafe { &status }, 0)
+		waited := C.tulpar_package_waitpid(pid, unsafe { &status }, 0)
 		if waited < 0 && C.errno == C.EINTR { continue }
 		if waited != pid { return error('cannot collect application process status') }
 		return if status & 0x7f == 0 { (status >> 8) & 0xff } else { 128 + (status & 0x7f) }

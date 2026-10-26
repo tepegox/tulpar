@@ -1,6 +1,6 @@
 /* Native stream, terminal and libc declarations; fixture algorithms are V. */
-#ifndef VINIX_SHARED_STREAM_FIXTURE_NATIVE_ABI_H
-#define VINIX_SHARED_STREAM_FIXTURE_NATIVE_ABI_H
+#ifndef TULPAR_SHARED_STREAM_FIXTURE_NATIVE_ABI_H
+#define TULPAR_SHARED_STREAM_FIXTURE_NATIVE_ABI_H
 #include <errno.h>
 #include <fcntl.h>
 #include <signal.h>

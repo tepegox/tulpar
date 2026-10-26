@@ -211,16 +211,16 @@ int main(void)
 		dup2(console, STDERR_FILENO);
 		close(console);
 	}
-	puts("VINIX SOUND TEST: START");
+	puts("TULPAR SOUND TEST: START");
 	pid_t worker = fork();
 	int status = 0;
 	if (worker == 0)
 		_exit(run_tests());
 	if (worker > 0 && waitpid(worker, &status, 0) == worker && WIFEXITED(status) &&
 	    WEXITSTATUS(status) == 0)
-		puts("VINIX SOUND TEST: GUEST DONE");
+		puts("TULPAR SOUND TEST: GUEST DONE");
 	else
-		puts("VINIX SOUND TEST: FAIL");
+		puts("TULPAR SOUND TEST: FAIL");
 	for (;;)
 		sleep(1);
 }

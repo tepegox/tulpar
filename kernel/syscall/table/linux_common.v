@@ -71,7 +71,7 @@ fn syscall_linux_futex(_ voidptr, uaddr u64, futex_op u64, val u64, timeout u64,
 			}
 			// FUTEX_WAIT has a relative timeout. FUTEX_WAIT_BITSET names an
 			// absolute deadline, so turn it into the relative duration used by
-			// the Vinix timer queue.
+			// the Tulpar timer queue.
 			if op == 9 {
 				clock_id := if futex_op & 0x100 != 0 {
 					time.clock_type_realtime
@@ -256,7 +256,7 @@ fn linux_writev_flags(_ voidptr, fdnum int, iov_ptr u64, iovcnt int, flags u32) 
 	defer { fd.unref() }
 	access_error := linux_iov_access_error(fd, true)
 	if access_error != 0 { return errno.err, access_error }
-	fast := C.vinix_stack_alloc(linux_iov_fast * sizeof(LinuxIOVec))
+	fast := C.tulpar_stack_alloc(linux_iov_fast * sizeof(LinuxIOVec))
 	vector := import_linux_iov(iov_ptr, iovcnt, fast) or { return errno.err, errno.get() }
 	defer { vector.release() }
 	total := vector.total
@@ -337,7 +337,7 @@ fn linux_uname(buf u64, version charptr, machine charptr) (u64, u64) {
 	// Linux already: /proc/sys/kernel/ostype, /proc/version. Programs that ask
 	// uname(2) which system they are on get the same answer. Erlang takes its
 	// os:type() from it, and RabbitMQ's disk monitor refused to start on
-	// {unix,vinix}. Outside a container the kernel is Vinix.
+	// {unix,tulpar}. Outside a container the kernel is Tulpar.
 	//
 	// Its release is a Linux one too. glibc before 2.36 refuses to start on a
 	// kernel older than the one it was built for -- 3.7 on arm64 -- and every
@@ -346,11 +346,11 @@ fn linux_uname(buf u64, version charptr, machine charptr) (u64, u64) {
 	// long-term release programs are made to run on; what a newer kernel adds
 	// they look for when they want it, and ENOSYS tells them.
 	in_container := net.in_own_uts_namespace()
-	sysname := if in_container { c'Linux' } else { c'Vinix' }
-	release := if in_container { c'5.15.0-vinix' } else { c'0.1.0' }
+	sysname := if in_container { c'Linux' } else { c'Tulpar' }
+	release := if in_container { c'5.15.0-tulpar' } else { c'0.1.0' }
 	unsafe {
 		C.strcpy(charptr(&uts[0]), sysname)
-		C.strcpy(charptr(&uts[65]), c'vinix')
+		C.strcpy(charptr(&uts[65]), c'tulpar')
 		C.strcpy(charptr(&uts[130]), release)
 		C.strcpy(charptr(&uts[195]), version)
 		C.strcpy(charptr(&uts[260]), machine)
@@ -396,11 +396,11 @@ fn syscall_linux_prctl(gpr_state voidptr, _option int, arg2 u64, _arg3 u64, _arg
 		proc.mac_prctl {
 			return proc.mac_control(arg2, _arg3, _arg4, _arg5)
 		}
-		proc.pr_vinix_syscall_policy {
+		proc.pr_tulpar_syscall_policy {
 			if _arg4 != 0 || _arg5 != 0 { return errno.err, errno.einval }
 			return proc.syscall_policy_control(mut process, arg2, _arg3)
 		}
-		proc.pr_vinix_stack_policy {
+		proc.pr_tulpar_stack_policy {
 			if _arg3 != 0 || _arg4 != 0 || _arg5 != 0 { return errno.err, errno.einval }
 			return proc.stack_policy_control(mut process, arg2, user_stack_pointer(gpr_state))
 		}
@@ -410,7 +410,7 @@ fn syscall_linux_prctl(gpr_state voidptr, _option int, arg2 u64, _arg3 u64, _arg
 			// its process went by the last of them -- ps showed DelayedTaskSche,
 			// and pgrep node found nothing. The process goes by its first
 			// thread's name, as on Linux.
-			raw := unsafe { &u8(C.vinix_stack_alloc(task_comm_len)) }
+			raw := unsafe { &u8(C.tulpar_stack_alloc(task_comm_len)) }
 			unsafe { C.memset(raw, 0, task_comm_len) }
 			// Linux reads up to 15 bytes, stopping at NUL. A short name at a
 			// page boundary must not depend on the following page being mapped.
@@ -439,7 +439,7 @@ fn syscall_linux_prctl(gpr_state voidptr, _option int, arg2 u64, _arg3 u64, _arg
 			return 0, 0
 		}
 		pr_get_name {
-			raw := unsafe { &u8(C.vinix_stack_alloc(task_comm_len)) }
+			raw := unsafe { &u8(C.tulpar_stack_alloc(task_comm_len)) }
 			unsafe { C.memset(raw, 0, task_comm_len) }
 			proc.copy_current_command(raw)
 			if !usercopy.copy_to_user(arg2, raw, task_comm_len) {
@@ -891,8 +891,8 @@ fn syscall_linux_statx(gpr_state voidptr, dirfd int, path charptr, flags int, ma
 		return errno.err, errno.einval
 	}
 
-	mut vinix_stat := unsafe { &stat.Stat(C.vinix_stack_alloc(sizeof(stat.Stat))) }
-	unsafe { *vinix_stat = stat.Stat{} }
+	mut tulpar_stat := unsafe { &stat.Stat(C.tulpar_stack_alloc(sizeof(stat.Stat))) }
+	unsafe { *tulpar_stat = stat.Stat{} }
 	// NULL is the descriptor-only spelling for nonnegative descriptor words.
 	// It must use the held descriptor path, not a kernel string passed to the
 	// user-path reader. Negative words retain the pathname EFAULT behavior.
@@ -900,15 +900,15 @@ fn syscall_linux_statx(gpr_state voidptr, dirfd int, path charptr, flags int, ma
 	mut err := u64(0)
 	if path == unsafe { nil } && i32(u32(dirfd)) >= 0
 		&& query_flags & ~(statx_no_automount | statx_sync_type) == u32(fs.at_empty_path) {
-		ret, err = fs.syscall_fstat(gpr_state, int(u32(dirfd)), vinix_stat)
+		ret, err = fs.syscall_fstat(gpr_state, int(u32(dirfd)), tulpar_stat)
 	} else {
-		ret, err = fs.syscall_fstatat(gpr_state, int(u32(dirfd)), path, vinix_stat, int(query_flags))
+		ret, err = fs.syscall_fstatat(gpr_state, int(u32(dirfd)), path, tulpar_stat, int(query_flags))
 	}
 	if err != 0 {
 		return ret, err
 	}
 
-	if !convert_stat_to_statx(vinix_stat, buf) {
+	if !convert_stat_to_statx(tulpar_stat, buf) {
 		return errno.err, errno.efault
 	}
 	return 0, 0
@@ -940,7 +940,7 @@ fn linux_readv_flags(_ voidptr, fdnum int, iov_ptr u64, iovcnt int, flags u32) (
 	defer { fd.unref() }
 	access_error := linux_iov_access_error(fd, false)
 	if access_error != 0 { return errno.err, access_error }
-	fast := C.vinix_stack_alloc(linux_iov_fast * sizeof(LinuxIOVec))
+	fast := C.tulpar_stack_alloc(linux_iov_fast * sizeof(LinuxIOVec))
 	vector := import_linux_iov(iov_ptr, iovcnt, fast) or { return errno.err, errno.get() }
 	defer { vector.release() }
 	if vector.total == 0 {

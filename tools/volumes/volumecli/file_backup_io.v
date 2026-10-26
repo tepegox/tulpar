@@ -86,7 +86,7 @@ fn read_file_archive(fd i32, mut version FileVersion, mut info C.stat, digest &[
 // linkat refuses any existing destination, including a symlink or input alias.
 fn file_backup_temporary(edit &PlanEdit, name &char) i32 {
 	for attempt := 0; attempt < 64; attempt++ {
-		if C.snprintf(name, 64, c'.vinix-backup-%ld-%u', i64(C.getpid()), u32(attempt)) <= 0 { return -1 }
+		if C.snprintf(name, 64, c'.tulpar-backup-%ld-%u', i64(C.getpid()), u32(attempt)) <= 0 { return -1 }
 		if C.strcmp(name, &edit.name[0]) == 0 { continue }
 		fd := C.openat(edit.directory, name, C.O_RDWR | C.O_CREAT | C.O_EXCL | C.O_NOFOLLOW | C.O_CLOEXEC, u32(0o600))
 		if fd >= 0 || unsafe { C.errno != C.EEXIST } { return fd }

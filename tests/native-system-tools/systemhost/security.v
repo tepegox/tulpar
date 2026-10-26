@@ -7,22 +7,22 @@ import os
 
 pub fn security_pass(family string) string {
 	return match family {
-		'security' { 'VINIX OPENBSD SECURITY: PASS' }
-		'mount' { 'VINIX MOUNT POLICY: PASS' }
-		else { 'VINIX IPV6: PASS' }
+		'security' { 'TULPAR OPENBSD SECURITY: PASS' }
+		'mount' { 'TULPAR MOUNT POLICY: PASS' }
+		else { 'TULPAR IPV6: PASS' }
 	}
 }
 
 pub fn security_failures(family string) []string {
 	return match family {
 		'security' {
-			['VINIX OPENBSD SECURITY: FAIL', 'OPENBSD SECURITY FAIL line', 'FATAL EXCEPTION',
+			['TULPAR OPENBSD SECURITY: FAIL', 'OPENBSD SECURITY FAIL line', 'FATAL EXCEPTION',
 				'KERNEL PANIC']
 		}
 		'mount' {
-			['VINIX MOUNT POLICY: FAIL', 'MOUNT POLICY FAIL line', 'FATAL EXCEPTION', 'KERNEL PANIC']
+			['TULPAR MOUNT POLICY: FAIL', 'MOUNT POLICY FAIL line', 'FATAL EXCEPTION', 'KERNEL PANIC']
 		}
-		else { ['VINIX IPV6: FAIL', 'KERNEL PANIC', 'FATAL EXCEPTION'] }
+		else { ['TULPAR IPV6: FAIL', 'KERNEL PANIC', 'FATAL EXCEPTION'] }
 	}
 }
 
@@ -46,14 +46,14 @@ fn security_x86(iso string, qemu_arg string, firmware_arg string, capture_path s
 	firmware := if firmware_arg != '' {
 		resolve(firmware_arg)!
 	} else {
-		os.getenv_opt('VINIX_OVMF_CODE') or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
+		os.getenv_opt('TULPAR_OVMF_CODE') or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
 	}
 	return guesthost.Launch{
 		command: [qemu, '-machine', 'q35,smm=off', '-accel',
-			os.getenv_opt('VINIX_QEMU_ACCEL') or { 'tcg' }, '-cpu', 'max', '-m', '1024', '-smp',
+			os.getenv_opt('TULPAR_QEMU_ACCEL') or { 'tcg' }, '-cpu', 'max', '-m', '1024', '-smp',
 			'2', '-drive', 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware, '-cdrom',
 			iso, '-netdev', 'user,id=net0', '-device', 'e1000,netdev=net0,mac=52:54:00:12:34:56',
-			'-object', 'filter-dump,id=vinixdump,netdev=net0,file=' + capture_path, '-display',
+			'-object', 'filter-dump,id=tulpardump,netdev=net0,file=' + capture_path, '-display',
 			'none', '-monitor', 'none', '-serial', 'stdio', '-no-reboot']
 		env:     policy_environment()
 	}
@@ -87,7 +87,7 @@ fn security(family string, arguments []string) !int {
 	if !build && arch == 'aarch64' { required(options, ['--init', '--initramfs', '--state-dir'])! }
 	if !build && arch == 'amd64' { required(options, ['--iso'])! }
 	seconds := if build { env_timeout(options, 600)! } else { positive(options, '--timeout', 600)! }
-	state := state_dir(options, 'vinix-' + family + '-')!
+	state := state_dir(options, 'tulpar-' + family + '-')!
 	defer { private_cleanup(state, options) }
 	capture_path := if options.has('--capture') {
 		resolve(options.value('--capture', ''))!
@@ -95,9 +95,9 @@ fn security(family string, arguments []string) !int {
 		state + '/net.pcap'
 	}
 	runner := resolve(os.getenv_opt(if family == 'ipv6' {
-		'VINIX_QEMU_RUNNER_ROOT'
+		'TULPAR_QEMU_RUNNER_ROOT'
 	} else {
-		'VINIX_VM_RUNNER_ROOT'
+		'TULPAR_VM_RUNNER_ROOT'
 	}) or { root() })!
 	mut init := ''
 	mut archive := ''
@@ -121,14 +121,14 @@ fn security(family string, arguments []string) !int {
 		kernel = snapshot(state, kernel_source(options, arch), arch)!
 		base := guesthost.serial_arm_launch(init, archive, state, kernel, runner, 2048, '')!
 		mut argv := base.command.clone()
-		argv << ['-object', 'filter-dump,id=vinixdump,netdev=net0,file=' + capture_path]
+		argv << ['-object', 'filter-dump,id=tulpardump,netdev=net0,file=' + capture_path]
 		guesthost.Launch{argv, base.env}
 	} else if build {
-		kernel = snapshot(state, options.value('--kernel-dir', os.getenv_opt('VINIX_AMD64_KERNEL') or {
-			root() + '/build-amd64-kernel/bin/vinix'
+		kernel = snapshot(state, options.value('--kernel-dir', os.getenv_opt('TULPAR_AMD64_KERNEL') or {
+			root() + '/build-amd64-kernel/bin/tulpar'
 		}), arch)!
 		guesthost.launch_from(init, archive, state, kernel, 'x86_64', false, runner)!
-		security_x86(state + '/test.iso', options.value('--qemu', os.getenv_opt('VINIX_QEMU_X86_64') or { 'qemu-system-x86_64' }), options.value('--firmware', ''), capture_path)!
+		security_x86(state + '/test.iso', options.value('--qemu', os.getenv_opt('TULPAR_QEMU_X86_64') or { 'qemu-system-x86_64' }), options.value('--firmware', ''), capture_path)!
 	} else {
 		security_x86(resolve(options.value('--iso', ''))!, options.value('--qemu', 'qemu-system-x86_64'), options.value('--firmware', ''), capture_path)!
 	}
@@ -164,8 +164,8 @@ fn security(family string, arguments []string) !int {
 	}
 	if family == 'ipv6' && os.exists(capture_path) {
 		failures << ipv6_packets(capture_frames(capture_path)!)
-		if os.getenv('VINIX_TEST_CAPTURE') != '' {
-			os.cp(capture_path, os.getenv('VINIX_TEST_CAPTURE'))!
+		if os.getenv('TULPAR_TEST_CAPTURE') != '' {
+			os.cp(capture_path, os.getenv('TULPAR_TEST_CAPTURE'))!
 		}
 	}
 	for failure in failures { eprintln('ERROR: ' + failure) }

@@ -160,7 +160,7 @@ fn test_maximum_capacity_batch_preserves_all_64_members_and_rows_near_u64() {
 
 fn test_capacity_batch_cli_rejects_invalid_counts_pairs_numbers_and_empty_devices() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'plan-capacity-batch'), &char(c'/unused'),
+		mut args := [&char(c'tulpar-volume'), &char(c'plan-capacity-batch'), &char(c'/unused'),
 			&char(c'0'), &char(c'/unused-device'), &char(c'25165824'), &char(c'1'), &char(c'/unused-device'), &char(c'25165824'), &char(nil)]!
 		for command in [c'plan-capacity-batch', c'plan-preview-capacity-batch'] {
 			args[1] = &char(command)

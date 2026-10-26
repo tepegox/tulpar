@@ -54,5 +54,5 @@ fn main() {
 	run('make', ['-C', '${work}/kernel', '-j4', 'ARCH=${arch}', 'LIMINE_MP=1', 'CC=${llvm}/clang',
 		'LD_AARCH64=${linker}', 'LD_X86_64=${linker}', 'AR=${llvm}/llvm-ar', 'V=${v}',
 		'VFLAGS=-new-compiler -no-memory-limit', 'PROD=1'])!
-	os.cp('${work}/kernel/bin/vinix', '${root}/build-aarch64-zed/kernel-${arch}')!
+	os.cp('${work}/kernel/bin/tulpar', '${root}/build-aarch64-zed/kernel-${arch}')!
 }

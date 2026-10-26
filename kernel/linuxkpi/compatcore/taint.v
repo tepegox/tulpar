@@ -27,16 +27,16 @@ pub fn get_taint() u64 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_warn']
-pub fn vinix_linuxkpi_warn(file &char, line i32) {
+@[export: 'tulpar_linuxkpi_warn']
+pub fn tulpar_linuxkpi_warn(file &char, line i32) {
 	unsafe {
 		C.vkp_warn_note(file, line)
 		C.vkp_warn(file, line)
 	}
 }
 
-@[export: 'vinix_linuxkpi_refcount_warning']
-pub fn vinix_linuxkpi_refcount_warning(kind i32) {
+@[export: 'tulpar_linuxkpi_refcount_warning']
+pub fn tulpar_linuxkpi_refcount_warning(kind i32) {
 	unsafe {
 		C.vkp_refcount_note(kind)
 		add_taint(9, 0)

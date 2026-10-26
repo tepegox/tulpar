@@ -7,9 +7,9 @@ import os
 import time
 
 fn saved_deployment_fixture(architecture string) !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-deployment-save-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/etc/vinix-packages')!
-	os.write_file(work + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: architecture,
+	work := os.real_path(os.temp_dir()) + '/tulpar-deployment-save-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/etc/tulpar-packages')!
+	os.write_file(work + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: architecture,
 		policy: Policy{ offline: true, allowed: ['unrelated'], permissions: [], reserve_bytes: 0 } }))!
 	mut packages := []Installed{}
 	for id in ['app', 'runtime', 'assets', 'extra'] {
@@ -72,11 +72,11 @@ fn test_saved_deployment_refuses_bad_roots_corrupt_state_writer_and_existing_out
 	mut saved := service.save_deployment_snapshot(path, [])!; saved.close()
 	before := read_metadata(path)!
 	mut refused := false; service.save_deployment_snapshot(path, ['runtime']) or { refused = err.msg().contains('already exists') }; assert refused && read_metadata(path)! == before
-	configuration := read_metadata(work + '/etc/vinix-packages/config.json')!
-	guard := acquire(directory)!; os.write_file(work + '/etc/vinix-packages/config.json', '{bad')!
+	configuration := read_metadata(work + '/etc/tulpar-packages/config.json')!
+	guard := acquire(directory)!; os.write_file(work + '/etc/tulpar-packages/config.json', '{bad')!
 	mut message := ''; service.save_deployment_snapshot(work + '/busy', []) or { message = err.msg() }
 	assert message.contains('another package transaction') && !os.exists(work + '/busy'); guard.release()
-	os.write_file(work + '/etc/vinix-packages/config.json', configuration)!
+	os.write_file(work + '/etc/tulpar-packages/config.json', configuration)!
 	os.write_file(directory + '/current/state.json', '{}')!
 	refused = false; service.save_deployment_snapshot(work + '/corrupt', []) or { refused = true }; assert refused && !os.exists(work + '/corrupt')
 	assert os.ls(work)!.all(!it.starts_with('.package-'))

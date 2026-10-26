@@ -47,7 +47,7 @@ V=/path/to/v V_MACOS_V3_NO_FALLBACK=1 /path/to/v -nocache \
   -path '@vlib|@vmodules|tests/hardware-platform' \
   -o /tmp/launch-data-check tests/packages/launch-data-check.v
 V=/path/to/v VFLAGS=-nocache V_MACOS_V3_NO_FALLBACK=1 \
-  VINIX_HWTEST_TCG=1 VINIX_LAUNCH_DATA_SANDBOX=/path/to/native/sandbox \
+  TULPAR_HWTEST_TCG=1 TULPAR_LAUNCH_DATA_SANDBOX=/path/to/native/sandbox \
   /tmp/launch-data-check --arch aarch64 --kernel /path/to/kernel \
   --state-dir /tmp/launch-data-arm --scenario packages-launch-data --timeout 240
 ```

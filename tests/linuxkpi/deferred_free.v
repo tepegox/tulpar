@@ -36,7 +36,7 @@ fn selected_source(raw string, prefix string, header string, global_prefixes []s
 	for body in hosttest.c_bodies(raw) {
 		line := body.all_before('\n')
 		if line.contains(prefix) || line.contains(' vkr_') || line.contains(' vkm_') ||
-			line.contains(' vinix_linuxkpi_gfp_supported(') || line.contains(' vinix_linuxkpi_alloc_gfp_pages(') || line.contains(' vinix_linuxkpi_tigerlake_id(') ||
+			line.contains(' tulpar_linuxkpi_gfp_supported(') || line.contains(' tulpar_linuxkpi_alloc_gfp_pages(') || line.contains(' tulpar_linuxkpi_tigerlake_id(') ||
 			line.contains(' kmalloc(') || line.contains(' kzalloc(') || line.contains(' kmalloc_array(') || line.contains(' kcalloc(') || line.contains(' ksize(') || line.contains(' kfree(') || line.contains(' krealloc(') || line.contains(' kmemdup(') || line.contains(' kmem_cache_') || line.contains(' kvfree(') || line.contains(' kvfree_call_rcu(') ||
 			line.contains(' call_rcu(') || line.contains(' synchronize_rcu') || line.contains(' rcu_barrier(') || line.contains(' get_state_synchronize_rcu(') || line.contains(' start_poll_synchronize_rcu(') || line.contains(' poll_state_synchronize_rcu(') || line.contains(' cond_synchronize_rcu(') ||
 			line.contains(' __bitmap_weight(') || line.contains(' arch_atomic_read(') {
@@ -97,10 +97,10 @@ fn stage_sources(work string) ![]string {
 		'struct C.callback_head {}\nstruct C.vkw_list {}\n' +
 		'struct C.vkw_swait_head { lock u32, task_list C.vkw_list }\n' +
 		'struct C.vkw_completion { done u32, @wait C.vkw_swait_head }\n' +
-		'fn C.kzalloc(usize,u32) voidptr\nfn C.kfree(voidptr)\nfn C.memset(voidptr,i32,usize) voidptr\nfn C.memcpy(voidptr,voidptr,usize) voidptr\nfn C.strlen(voidptr) usize\nfn C.kmalloc(usize,u32) voidptr\nfn C.vinix_linuxkpi_page_size() usize\nfn C.vinix_linuxkpi_free_pages(voidptr,usize)\nfn C.vinix_linuxkpi_alloc_gfp_pages(usize,u32) voidptr\nfn C.vinix_linuxkpi_gfp_supported(u32) bool\nfn C.vkp_cache_ctor_warning(bool)\n' +
-		'fn C.vinix_linuxkpi_bug(&char,i32)\nfn C.vinix_linuxkpi_irq_flags() u64\n' +
-		'fn C.vinix_linuxkpi_may_sleep() bool\nfn C.vinix_linuxkpi_spin_wait()\nfn C.vinix_linuxkpi_cond_resched() i32\n' +
-		'fn C.vinix_linuxkpi_preempt_disable()\nfn C.vinix_linuxkpi_preempt_enable()\n' +
+		'fn C.kzalloc(usize,u32) voidptr\nfn C.kfree(voidptr)\nfn C.memset(voidptr,i32,usize) voidptr\nfn C.memcpy(voidptr,voidptr,usize) voidptr\nfn C.strlen(voidptr) usize\nfn C.kmalloc(usize,u32) voidptr\nfn C.tulpar_linuxkpi_page_size() usize\nfn C.tulpar_linuxkpi_free_pages(voidptr,usize)\nfn C.tulpar_linuxkpi_alloc_gfp_pages(usize,u32) voidptr\nfn C.tulpar_linuxkpi_gfp_supported(u32) bool\nfn C.vkp_cache_ctor_warning(bool)\n' +
+		'fn C.tulpar_linuxkpi_bug(&char,i32)\nfn C.tulpar_linuxkpi_irq_flags() u64\n' +
+		'fn C.tulpar_linuxkpi_may_sleep() bool\nfn C.tulpar_linuxkpi_spin_wait()\nfn C.tulpar_linuxkpi_cond_resched() i32\n' +
+		'fn C.tulpar_linuxkpi_preempt_disable()\nfn C.tulpar_linuxkpi_preempt_enable()\n' +
 		'fn C.vkp_spin_init(voidptr)\nfn C.vkp_spin_lock_irqsave(voidptr) u64\n' +
 		'fn C.vkp_spin_unlock_irqrestore(voidptr,u64)\nfn C.msleep(u32)\n' +
 		'fn C.rcuh_completion_init(voidptr)\nfn C.rcuh_completion_complete(voidptr)\nfn C.rcuh_completion_wait(voidptr)\n' +
@@ -114,7 +114,7 @@ fn stage_sources(work string) ![]string {
 	os.write_file(os.join_path(work, 'headercore/bindings.v'), '@[translated]\nmodule headercore\n' +
 		'#include "linuxkpi_header_primitive_v_contract.h"\n@[typedef]\nstruct C.atomic_t { counter i32 }\n' +
 		'@[typedef]\nstruct C.vhp_const_atomicp {}\nfn C.test_bit(i32,voidptr) bool\n' +
-		'@[typedef]\nstruct C.vhp_const_voidp {}\nstruct C.callback_head {}\nstruct C.task_struct { vinix_thread voidptr, __state u32 }\n' +
+		'@[typedef]\nstruct C.vhp_const_voidp {}\nstruct C.callback_head {}\nstruct C.task_struct { tulpar_thread voidptr, __state u32 }\n' +
 		'@[typedef]\nstruct C.pthread_t {}\ntype HeaderThreadFn = fn(voidptr) voidptr\n' +
 		'fn C.pthread_create(voidptr,voidptr,HeaderThreadFn,voidptr) i32\nfn C.pthread_join(C.pthread_t,voidptr) i32\n' +
 		'fn C.pthread_exit(voidptr)\nfn C.memcpy(voidptr,voidptr,usize) voidptr\n' +
@@ -134,7 +134,7 @@ fn stage_fixture(directory string) ! {
 	// production page allocator. These are transport/test functions only.
 	original := os.read_file(os.join_path(root,'tests/linuxkpi/rcucallfixture/core.v'))!
 	mut transport := original.all_before('fn callback(head &C.callback_head) {').replace('module rcucallfixture','module freefixture')
-	for attribute in ["@[export: 'kzalloc']", "@[export: 'kfree']", "@[export: 'vinix_linuxkpi_bug'; noreturn]", "@[export: 'vkr_page_allocation_size']", "@[export: 'vkr_kvfree']"] { transport = transport.replace(attribute + ' pub fn',attribute+'\npub fn') }
+	for attribute in ["@[export: 'kzalloc']", "@[export: 'kfree']", "@[export: 'tulpar_linuxkpi_bug'; noreturn]", "@[export: 'vkr_page_allocation_size']", "@[export: 'vkr_kvfree']"] { transport = transport.replace(attribute + ' pub fn',attribute+'\npub fn') }
 	for name in ['allocate','deallocate','bug','unsupported_page_owner','unsupported_page_free','await_return','await_poll'] { transport = transport.replace(hosttest.v_function(transport,name)!,'') }
 	for name in ['start_waiter','wait_actor','join_waiter'] { transport += hosttest.v_function(original,name)! }
 	os.write_file(os.join_path(directory,'transport.v'),transport)!
@@ -182,7 +182,7 @@ fn profile(work string, linux string, compiler []string, standard string) []stri
 		'-fno-strict-aliasing', '-ffunction-sections', '-fdata-sections', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-sign-compare',
 		'-fsanitize=address,undefined', '-fno-omit-frame-pointer', '-D_FORTIFY_SOURCE=0',
-		'-DVINIX_LINUXKPI', '-DVINIX_LINUXKPI_HOST_TEST', '-D__KERNEL__',
+		'-DTULPAR_LINUXKPI', '-DTULPAR_LINUXKPI_HOST_TEST', '-D__KERNEL__',
 		'-include', os.join_path(root, 'tests/linuxkpi/host_types.h'), '-include', 'linux/kconfig.h',
 		'-include', os.join_path(linux, 'include/linux/compiler_types.h')]
 	for directory in [os.join_path(work, 'include'), os.join_path(root, 'tests/linuxkpi/freefixture'), os.join_path(root, 'tests/linuxkpi/rcucallfixture'),
@@ -199,7 +199,7 @@ fn run_profile(keep string) ! {
 	root := hosttest.root()
 	linux := hosttest.env_default('LINUXKPI_SOURCE_DIR', os.join_path(root, 'third_party/linux-i915/linux-6.6.157'))
 	compiler := hosttest.shell_split(hosttest.env_default('CC', 'clang'))!
-	work := hosttest.work_dir(keep, 'vinix-deferred-free-')!
+	work := hosttest.work_dir(keep, 'tulpar-deferred-free-')!
 	defer { if keep == '' { hosttest.remove_work_dir(work) or { eprintln(err) } } }
 	mut env := os.environ()
 	env['VCACHE'] = os.join_path(work, 'vcache')
@@ -237,7 +237,7 @@ fn run_profile(keep string) ! {
 	include := os.join_path(work, 'include')
 	for schema, name in {'atomic-exchange': 'atomic_exchange', 'overflow': 'integer_policy', 'spinlock': 'spinlock_adapters'} {
 		hosttest.generate_abi(os.join_path(root, 'kernel/linuxkpi/abi', schema + '.json'),
-			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'vinix', name + '.h'))!
+			os.join_path(root, 'kernel/linuxkpi'), os.join_path(include, 'tulpar', name + '.h'))!
 	}
 	mut proofs := []json2.Any{}
 	for name in ['compatcore', 'headercore'] {
@@ -250,7 +250,7 @@ fn run_profile(keep string) ! {
 			'typedef struct cpumask cpumask;\n' +
 			hosttest.scalar_metadata(os.join_path(stage, name), '')!
 		} else { '#include "linuxkpi_rcu_v_primitives.h"\n#include "linuxkpi_smp_masks_v_primitives.h"\n' +
-			'void msleep(unsigned int); void rcuh_completion_init(void *); void rcuh_completion_complete(void *); void rcuh_completion_wait(void *);\n#include <string.h>\nvoid *vinix_linuxkpi_alloc_pages(size_t,bool);\n' }
+			'void msleep(unsigned int); void rcuh_completion_init(void *); void rcuh_completion_complete(void *); void rcuh_completion_wait(void *);\n#include <string.h>\nvoid *tulpar_linuxkpi_alloc_pages(size_t,bool);\n' }
 		prefixes := if name == 'headercore' { ['cpu_bit_bitmap', 'cpu_all_bits', '__cpu_', '__num_online_cpus', 'nr_cpu_ids'] }
 			else { ['compatcore__vkr_rcu_', 'compatcore__vkms_ready'] }
 		selected := selected_source(raw, name + '__', header, prefixes)!
@@ -270,7 +270,7 @@ fn run_profile(keep string) ! {
 		for group in ['compatcore', 'headercore'] {
 			obj := os.join_path(work, standard + '-' + group + '.o')
 			mut group_flags := base.clone()
-			if group == 'compatcore' { group_flags << '-DVINIX_V_RUNTIME' }
+			if group == 'compatcore' { group_flags << '-DTULPAR_V_RUNTIME' }
 			inputs << compile_input(group_flags, os.join_path(work, group + '-selected.c'), obj,
 				os.join_path(work, standard + '-' + group + '-compile.log'), env)!
 			imports := command([hosttest.tool('llvm-nm'), '-u', obj], '', env)!.stdout

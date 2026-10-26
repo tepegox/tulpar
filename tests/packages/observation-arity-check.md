@@ -1,10 +1,10 @@
 # Read-only package CLI operand admission
 
-`vinix-package view`, `updates`, `status`, `list` and `verify` accept no
+`tulpar-package view`, `updates`, `status`, `list` and `verify` accept no
 operands. `info` requires exactly one package ID. Invalid operand counts return
 exit status 1 before configuration, catalog or installed-state reads, with
 `COMMAND takes no arguments` or `info requires one package ID` after the usual
-`vinix-package:` prefix. Global option parsing and its errors still come first.
+`tulpar-package:` prefix. Global option parsing and its errors still come first.
 
 This matters for callers that accidentally pass an ID to `verify`: the command
 does not support verification scoped to that ID. A valid `verify` continues to

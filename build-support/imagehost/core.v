@@ -18,7 +18,7 @@ fn C.fchmod(i32, u32) i32
 fn C.umask(u32) u32
 fn C.link(&char, &char) i32
 
-pub const limine_config = 'timeout: 0\nverbose: yes\n\n/Vinix\n    protocol: limine\n    kernel_path: boot():/boot/vinix\n    module_path: boot():/boot/initramfs.tar\n    cmdline: vinix.qemu_platform=1\n    kaslr: no\n'
+pub const limine_config = 'timeout: 0\nverbose: yes\n\n/Tulpar\n    protocol: limine\n    kernel_path: boot():/boot/tulpar\n    module_path: boot():/boot/initramfs.tar\n    cmdline: tulpar.qemu_platform=1\n    kaslr: no\n'
 
 pub fn human_size(text string) !string {
 	mut number := strconv.atof64(text)!
@@ -69,7 +69,7 @@ pub fn command(argv []string, environment map[string]string) ! {
 pub fn build(root string, output string, initramfs string, environment map[string]string) !u64 {
 	if output == '' || output.contains('\x00') { return error('invalid image output') }
 	if os.exists(output) || os.is_link(output) { return error('image already exists: ' + output) }
-	kernel := root + '/kernel/bin/vinix'
+	kernel := root + '/kernel/bin/tulpar'
 	limine := root + '/boot-image/limine-bin/BOOTAA64.EFI'
 	for input in [initramfs, kernel, limine] {
 		state := os.stat(input) or { return error('missing guest image input: ' + input) }
@@ -84,7 +84,7 @@ pub fn build(root string, output string, initramfs string, environment map[strin
 	size := image_size([os.stat(initramfs)!.size, os.stat(kernel)!.size])!
 	if size > u64(0x7fffffffffffffff) / (1024 * 1024) { return error('guest image size overflows') }
 	mkdir(os.dir(output))!
-	work := sourcecommand.temporary('vinix-guest-disk')!
+	work := sourcecommand.temporary('tulpar-guest-disk')!
 	defer {
 		os.rm(work + '/limine.conf') or {}
 		os.rmdir(work) or {}
@@ -111,7 +111,7 @@ pub fn build(root string, output string, initramfs string, environment map[strin
 	for source, destination in {
 		limine:                '::/EFI/BOOT/BOOTAA64.EFI'
 		work + '/limine.conf': '::/boot/limine.conf'
-		kernel:                '::/boot/vinix'
+		kernel:                '::/boot/tulpar'
 		initramfs:             '::/boot/initramfs.tar'
 	} {
 		command([tools['mcopy'], '-i', image, source, destination], environment)!

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 module lib
 
-@[export: 'vinix_vmx_invept']
+@[export: 'tulpar_vmx_invept']
 fn vmx_invept(kind u64, eptp u64) i32 {
 	descriptor := [eptp, u64(0)]!
 	mut failed := u8(0)

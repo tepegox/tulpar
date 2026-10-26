@@ -13,7 +13,7 @@
 //	    cpuinfo_min_freq cpuinfo_max_freq      what the hardware can do
 //	    energy_performance_preference
 //	    energy_performance_available_preferences
-//	/sys/devices/system/cpu/cpufreq/           Vinix's own
+//	/sys/devices/system/cpu/cpufreq/           Tulpar's own
 //	    thermal_limit      percent of top performance thermal management allows
 //	    profile            performance, balanced or power_saver, for all CPUs
 //
@@ -217,7 +217,7 @@ fn store_profile(_ voidptr, data &u8, length u64) u64 {
 // `prefix`, `cpu_number` in decimal, `name`: a path built on the stack, as
 // every path in /sys is.
 fn cpu_path(cpu_number int, name string) string {
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(name.len + 48) }
 	text.add('devices/system/cpu/cpu')
 	text.add_unsigned(u64(cpu_number))

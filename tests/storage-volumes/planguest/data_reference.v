@@ -16,7 +16,7 @@ fn data_reference_path(changed bool) &char {
 @[direct_array_access]
 fn data_reference_tool(first &char, second &char, before bool, after bool, expected i32) {
 	unsafe {
-		args := [&char(c'/usr/sbin/vinix-volume'), &char(c'compare-data-references'), first, second, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'compare-data-references'), first, second, &char(nil)]!
 		fd := C.open(c'/root/reference-data-output', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(fd >= 0, c'open data reference capture')
 		child := C.fork(); check(child >= 0, c'fork data reference utility')
 		if child == 0 { if C.dup2(fd, 1) != 1 || C.close(fd) != 0 { C._exit(126) }; C.execv(args[0], &args[0]); C._exit(127) }
@@ -25,7 +25,7 @@ fn data_reference_tool(first &char, second &char, before bool, after bool, expec
 		check(capture >= 0 && count >= 0 && count < 4095 && C.close(capture) == 0, c'bounded data reference output'); actual[count] = 0
 		if expected == 1 { check(C.strstr(&actual[0], c'operation=') == nil, c'data reference failure emits no finding'); return }
 		mut text := [4096]char{}
-		mut length := int(C.snprintf(&text[0], 4096, c'format=VINIXDH1 operation=compared-data-references disks=2 mappings=3 stable=%d changed=%d algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\n', if before == after { 3 } else { 1 }, if before == after { 0 } else { 2 }, data_reference_hash(before), data_reference_hash(after)))
+		mut length := int(C.snprintf(&text[0], 4096, c'format=TULPARDH1 operation=compared-data-references disks=2 mappings=3 stable=%d changed=%d algorithm=sha256 before_reference_sha256=%s after_reference_sha256=%s\n', if before == after { 3 } else { 1 }, if before == after { 0 } else { 2 }, data_reference_hash(before), data_reference_hash(after)))
 		for row in 0 .. 3 {
 			disk := if row == 2 { u32(1) } else { u32(0) }; slot := if row == 0 { u32(2) } else if row == 1 { u32(5) } else { u32(9) }
 			if row != 1 { length += int(C.snprintf(&text[length], usize(4096 - length), c'disk=%u disk_bytes=16777216 sector=512 identity=mbr:%08x\n', disk, u32(0x12345678) + disk)) }
@@ -82,12 +82,12 @@ fn data_reference_entry() i32 {
 		copy_plan(c'/root/manual-data.vhash', c'/root/malformed-data.vhash'); bad := C.open(c'/root/malformed-data.vhash', C.O_RDWR); mut broken := u8(1)
 		check(bad >= 0 && C.pwrite(bad, &broken, 1, 471) == 1 && C.fsync(bad) == 0 && C.close(bad) == 0, c'persist invalid later reference')
 		data_reference_tool(c'/root/changed-data.vhash', c'/root/malformed-data.vhash', true, false, 1); check(C.unlink(c'/root/malformed-data.vhash') == 0, c'reclaim malformed data reference')
-		first := status(c'/dev/mapper/vinix2'); second := status(c'/dev/mapper/vinix9'); held := C.open(c'/dev/mapper/vinix9', C.O_RDONLY); check(held >= 0, c'hold reference live mapping')
+		first := status(c'/dev/mapper/tulpar2'); second := status(c'/dev/mapper/tulpar9'); held := C.open(c'/dev/mapper/tulpar9', C.O_RDONLY); check(held >= 0, c'hold reference live mapping')
 		root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold data reference writer lock')
-		data_reference_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/vinix2') && second == status(c'/dev/mapper/vinix9'), c'offline comparisons preserve all live status under writer contention')
+		data_reference_matrix(); check(C.close(root) == 0 && first == status(c'/dev/mapper/tulpar2') && second == status(c'/dev/mapper/tulpar9'), c'offline comparisons preserve all live status under writer contention')
 		check(C.pread(held, &changed[0], 4096, 0) == 4096 && C.close(held) == 0, c'read held data reference mapping'); for value in changed { check(value == 0x9c, c'preserved reference mapping content') }
-		data_reference_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/vinix/volumes.vset')
-		check(C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'remove invalid reference boot plan')
+		data_reference_retention(); copy_plan(c'/root/auto-data.vset', c'/etc/tulpar/volumes.vset')
+		check(C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'remove invalid reference boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600)); check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist data reference phase')
 		C.printf(c'PLAN DATA REFERENCE PASSED: complete saved metadata, all-row digests/fingerprints, offline failure precedence and bounded lifetimes\n')
 	} else {
@@ -98,6 +98,6 @@ fn data_reference_entry() i32 {
 		// The reordered branch does not execute hash capture; its other captures exist.
 		if C.unlink(file) != 0 { check(C.errno == C.ENOENT, c'reclaim reference captures') }
 	}
-	for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist data reference artifacts and boot phase') }
+	for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! { fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist data reference artifacts and boot phase') }
 	C.printf(c'PLAN DONE\n'); for { C.pause() }; return 0
 }

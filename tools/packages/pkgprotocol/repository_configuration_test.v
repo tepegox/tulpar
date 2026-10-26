@@ -6,9 +6,9 @@ import json2
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 
 fn configuration_fixture() RepositoryConfiguration {
 	mut repositories := []Repository{cap: 32}
@@ -60,13 +60,13 @@ fn test_configuration_reader_retires_valid_and_partial_invalid_metadata() {
 		text := json2.encode(configuration_fixture())
 		invalid := [text.replace('"id":"publisher-31",', ''), text.replace('"scope":"configuration"', '"scope":null'),
 			text.replace('"id":"publisher-31"', '"id":"publisher-0"'), text[..text.len - 1]]
-		C.vinix_heap_begin()
+		C.tulpar_heap_begin()
 		for _ in 0 .. 1000 {
 			configuration_consume(text, true)
 			for bad in invalid { configuration_consume(bad, false) }
 		}
-		kept := C.vinix_heap_end()
-		assert kept == 0 && C.vinix_heap_count() == 0, 'configuration reader retained ${kept} bytes'
+		kept := C.tulpar_heap_end()
+		assert kept == 0 && C.tulpar_heap_count() == 0, 'configuration reader retained ${kept} bytes'
 		println('REPOSITORY CONFIG protocol 1000 valid/partial-invalid decode and retirement cycles retain zero tracked bytes PASS')
 	}
 }

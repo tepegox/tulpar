@@ -8,13 +8,13 @@ import time
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
-fn C.vinix_heap_count() u32
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
+fn C.tulpar_heap_count() u32
 fn C.mkfifo(&char, u32) int
 
 fn repair_fixture() !(string, State, Plan) {
-	directory := os.temp_dir() + '/vinix-repair-core-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-repair-core-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	text := 'expected installed bytes'
 	mut packages := []Installed{}
 	for id in ['runtime', 'app', 'data'] {
@@ -75,14 +75,14 @@ fn test_repair_discovery_retires_its_owned_paths_maps_and_ids() {
 		path := directory + '/generations/7/apps/app/bin/app'
 		for damaged in [false, true] {
 			if damaged { os.write_file(path, 'damaged bytes')! }
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 64 {
 				repairs := transaction_repairs(directory, current, plan, 'install')
 				assert repairs.len == if damaged { 1 } else { 0 }
 				close_transaction_repairs(repairs)
 			}
-			kept := C.vinix_heap_end()
-			assert kept == 0 && C.vinix_heap_count() == 0, 'repair discovery retained ${kept} bytes'
+			kept := C.tulpar_heap_end()
+			assert kept == 0 && C.tulpar_heap_count() == 0, 'repair discovery retained ${kept} bytes'
 		}
 		println('PACKAGE REPAIR 128 healthy/damaged discovery and retirement cycles retain zero tracked bytes PASS')
 	}

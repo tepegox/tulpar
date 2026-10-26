@@ -9,7 +9,7 @@ import tools.packages.pkglaunch
 import tools.packages.pkgcore
 import tools.packages.pkgprotocol
 
-const usage = 'usage: vinix-package [--root DIR] [--offline] [--json] [--progress] COMMAND [ARGS]\n' +
+const usage = 'usage: tulpar-package [--root DIR] [--offline] [--json] [--progress] COMMAND [ARGS]\n' +
 	'  capabilities (read-only JSON supported interface versions)\n' +
 	'  update | search [QUERY] | info ID | list | status | updates | view\n' +
 	'  admin [--progress] [--offline] update|apply|cleanup-apply|repo-apply|deployment-apply|policy-apply|mirror-apply|mirror-deployment-apply ...\n' +
@@ -577,7 +577,7 @@ fn C.alarm(u32) u32
 
 fn admin_authorize() !int {
 	if os.geteuid() != 0 { return error('admin-authorize is an authentication-service action') }
-	identity := os.getenv('VINIX_AUTH_UID')
+	identity := os.getenv('TULPAR_AUTH_UID')
 	defer { unsafe { identity.free() } }
 	if identity.len == 0 || identity.len > 10 || !identity.bytes().all(it >= `0` && it <= `9`)
 		|| identity[0] == `0` || identity.u64() > 0xffffffff { return error('the authentication service supplied no ordinary caller identity') }
@@ -608,7 +608,7 @@ fn admin_authorize() !int {
 		// The caller may close Software while the transaction completes. Ignore
 		// a broken output stream; the normal state journal still owns recovery.
 		unsafe { C.signal(C.SIGPIPE, C.SIG_IGN) }
-		code := checked(request.arguments) or { eprintln('vinix-package: ' + err.msg()); 1 }
+		code := checked(request.arguments) or { eprintln('tulpar-package: ' + err.msg()); 1 }
 		receipt := request.receipt(code)
 		println(receipt); flush_stdout()
 		C._exit(code)
@@ -619,7 +619,7 @@ fn admin_authorize() !int {
 
 fn main() {
 	code := checked(os.args[1..]) or {
-		eprintln('vinix-package: ${err}')
+		eprintln('tulpar-package: ${err}')
 		exit(1)
 	}
 	exit(code)

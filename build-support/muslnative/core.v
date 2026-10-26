@@ -174,7 +174,7 @@ pub fn plan(raw Options, retain string) !Plan {
 	mut cc := cachekey.shell_words(if options.cc != '' {
 		options.cc
 	} else {
-		os.getenv_opt('VINIX_MUSL_CC_' + options.arch.to_upper()) or { options.arch + '-linux-musl-gcc' }
+		os.getenv_opt('TULPAR_MUSL_CC_' + options.arch.to_upper()) or { options.arch + '-linux-musl-gcc' }
 	})!
 	if cc.len == 0 { return InputError{'target compiler missing'} }
 	selected := cachekey.which(cc[0], os.environ()) or { return InputError{'target compiler missing: ' + hosttest.shell_join(cc)} }
@@ -210,7 +210,7 @@ pub fn plan(raw Options, retain string) !Plan {
 		if patch.name in names { return InputError{'patch filenames must be distinct'} }
 		names[patch.name] = true
 	}
-	cflags := '-fstack-protector-strong -DVINIX_MALLOC_RETAIN=' + retain
+	cflags := '-fstack-protector-strong -DTULPAR_MALLOC_RETAIN=' + retain
 	ldflags := '-Wl,-soname,libc.musl-' + options.arch + '.so.1' + if options.max_page_size > 0 {
 		' -Wl,-z,max-page-size=' + options.max_page_size.str()
 	} else {

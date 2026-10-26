@@ -34,9 +34,9 @@ fn C.fcntl(i32, i32, ...voidptr) i32
 fn service_socket_path() [108]char {
 	unsafe {
 		mut path := [108]char{}
-		runtime := C.getenv(c'VINIX_SESSION_RUNTIME')
+		runtime := C.getenv(c'TULPAR_SESSION_RUNTIME')
 		check(runtime != nil, 485)
-		n := C.snprintf(&path[0], path.len, c'%s/vinix-session.%u/broker', runtime, C.getuid())
+		n := C.snprintf(&path[0], path.len, c'%s/tulpar-session.%u/broker', runtime, C.getuid())
 		check(n > 0 && n < path.len, 486)
 		return path
 	}
@@ -130,7 +130,7 @@ fn service_call(command &char, argument &char, extra &char) {
 fn service_config(mut encoded [8192]char) {
 	unsafe {
 		mut text := [4096]char{}
-		fd := C.open(c'/home/developer/.vinix-services', C.O_RDONLY)
+		fd := C.open(c'/home/developer/.tulpar-services', C.O_RDONLY)
 		check(fd >= 0, 462)
 		mut st := C.stat{}
 		n := C.read(fd, &text[0], text.len - 1)
@@ -173,7 +173,7 @@ fn service_broker() i32 {
 			log := C.open(c'/home/developer/service-broker.log', C.O_WRONLY | C.O_CREAT | C.O_APPEND, u32(0o600))
 			if log < 0 || C.dup2(log, 1) != 1 || C.dup2(log, 2) != 2 { C._exit(125) }
 			if log > 2 { C.close(log) }
-			argv := [&char(c'/usr/bin/vinix-session'),
+			argv := [&char(c'/usr/bin/tulpar-session'),
 				&char(c'--session-home=/home/developer'), &char(c'--session-control-fd=3'), &char(nil)]!
 			C.execv(argv[0], &argv[0])
 			C._exit(127)
@@ -212,18 +212,18 @@ fn service_broker() i32 {
 fn service_lifecycle_checks() {
 	unsafe {
 		// This optional input is selected and pinned by the host controller.
-		broker_file := C.open(c'/usr/bin/vinix-session', C.O_RDONLY)
+		broker_file := C.open(c'/usr/bin/tulpar-session', C.O_RDONLY)
 		if broker_file < 0 { return }
 		check(C.close(broker_file) == 0 && C.mkdir(c'/home/developer/service-runtime', 0o700) == 0
-			&& C.setenv(c'VINIX_SESSION_RUNTIME', c'/home/developer/service-runtime', 1) == 0, 468)
-		check(command(c'/usr/bin/vinix-jobs', c'init', c'/home/developer/service-jobs.json', c'/home/developer/service-state') == 0, 469)
-		check(command_output(c'/usr/bin/vinix-jobs', c'service-unit', c'/home/developer/service-state', nil,
+			&& C.setenv(c'TULPAR_SESSION_RUNTIME', c'/home/developer/service-runtime', 1) == 0, 468)
+		check(command(c'/usr/bin/tulpar-jobs', c'init', c'/home/developer/service-jobs.json', c'/home/developer/service-state') == 0, 469)
+		check(command_output(c'/usr/bin/tulpar-jobs', c'service-unit', c'/home/developer/service-state', nil,
 			c'/home/developer/service.service') == 0, 470)
 		mut broker := service_broker()
-		fields := [&char(c'service.import'), &char(c'vinix-jobs.service'),
+		fields := [&char(c'service.import'), &char(c'tulpar-jobs.service'),
 			&char(c'/home/developer/service.service'), &char(c'0')]!
 		_ = service_request(fields, 4, true)
-		check(C.open(c'/home/developer/.vinix-services', C.O_RDONLY) == -1, 471)
+		check(C.open(c'/home/developer/.tulpar-services', C.O_RDONLY) == -1, 471)
 		service_call(c'attach', nil, nil)
 		_ = service_request(fields, 4, false)
 		service_wait(true)
@@ -286,14 +286,14 @@ fn service_lifecycle_checks() {
 		}
 		service_config(mut actual)
 		check(C.strcmp(&actual[0], &disabled[0]) == 0, 480)
-		service_call(c'service.remove', c'vinix-jobs.service', nil)
+		service_call(c'service.remove', c'tulpar-jobs.service', nil)
 		mut removed := [8192]char{}
 		service_config(mut removed)
 		service_call(c'shutdown', nil, nil)
 		wait_jobs(broker, 0)
 		broker = service_broker()
 		reply := service_request([&char(c'services'), &char(nil), &char(nil), &char(nil)]!, 1, false)
-		check(C.strcmp(&reply[0], c'vinix-service-status\t1\n') == 0, 481)
+		check(C.strcmp(&reply[0], c'tulpar-service-status\t1\n') == 0, 481)
 		service_call(c'attach', nil, nil)
 		service_call(c'shutdown', nil, nil)
 		wait_jobs(broker, 0)

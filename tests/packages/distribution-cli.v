@@ -105,7 +105,7 @@ fn success(binary string, arguments []string) !string {
 fn qualify_deployment_decoder_cli(binary string, root string, path string, text string, mirror_fingerprint string) ! {
 	store := pkgcore.state_directory(root)
 	current := os.readlink(store + '/current')!
-	retained := [root + '/etc/vinix-packages/config.json', store + '/catalog.json',
+	retained := [root + '/etc/tulpar-packages/config.json', store + '/catalog.json',
 		store + '/trust-history.json', store + '/' + current + '/state.json']
 	mut hashes := []string{}
 	for file in retained { hashes << pkgcore.hash_file(file)! }
@@ -239,7 +239,7 @@ fn qualify_catalog_cli(binary string, work string) ! {
 fn qualify_busy_configuration(binary string, root string) ! {
 	guard := pkgcore.acquire(pkgcore.state_directory(root))!
 	defer { guard.release() }
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	original := os.read_file(path)!
 	defer { os.write_file(path, original) or { panic(err) } }
 	os.write_file(path, '{broken configuration')!
@@ -263,7 +263,7 @@ fn qualify_busy_configuration(binary string, root string) ! {
 
 fn qualify_repository_configuration(binary string, root string) ! {
 	store := pkgcore.state_directory(root)
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	configuration := os.read_file(path)!
 	config := pkgcore.load_config(root)!
 	cache := os.read_file(store + '/catalog.json')!
@@ -313,7 +313,7 @@ fn qualify_repository_configuration(binary string, root string) ! {
 }
 
 fn qualify_configuration_schema(binary string, root string) ! {
-	path := root + '/etc/vinix-packages/config.json'
+	path := root + '/etc/tulpar-packages/config.json'
 	original := os.read_file(path)!
 	defer { os.write_file(path, original) or { panic(err) } }
 	store := pkgcore.state_directory(root)
@@ -350,7 +350,7 @@ fn qualify_configuration_schema(binary string, root string) ! {
 fn qualify_metadata_files(binary string, root string) ! {
 	store := pkgcore.state_directory(root)
 	current := os.readlink(store + '/current')!
-	paths := [root + '/etc/vinix-packages/config.json', store + '/catalog.json',
+	paths := [root + '/etc/tulpar-packages/config.json', store + '/catalog.json',
 		store + '/trust-history.json', store + '/' + current + '/state.json']
 	mut hashes := []string{}
 	for path in paths { hashes << pkgcore.hash_file(path)! }
@@ -402,7 +402,7 @@ fn qualify_history_schema(binary string, root string, repository string, key str
 	path := store + '/trust-history.json'
 	original := os.read_file(path)!
 	defer { os.write_file(path, original) or { panic(err) } }
-	configuration := os.read_file(root + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(root + '/etc/tulpar-packages/config.json')!
 	cache := os.read_file(store + '/catalog.json')!
 	current := os.readlink(store + '/current')!
 	for invalid in ['null', '{"format":1}', '{"format":1,"repositories":null}',
@@ -417,7 +417,7 @@ fn qualify_history_schema(binary string, root string, repository string, key str
 			assert reply.code == 1 && reply.text.contains('invalid repository trust history:') && !reply.text.contains('V panic:'), reply.text
 		}
 		assert os.read_file(path)! == invalid && os.read_file(store + '/catalog.json')! == cache
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == configuration
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration
 		assert os.readlink(store + '/current')! == current
 		assert !os.exists(store + '/refresh') && !os.exists(store + '/enrollment')
 	}
@@ -434,7 +434,7 @@ fn qualify_snapshot_schema(binary string, root string, repository string, key st
 	retained := ['trust-history.json', current + '/state.json']
 	mut hashes := []string{}
 	for file in retained { hashes << pkgcore.hash_file(store + '/' + file)! }
-	configuration := os.read_file(root + '/etc/vinix-packages/config.json')!
+	configuration := os.read_file(root + '/etc/tulpar-packages/config.json')!
 	objects := os.ls(store + '/objects')!.sorted()
 	sentinel := store + '/generations/.stage-snapshot-sentinel'
 	os.mkdir(sentinel)!
@@ -452,7 +452,7 @@ fn qualify_snapshot_schema(binary string, root string, repository string, key st
 			assert reply.code == 1 && reply.text.contains('invalid cached repository metadata:') && !reply.text.contains('V panic:'), reply.text
 		}
 		assert os.read_file(path)! == invalid && os.readlink(store + '/current')! == current
-		assert os.read_file(root + '/etc/vinix-packages/config.json')! == configuration
+		assert os.read_file(root + '/etc/tulpar-packages/config.json')! == configuration
 		for i, file in retained { assert pkgcore.hash_file(store + '/' + file)! == hashes[i] }
 		assert os.ls(store + '/objects')!.sorted() == objects && os.read_file(sentinel + '/keep')! == 'interrupted recovery work'
 		assert json2.decode[pkgcore.State](success(binary, ['--root', root, '--json', 'verify'])!)!.generation == 1
@@ -483,9 +483,9 @@ fn qualify_resolver_diagnostics(binary string, directory string) ! {
 	assert refused_release.code == 1 && refused_release.text.contains('Dependency path: app -> absent') && !os.exists(directory + '/release')
 	for architecture in ['aarch64', 'x86_64']! {
 		root := directory + '/' + architecture
-		os.mkdir_all(root + '/etc/vinix-packages')!
+		os.mkdir_all(root + '/etc/tulpar-packages')!
 		config := pkgcore.Config{ architecture: architecture, repositories: [pkgcore.Repository{ id: 'fixture', url: 'file://' + repository, public_key: key }], policy: pkgcore.Policy{ reserve_bytes: 0 } }
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 		success(binary, ['--root', root, 'update'])!
 		store := pkgcore.state_directory(root)
 		catalog := os.read_file(store + '/catalog.json')!; history := os.read_file(store + '/trust-history.json')!
@@ -516,9 +516,9 @@ fn qualify_install_preference(binary string, directory string) ! {
 	success(binary, ['publish', repository, 'fixture', directory + '/seed', '1', expires])!
 	for architecture in ['aarch64', 'x86_64']! {
 		root := directory + '/' + architecture
-		os.mkdir_all(root + '/etc/vinix-packages')!
+		os.mkdir_all(root + '/etc/tulpar-packages')!
 		config := pkgcore.Config{architecture: architecture, repositories: [pkgcore.Repository{id: 'fixture', url: 'file://' + repository, public_key: key}], policy: pkgcore.Policy{offline: true, reserve_bytes: 0}}
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 		success(binary, ['--root', root, 'update'])!
 		success(binary, ['--root', root, 'install', ...ids])!
 	}
@@ -609,9 +609,9 @@ fn qualify_removal_guidance(binary string, directory string) ! {
 	success(binary, ['publish', repository, 'fixture', directory + '/seed', '1', (time.now().unix() + 3600).str()])!
 	for architecture in ['aarch64', 'x86_64']! {
 		root := directory + '/' + architecture
-		os.mkdir_all(root + '/etc/vinix-packages')!
+		os.mkdir_all(root + '/etc/tulpar-packages')!
 		config := pkgcore.Config{architecture: architecture, repositories: [pkgcore.Repository{id: 'fixture', url: 'file://' + repository, public_key: key}], policy: pkgcore.Policy{offline: true, reserve_bytes: 0}}
-		os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(config))!
+		os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(config))!
 		success(binary, ['--root', root, 'update'])!
 		success(binary, ['--root', root, 'install', 'editor', 'shared'])!
 	}
@@ -630,7 +630,7 @@ fn qualify_removal_guidance(binary string, directory string) ! {
 			before := os.readlink(store + '/current')!
 			state := os.read_file(store + '/' + before + '/state.json')!
 			catalog := os.read_file(store + '/catalog.json')!; history := os.read_file(store + '/trust-history.json')!
-			config := os.read_file(root + '/etc/vinix-packages/config.json')!
+			config := os.read_file(root + '/etc/tulpar-packages/config.json')!
 			generations := os.ls(store + '/generations')!.sorted()
 			for id in ['shared', 'bridge']! {
 				for operation in [['plan', 'remove', id], ['review', 'remove', id], ['remove', id]] {
@@ -639,7 +639,7 @@ fn qualify_removal_guidance(binary string, directory string) ! {
 					assert reply.text.contains(if id == 'shared' { 'cannot remove shared' } else { 'bridge is not explicitly installed' }), reply.text
 					assert os.readlink(store + '/current')! == before && os.read_file(store + '/' + before + '/state.json')! == state
 					assert os.read_file(store + '/catalog.json')! == catalog && os.read_file(store + '/trust-history.json')! == history
-					assert os.read_file(root + '/etc/vinix-packages/config.json')! == config && os.ls(store + '/generations')!.sorted() == generations
+					assert os.read_file(root + '/etc/tulpar-packages/config.json')! == config && os.ls(store + '/generations')!.sorted() == generations
 				}
 			}
 		}
@@ -677,11 +677,11 @@ fn qualify_empty_deployment(binary string, directory string) ! {
 	for architecture in ['aarch64', 'x86_64']! {
 		for format in [1, 2]! {
 			root := directory + '/' + architecture + '-' + format.str()
-			os.mkdir_all(root + '/etc/vinix-packages')!
+			os.mkdir_all(root + '/etc/tulpar-packages')!
 			config := pkgcore.Config{ architecture: architecture, repositories: [pkgcore.Repository{ id: 'fixture', url: 'file://' + repository, public_key: key }],
 				policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }
 			config_text := json2.encode(config)
-			os.write_file(root + '/etc/vinix-packages/config.json', config_text)!
+			os.write_file(root + '/etc/tulpar-packages/config.json', config_text)!
 			success(binary, ['--root', root, 'update'])!
 			success(binary, ['--root', root, 'install', 'app'])!
 			store := pkgcore.state_directory(root)
@@ -692,9 +692,9 @@ fn qualify_empty_deployment(binary string, directory string) ! {
 			os.write_file(store + '/catalog.json', '{unavailable catalog')!
 			os.write_file(store + '/trust-history.json', '{unavailable history')!
 			for object in os.ls(store + '/objects')! { os.rm(store + '/objects/' + object)! }
-			os.write_file(root + '/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ ...config,
+			os.write_file(root + '/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ ...config,
 				repositories: [], policy: pkgcore.Policy{ offline: true, allowed: ['other'], permissions: [], reserve_bytes: 1234 } }))!
-			data := root + '/home/alex/.local/share/vinix-apps/app'
+			data := root + '/home/alex/.local/share/tulpar-apps/app'
 			os.mkdir_all(data)!; os.write_file(data + '/saved', 'keep user data')!
 			path := root + '/empty.json'
 			empty := '{"format":${format},"architecture":"${architecture}","packages":[]' + if format == 2 { ',"locked":[]}' } else { '}' }
@@ -726,7 +726,7 @@ fn qualify_empty_deployment(binary string, directory string) ! {
 			assert command(binary, ['--root', root, 'review', 'rollback'])!.code != 0
 			success(binary, ['--root', root, 'deploy', path])!
 			assert pkgcore.read_state(store, architecture)! == removed
-			os.write_file(root + '/etc/vinix-packages/config.json', config_text)!
+			os.write_file(root + '/etc/tulpar-packages/config.json', config_text)!
 			os.write_file(store + '/catalog.json', catalog)!; os.write_file(store + '/trust-history.json', history)!
 			mut rollback := pkgprotocol.decode_review(success(binary, ['--root', root, 'review', 'rollback'])!)!
 			success(binary, ['--root', root, 'apply', rollback.fingerprint, 'rollback'])!
@@ -738,8 +738,8 @@ fn qualify_empty_deployment(binary string, directory string) ! {
 }
 
 fn qualify(binary string) ! {
-	work := os.real_path(os.temp_dir()) + '/vinix-package-cli-' + os.getpid().str()
-	os.mkdir_all(work + '/root/etc/vinix-packages')!
+	work := os.real_path(os.temp_dir()) + '/tulpar-package-cli-' + os.getpid().str()
+	os.mkdir_all(work + '/root/etc/tulpar-packages')!
 	os.mkdir_all(work + '/payload/bin')!
 	defer { os.rmdir_all(work) or {} }
 	qualify_catalog_cli(binary, work)!
@@ -762,7 +762,7 @@ fn qualify(binary string) ! {
 	root_args := ['--root', work + '/root']
 	repository := work + '/repository'
 	config := pkgcore.Config{ architecture: 'aarch64', policy: pkgcore.Policy{ reserve_bytes: 0 } }
-	os.write_file(work + '/root/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(work + '/root/etc/tulpar-packages/config.json', json2.encode(config))!
 	assert success(binary, [...root_args, 'repo-list'])!.contains('No trusted repositories')
 	initial_policy := json2.decode[pkgcore.PolicyDocument](success(binary, [...root_args, '--offline', 'policy'])!)!
 	assert !initial_policy.policy.offline && !os.exists(pkgcore.state_directory(work + '/root'))
@@ -819,8 +819,8 @@ fn qualify(binary string) ! {
 	forked_release := command(binary, ['publish-release', repository, 'fixture', work + '/seed', '1', (expires + 1).str(), work + '/fork'])!
 	assert forked_release.code != 0 && forked_release.text.contains('sequence equivocation') && !os.exists(work + '/fork')
 	release_root := work + '/release-client'
-	os.mkdir_all(release_root + '/etc/vinix-packages')!
-	os.write_file(release_root + '/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{
+	os.mkdir_all(release_root + '/etc/tulpar-packages')!
+	os.write_file(release_root + '/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{
 		architecture: 'aarch64', policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 }
 	}))!
 	success(binary, ['--root', release_root, 'repo-enroll', 'fixture', 'file://' + release_path, key])!
@@ -946,7 +946,7 @@ fn qualify(binary string) ! {
 	assert changed_mirror.code != 0 && changed_mirror.text.contains('stale') && !os.exists(work + '/other-mirror')
 	mirror_text := success(binary, [...root_args, '--progress', 'mirror-apply', mirror_review.review.fingerprint, work + '/mirror', 'app'])!
 	assert mirror_text.contains('"phase":"copy"') && mirror_text.contains('"phase":"complete"')
-	assert os.ls(work)!.all(!it.starts_with('.vinix-mirror-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-mirror-'))
 	for object in os.ls(work + '/mirror/fixture/objects')! {
 		assert os.stat(work + '/mirror/fixture/objects/' + object)!.mode & 0o777 == 0o644
 	}
@@ -954,9 +954,9 @@ fn qualify(binary string) ! {
 	assert repeat_mirror.code != 0 && repeat_mirror.text.contains('must be new')
 	assert os.ls(work + '/mirror/fixture/objects')!.len == 1
 	offline_root := work + '/offline'
-	os.mkdir_all(offline_root + '/etc/vinix-packages')!
+	os.mkdir_all(offline_root + '/etc/tulpar-packages')!
 	offline := pkgcore.Config{ ...config, policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }
-	os.write_file(offline_root + '/etc/vinix-packages/config.json', json2.encode(offline))!
+	os.write_file(offline_root + '/etc/tulpar-packages/config.json', json2.encode(offline))!
 	success(binary, ['--root', offline_root, 'repo-enroll', 'fixture', 'file://' + work + '/mirror/fixture', key])!
 	success(binary, ['--root', offline_root, 'update'])!
 	lock_path := work + '/locked-deployment.json'

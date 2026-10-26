@@ -16,9 +16,9 @@ stuck firmware ownership, and capability links outside the mapped registers.
 QEMU input and suspend regression checks use the hardware-platform suite:
 
 ```sh
-tests/hardware-platform/run --arch x86_64 --kernel /path/to/vinix \
+tests/hardware-platform/run --arch x86_64 --kernel /path/to/tulpar \
   --scenario usb-input --scenario suspend-deep
-tests/hardware-platform/run --arch aarch64 --kernel /path/to/vinix \
+tests/hardware-platform/run --arch aarch64 --kernel /path/to/tulpar \
   --scenario usb-input
 ```
 

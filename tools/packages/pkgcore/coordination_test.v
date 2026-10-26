@@ -20,9 +20,9 @@ fn C.link(&char, &char) int
 struct CoordinationLimit { current u64 maximum u64 }
 
 fn coordination_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-coordination-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	os.mkdir_all(work + '/etc/vinix-packages')!
-	os.write_file(work + '/etc/vinix-packages/config.json', json2.encode(Config{ architecture: 'aarch64' }))!
+	work := os.real_path(os.temp_dir()) + '/tulpar-coordination-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	os.mkdir_all(work + '/etc/tulpar-packages')!
+	os.write_file(work + '/etc/tulpar-packages/config.json', json2.encode(Config{ architecture: 'aarch64' }))!
 	directory := state_directory(work)
 	os.mkdir_all(directory + '/generations/1')!
 	os.mkdir(directory + '/objects')!

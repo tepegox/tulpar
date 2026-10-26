@@ -12,19 +12,19 @@ fn C.readlinkat(int, &char, voidptr, usize) isize
 
 fn image_integration_files() ! {
 	for pair in [
-		['/usr/share/licenses/vinix-packages/ed25519-MIT.txt', $embed_file('../../../tools/packages/signing/LICENSE').to_string()],
-		['/usr/share/licenses/vinix-packages/application-sdk-MIT.txt', $embed_file('../../../tools/packages/appsdk/LICENSE').to_string()],
-		['/usr/share/vinix/actions/packages-change', $embed_file('../../../tools/accounts/actions/packages-change').to_string()],
-		['/usr/share/vinix/actions/packages-launch', $embed_file('../../../tools/accounts/actions/packages-launch').to_string()]] {
+		['/usr/share/licenses/tulpar-packages/ed25519-MIT.txt', $embed_file('../../../tools/packages/signing/LICENSE').to_string()],
+		['/usr/share/licenses/tulpar-packages/application-sdk-MIT.txt', $embed_file('../../../tools/packages/appsdk/LICENSE').to_string()],
+		['/usr/share/tulpar/actions/packages-change', $embed_file('../../../tools/accounts/actions/packages-change').to_string()],
+		['/usr/share/tulpar/actions/packages-launch', $embed_file('../../../tools/accounts/actions/packages-launch').to_string()]] {
 		if os.is_link(pair[0]) || os.read_file(pair[0])! != pair[1] || os.stat(pair[0])!.mode & 0o7777 != 0o644 { return error('staged image integration file differs: ' + pair[0]) }
 	}
-	for pair in [['/usr/bin/vinix-software', '/usr/bin/vinix-desktop'],
-		['/usr/share/applications/vinix-packages', '/var/lib/vinix-packages/current/share/applications']] {
+	for pair in [['/usr/bin/tulpar-software', '/usr/bin/tulpar-desktop'],
+		['/usr/share/applications/tulpar-packages', '/var/lib/tulpar-packages/current/share/applications']] {
 		mut bytes := [128]u8{}
 		count := C.readlinkat(C.AT_FDCWD, pair[0].str, unsafe { &bytes[0] }, usize(bytes.len))
 		if count != pair[1].len || unsafe { tos(&bytes[0], int(count)) } != pair[1] { return error('staged image integration link differs: ' + pair[0]) }
 	}
-	if os.is_link('/var/lib/vinix-packages') || os.ls('/var/lib/vinix-packages')!.len != 0 { return error('image staging initialized consumer state') }
+	if os.is_link('/var/lib/tulpar-packages') || os.ls('/var/lib/tulpar-packages')!.len != 0 { return error('image staging initialized consumer state') }
 	println('IMAGE INTEGRATION native staged licenses/actions/launcher/registration and empty consumer state PASS')
 }
 
@@ -37,10 +37,10 @@ fn child(path string, args []string, expected int, marker string) ! {
 fn check() ! {
 	child('/usr/share/package-fixtures/image-integration', [], 0, 'IMAGE INTEGRATION 82')!
 	image_integration_files()!
-	child('/usr/bin/vinix-package', ['--help'], 0, 'usage: vinix-package')!
-	child('/usr/bin/vinix-package', ['--json', 'status'], 0, '"architecture":')!
-	child('/usr/sbin/vinix-session', [], 2, 'usage: vinix-session')!
-	child('/usr/libexec/vinix/vinix-linux-runner', [], 126, 'usage: vinix-linux-runner')!
+	child('/usr/bin/tulpar-package', ['--help'], 0, 'usage: tulpar-package')!
+	child('/usr/bin/tulpar-package', ['--json', 'status'], 0, '"architecture":')!
+	child('/usr/sbin/tulpar-session', [], 2, 'usage: tulpar-session')!
+	child('/usr/libexec/tulpar/tulpar-linux-runner', [], 126, 'usage: tulpar-linux-runner')!
 	println('IMAGE INTEGRATION native production-staged package/session/Linux-runner execution PASS')
 	before := os.read_file('/proc/kernel-resources')!; println('IMAGE INTEGRATION resources before grace:\n' + before)
 	C.sleep(6)

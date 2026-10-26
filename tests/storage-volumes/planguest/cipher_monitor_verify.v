@@ -25,19 +25,19 @@ fn cipher_verify_hash(recovery bool, readonly bool, kind int) &char {
 @[direct_array_access]
 fn cipher_verify_expected(output &char, recovery bool, readonly bool, kind int) int {
 	count := if kind == 5 { 512 } else if kind == 4 { 3 } else { kind }; changed := int(kind == 4)
-	return int(C.snprintf(output, 2048, c'format=VINIXCM1 operation=verified-ciphertext-monitor source=%s mappings=1 samples=%d changed_samples=%d session_changed=%d final_changed=0 stable=%d new_changes=%d restored=%d changed_again=0 algorithm=sha256 reference_sha256=%s transcript_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu result=match expected_sha256=%s final_sha256=%s\n', if recovery { &char(c'recovery') } else { &char(c'volume') }, count, changed, changed, if changed != 0 { 0 } else { count - 1 }, changed, changed, reference_hash(readonly, false), cipher_verify_hash(recovery, readonly, kind), u64(readonly), reference_digest(false), reference_digest(false)))
+	return int(C.snprintf(output, 2048, c'format=TULPARCM1 operation=verified-ciphertext-monitor source=%s mappings=1 samples=%d changed_samples=%d session_changed=%d final_changed=0 stable=%d new_changes=%d restored=%d changed_again=0 algorithm=sha256 reference_sha256=%s transcript_sha256=%s\ndisk_bytes=16777216 sector=512 identity=mbr:12345678 slot=60 offset=15728640 bytes=4096 readonly=%lu result=match expected_sha256=%s final_sha256=%s\n', if recovery { &char(c'recovery') } else { &char(c'volume') }, count, changed, changed, if changed != 0 { 0 } else { count - 1 }, changed, changed, reference_hash(readonly, false), cipher_verify_hash(recovery, readonly, kind), u64(readonly), reference_digest(false), reference_digest(false)))
 }
 @[direct_array_access]
 fn cipher_verify_tool(recovery bool, readonly bool, kind int) {
 	mut path := [96]char{}; check(C.snprintf(&path[0], 96, c'/root/monitor-%s%s-%d.txt', if recovery { &char(c'recovery') } else { &char(c'volume') }, if readonly { &char(c'-ro') } else { &char(c'') }, kind) > 0, c'bounded ciphertext verifier input')
 	input := if kind in [4, 7]! { &char(c'/root/monitor-sequence.txt') } else if kind == 5 { &char(c'/root/monitor-long.txt') } else if kind == 6 { &char(c'/root/monitor-late-error.txt') } else { unsafe { &path[0] } }
-	unsafe { args := [&char(c'/usr/sbin/vinix-volume'), &char(c'verify-volume-monitor'), if readonly { &char(c'/root/volume-ro.vchash') } else { &char(c'/root/volume.vchash') }, input, &char(nil)]!
+	unsafe { args := [&char(c'/usr/sbin/tulpar-volume'), &char(c'verify-volume-monitor'), if readonly { &char(c'/root/volume-ro.vchash') } else { &char(c'/root/volume.vchash') }, input, &char(nil)]!
 		fd := C.open(c'/root/cipher-verify.out', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600)); check(fd >= 0, c'open ciphertext verifier capture'); child := C.fork(); check(child >= 0, c'fork ciphertext verifier')
 		if child == 0 { if C.dup2(fd, 1) != 1 || C.close(fd) != 0 { C._exit(126) }; C.execv(args[0], &args[0]); C._exit(127) }; check(C.close(fd) == 0, c'close ciphertext verifier capture'); mut code := i32(-1)
 		check(C.waitpid(child, &code, 0) == child && code == (if kind >= 6 { 1 } else if kind == 4 { 2 } else { 0 }) << 8, c'exact ciphertext verifier exit')
 	}
 	mut actual := [2048]char{}; fd := C.open(c'/root/cipher-verify.out', C.O_RDONLY); n := C.read(fd, &actual[0], 2047); check(fd >= 0 && n > 0 && n < 2048 && C.close(fd) == 0, c'read full ciphertext verifier output')
-	if kind >= 6 { check(C.memcmp(&actual[0], c'vinix-volume:', 13) == 0, c'late error or wrong reference produces only refusal'); return }
+	if kind >= 6 { check(C.memcmp(&actual[0], c'tulpar-volume:', 13) == 0, c'late error or wrong reference produces only refusal'); return }
 	mut expected := [2048]char{}; size := cipher_verify_expected(&expected[0], recovery, readonly, kind); check(size > 0 && size < 2048 && n == size && C.memcmp(&actual[0], &expected[0], usize(size)) == 0, c'exact complete ciphertext history and original input hashes')
 }
 @[direct_array_access]
@@ -60,7 +60,7 @@ fn cipher_monitor_verify_entry() i32 {
 	C.printf(c'PLAN START\n'); warm_image(); phase := C.open(c'/second-boot', C.O_RDONLY); parent := $if amd64 { &char(c'/dev/sd0') } $else { &char(c'/dev/vda') }
 	if phase < 0 {
 		volume_scrub_first(parent, $if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') }); cipher_binding_matrix(); recovery_unlock_tool(c'/root/volume-ro.vrecover', c'/root/recovery.key', false, 0)
-		before := status(c'/dev/mapper/vinix60'); held := C.open(c'/dev/mapper/vinix60', C.O_RDONLY); root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(held >= 0 && root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold live encrypted view and writer contention')
+		before := status(c'/dev/mapper/tulpar60'); held := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY); root := C.open(c'/root', C.O_RDONLY | C.O_DIRECTORY); check(held >= 0 && root >= 0 && C.flock(root, C.LOCK_EX | C.LOCK_NB) == 0, c'hold live encrypted view and writer contention')
 		raw := C.open(parent, C.O_RDWR); mut original := [512]u8{}; mut changed := [512]u8{}; check(raw >= 0 && C.pread(raw, &original[0], 512, 15728640) == 512, c'pin ciphertext monitor corruption'); changed = original; changed[0] ^= 1
 		copy_plan(c'/root/volume-ro.sealed', c'/root/monitor.sealed'); copy_scrub_report(c'/root/crypt.pass', c'/root/monitor.pass'); copy_plan(c'/root/volume-ro.vchash', c'/root/monitor-input.vchash')
 		child := cipher_monitor_start(c'/root/monitor.sealed', c'/root/monitor.pass', c'/root/monitor-input.vchash', c'2', c'3', false); cipher_monitor_wait(1, false, true, 1)
@@ -70,7 +70,7 @@ fn cipher_monitor_verify_entry() i32 {
 		cipher_monitor_finish(child, 3, false, true, 1, 2); copy_scrub_report(c'/root/cipher-monitor.out', c'/root/monitor-sequence.txt'); copy_plan(c'/root/volume-ro.vchash', c'/root/monitor-input.vchash'); check(C.unlink(c'/root/monitor.sealed') == 0 && C.unlink(c'/root/monitor.pass') == 0, c'reclaim replaced credential copies')
 		check(C.pwrite(raw, &changed[0], 512, 15728640) == 512 && C.fsync(raw) == 0, c'persist changed ciphertext error sample'); failed := cipher_monitor_command(true, false, c'2', c'3'); cipher_monitor_wait(1, true, false, 2); signature(parent, 0x1234567a)
 		cipher_monitor_finish(failed, 1, true, false, 2, 1); copy_scrub_report(c'/root/cipher-monitor.out', c'/root/monitor-late-error.txt'); signature(parent, 0x12345678); check(C.pwrite(raw, &original[0], 512, 15728640) == 512 && C.fsync(raw) == 0 && C.close(raw) == 0, c'restore ciphertext and physical identity')
-		cipher_monitor_matrix(); cipher_verify_matrix(); check(before == status(c'/dev/mapper/vinix60') && C.close(root) == 0, c'encrypted monitor preserves complete live status under writer contention'); crypt_data(held, 0, 0x73); check(C.close(held) == 0, c'close retained encrypted view'); simple(c'remove', c'/dev/mapper/vinix60', unsafe { nil }, 0)
+		cipher_monitor_matrix(); cipher_verify_matrix(); check(before == status(c'/dev/mapper/tulpar60') && C.close(root) == 0, c'encrypted monitor preserves complete live status under writer contention'); crypt_data(held, 0, 0x73); check(C.close(held) == 0, c'close retained encrypted view'); simple(c'remove', c'/dev/mapper/tulpar60', unsafe { nil }, 0)
 		cipher_monitor_long(); cipher_monitor_retention(); cipher_verify_long(); cipher_verify_retention(); check(C.open(c'/root/crypt.key', C.O_RDONLY) < 0 && C.errno == C.ENOENT, c'monitor creates no raw keyfile')
 		C.printf(c'PLAN CIPHER MONITOR VERIFY PASSED: one authentication per pinned session, complete repeated ciphertext scans, erased secrets, restored-data latch, late-error precedence and bounded real-KDF lifetimes\n')
 	} else { check(C.close(phase) == 0, c'close cipher monitor phase'); cipher_binding_matrix(); cipher_monitor_matrix(); cipher_verify_matrix(); recovery_unlock_view($if amd64 { &char(c'/dev/sd1') } $else { &char(c'/dev/vdb') }, c'/root/volume-ro.vrecover', false, true); C.printf(c'PLAN CIPHER MONITOR VERIFY REORDERED BOOT PRESERVED\n') }

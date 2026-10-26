@@ -37,12 +37,12 @@ RETPOLINE r15
 /* Noreturn replacement of the scheduler's inline IRETQ sequence.
  * RDI is the complete GPR frame; RSI is a trusted logical CPU number. GS
  * may already be the user's base when resuming a kernel frame, so use RSI. */
-.global vinix_x86_resume_context
-.type vinix_x86_resume_context,@function
-vinix_x86_resume_context:
-    VINIX_RSB_FILL
+.global tulpar_x86_resume_context
+.type tulpar_x86_resume_context,@function
+tulpar_x86_resume_context:
+    TULPAR_RSB_FILL
     mov %rdi, %rsp
-    VINIX_SPEC_SWITCH rsi
+    TULPAR_SPEC_SWITCH rsi
     pop %rax
     mov %eax, %ds
     pop %rax
@@ -50,7 +50,7 @@ vinix_x86_resume_context:
     movq $0, 120(%rsp)
     testb $3, 136(%rsp)
     jz 3f
-    VINIX_SPEC_RETURN rsi, 120
+    TULPAR_SPEC_RETURN rsi, 120
 3:
     pop %rax
     pop %rbx
@@ -67,16 +67,16 @@ vinix_x86_resume_context:
     pop %r13
     pop %r14
     pop %r15
-    VINIX_SPEC_CLEAR
+    TULPAR_SPEC_CLEAR
     add $8, %rsp
     swapgs
     lfence
     iretq
-.size vinix_x86_resume_context, .-vinix_x86_resume_context
+.size tulpar_x86_resume_context, .-tulpar_x86_resume_context
 
 .section .rodata
 .align 2
-.global vinix_x86_verw_selector
-vinix_x86_verw_selector:
+.global tulpar_x86_verw_selector
+tulpar_x86_verw_selector:
     .word 0x30
 .section .note.GNU-stack,"",%progbits

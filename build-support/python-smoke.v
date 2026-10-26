@@ -67,7 +67,7 @@ fn build() ! {
 		'Usage: python-smoke --output ELF [--arch aarch64|x86_64 --sysroot DIR --libc SHARED_MUSL --cc CLANG]\nGenerate and link the native V CPython smoke controller; no interpreter is executed.')!
 	output := args.value('--output', '')
 	if output == '' { return error_with_code('--output is required', 2) }
-	arch := args.value('--arch', os.getenv_opt('VINIX_ARCH') or { 'aarch64' })
+	arch := args.value('--arch', os.getenv_opt('TULPAR_ARCH') or { 'aarch64' })
 	if arch !in ['aarch64', 'x86_64'] {
 		return error_with_code('arch must be aarch64 or x86_64', 2)
 	}
@@ -76,13 +76,13 @@ fn build() ! {
 	arm := arch == 'aarch64'
 	machine := if arm { u16(183) } else { u16(62) }
 	sdk := args.value('--sysroot', if arm {
-		os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/sysroot' }
+		os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root + '/build-aarch64-userland/sysroot' }
 	} else {
-		os.getenv_opt('VINIX_AMD64_SYSROOT') or { root + '/build-amd64-desktop/initramfs-root' }
+		os.getenv_opt('TULPAR_AMD64_SYSROOT') or { root + '/build-amd64-desktop/initramfs-root' }
 	})
 	lib := sdk + if arm { '/lib' } else { '/usr/lib' }
 	interpreter := '/lib/ld-musl-' + arch + '.so.1'
-	default_runtime := os.getenv_opt('VINIX_PYTHON_MUSL') or {
+	default_runtime := os.getenv_opt('TULPAR_PYTHON_MUSL') or {
 		base := if arm { root + '/build-aarch64-userland/staging' } else { sdk }
 		base + interpreter
 	}
@@ -146,7 +146,7 @@ fn build() ! {
 		'runtime_sha256':    json2.Any(sha256.sum(os.read_bytes(runtime)!).hex())
 		'compiler_sha256':   json2.Any(sha256.sum(os.read_bytes(compiler)!).hex())
 		'executable_sha256': json2.Any(sha256.sum(os.read_bytes(work + '/smoke')!).hex())
-		'qualification':     json2.Any('Build-only; no CPython or Vinix guest executed.')
+		'qualification':     json2.Any('Build-only; no CPython or Tulpar guest executed.')
 	})
 	os.write_file(work + '/manifest.json', json2.encode(manifest, prettify: true) + '\n')!
 	os.rename(work + '/smoke', output)!

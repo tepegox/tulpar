@@ -31,14 +31,14 @@ fn deployment_choice_result(path string) ! {
 }
 
 fn check_software_deployment_chooser(broker_path string) ! {
-	base := '/tmp/vinix-deployment-choice-' + os.getpid().str()
+	base := '/tmp/tulpar-deployment-choice-' + os.getpid().str()
 	os.mkdir(base)!
 	os.chmod(base, 0o700)!
-	previous := os.getenv_opt('VINIX_SESSION_RUNTIME')
-	os.setenv('VINIX_SESSION_RUNTIME', base, true)
+	previous := os.getenv_opt('TULPAR_SESSION_RUNTIME')
+	os.setenv('TULPAR_SESSION_RUNTIME', base, true)
 	defer {
-		if value := previous { os.setenv('VINIX_SESSION_RUNTIME', value, true); unsafe { value.free() } }
-		else { os.unsetenv('VINIX_SESSION_RUNTIME') }
+		if value := previous { os.setenv('TULPAR_SESSION_RUNTIME', value, true); unsafe { value.free() } }
+		else { os.unsetenv('TULPAR_SESSION_RUNTIME') }
 		os.rmdir_all(base) or {}
 		unsafe { base.free() }
 	}
@@ -148,7 +148,7 @@ fn check_software_deployment_chooser_memory() ! {
 		oversized := long + 'b'
 		defer { unsafe { long.free(); oversized.free() } }
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for selected in [deployment_navigation_path, '', 'relative.json', '/bad\npath', '/bad\xc2\x80', '/bad\xff', long, oversized]! {
 					app.deployment_choice_pending = true; app.deployment_choice_current = true
@@ -176,7 +176,7 @@ fn check_software_deployment_chooser_memory() ! {
 			}
 		}
 		app.set_status('')
-		kept := C.vinix_heap_end()
+		kept := C.tulpar_heap_end()
 		assert kept == 0, 'deployment chooser retained ${kept} bytes'
 		println('Software deployment chooser: 1000 literal/empty/invalid/4096-byte/oversize/late-result/directory/full/compact lifecycle cycles retain zero tracked bytes PASS')
 	}

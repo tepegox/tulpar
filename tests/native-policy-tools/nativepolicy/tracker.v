@@ -4,7 +4,7 @@ module nativepolicy
 import os
 
 fn tracker() ! {
-	work := private_work('vinix-track-')!
+	work := private_work('tulpar-track-')!
 	defer { retire(work) }
 	source := work + '/tracker'
 	os.mkdir(source)!

@@ -1,6 +1,6 @@
 /* Native musl declarations; the poll regression is maintained in V. */
-#ifndef VINIX_POLL_NATIVE_ABI_H
-#define VINIX_POLL_NATIVE_ABI_H
+#ifndef TULPAR_POLL_NATIVE_ABI_H
+#define TULPAR_POLL_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

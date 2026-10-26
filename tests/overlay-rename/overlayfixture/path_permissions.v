@@ -58,7 +58,7 @@ fn inherited_socket_owner(listener int) {
 		socket_owned_description(client, 530)
 		mut address := &C.sockaddr_un(C.alloca(sizeof(C.sockaddr_un)))
 		socket_address(c'/tmp/overlay-state/root-listener', address)
-		check(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0, 531)
+		check(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0, 531)
 		accepted := C.accept(listener, nil, nil)
 		socket_owned_description(accepted, 532)
 		socket_owned_peer(accepted)
@@ -91,7 +91,7 @@ fn socket_private_connections(client int, listener int, address &C.sockaddr_un) 
 	unsafe {
 		for mode in [u32(0), u32(0o400), u32(0o100)]! {
 			check(C.chmod(&address.sun_path[0], mode) == 0, 485)
-			refused_socket_target(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 486)
+			refused_socket_target(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 486)
 		}
 		length := &u32(C.alloca(sizeof(u32)))
 		*length = u32(sizeof(C.sockaddr_un))
@@ -116,9 +116,9 @@ fn socket_record_permissions(base &char) {
 		check(listener >= 0 && client >= 0
 			&& C.bind(listener, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0
 			&& C.listen(listener, 1) == 0 && C.chmod(&path[0], 0o400) == 0, 491)
-		refused_socket_target(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 492)
+		refused_socket_target(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 492)
 		check(C.chmod(&path[0], 0o200) == 0
-			&& C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0, 493)
+			&& C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0, 493)
 		accepted := C.accept(listener, nil, nil)
 		socket_owned_description(accepted, 525)
 		socket_owned_peer(accepted)
@@ -159,28 +159,28 @@ fn socket_datagram_permissions(base &char) {
 		*batch = C.mmsghdr{ msg_hdr: *header, msg_len: 0x5a5a }
 		for mode in [u32(0), u32(0o400), u32(0o100)]! {
 			check(C.chmod(&path[0], mode) == 0, 498)
-			refused_socket_target(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 499)
-			refused_socket_target(C.vinix_overlay_sendto(client, byte, 1, C.MSG_DONTWAIT,
+			refused_socket_target(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 499)
+			refused_socket_target(C.tulpar_overlay_sendto(client, byte, 1, C.MSG_DONTWAIT,
 				address, u32(sizeof(C.sockaddr_un))), 500)
-			refused_socket_target(C.vinix_overlay_sendmsg(client, header, C.MSG_DONTWAIT), 501)
+			refused_socket_target(C.tulpar_overlay_sendmsg(client, header, C.MSG_DONTWAIT), 501)
 			refused_socket_target(C.sendmmsg(client, batch, 1, u32(C.MSG_DONTWAIT)), 502)
 			check(batch.msg_len == 0x5a5a, 503)
-			refused_socket_target(C.vinix_overlay_sendto(client, nil, 0, C.MSG_DONTWAIT,
+			refused_socket_target(C.tulpar_overlay_sendto(client, nil, 0, C.MSG_DONTWAIT,
 				address, u32(sizeof(C.sockaddr_un))), 504)
 			check(C.recvfrom(server, byte, 1, C.MSG_DONTWAIT, nil, nil) == -1
 				&& *C.__errno_location() == C.EAGAIN && *byte == char(`D`), 505)
 		}
 		check(C.chmod(&path[0], 0o200) == 0
-			&& C.vinix_overlay_sendto(client, byte, 1, C.MSG_DONTWAIT, address, u32(sizeof(C.sockaddr_un))) == 1, 506)
+			&& C.tulpar_overlay_sendto(client, byte, 1, C.MSG_DONTWAIT, address, u32(sizeof(C.sockaddr_un))) == 1, 506)
 		receive_permission_byte(server, char(`D`), 507)
-		check(C.vinix_overlay_sendmsg(client, header, C.MSG_DONTWAIT) == 1, 508)
+		check(C.tulpar_overlay_sendmsg(client, header, C.MSG_DONTWAIT) == 1, 508)
 		receive_permission_byte(server, char(`D`), 509)
-		check(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0
+		check(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0
 			&& C.chmod(&path[0], 0) == 0, 510)
 		// A failed reconnect must retain the previous target. Existing connected
 		// sends continue after chmod; only another pathname lookup is refused.
-		refused_socket_target(C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 511)
-		refused_socket_target(C.vinix_overlay_sendto(client, byte, 1, C.MSG_DONTWAIT,
+		refused_socket_target(C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))), 511)
+		refused_socket_target(C.tulpar_overlay_sendto(client, byte, 1, C.MSG_DONTWAIT,
 			address, u32(sizeof(C.sockaddr_un))), 512)
 		check(C.write(client, c'C', 1) == 1, 513)
 		receive_permission_byte(server, char(`C`), 514)
@@ -193,7 +193,7 @@ fn socket_abstract_permissions() {
 		mut address := &C.sockaddr_un(C.alloca(sizeof(C.sockaddr_un)))
 		*address = C.sockaddr_un{}
 		address.sun_family = u16(C.AF_UNIX)
-		check(C.snprintf(&address.sun_path[1], 107, c'vinix-permission') > 0, 516)
+		check(C.snprintf(&address.sun_path[1], 107, c'tulpar-permission') > 0, 516)
 		server := C.socket(C.AF_UNIX, C.SOCK_DGRAM, 0)
 		client := C.socket(C.AF_UNIX, C.SOCK_DGRAM, 0)
 		check(server >= 0 && client >= 0, 517)
@@ -202,7 +202,7 @@ fn socket_abstract_permissions() {
 		bound := C.bind(server, voidptr(address), u32(sizeof(C.sockaddr_un)))
 		C.umask(old_mask)
 		check(bound == 0 && C.fchmod(server, 0) == 0
-			&& C.vinix_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0
+			&& C.tulpar_overlay_connect(client, voidptr(address), u32(sizeof(C.sockaddr_un))) == 0
 			&& C.write(client, c'A', 1) == 1, 518)
 		receive_permission_byte(server, char(`A`), 519)
 		check(C.close(client) == 0 && C.close(server) == 0, 520)

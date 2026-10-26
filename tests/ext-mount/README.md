@@ -31,7 +31,7 @@ beyond group zero. Requires V and e2fsprogs (`MKE2FS` overrides its path).
 
 ```
 v run tests/ext-mount/run-host.v
-VINIX_HOST_SANITIZE=1 ASAN_OPTIONS=detect_leaks=0 v run tests/ext-mount/run-host.v
+TULPAR_HOST_SANITIZE=1 ASAN_OPTIONS=detect_leaks=0 v run tests/ext-mount/run-host.v
 ```
 
 GPT partition lengths include the final LBA, so a filesystem that fills its

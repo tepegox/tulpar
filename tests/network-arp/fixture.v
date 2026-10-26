@@ -56,16 +56,16 @@ fn C.etharp_tmr()
 @[export: 'sys_now']
 fn now() u32 { return 0 }
 
-@[export: 'vinix_net_random']
+@[export: 'tulpar_net_random']
 fn random_word() u32 { return 0x12345678 }
 
-@[export: 'vinix_tcp_isn']
+@[export: 'tulpar_tcp_isn']
 fn isn(_a u32, _b u16, _c u32, _d u16) u32 { return 1 }
 
-@[export: 'vinix_tcp_isn6']
+@[export: 'tulpar_tcp_isn6']
 fn isn6(_a &u32, _b u16, _c &u32, _d u16) u32 { return 1 }
 
-@[export: 'vinix_lwip_assert']
+@[export: 'tulpar_lwip_assert']
 fn lwip_assert(message &char, file &char, line int) {
 	panic('${unsafe { cstring_to_vstring(file) }}:${line}: ${unsafe { cstring_to_vstring(message) }}')
 }

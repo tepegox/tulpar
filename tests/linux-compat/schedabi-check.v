@@ -108,13 +108,13 @@ fn storage(log string, arch string, phase string) {
 }
 fn failure(log string, arch string) { assert log.contains('LINUX SCHEDABI DETAIL:'), 'schedabi baseline failure markers required'; semantics(log, 'before', arch, false) }
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
-	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array(); assert rows.len == names.len
 	mut artifacts := {'receipt': digest(state + '/receipt.json'), 'aggregate': digest(state + '.log')}
 	for index, row in rows {
 		entry := row.as_map(); name := entry['name']!.str(); assert name == names[index] && entry['exit_code']!.int() == if failing && index == 0 { 1 } else { 0 } && entry['detail']!.str() == ''
 		for label, path in {'source': state + '/sources/' + name + 'fixture/core.v', 'init': state + '/' + name + '/init', 'iso': state + '/' + name + '/test.iso'} { hash := digest(path); key := if label == 'source' { 'source_sha256' } else if label == 'init' { 'init_sha256' } else { 'iso_sha256' }; assert hash == entry[key]!.str(); artifacts[name + '_' + label] = hash }
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c'); artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 { assert os.read_file(state + '/' + name + '/serial.log')!.contains('LINUX ' + name.to_upper() + ': PASS') }
 	}; return artifacts
@@ -122,8 +122,8 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 fn reference_receipt(state string, arch string, init string) !map[string]string {
 	value := object(state + '/receipt.json')!; assert value['architecture']!.str() == arch && value['passed']!.bool() && value['finished']!.bool() && value['forced']!.bool() && value['status']!.int() == 0
 	artifacts := value['artifacts']!.as_map_of_strings(); command := value['command']!.as_array().map(it.str()); assert command.contains('-kernel') && command.contains('-initrd') && command.contains('-no-reboot')
-	for label, path in {'kernel': state + '/linux', 'probe': state + '/probe', 'wrapper_source': state + '/source/schedabireferenceinit/core.v', 'wrapper_c': state + '/fixture.c', 'wrapper_elf': state + '/init', 'initramfs': state + '/initramfs.cpio', 'serial': state + '/serial.log', 'serial_adapter_c': state + '/serial.c', 'controller_source': '/Users/alex/code/vinix/tests/linux-compat/schedabi-reference.v', 'qemu': command[0]} { assert artifacts[label] == digest(path) }
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/schedabireferenceinit/core.v')
+	for label, path in {'kernel': state + '/linux', 'probe': state + '/probe', 'wrapper_source': state + '/source/schedabireferenceinit/core.v', 'wrapper_c': state + '/fixture.c', 'wrapper_elf': state + '/init', 'initramfs': state + '/initramfs.cpio', 'serial': state + '/serial.log', 'serial_adapter_c': state + '/serial.c', 'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/schedabi-reference.v', 'qemu': command[0]} { assert artifacts[label] == digest(path) }
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/schedabireferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true); return artifacts
 }
 fn scope(area string, final bool) {
@@ -186,8 +186,8 @@ fn qos(area string, out string, arch string, suffix string, final_kernel string)
 	for phase in phases {
 		state := area + 'states/qos-' + phase + '-' + suffix; inputs := object(state + '/inputs.json')!
 		assert inputs['family']!.str() == 'scheduler-qos' && inputs['arch']!.str() == arch && inputs['compile_command']!.as_array().any(it.str() == '-DSCHED_QOS_SMALL=1')
-		kernel := digest(state + '/kernel/bin/vinix'); assert kernel == inputs['kernel_sha256']!.str() && kernel == if phase == 'after' { final_kernel } else { digest(area + 'baseline-' + suffix + '/kernel/bin/vinix') }
-		assert digest('/Users/alex/code/vinix/tests/scheduler-qos/guest.c') == inputs['source_sha256']!.str()
+		kernel := digest(state + '/kernel/bin/tulpar'); assert kernel == inputs['kernel_sha256']!.str() && kernel == if phase == 'after' { final_kernel } else { digest(area + 'baseline-' + suffix + '/kernel/bin/tulpar') }
+		assert digest('/Users/alex/code/tulpar/tests/scheduler-qos/guest.c') == inputs['source_sha256']!.str()
 		assert digest(state + '/init') == inputs['init_sha256']!.str(); if init != '' { assert init == inputs['init_sha256']!.str() }; init = inputs['init_sha256']!.str()
 		assert digest(state + '/initramfs.tar') == inputs['archive_sha256']!.str()
 		command := inputs['command']!.as_array().map(it.str()); assert command[command.index('-smp') + 1] == '4'
@@ -204,14 +204,14 @@ fn main() {
 	if '--negative-control' in os.args { assert false, 'schedabi assertions must execute'; return }
 	if '--negative-pass-control' in os.args { failure(os.read_file(os.args[2])!, os.args[3]); return }
 	assert os.args.len >= 2, 'Usage: schedabi-check.v EVIDENCE-AREA [--middle-only]'
-	area := os.args[1].trim_right('/') + '/'; states := area + 'states/'; root := '/Users/alex/code/vinix/'; out := root + 'tests/linux-compat/results/2026-10-14/'
+	area := os.args[1].trim_right('/') + '/'; states := area + 'states/'; root := '/Users/alex/code/tulpar/'; out := root + 'tests/linux-compat/results/2026-10-14/'
 	middle_only := '--middle-only' in os.args
 	scope(area, !middle_only)
 	control_prefix := if middle_only { 'middle-' } else { '' }
 	os.write_file(area + control_prefix + 'assertion-control.log', control(['--negative-control'], 'schedabi assertions must execute'))!
 	os.write_file(area + control_prefix + 'passing-log-control.log', control(['--negative-pass-control', states + 'p3-reference-arm/serial.log', 'aarch64'], 'schedabi baseline failure markers required'))!
 	base := os.read_file(area + 'base.txt')!.trim_space(); assert base == '108082c1e0513e87559e47fde420471ccc2f15f7'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'; compiler := compiler_root + 'compiler/v'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'; compiler := compiler_root + 'compiler/v'
 	assert digest(compiler) == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
 	mut pins := map[string]string{}; for path, value in object(compiler_root + 'compiler-inputs.json')! { pins[path] = value.str() }; assert pins.len == 15146 && pins['v'] == digest(compiler)
 	for path, hash in pins { assert digest(compiler_root + 'compiler/' + path) == hash, path }
@@ -222,13 +222,13 @@ fn main() {
 		mut identity := map[string]string{}
 		phases := if middle_only { ['before', 'middle'] } else { ['before', 'middle', 'after'] }
 		for phase in phases {
-			state := states + 'p3-' + phase + '-' + suffix; kernel := area + if phase == 'after' { 'kernel-' } else if phase == 'before' { 'baseline-' } else { 'middle-' } + suffix + '/kernel/bin/vinix'
+			state := states + 'p3-' + phase + '-' + suffix; kernel := area + if phase == 'after' { 'kernel-' } else if phase == 'before' { 'baseline-' } else { 'middle-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'after' { ['schedabi', 'runtime', 'capabi', 'open', 'fcntlabi'] } else { ['schedabi'] }
 			captured := receipt(state, arch, digest(kernel), names, phase != 'after')!
 			for key, value in captured { artifacts[phase + '_' + key] = value }
 			for key in ['schedabi_source', 'schedabi_init', 'schedabi_c'] { if phase == 'before' { identity[key] = captured[key] } else { assert identity[key] == captured[key], 'probe changed between phases' } }
 			text := os.read_file(state + '/schedabi/serial.log')!; semantics(text, phase, arch, false); storage(text, arch, phase)
-			build := area + 'build-' + phase + '-' + suffix + '.log'; text_build := os.read_file(build)!; assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			build := area + 'build-' + phase + '-' + suffix + '.log'; text_build := os.read_file(build)!; assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			artifacts[phase + '_kernel'] = digest(kernel); artifacts[phase + '_kernel_c'] = digest(area + phase + '-' + suffix + '.c')
 			if !middle_only { for label, path in {'receipt': state + '/receipt.json', 'aggregate': state + '.log', 'native': state + '/schedabi/serial.log', 'build': build} { publish(path, out + 'schedabi-' + phase + '-' + arch + '-' + label + if label == 'receipt' { '.json' } else { '.log' })! } }
 		}

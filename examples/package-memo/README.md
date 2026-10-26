@@ -14,9 +14,9 @@ Build a publisher workspace for both architectures with a reviewed V compiler,
 V=/path/to/v /path/to/v run examples/package-memo/build.v /tmp/memo-repository
 ```
 
-The builder includes SDK, V and musl notices. `VINIX_MUSL_COPYRIGHT` can select the
+The builder includes SDK, V and musl notices. `TULPAR_MUSL_COPYRIGHT` can select the
 matching toolchain's musl notice. Sign/export with
 [`publish-release`](../../tools/packages/SDK.md#build-and-publish), then enroll
 the reviewed publisher key through your authenticated channel, refresh and
-install `org.vinix.memo`. Software, Start and Quick Launch choose the installed
+install `org.tulpar.memo`. Software, Start and Quick Launch choose the installed
 manifest's protocol automatically. The builder creates no trust key or account.

@@ -7,7 +7,7 @@ module srcufixture
 
 struct C.task_struct {
 	__state      u32
-	vinix_thread voidptr
+	tulpar_thread voidptr
 }
 
 struct C.srcu_struct {
@@ -44,30 +44,30 @@ type SrcuWorker = fn (voidptr) voidptr
 type SrcuCallback = fn (&C.rcu_head)
 type SrcuWorkCallback = fn (&C.work_struct)
 
-fn C.vinix_linuxkpi_fixture_srcu_worker(voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_srcu_barrier_waiter(voidptr) voidptr
-fn C.vinix_linuxkpi_fixture_srcu_free_callback(&C.rcu_head)
-fn C.vinix_linuxkpi_fixture_srcu_barrier_callback(&C.rcu_head)
-fn C.vinix_linuxkpi_fixture_srcu_work_callback(&C.work_struct)
+fn C.tulpar_linuxkpi_fixture_srcu_worker(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_srcu_barrier_waiter(voidptr) voidptr
+fn C.tulpar_linuxkpi_fixture_srcu_free_callback(&C.rcu_head)
+fn C.tulpar_linuxkpi_fixture_srcu_barrier_callback(&C.rcu_head)
+fn C.tulpar_linuxkpi_fixture_srcu_work_callback(&C.work_struct)
 fn C.pthread_create(voidptr, voidptr, SrcuWorker, voidptr) i32
 fn C.pthread_join(C.pthread_t, voidptr) i32
 fn C.pthread_exit(voidptr)
 fn C.get_task_struct(&C.task_struct) &C.task_struct
 fn C.put_task_struct(&C.task_struct)
-fn C.vinix_linuxkpi_worker_bind(u32) i32
-fn C.vinix_linuxkpi_cpu_id() u32
-fn C.vinix_linuxkpi_percpu_count() u32
-fn C.vinix_linuxkpi_test_worker_route(voidptr, u32) i32
-fn C.vinix_linuxkpi_task_queued(voidptr) bool
-fn C.vinix_linuxkpi_may_sleep() bool
-fn C.vinix_linuxkpi_preempt_count() u32
-fn C.vinix_linuxkpi_preempt_disable()
-fn C.vinix_linuxkpi_preempt_enable()
-fn C.vinix_linuxkpi_irq_flags() uint
-fn C.vinix_linuxkpi_irq_save() uint
-fn C.vinix_linuxkpi_irq_restore(uint)
-fn C.vinix_linuxkpi_spin_wait()
-fn C.vinix_linuxkpi_test_alloc_oom(i32)
+fn C.tulpar_linuxkpi_worker_bind(u32) i32
+fn C.tulpar_linuxkpi_cpu_id() u32
+fn C.tulpar_linuxkpi_percpu_count() u32
+fn C.tulpar_linuxkpi_test_worker_route(voidptr, u32) i32
+fn C.tulpar_linuxkpi_task_queued(voidptr) bool
+fn C.tulpar_linuxkpi_may_sleep() bool
+fn C.tulpar_linuxkpi_preempt_count() u32
+fn C.tulpar_linuxkpi_preempt_disable()
+fn C.tulpar_linuxkpi_preempt_enable()
+fn C.tulpar_linuxkpi_irq_flags() uint
+fn C.tulpar_linuxkpi_irq_save() uint
+fn C.tulpar_linuxkpi_irq_restore(uint)
+fn C.tulpar_linuxkpi_spin_wait()
+fn C.tulpar_linuxkpi_test_alloc_oom(i32)
 fn C.init_completion(&C.completion)
 fn C.complete(&C.completion)
 fn C.complete_all(&C.completion)
@@ -168,23 +168,23 @@ fn thread_failure(test &SrcuThread, line u32) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_srcu_worker']
+@[export: 'tulpar_linuxkpi_fixture_srcu_worker']
 pub fn worker(argument voidptr) voidptr {
 	unsafe {
 		mut test := &SrcuThread(argument)
 		test.task = C.get_task_struct(C.current)
 		if test.operation == .reader {
-			if C.vinix_linuxkpi_worker_bind(0) != 0 { thread_failure(test, 43) }
+			if C.tulpar_linuxkpi_worker_bind(0) != 0 { thread_failure(test, 43) }
 			test.idx[0] = C.srcu_read_lock(test.ssp)
 			if test.nested { test.idx[1] = C.srcu_read_lock(test.ssp) }
 			C.complete(&test.entered)
 			C.cond_resched()
 			C.msleep(1)
-			if !C.vinix_linuxkpi_may_sleep() || C.vinix_linuxkpi_cpu_id() != 0 {
+			if !C.tulpar_linuxkpi_may_sleep() || C.tulpar_linuxkpi_cpu_id() != 0 {
 				thread_failure(test, 50)
 			}
-			target := if C.vinix_linuxkpi_percpu_count() > 1 { u32(1) } else { u32(0) }
-			if C.vinix_linuxkpi_worker_bind(target) != 0 { thread_failure(test, 52) }
+			target := if C.tulpar_linuxkpi_percpu_count() > 1 { u32(1) } else { u32(0) }
+			if C.tulpar_linuxkpi_worker_bind(target) != 0 { thread_failure(test, 52) }
 			if test.nested {
 				C.wait_for_completion(&test.release_one)
 				C.srcu_read_unlock(test.ssp, test.idx[1])
@@ -193,7 +193,7 @@ pub fn worker(argument voidptr) voidptr {
 			C.wait_for_completion(&test.release)
 			C.cond_resched()
 			C.msleep(1)
-			if C.vinix_linuxkpi_cpu_id() != target { thread_failure(test, 61) }
+			if C.tulpar_linuxkpi_cpu_id() != target { thread_failure(test, 61) }
 			C.srcu_read_unlock(test.ssp, test.idx[0])
 		} else {
 			C.complete(&test.entered)
@@ -218,7 +218,7 @@ fn start(test &SrcuThread, ssp &C.srcu_struct, operation Operation, nested bool)
 		C.init_completion(&test.release)
 		C.init_completion(&test.done)
 		test.initialized = true
-		if C.pthread_create(&test.thread, nil, C.vinix_linuxkpi_fixture_srcu_worker, test) != 0 {
+		if C.pthread_create(&test.thread, nil, C.tulpar_linuxkpi_fixture_srcu_worker, test) != 0 {
 			return -C.ENOMEM
 		}
 		test.started = true
@@ -277,7 +277,7 @@ fn readers_body(ssp &C.srcu_struct, old &SrcuThread, late &SrcuThread,
 			return -C.EIO
 		}
 		bank := u32(old.idx[0])
-		target := if C.vinix_linuxkpi_percpu_count() > 1 { u32(1) } else { u32(0) }
+		target := if C.tulpar_linuxkpi_percpu_count() > 1 { u32(1) } else { u32(0) }
 		source := C.per_cpu_ptr(ssp.sda, 0)
 		destination := C.per_cpu_ptr(ssp.sda, target)
 		if bank > 1 || old.idx[1] != i32(bank) || C.atomic_long_read(&source.srcu_lock_count[bank]) != 2 || C.atomic_long_read(&destination.srcu_unlock_count[bank]) != 0 {
@@ -386,15 +386,15 @@ mut:
 	index u32
 }
 
-@[export: 'vinix_linuxkpi_fixture_srcu_free_callback']
+@[export: 'tulpar_linuxkpi_fixture_srcu_free_callback']
 pub fn free_callback(head &C.rcu_head) {
 	unsafe {
 		// head is the first member, preserving container_of's exact identity.
 		callback := &Callback(head)
 		mut test := callback.test
 		index := callback.index
-		if C.vinix_linuxkpi_may_sleep() || C.vinix_linuxkpi_preempt_count() == 0
-			|| C.vinix_linuxkpi_irq_flags() & (uint(1) << 9) == 0
+		if C.tulpar_linuxkpi_may_sleep() || C.tulpar_linuxkpi_preempt_count() == 0
+			|| C.tulpar_linuxkpi_irq_flags() & (uint(1) << 9) == 0
 			|| C.__atomic_fetch_add(&test.count, 1, 4) != index {
 			if test.result == 0 { test.failure_line = 259 }
 			test.result = -C.EIO
@@ -437,11 +437,11 @@ fn barrier_waiter_body(test &BarrierProbe) {
 			}
 			C.cond_resched()
 		}
-		if C.vinix_linuxkpi_worker_bind((test.cpu + 1) % C.vinix_linuxkpi_percpu_count()) != 0 {
+		if C.tulpar_linuxkpi_worker_bind((test.cpu + 1) % C.tulpar_linuxkpi_percpu_count()) != 0 {
 			test.waiter_failure_line = 293
 			C.srcu_store_i32(&test.result, -C.EIO, 3)
 		}
-		test.waiter_cpu = C.vinix_linuxkpi_cpu_id()
+		test.waiter_cpu = C.tulpar_linuxkpi_cpu_id()
 		cookie := C.start_poll_synchronize_srcu(test.ssp)
 		if poll(test.ssp, cookie) != 0 {
 			test.waiter_failure_line = 301
@@ -454,12 +454,12 @@ fn barrier_waiter_body(test &BarrierProbe) {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_srcu_barrier_waiter']
+@[export: 'tulpar_linuxkpi_fixture_srcu_barrier_waiter']
 pub fn barrier_waiter(argument voidptr) voidptr {
 	unsafe {
 		mut test := &BarrierProbe(argument)
 		test.task = C.get_task_struct(C.current)
-		test.waiter_cpu = C.vinix_linuxkpi_cpu_id()
+		test.waiter_cpu = C.tulpar_linuxkpi_cpu_id()
 		C.complete(&test.ready)
 		barrier_waiter_body(test)
 		C.__atomic_store_n(&test.barrier_done, true, 3)
@@ -468,13 +468,13 @@ pub fn barrier_waiter(argument voidptr) voidptr {
 	}
 }
 
-@[export: 'vinix_linuxkpi_fixture_srcu_barrier_callback']
+@[export: 'tulpar_linuxkpi_fixture_srcu_barrier_callback']
 pub fn barrier_callback(head &C.rcu_head) {
 	unsafe {
 		mut test := &BarrierProbe(head)
-		test.cpu = C.vinix_linuxkpi_cpu_id()
-		test.route_error = C.vinix_linuxkpi_test_worker_route(test.task.vinix_thread,
-			(test.cpu + 1) % C.vinix_linuxkpi_percpu_count())
+		test.cpu = C.tulpar_linuxkpi_cpu_id()
+		test.route_error = C.tulpar_linuxkpi_test_worker_route(test.task.tulpar_thread,
+			(test.cpu + 1) % C.tulpar_linuxkpi_percpu_count())
 		if test.route_error != 0 {
 			test.callback_failure_line = 324
 			C.srcu_store_i32(&test.result, -C.EIO, 3)
@@ -489,11 +489,11 @@ pub fn barrier_callback(head &C.rcu_head) {
 			if C.srcu_load_bool(&test.barrier_done, 2) || C.time_after_eq(C.jiffies, deadline) {
 				test.callback_failure_line = 336
 				test.task_state_at_failure = C.__atomic_load_n(&test.task.__state, 2)
-				test.task_queued_at_failure = C.vinix_linuxkpi_task_queued(test.task.vinix_thread)
+				test.task_queued_at_failure = C.tulpar_linuxkpi_task_queued(test.task.tulpar_thread)
 				C.srcu_store_i32(&test.result, -C.EIO, 3)
 				break
 			}
-			if C.srcu_load_bool(&test.barrier_started, 2) && C.__atomic_load_n(&test.task.__state, 2) == C.TASK_UNINTERRUPTIBLE && !C.vinix_linuxkpi_task_queued(test.task.vinix_thread) {
+			if C.srcu_load_bool(&test.barrier_started, 2) && C.__atomic_load_n(&test.task.__state, 2) == C.TASK_UNINTERRUPTIBLE && !C.tulpar_linuxkpi_task_queued(test.task.tulpar_thread) {
 				if !C.srcu_load_bool(&test.gp_done, 2) {
 					test.callback_failure_line = 346
 					C.srcu_store_i32(&test.result, -C.EIO, 3)
@@ -501,7 +501,7 @@ pub fn barrier_callback(head &C.rcu_head) {
 				test.observed_park = true
 				break
 			}
-			C.vinix_linuxkpi_spin_wait()
+			C.tulpar_linuxkpi_spin_wait()
 		}
 		C.__atomic_store_n(&test.callback_done, true, 3)
 	}
@@ -520,26 +520,26 @@ fn callbacks_body(ssp &C.srcu_struct, test &Callbacks, callbacks &&Callback,
 			callbacks[i].test = test
 			callbacks[i].index = u32(i)
 		}
-		flags := C.vinix_linuxkpi_irq_save()
+		flags := C.tulpar_linuxkpi_irq_save()
 		for *submitted < 8 {
-			C.call_srcu(ssp, &callbacks[*submitted].head, C.vinix_linuxkpi_fixture_srcu_free_callback)
+			C.call_srcu(ssp, &callbacks[*submitted].head, C.tulpar_linuxkpi_fixture_srcu_free_callback)
 			(*submitted)++
 		}
-		C.vinix_linuxkpi_irq_restore(flags)
-		C.vinix_linuxkpi_preempt_disable()
+		C.tulpar_linuxkpi_irq_restore(flags)
+		C.tulpar_linuxkpi_preempt_disable()
 		for *submitted < 16 {
-			C.call_srcu(ssp, &callbacks[*submitted].head, C.vinix_linuxkpi_fixture_srcu_free_callback)
+			C.call_srcu(ssp, &callbacks[*submitted].head, C.tulpar_linuxkpi_fixture_srcu_free_callback)
 			(*submitted)++
 		}
-		C.vinix_linuxkpi_preempt_enable()
+		C.tulpar_linuxkpi_preempt_enable()
 		C.srcu_barrier(ssp)
 		if test.count != 16 || test.result != 0 {
 			C.kprintf(c'linuxkpi: SRCU self-test callback sequence failed at line %u: count=%u error=%d condition_line=%u\n', u32(390), test.count, test.result, test.failure_line)
 			result = -C.EIO
 		}
-		if C.vinix_linuxkpi_percpu_count() > 1 {
+		if C.tulpar_linuxkpi_percpu_count() > 1 {
 			C.init_completion(&probe.ready)
-			if C.pthread_create(&probe.thread, nil, C.vinix_linuxkpi_fixture_srcu_barrier_waiter, probe) != 0 {
+			if C.pthread_create(&probe.thread, nil, C.tulpar_linuxkpi_fixture_srcu_barrier_waiter, probe) != 0 {
 				C.kprintf(c'linuxkpi: SRCU self-test barrier waiter creation failed at line %u: error=%d\n', u32(397), -C.ENOMEM)
 				return -C.ENOMEM
 			}
@@ -548,7 +548,7 @@ fn callbacks_body(ssp &C.srcu_struct, test &Callbacks, callbacks &&Callback,
 				C.kprintf(c'linuxkpi: SRCU self-test barrier waiter entry failed at line %u: started=%u\n', u32(403), u32(*probe_started))
 				return -C.EIO
 			}
-			C.call_srcu(ssp, &probe.head, C.vinix_linuxkpi_fixture_srcu_barrier_callback)
+			C.call_srcu(ssp, &probe.head, C.tulpar_linuxkpi_fixture_srcu_barrier_callback)
 			*probe_submitted = true
 		}
 		return result
@@ -598,11 +598,11 @@ mut:
 	result i32
 }
 
-@[export: 'vinix_linuxkpi_fixture_srcu_work_callback']
+@[export: 'tulpar_linuxkpi_fixture_srcu_work_callback']
 pub fn work_callback(work &C.work_struct) {
 	unsafe {
 		mut test := &WorkTest(work)
-		if !C.vinix_linuxkpi_may_sleep() || uint(C.current_work()) != uint(work) {
+		if !C.tulpar_linuxkpi_may_sleep() || uint(C.current_work()) != uint(work) {
 			test.result = -C.EIO
 		}
 		C.synchronize_srcu(test.ssp)
@@ -620,14 +620,14 @@ fn work_progress() i32 {
 			C.kprintf(c'linuxkpi: SRCU self-test work caller domain init failed at line %u: error=%d\n', u32(458), result)
 			return result
 		}
-		queue := C.alloc_workqueue(c'vinix-srcu-caller', 0, 1)
+		queue := C.alloc_workqueue(c'tulpar-srcu-caller', 0, 1)
 		if queue == nil {
 			C.kprintf(c'linuxkpi: SRCU self-test work caller queue allocation failed at line %u: error=%d\n', u32(463), -C.ENOMEM)
 			C.cleanup_srcu_struct(&ssp)
 			return -C.ENOMEM
 		}
 		mut test := WorkTest{ ssp: &ssp }
-		C.INIT_WORK_ONSTACK(&test.work, C.vinix_linuxkpi_fixture_srcu_work_callback)
+		C.INIT_WORK_ONSTACK(&test.work, C.tulpar_linuxkpi_fixture_srcu_work_callback)
 		C.init_completion(&test.done)
 		C.BUG_ON(!C.queue_work_on(0, queue, &test.work))
 		if C.wait_for_completion_timeout(&test.done, 500) == 0 {
@@ -644,7 +644,7 @@ fn work_progress() i32 {
 	}
 }
 
-@[export: 'vinix_linuxkpi_srcu_native_selftest']
+@[export: 'tulpar_linuxkpi_srcu_native_selftest']
 pub fn selftest() i32 {
 	unsafe {
 		mut result := readers()
@@ -664,9 +664,9 @@ pub fn selftest() i32 {
 		for repeat in 0 .. 20 {
 			for stage in 0 .. 2 {
 				mut ssp := C.srcu_struct{}
-				C.vinix_linuxkpi_test_alloc_oom(i32(stage))
+				C.tulpar_linuxkpi_test_alloc_oom(i32(stage))
 				constructor_error := C.init_srcu_struct(&ssp)
-				C.vinix_linuxkpi_test_alloc_oom(-1)
+				C.tulpar_linuxkpi_test_alloc_oom(-1)
 				if constructor_error != -C.ENOMEM {
 					C.kprintf(c'linuxkpi: SRCU self-test constructor fault failed at line %u: repeat=%u stage=%d error=%d\n', u32(508), u32(repeat), i32(stage), constructor_error)
 					result = -C.EIO

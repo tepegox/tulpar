@@ -5,7 +5,7 @@ import krandom
 
 #include <verity.h>
 
-struct C.vinix_verity {
+struct C.tulpar_verity {
 mut:
 	data_blocks u64
 	total_blocks u64
@@ -23,7 +23,7 @@ const max_image_blocks = u64(0x7fffffffffffffff) / block_bytes
 
 // Headerless dm-verity v1, SHA-256, no salt, one backing device. Borrow every
 // buffer and callback; no verification path allocates or exposes data.
-@[export: 'vinix_verity_sha256']
+@[export: 'tulpar_verity_sha256']
 fn hash_block(input voidptr, length uint, output &u8) {
 	// The C ABI borrows 32 output bytes; pass their address without copying an
 	// array value or giving the V compiler an escaping local to allocate.
@@ -36,9 +36,9 @@ fn hex_digit(value char) i32 {
 	return -1
 }
 
-@[export: 'vinix_verity_init']
-fn init_geometry(geometry &C.vinix_verity, blocks u64, hex &char, length uint) i32 {
-	unsafe { C.memset(geometry, 0, sizeof(C.vinix_verity)) }
+@[export: 'tulpar_verity_init']
+fn init_geometry(geometry &C.tulpar_verity, blocks u64, hex &char, length uint) i32 {
+	unsafe { C.memset(geometry, 0, sizeof(C.tulpar_verity)) }
 	if blocks == 0 || blocks > max_image_blocks || length != 64 { return -1 }
 	unsafe {
 		for i in 0 .. 32 {
@@ -87,19 +87,19 @@ fn find_text(text &char, needle &char) &char {
 
 // Fail closed for malformed, duplicate or conflicting root selection. The
 // caller's device buffer is written only after the complete policy is valid.
-@[export: 'vinix_verity_parse']
-fn parse_policy(cmdline &char, geometry &C.vinix_verity, device &char, capacity uint) i32 {
+@[export: 'tulpar_verity_parse']
+fn parse_policy(cmdline &char, geometry &C.tulpar_verity, device &char, capacity uint) i32 {
 	if uint(cmdline) == 0 { return 0 }
 	unsafe {
 		mut length := uint(0)
 		for length < 4096 && cmdline[length] != 0 { length++ }
 		if length == 4096 { return -1 }
-		reserved := find_text(cmdline, c'vinix.verity')
+		reserved := find_text(cmdline, c'tulpar.verity')
 		if uint(reserved) == 0 { return 0 }
-		if uint(find_text(reserved + 1, c'vinix.verity')) != 0 { return -1 }
-		conflicts := [charptr(c'vinix.disk='), charptr(c'vinix.qemu_persist='),
-			charptr(c'vinix.qemu_root='), charptr(c'vinix.apple_ans='), charptr(c'vinix.ans_rw='),
-			charptr(c'vinix.persist='), charptr(c'vinix.root'), charptr(c'root=')]!
+		if uint(find_text(reserved + 1, c'tulpar.verity')) != 0 { return -1 }
+		conflicts := [charptr(c'tulpar.disk='), charptr(c'tulpar.qemu_persist='),
+			charptr(c'tulpar.qemu_root='), charptr(c'tulpar.apple_ans='), charptr(c'tulpar.ans_rw='),
+			charptr(c'tulpar.persist='), charptr(c'tulpar.root'), charptr(c'root=')]!
 		for needle in conflicts {
 			if uint(find_text(cmdline, needle)) != 0 { return -1 }
 		}
@@ -110,7 +110,7 @@ fn parse_policy(cmdline &char, geometry &C.vinix_verity, device &char, capacity 
 			for at < length && whitespace(cmdline[at]) { at++ }
 			start := at
 			for at < length && !whitespace(cmdline[at]) { at++ }
-			if at - start >= 13 && C.memcmp(cmdline + start, c'vinix.verity=', 13) == 0 {
+			if at - start >= 13 && C.memcmp(cmdline + start, c'tulpar.verity=', 13) == 0 {
 				if uint(value) != 0 { return -1 }
 				value = cmdline + start + 13
 				size = at - start - 13
@@ -157,8 +157,8 @@ fn parse_policy(cmdline &char, geometry &C.vinix_verity, device &char, capacity 
 
 type BlockReader = fn (voidptr, u64, voidptr) i32
 
-@[export: 'vinix_verity_check']
-fn check_block(geometry &C.vinix_verity, block u64, data voidptr,
+@[export: 'tulpar_verity_check']
+fn check_block(geometry &C.tulpar_verity, block u64, data voidptr,
 	reader BlockReader, context voidptr, scratch voidptr) i32 {
 	if block >= geometry.data_blocks { return -1 }
 	mut digest := [32]u8{}

@@ -1,6 +1,6 @@
 # Host identity through Alpine commands
 
-`run` executes the imported Alpine BusyBox, the installed Vinix `uname`,
+`run` executes the imported Alpine BusyBox, the installed Tulpar `uname`,
 `sysctl`, `cat`, `arch`, and `hostname` in a standalone QEMU guest. It checks
 both kernel reports and the staged OS metadata and login banners, then repeats
 the kernel identity checks from a child in a private UTS namespace.
@@ -13,14 +13,14 @@ tests/userland-identity/run --arch x86_64 --kernel-dir /path/to/amd64/kernel \
 ```
 
 `--audit` copies the existing image's metadata and prints the observations
-without enforcing Vinix branding. Use a fresh state directory per invocation.
-The ARM fixture compiler uses `VINIX_AARCH64_SYSROOT` when set; the default is
+without enforcing Tulpar branding. Use a fresh state directory per invocation.
+The ARM fixture compiler uses `TULPAR_AARCH64_SYSROOT` when set; the default is
 the repository's `build-aarch64-userland/sysroot`.
 
 The host's `uname`, `/proc/version`, `kernel.ostype`, and `kernel.osrelease`
-must agree on Vinix 0.1.0. Private UTS namespaces retain Linux 5.15.0-vinix for
+must agree on Tulpar 0.1.0. Private UTS namespaces retain Linux 5.15.0-tulpar for
 Linux container applications. `/etc/os-release`, `/usr/lib/os-release`, and
-`/etc/lsb-release` describe Vinix, and login messages welcome the user to Vinix.
+`/etc/lsb-release` describe Tulpar, and login messages welcome the user to Tulpar.
 
 Alpine BusyBox hardcodes the operating-system label of its own `uname -o`
 applet to Linux. The normal `/bin/uname` and `/usr/bin/uname` commands correct

@@ -33,7 +33,7 @@ pub fn build(busybox_path string, output string) !u64 {
 	files := {
 		'etc/passwd':     'root:x:0:0:root:/root:/bin/sh\nnobody:x:65534:65534:nobody:/:/bin/false\n'
 		'etc/group':      'root:x:0:\nnogroup:x:65534:\n'
-		'etc/os-release': 'NAME="Vinix busybox"\nID=vinix-busybox\n'
+		'etc/os-release': 'NAME="Tulpar busybox"\nID=tulpar-busybox\n'
 	}
 	for name, content in files {
 		archive.add(tarcore.Member{ name: name, mode: 0o644, size: content.len, mtime: epoch }, content.bytes())!

@@ -4,7 +4,7 @@ module linuxkpi
 import usercopy
 import linuxkpi.compatcore
 
-@[export: 'vinix_linuxkpi_raw_copy_from_user_nocache']
+@[export: 'tulpar_linuxkpi_raw_copy_from_user_nocache']
 fn native_nocache_from_user(destination voidptr, source voidptr, length u32) u32 {
 	return u32(usercopy.raw_copy_from_user_nocache(destination, u64(source), u64(length)))
 }

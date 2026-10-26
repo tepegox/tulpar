@@ -33,7 +33,7 @@ pub fn guest_query(path string, command string, deadline u64, cancel fn () bool)
 		}
 	}
 	nonce := rand.int_u64(u64(0x7fffffffffffffff))!.str()
-	sync_id := 'vinix-guest-sync-' + nonce
+	sync_id := 'tulpar-guest-sync-' + nonce
 	guest.send('\xff{"execute":"guest-sync-delimited","arguments":{"id":' + nonce + '},"id":' + json2.encode(sync_id) + '}\n')!
 	mut synchronized := false
 	for !synchronized {
@@ -43,7 +43,7 @@ pub fn guest_query(path string, command string, deadline u64, cancel fn () bool)
 			if value is WireNumber && value.token == nonce { synchronized = true }
 		}
 	}
-	id := 'vinix-guest-' + nonce
+	id := 'tulpar-guest-' + nonce
 	guest.send('{"execute":' + json2.encode(command) + ',"id":' + json2.encode(id) + '}\n')!
 	for {
 		reply := guest_object(guest.line()!)!

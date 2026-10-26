@@ -152,7 +152,7 @@ fn test_pool_growth_requires_capacity_adoption_preserves_full_tables_and_near_u6
 }
 
 fn test_pool_growth_file_commands_republish_equal_size_and_refuse_bad_inputs_and_arguments() {
-	work := os.join_path(os.temp_dir(), 'vinix-pool-growth-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-pool-growth-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/pool.vset'
@@ -177,7 +177,7 @@ fn test_pool_growth_file_commands_republish_equal_size_and_refuse_bad_inputs_and
 	assert grow_pool_plan(path.str, 3, 0, 16384, true) == 1 && os.read_bytes(path)! == broken
 	assert grow_pool_plan(path.str, 3, 2, 8192, false) == 1 && os.read_bytes(path)! == broken
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-expand'), &char(c'/unused'), &char(c'3'),
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-expand'), &char(c'/unused'), &char(c'3'),
 			&char(c'0'), &char(c'12288'), &char(nil)]!
 		for command in [c'pool-expand', c'pool-grow'] {
 			args[1] = &char(command)

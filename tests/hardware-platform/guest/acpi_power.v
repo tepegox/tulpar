@@ -53,7 +53,7 @@ fn scenario_acpi_power(mut t Test) {
 		'technology')}"')
 	t.check(read_word(battery + 'model_name') == 'VNXBAT', 'model_name is "${read_word(battery +
 		'model_name')}"')
-	t.check(read_word(battery + 'manufacturer') == 'Vinix', 'manufacturer is "${read_word(battery +
+	t.check(read_word(battery + 'manufacturer') == 'Tulpar', 'manufacturer is "${read_word(battery +
 		'manufacturer')}"')
 	t.check(read_word(battery + 'serial_number') == '0042', 'serial_number is "${read_word(battery +
 		'serial_number')}"')

@@ -74,7 +74,7 @@ fn test_failed_snapshot_create_keeps_firmware_even_when_the_backend_completed() 
 		println('SKIP: snapshot recovery requires qemu-img')
 		return
 	}
-	root := '/tmp/vinix-vm-recover-files-${os.getpid()}'
+	root := '/tmp/tulpar-vm-recover-files-${os.getpid()}'
 	state := recovery_fixture(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	os.write_file(root + '/image-tool.fault', 'after:-c')!
@@ -94,7 +94,7 @@ fn test_snapshot_recovery_replays_restore_and_finishes_partial_deletion() {
 		return
 	}
 	io_tool := os.find_abs_path_of_executable('qemu-io')!
-	root := '/tmp/vinix-vm-recover-pair-${os.getpid()}'
+	root := '/tmp/tulpar-vm-recover-pair-${os.getpid()}'
 	state := recovery_fixture(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	snapshot('snapshot-create', state, 'anchor')!
@@ -157,7 +157,7 @@ fn test_snapshot_recovery_abandons_uncreated_preparation_and_finishes_identified
 		println('SKIP: snapshot recovery requires qemu-img')
 		return
 	}
-	root := '/tmp/vinix-vm-recover-create-${os.getpid()}'
+	root := '/tmp/tulpar-vm-recover-create-${os.getpid()}'
 	state := recovery_fixture(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	for removed in [false, true] {
@@ -180,17 +180,17 @@ fn test_snapshot_recovery_abandons_uncreated_preparation_and_finishes_identified
 	os.rmdir(state + '/snapshots/identified.json.new')!
 	pending := json2.decode[SnapshotPending](os.read_file(state + '/snapshot.pending.json')!, strict: true)!
 	assert pending.snapshot.disk_identity.len == 64
-	recovery_command([@VEXE, '-enable-globals', '-gc', 'none', '-cc', 'cc', '-o', root + '/vinix-vm',
+	recovery_command([@VEXE, '-enable-globals', '-gc', 'none', '-cc', 'cc', '-o', root + '/tulpar-vm',
 		os.dir(os.dir(@FILE)) + '/vm.v'])!
 	// Use a separate process: native record locks may be process scoped.
 	journal := os.read_file(state + '/snapshot.pending.json')!
 	mut guard := lease(state)!
-	locked := sourcecommand.capture([root + '/vinix-vm', 'snapshot-recover', state], os.environ(),
+	locked := sourcecommand.capture([root + '/tulpar-vm', 'snapshot-recover', state], os.environ(),
 		30, 65536, unsafe { nil })!
 	assert locked.status != 0 && locked.stderr.contains('lock'), locked.stderr
 	assert os.read_file(state + '/snapshot.pending.json')! == journal
 	guard.release()
-	recovery_command([root + '/vinix-vm', 'snapshot-recover', state])!
+	recovery_command([root + '/tulpar-vm', 'snapshot-recover', state])!
 	assert !os.exists(state + '/snapshot.pending.json')
 	assert os.read_file(state + '/snapshots/identified.fd')! == 'paired-variables'
 	os.write_file(state + '/vars.fd', 'current-variables')!
@@ -208,7 +208,7 @@ fn test_snapshot_recovery_refuses_changed_identities_variables_manifests_and_leg
 		println('SKIP: snapshot recovery requires qemu-img')
 		return
 	}
-	root := '/tmp/vinix-vm-recover-refuse-${os.getpid()}'
+	root := '/tmp/tulpar-vm-recover-refuse-${os.getpid()}'
 	state := recovery_fixture(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	for action in ['snapshot-restore', 'snapshot-delete'] {

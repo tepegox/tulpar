@@ -28,9 +28,9 @@ struct C.seqcount_latch_t {}
 
 struct C.mutex {}
 
-fn C.vinix_linuxkpi_irq_flags() usize
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_irq_flags() usize
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
 fn C.preempt_disable()
 fn C.preempt_enable()
 fn C.preempt_count() u32
@@ -81,8 +81,8 @@ fn C.mutex_init(&C.mutex)
 fn C.mutex_destroy(&C.mutex)
 fn C.mutex_lock(&C.mutex)
 fn C.mutex_unlock(&C.mutex)
-fn C.vinix_linuxkpi_irq_save() usize
-fn C.vinix_linuxkpi_irq_restore(usize)
+fn C.tulpar_linuxkpi_irq_save() usize
+fn C.tulpar_linuxkpi_irq_restore(usize)
 fn C.vmh_fixture_seq_thread(voidptr) voidptr
 __global native_seq_static_lock C.seqlock_t
 struct Pair {
@@ -166,13 +166,13 @@ fn basic() {
 		C.assert(!(C.need_seqretry(&native_seq_static_lock, exclusive)))
 		C.done_seqretry(&native_seq_static_lock, exclusive)
 		C.assert(!C.spin_is_locked(&native_seq_static_lock.@lock) && C.preempt_count() == 0)
-		outer_irq := C.vinix_linuxkpi_irq_save()
+		outer_irq := C.tulpar_linuxkpi_irq_save()
 		exclusive = -1
 		irq = C.read_seqbegin_or_lock_irqsave(&native_seq_static_lock, &exclusive)
 		C.assert(!C.vmh_interrupts && C.preempt_count() == 1)
 		C.done_seqretry_irqrestore(&native_seq_static_lock, exclusive, irq)
 		C.assert(!C.vmh_interrupts && C.preempt_count() == 0)
-		C.vinix_linuxkpi_irq_restore(outer_irq)
+		C.tulpar_linuxkpi_irq_restore(outer_irq)
 
 		mut latch := C.seqcount_latch_t{}
 		C.seqcount_latch_init(&latch)

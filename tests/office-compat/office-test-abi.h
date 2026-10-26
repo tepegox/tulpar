@@ -1,6 +1,6 @@
 // Declaration-only ABI for host and Windows64 licensing fixtures.
-#ifndef VINIX_OFFICE_TEST_ABI_H
-#define VINIX_OFFICE_TEST_ABI_H
+#ifndef TULPAR_OFFICE_TEST_ABI_H
+#define TULPAR_OFFICE_TEST_ABI_H
 #include "sppc-office-v-abi.h"
 #include <stddef.h>
 #ifndef _WIN32

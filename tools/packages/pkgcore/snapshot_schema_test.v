@@ -7,12 +7,12 @@ import time
 
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
-	fn C.vinix_heap_begin()
-	fn C.vinix_heap_end() u64
+	fn C.tulpar_heap_begin()
+	fn C.tulpar_heap_end() u64
 }
 
 fn snapshot_schema_work() !string {
-	path := os.real_path(os.temp_dir()) + '/vinix-snapshot-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	path := os.real_path(os.temp_dir()) + '/tulpar-snapshot-schema-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(path)!
 	return path
 }
@@ -143,14 +143,14 @@ fn snapshot_inventory(path string) ![]string {
 fn test_cache_refusal_preserves_legacy_migration_replay_floor_and_installed_recovery() {
 	work := snapshot_schema_work()!
 	defer { os.rmdir_all(work) or {} }
-	os.mkdir_all(work + '/root/etc/vinix-packages')!
+	os.mkdir_all(work + '/root/etc/tulpar-packages')!
 	os.mkdir_all(work + '/source/bin')!
 	os.write_file(work + '/source/bin/app', 'signed payload')!
 	os.chmod(work + '/source/bin/app', 0o755)!
 	key := keygen(work + '/seed')!
 	repository := Repository{ id: 'publisher', url: 'file://' + work + '/repository', public_key: key }
 	config := Config{ architecture: 'aarch64', repositories: [repository], policy: Policy{ offline: true, reserve_bytes: 0 } }
-	os.write_file(work + '/root/etc/vinix-packages/config.json', json2.encode(config))!
+	os.write_file(work + '/root/etc/tulpar-packages/config.json', json2.encode(config))!
 	os.write_file(work + '/manifest.json', json2.encode(Package{ id: 'app', version: '1.0.0', architecture: 'aarch64',
 		name: 'Application', license: 'MIT', kind: 'native', entrypoint: 'bin/app' }))!
 	pack(work + '/manifest.json', work + '/source', work + '/repository')!
@@ -211,7 +211,7 @@ fn test_snapshot_schema_scanner_retires_owned_keys() {
 			valid.replace('"text":', '"te\\u0078t":"ignored","text":'),
 			valid.replace('"repository":', '"unknown":0,"repository":')]
 		for warmup in 0 .. 2 {
-			if warmup == 1 { C.vinix_heap_begin() }
+			if warmup == 1 { C.tulpar_heap_begin() }
 			for _ in 0 .. 1000 {
 				for i, input in inputs {
 					mut accepted := true
@@ -222,7 +222,7 @@ fn test_snapshot_schema_scanner_retires_owned_keys() {
 					assert accepted == (i == 0)
 				}
 			}
-			if warmup == 1 { kept := C.vinix_heap_end(); println('Snapshot scanner: retained ' + kept.str() + ' tracked bytes in 1000 cycles'); assert kept == 0 }
+			if warmup == 1 { kept := C.tulpar_heap_end(); println('Snapshot scanner: retained ' + kept.str() + ' tracked bytes in 1000 cycles'); assert kept == 0 }
 		}
 	}
 }

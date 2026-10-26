@@ -51,7 +51,7 @@ fn record(path string, evidence map[string]json2.Any) ! {
 
 pub fn run(root string, options Options) ! {
 	state := cachekey.resolve_path(if options.state == '' {
-		sourcecommand.temporary('vinix-ext2-xattr-')!
+		sourcecommand.temporary('tulpar-ext2-xattr-')!
 	} else {
 		options.state
 	})!
@@ -60,7 +60,7 @@ pub fn run(root string, options Options) ! {
 		return error_with_code('Use a fresh state directory; an existing marker could skip the first boot checks', 2)
 	}
 	kernel_dir := cachekey.resolve_path(options.kernel)!
-	kernel := kernel_dir + '/bin/vinix'
+	kernel := kernel_dir + '/bin/tulpar'
 	if !os.is_file(kernel) {
 		return error_with_code('Build the requested kernel first: ' + kernel, 2)
 	}
@@ -79,7 +79,7 @@ pub fn run(root string, options Options) ! {
 	} {
 		return error_with_code('Kernel ELF architecture does not match --arch', 2)
 	}
-	tested_kernel := state + '/kernel/bin/vinix'
+	tested_kernel := state + '/kernel/bin/tulpar'
 	gamehost.copy_file(kernel, tested_kernel)!
 	if os.is_file(kernel_dir + '/obj/blob.c') {
 		gamehost.copy_file(kernel_dir + '/obj/blob.c', state + '/generated.c')!
@@ -117,7 +117,7 @@ pub fn run(root string, options Options) ! {
 	}
 	record(state + '/evidence.json', evidence)!
 	env := os.environ()
-	sdk := env['VINIX_AARCH64_SYSROOT'] or { root + '/build-aarch64-userland/sysroot' }
+	sdk := env['TULPAR_AARCH64_SYSROOT'] or { root + '/build-aarch64-userland/sysroot' }
 	cc := if options.arch == 'aarch64' {
 		[env['CC'] or { 'clang' }, '--target=aarch64-linux-musl', '--sysroot=' + sdk,
 			'-L' + sdk + '/lib', '-fuse-ld=lld']
@@ -159,20 +159,20 @@ pub fn run(root string, options Options) ! {
 	gamehost.archive(rootfs, state + '/initramfs.tar')!
 	mut environment := env.clone()
 	for key, value in {
-		'VINIX_KERNEL_DIR':           state + '/kernel'
-		'VINIX_INITRAMFS':            state + '/initramfs.tar'
-		'VINIX_BOOT_DISK':            state + '/boot.img'
-		'VINIX_EFIVARS':              state + '/efivars.fd'
-		'VINIX_QEMU_PACKAGE_STORE':   state + '/packages.tar'
-		'VINIX_QEMU_HOST_SOURCE':     '0'
-		'VINIX_QEMU_PERSIST_DISK':    state + '/root.ext2'
-		'VINIX_QEMU_PERSIST_SIZE_MB': '64'
-		'VINIX_QEMU_AUDIO':           'off'
-		'VINIX_QEMU_EXTRA':           '-qmp unix:' + state + '/qmp.sock,server=on,wait=off'
+		'TULPAR_KERNEL_DIR':           state + '/kernel'
+		'TULPAR_INITRAMFS':            state + '/initramfs.tar'
+		'TULPAR_BOOT_DISK':            state + '/boot.img'
+		'TULPAR_EFIVARS':              state + '/efivars.fd'
+		'TULPAR_QEMU_PACKAGE_STORE':   state + '/packages.tar'
+		'TULPAR_QEMU_HOST_SOURCE':     '0'
+		'TULPAR_QEMU_PERSIST_DISK':    state + '/root.ext2'
+		'TULPAR_QEMU_PERSIST_SIZE_MB': '64'
+		'TULPAR_QEMU_AUDIO':           'off'
+		'TULPAR_QEMU_EXTRA':           '-qmp unix:' + state + '/qmp.sock,server=on,wait=off'
 	} {
 		environment[key] = value
 	}
-	environment.delete('VINIX_QEMU_PERSIST')
+	environment.delete('TULPAR_QEMU_PERSIST')
 	$if !macos {
 		if 'USE_TCG' !in environment { environment['USE_TCG'] = '1' }
 	}
@@ -195,19 +195,19 @@ pub fn run(root string, options Options) ! {
 		cache := root + '/build-amd64-iso/limine'
 		if os.is_dir(cache) { gamehost.copy_tree(cache, state + '/iso-build/limine', true)! }
 		for key, value in {
-			'VINIX_AMD64_KERNEL':        tested_kernel
-			'VINIX_AMD64_INITRAMFS':     state + '/initramfs.tar'
-			'VINIX_AMD64_ISO':           state + '/test.iso'
-			'VINIX_AMD64_ISO_BUILD_DIR': state + '/iso-build'
+			'TULPAR_AMD64_KERNEL':        tested_kernel
+			'TULPAR_AMD64_INITRAMFS':     state + '/initramfs.tar'
+			'TULPAR_AMD64_ISO':           state + '/test.iso'
+			'TULPAR_AMD64_ISO_BUILD_DIR': state + '/iso-build'
 		} {
 			environment[key] = value
 		}
 		command([root + '/build-support/build-amd64-iso.sh'], environment)!
-		os.write_file(rootfs + '/.vinix-image-id', gamehost.digest(state + '/initramfs.tar')![..16] + '\n')!
+		os.write_file(rootfs + '/.tulpar-image-id', gamehost.digest(state + '/initramfs.tar')![..16] + '\n')!
 		seed_disk(rootfs, state, debugfs, true, options.acl)!
-		qemu := cachekey.which(env['VINIX_QEMU_X86_64'] or { 'qemu-system-x86_64' }, env)!
+		qemu := cachekey.which(env['TULPAR_QEMU_X86_64'] or { 'qemu-system-x86_64' }, env)!
 		if qemu == '' { return error_with_code('qemu-system-x86_64 is missing', 2) }
-		firmware := env['VINIX_OVMF_CODE'] or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
+		firmware := env['TULPAR_OVMF_CODE'] or { os.dir(os.dir(qemu)) + '/share/qemu/edk2-x86_64-code.fd' }
 		launch = [qemu, '-machine', 'q35,smm=off', '-accel', 'tcg', '-cpu', 'max', '-m', '1024',
 			'-smp', '2', '-drive', 'if=pflash,format=raw,unit=0,readonly=on,file=' + firmware,
 			'-cdrom', state + '/test.iso', '-drive',

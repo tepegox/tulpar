@@ -1,6 +1,6 @@
 # Boot securelevel policy checkpoint
 
-The kernel accepts one `vinix.securelevel=-1|0|1|2` boot option. It establishes
+The kernel accepts one `tulpar.securelevel=-1|0|1|2` boot option. It establishes
 the initial level and a floor before SMP and userspace. The common
 `security.set_securelevel` entry point serializes runtime changes behind
 `/proc/sys/kernel/securelevel`. Even PID 1 cannot lower the boot floor. Without

@@ -40,7 +40,7 @@ USE_TCG=1 /path/to/worktree/tests/kernel-sysvmsg/run \
 
 The runner uses the checkout's ARM Alpine sysroot, Limine and QEMU firmware,
 without modifying its guest disks. Override `LLVM_BIN` and
-`VINIX_AARCH64_SYSROOT` for other installations. It succeeds only after
+`TULPAR_AARCH64_SYSROOT` for other installations. It succeeds only after
 `MSG-CHECK DONE failures=0`.
 
 The guest checks selection and ABI metadata, ownership/group permissions,

@@ -43,7 +43,7 @@ pub const max_password = 128
 pub fn inherited() ! {
 	// libc owns this value; borrowing avoids an allocated environment copy on
 	// every request and reply. The capability is the descriptor, not this flag.
-	entry := unsafe { C.getenv(c'VINIX_SESSION_FD') }
+	entry := unsafe { C.getenv(c'TULPAR_SESSION_FD') }
 	if entry == unsafe { nil } || unsafe { C.strcmp(entry, c'3') } != 0 {
 		return error('no session manager channel')
 	}

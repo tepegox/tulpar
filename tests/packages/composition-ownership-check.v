@@ -27,9 +27,9 @@ fn ownership_checks() ! {
 	repository := os.dir(os.dir(os.dir(@FILE)))
 	flags := ['-nocache', '-no-skip-unused', '-gc', 'none', '-manualfree', '-path', '@vlib|@vmodules|' + repository + '|' + repository + '/tools/accounts']
 	mut checks := []OwnershipCheck{}
-	cli := work + '/vinix-package'
+	cli := work + '/tulpar-package'
 	checks << ownership_task('cli-compile', [v, ...flags, '-o', cli, repository + '/tools/packages/main.v'], work)!
-	os.setenv('VINIX_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('VINIX_PACKAGE_APPLE_CLI', cli, true)
+	os.setenv('TULPAR_PACKAGE_COMPOSITION_CLI', cli, true); os.setenv('TULPAR_PACKAGE_APPLE_CLI', cli, true)
 	for name in ['composition_ownership', 'composition', 'catalog', 'catalog_normalize', 'publisher_schema', 'native_profile', 'apple_profile', 'release'] {
 		binary := work + '/' + name
 		checks << ownership_task(name + '-compile', [v, ...flags, '-o', binary, repository + '/tools/packages/pkgcore/' + name + '_test.v'], work)!

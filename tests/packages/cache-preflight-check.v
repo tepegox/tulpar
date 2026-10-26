@@ -54,7 +54,7 @@ fn check() ! {
 	if os.args.len !in [2, 3] { return error('usage: cache-preflight-check NEW_WORK [CLI]') }
 	work := os.abs_path(os.args[1]); if os.exists(work) || os.is_link(work) { return error('qualification directory must be new') }
 	binary := if os.args.len == 3 { os.real_path(os.args[2]) } else { '' }
-	root := work + '/root'; os.mkdir_all(root + '/etc/vinix-packages')!
+	root := work + '/root'; os.mkdir_all(root + '/etc/tulpar-packages')!
 	for name in ['first', 'second'] { os.mkdir_all(work + '/' + name + '/objects')! }
 	arch := $if arm64 { 'aarch64' } $else { 'x86_64' }
 	private := signing.new_key_from_seed([]u8{len: 32, init: 7}) // Public fixture key, never a release publisher.
@@ -62,7 +62,7 @@ fn check() ! {
 	second := pkgcore.Repository{ ...first, id: 'second', url: 'file://' + work + '/second' }
 	later := pkgcore.Repository{ ...first, id: 'later', url: 'file://' + work + '/unreachable' }
 	config := pkgcore.Config{ architecture: arch, repositories: [first, second], policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }
-	configuration := root + '/etc/vinix-packages/config.json'
+	configuration := root + '/etc/tulpar-packages/config.json'
 	os.write_file(configuration, json2.encode(config))!
 	seed := pkgcore.Package{ id: 'seed', version: '1.0.0', architecture: 'all', kind: 'data', name: 'Seed', license: 'MIT',
 		files: [pkgcore.Payload{ path: 'asset', bytes: 4, sha256: sha256.hexhash('seed') }] }

@@ -540,7 +540,7 @@ fn init_policy(root string, work string) ! {
 		check_generated(work + '/init-policy-' + variant + '.c')!
 		binary := work + '/init-host-' + variant
 		command(['clang', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function',
-			'-Wno-unused-parameter', '-Wno-unused-label', '-D_GNU_SOURCE', '-DVINIX_INIT_HOST_TEST',
+			'-Wno-unused-parameter', '-Wno-unused-label', '-D_GNU_SOURCE', '-DTULPAR_INIT_HOST_TEST',
 			'-fsanitize=address,undefined', '-I', root + '/build-support/init-aarch64',
 			'-I', root + '/tests/init-policy/hostfixture', work + '/init-policy-' + variant + '.c',
 			work + '/init-fixture.c', '-o', binary])!
@@ -581,7 +581,7 @@ fn plan_filesystem_blocks(work string, blocks int) ! {
 	command([tool, '-q', '-F', '-t', 'ext2', '-b', '4096', '-I', '128', '-m', '0',
 		'-d', work + '/seed', work + '/config.ext2', blocks.str()])!
 	debugfs := os.join_path(os.dir(tool), 'debugfs')
-	for path in ['/etc', '/etc/vinix', '/root'] {
+	for path in ['/etc', '/etc/tulpar', '/root'] {
 		command([debugfs, '-w', '-R', 'set_inode_field ' + path + ' uid 0', work + '/config.ext2'])!
 	}
 }
@@ -649,20 +649,20 @@ fn compile_guest(root string, work string, arch string, nvme bool, recovery_mode
 	cc := if arch == 'aarch64' { 'aarch64-linux-musl-gcc' } else { 'x86_64-linux-musl-gcc' }
 	command([cc, '-static', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror',
 		'-Wno-unused-function', '-Wno-unused-parameter', '-Wno-unused-label', '-D_GNU_SOURCE',
-		'-DVINIX_V_RUNTIME', '-I', root + '/tools/volumes/volumecli', source, '-o', work + '/init'])!
+		'-DTULPAR_V_RUNTIME', '-I', root + '/tools/volumes/volumecli', source, '-o', work + '/init'])!
 	os.mkdir_all(work + '/seed/sbin')!
 	for name in ['dev', 'proc', 'tmp', 'root', 'run', 'sys'] { os.mkdir_all(work + '/seed/' + name)! }
-	os.write_file(work + '/seed/.vinix-image-id', 'volume-plan-fixture\n')!
+	os.write_file(work + '/seed/.tulpar-image-id', 'volume-plan-fixture\n')!
 	os.cp(work + '/init', work + '/seed/sbin/init')!
 	os.chmod(work + '/seed/sbin/init', 0o755)!
 	if recovery_mode in ['cipher-monitor-verify', 'file-backup'] { stage_selected_volume(root, work, arch, cc)! }
 	else { print(command(['sh', root + '/build-support/run-v-tool.sh', root + '/build-support/storage-tools/stage.v',
 		'--arch', if arch == 'aarch64' { 'aarch64' } else { 'x86_64' }, '--staging', work + '/seed'])!) }
-	os.mkdir_all(work + '/seed/etc/vinix')!
-	os.write_file(work + '/seed/etc/vinix/volumes.vmap', 'deliberately invalid boot plan\n')!
+	os.mkdir_all(work + '/seed/etc/tulpar')!
+	os.write_file(work + '/seed/etc/tulpar/volumes.vmap', 'deliberately invalid boot plan\n')!
 	os.mkdir_all(work + '/seed/usr/bin')!
-	os.cp(work + '/init', work + '/seed/usr/bin/vinix-desktop')!
-	os.chmod(work + '/seed/usr/bin/vinix-desktop', 0o755)!
+	os.cp(work + '/init', work + '/seed/usr/bin/tulpar-desktop')!
+	os.chmod(work + '/seed/usr/bin/tulpar-desktop', 0o755)!
 	if arch == 'aarch64' {
 		command(['sh', root + '/build-support/run-v-tool.sh', root + '/build-support/init-aarch64/compile_init.v',
 			'desktop', work + '/boot-init.c'])!
@@ -674,7 +674,7 @@ fn compile_guest(root string, work string, arch string, nvme bool, recovery_mode
 		command(['ld.lld', '-m', 'aarch64elf', '--nostdlib', '-static', '--gc-sections',
 			work + '/boot-init.o', work + '/boot-abi.o', '-o', work + '/seed/sbin/init'])!
 	} else {
-		cached := os.getenv_opt('VINIX_AMD64_USERLAND_ROOT') or { root + '/build-amd64-userland/staging' }
+		cached := os.getenv_opt('TULPAR_AMD64_USERLAND_ROOT') or { root + '/build-amd64-userland/staging' }
 		os.mkdir_all(work + '/seed/bin')!; os.mkdir_all(work + '/seed/lib')!
 		for path in ['bin/busybox', 'lib/ld-musl-x86_64.so.1'] { os.cp(cached + '/' + path, work + '/seed/' + path)! }
 		os.symlink('busybox', work + '/seed/bin/sh')!
@@ -693,15 +693,15 @@ fn amd64_boot(root string, work string, kernel string, second bool, nvme bool) !
 	iso := work + '/iso'
 	os.mkdir_all(iso + '/boot')!
 	os.mkdir_all(iso + '/EFI/BOOT')!
-	os.cp(kernel, iso + '/boot/vinix')!
+	os.cp(kernel, iso + '/boot/tulpar')!
 	os.cp(work + '/initramfs.tar', iso + '/boot/initramfs.tar')!
 	os.cp(root + '/build-amd64-iso/limine/BOOTX64.EFI', iso + '/EFI/BOOT/BOOTX64.EFI')!
 	os.cp(root + '/build-amd64-iso/limine/limine-uefi-cd.bin', iso + '/boot/limine-uefi-cd.bin')!
-	os.write_file(iso + '/boot/limine.conf', os.read_file(root + '/build-support/limine.conf')! + '\n    cmdline: vinix.disk=auto\n')!
+	os.write_file(iso + '/boot/limine.conf', os.read_file(root + '/build-support/limine.conf')! + '\n    cmdline: tulpar.disk=auto\n')!
 	command(['xorriso', '-as', 'mkisofs', '-iso-level', '3', '-R', '-r', '-J',
 		'-e', 'boot/limine-uefi-cd.bin', '-no-emul-boot', iso, '-o', work + '/test.iso'])!
 	qemu := os.find_abs_path_of_executable('qemu-system-x86_64')!
-	firmware := os.getenv_opt('VINIX_OVMF_CODE_AMD64') or {
+	firmware := os.getenv_opt('TULPAR_OVMF_CODE_AMD64') or {
 		os.dir(os.dir(os.real_path(qemu))) + '/share/qemu/edk2-x86_64-code.fd'
 	}
 	first_disk := work + if second { '/wrong.raw' } else { '/volume.raw' }
@@ -714,9 +714,9 @@ fn amd64_boot(root string, work string, kernel string, second bool, nvme bool) !
 		'-display', 'none', '-monitor', 'none', '-serial', 'stdio', '-nic', 'none', '-no-reboot']
 	if nvme {
 		args << ['-drive','if=none,format=raw,id=nvme-health,file=' + work + '/nvme.raw',
-			'-device','nvme,drive=nvme-health,serial=VINIXHEALTH',
+			'-device','nvme,drive=nvme-health,serial=TULPARHEALTH',
 			'-drive','if=none,format=raw,id=nvme-warning,file=' + work + '/nvme-warning.raw',
-			'-device','nvme,drive=nvme-warning,serial=VINIXWARNING,smart_critical_warning=8']
+			'-device','nvme,drive=nvme-warning,serial=TULPARWARNING,smart_critical_warning=8']
 	}
 	return args
 }
@@ -730,14 +730,14 @@ fn arm_boot(root string, work string, kernel string, second bool) ![]string {
 		for directory in ['::/EFI', '::/EFI/BOOT', '::/boot'] { command(['mmd', '-i', boot_image, directory])! }
 		command(['mcopy', '-i', boot_image, root + '/boot-image/limine-bin/BOOTAA64.EFI', '::/EFI/BOOT/BOOTAA64.EFI'])!
 	}
-	os.write_file(work + '/limine.conf', os.read_file(root + '/build-support/limine.conf')! + '\n    cmdline: vinix.qemu_platform=1 vinix.qemu_persist=1 vinix.qemu_root=1\n')!
-	for pair in [[kernel, '::/boot/vinix'], [work + '/initramfs.tar', '::/boot/initramfs.tar'], [work + '/limine.conf', '::/boot/limine.conf']] {
+	os.write_file(work + '/limine.conf', os.read_file(root + '/build-support/limine.conf')! + '\n    cmdline: tulpar.qemu_platform=1 tulpar.qemu_persist=1 tulpar.qemu_root=1\n')!
+	for pair in [[kernel, '::/boot/tulpar'], [work + '/initramfs.tar', '::/boot/initramfs.tar'], [work + '/limine.conf', '::/boot/limine.conf']] {
 		command(['mcopy', '-o', '-i', boot_image, pair[0], pair[1]])!
 	}
 	qemu := os.find_abs_path_of_executable('qemu-system-aarch64')!
 	share := os.dir(os.dir(os.real_path(qemu))) + '/share/qemu'
 	os.cp(share + '/edk2-arm-vars.fd', work + '/vars.fd')!
-	firmware := os.getenv_opt('VINIX_OVMF_CODE') or { root + '/boot-image/edk2-aarch64-code-2048x1536.fd' }
+	firmware := os.getenv_opt('TULPAR_OVMF_CODE') or { root + '/boot-image/edk2-aarch64-code-2048x1536.fd' }
 	first_disk := work + if second { '/wrong.raw' } else { '/volume.raw' }
 	second_disk := work + if second { '/volume.raw' } else { '/wrong.raw' }
 	return [qemu, '-machine', 'virt,gic-version=3', '-accel', if os.user_os() == 'macos' { 'hvf' } else { 'tcg' },
@@ -753,15 +753,15 @@ fn arm_boot(root string, work string, kernel string, second bool) ![]string {
 }
 
 fn boot_timeout_seconds() !u64 {
-	configured := os.getenv_opt('VINIX_STORAGE_BOOT_TIMEOUT') or { return 1800 }
+	configured := os.getenv_opt('TULPAR_STORAGE_BOOT_TIMEOUT') or { return 1800 }
 	defer { unsafe { configured.free() } }
-	if configured.len == 0 || configured.len > 8 { return error('VINIX_STORAGE_BOOT_TIMEOUT must be decimal seconds from 60 to 7200') }
+	if configured.len == 0 || configured.len > 8 { return error('TULPAR_STORAGE_BOOT_TIMEOUT must be decimal seconds from 60 to 7200') }
 	mut seconds := u64(0)
 	for digit in configured {
-		if digit < `0` || digit > `9` || seconds > 7200 { return error('VINIX_STORAGE_BOOT_TIMEOUT must be decimal seconds from 60 to 7200') }
+		if digit < `0` || digit > `9` || seconds > 7200 { return error('TULPAR_STORAGE_BOOT_TIMEOUT must be decimal seconds from 60 to 7200') }
 		seconds = seconds * 10 + u64(digit - `0`)
 	}
-	if seconds < 60 || seconds > 7200 { return error('VINIX_STORAGE_BOOT_TIMEOUT must be decimal seconds from 60 to 7200') }
+	if seconds < 60 || seconds > 7200 { return error('TULPAR_STORAGE_BOOT_TIMEOUT must be decimal seconds from 60 to 7200') }
 	return seconds
 }
 
@@ -1790,8 +1790,8 @@ fn cipher_monitor_verify_guest(root string, work string, arch string, kernel str
 fn stage_selected_volume(root string, work string, arch string, cc string) ! {
 	source := work + '/staged-volume.c'; generate(root, root + '/tools/volumes/volumecli', source, arch)!; check_generated(source)!
 	os.write_file(source, os.read_file(source)! + '\n_Static_assert(sizeof(volumecli__Request)==32, "V request ABI");\n_Static_assert(sizeof(volumecli__Status)==128, "V status ABI");\n_Static_assert(sizeof(volumecli__Health)==1088, "V health ABI");\n_Static_assert(offsetof(volumecli__Health,data)==576, "V health data ABI");\n')!
-	binary := work + '/seed/usr/sbin/vinix-volume'; os.mkdir_all(os.dir(binary))!
-	command([cc, '-static', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter', '-Wno-unused-label', '-D_GNU_SOURCE', '-DVINIX_V_RUNTIME', '-I', root + '/tools/volumes/volumecli', source, '-o', binary])!
+	binary := work + '/seed/usr/sbin/tulpar-volume'; os.mkdir_all(os.dir(binary))!
+	command([cc, '-static', '-std=c11', '-O2', '-Wall', '-Wextra', '-Werror', '-Wno-unused-function', '-Wno-unused-parameter', '-Wno-unused-label', '-D_GNU_SOURCE', '-DTULPAR_V_RUNTIME', '-I', root + '/tools/volumes/volumecli', source, '-o', binary])!
 	bytes := os.read_bytes(binary)!
 	if bytes.len < 20 || bytes[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1] || int(bytes[18]) + (int(bytes[19]) << 8) != if arch == 'aarch64' { 183 } else { 62 } { return error('Wrong selected utility ELF architecture') }
 	os.chmod(binary, 0o755)!; println('Staged checked volume utility (' + arch + ').')
@@ -1837,7 +1837,7 @@ fn file_backup_host(root string, work string) ! {
 fn file_backup_guest(root string, work string, arch string, kernel string) ! {
 	if kernel == '' || !os.is_file(kernel) || work.contains(',') { return error('Select an existing kernel and safe work directory') }
 	compile_guest(root, work, arch, false, 'file-backup')!
-	os.rm(work + '/seed/etc/vinix/volumes.vmap')!
+	os.rm(work + '/seed/etc/tulpar/volumes.vmap')!
 	write_disk(work + '/volume.raw', false)!; write_disk(work + '/wrong.raw', true)!; plan_filesystem_blocks(work, 16384)!; pack(work)!
 	first := boot(if arch == 'aarch64' { arm_boot(root, work, kernel, false)! } else { amd64_boot(root, work, kernel, false, false)! }, work + '/first-boot.log')!
 	if !first.contains('PLAN FILE BACKUP PASSED') || first.count('PLAN FILE BACKUP CYCLES count=20') != 2 || !first.contains('PLAN FILE BACKUP LARGE ') || !first.contains('PLAN FILE BACKUP RETAIN ') { return error('Missing full file backup qualification') }

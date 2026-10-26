@@ -4,7 +4,7 @@ module volumecli
 import os
 
 fn test_key_import_requires_private_owned_regular_exact_distinct_binary_key() {
-	work := os.join_path(os.temp_dir(), 'vinix-crypt-key-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-crypt-key-${os.getpid()}')
 	os.mkdir(work)!
 	defer { os.rmdir_all(work) or {} }
 	path := work + '/key'
@@ -36,7 +36,7 @@ fn test_key_import_requires_private_owned_regular_exact_distinct_binary_key() {
 
 fn test_encrypted_cli_rejects_invalid_syntax_before_key_or_device_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'open-crypt'), &char(c'/unused'),
+		mut args := [&char(c'tulpar-volume'), &char(c'open-crypt'), &char(c'/unused'),
 			&char(c'0'), &char(c'0'), &char(c'512'), &char(c'/unused-key'), &char(c'ro'), &char(nil)]!
 		assert run(6, &args[0]) == 2
 		assert run(9, &args[0]) == 2

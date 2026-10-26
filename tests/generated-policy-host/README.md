@@ -41,10 +41,10 @@ current ARM and frozen x86 generated C, executes the production assembly
 adapters, checks a cached production x86 kernel (1,549 thunk branches), and
 verifies twenty-one compiler/fixture failure retirements. Cold entrypoints pass
 outside the checkout. Input hashes and results are recorded locally in
-`/tmp/vinix-gpolicy-qualification.json`; the V qualification driver is
-`/tmp/vinix-gpolicy-qualify.v`.
+`/tmp/tulpar-gpolicy-qualification.json`; the V qualification driver is
+`/tmp/tulpar-gpolicy-qualify.v`.
 
 These host-command changes claim no fresh kernel build, guest boot or hardware
-validation. The old `build-amd64-kernel/bin/vinix` artifact correctly fails the
+validation. The old `build-amd64-kernel/bin/tulpar` artifact correctly fails the
 linked checker because it contains raw indirect branches; it is not the cached
 production kernel used for the positive check.

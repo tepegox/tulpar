@@ -12,7 +12,7 @@ fn test_qualification_command_budget_is_bounded_and_records_timeout() {
 	for invalid in ['', '0', '-1', '86401', '9999999999999', ' 120', '120\n'] {
 		if _ := command_timeout(invalid) { assert false, 'invalid budget must be rejected' }
 	}
-	root := sourcecommand.temporary('vinix-qualification-budget')!
+	root := sourcecommand.temporary('tulpar-qualification-budget')!
 	defer { os.rmdir_all(root) or {} }
 	mut runner := Runner{ work: root, env: devcore.environment(0), timeout_seconds: 1 }
 	runner.command('sleep', ['5']) or {
@@ -24,15 +24,15 @@ fn test_qualification_command_budget_is_bounded_and_records_timeout() {
 }
 
 fn test_qualification_compiles_executes_and_reopens_database_with_receipts() {
-	root := sourcecommand.temporary('vinix-qualification')!
+	root := sourcecommand.temporary('tulpar-qualification')!
 	defer { os.rmdir_all(root) or {} }
 	report := qualify(['c', 'cpp', 'v', 'make', 'sqlite'], root + '/results', false)!
 	assert report.all_selected_passed, json2.encode(report)
 	assert report.complete
 	assert report.results.len == 5
 	assert report.uid == os.getuid()
-	assert report.context == if os.uname().sysname.to_lower() == 'vinix' {
-		'vinix-native'
+	assert report.context == if os.uname().sysname.to_lower() == 'tulpar' {
+		'tulpar-native'
 	} else {
 		'host-only'
 	}
@@ -49,7 +49,7 @@ fn test_qualification_compiles_executes_and_reopens_database_with_receipts() {
 }
 
 fn test_missing_tool_cannot_pass() {
-	tool('vinix-tool-that-does-not-exist-891d03') or {
+	tool('tulpar-tool-that-does-not-exist-891d03') or {
 		assert err is MissingTool
 		return
 	}
@@ -57,7 +57,7 @@ fn test_missing_tool_cannot_pass() {
 }
 
 fn test_successful_command_with_wrong_output_cannot_pass() {
-	root := sourcecommand.temporary('vinix-qualification-output')!
+	root := sourcecommand.temporary('tulpar-qualification-output')!
 	defer { os.rmdir_all(root) or {} }
 	os.symlink(tool('echo')!, root + '/project')!
 	mut runner := Runner{ work: root, env: devcore.environment(0) }
@@ -70,7 +70,7 @@ fn test_successful_command_with_wrong_output_cannot_pass() {
 }
 
 fn test_nonzero_commands_are_recorded_and_fail_the_probe() {
-	root := sourcecommand.temporary('vinix-qualification-failure')!
+	root := sourcecommand.temporary('tulpar-qualification-failure')!
 	defer { os.rmdir_all(root) or {} }
 	mut runner := Runner{ work: root, env: devcore.environment(0) }
 	runner.command('false', []) or {
@@ -81,12 +81,12 @@ fn test_nonzero_commands_are_recorded_and_fail_the_probe() {
 	assert false
 }
 
-fn test_host_evidence_cannot_be_submitted_as_vinix_evidence() {
-	if os.uname().sysname.to_lower() == 'vinix' { return }
-	root := sourcecommand.temporary('vinix-qualification-context')!
+fn test_host_evidence_cannot_be_submitted_as_tulpar_evidence() {
+	if os.uname().sysname.to_lower() == 'tulpar' { return }
+	root := sourcecommand.temporary('tulpar-qualification-context')!
 	defer { os.rmdir_all(root) or {} }
 	qualify(['c'], root + '/result', true) or {
-		assert err.msg().contains('installed Vinix')
+		assert err.msg().contains('installed Tulpar')
 		assert !os.exists(root + '/result')
 		return
 	}
@@ -94,22 +94,22 @@ fn test_host_evidence_cannot_be_submitted_as_vinix_evidence() {
 }
 
 fn test_jit_request_rejects_invalid_values_and_host_context_before_output_creation() {
-	root := sourcecommand.temporary('vinix-qualification-jit')!
+	root := sourcecommand.temporary('tulpar-qualification-jit')!
 	defer { os.rmdir_all(root) or {} }
-	original := os.getenv_opt('VINIX_QUALIFY_JIT')
+	original := os.getenv_opt('TULPAR_QUALIFY_JIT')
 	defer {
-		if value := original { os.setenv('VINIX_QUALIFY_JIT', value, true) }
-		else { os.unsetenv('VINIX_QUALIFY_JIT') }
+		if value := original { os.setenv('TULPAR_QUALIFY_JIT', value, true) }
+		else { os.unsetenv('TULPAR_QUALIFY_JIT') }
 	}
 	for value in ['true', '2', '-1', ' 1'] {
-		os.setenv('VINIX_QUALIFY_JIT', value, true)
+		os.setenv('TULPAR_QUALIFY_JIT', value, true)
 		if _ := qualify(['java'], root + '/result', false) { assert false, 'invalid JIT request accepted' }
 		assert !os.exists(root + '/result')
 	}
-	os.setenv('VINIX_QUALIFY_JIT', '1', true)
+	os.setenv('TULPAR_QUALIFY_JIT', '1', true)
 	if _ := qualify(['c'], root + '/result', false) { assert false, 'JIT request accepted for unrelated profile' }
 	assert !os.exists(root + '/result')
-	if os.uname().sysname.to_lower() != 'vinix' {
+	if os.uname().sysname.to_lower() != 'tulpar' {
 		if _ := qualify(['java'], root + '/result', false) { assert false, 'host JIT request accepted as native authorization' }
 		assert !os.exists(root + '/result')
 	}

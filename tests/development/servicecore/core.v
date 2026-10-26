@@ -26,8 +26,8 @@ pub fn stage(source string, root string, arch string) !map[string]string {
 	if arch !in ['aarch64', 'x86_64'] { return error('unsupported service architecture') }
 	mut hashes := map[string]string{}
 	os.mkdir_all(root + '/usr/bin')!
-	for name in ['vinix-session', 'vinix-timesync', 'vinix-service-runner'] {
-		input := if name == 'vinix-session' { source } else { os.dir(source) + '/' + name }
+	for name in ['tulpar-session', 'tulpar-timesync', 'tulpar-service-runner'] {
+		input := if name == 'tulpar-session' { source } else { os.dir(source) + '/' + name }
 		bytes := os.read_bytes(input)!
 		if bytes.len < 20 || bytes[..6] != [u8(0x7f), `E`, `L`, `F`, 2, 1]
 			|| (u16(bytes[18]) | (u16(bytes[19]) << 8)) != machine {
@@ -57,17 +57,17 @@ pub fn verify(body string) ! {
 		}
 		if proof.stop_millis[i] >= 10000 { return error('service retirement exceeded the exported stop window') }
 	}
-	unit := '[Unit]\nDescription=Vinix scheduled jobs\n[Service]\nType=simple\n'
-		+ 'ExecStart="/usr/bin/vinix-jobs" watch "/home/developer/service-state"\n'
+	unit := '[Unit]\nDescription=Tulpar scheduled jobs\n[Service]\nType=simple\n'
+		+ 'ExecStart="/usr/bin/tulpar-jobs" watch "/home/developer/service-state"\n'
 		+ 'Restart=on-failure\nRestartSec=1s\nTimeoutStopSec=10s\n[Install]\nWantedBy=default.target\n'
 	for enabled in [false, true] {
 		mut supervisor := sessioncore.Supervisor{count: 1}
-		supervisor.services[0] = sessioncore.import_linux_service('vinix-jobs.service', unit, enabled)!
+		supervisor.services[0] = sessioncore.import_linux_service('tulpar-jobs.service', unit, enabled)!
 		supervisor.validate()!
 		record := hex.decode(if enabled { proof.enabled } else { proof.disabled })!.bytestr()
 		if record != supervisor.encode() { return error('persisted scheduler service definition changed') }
 	}
-	if hex.decode(proof.removed)!.bytestr() != 'vinix-services\t1\n' {
+	if hex.decode(proof.removed)!.bytestr() != 'tulpar-services\t1\n' {
 		return error('service removal left a persistent definition')
 	}
 }

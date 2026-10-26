@@ -7,16 +7,16 @@ import tools.packages.pkgcore
 import tools.packages.pkgprotocol
 
 fn package_personal_data(db accountcore.Database, user accountcore.User) !pkgprotocol.PersonalDataStatus {
-	listed := run(['/usr/bin/vinix-package', '--json', 'data-list'], '', db, user)
+	listed := run(['/usr/bin/tulpar-package', '--json', 'data-list'], '', db, user)
 	assert listed.status == 0, listed.output
 	return pkgprotocol.decode_personal_data(listed.output)
 }
 
 fn qualify_package_data_purge(mut t Test, db accountcore.Database, alex accountcore.User, sam accountcore.User) ! {
-	data := alex.home + '/.local/share/vinix-apps/isolated-cli'
+	data := alex.home + '/.local/share/tulpar-apps/isolated-cli'
 	for user in [alex, sam] {
 		own_id := user.name + '-data'
-		own := user.home + '/.local/share/vinix-apps/' + own_id
+		own := user.home + '/.local/share/tulpar-apps/' + own_id
 		os.mkdir(own)!; os.chown(own, int(user.uid), int(user.gid))!
 		mut listed := package_personal_data(db, user)!
 		assert listed.rows.any(it.id == 'isolated-cli' && it.installed && it.diagnostic == '')
@@ -24,17 +24,17 @@ fn qualify_package_data_purge(mut t Test, db accountcore.Database, alex accountc
 		assert !listed.rows.any(it.id == if user.name == 'alex' { 'sam-data' } else { 'alex-data' })
 		listed.close()
 	}
-	root_list := run(['/usr/bin/vinix-package', '--json', 'data-list'], '', none, none)
+	root_list := run(['/usr/bin/tulpar-package', '--json', 'data-list'], '', none, none)
 	assert root_list.status != 0 && root_list.output.contains('ordinary user session'), root_list.output
-	installed := run(['/usr/bin/vinix-package', 'purge-data', 'isolated-cli'], '', db, alex)
+	installed := run(['/usr/bin/tulpar-package', 'purge-data', 'isolated-cli'], '', db, alex)
 	assert installed.status != 0 && installed.output.contains('remove the application'), installed.output
 	assert os.exists(data + '/ran')
-	root_refused := run(['/usr/bin/vinix-package', 'purge-data', 'isolated-cli'], '', none, none)
+	root_refused := run(['/usr/bin/tulpar-package', 'purge-data', 'isolated-cli'], '', none, none)
 	assert root_refused.status != 0 && root_refused.output.contains('ordinary user session'), root_refused.output
 	state := pkgcore.Service{}.state()!
-	generation := '/var/lib/vinix-packages/generations/' + state.generation.str()
-	mut holding := os.new_process('/usr/sbin/vinix-session')
-	holding.set_args(['run', 'alex', '/usr/bin/vinix-package', 'run-args', 'isolated-cli', '--', 'hold'])
+	generation := '/var/lib/tulpar-packages/generations/' + state.generation.str()
+	mut holding := os.new_process('/usr/sbin/tulpar-session')
+	holding.set_args(['run', 'alex', '/usr/bin/tulpar-package', 'run-args', 'isolated-cli', '--', 'hold'])
 	holding.set_redirect_stdio_merged()
 	holding.run()
 	defer { if holding.is_alive() { os.write_file(data + '/finish', 'finish') or {}; holding.wait() }; holding.close() }
@@ -52,9 +52,9 @@ fn qualify_package_data_purge(mut t Test, db accountcore.Database, alex accountc
 		mut retained := package_personal_data(db, user)!
 		assert retained.rows.any(it.id == 'isolated-cli' && !it.installed)
 		retained.close()
-		busy := run(['/usr/bin/vinix-package', 'purge-data', 'isolated-cli'], '', db, user)
+		busy := run(['/usr/bin/tulpar-package', 'purge-data', 'isolated-cli'], '', db, user)
 		assert busy.status != 0 && busy.output.contains('still in use'), busy.output
-		assert os.exists(user.home + '/.local/share/vinix-apps/isolated-cli/ran')
+		assert os.exists(user.home + '/.local/share/tulpar-apps/isolated-cli/ran')
 	}
 	os.write_file(data + '/finish', 'finish')!
 	os.chown(data + '/finish', int(alex.uid), int(alex.gid))!
@@ -65,9 +65,9 @@ fn qualify_package_data_purge(mut t Test, db accountcore.Database, alex accountc
 	assert !os.exists(generation)
 	for user in [alex, sam] {
 		for _ in 0 .. 2 {
-			purged := run(['/usr/bin/vinix-package', 'purge-data', 'isolated-cli'], '', db, user)
+			purged := run(['/usr/bin/tulpar-package', 'purge-data', 'isolated-cli'], '', db, user)
 			assert purged.status == 0, purged.output
-			assert !os.exists(user.home + '/.local/share/vinix-apps/isolated-cli')
+			assert !os.exists(user.home + '/.local/share/tulpar-apps/isolated-cli')
 		}
 		mut deleted := package_personal_data(db, user)!
 		assert !deleted.rows.any(it.id == 'isolated-cli')
@@ -81,16 +81,16 @@ fn qualify_package_data_purge(mut t Test, db accountcore.Database, alex accountc
 	mut linked := package_personal_data(db, alex)!
 	assert linked.rows.any(it.id == 'isolated-cli' && it.diagnostic.contains('ordinary directory'))
 	linked.close()
-	alias := run(['/usr/bin/vinix-package', 'purge-data', 'isolated-cli'], '', db, alex)
+	alias := run(['/usr/bin/tulpar-package', 'purge-data', 'isolated-cli'], '', db, alex)
 	assert alias.status != 0 && alias.output.contains('ordinary directory'), alias.output
 	assert os.read_file(outside + '/isolated-cli/kept')! == 'outside' && os.is_link(data)
 	os.rm(data)!
-	parent := alex.home + '/.local/share/vinix-apps'
+	parent := alex.home + '/.local/share/tulpar-apps'
 	os.rename(parent, parent + '.saved')!
 	os.symlink(outside, parent)!
-	unsafe_list := run(['/usr/bin/vinix-package', '--json', 'data-list'], '', db, alex)
+	unsafe_list := run(['/usr/bin/tulpar-package', '--json', 'data-list'], '', db, alex)
 	assert unsafe_list.status != 0 && unsafe_list.output.contains('ordinary directory'), unsafe_list.output
-	ancestor := run(['/usr/bin/vinix-package', 'purge-data', 'isolated-cli'], '', db, alex)
+	ancestor := run(['/usr/bin/tulpar-package', 'purge-data', 'isolated-cli'], '', db, alex)
 	assert ancestor.status != 0 && ancestor.output.contains('ordinary directory'), ancestor.output
 	assert os.read_file(outside + '/isolated-cli/kept')! == 'outside'
 	os.rm(parent)!; os.rename(parent + '.saved', parent)!
@@ -100,7 +100,7 @@ fn qualify_package_data_purge(mut t Test, db accountcore.Database, alex accountc
 	os.write_file(data + '/nested/owned', 'owned')!
 	os.symlink(outside, data + '/nested/link')!
 	assert C.mkfifo((data + '/fifo').str, 0o600) == 0
-	nested := run(['/usr/bin/vinix-package', 'purge-data', 'isolated-cli'], '', db, alex)
+	nested := run(['/usr/bin/tulpar-package', 'purge-data', 'isolated-cli'], '', db, alex)
 	assert nested.status == 0, nested.output
 	assert !os.exists(data) && os.read_file(outside + '/isolated-cli/kept')! == 'outside'
 	// Restore the catalog installation for the existing trust/tamper checks.

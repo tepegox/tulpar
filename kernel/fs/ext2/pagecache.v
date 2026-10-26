@@ -189,7 +189,7 @@ fn (mut this EXT2Resource) advise(_handle voidptr, offset u64, length u64, advic
 	defer { this.l.release() }
 	this.filesystem.l.acquire()
 	defer { this.filesystem.l.release() }
-	mut inode := unsafe { &EXT2Inode(C.vinix_stack_alloc(sizeof(EXT2Inode))) }
+	mut inode := unsafe { &EXT2Inode(C.tulpar_stack_alloc(sizeof(EXT2Inode))) }
 	unsafe { *inode = EXT2Inode{} }
 	inode.read_entry(mut this.filesystem, u32(this.stat.ino)) or { return none }
 	size := inode.size()

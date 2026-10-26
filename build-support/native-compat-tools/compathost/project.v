@@ -6,7 +6,7 @@ import hosttest
 import policyhost
 
 fn project(source string, name string, destination string, arch string, globals bool, nofloat bool, defines []string) ! {
-	work := hosttest.work_dir('', 'vinix-compat-project-')!
+	work := hosttest.work_dir('', 'tulpar-compat-project-')!
 	defer { retire(work) }
 	hosttest.module_copy_tree(source, work + '/' + name)!
 	if name == 'winehost' {
@@ -40,8 +40,8 @@ fn security_core(tool string, destination string, arch string, defines []string)
 	project(source, module_name, destination, arch, true, true, defines)!
 	checks := match tool {
 		'mac' {
-			[['VINIX_MAC_DOMAINS', '16'], ['VINIX_MAC_TYPES', '32'], ['VINIX_MAC_LABEL_TYPES',
-				'29'], ['VINIX_MAC_ALL', '511']]
+			[['TULPAR_MAC_DOMAINS', '16'], ['TULPAR_MAC_TYPES', '32'], ['TULPAR_MAC_LABEL_TYPES',
+				'29'], ['TULPAR_MAC_ALL', '511']]
 		}
 		'sandbox' {
 			[['sizeof(struct sb_cap_data)', '12'], ['sizeof(sandboxcore__CapHeader)', '8'],
@@ -106,7 +106,7 @@ fn x11_core(tool string, destination string, arch string, no_main bool) ! {
 	if tool == 'winehost' { defines << 'x11_host_libc' }
 	project(root() + '/build-support/xorg-server/' + tool, tool, destination, arch, false, false,
 		defines)!
-	write(destination, '#define VINIX_XINPUT_V_RUNTIME 1\n' + scaffold_warnings + read(destination)!)!
+	write(destination, '#define TULPAR_XINPUT_V_RUNTIME 1\n' + scaffold_warnings + read(destination)!)!
 }
 
 fn x11_compile(args []string) !int {

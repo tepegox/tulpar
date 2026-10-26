@@ -18,7 +18,7 @@ remain the third-party runtime being tested.
 
 The shared binding resolves 40 exports from `libpython3.12.so.1.0`, including four
 descriptor/attribute/exception operations added for the macOS installer. Set
-`VINIX_CPYTHON_LIBRARY` for another compatible SDK library. C integer slots and
+`TULPAR_CPYTHON_LIBRARY` for another compatible SDK library. C integer slots and
 the method flags use `i32`; ssize_t and long-long slots use their 64-bit types.
 Owned references retire in reverse order. Tuple insertion transfers a separately
 incremented reference; sequence reads return tracked owned references. Retired
@@ -34,7 +34,7 @@ V=/path/to/qualified/v CC=/path/to/clang \
 ```
 
 `--sysroot` selects headers, CRT and compiler-support archives. `--libc` or
-`VINIX_PYTHON_MUSL` selects the already built shared musl loader. Defaults use the
+`TULPAR_PYTHON_MUSL` selects the already built shared musl loader. Defaults use the
 ARM userland SDK/staging or amd64 desktop SDK. V emits Linux C for the target;
 Clang links it with that SDK rather than V's bundled x86-only cross linker.
 `-gc none` permits SDK-created threads to enter native callbacks. The V-specific
@@ -48,7 +48,7 @@ layout, retired access and failed capsule/function creation. Each profile also
 generates and links both real guest ELFs, checks every required export in both
 staged CPython libraries as ELF data, and verifies compiler failure preserves
 an existing output. These checks execute no interpreter, SDK Python modules or
-Vinix guest. They establish build and ownership contracts; a new full guest
+Tulpar guest. They establish build and ownership contracts; a new full guest
 runtime result is still required separately.
 
 The developer-tools overlay stages the same controller. `--fcntl-only` imports

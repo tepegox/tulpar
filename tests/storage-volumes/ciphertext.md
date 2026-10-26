@@ -2,7 +2,7 @@
 
 The four `hash-volume`/`verify-volume` and recovery variants authenticate VC1/VR1
 geometry, erase every secret, then stream SHA-256 from the entire pinned physical
-extent. Private fixed `VINIXCH1` references bind exact public metadata, survive
+extent. Private fixed `TULPARCH1` references bind exact public metadata, survive
 credential changes and can be verified through either domain. They require a
 trusted reference and quiescent data writes; they provide no snapshot or
 plaintext authentication. See [the contract](../../docs/storage-volumes.md#encrypted-ciphertext-checksum-references).
@@ -11,10 +11,10 @@ plaintext authentication. See [the contract](../../docs/storage-volumes.md#encry
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
   --host-ciphertext --work /tmp/ciphertext-host
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/vinix \
+  --arch aarch64 --kernel /path/to/arm-worktree/kernel/bin/tulpar \
   --ciphertext --work /tmp/ciphertext-arm
 V=/path/to/v build-support/run-v-tool.sh tests/storage-volumes/plan_run.v \
-  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/vinix \
+  --arch amd64 --kernel /path/to/x86-worktree/kernel/bin/tulpar \
   --ciphertext --work /tmp/ciphertext-x86
 ```
 

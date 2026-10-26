@@ -118,7 +118,7 @@ fn verify_bundle(bundle_arg string, arch string, certificate string, backend str
 		invalid('configuration differs from the hash enrolled in the loader')!
 	}
 	content := method(config, 'read_text', [], {'encoding': v(ah.Value('ascii'))})!
-	kernel_match := regex('search', '^    path: boot\\(\\):/boot/vinix#([0-9a-f]{128})$', content)!
+	kernel_match := regex('search', '^    path: boot\\(\\):/boot/tulpar#([0-9a-f]{128})$', content)!
 	modules := regex('findall', '^    module_path: boot\\(\\):/boot/root-([0-9]+)\\.tar#([0-9a-f]{128})$', content)!
 	cmdline_match := regex('search', '^    cmdline: (.*)$', content)!
 	dtb := regex('search', '^    dtb_path: boot\\(\\):/boot/platform\\.dtb#([0-9a-f]{128})$', content)!
@@ -160,7 +160,7 @@ fn verify_bundle(bundle_arg string, arch string, certificate string, backend str
 	expected := call('config_text', o(index(kernel_match, 1)!), o(module_hashes), o(index(cmdline_match, 1)!), o(dtb_hash), o(root_token))!
 	if compare('ne', content, expected)! { invalid('unexpected configuration directive or command line')! }
 	hashes := dictionary()!
-	set_item(hashes, v(ah.Value('boot/vinix')), o(index(kernel_match, 1)!))!
+	set_item(hashes, v(ah.Value('boot/tulpar')), o(index(kernel_match, 1)!))!
 	additions := dictionary()!
 	hash_entries := iterator(modules)!
 	for {
@@ -181,7 +181,7 @@ fn verify_bundle(bundle_arg string, arch string, certificate string, backend str
 	expected_files := collection('set', expected_values)!
 	if truth(root_token)! { method(expected_files, 'add', [v(ah.Value('boot/verity-root.img'))], {})! }
 	if compare('ne', files, expected_files)! { invalid('bundle contains missing or unexpected boot files')! }
-	call('check_kernel', o(join(bundle, 'boot/vinix')!), o(arch))!
+	call('check_kernel', o(join(bundle, 'boot/tulpar')!), o(arch))!
 	artifacts := iterator(method(hashes, 'items', [], {})!)!
 	for {
 		artifact := next(artifacts)!

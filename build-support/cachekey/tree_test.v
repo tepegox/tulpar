@@ -17,7 +17,7 @@ mut:
 fn C.utime(&char, &C.utimbuf) i32
 
 fn temporary_tree(label string) string {
-	mut pattern := (os.temp_dir().trim_right('/') + '/vinix-cache-' + label + '-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir().trim_right('/') + '/tulpar-cache-' + label + '-XXXXXX\x00').bytes()
 	if isnil(C.mkdtemp(pattern.data)) { panic(file_error(pattern.bytestr())) }
 	return pattern[..pattern.len - 1].bytestr()
 }

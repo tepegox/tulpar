@@ -13,9 +13,9 @@ import x86.msr
 
 #include "linuxkpi_cpu_bug_fixture_v_primitives.h"
 
-fn C.vinix_linuxkpi_cpu_bug_fixture_l1tf() bool
-fn C.vinix_linuxkpi_cpu_bug_fixture_bit() u32
-fn C.vinix_linuxkpi_cpu_bug_fixture_sleep(i64) i64
+fn C.tulpar_linuxkpi_cpu_bug_fixture_l1tf() bool
+fn C.tulpar_linuxkpi_cpu_bug_fixture_bit() u32
+fn C.tulpar_linuxkpi_cpu_bug_fixture_sleep(i64) i64
 
 // Fixed boot-lifetime publication and observer records. The retained actor
 // pointers are forgotten only after the join helper observes off-stack exit.
@@ -42,7 +42,7 @@ fn cpu_bug_test_fail(bit u32) {
 
 fn cpu_bug_test_query_batch(expected bool, count u32) bool {
 	for _ in u32(0) .. count {
-		if C.vinix_linuxkpi_cpu_bug_fixture_l1tf() != expected { return false }
+		if C.tulpar_linuxkpi_cpu_bug_fixture_l1tf() != expected { return false }
 	}
 	return true
 }
@@ -98,12 +98,12 @@ fn cpu_bug_test_actor(argument voidptr) {
 	if !katomic.load(&cpu_bug_test_ledger.quit) {
 		expected := boot_l1tf_sample == 2
 		for cycle in 0 .. 10000 {
-			if C.vinix_linuxkpi_cpu_bug_fixture_l1tf() != expected || !cpu.interrupt_state() {
+			if C.tulpar_linuxkpi_cpu_bug_fixture_l1tf() != expected || !cpu.interrupt_state() {
 				cpu_bug_test_fail(8)
 			}
 			if cycle == 5000 {
 				katomic.store(mut &cpu_bug_test_ledger.sleep_started[index], true)
-				if C.vinix_linuxkpi_cpu_bug_fixture_sleep(100) != 0
+				if C.tulpar_linuxkpi_cpu_bug_fixture_sleep(100) != 0
 					|| !cpu_bug_test_local(index + 1) {
 					cpu_bug_test_fail(16)
 				}
@@ -137,7 +137,7 @@ fn cpu_bug_test_wait_done() bool {
 		for i in 0 .. 3 {
 			actor := unsafe { &proc.Thread(cpu_bug_test_ledger.owners[i]) }
 			if katomic.load(&cpu_bug_test_ledger.sleep_started[i])
-				&& C.vinix_linuxkpi_dmafence_fixture_task_state(unsafe { &actor.linuxkpi_task[0] }) == 2
+				&& C.tulpar_linuxkpi_dmafence_fixture_task_state(unsafe { &actor.linuxkpi_task[0] }) == 2
 				&& !katomic.load(&actor.is_in_queue) && katomic.load(&actor.running_on) == u64(-1)
 				&& !katomic.load(&actor.is_in_queue) {
 				cpu_bug_test_ledger.park_seen[i] = true
@@ -224,7 +224,7 @@ fn cpu_bug_test_witness() bool {
 		arch_caps_read = true
 	}
 	sample := cpu.linuxkpi_sample_l1tf()
-	query := C.vinix_linuxkpi_cpu_bug_fixture_l1tf()
+	query := C.tulpar_linuxkpi_cpu_bug_fixture_l1tf()
 	if !available || max_leaf < 1 || !leaf1_available || cpulocal.current().cpu_number != 0
 		|| sample != boot_l1tf_sample || query != (sample == 2) { return false }
 	C.kprintf(c'linuxkpi: native L1TF BSP witness vendor_b=%08x vendor_d=%08x vendor_c=%08x signature=%08x leaf7_edx=%08x arch_caps_read=%u arch_caps=%llu sample=%u query=%u cpus=%u\n',
@@ -235,7 +235,7 @@ fn cpu_bug_test_witness() bool {
 
 fn cpu_bugs_native_selftest() bool {
 	if cpu_locals.len < 4 || cpu_locals.len > 64 || katomic.load(&boot_bug_ready) != 1
-		|| boot_bug_count != u32(cpu_locals.len) || C.vinix_linuxkpi_cpu_bug_fixture_bit() != 722
+		|| boot_bug_count != u32(cpu_locals.len) || C.tulpar_linuxkpi_cpu_bug_fixture_bit() != 722
 		|| boot_l1tf_sample != cpu_locals[0].linuxkpi_l1tf_sample { return false }
 	for i in 0 .. cpu_locals.len {
 		local := cpu_locals[i]

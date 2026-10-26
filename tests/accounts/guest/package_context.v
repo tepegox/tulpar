@@ -44,7 +44,7 @@ fn context_package(id string, version string, runtime string) pkgcore.Package {
 }
 
 fn assert_package_context(id string, architecture string) ! {
-	state := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
+	state := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
 	installed := state.packages.filter(it.package.id == id)[0]
 	mut context := json2.decode[appsdk.Context](package_success(['run', id])!)!
 	defer { context.close() }
@@ -52,7 +52,7 @@ fn assert_package_context(id string, architecture string) ! {
 	assert context.id == id && context.version == installed.package.version && context.generation == state.generation
 	assert context.repository == installed.repository && context.public_key == installed.public_key && context.sequence == installed.sequence
 	assert context.architecture == architecture && context.permissions == installed.package.permissions
-	assert context.data_directory == '/home/alex/.local/share/vinix-apps/' + id
+	assert context.data_directory == '/home/alex/.local/share/tulpar-apps/' + id
 	if context.runtime_id != '' {
 		assert context.runtime_id == installed.package.runtime
 		assert context.runtime_version == state.packages.filter(it.package.id == context.runtime_id)[0].package.version
@@ -80,29 +80,29 @@ fn qualify_package_context(mut t Test) ! {
 	os.chmod('/tmp/hello-source/bin/package-hello', 0o755)!
 	pkgcore.pack('/usr/share/context-fixtures/manifest.json', '/tmp/hello-source', '/tmp/context-repository')!
 	pkgcore.publish('/tmp/context-repository', 'context-fixture', '/tmp/package-publisher/context-seed', 1, time.now().unix() + 3600)!
-	os.mkdir_all('/etc/vinix-packages')!
-	os.write_file('/etc/vinix-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'alex',
+	os.mkdir_all('/etc/tulpar-packages')!
+	os.write_file('/etc/tulpar-packages/config.json', json2.encode(pkgcore.Config{ architecture: architecture, launch_user: 'alex',
 		policy: pkgcore.Policy{ offline: true, reserve_bytes: 0 } }))!
-	os.chmod('/etc/vinix-packages/config.json', 0o644)!
+	os.chmod('/etc/tulpar-packages/config.json', 0o644)!
 	package_success(['--offline', 'repo-enroll', 'context-fixture', 'file:///tmp/context-repository', key])!
 	package_success(['--offline', 'update'])!
-	apps := ['sdk-native', 'sdk-leased', 'org.vinix.package-hello']
+	apps := ['sdk-native', 'sdk-leased', 'org.tulpar.package-hello']
 	reviewed_package_operation('install', apps)!
-	os.setenv('VINIX_APP_ID', 'ambient-forgery', true)
-	os.setenv('VINIX_APP_GENERATION', '999', true)
+	os.setenv('TULPAR_APP_ID', 'ambient-forgery', true)
+	os.setenv('TULPAR_APP_GENERATION', '999', true)
 	assert_package_context('sdk-native', architecture)!
 	assert_package_context('sdk-leased', architecture)!
 	document := '/home/alex/a space; $literal.txt'
 	os.write_file(document, 'SDK sample document\n')!; os.chown(document, 1000, 1000)!; os.chmod(document, 0o600)!
-	hello := package_success(['run', 'org.vinix.package-hello', document])!
-	assert hello.contains('Application: org.vinix.package-hello 1.0.0') && hello.contains('SDK sample document'), hello
-	denied := run(['/usr/bin/vinix-package', 'run-args', 'org.vinix.package-hello', '--', document], '', none, none)
+	hello := package_success(['run', 'org.tulpar.package-hello', document])!
+	assert hello.contains('Application: org.tulpar.package-hello 1.0.0') && hello.contains('SDK sample document'), hello
+	denied := run(['/usr/bin/tulpar-package', 'run-args', 'org.tulpar.package-hello', '--', document], '', none, none)
 	assert denied.status != 0 && denied.output.contains('Cannot read supplied document'), denied.output
 	t.say('PACKAGE CONTEXT native-sdk-example ordinary-identity explicit-document-grants installed-provenance ambient-forgery-refusal PASS')
-	initial := pkgcore.read_state('/var/lib/vinix-packages', architecture)!
-	leased := '/var/lib/vinix-packages/generations/' + initial.generation.str()
-	data := '/home/alex/.local/share/vinix-apps/sdk-leased'
-	mut holding := os.new_process('/usr/bin/vinix-package')
+	initial := pkgcore.read_state('/var/lib/tulpar-packages', architecture)!
+	leased := '/var/lib/tulpar-packages/generations/' + initial.generation.str()
+	data := '/home/alex/.local/share/tulpar-apps/sdk-leased'
+	mut holding := os.new_process('/usr/bin/tulpar-package')
 	holding.set_args(['run-args', 'sdk-leased', '--', 'hold'])
 	holding.set_redirect_stdio_merged(); holding.run()
 	defer { if holding.is_alive() { holding.signal_kill(); holding.wait() }; holding.close() }
@@ -136,7 +136,7 @@ fn qualify_package_context(mut t Test) ! {
 	assert holding.code == 37 && output.contains('PACKAGE CONTEXT running snapshot'), output
 	assert os.read_file(data + '/result')! == before && os.stat(data + '/result')!.uid == 1000
 	package_success(['gc'])!
-	assert !os.exists(leased) && pkgcore.read_state('/var/lib/vinix-packages', architecture)!.packages.len == 0
+	assert !os.exists(leased) && pkgcore.read_state('/var/lib/tulpar-packages', architecture)!.packages.len == 0
 	t.say('PACKAGE CONTEXT new-launch-upgrade rollback old-snapshot-reload leased-runtime-uninstall-gc retained-user-data PASS')
 }
 

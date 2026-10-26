@@ -7,14 +7,14 @@ import hosttest
 import os
 
 pub fn securelevel_cases() []string {
-	return ['', 'vinix.securelevel=-1', 'vinix.securelevel=0', 'vinix.securelevel=1',
-		'vinix.securelevel=2', 'vinix.securelevel=invalid', 'vinix.securelevel=1 vinix.securelevel=2',
-		'vinix.securelevel']
+	return ['', 'tulpar.securelevel=-1', 'tulpar.securelevel=0', 'tulpar.securelevel=1',
+		'tulpar.securelevel=2', 'tulpar.securelevel=invalid', 'tulpar.securelevel=1 tulpar.securelevel=2',
+		'tulpar.securelevel']
 }
 
 pub fn securelevel_verdict(text string, status int, valid bool) bool {
 	if valid { return status == 0 && text.contains('SECURELEVEL ALL PASS') }
-	return status == 0 && text.contains('security: invalid or duplicate vinix.securelevel boot policy')
+	return status == 0 && text.contains('security: invalid or duplicate tulpar.securelevel boot policy')
 		&& text.contains('KERNEL PANIC') && !text.contains('SECURELEVEL BOOT TEST ENTERED')
 }
 
@@ -27,29 +27,29 @@ fn securelevel(args []string) !int {
 	], [], 'Usage: run --arch aarch64|x86_64 [--kernel-dir DIR] [--state-dir DIR] [--build-only]')!
 	required(options, ['--arch'])!
 	arch := options.value('--arch', '')
-	state := state_dir(options, 'vinix-securelevel-boots-')!
+	state := state_dir(options, 'tulpar-securelevel-boots-')!
 	defer { private_cleanup(state, options) }
 	kernel := snapshot(state, kernel_source(options, arch), arch)!
-	previous := os.getenv_opt('VINIX_CMDLINE')
+	previous := os.getenv_opt('TULPAR_CMDLINE')
 	defer { if value := previous {
-		os.setenv('VINIX_CMDLINE', value, true)
+		os.setenv('TULPAR_CMDLINE', value, true)
 	} else {
-		os.unsetenv('VINIX_CMDLINE')
+		os.unsetenv('TULPAR_CMDLINE')
 	} }
 	for index, policy in securelevel_cases() {
 		target := state + '/' + index.str()
 		diskhost.mkdir(target)!
-		os.setenv('VINIX_CMDLINE', policy, true)
+		os.setenv('TULPAR_CMDLINE', policy, true)
 		valid := index < 5
 		expected := if valid {
 			'SECURELEVEL ALL PASS'
 		} else {
-			'security: invalid or duplicate vinix.securelevel boot policy'
+			'security: invalid or duplicate tulpar.securelevel boot policy'
 		}
 		init := guesthost.compile_init(root() + '/tests/securelevel-boot/guest.c', target, arch, false)!
 		archive := archive_root(init, target, ['sbin', 'dev', 'proc', 'sys', 'tmp', 'root'])!
 		configured := guesthost.launch(init, archive, target, kernel, arch, false)!
-		if arch == 'aarch64' { arm_config(target, root(), 'vinix.qemu_platform=1 ' + policy)! }
+		if arch == 'aarch64' { arm_config(target, root(), 'tulpar.qemu_platform=1 ' + policy)! }
 		receipt(target, configured, kernel, init, archive, 240)!
 		if options.has('--build-only') { continue }
 		println('Boot ' + index.str() + ': ' + if policy == '' { 'default' } else { policy })
@@ -80,7 +80,7 @@ fn securelevel(args []string) !int {
 fn securelevel_ext2(args []string) !int {
 	options := parse(args, [hosttest.Option{ name: '--kernel-dir', value: true },
 		hosttest.Option{ name: '--state-dir', value: true }, hosttest.Option{ name: '--build-only' }], [], 'Usage: persistent [--kernel-dir DIR] [--state-dir DIR] [--build-only]')!
-	state := state_dir(options, 'vinix-securelevel-ext2-')!
+	state := state_dir(options, 'tulpar-securelevel-ext2-')!
 	defer { private_cleanup(state, options) }
 	if os.exists(state + '/root.ext2') || os.is_link(state + '/root.ext2') {
 		return argument('Use a fresh state directory for the ext2 checks')
@@ -92,12 +92,12 @@ fn securelevel_ext2(args []string) !int {
 	run([...compile, '-pthread', '-fno-stack-protector', '-DTEST_DIR="/root"', '-DSECURELEVEL_EXT2',
 		root() + '/tests/securelevel-boot/guest.c', state + '/serial.o', '-o', init])!
 	archive := archive_root('', state, ['root', 'sbin', 'tmp'])!
-	previous := os.getenv_opt('VINIX_CMDLINE')
-	os.setenv('VINIX_CMDLINE', 'vinix.securelevel=1', true)
+	previous := os.getenv_opt('TULPAR_CMDLINE')
+	os.setenv('TULPAR_CMDLINE', 'tulpar.securelevel=1', true)
 	defer { if value := previous {
-		os.setenv('VINIX_CMDLINE', value, true)
+		os.setenv('TULPAR_CMDLINE', value, true)
 	} else {
-		os.unsetenv('VINIX_CMDLINE')
+		os.unsetenv('TULPAR_CMDLINE')
 	} }
 	configured := guesthost.serial_arm_launch(init, archive, state, kernel, root(), 1024, '')!
 	receipt(state, configured, kernel, init, archive, 240)!

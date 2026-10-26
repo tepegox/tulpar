@@ -4,7 +4,7 @@
 // What the device core did about PCI power states in the sleeps so far
 // (devcore/pci_power.v), as /sys says it:
 //
-//	/sys/power/pci_d3    "on" or "off" (vinix.pci_d3=off), then
+//	/sys/power/pci_d3    "on" or "off" (tulpar.pci_d3=off), then
 //	                     last:      functions the last sleep put into D3hot
 //	                     total:     and all sleeps together
 //	                     refused:   functions that would not go

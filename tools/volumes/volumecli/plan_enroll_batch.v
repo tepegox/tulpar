@@ -111,7 +111,7 @@ fn enroll_batch_bundle_plan(path &char, count int, sources &&char, preview bool)
 	if !open_plan_edit(path, mut edit, !preview) || !read_bundle(edit.source, mut set, false) { return 1 }
 	for i in 0 .. count {
 		fd := C.open(unsafe { sources[i] }, C.O_RDONLY | C.O_CLOEXEC | C.O_NOFOLLOW | C.O_NONBLOCK)
-		if fd < 0 { C.perror(c'vinix-volume: open enrollment batch plan'); return 1 }
+		if fd < 0 { C.perror(c'tulpar-volume: open enrollment batch plan'); return 1 }
 		fds[i] = fd; opened++
 		if !read_plan(fd, mut batch.plans[i], false) { return 1 }
 	}

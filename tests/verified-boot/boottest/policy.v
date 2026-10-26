@@ -63,7 +63,7 @@ fn bundle_statements(mut f Frame, self string, temporary string) ! {
 		build(constant('boot.build_bundle')!, args)!
 	})!
 	f.clean()!
-	for filename in ['boot/vinix', 'boot/root-0.tar', 'boot/root-1.tar', 'boot/limine.conf'] {
+	for filename in ['boot/tulpar', 'boot/root-0.tar', 'boot/root-1.tar', 'boot/limine.conf'] {
 		f.named('filename', literal(ah.Value(filename))!)!
 		path := f.named('path', join(output, filename)!)!
 		original := f.named('original', read(path)!)!

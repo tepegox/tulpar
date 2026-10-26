@@ -34,7 +34,7 @@ pub fn release_requirement_at(root string, owner u32, architecture string, id st
 	if directory < 0 { return error('release root unavailable') }
 	defer { C.close(directory) }
 	release_trusted(directory, owner, true)!
-	for part in ['usr', 'share', 'vinix-packages']! {
+	for part in ['usr', 'share', 'tulpar-packages']! {
 		next := C.openat(directory, &char(part.str), C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC, 0)
 		if next < 0 {
 			if C.errno == C.ENOENT { return false }
@@ -64,8 +64,8 @@ pub fn release_requirement_at(root string, owner u32, architecture string, id st
 	if C.read(fd, &sentinel, 1) != 0 { return error('release declaration changed while reading') }
 	after := release_trusted(fd, owner, false)!
 	if before.st_dev != after.st_dev || before.st_ino != after.st_ino || before.st_size != after.st_size
-		|| C.vinix_workflow_mtime_ns(unsafe { &before }) != C.vinix_workflow_mtime_ns(unsafe { &after })
-		|| C.vinix_workflow_ctime_ns(unsafe { &before }) != C.vinix_workflow_ctime_ns(unsafe { &after })
+		|| C.tulpar_workflow_mtime_ns(unsafe { &before }) != C.tulpar_workflow_mtime_ns(unsafe { &after })
+		|| C.tulpar_workflow_ctime_ns(unsafe { &before }) != C.tulpar_workflow_ctime_ns(unsafe { &after })
 		|| before.st_mtime != after.st_mtime || before.st_ctime != after.st_ctime {
 		return error('release declaration changed while reading')
 	}

@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_ELF_TEXT_NATIVE_ABI_H
-#define VINIX_ELF_TEXT_NATIVE_ABI_H
+#ifndef TULPAR_ELF_TEXT_NATIVE_ABI_H
+#define TULPAR_ELF_TEXT_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

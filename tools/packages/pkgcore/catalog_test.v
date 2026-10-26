@@ -6,7 +6,7 @@ import os
 import time
 
 fn catalog_fixture() !(string, CatalogRecipe) {
-	work := os.real_path(os.temp_dir()) + '/vinix-catalog-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	work := os.real_path(os.temp_dir()) + '/tulpar-catalog-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	os.mkdir_all(work + '/roots/shared')!
 	os.write_file(work + '/roots/shared/COPYING', 'shared license document')!
 	mut items := []CatalogImport{}
@@ -53,7 +53,7 @@ fn catalog_refusal(work string, destination string, diagnostic string) {
 	assert refused && !os.exists(work + '/' + destination), diagnostic
 	names := os.ls(work) or { panic(err) }
 	defer { unsafe { names.free() } }
-	assert names.all(!it.starts_with('.vinix-catalog-'))
+	assert names.all(!it.starts_with('.tulpar-catalog-'))
 }
 
 fn test_catalog_pinned_import_reproducible_release_and_offline_install_on_both_targets() {
@@ -193,12 +193,12 @@ fn test_catalog_space_integrity_and_destination_races_leave_no_visible_partial_w
 			refused = err.msg().contains('insufficient disk space') || err.msg().contains('object changed')
 		}
 		assert refused && !os.exists(work + '/failed')
-		assert os.ls(work)!.all(!it.starts_with('.vinix-catalog-'))
+		assert os.ls(work)!.all(!it.starts_with('.tulpar-catalog-'))
 	}
 	mut refused := false
 	catalog_build(work + '/catalog.json', work + '/roots', work + '/raced', CatalogOptions{ checkpoint: catalog_race_ready }) or { refused = true }
 	assert refused && os.is_dir(work + '/raced') && os.ls(work + '/raced')!.len == 0
-	assert os.ls(work)!.all(!it.starts_with('.vinix-catalog-'))
+	assert os.ls(work)!.all(!it.starts_with('.tulpar-catalog-'))
 }
 
 fn test_catalog_requires_explicit_pins_and_license_flags_and_refuses_unknown_duplicate_escaped_keys() {

@@ -1,6 +1,6 @@
 # Native release applications at first login
 
-When `/usr/share/vinix-packages/applications.json` is an ordinary file, a new
+When `/usr/share/tulpar-packages/applications.json` is an ordinary file, a new
 ordinary account is offered **Review release applications** and **Skip for now**
 before its first desktop session becomes ready. This does not depend on legacy
 registration or `/usr/bin/pkg`. Images without the declaration retain the legacy
@@ -14,7 +14,7 @@ removal proposal, explicit Confirm, and separate administrator approval. It adds
 no publisher trust or automatic package operation. Starting a search while the
 catalog loads retires the queued handoff instead of replacing the user's input.
 
-A successful choice writes the private per-home `.vinix-first-run-release` record
+A successful choice writes the private per-home `.tulpar-first-run-release` record
 as exactly `review\n` or `skip\n`, then consumes any legacy pending marker. Both
 choices are durable and do not repeat at the next login. Failure to save leaves
 the choice open. Reads refuse symlinks, nonregular and oversized records; writes

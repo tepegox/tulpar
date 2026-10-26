@@ -23,8 +23,8 @@ use status 2. Interspersed options, `--mode=...`, unambiguous long-option prefix
 repeated options, `--help` and `--` are supported.
 
 Run `v -nocache -cc cc test tests/process-churn/churncheck` for policy fixtures.
-Compile `check-results.v` separately and set `VINIX_CHURN_CHECK_TOOL` to that
-binary to include CLI tests. `VINIX_CHURN_FIXTURE_DIR` optionally saves the seven
+Compile `check-results.v` separately and set `TULPAR_CHURN_CHECK_TOOL` to that
+binary to include CLI tests. `TULPAR_CHURN_FIXTURE_DIR` optionally saves the seven
 qualified input/output fixtures for cold-launcher checks. The shared launcher
 keeps compiler messages on stderr and removes its private temporary executable.
 There is no Package Session dependency or Python callback API in this command.

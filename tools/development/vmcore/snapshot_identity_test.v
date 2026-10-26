@@ -65,7 +65,7 @@ fn test_numeric_snapshot_names_restore_the_matching_disk_and_firmware() {
 		return
 	}
 	io_tool := os.find_abs_path_of_executable('qemu-io')!
-	root := '/tmp/vinix-vm-snapshot-identity-${os.getpid()}'
+	root := '/tmp/tulpar-vm-snapshot-identity-${os.getpid()}'
 	state := snapshot_test_state(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	snapshot('snapshot-create', state, 'anchor')!
@@ -100,7 +100,7 @@ fn test_missing_or_duplicate_snapshot_names_refuse_before_changing_disk_or_varia
 		println('SKIP: snapshot identity requires qemu-img')
 		return
 	}
-	root := '/tmp/vinix-vm-snapshot-refusal-${os.getpid()}'
+	root := '/tmp/tulpar-vm-snapshot-refusal-${os.getpid()}'
 	state := snapshot_test_state(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	snapshot('snapshot-create', state, 'anchor')!
@@ -144,7 +144,7 @@ fn test_snapshot_creation_refuses_an_existing_backend_name_without_sidecars() {
 		println('SKIP: snapshot creation identity requires qemu-img')
 		return
 	}
-	root := '/tmp/vinix-vm-snapshot-create-${os.getpid()}'
+	root := '/tmp/tulpar-vm-snapshot-create-${os.getpid()}'
 	state := snapshot_test_state(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	snapshot_test_command([image_tool, 'snapshot', '-c', 'orphan', state + '/disk.qcow2'])!
@@ -166,7 +166,7 @@ fn test_snapshot_deletion_refuses_an_ambiguous_backend_name() {
 		println('SKIP: snapshot deletion identity requires qemu-img')
 		return
 	}
-	root := '/tmp/vinix-vm-snapshot-delete-${os.getpid()}'
+	root := '/tmp/tulpar-vm-snapshot-delete-${os.getpid()}'
 	state := snapshot_test_state(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	snapshot('snapshot-create', state, 'duplicate')!
@@ -191,7 +191,7 @@ fn test_recreated_backend_snapshot_with_recycled_id_refuses_stale_sidecars() {
 		return
 	}
 	io_tool := os.find_abs_path_of_executable('qemu-io')!
-	root := '/tmp/vinix-vm-snapshot-binding-${os.getpid()}'
+	root := '/tmp/tulpar-vm-snapshot-binding-${os.getpid()}'
 	state := snapshot_test_state(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	snapshot('snapshot-create', state, 'paired')!
@@ -231,7 +231,7 @@ fn test_legacy_snapshot_receipts_still_restore_an_exact_name() {
 		println('SKIP: legacy snapshot identity requires qemu-img')
 		return
 	}
-	root := '/tmp/vinix-vm-snapshot-legacy-${os.getpid()}'
+	root := '/tmp/tulpar-vm-snapshot-legacy-${os.getpid()}'
 	state := snapshot_test_state(root, image_tool)!
 	defer { os.rmdir_all(root) or {} }
 	snapshot('snapshot-create', state, 'legacy')!

@@ -13,16 +13,16 @@ const cheap = accountcore.Cost{
 }
 
 fn scratch() string {
-	return os.join_path(os.temp_dir(), 'vinix-authcore-${os.getpid()}')
+	return os.join_path(os.temp_dir(), 'tulpar-authcore-${os.getpid()}')
 }
 
 // The test's clock: what the test last put in the environment.
 fn clock_of_test() i64 {
-	return os.getenv('VINIX_TEST_NOW').i64()
+	return os.getenv('TULPAR_TEST_NOW').i64()
 }
 
 fn set_now(now i64) {
-	os.setenv('VINIX_TEST_NOW', now.str(), true)
+	os.setenv('TULPAR_TEST_NOW', now.str(), true)
 }
 
 // Stands in for starting a program: writes down what would have run.
@@ -71,10 +71,10 @@ fn new_world() !World {
 	db.add_user(name: 'sam', hash: accountcore.hash_password('sam password'.bytes(), cheap)!)!
 	store.save(db)!
 	for name, text in {
-		'restart':          'description = Restart the computer\nauth = session\nexec = /usr/sbin/vinix-system\narg = power\narg = restart\n'
-		'account-password': 'description = Change a password\nauth = admin\nexec = /usr/sbin/vinix-account\narg = passwd\nparam = name\ninput = secret\n'
+		'restart':          'description = Restart the computer\nauth = session\nexec = /usr/sbin/tulpar-system\narg = power\narg = restart\n'
+		'account-password': 'description = Change a password\nauth = admin\nexec = /usr/sbin/tulpar-account\narg = passwd\nparam = name\ninput = secret\n'
 		'own-thing':        'description = Something of one\'s own\nauth = self\nexec = /bin/true\n'
-		'own-launch':       'description = Launch as the caller\nauth = account\nexec = /usr/sbin/vinix-session\narg = package-launch\ninput = secret\n'
+		'own-launch':       'description = Launch as the caller\nauth = account\nexec = /usr/sbin/tulpar-session\narg = package-launch\ninput = secret\n'
 		'profile':          'description = Power profile\nauth = admin\nexec = /bin/true\nparam = choice:fast,quiet\nparam = number\n'
 		'fails':            'description = Fails\nauth = admin\nexec = /bin/false\n'
 		'broken':           'description = Broken\nauth = admin\nexec = /bin/true\nshell = yes\n'
@@ -126,9 +126,9 @@ fn ask(w World, peer Peer, code u16, fields ...string) authproto.Frame {
 }
 
 fn test_action_files() ! {
-	action := parse_action('account-add', '# add someone\ndescription = Add an account\nauth = admin\nexec = /usr/sbin/vinix-account\narg = add\narg = --password-stdin\nparam = name\nparam = text\nparam = choice:admin,standard\ninput = secret\n')!
+	action := parse_action('account-add', '# add someone\ndescription = Add an account\nauth = admin\nexec = /usr/sbin/tulpar-account\narg = add\narg = --password-stdin\nparam = name\nparam = text\nparam = choice:admin,standard\ninput = secret\n')!
 	assert action.auth == .admin && action.input && action.params.len == 3
-	assert action.arguments(['sam', 'Sam Smith', 'standard'])! == ['/usr/sbin/vinix-account', 'add',
+	assert action.arguments(['sam', 'Sam Smith', 'standard'])! == ['/usr/sbin/tulpar-account', 'add',
 		'--password-stdin', 'sam', 'Sam Smith', 'standard']
 	for bad in [
 		['sam', 'Sam'], // too few
@@ -186,7 +186,7 @@ fn test_account_action_needs_only_a_known_ordinary_peer() ! {
 		description := ask(w, peer, authproto.op_describe, 'own-launch')
 		assert description.code == authproto.status_ok && description.text(1) == '1' && description.text(2) == '0'
 		assert ask(w, peer, authproto.op_run, 'own-launch', '', 'nonce').code == authproto.status_ok
-		assert ran().contains('|${peer.uid}|/usr/sbin/vinix-session package-launch|nonce')
+		assert ran().contains('|${peer.uid}|/usr/sbin/tulpar-session package-launch|nonce')
 	}
 	for peer in [w.greet, Peer{ uid: 4242 }] {
 		assert ask(w, peer, authproto.op_run, 'own-launch', '', 'nonce').code == authproto.status_denied
@@ -288,7 +288,7 @@ fn test_run_rules() ! {
 	done := ask(w, w.alex, authproto.op_run, 'account-password', 'alex password', 'new secret',
 		'sam')
 	assert done.code == authproto.status_ok && done.text(0) == '0' && done.text(1) == 'done'
-	assert ran() == 'alex|1000|/usr/sbin/vinix-account passwd sam|new secret'
+	assert ran() == 'alex|1000|/usr/sbin/tulpar-account passwd sam|new secret'
 	assert ask(w, w.alex, authproto.op_run, 'account-password', 'wrong', 'x', 'sam').code == authproto.status_denied
 	assert ran() == ''
 	// Someone who is not one: no password makes it allowed, their own
@@ -317,7 +317,7 @@ fn test_session_rule() ! {
 	os.write_file(w.env.session, '1001\n')!
 	os.chmod(w.env.session, 0o644)!
 	assert ask(w, w.sam, authproto.op_run, 'restart', '', '').code == authproto.status_ok
-	assert ran() == 'sam|1001|/usr/sbin/vinix-system power restart|'
+	assert ran() == 'sam|1001|/usr/sbin/tulpar-system power restart|'
 	described := ask(w, w.sam, authproto.op_describe, 'restart')
 	assert described.text(0) == 'Restart the computer' && described.text(1) == '1'
 		&& described.text(2) == '0'

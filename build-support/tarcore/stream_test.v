@@ -8,7 +8,7 @@ import os
 fn C.mkstemp(&u8) i32
 
 fn test_stream_write_visibility_close_and_failure() {
-	mut pattern := (os.temp_dir() + '/vinix-tar-write-XXXXXX\x00').bytes()
+	mut pattern := (os.temp_dir() + '/tulpar-tar-write-XXXXXX\x00').bytes()
 	fd := unsafe { C.mkstemp(pattern.data) }
 	assert fd >= 0
 	C.close(fd)

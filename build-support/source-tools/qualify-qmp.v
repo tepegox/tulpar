@@ -28,7 +28,7 @@ fn qualify() ! {
 	os.mkdir(work+'/tmp')!
 	root:=os.real_path(os.dir(@FILE)+'/../..')
 	mut env:=os.environ()
-	for key,value in {'V':compiler,'VINIX_V_COMPILER':compiler,'VTMP':work+'/tmp','TMPDIR':work+'/tmp',
+	for key,value in {'V':compiler,'TULPAR_V_COMPILER':compiler,'VTMP':work+'/tmp','TMPDIR':work+'/tmp',
 		'V_C_ERROR_BUG_REPORT_DISABLED':'1','V_MACOS_V3_NO_FALLBACK':'1',
 		'ASAN_OPTIONS':'detect_leaks=0:detect_stack_use_after_return=1:abort_on_error=1','UBSAN_OPTIONS':'halt_on_error=1:print_stacktrace=1'} {env[key]=value}
 	mut flags:=[]string{}
@@ -63,7 +63,7 @@ fn qualify() ! {
 	wrapper:=work+'/v-compiler'
 	os.write_file(wrapper,'#!/bin/sh\nexec /usr/bin/env -u CFLAGS -u LDFLAGS "'+compiler+'" -nocache -cc /usr/bin/clang '+wrapper_flags+'"$@"\n')!
 	os.chmod(wrapper,0o755)!
-	env['V']=wrapper;env['VINIX_V_COMPILER']=wrapper
+	env['V']=wrapper;env['TULPAR_V_COMPILER']=wrapper
 	checked([work+'/main','install-qmp',work+'/installed-qmp'],env,work+'/install.log')!
 	checked([work+'/check',work+'/installed-qmp',work+'/trim',work+'/installed-fixtures'],env,work+'/installed-check.log')!
 	os.write_file(work+'/preserved-qmp','old QMP output')!
@@ -72,7 +72,7 @@ fn qualify() ! {
 	assert failed.status!=0 && os.read_file(work+'/preserved-qmp')! == 'old QMP output'
 	// Each host architecture builds the static guest tool from ordinary Linux
 	// V C generation; the existing musl SDK supplies compiler/runtime objects.
-	env['V']=compiler;env['VINIX_V_COMPILER']=compiler
+	env['V']=compiler;env['TULPAR_V_COMPILER']=compiler
 	env['CC']='/opt/homebrew/opt/llvm/bin/clang'
 	checked([work+'/stage',work+'/guest/trim-cmake'],env,work+'/guest-build.log')!
 	checked(['/opt/homebrew/opt/llvm/bin/llvm-readelf','-h','-l',work+'/guest/trim-cmake'],env,work+'/guest-elf.log')!

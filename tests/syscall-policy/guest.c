@@ -13,7 +13,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#define PR_VINIX_SYSCALL_POLICY 0x56490002
+#define PR_TULPAR_SYSCALL_POLICY 0x56490002
 #if defined(__aarch64__)
 #define SYS_mimmutable 247
 #define SYS_pledge 248
@@ -42,7 +42,7 @@ static void check(int ok, const char *name) {
     failures += !ok;
 }
 static long policy(int action, const struct request *input) {
-    return prctl(PR_VINIX_SYSCALL_POLICY, action, (unsigned long)input, 0L, 0L);
+    return prctl(PR_TULPAR_SYSCALL_POLICY, action, (unsigned long)input, 0L, 0L);
 }
 static long invoke(int number, long a, long b, long c, long d, long e, long f) {
     for (int i = 0; i < pin_count; ++i)
@@ -51,7 +51,7 @@ static long invoke(int number, long a, long b, long c, long d, long e, long f) {
     return -ENOSYS;
 }
 static long pinned_policy(int action, const struct request *input) {
-    return invoke(SYS_prctl, PR_VINIX_SYSCALL_POLICY, action, (long)input, 0, 0, 0);
+    return invoke(SYS_prctl, PR_TULPAR_SYSCALL_POLICY, action, (long)input, 0, 0, 0);
 }
 static void child_exit(int code) {
     invoke(SYS_exit_group, code, 0, 0, 0, 0, 0);

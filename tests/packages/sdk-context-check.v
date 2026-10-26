@@ -26,12 +26,12 @@ fn artifact(role string, path string) !Artifact {
 fn suite(repository string, architecture string, sandbox string) !hwhost.Suite {
 	manifest := if repository == '' { '' } else { os.read_file(repository + '/examples/package-hello/manifest-' + architecture + '.json')! }
 	mut programs := [
-		hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/vinix-package' },
-		hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/vinix-account' },
-		hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/vinix-session' },
+		hwhost.Program{ source: 'tools/packages/main.v', path: 'usr/bin/tulpar-package' },
+		hwhost.Program{ source: 'tools/accounts/account.v', path: 'usr/sbin/tulpar-account' },
+		hwhost.Program{ source: 'tools/accounts/session.v', path: 'usr/sbin/tulpar-session' },
 	]
-	mut binaries := [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/vinix-sandbox' }]
-	example := os.getenv('VINIX_CONTEXT_EXAMPLE')
+	mut binaries := [hwhost.RootBinary{ source: sandbox, path: 'usr/bin/tulpar-sandbox' }]
+	example := os.getenv('TULPAR_CONTEXT_EXAMPLE')
 	if example == '' { programs << hwhost.Program{ source: 'examples/package-hello/main.v', path: 'usr/share/context-fixtures/package-hello' } }
 	else { binaries << hwhost.RootBinary{ source: example, path: 'usr/share/context-fixtures/package-hello' } }
 	return hwhost.Suite{
@@ -43,7 +43,7 @@ fn suite(repository string, architecture string, sandbox string) !hwhost.Suite {
 		files: [
 			hwhost.RootFile{ path: 'etc/passwd', text: 'root:x:0:0:root:/root:/bin/sh\n' },
 			hwhost.RootFile{ path: 'etc/group', text: 'root:x:0:\ntty:x:5:\n' },
-			hwhost.RootFile{ path: 'etc/vinix/auth.conf', text: 'scrypt_ln = 10\n' },
+			hwhost.RootFile{ path: 'etc/tulpar/auth.conf', text: 'scrypt_ln = 10\n' },
 			hwhost.RootFile{ path: 'usr/share/context-fixtures/manifest.json', text: manifest },
 		]
 		directories: ['run', 'home', 'var/log', 'tmp:1777']
@@ -67,9 +67,9 @@ fn check() !int {
 	if options.help || options.list { return hwhost.run_suite(suite('', 'aarch64', '')!, os.args[1..], @FILE) }
 	if !os.is_file(options.kernel) || options.state_dir == '' || os.exists(options.state_dir)
 		|| os.is_link(options.state_dir) { return error('provide --kernel and a new --state-dir') }
-	if os.getenv('VINIX_HWTEST_TCG') != '1' { return error('this qualification requires VINIX_HWTEST_TCG=1') }
+	if os.getenv('TULPAR_HWTEST_TCG') != '1' { return error('this qualification requires TULPAR_HWTEST_TCG=1') }
 	repository := hwhost.find_root(@FILE)!
-	definition := suite(repository, options.arch, os.getenv('VINIX_CONTEXT_SANDBOX'))!
+	definition := suite(repository, options.arch, os.getenv('TULPAR_CONTEXT_SANDBOX'))!
 	hwhost.validate_scenarios(definition.scenarios)!
 	selection := hwhost.select_scenarios(definition.scenarios, options.arch, options.scenarios)!
 	if selection.run.len != 1 { return error('select the packages-context scenario') }
@@ -83,9 +83,9 @@ fn check() !int {
 	guest := hwhost.build_program(host, repository + '/' + definition.guest, guest_dir, 'init', definition.module_paths)!
 	root := hwhost.build_extras(host, definition, guest_dir)!
 	mut artifacts := []Artifact{}
-	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/vinix-sandbox', 'guest-init': guest,
-		'package-service': root + '/usr/bin/vinix-package', 'account-manager': root + '/usr/sbin/vinix-account',
-		'session-runner': root + '/usr/sbin/vinix-session', 'native-sdk-example': root + '/usr/share/context-fixtures/package-hello',
+	for role, path in {'kernel': kernel, 'sandbox': root + '/usr/bin/tulpar-sandbox', 'guest-init': guest,
+		'package-service': root + '/usr/bin/tulpar-package', 'account-manager': root + '/usr/sbin/tulpar-account',
+		'session-runner': root + '/usr/sbin/tulpar-session', 'native-sdk-example': root + '/usr/share/context-fixtures/package-hello',
 		'example-manifest': root + '/usr/share/context-fixtures/manifest.json'} { artifacts << artifact(role, path)! }
 	outcome := hwhost.run_scenario(host, selection.run[0], hwhost.Run{ kernel: kernel, guest: guest, extras: root,
 		state: work + '/packages-context', timeout: if options.timeout > 300 { options.timeout } else { 300 }, keep: true,

@@ -28,7 +28,7 @@ mut:
 	input_reads int
 	config_stats int
 	etc_stats int
-	vinix_stats int
+	tulpar_stats int
 	multi bool
 	goal_derives int = 1
 	set_stats int
@@ -125,7 +125,7 @@ fn volume_discovery_mock_fstatat(fd i32, name &char, info &C.stat, flags i32) i3
 fn volume_discovery_mock_openat(fd i32, name &char, flags i32) i32 {
 	if volume_discovery_io.inspect { assert flags & C.O_ACCMODE == C.O_RDONLY; recovery_inspect_erased() }
 	if volume_discovery_io.boot && volume_discovery_io.indices[fd] < -1 {
-		if C.strcmp(name, c'vinix') == 0 {
+		if C.strcmp(name, c'tulpar') == 0 {
 			assert volume_discovery_io.indices[fd] == -2 && flags == C.O_RDONLY | C.O_DIRECTORY | C.O_NOFOLLOW | C.O_CLOEXEC
 			if volume_discovery_io.mode in [102, 103] { unsafe { C.errno = if volume_discovery_io.mode == 102 { C.ENOENT } else { C.EACCES } }; return -1 }
 			return volume_discovery_track(C.openat(fd, name, flags), -3)
@@ -160,7 +160,7 @@ fn volume_discovery_mock_fstat(fd i32, info &C.stat) i32 {
 		unsafe { info.st_uid = 0 }
 		index := volume_discovery_io.indices[fd]
 		if index == -2 { volume_discovery_io.etc_stats++ }
-		if index == -3 { volume_discovery_io.vinix_stats++ }
+		if index == -3 { volume_discovery_io.tulpar_stats++ }
 		if index == -4 { volume_discovery_io.config_stats++ }
 		if index == -6 { volume_discovery_io.set_stats++ }
 		unsafe {
@@ -171,7 +171,7 @@ fn volume_discovery_mock_fstat(fd i32, info &C.stat) i32 {
 				|| (index == -5 && volume_discovery_io.mode == 109) { info.st_mode |= 0o022 }
 			if index == -4 && volume_discovery_io.mode == 115 && volume_discovery_io.config_stats == 2 { info.st_uid = 1 }
 			if index == -2 && volume_discovery_io.mode == 116 && volume_discovery_io.etc_stats == 2 { info.st_mode |= 0o002 }
-			if index == -3 && volume_discovery_io.mode == 118 && volume_discovery_io.vinix_stats == 3 { info.st_mode |= 0o002 }
+			if index == -3 && volume_discovery_io.mode == 118 && volume_discovery_io.tulpar_stats == 3 { info.st_mode |= 0o002 }
 		}
 	}
 	if result == 0 && volume_discovery_io.recovery && volume_discovery_io.indices[fd] == -8 && volume_discovery_io.key_stats == 2 {
@@ -273,21 +273,21 @@ fn volume_discovery_mock_derive(password &u8, size int, salt &u8, output &u8) bo
 		unsafe { assert salt[0] == u8(volume_discovery_io.expected_slots[volume_discovery_io.derives - 1]) }
 		if volume_discovery_io.mode == 133 && volume_discovery_io.derives == 2 { return false }
 		if volume_discovery_io.mode == 141 && volume_discovery_io.derives == 2 {
-			os.mv(volume_discovery_io.etc + '/vinix/boot-volumes.d', volume_discovery_io.etc + '/vinix/pinned-set') or { panic(err) }
-			os.mkdir(volume_discovery_io.etc + '/vinix/boot-volumes.d') or { panic(err) }
-			for name in ['a.vcrypt', 'a.pass', 'b.vcrypt', 'b.pass'] { os.write_file(volume_discovery_io.etc + '/vinix/boot-volumes.d/' + name, 'replacement ignored') or { panic(err) } }
+			os.mv(volume_discovery_io.etc + '/tulpar/boot-volumes.d', volume_discovery_io.etc + '/tulpar/pinned-set') or { panic(err) }
+			os.mkdir(volume_discovery_io.etc + '/tulpar/boot-volumes.d') or { panic(err) }
+			for name in ['a.vcrypt', 'a.pass', 'b.vcrypt', 'b.pass'] { os.write_file(volume_discovery_io.etc + '/tulpar/boot-volumes.d/' + name, 'replacement ignored') or { panic(err) } }
 		}
-		if volume_discovery_io.mode == 142 && volume_discovery_io.derives == 1 { os.rm(volume_discovery_io.etc + '/vinix/boot-volumes.d/b.vcrypt') or { panic(err) } }
+		if volume_discovery_io.mode == 142 && volume_discovery_io.derives == 1 { os.rm(volume_discovery_io.etc + '/tulpar/boot-volumes.d/b.vcrypt') or { panic(err) } }
 	}
 	volume_discovery_io.password = password; volume_discovery_io.wrapping = output
 	if volume_discovery_io.boot {
 		expected := [u8(0), 10, 0xe2, 0x82, 0xac, 0xff]!
 		unsafe { for i in 0 .. 6 { assert password[i] == expected[i] }; for i in 6 .. 1024 { assert password[i] == 0 } }
 		if volume_discovery_io.mode == 119 {
-			os.mv(volume_discovery_io.etc + '/vinix', volume_discovery_io.etc + '/pinned') or { panic(err) }
-			os.mkdir(volume_discovery_io.etc + '/vinix') or { panic(err) }
-			os.write_file(volume_discovery_io.etc + '/vinix/boot-volume.vcrypt', 'replacement ignored') or { panic(err) }
-			os.write_file(volume_discovery_io.etc + '/vinix/boot-volume.pass', 'replacement ignored') or { panic(err) }
+			os.mv(volume_discovery_io.etc + '/tulpar', volume_discovery_io.etc + '/pinned') or { panic(err) }
+			os.mkdir(volume_discovery_io.etc + '/tulpar') or { panic(err) }
+			os.write_file(volume_discovery_io.etc + '/tulpar/boot-volume.vcrypt', 'replacement ignored') or { panic(err) }
+			os.write_file(volume_discovery_io.etc + '/tulpar/boot-volume.pass', 'replacement ignored') or { panic(err) }
 		}
 	}
 	if volume_discovery_io.mode == 2 { return false }
@@ -304,10 +304,10 @@ fn volume_boot_check(etc string, directory string, flags u64, mode int, restore 
 }
 
 fn test_opt_in_boot_unlock_pins_root_directories_private_inputs_and_preserves_failures() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-boot-${os.getpid()}')
-	os.mkdir_all(work + '/etc/vinix')!; os.mkdir(work + '/dev')!; defer { os.rmdir_all(work) or {} }
-	os.chmod(work + '/etc', 0o755)!; os.chmod(work + '/etc/vinix', 0o700)!
-	config := work + '/etc/vinix/boot-volume.vcrypt'; password := work + '/etc/vinix/boot-volume.pass'
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-boot-${os.getpid()}')
+	os.mkdir_all(work + '/etc/tulpar')!; os.mkdir(work + '/dev')!; defer { os.rmdir_all(work) or {} }
+	os.chmod(work + '/etc', 0o755)!; os.chmod(work + '/etc/tulpar', 0o700)!
+	config := work + '/etc/tulpar/boot-volume.vcrypt'; password := work + '/etc/tulpar/boot-volume.pass'
 	mut wrapping := [64]u8{init: u8(index * 29 + 41)}; mut random := [28]u8{init: u8(index * 11 + 3)}; mut source := [320]u8{}
 	mut disk := DiskKey{bytes: 16777216, sector: 512, kind: 1}; disk.id[0] = 1
 	volume_discovery_fixture(work + '/dev', 0, 512, 1)!
@@ -340,18 +340,18 @@ fn test_opt_in_boot_unlock_pins_root_directories_private_inputs_and_preserves_fa
 		volume_boot_check(work + '/etc', work + '/dev', 1, 119, restore, 0)
 		assert os.read_bytes(work + '/etc/pinned/boot-volume.vcrypt')! == source[..]
 		assert os.read_file(config)! == 'replacement ignored'
-		os.rmdir_all(work + '/etc/vinix')!; os.mv(work + '/etc/pinned', work + '/etc/vinix')!
+		os.rmdir_all(work + '/etc/tulpar')!; os.mv(work + '/etc/pinned', work + '/etc/tulpar')!
 	}
 	os.rm(password)!; volume_boot_check(work + '/etc', work + '/dev', 1, 0, false, 1); assert volume_discovery_io.scans == 0
 	os.write_file_array(password, [u8(0), 10, 0xe2, 0x82, 0xac, 0xff])!; os.chmod(password, 0o600)!
 	mut plain := Plan{key: disk, count: 1}; plain.rows[0] = Request{slot: 5, offset: 8192, length: 4096}
 	mut bytes := [2112]u8{}; size := encode_plan(&plain, &bytes[0]); assert size > 0
-	os.write_file_array(work + '/etc/vinix/volumes.vmap', bytes[..size])!; os.chmod(work + '/etc/vinix/volumes.vmap', 0o600)!
+	os.write_file_array(work + '/etc/tulpar/volumes.vmap', bytes[..size])!; os.chmod(work + '/etc/tulpar/volumes.vmap', 0o600)!
 	volume_boot_check(work + '/etc', work + '/dev', 1, 0, true, 1); assert volume_discovery_io.scans == 0 && volume_discovery_io.derives == 1
 	plain.rows[0] = Request{slot: 1, offset: 2048, length: 512}; assert encode_plan(&plain, &bytes[0]) == size
-	os.write_file_array(work + '/etc/vinix/volumes.vmap', bytes[..size])!
+	os.write_file_array(work + '/etc/tulpar/volumes.vmap', bytes[..size])!
 	volume_boot_check(work + '/etc', work + '/dev', 1, 0, true, 1); assert volume_discovery_io.scans == 0
-	os.rm(work + '/etc/vinix/volumes.vmap')!
+	os.rm(work + '/etc/tulpar/volumes.vmap')!
 	os.rm(config)!
 	for restore in [false, true] { volume_boot_check(work + '/etc', work + '/dev', 1, 0, restore, 0); assert volume_discovery_io.scans == 0 && volume_discovery_io.derives == 0 }
 	assert os.read_bytes(password)! == [u8(0), 10, 0xe2, 0x82, 0xac, 0xff]
@@ -390,8 +390,8 @@ fn volume_boot_set_check(etc string, directory string, requests []EncryptedReque
 }
 
 fn test_encrypted_boot_set_authenticates_every_member_before_discovery_and_pins_all_parents_before_import() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-boot-set-${os.getpid()}')
-	etc := work + '/etc'; root := etc + '/vinix'; directory := root + '/boot-volumes.d'; devices := work + '/dev'
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-boot-set-${os.getpid()}')
+	etc := work + '/etc'; root := etc + '/tulpar'; directory := root + '/boot-volumes.d'; devices := work + '/dev'
 	os.mkdir_all(directory)!; os.mkdir(devices)!; defer { os.rmdir_all(work) or {} }
 	os.chmod(etc, 0o755)!; os.chmod(root, 0o700)!; os.chmod(directory, 0o700)!
 	volume_discovery_fixture(devices, 0, 512, 1)!
@@ -445,8 +445,8 @@ fn test_encrypted_boot_set_authenticates_every_member_before_discovery_and_pins_
 }
 
 fn test_encrypted_boot_set_bounds_complete_enumeration_and_accepts_all_64_private_profiles() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-boot-limit-${os.getpid()}')
-	etc := work + '/etc'; root := etc + '/vinix'; directory := root + '/boot-volumes.d'; devices := work + '/dev'
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-boot-limit-${os.getpid()}')
+	etc := work + '/etc'; root := etc + '/tulpar'; directory := root + '/boot-volumes.d'; devices := work + '/dev'
 	os.mkdir_all(directory)!; os.mkdir(devices)!; defer { os.rmdir_all(work) or {} }
 	os.chmod(etc, 0o755)!; os.chmod(root, 0o700)!; os.chmod(directory, 0o700)!
 	volume_discovery_fixture(devices, 0, 512, 1)!
@@ -492,7 +492,7 @@ fn volume_discovery_check(config string, password string, directory string, sect
 }
 
 fn test_authenticated_auto_unlock_discovery_uniqueness_modes_rechecks_and_cleanup() {
-	work := os.join_path(os.temp_dir(), 'vinix-volume-discovery-${os.getpid()}')
+	work := os.join_path(os.temp_dir(), 'tulpar-volume-discovery-${os.getpid()}')
 	os.mkdir(work)!; os.chmod(work, 0o700)!; os.mkdir(work + '/dev')!; defer { os.rmdir_all(work) or {} }
 	password := work + '/pass'; config := work + '/config'; directory := work + '/dev'
 	os.write_file_array(password, [u8(0), 10, 0xe2, 0x82, 0xac, 0xff])!; os.chmod(password, 0o600)!

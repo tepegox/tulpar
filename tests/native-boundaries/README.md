@@ -13,8 +13,8 @@ match before the command prints its complete report. Temporary source and
 object directories are removed on success and ordinary errors.
 
 `boundarycheck/core_test.v` covers unsupported host rejection and the Darwin
-assembly adaptation. Set `VINIX_BOUNDARY_TOOL` and
-`VINIX_BOUNDARY_COMPILER_FIXTURE` to native binaries built from `run.v` and
+assembly adaptation. Set `TULPAR_BOUNDARY_TOOL` and
+`TULPAR_BOUNDARY_COMPILER_FIXTURE` to native binaries built from `run.v` and
 `compilerfixture` to also exercise real compilation, forced compiler and local
 fixture failures, allocator imports, output mismatch and cleanup. These are
 host checks; they do not build or boot a kernel.
@@ -24,5 +24,5 @@ The Rosetta x86 command rejects the unsupported host before any work is created;
 its assembly-adaptation and architecture-rejection tests also pass. The cold
 launcher passes from an unrelated working directory and leaves no temporary
 files after either success or compiler failure. Qualification logs are
-`/tmp/vinix-boundary-{arm,asan,x86}-final.log` and
-`/tmp/vinix-boundary-cold-final.log`. No Python was run.
+`/tmp/tulpar-boundary-{arm,asan,x86}-final.log` and
+`/tmp/tulpar-boundary-cold-final.log`. No Python was run.

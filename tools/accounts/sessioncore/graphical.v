@@ -13,16 +13,16 @@ fn C.flock(int, int) int
 fn C.fstat(int, &C.stat) int
 
 fn graphical_lock() !int {
-	for directory in ['/run', '/run/vinix'] {
+	for directory in ['/run', '/run/tulpar'] {
 		if !os.exists(directory) { os.mkdir(directory, mode: 0o755)! }
 		info := os.lstat(directory)!
 		if info.mode & 0o170000 != 0o040000 || info.uid != 0 || info.mode & 0o022 != 0 {
 			return error('the authentication directory is not controlled by root')
 		}
 	}
-	fd := C.open(c'/run/vinix/graphical-manager.lock', C.O_CREAT | C.O_RDWR | C.O_NOFOLLOW | C.O_CLOEXEC, 0o600)
+	fd := C.open(c'/run/tulpar/graphical-manager.lock', C.O_CREAT | C.O_RDWR | C.O_NOFOLLOW | C.O_CLOEXEC, 0o600)
 	if fd < 0 { return error('cannot open the graphical manager lock') }
-	info := os.lstat('/run/vinix/graphical-manager.lock') or { C.close(fd); return err }
+	info := os.lstat('/run/tulpar/graphical-manager.lock') or { C.close(fd); return err }
 	mut held := C.stat{}
 	if C.fstat(fd, &held) != 0 || u64(held.st_dev) != info.dev || u64(held.st_ino) != info.inode
 		|| info.mode & 0o170000 != 0o100000 || info.uid != 0 || info.mode & 0o077 != 0 {
@@ -67,7 +67,7 @@ pub fn graphical(desktop string, fallback string) ! {
 	desktop_fallback := if fallback == '' { []string{} } else { [fallback] }
 	greeter_command := [desktop, '--greeter']
 	desktop_command := [desktop]
-	account_command := ['/usr/sbin/vinix-account', 'init']
+	account_command := ['/usr/sbin/tulpar-account', 'init']
 	// These headers borrow command strings and permanent arguments. Retire
 	// only their buffers after the synchronous manager and all children finish.
 	defer {
@@ -100,7 +100,7 @@ pub fn graphical(desktop string, fallback string) ! {
 		initialized.close()
 		if !created { return error('no person account was created; refusing an unusable login screen') }
 	}
-	mut authd := os.new_process('/usr/sbin/vinix-authd')
+	mut authd := os.new_process('/usr/sbin/tulpar-authd')
 	mut owned := false
 	defer {
 		if owned {

@@ -3,7 +3,7 @@ module sessioncore
 
 pub fn (s &Supervisor) encode() string {
 	mut w := Writer{}
-	w.add('vinix-services\t1\n')
+	w.add('tulpar-services\t1\n')
 	for i in 0 .. s.count {
 		v := s.services[i]
 		w.add('service\t')
@@ -38,7 +38,7 @@ pub fn decode_services(record string, allow_system bool) !Supervisor {
 		f := fields(unsafe { tos(&record.str[start], end - start) })!
 		start = end + 1
 		if !header {
-			if f.count != 2 || f.values[0] != 'vinix-services' || f.values[1] != '1' {
+			if f.count != 2 || f.values[0] != 'tulpar-services' || f.values[1] != '1' {
 				return error('invalid service header')
 			}
 			header = true

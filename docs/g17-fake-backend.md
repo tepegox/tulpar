@@ -1,6 +1,6 @@
 # Fake G17 execution backend
 
-Vinix keeps the Mesa-facing DRM lifecycle above generation-specific GPU
+Tulpar keeps the Mesa-facing DRM lifecycle above generation-specific GPU
 execution.  VirtIO-GPU/VirGL is the accelerated VM reference backend, native
 AGX remains the hardware backend, and fake G17 execution stops at the recovered
 HAL300 command boundary:
@@ -8,7 +8,7 @@ HAL300 command boundary:
 ```text
 Mesa / applications
         |
-Vinix DRM: GEM, VM, sync objects, fences, queues, teardown
+Tulpar DRM: GEM, VM, sync objects, fences, queues, teardown
         |
         +-- VirtIO-GPU -- VirGL -- host GPU
         |
@@ -21,7 +21,7 @@ Vinix DRM: GEM, VM, sync objects, fences, queues, teardown
 ```
 
 The fake backend is not a G17 emulator. It proves that a command builder
-produced the expected bytes and that the ordinary Vinix queue/fence lifecycle
+produced the expected bytes and that the ordinary Tulpar queue/fence lifecycle
 handles success and failure. It cannot prove firmware boot, real UAT mappings,
 hardware register semantics, or acceptance by G17 firmware.
 
@@ -197,7 +197,7 @@ make -C tools/agx-re -f GNUmakefile generate-fake-g17-encoder
 make -C tools/agx-re -f GNUmakefile check-fake-g17-encoder
 ```
 
-Compile a verifier plan for a captured or Vinix-generated command with:
+Compile a verifier plan for a captured or Tulpar-generated command with:
 
 ```sh
 tools/agx-re/compile_fake_g17_plan \
@@ -257,7 +257,7 @@ the desktop initramfs and the staged Mesa Asahi runtime:
 ./scripts/run-aarch64.sh --serial --fake-g17 --mem=8192
 ```
 
-At the Vinix prompt, run the three lifecycle-only depth/stencil cases:
+At the Tulpar prompt, run the three lifecycle-only depth/stencil cases:
 
 ```sh
 /usr/bin/run-gl-triangle-agx --submit-only --depth
@@ -290,13 +290,13 @@ After observing the expected `EINVAL` in either invalid-resource run, the
 interposer exits the faulting process before Mesa can wait forever for a fence
 that was intentionally never created. Those runs prove kernel rejection and
 fd/process teardown safety; they do not claim Mesa gracefully returns from a
-rejected submission. Set `VINIX_BOOT_DISK` to reuse an existing test image or
-`VINIX_FAKE_G17_VM_TIMEOUT` to change its 180-second deadline.
+rejected submission. Set `TULPAR_BOOT_DISK` to reuse an existing test image or
+`TULPAR_FAKE_G17_VM_TIMEOUT` to change its 180-second deadline.
 
-Mesa should identify the renderer as `Vinix Fake G17C (M5 Max ABI)` and report
+Mesa should identify the renderer as `Tulpar Fake G17C (M5 Max ABI)` and report
 that the render submit and fence completed successfully. The fake kernel sets a
-Vinix-private compatible feature bit; stock Mesa safely ignores compatible bits
-it does not know, while the pinned Vinix Mesa patch uses this bit only to change
+Tulpar-private compatible feature bit; stock Mesa safely ignores compatible bits
+it does not know, while the pinned Tulpar Mesa patch uses this bit only to change
 the public renderer string. M5-compatible parameters remain in place so Asahi
 can initialize. Fake submissions call the same recovered descriptor initializer
 as the native G17 backend, so the VM covers its bounds/overlap-checked scalar

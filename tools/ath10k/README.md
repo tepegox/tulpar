@@ -14,7 +14,7 @@ Physical hardware validation is still required; QEMU has no QCA9377 model.
 The amd64 desktop image builder includes the pinned firmware, licences and
 `wifi-ctl` automatically. For an existing installation, install a kernel
 containing `dev.ath10k` and extract the supplied
-`qca9377-firmware-and-tools.tar.gz` into the Vinix root filesystem. Keep the
+`qca9377-firmware-and-tools.tar.gz` into the Tulpar root filesystem. Keep the
 included Qualcomm licence and notices with the firmware. The firmware files
 must be present at:
 
@@ -40,7 +40,7 @@ Scanning and joining are separate steps. `status`, `networks`, `on` and `off`
 are also available. Joining returns success after authorization, then DHCP
 starts. A DHCP lease may take longer to appear.
 
-Vinix currently has one physical IP stack, named `eth0`. A Wi-Fi join selects
+Tulpar currently has one physical IP stack, named `eth0`. A Wi-Fi join selects
 it for Wi-Fi; disconnecting restores a connected Realtek wired adapter. Its
 address is therefore still shown under `eth0`. Settings can control the radio
 and display scans through the existing `/dev/wlan0` ABI; use the CLI to join.

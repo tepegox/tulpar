@@ -6,7 +6,7 @@ import hosttest
 import os
 
 fn main() {
-	mode := os.getenv('VINIX_BOUNDARY_CASE')
+	mode := os.getenv('TULPAR_BOUNDARY_CASE')
 	if mode == 'compile-failure' {
 		eprintln('forced compiler failure')
 		exit(37)
@@ -27,7 +27,7 @@ fn main() {
 			os.write_file(path, text)!
 		}
 	}
-	mut argv := [os.getenv('VINIX_BOUNDARY_REAL_CC')]
+	mut argv := [os.getenv('TULPAR_BOUNDARY_REAL_CC')]
 	argv << os.args[1..]
 	result := hosttest.capture(argv, '', 90, os.environ())!
 	print(result.stdout)

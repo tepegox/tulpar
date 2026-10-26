@@ -49,7 +49,7 @@ headless ui2 module:
 
 ```sh
 v -nocache -o /tmp/review-actions tests/packages/review-actions-check.v
-V=/path/to/reviewed/v VINIX_PACKAGE_TEST_UI2=/path/to/modules \
+V=/path/to/reviewed/v TULPAR_PACKAGE_TEST_UI2=/path/to/modules \
   /tmp/review-actions /build/new-review-actions
 ```
 

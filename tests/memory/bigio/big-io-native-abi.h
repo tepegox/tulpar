@@ -1,6 +1,6 @@
 /* Native SDK types only; all workload and checking policy lives in V. */
-#ifndef VINIX_BIG_IO_NATIVE_ABI_H
-#define VINIX_BIG_IO_NATIVE_ABI_H
+#ifndef TULPAR_BIG_IO_NATIVE_ABI_H
+#define TULPAR_BIG_IO_NATIVE_ABI_H
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif

@@ -13,13 +13,13 @@ import time
 // A controlled serial process exercises the entire CLI/SDK/PTY path. It does
 // not execute the guest kernel or stand in for guest security/storage evidence.
 fn machine() ! {
-	os.write_file(os.getenv('VINIX_SYSTEM_MODEL_ARGV'), os.args[1..].join('\n'))!
-	mode := os.getenv('VINIX_SYSTEM_MODEL')
+	os.write_file(os.getenv('TULPAR_SYSTEM_MODEL_ARGV'), os.args[1..].join('\n'))!
+	mode := os.getenv('TULPAR_SYSTEM_MODEL')
 	if mode == 'root' {
 		for _ in 0 .. 2 {
-			println('VINIX DISK ROOT: START\nVINIX DISK ROOT: ON VOLUME\nVINIX DISK ROOT: LARGE FILE OK')
+			println('TULPAR DISK ROOT: START\nTULPAR DISK ROOT: ON VOLUME\nTULPAR DISK ROOT: LARGE FILE OK')
 		}
-		println('VINIX DISK ROOT: WROTE /etc MARKER, REBOOTING\nVINIX DISK ROOT: PASS')
+		println('TULPAR DISK ROOT: WROTE /etc MARKER, REBOOTING\nTULPAR DISK ROOT: PASS')
 	} else if mode == 'failure' {
 		println('MODEL FAILURE')
 	} else if mode != 'empty' {
@@ -60,17 +60,17 @@ fn check_command(command string, args []string, env map[string]string, status in
 fn checked() ! {
 	if os.args.len != 4 { return error('check-system-cli CONTROLLER-PREFIX PROFILE KERNEL-DIR') }
 	prefix, profile, kernel := os.args[1], os.args[2], os.args[3]
-	work := hosttest.work_dir('', 'vinix-system-cli-')!
+	work := hosttest.work_dir('', 'tulpar-system-cli-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	qemu := os.find_abs_path_of_executable('qemu-system-aarch64')!
 	share := os.dir(os.dir(qemu)) + '/share/qemu'
 	mut env := policyhost.environment()
-	env['VINIX_QEMU_BIN'] = os.executable()
-	env['VINIX_OVMF_CODE'] = share + '/edk2-aarch64-code.fd'
-	env['VINIX_OVMF_VARS'] = share + '/edk2-arm-vars.fd'
+	env['TULPAR_QEMU_BIN'] = os.executable()
+	env['TULPAR_OVMF_CODE'] = share + '/edk2-aarch64-code.fd'
+	env['TULPAR_OVMF_VARS'] = share + '/edk2-arm-vars.fd'
 	env['USE_TCG'] = '1'
-	env['VINIX_QEMU_EXTRA'] = "-name 'model extra'"
-	env['VINIX_SYSTEM_MODEL_ARGV'] = work + '/model-argv'
+	env['TULPAR_QEMU_EXTRA'] = "-name 'model extra'"
+	env['TULPAR_SYSTEM_MODEL_ARGV'] = work + '/model-argv'
 	diskhost.mkdir(work + '/base/sbin')!
 	os.write_file(work + '/base/sbin/init', 'old init')!
 	os.write_file(work + '/provided-init', '#!/bin/sh\nexit 0\n')!
@@ -78,7 +78,7 @@ fn checked() ! {
 	for mode in ['pass', 'nonzero', 'late', 'failure', 'empty'] {
 		state := work + '/docker-' + mode
 		diskhost.mkdir(state)!
-		env['VINIX_SYSTEM_MODEL'] = mode
+		env['TULPAR_SYSTEM_MODEL'] = mode
 		check_command(prefix + 'docker-' + profile, ['--init', work + '/provided-init', '--initramfs',
 			archive, '--kernel-dir', kernel, '--state-dir', state, '--mem', '1234', '--pass-marker',
 			'MODEL PASS', '--fail-marker', 'MODEL FAILURE', '--fail-marker', 'OTHER FAIL', '--log',
@@ -95,7 +95,7 @@ fn checked() ! {
 	}
 	println('PASS full Docker CLI: init overlay, memory, raw log, first verdict, nonzero exit and late failure')
 
-	env['VINIX_SYSTEM_MODEL'] = 'root'
+	env['TULPAR_SYSTEM_MODEL'] = 'root'
 	state := work + '/root-state'
 	diskhost.mkdir(state)!
 	for dir in ['sbin', 'root', 'etc'] { diskhost.mkdir(work + '/system/' + dir)! }
@@ -147,7 +147,7 @@ fn checked() ! {
 }
 
 fn main() {
-	if os.args.contains('-machine') && os.getenv('VINIX_SYSTEM_MODEL') != '' {
+	if os.args.contains('-machine') && os.getenv('TULPAR_SYSTEM_MODEL') != '' {
 		machine() or { panic(err) }
 		return
 	}

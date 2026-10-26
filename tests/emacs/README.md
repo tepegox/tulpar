@@ -1,25 +1,25 @@
-# Emacs on Vinix
+# Emacs on Tulpar
 
 GNU Emacs 30.1 runs as an unchanged native ARM64/musl Alpine X11 executable
-inside a Vinix desktop window. Its portable dump, Lisp files, fonts and shared
-libraries live in `/usr/libexec/vinix-emacs/root`; the launcher selects those
+inside a Tulpar desktop window. Its portable dump, Lisp files, fonts and shared
+libraries live in `/usr/libexec/tulpar-emacs/root`; the launcher selects those
 paths explicitly and leaves the system libraries alone. This uses the X11
 build without native compilation.
 
 On an ARM64 macOS host with V, LLVM, QEMU, mtools, ui2 at `../ui2`, the existing
-ARM64 userland/X11 layers and an ARM64 Vinix kernel:
+ARM64 userland/X11 layers and an ARM64 Tulpar kernel:
 
 ```sh
 v -cc clang run build-support/stage-emacs.v build/emacs
 v -cc clang run desktop/tools/build-emacs-demo.v
 v -cc clang -path '@vlib|@vmodules|tests/hardware-platform|tests/linuxkpi|tools' \
     -o build/emacs/controller tests/emacs/run.v
-VINIX_EMACS_KERNEL="$PWD/kernel/bin/vinix" build/emacs/controller
+TULPAR_EMACS_KERNEL="$PWD/kernel/bin/tulpar" build/emacs/controller
 ```
 
-`VINIX_AARCH64_SYSROOT` selects the userland **staging** directory for the
-cross-build. `VINIX_USERLAND_STAGING` and `VINIX_X11_STAGING` select guest
-runtime inputs if those layers are elsewhere. `VINIX_UI2_SOURCE` selects ui2.
+`TULPAR_AARCH64_SYSROOT` selects the userland **staging** directory for the
+cross-build. `TULPAR_USERLAND_STAGING` and `TULPAR_X11_STAGING` select guest
+runtime inputs if those layers are elsewhere. `TULPAR_UI2_SOURCE` selects ui2.
 The builder snapshots committed desktop sources and overlays only the Emacs
 changes, avoiding unrelated concurrent edits. `--clients-only` rebuilds the
 launcher and guest init. `--check` runs the utility catalog, Start menu paging and
@@ -47,12 +47,12 @@ build/emacs/controller quit
 ```
 
 The guest verifies that the text reaches the saved file. `shot` captures QEMU's
-actual framebuffer to `docs/screenshots/emacs-vinix-qemu.png`; inspect both the
-image and serial log. The private QMP socket is `/tmp/vinix-emacs-qmp`.
+actual framebuffer to `docs/screenshots/emacs-tulpar-qemu.png`; inspect both the
+image and serial log. The private QMP socket is `/tmp/tulpar-emacs-qmp`.
 
 For a desktop image, merge `build/emacs/staging` into its staging tree after
 building the desktop with these sources. The layer contains `run-emacs` and
-the `vinix-emacs` multicall link. The desktop's Emacs entry then opens it;
+the `tulpar-emacs` multicall link. The desktop's Emacs entry then opens it;
 `run-emacs -nw` also selects terminal mode.
 
 The existing hosted input bridge does not decode modified navigation sequences
@@ -64,4 +64,4 @@ Package versions, hashes and guest results are recorded in
 [results/native-arm64.txt](results/native-arm64.txt) and
 [the runtime manifest](results/alpine-runtime-packages.json).
 
-![Emacs editing Lisp in a Vinix window](../../docs/screenshots/emacs-vinix-qemu.png)
+![Emacs editing Lisp in a Tulpar window](../../docs/screenshots/emacs-tulpar-qemu.png)

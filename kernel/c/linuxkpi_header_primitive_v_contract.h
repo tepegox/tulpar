@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-or-later */
-#ifndef VINIX_LINUXKPI_HEADER_PRIMITIVE_V_CONTRACT_H
-#define VINIX_LINUXKPI_HEADER_PRIMITIVE_V_CONTRACT_H
+#ifndef TULPAR_LINUXKPI_HEADER_PRIMITIVE_V_CONTRACT_H
+#define TULPAR_LINUXKPI_HEADER_PRIMITIVE_V_CONTRACT_H
 #include "linuxkpi_common_v_contract.h"
 #include <linux/slab.h>
-#include <vinix/runtime.h>
+#include <tulpar/runtime.h>
 typedef s64 vhp_s64;
 typedef const atomic_t *vhp_const_atomicp;
 typedef const atomic64_t *vhp_const_atomic64p;

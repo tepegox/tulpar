@@ -10,7 +10,7 @@ import strconv
 #include <errno.h>
 
 @[typedef]
-struct C.vinix_cache_stat {
+struct C.tulpar_cache_stat {
 	st_dev                 u64
 	st_ino                 u64
 	st_mode                u32
@@ -18,14 +18,14 @@ struct C.vinix_cache_stat {
 	st_atime               i64
 	st_mtime               i64
 	st_ctime               i64
-	vinix_cache_atime_nsec i64
-	vinix_cache_mtime_nsec i64
-	vinix_cache_ctime_nsec i64
+	tulpar_cache_atime_nsec i64
+	tulpar_cache_mtime_nsec i64
+	tulpar_cache_ctime_nsec i64
 }
 
-fn C.vinix_cache_lstat(&char, &C.vinix_cache_stat) i32
-fn C.vinix_cache_fstat(i32, &C.vinix_cache_stat) i32
-fn C.vinix_cache_stat_path(&char, &C.vinix_cache_stat) i32
+fn C.tulpar_cache_lstat(&char, &C.tulpar_cache_stat) i32
+fn C.tulpar_cache_fstat(i32, &C.tulpar_cache_stat) i32
+fn C.tulpar_cache_stat_path(&char, &C.tulpar_cache_stat) i32
 
 pub struct FileError {
 pub:
@@ -41,8 +41,8 @@ fn file_error(path string) IError { return FileError{int(C.errno), path} }
 
 fn path_is_file(path string) !bool {
 	if path.contains('\x00') { return false }
-	mut state := C.vinix_cache_stat{}
-	if C.vinix_cache_stat_path(&char(path.str), &state) != 0 {
+	mut state := C.tulpar_cache_stat{}
+	if C.tulpar_cache_stat_path(&char(path.str), &state) != 0 {
 		if C.errno in [C.ENOENT, C.ENOTDIR, C.EBADF, C.ELOOP] { return false }
 		return file_error(path)
 	}
@@ -61,10 +61,10 @@ fn nanoseconds(seconds i64, fraction i64) string {
 	return (big.integer_from_i64(seconds) * big.integer_from_int(1000000000) + big.integer_from_i64(fraction)).str()
 }
 
-fn generation(mut digest sha256.Digest, state C.vinix_cache_stat) {
+fn generation(mut digest sha256.Digest, state C.tulpar_cache_stat) {
 	for value in [state.st_dev.str(), state.st_ino.str(), state.st_size.str(),
-		nanoseconds(state.st_mtime, state.vinix_cache_mtime_nsec),
-		nanoseconds(state.st_ctime, state.vinix_cache_ctime_nsec)] {
+		nanoseconds(state.st_mtime, state.tulpar_cache_mtime_nsec),
+		nanoseconds(state.st_ctime, state.tulpar_cache_ctime_nsec)] {
 		add_field(mut digest, value)
 	}
 }
@@ -72,8 +72,8 @@ fn generation(mut digest sha256.Digest, state C.vinix_cache_stat) {
 fn file_contents(mut digest sha256.Digest, path string) ! {
 	mut stream := os.open(path) or { return file_error(path) }
 	defer { stream.close() }
-	mut state := C.vinix_cache_stat{}
-	if C.vinix_cache_fstat(i32(stream.fd), &state) != 0 { return file_error('') }
+	mut state := C.tulpar_cache_stat{}
+	if C.tulpar_cache_fstat(i32(stream.fd), &state) != 0 { return file_error('') }
 	if state.st_mode & u32(C.S_IFMT) == u32(C.S_IFDIR) { return FileError{int(C.EISDIR), path} }
 	mut buffer := []u8{len: 1024 * 1024}
 	for {
@@ -91,8 +91,8 @@ fn file_contents(mut digest sha256.Digest, path string) ! {
 pub fn hash_path(mut digest sha256.Digest, path string, label string, metadata_only bool) ! {
 	add_field(mut digest, label)
 	if path.contains('\x00') { return error('embedded null byte') }
-	mut state := C.vinix_cache_stat{}
-	if C.vinix_cache_lstat(&char(path.str), &state) != 0 {
+	mut state := C.tulpar_cache_stat{}
+	if C.tulpar_cache_lstat(&char(path.str), &state) != 0 {
 		if C.errno == C.ENOENT {
 			add_field(mut digest, 'missing')
 			return
@@ -132,18 +132,18 @@ pub fn tree_key(paths []string, metadata_only bool, namespace string) !string {
 
 pub fn content_key(paths []string, metadata_only bool) !string {
 	return tree_key(paths, metadata_only, if metadata_only {
-		'vinix-metadata-key-v1'
+		'tulpar-metadata-key-v1'
 	} else {
-		'vinix-content-key-v1'
+		'tulpar-content-key-v1'
 	})
 }
 
 pub fn root_generation(path string) !string {
 	if path.contains('\x00') { return error('embedded null byte') }
 	mut digest := sha256.new()
-	add_field(mut digest, 'vinix-root-generation-v1')
-	mut state := C.vinix_cache_stat{}
-	if C.vinix_cache_lstat(&char(path.str), &state) != 0 {
+	add_field(mut digest, 'tulpar-root-generation-v1')
+	mut state := C.tulpar_cache_stat{}
+	if C.tulpar_cache_lstat(&char(path.str), &state) != 0 {
 		if C.errno != C.ENOENT { return file_error(path) }
 		add_field(mut digest, 'missing')
 		return digest.sum([]u8{}).hex()

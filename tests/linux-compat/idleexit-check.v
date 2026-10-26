@@ -229,7 +229,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -260,7 +260,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -285,12 +285,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/idleexit-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/idleexit-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/idleexitreferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/idleexitreferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -300,7 +300,7 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 fn setup_receipt(state string, arch string, kernel string, preflight string) !map[string]string {
 	value := object(state + '/receipt.json')!
 	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel
-	assert digest(state + '/kernel/bin/vinix') == kernel
+	assert digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == 1
 	row := rows[0].as_map()
@@ -401,7 +401,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: idleexit-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	os.write_file(area + 'assertion-control.log', control(['--negative-control'], 'idleexit assertions must execute'))!
@@ -412,7 +412,7 @@ fn main() {
 	os.write_file(area + 'scope-check.log', 'arm/x86: whole generated production C differs only in table__may_set_sched_params; no compiler identifier normalization, new allocation/free or pointer escape; one PID-table lock and exact existing unlock paths plus one new guarded return\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '410d7c5e499acbb3c274be54161f84b59514d505'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -506,7 +506,7 @@ fn main() {
 		mut identity := map[string]string{}
 		early := states + 'p1-before-' + suffix
 		early_probe := states + 'preflight2-idleexit-' + suffix
-		early_native := setup_receipt(early, arch, digest(area + 'baseline-' + suffix + '/kernel/bin/vinix'), early_probe)!
+		early_native := setup_receipt(early, arch, digest(area + 'baseline-' + suffix + '/kernel/bin/tulpar'), early_probe)!
 		for key, value in early_native { artifacts['setup_' + key] = value }
 		early_linux := reference_receipt(states + 'p1-reference-' + suffix, arch, early_native['init'])!
 		for key, value in early_linux { artifacts['setup_reference_' + key] = value }
@@ -526,7 +526,7 @@ fn main() {
 		}
 		for phase in ['before', 'after'] {
 			state := states + 'p2-' + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['idleexit']
 			} else {
@@ -547,7 +547,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			artifacts[phase + '_kernel'] = digest(kernel)
 			artifacts[phase + '_kernel_c'] = digest(area + phase + '-' + suffix + '.c')
 			artifacts[phase + '_build'] = digest(build)

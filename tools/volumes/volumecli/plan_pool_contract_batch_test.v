@@ -122,7 +122,7 @@ fn test_contraction_protects_clipped_mapping_intersections_and_uses_saved_sector
 }
 
 fn test_full_132_argument_contraction_cli_preserves_full_v2_sets_and_durable_equal_end_retries() {
-	work := os.join_path(os.temp_dir(), 'vinix-contraction-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-contraction-full-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}
 	for disk in 0 .. 64 {
 		mut plan := Plan{key: contraction_key(disk + 1, 1), count: 1}
@@ -141,7 +141,7 @@ fn test_full_132_argument_contraction_cli_preserves_full_v2_sets_and_durable_equ
 		mut identity := [41]char{}; disk_identity(&set.plans[disk].key, &identity[0]); values << unsafe { cstring_to_vstring(&identity[0]) }; values << end.str()
 	}
 	unsafe {
-		mut args := [133]&char{}; args[0] = &char(c'vinix-volume'); args[2] = path.str; args[3] = &char(c'3')
+		mut args := [133]&char{}; args[0] = &char(c'tulpar-volume'); args[2] = path.str; args[3] = &char(c'3')
 		for i in 0 .. values.len { args[4 + i] = values[i].str }
 		args[1] = &char(c'pool-preview-contract-batch'); assert run(132, &args[0]) == 0 && os.read_bytes(path)! == original
 		args[1] = &char(c'pool-contract-batch'); assert run(132, &args[0]) == 0
@@ -152,13 +152,13 @@ fn test_full_132_argument_contraction_cli_preserves_full_v2_sets_and_durable_equ
 }
 
 fn test_contraction_sources_and_later_cli_tokens_fail_without_publication_prefixes() {
-	work := os.join_path(os.temp_dir(), 'vinix-contraction-cli-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
+	work := os.join_path(os.temp_dir(), 'tulpar-contraction-cli-${os.getpid()}'); os.mkdir(work)!; defer { os.rmdir_all(work) or {} }
 	path := work + '/saved.vset'; mut set := PlanSet{}; contraction_fixture(mut set, 0, 1)
 	assert publish_bundle(path.str, &set); original := os.read_bytes(path)!; os.symlink(path, work + '/alias')!
 	mut batch := PoolContractionBatch{count: 1}; batch.keys[0] = set.plans[1].key; batch.ends[0] = 24576
 	for preview in [false, true] { for bad in [work + '/missing', work, work + '/alias'] { assert contract_batch_pool_plan(bad.str, 3, &batch, preview) == 1 } }
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'pool-contract-batch'), path.str, &char(c'3'),
+		mut args := [&char(c'tulpar-volume'), &char(c'pool-contract-batch'), path.str, &char(c'3'),
 			&char(c'mbr:00000001'), &char(c'24576'), &char(c'gpt:00000002-0000-0000-0000-000000000055'), &char(c'24576'), &char(nil)]!
 		for command in [c'pool-contract-batch', c'pool-preview-contract-batch'] {
 			args[1] = &char(command); for count in [2, 3, 5, 7, 133, 400] { assert run(count, &args[0]) == 2 }

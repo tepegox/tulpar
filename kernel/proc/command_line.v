@@ -17,7 +17,7 @@ pub fn prepare_command_line(owner kbudget.Owner, argv []string) ?CommandLine {
 	for argument in argv { capacity += argument.len + 1 }
 	charge := reserve_kernel_for(owner, .process, u64(capacity) * 2 + 128)?
 	// Keep the builder on the caller's stack under -manualfree.
-	mut text := unsafe { &lib.Text(C.vinix_stack_alloc(sizeof(lib.Text))) }
+	mut text := unsafe { &lib.Text(C.tulpar_stack_alloc(sizeof(lib.Text))) }
 	unsafe { *text = lib.new_text(capacity) }
 	for argument in argv {
 		text.add(argument)

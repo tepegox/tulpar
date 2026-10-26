@@ -92,7 +92,7 @@ fn main() {
 		eprintln('timeout must be positive')
 		exit(2)
 	}
-	kernel := os.real_path(options.value('--kernel-dir', '') + '/bin/vinix')
+	kernel := os.real_path(options.value('--kernel-dir', '') + '/bin/tulpar')
 	header := os.read_bytes(kernel) or {
 		eprintln(err.msg())
 		exit(2)
@@ -117,7 +117,7 @@ fn main() {
 	}
 	work := os.real_path(state)
 	// Freeze the exact read bytes, even if another build replaces the input.
-	os.write_file_array(work + '/kernel/bin/vinix', header) or {
+	os.write_file_array(work + '/kernel/bin/tulpar', header) or {
 		eprintln(err.msg())
 		exit(1)
 	}

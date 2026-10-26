@@ -83,7 +83,7 @@ fn check_c(area string,suffix string) ! {
  mut before := os.read_file(area+'before-'+suffix+'.c')!; mut after := os.read_file(area+'after-'+suffix+'.c')!
  for name in ['userland__syscall_wait4','userland__syscall_waitid'] {
   old := body(before,name); new := body(after,name); assert old != new
-  for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','vinix_stack_alloc(','pin_thread(','unpin_thread('] {assert old.count(token) == new.count(token),token}
+  for token in ['malloc(','calloc(','realloc(','memdup(','array__','free(','alloca(','tulpar_stack_alloc(','pin_thread(','unpin_thread('] {assert old.count(token) == new.count(token),token}
   before = before.replace(old,''); after = after.replace(new,'')
   old_decl := before.split_into_lines().filter(it.contains(' '+name+'(') && it.ends_with(';')); new_decl := after.split_into_lines().filter(it.contains(' '+name+'(') && it.ends_with(';')); assert old_decl.len == 1 && new_decl.len == 1
   before = before.replace(old_decl[0],''); after = after.replace(new_decl[0],'')
@@ -93,7 +93,7 @@ fn check_c(area string,suffix string) ! {
 
 fn sdk_and_primary(area string,out string) ! {
  sdk := object(area+'sdk-inputs.json')!; assert sdk.len == 2014
- prior := object('/Users/alex/.cache/vinix-linux-compat/groupzombie-20261015/sdk-inputs.json')!; assert sdk.len == prior.len
+ prior := object('/Users/alex/.cache/tulpar-linux-compat/groupzombie-20261015/sdk-inputs.json')!; assert sdk.len == prior.len
  for path,hash in sdk {assert hash.str() == prior[path]!.str() && digest(area+'sdk/'+path) == hash.str(),path}
  mut found := map[string]bool{}
  for path in os.walk_ext(area+'sdk','') {assert os.inode(path).typ == .regular; local := path.all_after(area+'sdk/'); assert local in sdk && local !in found; found[local] = true}
@@ -209,7 +209,7 @@ fn failure(log string, arch string) {
 
 fn receipt(state string, arch string, kernel string, names []string, failing bool) !map[string]string {
 	value := object(state + '/receipt.json')!
-	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/vinix') == kernel
+	assert value['architecture']!.str() == arch && value['kernel_sha256']!.str() == kernel && digest(state + '/kernel/bin/tulpar') == kernel
 	rows := value['results']!.as_array()
 	assert rows.len == names.len
 	mut artifacts := {
@@ -240,7 +240,7 @@ fn receipt(state string, arch string, kernel string, names []string, failing boo
 			assert hash == entry[key]!.str()
 			artifacts[name + '_' + label] = hash
 		}
-		assert artifacts[name + '_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/' + name + 'fixture/core.v')
+		assert artifacts[name + '_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/' + name + 'fixture/core.v')
 		artifacts[name + '_c'] = digest(state + '/' + name + '/fixture.c')
 		artifacts[name + '_serial'] = digest(state + '/' + name + '/serial.log')
 		if !failing || index > 0 {
@@ -265,12 +265,12 @@ fn reference_receipt(state string, arch string, init string) !map[string]string 
 		'initramfs':         state + '/initramfs.cpio'
 		'serial':            state + '/serial.log'
 		'serial_adapter_c':  state + '/serial.c'
-		'controller_source': '/Users/alex/code/vinix/tests/linux-compat/waitabi-reference.v'
+		'controller_source': '/Users/alex/code/tulpar/tests/linux-compat/waitabi-reference.v'
 		'qemu':              command[0]
 	} {
 		assert artifacts[label] == digest(path)
 	}
-	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/vinix/tests/linux-compat/waitabireferenceinit/core.v')
+	assert artifacts['probe'] == init && artifacts['wrapper_source'] == digest('/Users/alex/code/tulpar/tests/linux-compat/waitabireferenceinit/core.v')
 	semantics(os.read_file(state + '/serial.log')!, 'after', arch, true)
 	return artifacts
 }
@@ -295,7 +295,7 @@ fn diagnostics(area string,out string) ! {
  mut pins := map[string]string{}
  old_source := area+'states/p1-before-arm/sources/waitabifixture/core.v'
  assert digest(old_source) == digest(area+'states/p1-before-x86/sources/waitabifixture/core.v')
- assert digest(old_source) != digest('/Users/alex/code/vinix/tests/linux-compat/waitabifixture/core.v')
+ assert digest(old_source) != digest('/Users/alex/code/tulpar/tests/linux-compat/waitabifixture/core.v')
  old := os.read_file(old_source)!
  assert old.contains('if code != 0 {untouched(&info,sizeof(C.siginfo_t))}')
  assert old.contains('actual.ret == -1 && actual.code == C.EFAULT && ready(state) && (target == 0 || status == 37<<8)')
@@ -352,7 +352,7 @@ fn diagnostics(area string,out string) ! {
 fn main() {
 	if '--scope-only' in os.args {
 		area := os.args[2].trim_right('/')+'/'
-		check_source(area,'/Users/alex/code/vinix/')!
+		check_source(area,'/Users/alex/code/tulpar/')!
 		for suffix in ['arm','x86'] {check_c(area,suffix)!}
 		println('Native wait ABI source/C scope: PASS')
 		return
@@ -368,7 +368,7 @@ fn main() {
 	assert os.args.len == 2, 'Usage: waitabi-check.v EVIDENCE-AREA (compile without -prod)'
 	area := os.args[1].trim_right('/') + '/'
 	states := area + 'states/'
-	root := '/Users/alex/code/vinix/'
+	root := '/Users/alex/code/tulpar/'
 	out := root + 'tests/linux-compat/results/2026-10-15/'
 	os.mkdir_all(out)!
 	sdk_and_primary(area, out)!
@@ -381,7 +381,7 @@ fn main() {
 	os.write_file(area + 'scope-check.log', 'arm/x86: complete production C differs only in native wait4/waitid definitions and exact declarations; low32 scalar imports and INT_MIN ESRCH after options validation; existing child claims, pins, locks, copyout and notifications unchanged; no added allocation/free/pin or compiler normalization\n')!
 	base := os.read_file(area + 'base.txt')!.trim_space()
 	assert base == '6fb03bb2e396a18b64d8795e80be39b660945f59'
-	compiler_root := '/Users/alex/.cache/vinix-linux-compat/proctask-20261014/'
+	compiler_root := '/Users/alex/.cache/tulpar-linux-compat/proctask-20261014/'
 	pins := object(compiler_root + 'compiler-inputs.json')!
 	assert pins.len == 15146
 	assert pins['v']!.str() == '9e506a9fbd95e2e7c227cc144da023b57a288d0974ea902f1d12270e28bc416b'
@@ -474,7 +474,7 @@ fn main() {
 			'linux_primary_pin':        digest(area + 'linux-source.sha256')
 			'private_sdk': digest(area + 'sdk-inputs.json')
 			'primary_source_note': digest(area + 'primary-source-note.txt')
-			'sdk_prior_inputs': digest('/Users/alex/.cache/vinix-linux-compat/groupzombie-20261015/sdk-inputs.json')
+			'sdk_prior_inputs': digest('/Users/alex/.cache/tulpar-linux-compat/groupzombie-20261015/sdk-inputs.json')
 			'arm_compiler_adapter': digest(area + 'arm-cc.v')
 			'arm_compiler_adapter_binary': digest(area + 'arm-cc')
 			'primary_reuse': digest(area + 'primary-reuse.json')
@@ -491,7 +491,7 @@ fn main() {
 		mut identity := map[string]string{}
 		for phase in ['before', 'after'] {
 			state := states + 'p2-' + phase + '-' + suffix
-			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/vinix'
+			kernel := area + if phase == 'before' { 'baseline-' } else { 'kernel-' } + suffix + '/kernel/bin/tulpar'
 			names := if phase == 'before' {
 				['waitabi']
 			} else {
@@ -511,7 +511,7 @@ fn main() {
 			storage(text, arch, phase)
 			build := area + 'build-' + phase + '-' + suffix + '.log'
 			text_build := os.read_file(build)!
-			assert text_build.contains('-o bin/vinix') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
+			assert text_build.contains('-o bin/tulpar') && !text_build.contains('Nothing to be done') && !text_build.contains('Error ')
 			producer := area + if phase == 'before' { 'initial-build-' + suffix + '-before.log' } else { 'build-' + suffix + '-after-producer.log' }
 			assert os.read_file(producer)!.trim_space() == suffix + ' ' + phase + ' production build: PASS'
 			artifacts[phase + '_build_producer'] = digest(producer)

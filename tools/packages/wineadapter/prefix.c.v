@@ -140,7 +140,7 @@ pub fn prepare_prefix(data string, builtins string) !Prefix {
 	defer { C.close(system) }
 	users := child(drive, 'users', uid)!
 	defer { C.close(users) }
-	user := child(users, 'vinix', uid)!
+	user := child(users, 'tulpar', uid)!
 	defer { C.close(user) }
 	temporary := child(user, 'Temp', uid)!
 	C.close(temporary)

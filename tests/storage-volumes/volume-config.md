@@ -1,7 +1,7 @@
 # Authenticated encrypted-volume configuration qualification
 
 `seal-volume`, `open-volume` and `unseal-volume-key` use the fixed 320-byte
-`VINIXVC1` format documented in [storage volumes](../../docs/storage-volumes.md#authenticated-encrypted-volume-configurations).
+`TULPARVC1` format documented in [storage volumes](../../docs/storage-volumes.md#authenticated-encrypted-volume-configurations).
 It binds the whole physical disk's identity/geometry and one mapping's slot,
 extent and mode to its wrapped volume key. The kernel mapper is unchanged.
 

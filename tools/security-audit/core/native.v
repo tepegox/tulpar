@@ -159,13 +159,13 @@ pub fn sleep(seconds &u64, nanoseconds &u64) i32 {
  }
 }
 @[export: 'vka_usage']
-pub fn print_usage() { C.fputs(c'usage: vinix-security-audit [--log /var/log/vinix-audit/seccomp.log] [--source /proc/security_audit] [--interval-ms 250] [--once]\n', C.stderr) }
+pub fn print_usage() { C.fputs(c'usage: tulpar-security-audit [--log /var/log/tulpar-audit/seccomp.log] [--source /proc/security_audit] [--interval-ms 250] [--once]\n', C.stderr) }
 @[export: 'vka_root_required']
-pub fn root_required() { C.fputs(c'vinix-security-audit: initial-namespace root required\n', C.stderr) }
+pub fn root_required() { C.fputs(c'tulpar-security-audit: initial-namespace root required\n', C.stderr) }
 @[export: 'vka_perror']
 pub fn print_error(operation &char) { C.perror(operation) }
 @[export: 'vka_collection_error']
-pub fn collection_error(error i32) { C.fprintf(C.stderr, c'vinix-security-audit: collection stopped: %s\n', C.strerror(error)) }
+pub fn collection_error(error i32) { C.fprintf(C.stderr, c'tulpar-security-audit: collection stopped: %s\n', C.strerror(error)) }
 // The independent fixture appends two literal rows through this bounded path.
 $if security_no_main ? {
  @[export: 'vka_add']

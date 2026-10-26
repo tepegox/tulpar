@@ -239,7 +239,7 @@ fn boundary(at usize, page usize, optional i32) i32 {
 	}
 }
 
-@[export: 'vinix_pagetable_boundaries']
+@[export: 'tulpar_pagetable_boundaries']
 pub fn boundaries() i32 {
 	unsafe {
 		page := usize(C.sysconf(C._SC_PAGESIZE))

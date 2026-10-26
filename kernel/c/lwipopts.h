@@ -1,5 +1,5 @@
-#ifndef VINIX_LWIPOPTS_H
-#define VINIX_LWIPOPTS_H
+#ifndef TULPAR_LWIPOPTS_H
+#define TULPAR_LWIPOPTS_H
 
 /* The kernel serialises access to lwIP and drives it from its idle poller. */
 #define NO_SYS 1
@@ -78,20 +78,20 @@
 /* Initial sequence numbers as RFC 6528 has them, keyed by a secret, rather
  * than lwIP's sum of the ticks since boot: see inet/net_random.v. */
 #include <stdint.h>
-#ifdef VINIX_V_RUNTIME
-#define VINIX_LWIP_CONST
+#ifdef TULPAR_V_RUNTIME
+#define TULPAR_LWIP_CONST
 #else
-#define VINIX_LWIP_CONST const
+#define TULPAR_LWIP_CONST const
 #endif
-uint32_t vinix_tcp_isn(uint32_t local_address, uint16_t local_port,
+uint32_t tulpar_tcp_isn(uint32_t local_address, uint16_t local_port,
                        uint32_t remote_address, uint16_t remote_port);
-uint32_t vinix_tcp_isn6(VINIX_LWIP_CONST uint32_t local_address[4], uint16_t local_port,
-                        VINIX_LWIP_CONST uint32_t remote_address[4], uint16_t remote_port);
+uint32_t tulpar_tcp_isn6(TULPAR_LWIP_CONST uint32_t local_address[4], uint16_t local_port,
+                        TULPAR_LWIP_CONST uint32_t remote_address[4], uint16_t remote_port);
 #define LWIP_HOOK_TCP_ISN(local_ip, local_port, remote_ip, remote_port) \
     (IP_IS_V6(local_ip) ? \
-     vinix_tcp_isn6(ip_2_ip6(local_ip)->addr, (local_port), \
+     tulpar_tcp_isn6(ip_2_ip6(local_ip)->addr, (local_port), \
                     ip_2_ip6(remote_ip)->addr, (remote_port)) : \
-     vinix_tcp_isn(ip4_addr_get_u32(ip_2_ip4(local_ip)), (local_port), \
+     tulpar_tcp_isn(ip4_addr_get_u32(ip_2_ip4(local_ip)), (local_port), \
                    ip4_addr_get_u32(ip_2_ip4(remote_ip)), (remote_port)))
 
 #define LWIP_STATS 0

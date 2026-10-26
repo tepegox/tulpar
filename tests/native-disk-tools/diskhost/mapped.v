@@ -43,12 +43,12 @@ fn mapped(args []string) !int {
 	}
 	seconds := timeout()!
 	executable := tool()!
-	work := work_dir(options, 'vinix-mapped-writeback-')!
+	work := work_dir(options, 'tulpar-mapped-writeback-')!
 	defer { remove_private(work, options) }
 	kernel_dir := kernel(work, options.value('--kernel-dir', ''), arch)!
 	init := work + '/init'
 	run([...flags(arch), root() + '/tests/mapped-writeback/guest.c',
-		'-DVINIX_TEST_MEMORY_MIB=' + memory.str(), '-pthread', '-o', init])!
+		'-DTULPAR_TEST_MEMORY_MIB=' + memory.str(), '-pthread', '-o', init])!
 	preseed := work + '/preseed'
 	mkdir(preseed + '/many')!
 	for index in 0 .. 1200 {

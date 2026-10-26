@@ -15,9 +15,9 @@ A real dynamically linked musl PIE verifies that both its own executable
 text and the kernel-loaded interpreter's executable text are immutable.
 
 Run the same command with `--arch aarch64` for ARM. Use
-`VINIX_VM_RUNNER_ROOT` for the checkout containing installed VM dependencies,
-`VINIX_AARCH64_SYSROOT` for the ARM build sysroot, and
-`VINIX_AARCH64_LOADER` for its matching dynamic musl loader if they are outside
+`TULPAR_VM_RUNNER_ROOT` for the checkout containing installed VM dependencies,
+`TULPAR_AARCH64_SYSROOT` for the ARM build sysroot, and
+`TULPAR_AARCH64_LOADER` for its matching dynamic musl loader if they are outside
 the default userland build directories. Set `USE_TCG=1` for ARM emulation.
 The runner builds a private initramfs and disk, and uses strict SMAP/PAN.
 

@@ -7,7 +7,7 @@ import os
 import policyhost
 
 fn qualify(binary string, profile string) ! {
-	controls := '/tmp/vinix-security-controls-' + profile
+	controls := '/tmp/tulpar-security-controls-' + profile
 	os.mkdir(controls)!
 	for path, revision in {
 		'tests/security-mac/cli_test.c':         'aaa2e6d5^'
@@ -37,7 +37,7 @@ fn qualify(binary string, profile string) ! {
 		}
 		mut streams := [][]string{}
 		for variant in ['v', 'c'] {
-			work := '/tmp/vinix-security-final-' + tool + '-' + profile + '-' + variant
+			work := '/tmp/tulpar-security-final-' + tool + '-' + profile + '-' + variant
 			mut args := [binary, family, '--keep-dir', work]
 			if variant == 'c' { args << ['--source', control] }
 			result := fixturehost.capture_both_preferred(args, env, policyhost.caller_arch())!

@@ -26,7 +26,7 @@ fn qualify() ! {
 	os.mkdir(work + '/tmp')!
 	root := os.real_path(os.dir(@FILE) + '/../..')
 	mut environment := os.environ()
-	for key, value in {'V':compiler, 'VINIX_V_COMPILER':compiler, 'VTMP':work + '/tmp', 'TMPDIR':work + '/tmp',
+	for key, value in {'V':compiler, 'TULPAR_V_COMPILER':compiler, 'VTMP':work + '/tmp', 'TMPDIR':work + '/tmp',
 		'V_C_ERROR_BUG_REPORT_DISABLED':'1', 'V_MACOS_V3_NO_FALLBACK':'1',
 		'ASAN_OPTIONS':'detect_leaks=0:detect_stack_use_after_return=1:abort_on_error=1', 'UBSAN_OPTIONS':'halt_on_error=1:print_stacktrace=1'} {
 		environment[key] = value
@@ -74,13 +74,13 @@ fn qualify() ! {
 	os.write_file(wrapper, '#!/bin/sh\nexec /usr/bin/env -u CFLAGS -u LDFLAGS "' + compiler + '" -nocache -cc /usr/bin/clang ' + wrapper_flags + '"$@"\n')!
 	os.chmod(wrapper, 0o755)!
 	environment['V'] = wrapper
-	environment['VINIX_V_COMPILER'] = wrapper
-	environment['VINIX_HOST_PYTHON'] = '/usr/bin/python3'
+	environment['TULPAR_V_COMPILER'] = wrapper
+	environment['TULPAR_HOST_PYTHON'] = '/usr/bin/python3'
 	header := checked([work + '/main', 'cpython-headers', '/usr/bin/python3'], environment, work + '/headers.log')!.stdout.trim_space()
 	assert os.is_file(header + '/Python.h')
 	checked([work + '/main', 'cpython-version', '/usr/bin/python3'], environment, work + '/version.log')!
 	probe := work + '/header-probe.v'
-	os.write_file(probe, 'module main\n#include <Python.h>\n@[export: \'vinix_header_probe\']\nfn probe() i32 { return i32(C.PY_MAJOR_VERSION * 100 + C.PY_MINOR_VERSION) }\n')!
+	os.write_file(probe, 'module main\n#include <Python.h>\n@[export: \'tulpar_header_probe\']\nfn probe() i32 { return i32(C.PY_MAJOR_VERSION * 100 + C.PY_MINOR_VERSION) }\n')!
 	checked(['/bin/sh', root + '/build-support/build-v-host-library.sh', probe, work + '/header-probe.dylib'], environment, work + '/public-header-library.log')!
 	checked(['/usr/bin/nm', '-gU', work + '/header-probe.dylib'], environment, work + '/header-exports.log')!
 	for path in ['tests/ios/reference-frameworks.sh', 'examples/ios-2048/build.sh', 'examples/ios-calculator/build.sh',
@@ -91,20 +91,20 @@ fn qualify() ! {
 		// Build actual signed bundles with the retained recipes. The pinned
 		// upstream clone is a read-only local Git source, not a network fetch.
 		mut app_environment := environment.clone()
-		app_environment['VINIX_IOS_CALCULATOR_BUILD_DIR'] = work + '/calculator'
+		app_environment['TULPAR_IOS_CALCULATOR_BUILD_DIR'] = work + '/calculator'
 		app_environment['IOS_CLANG'] = '/usr/bin/clang'
 		app_environment['IOS_LD'] = '/opt/homebrew/bin/ld64.lld'
 		checked(['/bin/bash', root + '/examples/ios-calculator/build.sh'], app_environment, work + '/calculator-build.log')!
 		os.mkdir(work + '/game')!
 		checked(['/usr/bin/git', 'clone', '--shared', root + '/build/ios/2048/source', work + '/game/source'], environment, work + '/game-clone.log')!
-		app_environment['VINIX_IOS_2048_BUILD_DIR'] = work + '/game'
+		app_environment['TULPAR_IOS_2048_BUILD_DIR'] = work + '/game'
 		checked(['/bin/bash', root + '/examples/ios-2048/build.sh'], app_environment, work + '/game-build.log')!
 		for package in [work + '/calculator/Calculator.ipa', work + '/game/NumberTileGame.ipa'] {
 			checked(['/usr/bin/unzip', '-t', package], environment, package + '-test.log')!
 		}
 	}
 	os.write_file(work + '/qualification.json', json2.encode(json2.Any({'status':json2.Any('PASS'), 'profile':json2.Any(profile),
-		'receipts':json2.Any(receipts), 'limits':json2.Any('Nine embedded blocks in five Shell callers. Native ARM Darwin C/C++ references, including signal-only process modes, run under ARM/x86/sanitized V controllers. The separate x86 Darwin overflow attempt raises SIGILL and fails the retained original SIGTRAP oracle. SDK headers are inert data; original source checks and real signed calculator/2048 Mach-O builds on ARM pass. No Python, interpreter initialization, Keychain/security/credentials fixture, Blender build, UI application or Vinix guest executes. Sanitizers instrument V; zlib and reference fixtures are unchanged SDK inputs. IPA archives retain classic ZIP limits.')}), prettify:true) + '\n')!
+		'receipts':json2.Any(receipts), 'limits':json2.Any('Nine embedded blocks in five Shell callers. Native ARM Darwin C/C++ references, including signal-only process modes, run under ARM/x86/sanitized V controllers. The separate x86 Darwin overflow attempt raises SIGILL and fails the retained original SIGTRAP oracle. SDK headers are inert data; original source checks and real signed calculator/2048 Mach-O builds on ARM pass. No Python, interpreter initialization, Keychain/security/credentials fixture, Blender build, UI application or Tulpar guest executes. Sanitizers instrument V; zlib and reference fixtures are unchanged SDK inputs. IPA archives retain classic ZIP limits.')}), prettify:true) + '\n')!
 	println('PASS native host-tool qualification ' + profile)
 }
 

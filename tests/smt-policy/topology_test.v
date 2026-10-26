@@ -36,17 +36,17 @@ fn test_non_smt_topology_keeps_every_core() {
 }
 
 fn test_smt_boot_token_boundaries_and_precedence() {
- for value in ['', 'vinix.smt=1', 'a=2\tvinix.smt=1\n'] {
+ for value in ['', 'tulpar.smt=1', 'a=2\ttulpar.smt=1\n'] {
   limine.command(value)
   assert smt_enabled()
  }
- for value in ['vinix.smt=0', 'vinix.smt=off', 'vinix.smt=', 'vinix.smt=10',
-  'vinix.smt=1suffix', 'vinix.smt=1 vinix.smt=0'] {
+ for value in ['tulpar.smt=0', 'tulpar.smt=off', 'tulpar.smt=', 'tulpar.smt=10',
+  'tulpar.smt=1suffix', 'tulpar.smt=1 tulpar.smt=0'] {
   limine.command(value)
   assert !smt_enabled()
  }
- limine.command('prefixvinix.smt=0')
+ limine.command('prefixtulpar.smt=0')
  assert smt_enabled()
- limine.command('vinix.smt=0\rvinix.smt=1')
+ limine.command('tulpar.smt=0\rtulpar.smt=1')
  assert smt_enabled()
 }

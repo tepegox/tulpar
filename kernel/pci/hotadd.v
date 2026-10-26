@@ -244,8 +244,8 @@ pub fn configure_arrivals(bridge &PCIDevice, arrivals [8]&PCIDevice, count int) 
 	windows := bridge.forwarded()
 	// On the stack, by hand: a local handed on as `mut` is otherwise moved to
 	// the heap, and nothing would free it.
-	mut claims := unsafe { &Claims(C.vinix_stack_alloc(sizeof(Claims))) }
-	mut theirs := unsafe { &Claims(C.vinix_stack_alloc(sizeof(Claims))) }
+	mut claims := unsafe { &Claims(C.tulpar_stack_alloc(sizeof(Claims))) }
+	mut theirs := unsafe { &Claims(C.tulpar_stack_alloc(sizeof(Claims))) }
 	claims.count = 0
 	for i in 0 .. count {
 		arrivals[i].add_claims(mut claims)

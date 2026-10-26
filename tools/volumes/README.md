@@ -1,4 +1,4 @@
-# vinix-volume
+# tulpar-volume
 
 Native V block-volume management utility. See
 [the storage interface and limits](../../docs/storage-volumes.md) for commands,
@@ -156,9 +156,9 @@ ordinary sealed configuration after credential/configuration loss. Both are
 offline, private and no-overwrite operations, with no disk access or raw keyfile.
 See [configuration recovery](../../docs/storage-volumes.md#encrypted-volume-configuration-recovery).
 
-`boot-restore` combines `/etc/vinix/boot-volume.vcrypt` and its
+`boot-restore` combines `/etc/tulpar/boot-volume.vcrypt` and its
 `boot-volume.pass` with named `NAME.vcrypt`/`NAME.pass` pairs in
-`/etc/vinix/boot-volumes.d`. All inputs authenticate, saved slot/extent conflicts
+`/etc/tulpar/boot-volumes.d`. All inputs authenticate, saved slot/extent conflicts
 are rejected, and every encrypted physical disk is pinned and rechecked before
 plain application. Root-owned private inputs are relative to retained trusted
 directories; credentials erase before discovery. `boot-unlock` applies only
@@ -209,14 +209,14 @@ The fixed profile uses 32 MiB; credentials are private owned files containing
 1–1024 exact bytes. Existing destinations are preserved. See
 [sealed-key format, work profile and limits](../../docs/storage-volumes.md#passphrase-sealed-volume-keys).
 
-`vinix-volume backup-key KEYFILE RECOVERY_KEYFILE ENVELOPE` wraps a 64-byte volume
+`tulpar-volume backup-key KEYFILE RECOVERY_KEYFILE ENVELOPE` wraps a 64-byte volume
 key with a separate random 64-byte recovery key. `recover-key ENVELOPE
 RECOVERY_KEYFILE KEYFILE` authenticates the backup before restoring an exact
 private keyfile. Both commands preserve existing destinations. Retain the
 recovery key separately and save the original volume geometry. See
 [key recovery format, publication and limits](../../docs/storage-volumes.md#authenticated-volume-key-recovery).
 
-`vinix-volume monitor DEVICE INTERVAL_SECONDS [SAMPLES]` periodically reports
+`tulpar-volume monitor DEVICE INTERVAL_SECONDS [SAMPLES]` periodically reports
 health warnings, offline/error state and completed I/O byte deltas through one
 read-only descriptor. Omit the sample count to run until interrupted. Bounded
 sessions retain warnings or failures in their exit code even after recovery;
@@ -226,7 +226,7 @@ NVMe/ANS samples include standard thermal/wear fields and all ten hardware
 counters with full 128-bit deltas. New media errors fail the session even when
 the critical-warning byte remains zero.
 
-`vinix-volume health DEVICE` queries whole AHCI ATA disks without changing
+`tulpar-volume health DEVICE` queries whole AHCI ATA disks without changing
 SMART settings. It prints sanitized identity, the drive's threshold status
 and vendor-specific raw attributes. Exit 3 means the threshold is exceeded;
 4 means ATA status is unavailable. Unsupported backends return an error.
@@ -237,18 +237,18 @@ It prints controller-wide critical warnings, standard health fields and ten
 full 128-bit counters; exit 3 means at least one critical warning is active.
 See [NVMe scope and limits](../../docs/storage-volumes.md#nvme-smarthealth).
 
-`vinix-volume discard DEVICE OFFSET_BYTES LENGTH_BYTES` deallocates a range
+`tulpar-volume discard DEVICE OFFSET_BYTES LENGTH_BYTES` deallocates a range
 through supported block backends. The offset and length are decimal bytes.
 See the storage documentation for extent protection and interruption behavior.
 
-`vinix-volume save DEVICE PLAN` atomically saves the selected whole disk's
-managed views. `vinix-volume restore DEVICE PLAN` verifies disk identity and
+`tulpar-volume save DEVICE PLAN` atomically saves the selected whole disk's
+managed views. `tulpar-volume restore DEVICE PLAN` verifies disk identity and
 geometry, rejects conflicting slots and creates missing mappings. Repeated
 restore keeps matching views. Use a persistent filesystem for the plan; disk
-discovery uses `vinix-volume discover PLAN`, and `restore-auto PLAN` restores
+discovery uses `tulpar-volume discover PLAN`, and `restore-auto PLAN` restores
 the unique physical match. Distinct disks with duplicate identity are rejected.
 
-`vinix-volume save-set BUNDLE DEVICE [DEVICE ...]` saves all selected disks in a
+`tulpar-volume save-set BUNDLE DEVICE [DEVICE ...]` saves all selected disks in a
 single checksummed file, publishing the complete set with one atomic rename.
 `restore-bundle BUNDLE` discovers every disk and preflights the whole set before
 creating mappings. See [bundle format and durability limits](../../docs/storage-volumes.md#atomic-multi-disk-bundles).
@@ -455,9 +455,9 @@ Close or process exit releases the lock without a lock file. Read-only queries
 and previews remain available. See
 [writer locking and live administration limits](../../docs/storage-volumes.md#saved-plan-writer-locking).
 
-Init runs `vinix-volume boot-restore` before applications. It replays the
-optional root-owned `/etc/vinix/volumes.vmap`, `/etc/vinix/volumes.vset` bundle and visible `.vmap` files in
-`/etc/vinix/volumes.d` as one set. Absence is a no-op, and failure is reported
+Init runs `tulpar-volume boot-restore` before applications. It replays the
+optional root-owned `/etc/tulpar/volumes.vmap`, `/etc/tulpar/volumes.vset` bundle and visible `.vmap` files in
+`/etc/tulpar/volumes.d` as one set. Absence is a no-op, and failure is reported
 while boot continues. The configuration directories and enabled files must
 not be writable by group or others. One plan per disk and unique global mapper
 slots are required. `restore-set DIRECTORY` applies a directory explicitly.
@@ -475,7 +475,7 @@ V=/path/to/v build-support/run-v-tool.sh build-support/storage-tools/stage.v \
   --arch x86_64 --staging /path/to/userland
 ```
 
-For ARM, use `--arch aarch64` and `--cc` or `VINIX_MUSL_CC_AARCH64` to select the
+For ARM, use `--arch aarch64` and `--cc` or `TULPAR_MUSL_CC_AARCH64` to select the
 cross compiler executable (arguments are not shell-split). Staging verifies the
 compiler and output ELF architecture and
-replaces only `usr/sbin/vinix-volume` atomically.
+replaces only `usr/sbin/tulpar-volume` atomically.

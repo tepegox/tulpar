@@ -26,7 +26,7 @@ orders otherwise, and verifies the kernel entry survives. A normal guest boot
 checks that shuffled code still runs; address variation is not a performance claim.
 
 The command compiles and runs native V through `build-support/run-v-tool.sh`;
-select the compiler with `V` or `VINIX_V_COMPILER`. It needs no Python runtime.
+select the compiler with `V` or `TULPAR_V_COMPILER`. It needs no Python runtime.
 Qualification compared the previous checker with ARM and x86 host binaries
 using isolated AArch64 and x86_64 ELF objects, the repository linker scripts
 and real LLD/llvm-nm. Both target layouts passed all five links. The shared

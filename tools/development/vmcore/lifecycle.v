@@ -64,7 +64,7 @@ fn monitor_child(pid int, raw voidptr) ! {
 	// Start owns channel replacement until QEMU has initialized its endpoints.
 	// Release only this startup lease; run.lock still protects the live VM.
 	context.agent_guard.release()
-	println('VM started; control it with vinix-vm status|pause|resume|shutdown|stop ${context.state}')
+	println('VM started; control it with tulpar-vm status|pause|resume|shutdown|stop ${context.state}')
 	for !sourcecommand.child_exited(pid)! {
 		if cancelled() {
 			control('shutdown', context.state) or {}
@@ -100,7 +100,7 @@ pub fn start(path string) !int {
 		if os.exists(state + '/' + name) { os.rm(state + '/' + name)! }
 	}
 	mut env := devcore.environment(0)
-	if config.jit { env['VINIX_ALLOW_WX'] = '1' }
+	if config.jit { env['TULPAR_ALLOW_WX'] = '1' }
 	result := sourcecommand.run_logged_owned(arguments(config, state)!, env,
 		cancelled, state + '/qemu.log', false, state, monitor_child, unsafe { &context }, 2) or {
 		os.write_file(state + '/exit.json', json2.encode({

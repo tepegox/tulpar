@@ -1,6 +1,6 @@
 description = Lock or unlock a user account
 auth = admin
-exec = /usr/sbin/vinix-account
+exec = /usr/sbin/tulpar-account
 arg = lock
 param = name
 param = choice:on,off

@@ -98,9 +98,9 @@ fn backend(flags u16) ! {
 }
 
 fn machine() ! {
-	mode := os.getenv('VINIX_DEVICE_MODEL')
-	family := os.getenv('VINIX_DEVICE_FAMILY')
-	os.write_file(os.getenv('VINIX_DEVICE_ARGV'), os.args[1..].join('\n'))!
+	mode := os.getenv('TULPAR_DEVICE_MODEL')
+	family := os.getenv('TULPAR_DEVICE_FAMILY')
+	os.write_file(os.getenv('TULPAR_DEVICE_ARGV'), os.args[1..].join('\n'))!
 	if family == 'pci-arm' {
 		serial := os.args[os.args.index('-serial') + 1].all_after('file:')
 		if mode == 'ignore-term' { unsafe { C.signal(C.SIGTERM, C.SIG_IGN) } }
@@ -124,15 +124,15 @@ fn machine() ! {
 		}
 		for { time.sleep(20 * time.millisecond) }
 	} else if family == 'sound' {
-		state := os.getenv('VINIX_DEVICE_STATE')
+		state := os.getenv('TULPAR_DEVICE_STATE')
 		os.write_file(state + '/sound.wav', wave().bytestr())!
 		println('virtio-snd: stream 0\nSOUND TEST PASS: OSS parameters\nSOUND TEST PASS: the device has one owner at a time\nSOUND TEST PASS: handled signals do not interrupt writes\nSOUND TEST PASS: writes are paced by playback\nSOUND TEST PASS: a blocked writer can be killed\nSOUND TEST PASS: reopened at another rate')
 		if mode == 'failure' { println('SOUND TEST FAIL line 42') }
-		println('VINIX SOUND TEST: GUEST DONE')
+		println('TULPAR SOUND TEST: GUEST DONE')
 	} else {
 		backend(if family == 'fsync-scope' { u16(1) } else { u16(3) })!
 		if mode == 'change-source' {
-			path := os.getenv('VINIX_DEVICE_STATE') + '/source/mapped.bin'
+			path := os.getenv('TULPAR_DEVICE_STATE') + '/source/mapped.bin'
 			os.chmod(path, 0o600)!
 			mut file := os.open_file(path, 'r+')!
 			file.write_string('changed host data')!
@@ -153,7 +153,7 @@ fn machine() ! {
 }
 
 fn systemhost_marker() string {
-	return 'PCI ARM GUEST: Linux ABI PID1 PASS\n' + if os.getenv('VINIX_DEVICE_CONFIG') == '1' {
+	return 'PCI ARM GUEST: Linux ABI PID1 PASS\n' + if os.getenv('TULPAR_DEVICE_CONFIG') == '1' {
 		'pci: ARM checked config widths, bounds and interrupt masks passed\n'
 	} else {
 		''
@@ -178,16 +178,16 @@ fn checked() ! {
 	}
 	prefix, profile, kernel := os.args[1], os.args[2], os.args[3]
 	interrupt_only := os.args.len == 6
-	work := hosttest.work_dir(if os.args.len >= 5 { os.args[4] } else { '' }, 'vinix-devices-cli-')!
+	work := hosttest.work_dir(if os.args.len >= 5 { os.args[4] } else { '' }, 'tulpar-devices-cli-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	qemu := os.find_abs_path_of_executable('qemu-system-aarch64')!
 	share := os.dir(os.dir(qemu)) + '/share/qemu'
 	mut env := policyhost.environment()
-	env['VINIX_QEMU_BIN'] = os.executable()
-	env['VINIX_OVMF_CODE'] = share + '/edk2-aarch64-code.fd'
-	env['VINIX_OVMF_VARS'] = share + '/edk2-arm-vars.fd'
+	env['TULPAR_QEMU_BIN'] = os.executable()
+	env['TULPAR_OVMF_CODE'] = share + '/edk2-aarch64-code.fd'
+	env['TULPAR_OVMF_VARS'] = share + '/edk2-arm-vars.fd'
 	env['USE_TCG'] = '1'
-	env['VINIX_DEVICE_ARGV'] = work + '/argv'
+	env['TULPAR_DEVICE_ARGV'] = work + '/argv'
 	os.mkdir_all(work + '/packages/game/dota')!
 	os.write_file(work + '/packages/game/dota/pak01_dir.vpk', 'sample directory data')!
 	for family in if interrupt_only { []string{} } else { ['fsync-scope', 'virtio-ro', 'export-read', 'sound'] } {
@@ -197,9 +197,9 @@ fn checked() ! {
 			['pass', 'failure']
 		} {
 			state := hosttest.module_resolve(work + '/' + family + '-' + mode)!
-			env['VINIX_DEVICE_MODEL'] = mode
-			env['VINIX_DEVICE_FAMILY'] = family
-			env['VINIX_DEVICE_STATE'] = state
+			env['TULPAR_DEVICE_MODEL'] = mode
+			env['TULPAR_DEVICE_FAMILY'] = family
+			env['TULPAR_DEVICE_STATE'] = state
 			mut args := ['--kernel-dir', kernel,
 				if family in ['fsync-scope', 'virtio-ro'] { '--work' } else { '--state-dir' },
 				state]
@@ -229,18 +229,18 @@ fn checked() ! {
 					assert !report['readonly_host_files_unchanged']!.bool()
 				}
 			} else {
-				assert argv.contains('virtio-sound-device,audiodev=vinix-audio,streams=1')
+				assert argv.contains('virtio-sound-device,audiodev=tulpar-audio,streams=1')
 			}
 			hosttest.remove_work_dir(state)!
 		}
 	}
 	if !interrupt_only { println('PASS full storage/sound CLI: NBD flags, write rejection, source hashes, guest failures and WAV verdict') }
-	env['VINIX_DEVICE_FAMILY'] = 'pci-arm'
+	env['TULPAR_DEVICE_FAMILY'] = 'pci-arm'
 	for mode in if interrupt_only { []string{} } else { ['pass', 'config-pass', 'early-exit', 'late', 'drain', 'timeout', 'ignore-term'] } {
 		state := hosttest.module_resolve(work + '/pci-' + mode)!
-		env['VINIX_DEVICE_MODEL'] = mode
-		env['VINIX_DEVICE_CONFIG'] = if mode == 'config-pass' { '1' } else { '0' }
-		args := ['--kernel', kernel + '/bin/vinix', '--state-dir', state, '--qemu', os.executable(),
+		env['TULPAR_DEVICE_MODEL'] = mode
+		env['TULPAR_DEVICE_CONFIG'] = if mode == 'config-pass' { '1' } else { '0' }
+		args := ['--kernel', kernel + '/bin/tulpar', '--state-dir', state, '--qemu', os.executable(),
 			'--firmware', share + '/edk2-aarch64-code.fd', '--vars-template',
 			share + '/edk2-arm-vars.fd', '--timeout', if mode == 'timeout' { '0.3' } else { '4' },
 			...if mode != 'config-pass' { ['--no-config-test'] } else { []string{} }]
@@ -265,9 +265,9 @@ fn checked() ! {
 	if !interrupt_only { println('PASS full PCI CLI: marker settle, early exit, late failure, final drain, deadline and TERM/KILL retirement') }
 	// An observer interruption must retire its private QEMU group and report 130.
 	state := hosttest.module_resolve(work + '/pci-interrupt')!
-	env['VINIX_DEVICE_MODEL'] = 'timeout'
+	env['TULPAR_DEVICE_MODEL'] = 'timeout'
 	mut child := fixturehost.spawn_logged([prefix + 'pci-arm-' + profile, '--kernel',
-		kernel + '/bin/vinix', '--state-dir', state, '--qemu', os.executable(), '--firmware',
+		kernel + '/bin/tulpar', '--state-dir', state, '--qemu', os.executable(), '--firmware',
 		share + '/edk2-aarch64-code.fd', '--vars-template', share + '/edk2-arm-vars.fd',
 		'--no-config-test'], env, policyhost.caller_arch(), '', work + '/interrupt.log')!
 	defer { child.close() }
@@ -301,7 +301,7 @@ fn checked() ! {
 }
 
 fn main() {
-	if os.getenv('VINIX_DEVICE_MODEL') != '' {
+	if os.getenv('TULPAR_DEVICE_MODEL') != '' {
 		machine() or {
 			eprintln(err)
 			exit(1)

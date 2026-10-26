@@ -25,23 +25,23 @@ per-class growth without changing the thresholds between baseline and fix.
 
 Build and run from an isolated worktree with the untracked kernel dependencies
 linked from the main checkout. Production kernel builds use `ALLOC_TRACK=1`.
-The saved artifact directory must contain `bin/vinix`; the ARM VM runner does
-not need its Makefile when `VINIX_QEMU_RT_NO_BUILD=1` is set.
+The saved artifact directory must contain `bin/tulpar`; the ARM VM runner does
+not need its Makefile when `TULPAR_QEMU_RT_NO_BUILD=1` is set.
 
 ```sh
 make -C kernel ARCH=aarch64 LIMINE_MP=1 ALLOC_TRACK=1 V=/path/to/v CC=clang
 tests/socket-io/check-generated kernel/obj/blob.c
-VINIX_VM_RUNNER_ROOT=/path/to/prepared/vinix \
-VINIX_AARCH64_SYSROOT=/path/to/vinix/build-aarch64-userland/sysroot \
-VINIX_KERNEL_DIR=/path/to/saved-arm-kernel VINIX_QEMU_RT_NO_BUILD=1 \
+TULPAR_VM_RUNNER_ROOT=/path/to/prepared/tulpar \
+TULPAR_AARCH64_SYSROOT=/path/to/tulpar/build-aarch64-userland/sysroot \
+TULPAR_KERNEL_DIR=/path/to/saved-arm-kernel TULPAR_QEMU_RT_NO_BUILD=1 \
 tests/socket-io/run --arch=aarch64
 
 make -C kernel clean
 make -C kernel ARCH=x86_64 ALLOC_TRACK=1 V=/path/to/v CC=clang \
   LD_X86_64=/path/to/ld.lld
 tests/socket-io/check-generated kernel/obj/blob.c
-VINIX_VM_RUNNER_ROOT=/path/to/prepared/vinix \
-VINIX_AMD64_KERNEL=/path/to/saved-amd64-kernel/bin/vinix \
+TULPAR_VM_RUNNER_ROOT=/path/to/prepared/tulpar \
+TULPAR_AMD64_KERNEL=/path/to/saved-amd64-kernel/bin/tulpar \
 tests/socket-io/run --arch=amd64
 ```
 

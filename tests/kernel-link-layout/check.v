@@ -31,7 +31,7 @@ fn check(kernel string, arch string) ! {
 	base << c_objects
 	base << asm_objects
 	base << root + '/cc-runtime-${arch}/cc-runtime.a'
-	work := hosttest.work_dir('', 'vinix-link-layout-')!
+	work := hosttest.work_dir('', 'tulpar-link-layout-')!
 	defer { hosttest.remove_work_dir(work) or { eprintln(err) } }
 	mut images := [][]u8{}
 	mut symbols := [][]string{}

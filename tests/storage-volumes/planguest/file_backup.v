@@ -6,7 +6,7 @@ fn C.fchmod(i32, u32) i32
 fn C.futimens(i32, &C.timespec) i32
 
 fn backup_guest_tool(command &char, first &char, second &char, third &char, expected i32) {
-	unsafe { args := [&char(c'/usr/sbin/vinix-volume'), command, first, second, third, &char(nil)]!; run_utility(&args[0], expected) }
+	unsafe { args := [&char(c'/usr/sbin/tulpar-volume'), command, first, second, third, &char(nil)]!; run_utility(&args[0], expected) }
 }
 fn backup_guest_times(fd i32, changed bool) {
 	mut times := [2]C.timespec{}; times[0].tv_sec = 1700000000; times[1].tv_sec = if changed { 1700002345 } else { 1700001234 }

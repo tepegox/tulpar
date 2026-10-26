@@ -47,11 +47,11 @@ fn init_policy_checked(arguments []string) !int {
 	timeout := serial_timeout(parsed, 600)!
 	kernel := resolve(parsed.value('--kernel-dir', ''))!
 	state_root := resolve(parsed.value('--state-dir', ''))!
-	if !parsed.has('--build-only') { abi_validate_elf(kernel + '/bin/vinix', 'aarch64')! }
+	if !parsed.has('--build-only') { abi_validate_elf(kernel + '/bin/tulpar', 'aarch64')! }
 	mkdir_literal(state_root)!
 	here := root() + '/tests/init-policy'
 	init := root() + '/build-support/init-aarch64'
-	sdk := os.getenv_opt('VINIX_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
+	sdk := os.getenv_opt('TULPAR_AARCH64_SYSROOT') or { root() + '/build-aarch64-userland/sysroot' }
 	for policy in ['shell', 'full', 'desktop'] {
 		state := state_root + '/' + policy
 		os.mkdir(state)!
@@ -86,7 +86,7 @@ fn init_policy_checked(arguments []string) !int {
 		} else {
 			hosttest.module_copy_file_preserving_stat(binary, rootfs + '/sbin/init')!
 			// The maintained desktop stand-in verifies the manager entry argv.
-			path := if policy == 'full' { '/bin/busybox' } else { '/usr/sbin/vinix-session' }
+			path := if policy == 'full' { '/bin/busybox' } else { '/usr/sbin/tulpar-session' }
 			hosttest.module_copy_file_preserving_stat(fixture, rootfs + path)!
 		}
 		archive := archive_tree(rootfs, state + '/initramfs.tar')!
@@ -94,7 +94,7 @@ fn init_policy_checked(arguments []string) !int {
 		if parsed.has('--build-only') { continue }
 		configured := launch(binary, archive, state, kernel, 'aarch64', true)!
 		expected := match policy {
-			'shell' { ['Hello from userland!', 'Vinix 0.1.0 aarch64', 'SHELL INIT GUEST: PASS'] }
+			'shell' { ['Hello from userland!', 'Tulpar 0.1.0 aarch64', 'SHELL INIT GUEST: PASS'] }
 			'full' { ['FULL INIT GUEST: PASS'] }
 			else { ['DESKTOP RELOAD FORWARDED: PASS', 'DESKTOP RESTART: PASS', 'DESKTOP INIT GUEST: PASS'] }
 		}

@@ -11,17 +11,17 @@ import strings
 #include "module_fs_abi.h"
 
 fn C.fstat(i32, &C.stat) i32
-fn C.vinix_module_stat_path(&char, &C.vinix_module_stat) i32
+fn C.tulpar_module_stat_path(&char, &C.tulpar_module_stat) i32
 fn C.utimensat(i32, &char, &C.timespec, i32) i32
 fn C.chflags(&char, u32) i32
 
 @[typedef]
-struct C.vinix_module_stat {
+struct C.tulpar_module_stat {
 	st_mode                  u32
 	st_atime                 i64
 	st_mtime                 i64
-	vinix_module_atime_nsec  i64
-	vinix_module_mtime_nsec  i64
+	tulpar_module_atime_nsec  i64
+	tulpar_module_mtime_nsec  i64
 	st_flags                 u32
 }
 
@@ -239,17 +239,17 @@ fn module_copy_stat(source string, destination string) ! {
 	module_copy_apply_stat(module_copy_snapshot(source)!, destination)!
 }
 
-fn module_copy_snapshot(source string) !C.vinix_module_stat {
-	mut state := C.vinix_module_stat{}
-	if C.vinix_module_stat_path(source.str, &state) != 0 {
+fn module_copy_snapshot(source string) !C.tulpar_module_stat {
+	mut state := C.tulpar_module_stat{}
+	if C.tulpar_module_stat_path(source.str, &state) != 0 {
 		return ModuleFileError{source, int(C.errno), 'Cannot inspect copied source'}
 	}
 	return state
 }
 
-fn module_copy_apply_stat(state C.vinix_module_stat, destination string) ! {
-	times := [C.timespec{state.st_atime, state.vinix_module_atime_nsec},
-		C.timespec{state.st_mtime, state.vinix_module_mtime_nsec}]!
+fn module_copy_apply_stat(state C.tulpar_module_stat, destination string) ! {
+	times := [C.timespec{state.st_atime, state.tulpar_module_atime_nsec},
+		C.timespec{state.st_mtime, state.tulpar_module_mtime_nsec}]!
 	if C.utimensat(C.AT_FDCWD, destination.str, &times[0], 0) != 0 {
 		return ModuleFileError{destination, int(C.errno), 'Cannot preserve source times'}
 	}

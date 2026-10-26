@@ -6,10 +6,10 @@ export PATH=/bin:/sbin:/usr/bin:/usr/sbin
 export HOME=/root
 export SSL_CA_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
-echo "VINIX GIMP PACKAGE TEST"
+echo "TULPAR GIMP PACKAGE TEST"
 
 if [ ! -x /usr/bin/Xorg ]; then
-	echo "GIMP test needs the Vinix Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
+	echo "GIMP test needs the Tulpar Xorg build (run scripts/build-x11-aarch64.sh first)" >&2
 	exit 1
 fi
 if [ -e /usr/bin/gimp ]; then
@@ -21,7 +21,7 @@ pkg install gimp
 
 test -x /usr/bin/gimp
 test -x /usr/bin/run-gimp
-test -f /etc/gimp/2.0/vinix-sessionrc
+test -f /etc/gimp/2.0/tulpar-sessionrc
 test -d /usr/lib/gimp/2.0/plug-ins
 test -f /usr/share/applications/gimp.desktop
 test -s /usr/share/gimp/2.0/icons/Symbolic/icon-theme.cache
@@ -35,8 +35,8 @@ echo "PASS pkg installed GIMP and its GTK runtime"
 mkdir -p /tmp/.X11-unix /var/lib/xkb
 display=:10
 # A persistent /root can shadow the copy the image ships there.
-if [ -x /usr/share/vinix/x-window-check ]; then
-	x_window_check=/usr/share/vinix/x-window-check
+if [ -x /usr/share/tulpar/x-window-check ]; then
+	x_window_check=/usr/share/tulpar/x-window-check
 else
 	x_window_check=/root/x-window-check
 fi
@@ -65,7 +65,7 @@ DISPLAY="$display" run-gimp >/tmp/gimp.log 2>&1 &
 gimp_pid=$!
 mapped=false
 i=0
-# A first launch probes GIMP's complete plug-in set. Vinix QEMU currently runs
+# A first launch probes GIMP's complete plug-in set. Tulpar QEMU currently runs
 # one guest CPU, so leave enough time for that one-time registry build.
 while [ "$i" -lt 180 ]; do
 	if ! kill -0 "$gimp_pid" 2>/dev/null; then
@@ -90,4 +90,4 @@ grep -q '(position 0 0)' /root/.config/GIMP/2.10/sessionrc
 grep -q '(size 1280 900)' /root/.config/GIMP/2.10/sessionrc
 
 echo "PASS GIMP opened an editor window"
-echo "VINIX GIMP PACKAGE TEST: PASS"
+echo "TULPAR GIMP PACKAGE TEST: PASS"

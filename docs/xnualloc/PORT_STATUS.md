@@ -1,4 +1,4 @@
-# XNU allocator translation and Vinix zone backend
+# XNU allocator translation and Tulpar zone backend
 
 Updated 2026-09-11. The allocator-only commits from draft PRs #178 and #179 are
 integrated into `master`, followed by compile, production-test and boot
@@ -7,7 +7,7 @@ transplant of every XNU allocator path or configuration.**
 
 ## Provenance
 
-Vinix inputs: PR #178 head `1dc68880818947654a69de85193d8800be0e4749` and
+Tulpar inputs: PR #178 head `1dc68880818947654a69de85193d8800be0e4749` and
 the three allocator continuation commits ending at PR #179 head
 `183c323f`. PR #179 also contains the unrelated ancestor
 `7c085707f535e498ff2ce9a6447d8a5b59844388` (an x86 TSS/I/O change); that commit
@@ -36,7 +36,7 @@ distribution or provide a license exception.
 | `zfree_drop`, allocation/free validation and accounting | `Zone.zfree_drop`, `zone_mark_valid/invalid`, `zfree_ext` | Adds a distinct client-live bitmap. Cached objects remain bitmap-reserved until drained. |
 | Non-SMR cache prime, import, overflow, depot recirculation | `zalloc_cached_*`, `zfree_cached_*` | Adapted control flow with six fixed magazine containers per initialized CPU cache. No recursive magazine allocation. |
 | Element/cache draining and ordinary empty-chunk reclamation | `zone_reclaim_elements`, `zone_drain_cache`, `zone_drain_recirc`, `zone_reclaim_chunk` | Detach/account under one external lock; release backing outside the lock. No VA sequestering. |
-| Vinix small heap entry points and early/SMP registration | `memory/xnu_zone_heap*.v`, routing in `physical.v`/`slab.v`, both SMP initializers | Source-connected behind `-d xnu_zone`; compiled on x86_64/AArch64 and boot-tested on x86_64. |
+| Tulpar small heap entry points and early/SMP registration | `memory/xnu_zone_heap*.v`, routing in `physical.v`/`slab.v`, both SMP initializers | Source-connected behind `-d xnu_zone`; compiled on x86_64/AArch64 and boot-tested on x86_64. |
 
 These are not byte-for-byte representations of XNU's full state. In particular,
 **recirculation objects stay reserved in this port** until an explicit drain;
@@ -50,7 +50,7 @@ read-only mappings or security facilities.
 independent slab backend. `-d xnu_zone` instead routes small `malloc`, `free`,
 `realloc` and `heap_trim` through the new zone/cache state machine. Fourteen
 16-byte-aligned classes from 16 through 2048 bytes and one 4 KiB backing page per
-chunk are retained. Larger requests use Vinix's existing contiguous PMM-backed
+chunk are retained. Larger requests use Tulpar's existing contiguous PMM-backed
 large allocation and page-aligned payload interface.
 
 **One interrupt-disabling class lock protects the zone, every CPU cache and both
@@ -111,7 +111,7 @@ sanitisers, diagnostics and the working-set/adaptive-cache policy.
 Mach VM map/submap population, partially backed chunks, asynchronous expansion,
 waiter wakeup/NOFAIL/WAITOK semantics, VM pressure/jetsam, VA sequestering and
 large noncontiguous VM-backed allocations are NOT ported. The bridge uses
-Vinix PMM instead. It does not pretend to emulate those contracts.
+Tulpar PMM instead. It does not pretend to emulate those contracts.
 
 The full XNU split-lock/preemption protocol is also missing: introducing it
 requires a separate concurrency proof and tests. The existing single-lock
@@ -149,7 +149,7 @@ The production in-kernel comparison used three alternating one-vCPU QEMU/TCG
 boots per backend and 15 warmed samples per workload. The XNU zone was 50.19%
 slower for hot 64-byte allocate/free pairs and 5.83% faster for mixed-size
 batches. It permanently retained 56 KiB of cache metadata and held 176 KiB of
-payload before trim versus 32 KiB for the Vinix bitmap backend; both reclaimed
+payload before trim versus 32 KiB for the Tulpar bitmap backend; both reclaimed
 all measured payload after trim. See [BENCHMARK.md](BENCHMARK.md) for the exact
 method, medians, ranges, memory results and limitations.
 

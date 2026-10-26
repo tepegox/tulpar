@@ -29,7 +29,7 @@ const vrs_reader_mask = ~i64(255)
 const vrs_max_readers = u64(0x007fffffffffffff)
 
 fn vrs_assert(ok bool, message &char) {
-	if !ok { C.vinix_linuxkpi_bug(message, 0) }
+	if !ok { C.tulpar_linuxkpi_bug(message, 0) }
 }
 
 fn vrs_storage(storage voidptr) &C.vrs_rwsem {
@@ -159,7 +159,7 @@ fn vrs_acquire(storage voidptr, state u32, writer bool) i32 {
 	unsafe {
 		vrs_assert(state == 2 || state == 258 || (!writer && state == 1), c'invalid rwsem wait state')
 		sem := vrs_storage(storage)
-		vrs_assert(C.vinix_linuxkpi_may_sleep(), c'rwsem blocking acquire requires sleepable task')
+		vrs_assert(C.tulpar_linuxkpi_may_sleep(), c'rwsem blocking acquire requires sleepable task')
 		task := vrs_current()
 		mut waiter := RwsemWaiter{ task: task, writer: writer }
 		mut flags := C.vkp_spin_lock_irqsave(&sem.wait_lock)

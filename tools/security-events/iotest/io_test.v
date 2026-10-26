@@ -28,7 +28,7 @@ fn run(dir string, extra string) int {
 }
 
 fn test_collector() ! {
-	dir := os.join_path(os.temp_dir(), 'vinix-events-${os.getpid()}')
+	dir := os.join_path(os.temp_dir(), 'tulpar-events-${os.getpid()}')
 	os.rmdir_all(dir) or {}
 	os.mkdir_all(dir)!
 	defer { os.rmdir_all(dir) or {} }
@@ -106,7 +106,7 @@ fn test_collector() ! {
 // Half a line left by a collector that was killed mid-write does not eat
 // the record that follows it.
 fn test_half_a_line() ! {
-	dir := os.join_path(os.temp_dir(), 'vinix-events-half-${os.getpid()}')
+	dir := os.join_path(os.temp_dir(), 'tulpar-events-half-${os.getpid()}')
 	os.rmdir_all(dir) or {}
 	os.mkdir_all(os.join_path(dir, 'log'))!
 	os.chmod(os.join_path(dir, 'log'), 0o700)!

@@ -10,11 +10,11 @@ import tools.packages.pkgprotocol
 $if track_heap ? {
 	#include "@VMODROOT/../../../tests/support/heap_tracker.h"
 }
-fn C.vinix_heap_begin()
-fn C.vinix_heap_end() u64
+fn C.tulpar_heap_begin()
+fn C.tulpar_heap_end() u64
 
 fn health_fixture() !(string, State) {
-	directory := os.temp_dir() + '/vinix-health-report-' + os.getpid().str() + '-' + time.now().unix_micro().str()
+	directory := os.temp_dir() + '/tulpar-health-report-' + os.getpid().str() + '-' + time.now().unix_micro().str()
 	root := directory + '/generations/7'
 	os.mkdir_all(root + '/share/applications')!
 	mut packages := []Installed{}
@@ -25,7 +25,7 @@ fn health_fixture() !(string, State) {
 			name: 'Editor é🚀', version: '1.0.0', architecture: if id == 'assets' { 'all' } else { 'aarch64' }, license: 'MIT',
 			entrypoint: 'bin/app', files: [Payload{ path: 'bin/app', bytes: 7, sha256: sha256.hexhash('payload'), executable: id != 'assets' }] }
 		packages << Installed{ package: p, repository: 'trusted', public_key: 'a'.repeat(64), sequence: 1 }
-		if id in ['app', 'utility'] { os.write_file(root + '/share/applications/vinix-' + id + '.desktop', desktop_entry(p))! }
+		if id in ['app', 'utility'] { os.write_file(root + '/share/applications/tulpar-' + id + '.desktop', desktop_entry(p))! }
 	}
 	return directory, State{ generation: 7, architecture: 'aarch64', packages: packages, requested: ['app', 'utility'] }
 }
@@ -35,7 +35,7 @@ fn health_damage(directory string) ! {
 	os.write_file(root + '/apps/app/bin/app', 'damaged')!
 	os.rm(root + '/apps/runtime/bin/app')!
 	os.write_file(root + '/apps/assets/extra', 'undeclared')!
-	os.rm(root + '/share/applications/vinix-utility.desktop')!
+	os.rm(root + '/share/applications/tulpar-utility.desktop')!
 }
 
 fn test_health_report_checks_every_package_and_classifies_the_first_own_tree_issue() {
@@ -74,13 +74,13 @@ fn test_health_report_retires_owned_results_and_all_scanner_scratch() {
 		directory, state := health_fixture()!; defer { os.rmdir_all(directory) or {} }
 		for damaged in [false, true]! {
 			if damaged { health_damage(directory)! }
-			C.vinix_heap_begin()
+			C.tulpar_heap_begin()
 			for _ in 0 .. 128 {
 				mut report := installed_health_report(directory, state, no_progress)!
 				assert report.rows.all((it.issue != '') == damaged)
 				report.close()
 			}
-			kept := C.vinix_heap_end(); assert kept == 0, 'health scans (damaged=${damaged}) retained ${kept} bytes'
+			kept := C.tulpar_heap_end(); assert kept == 0, 'health scans (damaged=${damaged}) retained ${kept} bytes'
 		}
 		println('HEALTH REPORT 128 healthy and 128 multiple-issue scan/retirement cycles retain zero tracked bytes PASS')
 	}

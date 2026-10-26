@@ -10,14 +10,14 @@ import linuxkpi.compatcore
 
 // A synchronous borrow from the running Thread. Running ownership protects
 // the counter across preemption and migration; no caller retains this pointer.
-@[export: 'vinix_linuxkpi_fault_depth']
+@[export: 'tulpar_linuxkpi_fault_depth']
 fn native_fault_depth() &u32 {
 	mut caller := proc.current_thread()
 	if caller == unsafe { nil } { return unsafe { nil } }
 	return unsafe { &caller.linuxkpi_fault_depth }
 }
 
-@[export: 'vinix_linuxkpi_maskable_irq_depth']
+@[export: 'tulpar_linuxkpi_maskable_irq_depth']
 fn native_maskable_irq_depth() u32 {
 	return cpulocal.maskable_irq_depth()
 }

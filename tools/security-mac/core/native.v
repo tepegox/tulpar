@@ -21,14 +21,14 @@ fn C.strerror(i32) &char
 
 @[export: 'vm_prctl']
 pub fn policy(command u64, domain u64, kind u64, mask u64) i64 {
- return i64(C.prctl(i32(C.VINIX_MAC_PRCTL), command, domain, kind, mask))
+ return i64(C.prctl(i32(C.TULPAR_MAC_PRCTL), command, domain, kind, mask))
 }
 @[export: 'vm_lsetxattr']
 pub fn set_label(path &char, name &char, value voidptr, length uint, flags i32) i32 { return C.lsetxattr(path, name, value, length, flags) }
 @[export: 'vm_execvp']
 pub fn execute(path &char, argv &&char) i32 { return C.execvp(path, argv) }
 @[export: 'vm_error']
-pub fn error(operation &char) { unsafe { C.fprintf(C.stderr, c'vinix-mac: %s: %s\n', operation, C.strerror(C.errno)) } }
+pub fn error(operation &char) { unsafe { C.fprintf(C.stderr, c'tulpar-mac: %s: %s\n', operation, C.strerror(C.errno)) } }
 @[export: 'vm_usage']
 pub fn print_usage(text &char) { C.fputs(text, C.stderr) }
 @[export: 'vm_status']

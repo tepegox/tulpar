@@ -9,7 +9,7 @@
 // kernel would come back running and dark, so there `deep` is not offered:
 // mem_sleep lists s2idle alone, selecting deep is refused, and deep_sleep
 // says why. The kernel command line can overrule that
-// (vinix.deep_sleep=force), for someone who knows the machine has no use for
+// (tulpar.deep_sleep=force), for someone who knows the machine has no use for
 // its screen, and a machine with no framebuffer at all has nothing to lose
 // and is offered deep without being asked.
 //
@@ -54,7 +54,7 @@ fn scenario_suspend_deep_undrawable(mut t Test) {
 fn scenario_suspend_deep_forced(mut t Test) {
 	offered, why := deep_offer()
 	t.info('mem_sleep: ${offered}; deep_sleep: ${why}')
-	t.check(offered == '[s2idle] deep' && why == 'available', 'vinix.deep_sleep=force did not make deep available: "${offered}", "${why}"')
+	t.check(offered == '[s2idle] deep' && why == 'available', 'tulpar.deep_sleep=force did not make deep available: "${offered}", "${why}"')
 	one_deep_sleep(mut t)
 }
 

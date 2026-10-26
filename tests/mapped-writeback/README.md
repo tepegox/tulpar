@@ -21,11 +21,11 @@ VFS grace period. A seeded 1200-entry directory exercises inode-scratch stack
 reuse while mounting the volume. AMD64 boots from its seeded AHCI disk root;
 AArch64 mounts its VirtIO volume at `/root`.
 
-For worktrees, set `VINIX_VM_RUNNER_ROOT` to the original repository and
-`VINIX_KERNEL_DIR` to this worktree's kernel directory for AArch64, or
-`VINIX_AMD64_KERNEL` to its built kernel for AMD64. Set
-`VINIX_AARCH64_SYSROOT` to the existing musl sysroot and
-`VINIX_QEMU_RT_NO_BUILD=1` to reuse the ARM build. `--steps=sync,churn` selects
+For worktrees, set `TULPAR_VM_RUNNER_ROOT` to the original repository and
+`TULPAR_KERNEL_DIR` to this worktree's kernel directory for AArch64, or
+`TULPAR_AMD64_KERNEL` to its built kernel for AMD64. Set
+`TULPAR_AARCH64_SYSROOT` to the existing musl sysroot and
+`TULPAR_QEMU_RT_NO_BUILD=1` to reuse the ARM build. `--steps=sync,churn` selects
 a subset. The native runner always snapshots an already-built kernel;
 `--state-dir` can retain its images, firmware and launch receipts. See
 [controller qualification and retained failures](../native-disk-tools/README.md).
@@ -41,10 +41,10 @@ an anonymous mapping exceeding free RAM and the block cache remains readable.
 The excess fits the bounded compression pool without an active swap device. Its 8 MiB file is checked
 on the actual disk after the guest stops.
 
-`V=/path/to/v VINIX_FILE_PAGES_HOST=1 tests/private-pages/run-host.sh` additionally
+`V=/path/to/v TULPAR_FILE_PAGES_HOST=1 tests/private-pages/run-host.sh` additionally
 runs the production reverse VM bridge against aliases, private COW identities,
 lock contention, empty shadow roots and workspace overflow. Set
-`VINIX_HOST_SANITIZE=1` on either host runner for ASan/UBSan.
+`TULPAR_HOST_SANITIZE=1` on either host runner for ASan/UBSan.
 
 Shared writes now fault once after creation or writeback; unchanged mapped
 pages avoid inode/data I/O. See [mapped-file paging](../../docs/mapped-file-paging.md)

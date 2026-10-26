@@ -12,9 +12,9 @@ fn procfs_scratch_fixture() string {
 	mut source := ''
 	for name in procfs_scratch_functions {
 		source += scratch_definition(name, if name == 'table__linux_getdents' {
-			'\tvinix_stack_alloc(Text);\n\tvinix_stack_alloc(Entry);\n\twhile (ready) { copy(); }'
+			'\ttulpar_stack_alloc(Text);\n\ttulpar_stack_alloc(Entry);\n\twhile (ready) { copy(); }'
 		} else {
-			'\tvinix_stack_alloc(Text);\n\treturn 0;'
+			'\ttulpar_stack_alloc(Text);\n\treturn 0;'
 		})
 	}
 	return source
@@ -24,19 +24,19 @@ fn ipv6_fixture() string {
 	return ipv6_functions.map(scratch_definition(it, if it == 'inet__fill_endpoint' {
 		'\tcopy();'
 	} else {
-		'\tvinix_stack_alloc(Endpoint);\n\tfor (int i = 0; i < 4; i++) { copy(); }'
+		'\ttulpar_stack_alloc(Endpoint);\n\tfor (int i = 0; i < 4; i++) { copy(); }'
 	})).join('\n')
 }
 
 fn timer_fixture() string {
-	return scratch_definition('userland__sleep_for_signal', '\tvinix_stack_alloc(voidptr);\n' +
+	return scratch_definition('userland__sleep_for_signal', '\ttulpar_stack_alloc(voidptr);\n' +
 		'\tArray events = event__stack_list(storage, count);\n\tevent__await_masked(&events, signal);') +
 		scratch_definition('event__await_masked', '\tfor (;;) { if (ready) { return true; } }') +
 		scratch_definition('event__stack_list', '\treturn header;')
 }
 
 fn unix_fixture(name string) string {
-	return scratch_definition('unix__UnixSocket__' + name, '\tvinix_stack_alloc(sizeof(unix__PendingFdGroup));\n' +
+	return scratch_definition('unix__UnixSocket__' + name, '\ttulpar_stack_alloc(sizeof(unix__PendingFdGroup));\n' +
 		'\tarray__push_many(&group->fds, fds.data, fds.len);\n\tgroup->fds.flags |= 1;\n' +
 		'\tunix__PendingFdGroup queued = *group;\n\tarray_push(&peer->pending_fd_groups, &queued);\n' +
 		'\tpeer->pending_fd_groups.flags |= 1;')
@@ -45,16 +45,16 @@ fn unix_fixture(name string) string {
 fn socket_fixture() string {
 	mut source := ''
 	for index, name in socket_names {
-		source += scratch_definition('socket__' + name, '\tvinix_stack_alloc(Scratch);\n'.repeat(socket_slots[index]) +
+		source += scratch_definition('socket__' + name, '\ttulpar_stack_alloc(Scratch);\n'.repeat(socket_slots[index]) +
 			'\tfor (int i = 0; i < 4; i++) { if (ready) { copy(); } }\n\tv_free(sock);')
 	}
 	return source + unix_fixture('write_with_fds') + unix_fixture('send_datagram')
 }
 
 fn churn_fixture() string {
-	return scratch_definition('fs__slabinfo_text', '\tvinix_stack_alloc(Text);\n\tarray__free(&classes);\n\treturn lib__finish_text(*text);') +
+	return scratch_definition('fs__slabinfo_text', '\ttulpar_stack_alloc(Text);\n\tarray__free(&classes);\n\treturn lib__finish_text(*text);') +
 		scratch_definition('lib__finish_text', '\ts = Array_u8__bytestr(t.bytes);\n\tarray__free(&t.bytes);\n\treturn s;') +
-		scratch_definition('file__do_select', '\tvinix_stack_alloc(Timeout);\n\tremaining = deadline;\n\tfile__ppoll(polls);\n\tarray__free(&polls);\n\tarray__free(&indexes);') +
+		scratch_definition('file__do_select', '\ttulpar_stack_alloc(Timeout);\n\tremaining = deadline;\n\tfile__ppoll(polls);\n\tarray__free(&polls);\n\tarray__free(&indexes);') +
 		scratch_definition('sched__new_process', '\tnew_proc->executable_path = string__clone(old_process->executable_path);') +
 		scratch_definition('userland__clone_new_process', '\treturn new_process;')
 }
@@ -147,7 +147,7 @@ fn test_procfs_scratch_each_function_text_promotion_and_directory_bounds() {
 			refused = true
 		}
 		assert refused, 'accepted missing procfs scratch'
-		body := '\tvinix_stack_alloc(Text);\n\tmy_memdup(x, sizeof(lib__Text));'
+		body := '\ttulpar_stack_alloc(Text);\n\tmy_memdup(x, sizeof(lib__Text));'
 		procfs_scratch_check(parse(scratch_definition(name, body))!, name) or {
 			assert err.msg() == 'heap-promoted text descriptor: ${name}'
 			continue
@@ -155,8 +155,8 @@ fn test_procfs_scratch_each_function_text_promotion_and_directory_bounds() {
 		assert false, 'accepted heap Text descriptor'
 	}
 	for before, after in {
-		'vinix_stack_alloc(Entry);': 'copy();'
-		'while (ready) { copy(); }': 'while (ready) { vinix_stack_alloc(Entry); }'
+		'tulpar_stack_alloc(Entry);': 'copy();'
+		'while (ready) { copy(); }': 'while (ready) { tulpar_stack_alloc(Entry); }'
 	} {
 		rejected(fixture.replace(before, after), 'procfs-scratch', 'directory scratch must be bounded once per call')
 	}
@@ -165,14 +165,14 @@ fn test_procfs_scratch_each_function_text_promotion_and_directory_bounds() {
 	}
 	rejected(fixture.replace('void fs__syscall_readdir(void) {', 'void fs__syscall_readdir(void) {\n\tmemdup(snapshot);'), 'procfs-scratch', 'heap-promoted directory snapshot scratch')
 	// A newline interrupts the original Text-descriptor pattern.
-	assert procfs_scratch_check(parse(scratch_definition('fs__machine_stat_text', '\tvinix_stack_alloc(Text); memdup(data,\nsizeof(lib__Text));'))!, 'fs__machine_stat_text')!.starts_with('PASS')
+	assert procfs_scratch_check(parse(scratch_definition('fs__machine_stat_text', '\ttulpar_stack_alloc(Text); memdup(data,\nsizeof(lib__Text));'))!, 'fs__machine_stat_text')!.starts_with('PASS')
 }
 
 fn test_ipv6_allocation_boundaries_stack_exceptions_and_loop_tail() {
 	check_family(parse(ipv6_fixture())!, 'ipv6', true)!
 	for name in ipv6_functions {
 		for call in scratch_allocations {
-			ipv6_check(parse(scratch_definition(name, '\tvinix_stack_alloc(X); ${call}(x);'))!, name) or {
+			ipv6_check(parse(scratch_definition(name, '\ttulpar_stack_alloc(X); ${call}(x);'))!, name) or {
 				assert err.msg() == 'heap-promoted scratch in ${name}'
 				continue
 			}
@@ -187,7 +187,7 @@ fn test_ipv6_allocation_boundaries_stack_exceptions_and_loop_tail() {
 		}
 	}
 	for space in ['', ' ', '\n', '\t', '\u0085', '\u2028', '\u3000'] {
-		body := '\tfor${space}(;;) { copy(); }\n\tvinix_stack_alloc(Endpoint);'
+		body := '\tfor${space}(;;) { copy(); }\n\ttulpar_stack_alloc(Endpoint);'
 		ipv6_check(parse(scratch_definition('inet__copy_endpoint_out', body))!, 'inet__copy_endpoint_out') or {
 			assert err.msg() == 'scratch allocated repeatedly inside loop: inet__copy_endpoint_out'
 			continue
@@ -195,7 +195,7 @@ fn test_ipv6_allocation_boundaries_stack_exceptions_and_loop_tail() {
 		assert false, 'accepted scratch after first loop'
 	}
 	for prefix in ['my_', 'é', '猫', '1'] {
-		assert ipv6_check(parse(scratch_definition('inet__copy_endpoint_out', '\tvinix_stack_alloc(X); ${prefix}malloc(x);'))!, 'inet__copy_endpoint_out')!.starts_with('PASS')
+		assert ipv6_check(parse(scratch_definition('inet__copy_endpoint_out', '\ttulpar_stack_alloc(X); ${prefix}malloc(x);'))!, 'inet__copy_endpoint_out')!.starts_with('PASS')
 	}
 	assert word_calls('memdup (x); malloc\t(x);', scratch_allocations, false).len == 0
 }
@@ -204,11 +204,11 @@ fn test_timer_stack_list_ownership_and_each_hidden_allocator() {
 	fixture := timer_fixture()
 	assert timer_check(parse(fixture)!)! == 'POSIX timer generated-C caller ownership: PASS'
 	for before, after in {
-		'vinix_stack_alloc(voidptr);':                       'copy();'
+		'tulpar_stack_alloc(voidptr);':                       'copy();'
 		'Array events = event__stack_list(storage, count);': 'Array* events = header;'
 		'event__await_masked(&events':                       'event__await(events'
 	} {
-		expected := if before.starts_with('vinix') {
+		expected := if before.starts_with('tulpar') {
 			'wait list must use one caller-stack pointer slot'
 		} else if before.starts_with('Array') {
 			'array header must remain by value'
@@ -233,7 +233,7 @@ fn test_socket_slots_shared_flags_box_cleanup_and_nested_loop_bounds() {
 	check_family(parse(fixture)!, 'socket', true)!
 	for index, name in socket_names {
 		for count in [socket_slots[index] - 1, socket_slots[index] + 1] {
-			body := '\tvinix_stack_alloc(Scratch);\n'.repeat(count) + '\tv_free(sock);'
+			body := '\ttulpar_stack_alloc(Scratch);\n'.repeat(count) + '\tv_free(sock);'
 			socket_check(parse(scratch_definition('socket__' + name, body))!, name, socket_slots[index]) or {
 				assert err.msg() == 'unexpected scratch count: ${name}'
 				continue
@@ -249,8 +249,8 @@ fn test_socket_slots_shared_flags_box_cleanup_and_nested_loop_bounds() {
 	}
 	rejected(fixture.replace('v_free(sock);', 'keep(sock);'), 'socket', 'socket interface box lost its owner')
 	for name in ['syscall_sendto', 'send_message', 'receive_message'] {
-		body := '\tvinix_stack_alloc(Scratch);\n'.repeat(socket_slots[socket_names.index(name)] - 1) +
-			'\tfor (;;) { if (ready) { vinix_stack_alloc(Scratch); } }\n\tv_free(sock);'
+		body := '\ttulpar_stack_alloc(Scratch);\n'.repeat(socket_slots[socket_names.index(name)] - 1) +
+			'\tfor (;;) { if (ready) { tulpar_stack_alloc(Scratch); } }\n\tv_free(sock);'
 		socket_check(parse(scratch_definition('socket__' + name, body))!, name, socket_slots[socket_names.index(name)]) or {
 			assert err.msg() == 'scratch allocated inside loop: ${name}'
 			continue
@@ -258,8 +258,8 @@ fn test_socket_slots_shared_flags_box_cleanup_and_nested_loop_bounds() {
 		assert false, 'accepted loop stack allocation'
 	}
 	// Stack storage after a closed loop is allowed; only literal "for (" matches.
-	for loop in ['for (;;) { copy(); }', 'for\t(;;) { vinix_stack_alloc(Scratch); }'] {
-		body := '\t${loop}\n' + '\tvinix_stack_alloc(Scratch);\n'.repeat(if loop.contains('\t') {
+	for loop in ['for (;;) { copy(); }', 'for\t(;;) { tulpar_stack_alloc(Scratch); }'] {
+		body := '\t${loop}\n' + '\ttulpar_stack_alloc(Scratch);\n'.repeat(if loop.contains('\t') {
 			1
 		} else {
 			2
@@ -273,7 +273,7 @@ fn test_unix_queue_single_shallow_transfer_and_all_owners() {
 		fixture := unix_fixture(name)
 		assert unix_socket_check(parse(fixture)!, name)!.starts_with('PASS')
 		for before, after in {
-			'vinix_stack_alloc(sizeof(unix__PendingFdGroup))':   'allocate()'
+			'tulpar_stack_alloc(sizeof(unix__PendingFdGroup))':   'allocate()'
 			'array__push_many(&group->fds, fds.data, fds.len);': 'borrow(fds);'
 			'&queued);':                                         '&different);'
 			'unix__PendingFdGroup queued = *group;':             'unix__PendingFdGroup queued = clone(group);'
@@ -300,13 +300,13 @@ fn test_churn_formatter_select_timeout_and_inherited_path_owners() {
 	fixture := churn_fixture()
 	check_family(parse(fixture)!, 'churn', true)!
 	for before, after in {
-		'vinix_stack_alloc(Text);':                    'memdup(Text);'
+		'tulpar_stack_alloc(Text);':                    'memdup(Text);'
 		'array__free(&classes);':                      'keep(classes);'
 		'return lib__finish_text(*text);':             'return text;'
 		'Array_u8__bytestr(t.bytes)':                  'borrow(t.bytes)'
 		'array__free(&t.bytes);':                      'keep(t.bytes);'
 		'return s;':                                   'return other;'
-		'vinix_stack_alloc(Timeout);':                 'memdup(Timeout);'
+		'tulpar_stack_alloc(Timeout);':                 'memdup(Timeout);'
 		'array__free(&polls);':                        'keep(polls);'
 		'array__free(&indexes);':                      'keep(indexes);'
 		'remaining = deadline;':                       'remaining = 0;'
@@ -322,9 +322,9 @@ fn test_churn_formatter_select_timeout_and_inherited_path_owners() {
 }
 
 fn test_native_scratch_cli_options_errors_partial_output_and_cleanup() {
-	tools := os.getenv('VINIX_SCRATCH_TOOLS')
+	tools := os.getenv('TULPAR_SCRATCH_TOOLS')
 	if tools == '' { return }
-	work := hosttest.work_dir('', 'vinix-scratch-cli-')!
+	work := hosttest.work_dir('', 'tulpar-scratch-cli-')!
 	defer { hosttest.remove_work_dir(work) or { panic(err) } }
 	for family, fixture in {
 		'procfs-scratch': procfs_scratch_fixture()

@@ -41,15 +41,15 @@ fn C.wait_for_completion(&C.completion)
 fn C.kzalloc(uint, u32) voidptr
 fn C.kfree(voidptr)
 @[c_extern]
-__global C.vinix_rwsem_fixture_static C.rw_semaphore
+__global C.tulpar_rwsem_fixture_static C.rw_semaphore
 @[c_extern]
 __global C.GFP_KERNEL u32
 
-@[export: 'vinix_linuxkpi_rwsem_fixture_static']
-pub fn static_storage() voidptr { return unsafe { &C.vinix_rwsem_fixture_static } }
-@[export: 'vinix_linuxkpi_rwsem_fixture_init']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_static']
+pub fn static_storage() voidptr { return unsafe { &C.tulpar_rwsem_fixture_static } }
+@[export: 'tulpar_linuxkpi_rwsem_fixture_init']
 pub fn init(storage voidptr) { unsafe { C.init_rwsem(&C.rw_semaphore(storage)) } }
-@[export: 'vinix_linuxkpi_rwsem_fixture_read']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_read']
 pub fn read(storage voidptr, mode u32) i32 {
 	unsafe {
 		sem := &C.rw_semaphore(storage)
@@ -59,7 +59,7 @@ pub fn read(storage voidptr, mode u32) i32 {
 		return 0
 	}
 }
-@[export: 'vinix_linuxkpi_rwsem_fixture_write']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_write']
 pub fn write(storage voidptr, killable bool) i32 {
 	unsafe {
 		sem := &C.rw_semaphore(storage)
@@ -68,14 +68,14 @@ pub fn write(storage voidptr, killable bool) i32 {
 		return 0
 	}
 }
-@[export: 'vinix_linuxkpi_rwsem_fixture_try']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_try']
 pub fn try_lock(storage voidptr, writer bool) i32 {
 	unsafe {
 		sem := &C.rw_semaphore(storage)
 		return if writer { C.down_write_trylock(sem) } else { C.down_read_trylock(sem) }
 	}
 }
-@[export: 'vinix_linuxkpi_rwsem_fixture_up']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_up']
 pub fn up(storage voidptr, mode u32) {
 	unsafe {
 		sem := &C.rw_semaphore(storage)
@@ -84,10 +84,10 @@ pub fn up(storage voidptr, mode u32) {
 		else { C.up_read(sem) }
 	}
 }
-@[export: 'vinix_linuxkpi_rwsem_fixture_downgrade']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_downgrade']
 pub fn downgrade(storage voidptr) { unsafe { C.downgrade_write(&C.rw_semaphore(storage)) } }
 // The original wait lock protects list traversal; no waiter pointer escapes.
-@[export: 'vinix_linuxkpi_rwsem_fixture_value']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_value']
 pub fn value(storage voidptr, field u32) i64 {
 	unsafe {
 		sem := &C.rw_semaphore(storage)
@@ -103,17 +103,17 @@ pub fn value(storage voidptr, field u32) i64 {
 		return result
 	}
 }
-@[export: 'vinix_linuxkpi_rwsem_fixture_init_completion']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_init_completion']
 pub fn init_completion(storage voidptr) { unsafe { C.init_completion(&C.completion(storage)) } }
-@[export: 'vinix_linuxkpi_rwsem_fixture_complete']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_complete']
 pub fn complete(storage voidptr) { unsafe { C.complete_all(&C.completion(storage)) } }
-@[export: 'vinix_linuxkpi_rwsem_fixture_wait']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_wait']
 pub fn wait(storage voidptr) { unsafe { C.wait_for_completion(&C.completion(storage)) } }
-@[export: 'vinix_linuxkpi_rwsem_fixture_alloc']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_alloc']
 pub fn alloc() voidptr {
 	storage := C.kzalloc(sizeof(C.rw_semaphore), C.GFP_KERNEL)
 	if storage != unsafe { nil } { init(storage) }
 	return storage
 }
-@[export: 'vinix_linuxkpi_rwsem_fixture_free']
+@[export: 'tulpar_linuxkpi_rwsem_fixture_free']
 pub fn free(storage voidptr) { C.kfree(storage) }

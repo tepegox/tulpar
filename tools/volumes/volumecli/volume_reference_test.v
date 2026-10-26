@@ -43,7 +43,7 @@ fn test_reference_comparison_complete_validation_exact_metadata_and_transactiona
 
 fn test_reference_query_commands_reject_bad_arity_and_empty_paths_before_io() {
 	unsafe {
-		mut args := [&char(c'vinix-volume'), &char(c'show-volume-reference'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
+		mut args := [&char(c'tulpar-volume'), &char(c'show-volume-reference'), &char(c'/unused'), &char(c'/unused'), &char(nil)]!
 		for count in [2, 4] { assert run(count, &args[0]) == 2 }; args[2] = &char(c''); assert run(3, &args[0]) == 2
 		args[1] = &char(c'compare-volume-references'); args[2] = &char(c'/unused')
 		for count in [2, 3, 5] { assert run(count, &args[0]) == 2 }

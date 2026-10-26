@@ -8,7 +8,7 @@ fn volume_inspect_tool(config &char, key &char, online bool, readonly bool, pare
 	unsafe {
 		output := C.open(c'/root/inspection.out', C.O_WRONLY | C.O_CREAT | C.O_TRUNC, u32(0o600))
 		check(output >= 0, c'open volume inspection output')
-		args := [&char(c'/usr/sbin/vinix-volume'), if online { &char(c'discover-volume') } else { &char(c'show-volume') }, config, key, &char(nil)]!
+		args := [&char(c'/usr/sbin/tulpar-volume'), if online { &char(c'discover-volume') } else { &char(c'show-volume') }, config, key, &char(nil)]!
 		child := C.fork(); check(child >= 0, c'fork volume inspection utility')
 		if child == 0 {
 			if C.dup2(output, 1) != 1 || C.close(output) != 0 { C._exit(126) }
@@ -37,7 +37,7 @@ fn volume_inspect_cycles(parent &char, count int) {
 	for _ in 0 .. count {
 		volume_inspect_tool(c'/root/volume-ro.sealed', c'/root/crypt.pass', false, true, parent, 0)
 		volume_inspect_tool(c'/root/volume-ro.sealed', c'/root/crypt.pass', true, true, parent, 0)
-		missing(c'/dev/mapper/vinix60')
+		missing(c'/dev/mapper/tulpar60')
 	}
 	C.sleep(13); C.printf(c'PLAN VOLUME INSPECTION CYCLES count=%d\n', count)
 }
@@ -71,25 +71,25 @@ fn volume_inspect_first(parent &char) {
 			volume_inspect_tool(c'/root/volume.sealed', c'/root/next.pass', online, false, parent, 1)
 			for readonly in [false, true]! {
 				volume_inspect_tool(if readonly { &char(c'/root/volume-ro.sealed') } else { &char(c'/root/volume.sealed') }, c'/root/crypt.pass', online, readonly, parent, 0)
-				missing(c'/dev/mapper/vinix60')
+				missing(c'/dev/mapper/tulpar60')
 			}
 		}
 		volume_seal_open_tool(parent, c'/root/volume-ro.sealed', c'/root/crypt.pass', false, 0)
-		before := status(c'/dev/mapper/vinix60'); held := C.open(c'/dev/mapper/vinix60', C.O_RDONLY)
+		before := status(c'/dev/mapper/tulpar60'); held := C.open(c'/dev/mapper/tulpar60', C.O_RDONLY)
 		mut ciphertext := [512]u8{}; mut after_ciphertext := [512]u8{}
 		raw := C.open(parent, C.O_RDONLY)
 		check(held >= 0 && raw >= 0 && C.pread(raw, &ciphertext[0], 512, 15728640) == 512, c'pin live encrypted descriptor and ciphertext')
 		volume_inspect_tool(c'/root/volume.sealed', c'/root/crypt.pass', true, false, parent, 0)
-		after := status(c'/dev/mapper/vinix60')
+		after := status(c'/dev/mapper/tulpar60')
 		check(before == after, c'discovery preserves occupied mapping, mode, generation and counters'); crypt_data(held, 0, 0x73)
 		check(C.pread(raw, &after_ciphertext[0], 512, 15728640) == 512 && C.memcmp(&ciphertext[0], &after_ciphertext[0], 512) == 0, c'discovery never changes physical ciphertext')
-		check(C.close(raw) == 0 && C.close(held) == 0, c'close held inspection descriptors'); simple(c'remove', c'/dev/mapper/vinix60', nil, 0)
+		check(C.close(raw) == 0 && C.close(held) == 0, c'close held inspection descriptors'); simple(c'remove', c'/dev/mapper/tulpar60', nil, 0)
 		volume_inspect_retention(parent)
 		volume_rewrap_read(c'/root/volume.sealed', &again[0]); check(C.memcmp(&original[0], &again[0], 320) == 0, c'inspection preserves config bytes')
-		check(C.unlink(c'/root/inspection.out') == 0 && C.unlink(c'/etc/vinix/volumes.vmap') == 0, c'clear capture and initial invalid boot plan')
+		check(C.unlink(c'/root/inspection.out') == 0 && C.unlink(c'/etc/tulpar/volumes.vmap') == 0, c'clear capture and initial invalid boot plan')
 		marker := C.open(c'/second-boot', C.O_WRONLY | C.O_CREAT | C.O_EXCL, u32(0o600))
 		check(marker >= 0 && C.fsync(marker) == 0 && C.close(marker) == 0, c'persist volume inspection phase')
-		for path in [&char(c'/root'), &char(c'/etc/vinix'), &char(c'/')]! {
+		for path in [&char(c'/root'), &char(c'/etc/tulpar'), &char(c'/')]! {
 			fd := C.open(path, C.O_RDONLY | C.O_DIRECTORY); check(fd >= 0 && C.fsync(fd) == 0 && C.close(fd) == 0, c'persist volume inspection configs')
 		}
 		C.printf(c'PLAN VOLUME INSPECTION PASSED: authenticated reports, read-only discovery, unchanged occupied mappings/ciphertext and measured lifetimes\n')
@@ -110,7 +110,7 @@ fn volume_inspect_entry() i32 {
 			config := if readonly { &char(c'/root/volume-ro.sealed') } else { &char(c'/root/volume.sealed') }
 			volume_inspect_tool(config, c'/root/crypt.pass', false, readonly, parent, 0)
 			volume_inspect_tool(config, c'/root/crypt.pass', true, readonly, parent, 0)
-			missing(c'/dev/mapper/vinix60')
+			missing(c'/dev/mapper/tulpar60')
 		}
 		volume_seal_view(parent, c'/root/volume.sealed', false, false)
 		volume_seal_view(parent, c'/root/volume-ro.sealed', false, true)

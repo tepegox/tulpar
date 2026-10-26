@@ -119,7 +119,7 @@ fn pledge_needs(nr u64, a [6]u64) u64 {
 		// memfd_secret, futex_waitv, set_mempolicy_home_node, cachestat,
 		// map_shadow_stack, futex2, mseal.
 		447, 449, 450, 451, 453, 454, 455, 456, 462 { pledge_stdio }
-		// Vinix: mimmutable, pledge, unveil, minherit.
+		// Tulpar: mimmutable, pledge, unveil, minherit.
 		500, 503 { pledge_stdio }
 		501 { pledge_always }
 		502 { proc.pledge_unveil }

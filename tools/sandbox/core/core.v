@@ -184,7 +184,7 @@ pub fn verify_ambient() i32 {
 pub fn run(argc i32, argv &&char) i32 {
  unsafe {
   if argc == 2 && C.strcmp(argv[1], c'--help') == 0 {
-   C.vksb_help(c'Usage: vinix-sandbox --promises \'stdio ...\' [--uid UID --gid GID]\n       [--unveil /path rwxc]... [--env NAME=VALUE]... -- /program [args...]\nDrops capabilities, supplementary groups and inherited FDs >=3; sets\nno_new_privs, locks unveil and keeps the target promises across exec.\nRoot must choose nonzero UID/GID. Environment is empty unless --env\nis supplied. The program is automatically unveiled rx; shared library\nand data paths must be explicitly unveiled. Setup failure exits 125.')
+   C.vksb_help(c'Usage: tulpar-sandbox --promises \'stdio ...\' [--uid UID --gid GID]\n       [--unveil /path rwxc]... [--env NAME=VALUE]... -- /program [args...]\nDrops capabilities, supplementary groups and inherited FDs >=3; sets\nno_new_privs, locks unveil and keeps the target promises across exec.\nRoot must choose nonzero UID/GID. Environment is empty unless --env\nis supplied. The program is automatically unveiled rx; shared library\nand data paths must be explicitly unveiled. Setup failure exits 125.')
    return 0
   }
   // Both helpers finish synchronously and retain no configuration pointer.
