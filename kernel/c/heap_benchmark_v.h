@@ -28,14 +28,6 @@ uint64_t vkb_test_ticks(void);
 #define vkb_free vkb_test_free
 #define vkb_log vkb_test_log
 #define VKB_PLATFORM "vinix"
-#elif defined(__APPLE__)
-void *kern_os_malloc(size_t);
-void kern_os_free(void *);
-void IOLog(const char *, ...);
-#define vkb_alloc kern_os_malloc
-#define vkb_free kern_os_free
-#define vkb_log IOLog
-#define VKB_PLATFORM "xnu"
 #else
 void *malloc(size_t);
 void free(void *);

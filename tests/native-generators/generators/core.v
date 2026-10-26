@@ -218,7 +218,6 @@ fn perform(args cachecli.Arguments, kind string, arch string) ! {
 				hosttest.emit_module_header(root() + '/kernel/heapbench', output, args.value('--header', ''))!
 			}
 		}
-		'metadata' { generate_metadata(absolute(output)!, arch)! }
 		else { return error('unknown generator') }
 	}
 }

@@ -22,12 +22,11 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install build-essential clang -y
 
-      # A fixed V, not the current one: the kernel is written against one
-      # compiler's strictness, and a floating V turns every upstream V change
-      # into a red build here. tools/m1-wifi/get-v.sh pins V and its bootstrap
-      # compiler and is what the Wi-Fi build already uses. Bump the pin there.
       - name: Build the pinned V
-        run: sh tools/m1-wifi/get-v.sh "$PWD/v"
+        run: |
+          git clone https://github.com/vlang/v v
+          git -C v checkout f7e9ee96c22ca6db47b56d28332e7553715c659f
+          make -C v
 
       # Userland utilities use the release compiler's libc bindings. The
       # kernel compiler is pinned separately for its freestanding backend.

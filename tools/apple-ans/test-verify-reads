@@ -1,3 +1,0 @@
-#!/bin/sh
-set -eu
-exec "$(dirname "$0")/../../build-support/run-v-tool.sh" "$(dirname "$0")/test-verify-reads.v" "$@"

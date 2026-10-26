@@ -2,9 +2,7 @@
 #define VINIX_VARARGS_ABI_H
 #include <stdint.h>
 /* Native ABI layouts, with no implementation statements. */
-#if defined(__APPLE__) && defined(__aarch64__)
-#define VINIX_VA_ABI 1
-#elif defined(__aarch64__)
+#if defined(__aarch64__)
 #define VINIX_VA_ABI 2
 #elif defined(__x86_64__)
 #define VINIX_VA_ABI 3

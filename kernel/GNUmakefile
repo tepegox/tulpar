@@ -57,19 +57,8 @@ endif
 # User controllable C compiler command.
 CC := cc
 
-# User controllable archiver command. Apple's ar cannot archive the kernel's
-# ELF objects, so macOS builds need LLVM even when clang is the host compiler.
+# User controllable archiver command.
 AR := ar
-ifeq ($(shell uname -s),Darwin)
-    ifneq ($(strip $(VINIX_LLVM_AR)),)
-        AR := $(VINIX_LLVM_AR)
-    else
-        AR := $(shell command -v llvm-ar 2>/dev/null || \
-            for candidate in /opt/homebrew/opt/llvm/bin/llvm-ar /usr/local/opt/llvm/bin/llvm-ar; do \
-                if test -x "$$candidate"; then printf '%s\n' "$$candidate"; break; fi; \
-            done)
-    endif
-endif
 
 # User controllable V command.
 V := v
@@ -84,8 +73,7 @@ CPPFLAGS :=
 VFLAGS :=
 
 # Emit Limine's multiprocessor request when the boot environment can start
-# secondary CPUs safely. Generic direct builds stay conservative; the M1
-# deployment selects this explicitly alongside its pinned Limine 12.8 loader.
+# secondary CPUs safely. Terminal images enable this with their pinned loader.
 LIMINE_MP ?= 0
 ifneq ($(LIMINE_MP),0)
 ifneq ($(LIMINE_MP),1)
@@ -278,7 +266,7 @@ endif
 
 # V build tags change the generated kernel C even though no source timestamp
 # changes. Keep the selected configuration in the prerequisite name so moving
-# between a QEMU SMP build and a hardware-safe Apple build cannot reuse a
+# between SMP-enabled and uniprocessor builds cannot reuse a
 # stale obj/blob.c.o.
 V_CONFIG_STAMP := obj/.v-config-$(ARCH)-limine-mp-$(LIMINE_MP)-alloc-track-$(ALLOC_TRACK)-linuxkpi-$(LINUXKPI)-pci-test-$(PCI_CONFIG_TEST)-pci-topology-$(PCI_TOPOLOGY_TEST)-acpi-test-$(ACPI_SYNC_TEST)-stack-guard-$(STACK_GUARD_TEST)
 
@@ -372,10 +360,8 @@ else
 override VFILES := $(shell find -L * -type f -name '*.v' \
     ! -path 'obj/*' \
     ! -path 'aarch64/*' \
-    ! -path 'apple/*' \
     ! -path 'devicetree/*' \
     ! -path 'drm/*' \
-    ! -path 'gpu/*' \
     ! -path 'dev/pointerdev/*' \
     ! -path 'syscall/common.v' \
     ! -name '*_aarch64.v' \
@@ -406,7 +392,7 @@ $(LINUXKPI_COBJ): $(V_CONFIG_STAMP)
 
 ifeq ($(ACPI_SYNC_TEST),1)
 ACPI_SYNC_V_ARCH := $(if $(filter aarch64,$(ARCH)),arm64,amd64)
-obj/acpi-sync/native.c: ../tests/acpi-sync/nativefixture/core.v ../tests/acpi-sync/native-abi.h ../tests/acpi-sync/compile-v-native ../tests/acpi-sync/compile-v-native.v ../tests/apple-protocols/fixturecompiler/controller.v ../tests/linuxkpi/hosttest/module.v $(V_CONFIG_STAMP)
+obj/acpi-sync/native.c: ../tests/acpi-sync/nativefixture/core.v ../tests/acpi-sync/native-abi.h ../tests/acpi-sync/compile-v-native ../tests/acpi-sync/compile-v-native.v ../tests/support/fixturecompiler/controller.v ../tests/linuxkpi/hosttest/module.v $(V_CONFIG_STAMP)
 	mkdir -p "$(@D)"
 	../tests/acpi-sync/compile-v-native $@ --arch $(ACPI_SYNC_V_ARCH)
 

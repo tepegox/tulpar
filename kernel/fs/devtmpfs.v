@@ -352,7 +352,7 @@ fn ensure_devtmpfs_dir(parent &VFSNode, name string) &VFSNode {
 // not: they belong to whoever opened their master. `tty` is not either: it
 // is whatever terminal the caller already has.
 fn seat_device_name(name string) bool {
-	for whole in ['console', 'pointer', 'mouse', 'dsp', 'mixer', 'audio', 'display-hpd', 'apple-panel-bl']! {
+	for whole in ['console', 'pointer', 'mouse', 'dsp', 'mixer', 'audio']! {
 		if name == whole {
 			return true
 		}

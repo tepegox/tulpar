@@ -12,11 +12,9 @@ fn firmware(arch string) !string {
 		return selected
 	}
 	paths := if arch == 'arm64' {
-		['/usr/share/AAVMF/AAVMF_CODE.fd', '/usr/share/qemu-efi-aarch64/QEMU_EFI.fd',
-		 '/opt/homebrew/share/qemu/edk2-aarch64-code.fd']
+		['/usr/share/AAVMF/AAVMF_CODE.fd', '/usr/share/qemu-efi-aarch64/QEMU_EFI.fd']
 	} else {
-		['/usr/share/OVMF/OVMF_CODE_4M.fd', '/usr/share/OVMF/OVMF_CODE.fd',
-		 '/opt/homebrew/share/qemu/edk2-x86_64-code.fd']
+		['/usr/share/OVMF/OVMF_CODE_4M.fd', '/usr/share/OVMF/OVMF_CODE.fd']
 	}
 	for path in paths { if os.is_file(path) { return path } }
 	return error('Set TULPAR_FIRMWARE to the UEFI firmware image')
@@ -27,6 +25,7 @@ fn qemu(arch string) string { return if arch == 'arm64' { 'qemu-system-aarch64' 
 fn guest_args(arch string) ![]string {
 	if !os.is_file(image(arch)) { return error('Build the image first: ' + image(arch)) }
 	accel := os.getenv_opt('TULPAR_ACCEL') or { 'tcg' }
+	if accel !in ['tcg', 'kvm'] { return error('TULPAR_ACCEL must be tcg or kvm') }
 	cpu := if accel == 'tcg' { 'max' } else { 'host' }
 	mut args := ['-m', '512', '-smp', '2', '-display', 'none', '-no-reboot']
 	if arch == 'arm64' {

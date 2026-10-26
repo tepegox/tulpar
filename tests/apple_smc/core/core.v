@@ -1,1 +1,0 @@
-../../../kernel/apple/smc/core/core.v

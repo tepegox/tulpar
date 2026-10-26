@@ -2,7 +2,7 @@
 # Assemble an aarch64 UEFI ISO around an already-built kernel and initramfs.
 # Limine's EFI boot image comes from its pinned release; the loader inside it
 # is that release built with Vinix's base revision patch
-# (scripts/build-limine-aarch64.sh), since upstream Limine refuses the
+# (scripts/build-limine-aarch64.v), since upstream Limine refuses the
 # kernel's base revision 2 on arm64.
 set -euo pipefail
 
@@ -54,7 +54,7 @@ sha256_file() {
 }
 
 LIMINE_DIR="$(limine_binary_dir "$BUILD_DIR/limine")"
-"$SCRIPT_DIR/scripts/build-limine-aarch64.sh" >&2
+sh "$SCRIPT_DIR/build-support/run-v-tool.sh" "$SCRIPT_DIR/scripts/build-limine-aarch64.v" >&2
 BOOTAA64="$SCRIPT_DIR/boot-image/limine-bin/BOOTAA64.EFI"
 if ! LC_ALL=C grep -aqF "Limine $LIMINE_BINARY_VERSION (aarch64, UEFI)" "$BOOTAA64"; then
     echo "ERROR: $BOOTAA64 is not Limine $LIMINE_BINARY_VERSION" >&2

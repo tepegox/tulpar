@@ -29,10 +29,6 @@ fn run_scenario(name string, mut t Test) bool {
 		'acpi-backlight-off' { scenario_acpi_backlight_off(mut t) }
 		'acpi-power' { scenario_acpi_power(mut t) }
 		'acpi-thermal' { scenario_acpi_thermal(mut t) }
-		'apple-smc-selftest' { scenario_apple_smc_selftest(mut t) }
-		'apple-smc-selftest-bare' { scenario_apple_smc_selftest_bare(mut t) }
-		'apple-smc-selftest-legacy' { scenario_apple_smc_selftest_legacy(mut t) }
-		'apple-smc-selftest-options' { scenario_apple_smc_selftest_options(mut t) }
 		'ahci' { scenario_ahci(mut t) }
 		'cpu-power' { scenario_cpu_power(mut t) }
 		'cpu-power-simulated' { scenario_cpu_power_simulated(mut t) }

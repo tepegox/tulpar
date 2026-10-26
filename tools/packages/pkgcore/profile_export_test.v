@@ -3,7 +3,6 @@ module pkgcore
 import json2
 import os
 import time
-import tests.packages.applefixture
 import tests.packages.elffixture
 
 #include <sys/resource.h>
@@ -13,7 +12,7 @@ fn C.mkfifo(&char, u32) int
 struct ProfileExportLimit { current u64 maximum u64 }
 
 fn profile_export_profiles() []string {
-	profiles := ['native', 'sqlite', 'ffmpeg', 'wine', 'apple']
+	profiles := ['native', 'sqlite', 'ffmpeg', 'wine']
 	if os.args.len >= 2 && os.args[1] in profiles { return [os.args[1]] }
 	return profiles
 }
@@ -163,54 +162,13 @@ fn profile_export_wine_fixture() !string {
 	return work
 }
 
-fn profile_export_apple_fixture_info(id string) string {
-	return '<plist><dict><key>CFBundleIdentifier</key><string>' + id + '</string><key>CFBundleExecutable</key><string>Example</string><key>CFBundlePackageType</key><string>APPL</string></dict></plist>'
-}
-
-fn profile_export_apple_fixture_recipe(application bool) RootRecipe {
-	return if application {
-		RootRecipe{ manifest: Package{ id: 'org.example.apple', version: '1.0.0', architecture: 'aarch64',
-			name: 'Reviewed Apple application', description: 'Publisher-supplied iOS bundle and isolated runtime.',
-			license: 'Example-EULA', proprietary: true, kind: 'apple', runtime: 'org.example.ios-runtime',
-			entrypoint: 'bin/run-ios', arguments: ['@APP@/Example.app/Example', 'literal ; $ argument'],
-			permissions: ['files', 'process'], associations: ['text/plain'],
-			dependencies: [Dependency{ id: 'org.example.ios-runtime', minimum: '1.0.0', before: '2.0.0' }] },
-			entries: [RootEntry{ source: 'app/Example', path: 'Example.app/Example' },
-				RootEntry{ source: 'app/Info.plist', path: 'Example.app/Info.plist' },
-				RootEntry{ source: 'licenses/application-LICENSE.txt', path: apple_application_notice }] }
-	} else {
-		RootRecipe{ manifest: Package{ id: 'org.example.ios-runtime', version: '1.0.0', architecture: 'aarch64',
-			name: 'Reviewed iOS runtime closure', license: 'GPL-2.0-or-later AND MIT', kind: 'runtime' },
-			entries: [RootEntry{ source: 'runtime/runner', path: 'bin/run-ios' },
-				RootEntry{ source: 'runtime/closure.txt', path: 'share/closure.txt' },
-				RootEntry{ source: 'licenses/runtime-LICENSE.txt', path: apple_runtime_notice }] }
-	}
-}
-
-fn profile_export_apple_fixture() !string {
-	work := os.real_path(os.temp_dir()) + '/vinix-apple-profile-' + os.getpid().str() + '-' + time.now().unix_micro().str()
-	root := work + '/roots/aarch64'
-	for directory in ['app', 'runtime', 'licenses'] { os.mkdir_all(root + '/' + directory)! }
-	os.write_file_array(root + '/app/Example', applefixture.image(23))!
-	os.write_file(root + '/app/Info.plist', profile_export_apple_fixture_info('org.example.apple'))!
-	os.write_file_array(root + '/runtime/runner', elffixture.image('aarch64', 'static'))!
-	os.chmod(root + '/runtime/runner', 0o755)!
-	os.write_file(root + '/runtime/closure.txt', 'enumerated runtime resources')!
-	os.write_file(root + '/licenses/application-LICENSE.txt', 'Fixture only; no commercial redistribution rights.')!
-	os.write_file(root + '/licenses/runtime-LICENSE.txt', 'Fixture runtime license.')!
-	os.mkdir_all(work + '/recipes/aarch64')!
-	for role in ['application', 'runtime'] { os.write_file(work + '/recipes/aarch64/' + role + '.json', json2.encode(profile_export_apple_fixture_recipe(role == 'application')))! }
-	return work
-}
-
-
 fn profile_export_fixture(kind string) !string {
 	work := match kind {
 		'native' { profile_export_native_profile_fixture()! }
 		'sqlite' { profile_export_sqlite_profile_fixture()! }
 		'ffmpeg' { profile_export_ffmpeg_test_roots()! }
 		'wine' { profile_export_wine_fixture()! }
-		else { profile_export_apple_fixture()! }
+		else { return error('unsupported profile') }
 	}
 	if kind == 'ffmpeg' {
 		archive := os.getenv_opt('VINIX_PROFILE_EXPORT_SOURCE') or { '/usr/share/package-fixtures/ffmpeg.tar.xz' }
@@ -230,7 +188,7 @@ fn profile_export_run(kind string, work string, target string, options CatalogOp
 		'sqlite' { mut info := sqlite_catalog_with('3.53.4', '1.0.0', work + '/roots', target, options)!; info.close() }
 		'ffmpeg' { mut info := ffmpeg_catalog_with('1.0.0', work + '/roots', target, options)!; info.close() }
 		'wine' { mut info := wine_catalog_with(work + '/recipes', work + '/roots', target, options)!; info.close() }
-		else { mut info := apple_catalog_with(work + '/recipes', work + '/roots', target, options)!; info.close() }
+		else { return error('unsupported profile') }
 	}
 }
 

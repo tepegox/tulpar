@@ -84,7 +84,7 @@ fn test_launch_plan_matrix_retires_success_storage_and_keeps_inputs_literal() {
 	os.write_file('/tmp/launch-owned-matrix', 'document')!
 	defer { os.rm('/tmp/launch-owned-matrix') or {} }
 	for architecture in ['aarch64', 'x86_64']! {
-		for kind in ['native', 'linux', 'windows', 'apple']! {
+		for kind in ['native', 'linux', 'windows']! {
 			config, state := launch_owned_fixture(architecture, kind, 16)
 			for mode in 0 .. if kind == 'native' { 6 } else { 4 } {
 				input := LaunchInput{ terminal: mode == 1 || mode == 3, command: mode == 2 || mode == 3,
@@ -115,13 +115,13 @@ fn test_launch_plan_matrix_retires_success_storage_and_keeps_inputs_literal() {
 			}
 		}
 	}
-	$if track_heap ? { println('LAUNCH OWNERSHIP 36 architecture/kind/mode cases: 1000 plan/close cycles each retained 0 bytes') }
-	println('LAUNCH OWNERSHIP both architectures and native/Linux/Windows/Apple plans preserve promises, environment, templates and literal tails PASS')
+	$if track_heap ? { println('LAUNCH OWNERSHIP 28 architecture/kind/mode cases: 1000 plan/close cycles each retained 0 bytes') }
+	println('LAUNCH OWNERSHIP both architectures and native/Linux/Windows plans preserve promises, environment, templates and literal tails PASS')
 }
 
 fn test_process_grant_allows_local_ipc_without_additional_paths_or_display_context() {
 	for architecture in ['aarch64', 'x86_64']! {
-		for kind in ['native', 'linux', 'windows', 'apple']! {
+		for kind in ['native', 'linux', 'windows']! {
 			config, fixture := launch_owned_fixture(architecture, kind, 0)
 			for mode in 0 .. if kind == 'native' { 4 } else { 2 } {
 				for process in [false, true]! {

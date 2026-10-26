@@ -2,7 +2,7 @@
 module devicetree
 
 // Flattened Device Tree (FDT) parser
-// Parses the DTB blob provided by m1n1/U-Boot via Limine module
+// Parses a standard flattened device tree supplied by firmware via Limine
 // Follows the DTSpec (devicetree.org) binary format
 import lib as _
 import memory as _
@@ -59,7 +59,6 @@ __global (
 	dt_root      &DTNode
 	dt_strings   voidptr
 	dt_struct    voidptr
-	dt_apple_adt bool
 )
 
 // Returns true if the device tree was successfully parsed.
@@ -78,36 +77,16 @@ fn be64(ptr voidptr) u64 {
 	return (u64(be32(ptr)) << 32) | u64(be32(unsafe { voidptr(u64(ptr) + 4) }))
 }
 
-// Apple DeviceTree payloads embedded as vendor properties retain their
-// original little-endian scalar encoding when a bootloader wraps them in an
-// FDT. Standard FDT cells must continue to use be32()/be64().
-fn le32(ptr voidptr) u32 {
-	p := unsafe { &u8(ptr) }
-	return unsafe {
-		u32(p[0]) | (u32(p[1]) << 8) | (u32(p[2]) << 16) | (u32(p[3]) << 24)
-	}
-}
-
-fn le64(ptr voidptr) u64 {
-	return u64(le32(ptr)) | (u64(le32(unsafe { voidptr(u64(ptr) + 4) })) << 32)
-}
-
 fn read_cells(ptr voidptr, count u32) ?u64 {
-	if count == 1 {
-		return u64(be32(ptr))
-	}
-	if count == 2 {
-		return be64(ptr)
-	}
+	if count == 1 { return u64(be32(ptr)) }
+	if count == 2 { return be64(ptr) }
 	return none
 }
 
 fn get_string(offset u32) string {
 	cstr := unsafe { &u8(u64(dt_strings) + offset) }
 	mut len := 0
-	for unsafe { cstr[len] } != 0 {
-		len++
-	}
+	for unsafe { cstr[len] } != 0 { len++ }
 	return unsafe { tos(cstr, len) }
 }
 
@@ -115,7 +94,7 @@ fn align4(v u32) u32 {
 	return (v + 3) & ~u32(3)
 }
 
-// Parse a DTB blob at the given address
+// Parse a standard DTB blob at the given address.
 pub fn parse(dtb_addr voidptr) bool {
 	header := unsafe { &FDTHeader(dtb_addr) }
 
@@ -136,11 +115,8 @@ pub fn parse(dtb_addr voidptr) bool {
 	dt_root = parse_node(mut &offset, unsafe { nil })
 
 	if dt_root != unsafe { nil } {
-		dt_apple_adt = has_property(dt_root, 'vinix,apple-adt')
 		println('devicetree: Parsed root node successfully')
-		if dt_apple_adt {
-			println("devicetree: iBoot's Apple device tree, converted by the Apple loader")
-		}
+
 		return true
 	}
 
@@ -310,22 +286,6 @@ fn find_compatible_in(node &DTNode, compat string) ?&DTNode {
 	return none
 }
 
-// A tree apple-boot/ converted from the ADT iBoot handed over, rather than
-// one m1n1 wrote for Linux. Nodes keep Apple's names, compatibles and
-// little-endian vendor values; only the cell properties are big-endian.
-pub fn is_apple_adt() bool {
-	return dt_apple_adt
-}
-
-fn has_property(node &DTNode, name string) bool {
-	for prop in node.properties {
-		if prop.name == name {
-			return true
-		}
-	}
-	return false
-}
-
 // Get a property from a node
 pub fn get_property(node &DTNode, name string) ?DTProperty {
 	for prop in node.properties {
@@ -352,50 +312,6 @@ pub fn get_u64(node &DTNode, name string) ?u64 {
 		return none
 	}
 	return be64(prop.data)
-}
-
-// Read an Apple vendor scalar without reinterpreting it as a standard
-// big-endian FDT cell.
-pub fn get_le_u32(node &DTNode, name string) ?u32 {
-	prop := get_property(node, name) or { return none }
-	if prop.len < 4 {
-		return none
-	}
-	return le32(prop.data)
-}
-
-pub fn get_le_u64(node &DTNode, name string) ?u64 {
-	prop := get_property(node, name) or { return none }
-	if prop.len < 8 {
-		return none
-	}
-	return le64(prop.data)
-}
-
-pub fn get_le_u32_array(node &DTNode, name string) ?[]u32 {
-	prop := get_property(node, name) or { return none }
-	if prop.len == 0 || prop.len % 4 != 0 {
-		return none
-	}
-	mut result := []u32{cap: int(prop.len / 4)}
-	for offset := u32(0); offset < prop.len; offset += 4 {
-		result << le32(unsafe { voidptr(u64(prop.data) + offset) })
-	}
-	return result
-}
-
-// Apple vendor records also use native little-endian 64-bit words. Keep this
-// separate from the standard big-endian FDT cell helpers above.
-pub fn get_le_u64_array(node &DTNode, name string) ?[]u64 {
-	prop := get_property(node, name) or { return none }
-	if prop.len == 0 || prop.len % 8 != 0 {
-		return none
-	}
-	mut result := []u64{cap: int(prop.len / 8)}
-	for offset := u32(0); offset < prop.len; offset += 8 {
-		result << le64(unsafe { voidptr(u64(prop.data) + offset) })
-	}
-	return result
 }
 
 // Get a list of big-endian u32 cells from a property.
@@ -501,13 +417,6 @@ fn translate_address(node &DTNode, input u64) ?u64 {
 	mut address := input
 	mut bus := node.parent
 	for bus != unsafe { nil } {
-		// In Apple's tree a bus without ranges ends the walk, as it does in
-		// XNU's IODTResolveAddressCell: DMA controllers and the like below
-		// such a bus already give CPU addresses, and the ranges of the bus
-		// above would move them somewhere else.
-		if dt_apple_adt && bus.parent != unsafe { nil } && !has_property(bus, 'ranges') {
-			break
-		}
 		address = translate_one_bus(bus, address) or { return none }
 		bus = bus.parent
 	}

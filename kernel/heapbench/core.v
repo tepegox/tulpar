@@ -210,7 +210,7 @@ fn phase(name &char, pairs u64, run fn (&Measurement, &Failure, bool) i32, total
 pub fn run() i32 {
  unsafe {
   mut checksum := u64(0)
-  // IOLog truncates at 256 bytes; keep three separate metadata records.
+  // Keep metadata in separate bounded records.
   C.vkb_log(c'KALLOC-META schema=3 platform=%s timer=x86-tsc samples=%llu hot_pairs=%llu batch_rounds=%llu batch_width=%llu big_pairs=%llu big_bytes=%llu operation=alloc_free_pair\n',
    C.VKB_PLATFORM, u64(5), u64(100000), u64(48), u64(256), u64(128), u64(262144))
   C.vkb_log(c'KALLOC-VALIDATION platform=%s sizes=16,32,48,64,96,128,192,256,384,512,768,1024,1536,2048 zero_validation=warmup_every_requested_byte payload_validation=endpoints timed_zero_validation=0\n', C.VKB_PLATFORM)
@@ -221,8 +221,3 @@ pub fn run() i32 {
   return 0
  }
 }
-
-@[export: 'kmod_alloc_start']
-pub fn kmod_start(kmod_info voidptr, data voidptr) i32 { _ = kmod_info; _ = data; return if run() == 0 { 0 } else { 5 } }
-@[export: 'kmod_alloc_stop']
-pub fn kmod_stop(kmod_info voidptr, data voidptr) i32 { _ = kmod_info; _ = data; return 0 }

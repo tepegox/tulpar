@@ -10,7 +10,7 @@ import sourcecommand
 import time
 
 pub const benchmark_flags = ['-std=c11', '-O2', '-Wall', '-Wextra', '-Werror', '-fno-builtin']
-pub const sampler_verdict = 'Shared kernel allocator sampler: success, three-phase OOM/zeroing rollback, TSC failure and kext ABI passed'
+pub const sampler_verdict = 'Shared kernel allocator sampler: success, three-phase OOM/zeroing rollback, TSC failure passed'
 
 pub fn root() string { return hosttest.root() }
 

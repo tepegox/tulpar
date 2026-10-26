@@ -8,7 +8,8 @@ The name comes from the legendary winged horse, Tulpar.
 
 The base contains the kernel, musl, BusyBox, and a small V init that starts
 `/bin/sh` and supervises the shell. Desktop applications, X11, Hyprland,
-and Android are unsupported. Guest compilers and editors are not included.
+Android, Apple hardware, iOS, and macOS are unsupported. Guest compilers
+and editors are not included. Build and run Tulpar on Linux.
 
 ## Build
 
@@ -48,8 +49,8 @@ make ARCH=arm64 run-no-build   # ARM64
 Use `make run` or `make ARCH=arm64 run` to build and boot in one step.
 QEMU uses 512 MiB RAM and two vCPUs, entirely in the terminal.
 Press **Ctrl+A, then X** to exit. Guest files live in RAM by default.
-Set `TULPAR_ACCEL=kvm` on a matching Linux host for hardware acceleration,
-or `TULPAR_ACCEL=hvf` on a matching macOS host. The default is TCG.
+Set `TULPAR_ACCEL=kvm` on a matching Linux host for hardware acceleration.
+The default is TCG.
 Set `TULPAR_FIRMWARE` if UEFI firmware is outside the standard locations.
 
 ## Verify

@@ -1,18 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Complete native va_list, including floating-point register arguments.
-#ifdef __APPLE__
-.global _vkb_test_log
-.balign 4
-_vkb_test_log:
-    stp x29, x30, [sp, #-32]!
-    mov x29, sp
-    add x9, sp, #32
-    str x9, [sp, #16]
-    add x1, sp, #16
-    bl _vsampler_capture_log
-    ldp x29, x30, [sp], #32
-    ret
-#else
 .global vkb_test_log
 .type vkb_test_log, %function
 .balign 4
@@ -43,4 +30,3 @@ vkb_test_log:
     ret
 .size vkb_test_log, .-vkb_test_log
 .section .note.GNU-stack,"",%progbits
-#endif

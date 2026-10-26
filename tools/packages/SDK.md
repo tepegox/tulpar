@@ -471,7 +471,7 @@ Requirements work in both check and normal staging modes. They are evaluated
 before target compiler lookup or any image publication. There must be a selected
 signed bundle; a configured remote URL alone cannot satisfy a requirement.
 Input supports 1–4096 distinct valid package IDs. Order does not affect the
-report. An advertised root must have a `native`, `linux`, `windows` or `apple`
+report. An advertised root must have a `native`, `linux`, `windows`
 candidate for the selected host. A `runtime` or `data` candidate with the same
 ID cannot substitute for an application, including when its version is newer.
 
@@ -1265,20 +1265,6 @@ therefore changes provenance even when the output catalog digest stays the same.
 Shared package identity collisions still refuse composition. Neither command
 provides binary translation or creates missing application/runtime variants.
 
-For example, prepare native roots at `/build/roots/native/{aarch64,x86_64}` and
-Apple roots at `/build/roots/apple/aarch64`, then use:
-
-```sh
-vinix-package native-catalog 1.0.0 /build/roots/native /build/native-lock
-vinix-package apple-catalog /build/apple-recipes /build/roots/apple /build/apple-lock
-vinix-package compose-catalog-for aarch64 /build/arm-lock native /build/native-lock/catalog.json apple /build/apple-lock/catalog.json
-vinix-package pack-catalog /build/arm-lock/catalog.json /build/roots /build/arm-workspace
-```
-
-This release contains the AArch64 native apps and Apple runtime closure. The
-same composition request for `x86_64` refuses the Apple input. See
-[target selection qualification](../../tests/packages/composition-target-check.md).
-
 For the qualified SQLite and FFmpeg profiles, prepare this layout (copy the
 prepared roots into these directories while preserving their file modes):
 
@@ -1334,7 +1320,7 @@ upstream inputs. See [qualification](../../tests/packages/composition-check.md).
 
 ### Publisher profile staging
 
-The native SDK, SQLite, FFmpeg, Wine and Apple publisher profiles capture their
+The native SDK, SQLite, FFmpeg and Wine publisher profiles capture their
 private root, payload inventory and catalog-lock directories. They recheck those
 identities after creation, each imported package and readiness. A replaced child
 prevents cleanup of the private tree; the diagnostic retains both the original
@@ -1866,126 +1852,6 @@ before publication or use. It supplies no complete corresponding-source offer,
 redistribution permission or publisher enrollment. Wine/translation and graphical
 catalog acceptance remain open.
 
-### Apple iOS ARM64 publisher profile
-
-`apple-catalog RECIPE_DIRECTORY PREPARED_ROOTS NEW_LOCK_DIRECTORY` pins one
-publisher-supplied iOS application and its separately versioned runtime. Supply
-`recipes/aarch64/application.json`, `recipes/aarch64/runtime.json` and prepared
-files under `roots/aarch64/`. The format-1 result has `profile: "apple-ios-arm64"`,
-`directory`, `catalog`, `catalog_sha256`, `application`, `version`, `runtime`,
-`runtime_version` and `architectures: ["aarch64"]`. Running this publisher tool
-on x86-64 does not produce an x86-64 application variant. The profile supplies
-no translation runtime, Apple SDK, signing entitlement or proprietary payload.
-
-V callers own the returned dynamic metadata and release it with idempotent
-`AppleProfileInfo.close()`. Replies survive retirement of decoded templates and
-caller paths; closing a reply preserves the published lock. The CLI releases its
-reply after format-1 JSON encoding. The
-[ownership qualification](../../tests/packages/apple-owner-check.md) measures
-complete publication/refusal paths, partial imports, metadata and XML/binary
-bundle admission after JSON initialization. It preserves captured declarations,
-canonical locks, explicit license/runtime bounds and compatible runtime updates.
-Broader catalog/release ownership and graphical/runtime acceptance remain open.
-
-The application template declares `kind: "apple"`, `architecture: "aarch64"`,
-`entrypoint: "bin/run-ios"` and a first argument
-`"@APP@/BUNDLE.app/EXECUTABLE"`. Use one top-level `.app` directory and a direct
-executable filename. Additional literal arguments, explicit permissions and MIME
-associations retain their normal package semantics. The sole dependency names
-`runtime` and provides both `minimum` and exclusive `before` version bounds.
-
-Select the executable, its sibling `Info.plist`,
-`licenses/application-LICENSE.txt`, and every needed bundle resource/notice as
-individual ordinary files. Templates have no `files` pins. Each recipe has at
-most 1024 selectors; every selected `licenses/` file is nonempty and at most
-1 MiB. Guest-root aliases retain the normal captured-root import semantics;
-architecture-root directory aliases are refused.
-
-The main executable must be a thin, unencrypted, plain ARM64 `MH_EXECUTE` with
-`MH_PIE`, an iOS deployment-platform command and one `LC_MAIN` without a custom
-stack size. The file is at most 512 MiB; the command area is at most 1 MiB with
-4096 commands and 128 mapped segments. The header check enforces segment/section
-ranges, a span of at most 512 MiB, no writable executable mappings, no overlapping
-segments, alignment for 4K/16K hosts and an aligned, file-backed executable entry.
-Universal binaries, ARM64e/PAC, macOS, simulator and x86 images refuse. Mach-O
-Unix executable mode is optional: the runtime reads and maps the image.
-
-`Info.plist` may be XML or binary, is at most 1 MiB and must be a dictionary.
-`CFBundleIdentifier` equals the package ID, `CFBundleExecutable` equals the
-declared executable filename, and `CFBundlePackageType` is `APPL`. These fields
-are strings. The package version remains the publisher's package version; the
-profile does not infer releases or permissions from other bundle properties.
-
-For example, the application recipe can contain:
-
-```json
-{
-  "manifest": {
-    "id": "org.example.counter", "version": "1.0.0", "architecture": "aarch64",
-    "name": "Example counter", "license": "GPL-2.0-or-later", "kind": "apple",
-    "runtime": "org.example.ios-runtime", "entrypoint": "bin/run-ios",
-    "arguments": ["@APP@/Example.app/Example"], "permissions": ["files"],
-    "dependencies": [{"id":"org.example.ios-runtime","minimum":"1.0.0","before":"2.0.0"}]
-  },
-  "entries": [
-    {"source":"app/Example","path":"Example.app/Example"},
-    {"source":"app/Info.plist","path":"Example.app/Info.plist"},
-    {"source":"licenses/app.txt","path":"licenses/application-LICENSE.txt"}
-  ]
-}
-```
-
-The runtime recipe declares `kind: "runtime"`, `architecture: "aarch64"`, its
-version and complete license expression. Select a native static ELF64 AArch64
-launcher at `bin/run-ios`, `licenses/runtime-LICENSE.txt`, and every binary,
-library, framework, resource and additional notice it needs. The launcher has
-Unix executable mode. Runtime dependencies, entrypoint, arguments, permissions
-and associations are empty; application grants control execution. The launcher
-accepts the bundle executable as its first argument, uses the admitted private
-Documents/keychain paths and keeps its generation lease alive while runtime files
-are used. It may delegate to another explicitly packaged runtime executable.
-
-```json
-{
-  "manifest": {
-    "id": "org.example.ios-runtime", "version": "1.0.0", "architecture": "aarch64",
-    "name": "Example iOS runtime", "license": "GPL-2.0-or-later AND MIT", "kind": "runtime"
-  },
-  "entries": [
-    {"source":"runtime/run-ios","path":"bin/run-ios"},
-    {"source":"licenses/runtime.txt","path":"licenses/runtime-LICENSE.txt"}
-  ]
-}
-```
-
-Add the entire reviewed runtime closure and its notices. Neither template may
-declare firmware. Proprietary flags and licenses remain explicit for both
-packages; publishing cannot establish redistribution rights or consumer consent.
-
-```sh
-vinix-package apple-catalog /build/recipes /build/roots /build/new-apple-lock
-vinix-package pack-catalog /build/new-apple-lock/catalog.json /build/roots /build/new-apple-workspace
-vinix-package publish-release /build/new-apple-workspace company /secure/publisher.seed 1 EXPIRES_UNIX /srv/new-apple-release
-```
-
-The profile captures both recipes, checks source files and disk budgets, imports
-into private staging, then rechecks copied Mach-O/plist/launcher bytes and the
-complete inventory before publishing a canonical lock atomically. Later source
-changes cause `pack-catalog` to refuse its reviewed pins. Handled failures clean
-staging without replacing an existing or concurrently created destination; an
-abrupt kill may leave `.vinix-apple-profile-*` for inspection. Normal signing,
-trust, offline caching, policy, review, runtime upgrades, rollback and retained
-private-data/uninstall rules apply. Use `compose-catalog-for aarch64` to combine
-this lock with reviewed dual-host profiles. The strict `compose-catalog` command
-still requires the same architecture list, and no x86-64 Apple variant is implied.
-
-Header admission does not bind imports/fixups, inspect every runtime resource,
-verify Apple code signatures or qualify arbitrary framework/API behavior. Use
-the [publisher checks](../../tests/packages/apple-profile-check.md) and retain
-target execution receipts before advertising each app/runtime tuple. The package
-fixture exercises the profile with real Mach-O Foundation/keychain operations;
-broader applications and graphical services remain separate acceptance gates.
-
 ## Runtimes and launch
 
 ### Native window protocol 1
@@ -2112,7 +1978,6 @@ foreign runtime compatibility and complete installed login acceptance remain ope
 | `native` | Executable entrypoint in its own payload or explicit runtime. Static V is the initial portable case. |
 | `linux` | Explicit target loader/library runtime and executable runner, qualified against Vinix's syscall/ABI subset. |
 | `windows` | Explicit target Wine/translation runtime and runner; executable/resources remain in the app payload. |
-| `apple` | Explicit target Mach-O compatibility runtime and runner for its qualified API subset; no general AppKit promise. |
 | `runtime` | Target-specific immutable runtime files, updated as a normal dependency, with no app launcher. |
 | `data` | Assets/docs or explicitly licensed firmware payloads; no app launcher. |
 
@@ -2163,36 +2028,6 @@ unveil; abstract Unix sockets have no filesystem path. `network`, `display` and
 `audio` request their corresponding sandbox promises/device or IPC paths.
 Organization policy can refuse requests.
 See [actual enforcement limits](../sandbox/README.md).
-
-For `apple` packages, the service also supplies
-`VINIX_IOS_DOCUMENTS=@DATA@/Documents` and
-`VINIX_IOS_KEYCHAIN=@DATA@/Keychains` (expanded absolute paths). These override
-ambient settings in normal, literal-command and terminal launches. The existing
-iOS compatibility runtime uses them for Foundation's container/home/search and
-temporary-directory APIs and its private keychain files. The bundle stays in
-the immutable generation; these locations stay under the ordinary user's
-existing private-data grant. No extra paths, devices or promises are granted.
-The normal service prepares private `tmp`; Foundation creates Documents when
-needed. Keychain storage retains its existing ownership, mode and no-follow
-checks. Records use the runtime's authenticated encryption with a separate local
-0600 key file. They have no hardware key protection, device lock-state service
-or shared-access-group entitlement service; see the [runtime limits](../../docs/ios.md).
-
-The existing Foundation path profile remains bounded to 1023 bytes. Ordinary
-uninstall retains this app data; deliberate data removal uses the normal
-separate purge operation.
-
-The [Apple package check](../../tests/packages/apple-runtime-check.md) executes
-V-generated ARM64 iOS Mach-O images through a signed copy of the real static
-runtime under the production sandbox. Its packaged native launcher checks the
-admitted context before exec. The Mach-O itself checks Foundation's home,
-Documents and temporary paths, writes files there and maintains a generic-password
-keychain counter across user-separated launches, upgrade, rollback and cached
-reinstall. Duplicate/delete/not-found and unsupported access-group behavior are
-also checked. This qualifies that API subset and the maintenance lifecycle;
-broader Apple frameworks and applications remain open. The current runner
-executes on AArch64; no x86-64 translation, macOS/AppKit or graphical compatibility
-is implied.
 
 Apps must handle denied access/missing services and save in private data or a
 supplied document. Keep on-disk data compatible with version rollback. A service
@@ -2556,7 +2391,7 @@ values explicitly; ambient `VINIX_APP_*` values from the caller are discarded.
 | --- | --- |
 | `VINIX_APP_SDK` | Context interface version, currently `1`. |
 | `VINIX_APP_ID`, `VINIX_APP_VERSION` | Installed application ID and numeric three-component version. |
-| `VINIX_APP_ARCHITECTURE`, `VINIX_APP_KIND` | Host target (`aarch64`/`x86_64`) and installed `native`/`linux`/`windows`/`apple` kind. |
+| `VINIX_APP_ARCHITECTURE`, `VINIX_APP_KIND` | Host target (`aarch64`/`x86_64`) and installed `native`/`linux`/`windows` kind. |
 | `VINIX_APP_GENERATION` | Canonical positive decimal generation counter. |
 | `VINIX_APP_REPOSITORY`, `VINIX_APP_PUBLIC_KEY`, `VINIX_APP_SEQUENCE` | The application's admitted publisher ID, lowercase Ed25519 key and positive index sequence. |
 | `VINIX_APP_DIR` | Absolute immutable app directory in the admitted generation. |
@@ -2989,7 +2824,7 @@ license with false flags and an empty runtime, means unavailable information;
 Software reports that explicitly instead of borrowing the candidate's facts.
 A nonempty license requires an installed version and a printable identifier of
 at most 256 bytes. A runtime is empty or a valid package ID of at most 128 bytes;
-known installed Linux/Windows/Apple kinds require one. Partial, duplicate,
+known installed Linux/Windows kinds require one. Partial, duplicate,
 coerced and malformed groups refuse the entire response. The two strings are
 owned and retired by `.close()`. Existing SDK-1 readers ignore these additions.
 
@@ -4094,7 +3929,7 @@ both target kernels. It checks real permissions, explicit immutable runtime
 dependencies, tamper refusal and generation leases through update/uninstall/GC;
 retained passing runs record hashes of the kernel, sandbox, payload, service,
 session runner and serial output. These fixtures qualify package mechanics,
-not the API coverage of a Linux, Windows, Apple or graphical runtime.
+not the API coverage of a Linux, Windows or graphical runtime.
 
 The [dynamic Linux check](../../tests/packages/linux-runtime-check.md) exercises
 `pack-root`, this runner, a target musl loader and a shared V library under the

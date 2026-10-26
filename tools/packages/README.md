@@ -746,29 +746,6 @@ checks bounded, exact artifact inventories and hashes, but accepts only
 These checks supply neither complete corresponding source nor redistribution
 authority. Real Wine/translation and graphical catalog qualification remain open.
 
-`apple-catalog RECIPE_DIRECTORY PREPARED_ROOTS NEW_LOCK_DIRECTORY` produces a
-reproducible AArch64 iOS app/runtime lock. It checks thin ARM64 Mach-O mappings,
-XML/binary bundle identity, a native static launcher, complete file inventories
-and explicit notices/licenses/runtime bounds before publishing. See the
-[profile contract](SDK.md#apple-ios-arm64-publisher-profile) and
-[publisher checks](../../tests/packages/apple-profile-check.md). It supplies no
-Apple SDK, proprietary payload or x86-64 translation variant.
-
-`AppleProfileInfo.close()` idempotently releases independently owned V reply
-metadata. Complete builder, partial-import and bundle-admission lifetimes are
-covered by the [ownership checks](../../tests/packages/apple-owner-check.md),
-including canonical retry and recovery-data preservation.
-
-Apple launches now derive the iOS compatibility runtime's Documents and keychain
-overrides from admitted private app data. They retain their containers through
-updates, rollback and uninstall without adding sandbox grants. The
-[Apple package check](../../tests/packages/apple-runtime-check.md) executes real
-ARM64 Mach-O instructions through a signed static runtime on AArch64, with
-separate ordinary users, ambient-override refusal and cached reinstall. The
-Mach-O itself checks Foundation container paths and file writes, Security
-generic-password persistence, duplicate/delete errors and access-group refusal. Wider
-Apple APIs, graphical sessions and other host architectures remain unqualified.
-
 Fixed native, SQLite and FFmpeg profiles recheck the complete imported file list
 and bounded, nonempty notices before publishing a lock. Replacing a required
 file with a directory cannot omit a notice or bypass the FFmpeg source pin.

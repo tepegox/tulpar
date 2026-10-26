@@ -19,9 +19,6 @@ _Static_assert(sizeof(va_list) == 32 && _Alignof(va_list) == 8 &&
     offsetof(va_list, __stack) == 0 && offsetof(va_list, __gr_top) == 8 &&
     offsetof(va_list, __vr_top) == 16 && offsetof(va_list, __gr_offs) == 24 &&
     offsetof(va_list, __vr_offs) == 28, "genuine AAPCS64 cursor representation");
-#else
-_Static_assert(sizeof(va_list) == sizeof(void *) && _Alignof(va_list) == 8,
-    "genuine Darwin ARM64 cursor representation");
 #endif
 _Static_assert(sizeof(va_list) <= 32 && _Alignof(va_list) <= 8,
     "fixed stack cursor capacity/alignment");

@@ -12,8 +12,6 @@ fn C.free(voidptr)
 fn C.vsnprintf(&char, usize, &char, C.vsampler_native_va) i32
 fn C.strstr(&char, &char) &char
 fn C.alloc_kernel_bench() i32
-fn C.kmod_alloc_start(voidptr, voidptr) i32
-fn C.kmod_alloc_stop(voidptr, voidptr) i32
 fn C.puts(&char) i32
 fn C.fflush(voidptr) i32
 fn C.pause() i32
@@ -113,9 +111,7 @@ pub fn run() i32 {
 		C.assert(C.strstr(&sampler_output[0], c'reason=nonmonotonic_tsc') != nil)
 		reset()
 		sampler_fail_at = 0
-		C.assert(C.kmod_alloc_start(nil, nil) == 5 && sampler_live == 0)
-		C.assert(C.kmod_alloc_stop(nil, nil) == 0)
-		C.puts(c'Shared kernel allocator sampler: success, three-phase OOM/zeroing rollback, TSC failure and kext ABI passed')
+		C.puts(c'Shared kernel allocator sampler: success, three-phase OOM/zeroing rollback, TSC failure passed')
 		$if sampler_guest ? {
 			C.fflush(nil)
 			for { C.pause() }

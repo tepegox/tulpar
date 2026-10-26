@@ -13,7 +13,6 @@ import file
 import event
 import event.eventstruct
 import aarch64.virtio_input
-import apple.spi_keyboard
 
 // PointerPacket is the whole of what /dev/pointer reports, and a read always
 // answers with the current state rather than replaying a queue: a compositor
@@ -70,37 +69,21 @@ fn (mut this Pointer) read(_handle voidptr, buf voidptr, _loc u64, count u64) ?i
 
 	this.l.acquire()
 
-	mut apple := [8]i32{}
-	mut packet := PointerPacket{}
-	if spi_keyboard.read_pointer(&apple[0]) {
-		packet = PointerPacket{
-			x: i32(apple[0])
-			y: i32(apple[1])
-			max_x: i32(apple[2])
-			max_y: i32(apple[3])
-			buttons: u32(apple[4])
-			pressed: u32(apple[5])
-			released: u32(apple[6])
-			scroll: i32(apple[7])
-		}
-	} else {
-		// No verified Apple report: preserve the existing QEMU/VirtIO source.
-		packet = PointerPacket{
-			x: i32(vi_ptr_x)
-			y: i32(vi_ptr_y)
-			max_x: i32(vi_ptr_max_x)
-			max_y: i32(vi_ptr_max_y)
-			buttons: vi_ptr_buttons
-			pressed: vi_ptr_pressed
-			released: vi_ptr_released
-			scroll: i32(vi_ptr_scroll)
-			scroll_x: i32(vi_ptr_scroll_x)
-		}
-		vi_ptr_pressed = 0
-		vi_ptr_released = 0
-		vi_ptr_scroll = 0
-		vi_ptr_scroll_x = 0
+	mut packet := PointerPacket{
+		x: i32(vi_ptr_x)
+		y: i32(vi_ptr_y)
+		max_x: i32(vi_ptr_max_x)
+		max_y: i32(vi_ptr_max_y)
+		buttons: vi_ptr_buttons
+		pressed: vi_ptr_pressed
+		released: vi_ptr_released
+		scroll: i32(vi_ptr_scroll)
+		scroll_x: i32(vi_ptr_scroll_x)
 	}
+	vi_ptr_pressed = 0
+	vi_ptr_released = 0
+	vi_ptr_scroll = 0
+	vi_ptr_scroll_x = 0
 	this.status &= ~file.pollin
 
 	this.l.release()
@@ -171,7 +154,6 @@ pub fn initialise() {
 
 	pointer_res = res
 	virtio_input.set_pointer_event_callback(voidptr(pointer_changed))
-	spi_keyboard.set_pointer_event_callback(voidptr(pointer_changed))
 
 	fs.devtmpfs_add_device(res, 'pointer')
 }

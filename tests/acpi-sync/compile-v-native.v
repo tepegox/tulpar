@@ -4,5 +4,5 @@ module main
 import fixturecompiler
 
 fn main() {
-	fixturecompiler.run(.acpi)
+	fixturecompiler.run()
 }

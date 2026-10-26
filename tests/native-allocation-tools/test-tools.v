@@ -6,7 +6,6 @@ import crypto.sha256
 import hosttest
 import json2
 import os
-import plist
 import sourcecommand
 import time
 
@@ -283,79 +282,6 @@ fn vm_cases(work string) ! {
 	}
 }
 
-fn mac_cases(work string) ! {
-	for sdk in [false, true] {
-		for mode in ['success', 'ssh-failure', 'ssh-timeout'] {
-			os.setenv('VINIX_ALLOC_MODE', mode, true)
-			os.rm(work + '/remote-retired') or {}
-			state := work + '/mac-' + sdk.str() + '-' + mode
-			mut args := ['macos', '--port', '2222', '--user', 'test-user', '--identity',
-				work + "/identity 'quote'", '--vm-config', work + '/config.json', '--state-dir',
-				state, '--gcc', "/guest/gcc 'quoted'", '--timeout', '1']
-			if sdk {
-				args << ['--guest-sdk', "/guest/sdk 'quoted'", '--host-sdk', work + '/host-sdk']
-			}
-			result := invoke(args, 90)!
-			assert result.status == if mode == 'success' { 0 } else { 1 }, result.str()
-			if mode != 'success' {
-				assert os.exists(work + '/remote-retired')
-				assert os.read_file(work + '/remote-retired')!.contains('ps -p "$bench_pid" -o command=')
-			}
-			config := hosttest.decode_json(os.read_file(state + '/config.json')!)!.as_map()
-			assert config['build_method']!.str() == if sdk {
-				'guest GCC C-to-assembly; host Apple assembler/linker'
-			} else {
-				'guest GCC driver'
-			}
-			assert config['guest_compile_command']!.str().contains('\'"\'"\'')
-			assert ('host_link_command' in config) == sdk
-			println('SSH / driver / SDK / failure cleanup: PASS ' + sdk.str() + ' ' + mode)
-			flush_stdout()
-		}
-	}
-	for mode in ['success', 'clang-kext'] {
-		os.setenv('VINIX_ALLOC_MODE', mode, true)
-		state := work + '/kext-' + mode
-		result := invoke(['kext', '--gcc', work + '/bin/fake-darwin-gcc', '--library-path',
-			'/controlled/lib', '--vm-config', work + '/config.json', '--state-dir', state], 90)!
-		assert result.status == if mode == 'success' { 0 } else { 2 }, result.str()
-		if mode == 'success' {
-			manifest := hosttest.decode_json(os.read_file(state + '/config.json')!)!.as_map()
-			assert manifest['build_commands']!.as_array().len == 5
-			frozen := hosttest.decode_json(os.read_file(allocationhost.root() + '/tests/alloc-bench/results/2026-10-02/kernel-macos-1/config.json')!)!.as_map()
-			assert manifest['compile_flags']!.as_array() == frozen['compile_flags']!.as_array()
-			assert manifest['platform_compile_flags']!.as_array() == frozen['platform_compile_flags']!.as_array()
-			assert manifest['compiler_library_path']!.str() == '/controlled/lib'
-			assert manifest['binary_sha256']!.str() == sha256.sum(os.read_bytes(state + '/AllocKernelBench.kext/Contents/MacOS/AllocKernelBench')!).hex()
-			info := plist.parse(os.read_bytes(state + '/AllocKernelBench.kext/Contents/Info.plist')!)!
-			assert info.kind == .dictionary && info.fields.len == 10
-			for field, expected in {
-				'CFBundleDevelopmentRegion':     'English'
-				'CFBundleExecutable':            'AllocKernelBench'
-				'CFBundleIdentifier':            'org.vinix.AllocKernelBench'
-				'CFBundleInfoDictionaryVersion': '6.0'
-				'CFBundleName':                  'AllocKernelBench'
-				'CFBundlePackageType':           'KEXT'
-				'CFBundleShortVersionString':    '1.0.0'
-				'CFBundleVersion':               '1.0.0'
-				'OSBundleRequired':              'Root'
-			} {
-				assert info.fields[field]!.kind == .string && info.fields[field]!.text == expected
-			}
-			libraries := info.fields['OSBundleLibraries']!
-			assert libraries.kind == .dictionary && libraries.fields.len == 2
-			for field in ['com.apple.kpi.iokit', 'com.apple.kpi.libkern'] {
-				assert libraries.fields[field]!.text == '8.0.0'
-			}
-			info.free()
-		} else {
-			assert !os.exists(state)
-		}
-		println('KEXT / probes / recipes / bundle / manifest: PASS ' + mode)
-		flush_stdout()
-	}
-}
-
 fn main() {
 	name := os.base(os.args[0])
 	if name in ['tar', 'limine', 'xorriso', 'qemu-system-x86_64', 'fake-gcc', 'fake-darwin-gcc',
@@ -386,10 +312,6 @@ fn main() {
 		exit(1)
 	}
 	vm_cases(os.args[1]) or {
-		eprintln(err)
-		exit(1)
-	}
-	mac_cases(os.args[1]) or {
 		eprintln(err)
 		exit(1)
 	}
@@ -434,18 +356,18 @@ fn notify(pid int, pointer voidptr) ! {
 }
 
 fn cli_cases(work string) ! {
-	for args in [['vinix'], ['kernel'], ['macos'], ['kext'], ['measure'], ['control'],
+	for args in [['vinix'], ['kernel'], ['macos'], ['kext'],
 		['vinix-driver'], ['macos-driver'], ['vinix', '--timeout', 'bad'],
 		['bench', '--host-arch', 'wrong'], ['sampler', '--model'], ['bench', '--build-only'],
 		['bench', '--arch', 'x86_64'], ['kernel', '--sysroot', 'wrong'], ['vinix', '--cpus', '2'],
-		['control', '--bad']] {
+		['vinix', '--bad']] {
 		result := invoke(args, 30)!
 		assert result.status == 2, args.str() + result.str()
 	}
 	protected := work + '/protected'
 	os.mkdir(protected)!
 	os.write_file(protected + '/keep', 'unchanged')!
-	for kind in ['bench', 'sampler', 'vinix', 'kernel', 'macos', 'kext', 'measure'] {
+	for kind in ['bench', 'sampler', 'vinix', 'kernel'] {
 		mut args := [kind]
 		if kind == 'measure' {
 			args << [protected, '--runtime', work, '--config', work + '/config.json']
@@ -473,7 +395,7 @@ fn cli_cases(work string) ! {
 }
 
 fn signal_cases(work string) ! {
-	for kind in ['bench', 'sampler', 'vinix', 'kernel', 'macos', 'kext'] {
+	for kind in ['bench', 'sampler', 'vinix', 'kernel'] {
 		for signal in [2, 15] {
 			if kind == 'macos' { os.rm(work + '/remote-retired') or {} }
 			state := work + '/signal-' + kind + '-' + signal.str()
@@ -509,7 +431,7 @@ fn signal_cases(work string) ! {
 			// Tar fixtures seed only the exact pinned Limine inputs. Their record
 			// directory must exist before image construction creates the state.
 			os.setenv('VINIX_ALLOC_FIXTURE', work, true)
-			if kind in ['bench', 'sampler', 'macos', 'kext'] {
+			if kind in ['bench', 'sampler'] {
 				os.setenv('VINIX_ALLOC_BLOCK_STATE', fixture, true)
 			}
 			data := SignalCase{fixture, signal}

@@ -42,7 +42,6 @@ const usage = 'usage: vinix-package [--root DIR] [--offline] [--json] [--progres
 	'  ffmpeg-catalog RUNTIME_VERSION PREPARED_ROOTS NEW_LOCK_DIRECTORY\n' +
 	'  neovim-catalog RUNTIME_VERSION PREPARED_ROOTS NEW_LOCK_DIRECTORY\n' +
 	'  wine-catalog RECIPE_DIRECTORY PREPARED_ROOTS NEW_LOCK_DIRECTORY\n' +
-	'  apple-catalog RECIPE_DIRECTORY PREPARED_ROOTS NEW_LOCK_DIRECTORY\n' +
 	'  publish REPOSITORY_DIR REPOSITORY_ID SEED_FILE SEQUENCE EXPIRES_UNIX\n' +
 	'  publish-release REPOSITORY_DIR REPOSITORY_ID SEED_FILE SEQUENCE EXPIRES_UNIX NEW_DIRECTORY\n'
 
@@ -201,12 +200,6 @@ fn checked(arguments []string) !int {
 		'wine-catalog' {
 			if names.len != 3 { return error('wine-catalog requires a recipe directory, prepared roots and a new lock directory') }
 			mut info := pkgcore.wine_catalog(names[0], names[1], names[2])!
-			publisher_reply(mut info)
-			return 0
-		}
-		'apple-catalog' {
-			if names.len != 3 { return error('apple-catalog requires a recipe directory, prepared roots and a new lock directory') }
-			mut info := pkgcore.apple_catalog(names[0], names[1], names[2])!
 			publisher_reply(mut info)
 			return 0
 		}

@@ -26,22 +26,7 @@ trap 'exit 143' TERM
 host_compile() {
     (unset CFLAGS CPPFLAGS LDFLAGS; "$@")
 }
-# Use the platform C compiler: TCC cannot resolve Boehm dlopen wrappers on macOS.
-# Compiler messages, including cache status on stdout, belong on stderr so
-# first-use compilation cannot corrupt the tool's manifest or binary output.
-if [ "$(uname -s)" = Darwin ]; then
-    # A Rosetta shell can pass its architecture preference to cc even when V
-    # itself is ARM. Select the compiler binary's architecture for its children.
-    case "$(file -b "$V")" in
-        "Mach-O 64-bit executable arm64"*)
-            host_compile arch -arm64 "$V" -cc cc -o "$tool_temp_dir/tool" "$tool_source" >&2 ;;
-        "Mach-O 64-bit executable x86_64"*)
-            host_compile arch -x86_64 "$V" -cc cc -o "$tool_temp_dir/tool" "$tool_source" >&2 ;;
-        *) host_compile "$V" -cc cc -o "$tool_temp_dir/tool" "$tool_source" >&2 ;;
-    esac
-else
-    host_compile "$V" -cc cc -o "$tool_temp_dir/tool" "$tool_source" >&2
-fi
+host_compile "$V" -cc cc -o "$tool_temp_dir/tool" "$tool_source" >&2
 
 # Keep the caller's working directory and pass tool arguments without parsing.
 set +e

@@ -11,28 +11,6 @@
 // choice and the two readings of the counter, sits between that look and the
 // WFI with interrupts still masked, and changes none of it.
 //
-// Where it is used
-//
-// In a virtual machine, where the scheduler already used WFI: the virtual
-// timer and the scheduler's SGI both wake it, and a host that parks an idle
-// vCPU is the whole point.
-//
-// On physical Apple hardware the loop polls instead, as it did, and no state
-// is offered. That is deliberate. The loop is also what polls the keyboard
-// and trackpad there, and Apple's interrupt controller has no targeted
-// interrupt this kernel can rely on to end a wait early. There is a second
-// reason to hold back: an Apple core can lose its state in WFI. Whether it
-// keeps its registers is selected in an implementation-defined system
-// register, CYC_OVRD, and a core that drops them comes back at its reset
-// vector rather than after the WFI. This kernel does not program that
-// register, and its fields are not something to guess at.
-//
-// vinix.apple_idle=wfi on the command line uses WFI there all the same, for
-// whoever is in a position to try it: the loop then polls its input once per
-// wake, which the idle timer makes a thousand times a second, instead of
-// continuously. It has not been run on hardware. It relies on the bootloader
-// having left the cores in the retention mode, and on the timer's FIQ waking
-// a WFI while masked.
 module cpuidle
 
 import katomic
@@ -90,17 +68,8 @@ fn driver_start() {
 			return
 		}
 	}
-	virtual := sched.idle_is_virtual()
-	mut on_hardware := false
-	if choice := devcore.boot_option('vinix.apple_idle=') {
-		on_hardware = choice == 'wfi'
-	}
-	if !virtual && !on_hardware {
-		print('cpuidle: no idle state on this hardware; the idle loop polls (vinix.apple_idle=wfi to try WFI)\n')
+	if !sched.idle_is_virtual() {
 		return
-	}
-	if !virtual {
-		print('cpuidle: WFI on physical hardware by vinix.apple_idle=wfi; untested\n')
 	}
 	cpuidle_tick_hz = cpu.read_cntfrq_el0()
 	// Linux's figures for WFI on arm64 (drivers/cpuidle/dt_idle_states and
@@ -111,5 +80,5 @@ fn driver_start() {
 	katomic.store(mut &cpuidle_ready, u32(1))
 	// Only now: the loop must not find WFI allowed before the table is there
 	// to count it in.
-	cpuidle_wfi_allowed = on_hardware
+	cpuidle_wfi_allowed = true
 }

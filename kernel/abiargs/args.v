@@ -23,12 +23,6 @@ mut:
 
 fn slot(cursor voidptr) voidptr {
 	unsafe {
-		if C.VINIX_VA_ABI == 1 {
-			stack := &voidptr(cursor)
-			address := *stack
-			*stack = voidptr(uint(*stack) + 8)
-			return address
-		}
 		if C.VINIX_VA_ABI == 2 {
 			list := &C.vinix_va_aapcs64(cursor)
 			offset := list.gr_offs
@@ -62,16 +56,11 @@ pub fn integer(cursor voidptr) u32 {
  unsafe { return *&u32(slot(cursor)) }
 }
 
-// Darwin passes va_list as a pointer value; give parsing a local cursor.
-pub fn parameter(args voidptr, local &voidptr) voidptr {
-	unsafe {
-		if C.VINIX_VA_ABI == 1 { *local = args; return local }
-		return args
-	}
+pub fn parameter(args voidptr, _local &voidptr) voidptr {
+	return args
 }
 
 pub fn native_size() uint {
-	if C.VINIX_VA_ABI == 1 { return sizeof(voidptr) }
 	if C.VINIX_VA_ABI == 2 { return sizeof(C.vinix_va_aapcs64) }
 	return sizeof(C.vinix_va_sysv64)
 }

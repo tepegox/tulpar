@@ -621,7 +621,6 @@ fn C.vinix_lwip_udp_recv(pcb &C.udp_pcb, recv Udp_recv_fn, recv_arg voidptr)
 fn C.udp_remove(pcb &C.udp_pcb)
 fn C.udp_send(pcb &C.udp_pcb, p &C.pbuf) Err_t
 fn C.udp_sendto(pcb &C.udp_pcb, p &C.pbuf, dst_ip &C.ip_addr, dst_port U16_t) Err_t
-fn C.vinix_apple_wifi_send(arg voidptr, arg_2 u64) i32
 fn C.vinix_e1000_send(arg voidptr, arg_2 u64) i32
 fn C.vinix_rtl8169_send(arg voidptr, arg_2 u64) i32
 fn C.vinix_ath10k_send(arg voidptr, arg_2 u64) i32
@@ -651,7 +650,6 @@ pub const vinix_net_error = 4
 pub const vinix_net_hangup = 8
 pub const driver_none = 0
 pub const driver_virtio = 1
-pub const driver_apple_wifi = 2
 pub const driver_e1000 = 3
 pub const driver_rtl8169 = 4
 pub const driver_ath10k = 5
@@ -668,9 +666,6 @@ pub fn driver_send(driver i32) Driver_send_fn {
 		match driver {
 			driver_virtio {
 				return C.vinix_virtio_net_send
-			}
-			driver_apple_wifi {
-				return C.vinix_apple_wifi_send
 			}
 			driver_e1000 {
 				return C.vinix_e1000_send

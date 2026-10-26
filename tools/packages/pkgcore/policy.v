@@ -280,7 +280,7 @@ pub fn (review PolicyReview) validate() ! {
 	mut previous := ''
 	for row in review.rows {
 		if !identifier(row.id) || row.id <= previous || row.name == '' || !printable(row.name, 256)
-			|| row.kind !in ['native', 'linux', 'windows', 'apple', 'runtime', 'data']
+			|| row.kind !in ['native', 'linux', 'windows', 'runtime', 'data']
 			|| row.license == '' || !printable(row.license, 256) || !identifier(row.repository)
 			|| !digest_valid(row.public_key) || !printable(row.diagnostic_before, 4096) || !printable(row.diagnostic_after, 4096) {
 			return error('invalid installed package in organization policy review')

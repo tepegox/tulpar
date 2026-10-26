@@ -34,7 +34,7 @@ pub:
 	license      string
 	proprietary  bool
 	firmware     bool
-	kind         string // native, linux, windows, apple, runtime, data
+	kind         string // native, linux, windows, runtime, data
 	runtime      string // dependency ID, never a host executable
 	entrypoint   string // relative to this package (or its runtime)
 	arguments    []string
@@ -219,7 +219,7 @@ pub fn (p Package) validate() ! {
 	if p.architecture !in ['aarch64', 'x86_64', 'all'] {
 		return error('unsupported architecture: ${p.architecture}')
 	}
-	if p.kind !in ['native', 'linux', 'windows', 'apple', 'runtime', 'data'] {
+	if p.kind !in ['native', 'linux', 'windows', 'runtime', 'data'] {
 		return error('invalid package kind: ${p.kind}')
 	}
 	if p.sdk != 1 { return error('unsupported SDK for ${p.id}') }
@@ -233,7 +233,7 @@ pub fn (p Package) validate() ! {
 	if p.architecture == 'all' && p.kind != 'data' {
 		return error('native binaries and runtimes must declare their target architecture')
 	}
-	if p.kind in ['linux', 'windows', 'apple'] && p.runtime == '' {
+	if p.kind in ['linux', 'windows'] && p.runtime == '' {
 		return error('${p.id} must declare an isolated runtime dependency')
 	}
 	if p.runtime != '' && (!identifier(p.runtime) || !p.dependencies.any(it.id == p.runtime)) {

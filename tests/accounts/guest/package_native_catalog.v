@@ -139,7 +139,7 @@ fn image_repository_assertions(mut t Test) ! {
 	assert catalog.output.contains('CATALOG EXPORT canonical composition and workspace preserve signed release closure and offline install/remove for both consumer architectures PASS')
 	t.say('PACKAGE CATALOG EXPORT guarded workspace composition host selection recovery retry saved output and signed offline consumption PASS')
 	if os.is_file('/usr/share/package-fixtures/profile-exports') {
-		for name in ['native', 'sqlite', 'ffmpeg', 'wine', 'apple']! {
+		for name in ['native', 'sqlite', 'ffmpeg', 'wine']! {
 			for cohort in 0 .. 4 {
 				profiles := run(['/usr/share/package-fixtures/profile-exports', name, cohort.str()], '', none, none)
 				assert profiles.status == 0, profiles.output

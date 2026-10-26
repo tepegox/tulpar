@@ -13,7 +13,7 @@
 //	                   entry points, the sampling worker, set_profile()
 //	sysfs.v            /sys/devices/system/cpu/cpuN/cpufreq, as on Linux
 //	driver_amd64.v     Intel HWP, Intel Enhanced SpeedStep, AMD CPPC
-//	driver_arm64.v     Apple cluster DVFS
+//	driver_arm64.v     generic policies without frequency control
 //
 // A driver fills in the policies and four functions. When none fits the
 // machine -- every virtual machine, where the host owns the clock -- the

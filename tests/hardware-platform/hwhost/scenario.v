@@ -534,7 +534,7 @@ pub const scenarios = [
 	Scenario{
 		name:     'cpu-power-simulated'
 		about:    'governors and profiles reach every CPU through a made-up frequency driver'
-		arches:   ['aarch64', 'x86_64']
+		arches:   ['x86_64']
 		cmdline:  'vinix.cpufreq=simulate'
 		required: ['HWTEST START cpu-power-simulated', 'HWTEST PASS cpu-power-simulated']
 		ending:   .poweroff
@@ -655,44 +655,6 @@ pub const scenarios = [
 		qemu:     ec_selftest_qemu('ec-bench-dsdt', false)
 		required: ['HWTEST START acpi-ec-selftest-dsdt', 'HWTEST PASS acpi-ec-selftest-dsdt']
 		actions:  ec_selftest_actions
-		ending:   .poweroff
-	},
-	Scenario{
-		name:     'apple-smc-selftest'
-		about:    'a simulated Apple SMC: battery, charger, sensors, a fan, the charge limit, a sleep, and giving up'
-		arches:   ['aarch64']
-		define:   'applesmc_selftest'
-		timeout:  240
-		required: ['HWTEST START apple-smc-selftest', 'HWTEST PASS apple-smc-selftest',
-			'apple-smc: self-test kernel: the SMC is simulated', 'apple-smc: battery service stopped']
-		ending:   .poweroff
-	},
-	Scenario{
-		name:     'apple-smc-selftest-bare'
-		about:    'the same SMC with no fan and no charge limit: neither has files'
-		arches:   ['aarch64']
-		define:   'applesmc_selftest'
-		cmdline:  'vinix.apple_smc_sim=bare'
-		required: ['HWTEST START apple-smc-selftest-bare', 'HWTEST PASS apple-smc-selftest-bare']
-		ending:   .poweroff
-	},
-	Scenario{
-		name:     'apple-smc-selftest-options'
-		about:    'vinix.apple_smc=nosensors,nolimit: the battery and charger alone'
-		arches:   ['aarch64']
-		define:   'applesmc_selftest'
-		cmdline:  'vinix.apple_smc=nosensors,nolimit'
-		required: ['HWTEST START apple-smc-selftest-options', 'HWTEST PASS apple-smc-selftest-options']
-		ending:   .poweroff
-	},
-	Scenario{
-		name:     'apple-smc-selftest-legacy'
-		about:    'vinix.apple_smc=legacy: /dev/battery and /dev/battery-power and nothing else'
-		arches:   ['aarch64']
-		define:   'applesmc_selftest'
-		cmdline:  'vinix.apple_smc=legacy'
-		required: ['HWTEST START apple-smc-selftest-legacy', 'HWTEST PASS apple-smc-selftest-legacy',
-			'left out by vinix.apple_smc=legacy']
 		ending:   .poweroff
 	},
 	Scenario{

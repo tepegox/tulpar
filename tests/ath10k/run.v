@@ -12,7 +12,7 @@ fn main() {
 		'wpa_crypto.v', 'wpa.v', 'station_commands.v', 'station.v', 'abi.v'] {
 		os.cp(root + '/kernel/dev/ath10k/' + name, work + '/' + name) or { panic(err) }
 	}
-	for name in ['fixture.v', 'allocation_darwin.c.v', 'allocation_test.v', 'firmware_test.v',
+	for name in ['fixture.v', 'firmware_test.v',
 		'crypto_test.v', 'protocol_test.v', 'wpa_test.v', 'abi_test.v'] {
 		os.cp(root + '/tests/ath10k/' + name, work + '/' + name) or { panic(err) }
 	}

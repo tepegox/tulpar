@@ -4,7 +4,6 @@
 #include <stdint.h>
 /* Missing architecture drivers remain null weak function pointers. */
 int vinix_virtio_net_send(void *, uint64_t) __attribute__((weak));
-int vinix_apple_wifi_send(void *, uint64_t) __attribute__((weak));
 int vinix_e1000_send(void *, uint64_t) __attribute__((weak));
 int vinix_rtl8169_send(void *, uint64_t) __attribute__((weak));
 int vinix_ath10k_send(void *, uint64_t) __attribute__((weak));

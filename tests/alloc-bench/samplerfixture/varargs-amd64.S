@@ -1,15 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Complete SysV register save area, not the integer-only kernel cursor.
-#ifdef __APPLE__
-#define SAMPLER_SYMBOL(name) _##name
-#else
-#define SAMPLER_SYMBOL(name) name
-#endif
-.global SAMPLER_SYMBOL(vkb_test_log)
-#ifndef __APPLE__
+.global vkb_test_log
 .type vkb_test_log, @function
-#endif
-SAMPLER_SYMBOL(vkb_test_log):
+vkb_test_log:
     pushq %rbp
     movq %rsp, %rbp
     subq $208, %rsp
@@ -33,10 +26,8 @@ SAMPLER_SYMBOL(vkb_test_log):
     movq %r10, 184(%rsp)
     movq %rsp, 192(%rsp)
     leaq 176(%rsp), %rsi
-    call SAMPLER_SYMBOL(vsampler_capture_log)
+    call vsampler_capture_log
     leave
     ret
-#ifndef __APPLE__
 .size vkb_test_log, .-vkb_test_log
 .section .note.GNU-stack,"",@progbits
-#endif

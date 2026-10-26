@@ -2,7 +2,6 @@
 // Copyright (c) 2026 Alexander Medvednikov
 module table
 
-import apple.ans
 import fs
 import pagecache
 import pipe
@@ -49,12 +48,8 @@ fn security_linux_mmap(gpr_state voidptr, addr voidptr, length u64, prot u64,
 // Push every cached write to its device. Block-backed filesystems keep dirty
 // pages in a shared write-back cache that is otherwise only drained when the
 // LRU evicts a page, so skipping this loses small writes across a restart.
-// ANS is write-through, but its controller still needs an explicit Flush.
 fn storage_flush_everything() bool {
-	// Both halves always run: a failing ANS controller must not leave a
-	// healthy block device's pages in memory, or the reverse.
-	caches_flushed := pagecache.sync_all()
-	return ans.flush() && caches_flushed
+	return pagecache.sync_all()
 }
 
 fn storage_reboot(_ voidptr, magic1 u32, magic2 u32, command u32, _arg voidptr) (u64, u64) {
@@ -69,7 +64,7 @@ fn storage_reboot(_ voidptr, magic1 u32, magic2 u32, command u32, _arg voidptr) 
 	//
 	// Nothing restarts a machine with unwritten data. A reset that dropped the
 	// page cache is exactly the reboot that loses the file just created, so a
-	// failed flush -- of the caches, or of Apple's NVMe -- refuses the
+	// failed flush of the caches refuses the
 	// transition rather than completing it: syspower returns then, with the
 	// machine as it was. Past that point every device is stopped and it does
 	// not return.

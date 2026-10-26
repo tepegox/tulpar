@@ -11,7 +11,7 @@ on:
       - 'tests/xnualloc/**'
       - 'tests/memory/**'
       - '.github/workflows/xnu-allocator-port.yml'
-      - 'tools/m1-wifi/get-v.sh'
+      - '.github/workflows/nightly.yml'
   workflow_dispatch:
 
 permissions:
@@ -78,7 +78,10 @@ jobs:
       - name: Install native and cross-build dependencies
         run: sudo apt-get update && sudo apt-get install -y build-essential clang lld llvm
       - name: Build the pinned kernel compiler
-        run: sh tools/m1-wifi/get-v.sh "$RUNNER_TEMP/xnu-kernel-v"
+        run: |
+          git clone https://github.com/vlang/v "$RUNNER_TEMP/xnu-kernel-v"
+          git -C "$RUNNER_TEMP/xnu-kernel-v" checkout f7e9ee96c22ca6db47b56d28332e7553715c659f
+          make -C "$RUNNER_TEMP/xnu-kernel-v"
       - name: Fetch kernel dependencies
         run: cd kernel && ./get-deps
       - name: Build flag-off, bitmap-only and zone kernels (debug)

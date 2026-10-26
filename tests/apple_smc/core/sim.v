@@ -1,1 +1,0 @@
-../../../kernel/apple/smc/core/sim_d_applesmc_selftest.v

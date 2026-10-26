@@ -19,6 +19,8 @@
   outside Git; `STATE_DIR=/external/fresh-directory` selects its destination.
 - X11, Hyprland, Android and desktop applications are unsupported. Do not add
   their build layers or restore automatic desktop publication hooks.
+- Apple hardware, iOS, macOS, and macOS host tooling are unsupported. Keep
+  ARM64 support based on standard firmware, GIC, and PSCI interfaces.
 
 ## Test artifacts
 

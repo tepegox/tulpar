@@ -7,11 +7,9 @@ import aarch64.virtio_input
 import aarch64.virtio_net
 import dev.e1000
 import socket.inet
-import apple.wifi
-import apple.spi_keyboard
 import flanterm as _
 
-// Poll UART, VirtIO and the built-in Apple SPI keyboard into the console.
+// Poll UART and VirtIO input into the console.
 // Called from the scheduler's await() loop to avoid needing a separate thread.
 pub fn poll_uart_input() {
 	// Networking shares the scheduler's idle poll path with input devices, so
@@ -34,13 +32,6 @@ pub fn poll_uart_input() {
 		vi_outlen = 0
 	}
 
-	// The driver releases its lock before entering the console/termios path.
-	mut apple_input := [512]u8{}
-	apple_count := spi_keyboard.poll(&apple_input[0], u64(apple_input.len), console_decckm, console_key_events)
-	if apple_count > 0 {
-		add_to_buf(&apple_input[0], u64(apple_count), true)
-	}
-	wifi.poll()
 }
 
 pub fn initialise() {
@@ -48,20 +39,11 @@ pub fn initialise() {
 
 	setup_console()
 
-	// Initialize only after console/termios setup and before polling starts.
-	spi_keyboard.initialise()
-	wifi.initialise()
-
-	// Register UART polling callback with the scheduler's await() loop.
-	// Under HVF, IRQ injection is broken, so we can't use a separate
-	// UART polling thread (it would starve all other threads).
 	sched.set_uart_poll_callback(voidptr(poll_uart_input))
 }
 
-// Caps Lock is kept by whichever keyboard toggled it: VirtIO and USB share one
-// state, the built-in Apple keyboard has its own.
 fn caps_lock_on() bool {
-	return vi_caps_active || spi_keyboard.caps_lock()
+	return vi_caps_active
 }
 
 fn num_lock_on() bool { return vi_num_active }

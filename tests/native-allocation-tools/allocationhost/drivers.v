@@ -19,16 +19,12 @@ fn joined(parent string, child string) string {
 }
 
 pub fn saved_driver(argv []string, origin string, macos bool) int {
-	args := cachecli.arguments(argv, []string{}, []string{}, []string{}, if macos { 1 } else { 3 }, if macos {
-		1
-	} else {
-		3
-	},
-		if macos {
-			'usage: macos-driver RUN_NAME'
-		} else {
-			'usage: vinix-driver RUN_NAME LIBC_VARIANT KERNEL'
-		}) or {
+	if macos {
+		eprintln('macOS is unsupported')
+		return 2
+	}
+	args := cachecli.arguments(argv, []string{}, []string{}, []string{}, 3, 3,
+		'usage: vinix-driver RUN_NAME LIBC_VARIANT KERNEL') or {
 		eprintln(err)
 		return 2
 	}
@@ -37,23 +33,15 @@ pub fn saved_driver(argv []string, origin string, macos bool) int {
 	return driver_options(args.positional, origin, macos) or { return status(err) }
 }
 
-fn driver_options(args []string, origin string, macos bool) !int {
+fn driver_options(args []string, origin string, _macos bool) !int {
 	base := os.dir(os.dir(resolve(origin)!))
 	state := joined(base + '/build', args[0])
 	mut command := []string{}
-	if macos {
-		// The current executable contains the complete serial/QMP observer;
-		// its lifetime outlasts this owned child, including temporary fronts.
-		command = [os.executable(), 'measure', state, '--runtime',
-			base + '/build/useralloc-macos-runtime', '--config',
-			base + '/tests/alloc-bench/results/2026-10-02/user-macos/config.json']
-	} else {
-		kernel := resolve(args[2])!
-		if !os.is_file(kernel) { return error('kernel missing: ' + kernel) }
-		command = [os.executable(), 'vinix', '--kernel', kernel, '--sysroot',
-			joined(base + '/third_party/useralloc-libc/build/useralloc', args[1]), '--state-dir',
-			state, '--iterations', '200000', '--samples', '7', '--timeout', '3600']
-	}
+	kernel := resolve(args[2])!
+	if !os.is_file(kernel) { return error('kernel missing: ' + kernel) }
+	command = [os.executable(), 'vinix', '--kernel', kernel, '--sysroot',
+		joined(base + '/third_party/useralloc-libc/build/useralloc', args[1]), '--state-dir', state,
+		'--iterations', '200000', '--samples', '7', '--timeout', '3600']
 	started := utc_text(time.utc())
 	log := hosttest.replace_suffix(state, '.runner.log')
 	context := CommandDeadline{-1, time.sys_mono_now()}

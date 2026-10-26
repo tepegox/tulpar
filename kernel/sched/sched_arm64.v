@@ -299,30 +299,6 @@ pub fn scheduler_gpu_interrupt_trace(raw_state voidptr, phase u64) {
 	}
 }
 
-// The Apple architectural timer arrives through the FIQ callback ahead of the
-// AIC event drain. These markers distinguish a timer-status read, scheduler
-// stall, and AIC_EVENT stall without tracing every interrupt after startup.
-pub fn gpu_exec_fiq_trace(phase u64, cntv_ctl u64) {
-	cpu_number := cpu.read_tpidr_el1()
-	if !gpu_exec_interrupt_trace_active(cpu_number) {
-		return
-	}
-	match phase {
-		0 { println('exec[gpu]/FIQ: platform FIQ callback entered') }
-		1 {
-			pending := if cntv_ctl & 4 != 0 { c'true' } else { c'false' }
-			C.kprintf(c'exec[gpu]/FIQ: CNTV_CTL=0x%llx pending=%s\n', u64(cntv_ctl), pending)
-		}
-		2 { println('exec[gpu]/FIQ: virtual timer pending; entering scheduler timer handler') }
-		3 {
-			C.kprintf(c'exec[gpu]/FIQ: scheduler timer handler returned; CNTV_CTL=0x%llx\n',
-				u64(cntv_ctl))
-		}
-		4 { println('exec[gpu]/FIQ: virtual timer not pending; continuing with AIC event drain') }
-		else { C.kprintf(c'exec[gpu]/FIQ: unknown callback phase %llu\n', u64(phase)) }
-	}
-}
-
 pub fn initialise() {
 	gic.set_sync_core_handler(answer_sync_core)
 	configure_cpu_capacities()
@@ -1428,9 +1404,7 @@ pub fn new_cloned_thread(_process &proc.Process, _source &proc.Thread, state &cp
 // is no enqueue SGI. Timer sleepers still depend on that interval, so a 20 Hz
 // idle tick made
 // every nanosleep cost about 50 ms however short it asked for. Physical
-// bring-up still polls at 1 kHz. HVF's WFI handler deliberately skips host
-// sleep below 2 ms, so stock virtual idle uses 4 ms to park its vCPU.
-// The prepared Venus host runtime supports the faster 1 ms interval.
+// bring-up polls at 1 kHz; virtual idle uses a 4 ms interval.
 const idle_tick_hz = u64(1000)
 
 // Set before APs start: Limine's firmware tables are bootloader-owned and
@@ -1451,9 +1425,7 @@ pub fn await() {
 }
 
 fn await_impl(trace_gpu_handoff bool) {
-	// QEMU's virtual timer wakes WFI even with IRQs masked. Let HVF park
-	// idle vCPUs instead of flooding its device lock with input/timer polls.
-	// Keep the polling bring-up path on physical Apple hardware.
+	// QEMU's virtual timer wakes WFI even with IRQs masked.
 	if trace_gpu_handoff {
 		println('exec[gpu]/sched: traced idle loop entered; reading timer frequency')
 	}
@@ -1470,7 +1442,7 @@ fn await_impl(trace_gpu_handoff bool) {
 			u64(ticks))
 	}
 
-	// Polling idle loop used on both QEMU/HVF and early Apple bring-up.
+	// Poll the timer with interrupts masked.
 	// Keep interrupts disabled, poll CNTV_CTL ISTATUS, and dispatch the
 	// scheduler timer handler directly when the timer fires.
 	cpu.interrupt_toggle(false)
@@ -1552,12 +1524,6 @@ fn await_impl(trace_gpu_handoff bool) {
 		}
 
 		if cpuidle.waits(virtual_idle) && !proc.scheduling_policies_in_use() {
-			if !virtual_idle {
-				// WFI on hardware, asked for with vinix.apple_idle=wfi: the
-				// input this loop polls is looked at once per wake instead
-				// of continuously, and the idle timer wakes it every tick.
-				poll_platform_input()
-			}
 			// The WFI this loop has always executed here, now chosen, timed
 			// and counted by cpuidle. Interrupts are still masked, so one
 			// that arrives before the WFI ends it at once; see
