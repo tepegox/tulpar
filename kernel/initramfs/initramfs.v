@@ -81,38 +81,6 @@ __global (
 	keep_existing_under string
 )
 
-fn uart_puts(s string) {
-	for c in s {
-		uart_putc(c)
-	}
-}
-
-fn uart_put_hex(v u64) {
-	hex := '0123456789abcdef'
-	for i := 60; i >= 0; i -= 4 {
-		uart_putc(hex[int((v >> u64(i)) & 0xf)])
-	}
-}
-
-fn uart_put_dec(n u64) {
-	if n == 0 {
-		uart_putc(`0`)
-		return
-	}
-	mut buf := [20]u8{}
-	mut i := 0
-	mut v := n
-	for v > 0 {
-		buf[i] = u8(v % 10) + `0`
-		v /= 10
-		i++
-	}
-	for i > 0 {
-		i--
-		uart_putc(buf[i])
-	}
-}
-
 // Check USTAR signature without allocating memory
 fn check_ustar(hdr &USTARHeader) bool {
 	return unsafe {
@@ -125,11 +93,7 @@ fn check_ustar(hdr &USTARHeader) bool {
 // then stay where it is for good.
 @[manualfree]
 fn unpack(initramfs_begin voidptr, initramfs_size u64, module_index u64) bool {
-	C.kprintf(c'initramfs: Module:  %llu\n', u64(module_index + 1))
-	C.kprintf(c'initramfs: Address: 0x%llx\n', u64(initramfs_begin))
-	C.kprintf(c'initramfs: Size:    %llu\n', u64(u32(initramfs_size)))
-
-	uart_puts('initramfs: Unpacking...\n')
+	C.kprintf(c'initramfs: unpacking module %llu (%llu bytes)\n', module_index + 1, initramfs_size)
 
 	mut entry_count := u64(0)
 	mut borrowed := false
@@ -141,24 +105,24 @@ fn unpack(initramfs_begin voidptr, initramfs_size u64, module_index u64) bool {
 	initramfs_end := u64(initramfs_begin) + initramfs_size
 
 	for {
-		// Bounds check
+		// The archive may end exactly at its supplied boundary.
 		if u64(current_header) >= initramfs_end {
-			uart_puts('initramfs: past end of data\n')
 			break
 		}
-
-		uart_putc(`>`)
-
-		// Check signature without V string allocation
-		if !check_ustar(current_header) {
-			uart_puts('initramfs: no ustar sig at 0x')
-			uart_put_hex(u64(current_header))
-			uart_putc(`\n`)
-			break
+		match archive_header_kind(unsafe { &u8(current_header) }, initramfs_end - u64(current_header)) {
+			.end { break }
+			.truncated {
+				C.kprintf(c'initramfs: truncated header at offset %llu\n', u64(current_header) - u64(initramfs_begin))
+				break
+			}
+			.invalid {
+				C.kprintf(c'initramfs: invalid ustar header at offset %llu\n', u64(current_header) - u64(initramfs_begin))
+				break
+			}
+			.ustar {}
 		}
 
 		entry_count++
-		uart_putc(`+`)
 
 		name := if name_override == '' {
 			ustar_field_string(&current_header.name[0], current_header.name.len)
@@ -179,17 +143,6 @@ fn unpack(initramfs_begin voidptr, initramfs_size u64, module_index u64) bool {
 		link_name := ustar_field_string(&current_header.link_name[0], current_header.link_name.len)
 		size := octal_to_int(ustar_field_string(&current_header.size[0], current_header.size.len))
 		mode := octal_to_int(ustar_field_string(&current_header.mode[0], current_header.mode.len))
-
-		// Debug: print first 20 and every 200th entry
-		if entry_count <= 20 || entry_count % 200 == 0 {
-			uart_puts(' [')
-			uart_put_dec(entry_count)
-			uart_puts('] ')
-			uart_puts(full_name)
-			uart_puts(' sz=')
-			uart_put_dec(size)
-			uart_putc(`\n`)
-		}
 
 		name_override = ''
 		if full_name == './' {
@@ -236,9 +189,7 @@ fn unpack(initramfs_begin voidptr, initramfs_size u64, module_index u64) bool {
 				// This used to take the whole kernel down before init ran.
 				mut new_node := fs.create(vfs_root, full_name, u32(mode | stat.ifreg)) or {
 					fs.get_node(vfs_root, full_name, false) or {
-						uart_puts('initramfs: FAIL create ')
-						uart_puts(full_name)
-						uart_putc(`\n`)
+						C.kprintf(c'initramfs: failed to create %.*s\n', i32(full_name.len), full_name.str)
 						panic('initramfs: failed to create file ${full_name}')
 					}
 				}
@@ -274,8 +225,6 @@ fn unpack(initramfs_begin voidptr, initramfs_size u64, module_index u64) bool {
 			else {}
 		}
 
-		uart_putc(`!`)
-
 		next:
 		if joined {
 			unsafe { full_name.free() }
@@ -285,9 +234,7 @@ fn unpack(initramfs_begin voidptr, initramfs_size u64, module_index u64) bool {
 		}
 	}
 
-	uart_puts('initramfs: Done (')
-	uart_put_dec(entry_count)
-	uart_puts(' entries)\n')
+	C.kprintf(c'initramfs: ready (%llu entries)\n', entry_count)
 	return borrowed
 }
 
@@ -490,11 +437,7 @@ fn module_archive(module_index u64) Archive {
 	if member.size < 512 {
 		panic('initramfs: the compressed module holds no archive')
 	}
-	uart_puts('initramfs: inflating ')
-	uart_put_dec(size)
-	uart_puts(' bytes into ')
-	uart_put_dec(member.size)
-	uart_putc(`\n`)
+	C.kprintf(c'initramfs: inflating %llu bytes into %llu bytes\n', size, member.size)
 	pages := lib.div_roundup(member.size, page_size)
 	physical := memory.pmm_alloc_nozero_fallible(pages)
 	if physical == unsafe { nil } {

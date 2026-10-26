@@ -95,32 +95,24 @@ fn kmain_thread(qemu_platform bool, acpi_platform bool) {
 	acpisync.scheduler_ready()
 	acpisync.test_native()
 	boot_stage(11)
-	print('kmain_thread: started\n')
 
 	term.framebuffer_init()
-	print('kmain_thread: framebuffer done\n')
 
 	socket.initialise()
-	print('kmain_thread: socket done\n')
 	// Failure reports and removals are carried out by a thread of the core's.
 	devcore.start_worker()
 	if qemu_platform {
 		virtio_net.initialise(memory.get_hhdm_offset())
 	}
 	pipe.initialise()
-	print('kmain_thread: pipe done\n')
 	futex.initialise()
-	print('kmain_thread: futex done\n')
 	fs.initialise()
-	print('kmain_thread: fs done\n')
 
 	fs.mount(vfs_root, '', '/', 'tmpfs') or {}
-	print('kmain_thread: root mount done\n')
 	fs.create(vfs_root, '/dev', 0o644 | stat.ifdir) or {}
 	fs.mount(vfs_root, '', '/dev', 'devtmpfs') or {}
 	fs.create(vfs_root, '/proc', 0o555 | stat.ifdir) or {}
 	fs.mount(vfs_root, '', '/proc', 'procfs') or {}
-	print('kmain_thread: devtmpfs done\n')
 	if qemu_platform {
 		virtio_blk.initialise(memory.get_hhdm_offset())
 	}
@@ -147,10 +139,8 @@ fn kmain_thread(qemu_platform bool, acpi_platform bool) {
 		if !unpacked && !verified_root {
 			initramfs.initialise_overlays()
 		}
-		print('kmain_thread: persistent root done\n')
 	} else {
 		initramfs.initialise()
-		print('kmain_thread: initramfs done\n')
 		if qemu_platform && !virtio_blk.mount_persistent_home() {
 			panic('QEMU persistent storage was requested but could not be mounted')
 		}
@@ -182,7 +172,6 @@ fn kmain_thread(qemu_platform bool, acpi_platform bool) {
 	cpufreq.publish()
 	// The thermal zones drivers registered before /sys was there.
 	thermal.publish()
-	print('kmain_thread: sysfs done\n')
 
 	table.init_syscall_table()
 	table.init_storage_syscalls()
@@ -194,23 +183,19 @@ fn kmain_thread(qemu_platform bool, acpi_platform bool) {
 	proc.register_cpu_signal_hook(voidptr(userland.cpu_signal_process))
 	proc.register_job_orphan_hook(voidptr(userland.signal_orphaned_job_group))
 	sched.register_user_signal_hook(voidptr(userland.interrupt_return))
-	print('kmain_thread: syscall table done\n')
 
 	// Register segfault handler so user-space crashes kill the process
 	// instead of hanging the kernel
 	exception.register_segfault_handler(segfault_kill_process)
 
 	streams.initialise()
-	print('kmain_thread: streams done\n')
 	random.initialise()
-	print('kmain_thread: random done\n')
 	if qemu_platform {
 		virtio_snd.initialise(memory.get_hhdm_offset())
 	}
 
 	fbdev.initialise()
 	fbdev.register_driver(simple.get_driver())
-	print('kmain_thread: fbdev done\n')
 
 	// A USB keyboard and pointer, before /dev/pointer takes the pointer's
 	// range. They are all a VirtualBox VM has to type and point with. Its
@@ -226,16 +211,12 @@ fn kmain_thread(qemu_platform bool, acpi_platform bool) {
 		virtio_gpu.initialise(memory.get_hhdm_offset())
 	}
 	pointerdev.initialise()
-	print('kmain_thread: pointer done\n')
 
 	procdev.initialise()
-	print('kmain_thread: processes done\n')
 	pty.initialise()
-	print('kmain_thread: pty done\n')
 
 	console.initialise()
 	tty.initialise()
-	print('kmain_thread: console done\n')
 	// Every VirtIO driver has had its turn: list what is in the slots and
 	// which of it has a working driver.
 	if qemu_platform {
@@ -246,10 +227,8 @@ fn kmain_thread(qemu_platform bool, acpi_platform bool) {
 
 	sched.new_kernel_thread(voidptr(maintenance_thread), unsafe { nil }, true)
 	sched.new_kernel_thread(voidptr(writeback_thread), unsafe { nil }, true)
-	print('kmain_thread: writeback done\n')
 
-	print('\n*** aarch64: Kernel initialisation complete ***\n')
-	print('*** Starting /sbin/init ***\n')
+	print('boot: ARM64 devices initialised; starting /sbin/init\n')
 
 	// The buttons the platform reports. A power button asks init first, which
 	// the signal code -- above syspower -- does for it.

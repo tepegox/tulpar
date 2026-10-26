@@ -106,6 +106,15 @@ pub fn check_guest(arch string, requested string) ! {
 	mut transcript := Transcript{}
 	defer { os.write_file(selected + '/serial.log', transcript.text) or {} }
 	receive(mut connection, mut transcript, 'tulpar# ', 120)!
+	for unwanted in ['>+', ' sz=', 'no ustar sig', 'initramfs: invalid', 'initramfs: truncated'] {
+		if transcript.text.contains(unwanted) { return error('Unexpected boot output: ' + unwanted) }
+	}
+	for expected in ['initramfs: ready (', 'driver ', ' attached', if arch == 'amd64' { 'e1000: ready' } else { 'virtio-net: ready' }] {
+		if !transcript.text.contains(expected) { return error('Missing boot diagnostic: ' + expected) }
+	}
+	if arch == 'amd64' && (!transcript.text.contains('vendor=8086 device=100e') || !transcript.text.contains('class=02:00')) {
+		return error('Missing PCI Ethernet device identity')
+	}
 	connection.write_string("printf 'ARCH=%s\\n' \"$(uname -m)\"; printf 'ARITH=%s\\n' \"$((20+26))\"; echo tulpar > /tmp/probe; cat /tmp/probe | grep -q tulpar && printf 'PIPE_%s\\n' PASS; (sleep 1; exit 7) & wait $!; test $? -eq 7 && printf 'WAIT_%s\\n' PASS; stty -a; cat /proc/meminfo; printf 'COMMANDS_%s\\n' DONE\n")!
 	receive(mut connection, mut transcript, 'COMMANDS_DONE', 30)!
 	for expected in ['ARCH=' + target(arch), 'ARITH=46', 'PIPE_PASS', 'WAIT_PASS'] {

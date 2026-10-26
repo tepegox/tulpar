@@ -7,11 +7,11 @@ pub fn kwrite(message charptr, msglen u64) {
 	kprint_lock.acquire()
 	bootlog.append(message, msglen)
 
-	$if !prod {
-		unsafe {
-			for i := 0; i < msglen; i++ {
-				serial.out(u8(message[i]))
-			}
+	// The serial terminal is the normal console on headless servers, including
+	// production builds. Keep driver diagnostics visible there as on ARM64.
+	unsafe {
+		for i := 0; i < msglen; i++ {
+			serial.out(u8(message[i]))
 		}
 	}
 

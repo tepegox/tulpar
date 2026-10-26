@@ -83,8 +83,9 @@ pub fn initialise() {
 			C.kprintf(c'pci: rejecting interrupt capabilities for BDF=%u, status=%lld\n',
 				(u32(device.bus) << 8) | (u32(device.slot) << 3) | device.function, i64(cap_status))
 		}
-		C.kprintf(c'pci: Found [%llx:%llx:%llx:%lld]\n', u64(device.bus), u64(device.slot),
-			u64(device.function), i64(device.parent))
+		C.kprintf(c'pci: %02llx:%02llx.%llx vendor=%04llx device=%04llx class=%02llx:%02llx\n',
+			u64(device.bus), u64(device.slot), u64(device.function), u64(device.vendor_id),
+			u64(device.device_id), u64(device.class), u64(device.subclass))
 	}
 	// Transfer the unique vector backing store into its permanent boot owner.
 	scanned_devices = unsafe { boot_records }

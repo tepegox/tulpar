@@ -342,6 +342,8 @@ fn bind_locked(mut dev Device, mut driver Driver) bool {
 	dev.suspended = false
 	driver.bound++
 	publish_binding(dev)
+	C.kprintf(c'devcore: %.*s: driver %.*s attached\n', i32(dev.name.len), dev.name.str,
+		i32(driver.name.len), driver.name.str)
 	return true
 }
 
@@ -372,6 +374,8 @@ pub fn claim(mut dev Device, mut driver Driver) bool {
 	dev.state = .bound
 	driver.bound++
 	publish_binding(dev)
+	C.kprintf(c'devcore: %.*s: driver %.*s attached\n', i32(dev.name.len), dev.name.str,
+		i32(driver.name.len), driver.name.str)
 	return true
 }
 
