@@ -103,6 +103,7 @@ pub const cap_setuid = 7
 pub const cap_setpcap = 8
 pub const cap_net_bind_service = 10
 pub const cap_net_admin = 12
+pub const cap_net_raw = 13
 pub const cap_linux_immutable = 9
 pub const cap_ipc_owner = 15
 pub const cap_ipc_lock = 14

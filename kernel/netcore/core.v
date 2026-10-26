@@ -323,9 +323,9 @@ pub enum Netif_mac_filter_action {
 
 pub type Netif_mld_mac_filter_fn = fn (&C.netif, &C.ip6_addr, Netif_mac_filter_action) Err_t
 
-pub type Netif_output_fn = fn (&C.netif, &C.pbuf, &C.ip4_addr) Err_t
+pub type Netif_output_fn = fn (&C.netif, &C.pbuf, C.vinix_output4_address) Err_t
 
-pub type Netif_output_ip6_fn = fn (&C.netif, &C.pbuf, &C.ip6_addr) Err_t
+pub type Netif_output_ip6_fn = fn (&C.netif, &C.pbuf, C.vinix_output6_address) Err_t
 
 pub struct C.pbuf {
 pub mut:
@@ -539,7 +539,7 @@ pub mut:
 	recv_arg voidptr
 }
 
-pub type Udp_recv_fn = fn (voidptr, &C.udp_pcb, &C.pbuf, &C.ip_addr, U16_t)
+pub type Udp_recv_fn = fn (voidptr, &C.udp_pcb, &C.pbuf, C.vinix_receive_address, U16_t)
 
 pub struct C.vinix_net_endpoint {
 pub mut:
@@ -556,7 +556,7 @@ fn C.dhcp_start(netif &C.netif) Err_t
 fn C.dhcp_supplied_address(netif &C.netif) U8_t
 fn C.dns_getserver(numdns U8_t) &C.ip_addr
 fn C.etharp_output(netif &C.netif, q &C.pbuf, ipaddr &C.ip4_addr) Err_t
-fn C.ethip6_output(netif &C.netif, q &C.pbuf, ip6addr &C.ip6_addr) Err_t
+fn C.ethip6_output(netif &C.netif, q &C.pbuf, ip6addr C.vinix_output6_address) Err_t
 fn C.igmp_init()
 fn C.igmp_joingroup_netif(netif &C.netif, groupaddr &C.ip4_addr) Err_t
 fn C.igmp_leavegroup_netif(netif &C.netif, groupaddr &C.ip4_addr) Err_t
@@ -749,6 +749,9 @@ pub mut:
 	accept_head         &Vinix_socket
 	accept_tail         &Vinix_socket
 	accept_next         &Vinix_socket
+	// Appended so historical fixtures can still borrow the original prefix.
+	raw                 &C.raw_pcb
+	icmp_filter         u32
 }
 
 __global net_physical_netif C.netif
@@ -1217,8 +1220,9 @@ pub fn udp_received(argument voidptr, pcb &C.udp_pcb, p &C.pbuf, address &C.ip_a
 // IP output already enqueues the optional multicast loop copy. The native
 // *loopif output enqueues again, which delivers duplicates and ignores LOOP=0.
 
-pub fn loop_output4(interface_ &C.netif, p &C.pbuf, destination &C.ip4_addr) Err_t {
+pub fn loop_output4(interface_ &C.netif, p &C.pbuf, target C.vinix_output4_address) Err_t {
 	unsafe {
+		destination := &C.ip4_addr(target)
 		return Err_t(if (u64(destination.addr) & (((u64(4026531840) & u64(U32_t(255))) << 24) | ((u64(4026531840) & u64(U32_t(65280))) << 8) | ((u64(4026531840) & u64(U32_t(16711680))) >> 8) | ((u64(4026531840) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(3758096384) & u64(U32_t(255))) << 24) | ((u64(3758096384) & u64(U32_t(65280))) << 8) | ((u64(3758096384) & u64(U32_t(16711680))) >> 8) | ((u64(3758096384) & u64(U32_t(u64(4278190080)))) >> 24)) {
 			Err_enum_t.err_ok
 		} else {
@@ -1227,8 +1231,9 @@ pub fn loop_output4(interface_ &C.netif, p &C.pbuf, destination &C.ip4_addr) Err
 	}
 }
 
-pub fn loop_output6(interface_ &C.netif, p &C.pbuf, destination &C.ip6_addr) Err_t {
+pub fn loop_output6(interface_ &C.netif, p &C.pbuf, target C.vinix_output6_address) Err_t {
 	unsafe {
+		destination := &C.ip6_addr(target)
 		return Err_t(if (u64(destination.addr[0]) & (((u64(4278190080) & u64(U32_t(255))) << 24) | ((u64(4278190080) & u64(U32_t(65280))) << 8) | ((u64(4278190080) & u64(U32_t(16711680))) >> 8) | ((u64(4278190080) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(4278190080) & u64(U32_t(255))) << 24) | ((u64(4278190080) & u64(U32_t(65280))) << 8) | ((u64(4278190080) & u64(U32_t(16711680))) >> 8) | ((u64(4278190080) & u64(U32_t(u64(4278190080)))) >> 24)) {
 			Err_enum_t.err_ok
 		} else {
@@ -1313,8 +1318,9 @@ pub fn link_output(netif &C.netif, p &C.pbuf) Err_t {
 // *machine had sent in between. The fragments of a datagram share its ID, and
 // *ip4_frag() sends them in order, one after another, the first at offset 0.
 
-pub fn output_ipv4(netif &C.netif, p &C.pbuf, destination &C.ip4_addr) Err_t {
+pub fn output_ipv4(netif &C.netif, p &C.pbuf, target C.vinix_output4_address) Err_t {
 	unsafe {
+		destination := &C.ip4_addr(target)
 		header := &C.ip_hdr(p.payload)
 		header_length := u16(0)
 		if i32(p.len) >= 20 && (i32(header._v_hl) >> 4) == 4 {
@@ -1542,6 +1548,8 @@ pub fn vinix_socket_new(@type i32, protocol i32) &Vinix_socket {
 		if !net_stack_initialised {
 			vinix_net_init()
 		}
+		if @type != vinix_net_stream && @type != vinix_net_dgram && @type != vinix_net_raw { return nil }
+		if @type == vinix_net_raw && protocol != 1 { return nil }
 		if (@type == vinix_net_stream && protocol != 0 && protocol != 6) || (@type == vinix_net_dgram && protocol != 0 && protocol != 17) {
 			return nil
 		}
@@ -1571,7 +1579,12 @@ pub fn vinix_socket_new(@type i32, protocol i32) &Vinix_socket {
 		socket.keep_idle = u32(7200000)
 		socket.keep_interval = u32(75000)
 		socket.keep_count = 9
-		if @type == vinix_net_stream {
+		if @type == vinix_net_raw {
+			socket.raw = C.raw_new_ip_type(U8_t(Lwip_ip_addr_type.ipaddr_type_v4), 1) @[freed]
+			if socket.raw == nil { C.mem_free(voidptr(socket)); return nil }
+			socket_ip_pcb(socket).ttl = 64
+			install_raw_callback(socket)
+		} else if @type == vinix_net_stream {
 			socket.tcp = C.tcp_new_ip_type(U8_t(Lwip_ip_addr_type.ipaddr_type_v4))
 			if uint(socket.tcp) == 0 {
 				C.mem_free(voidptr(socket))
@@ -1585,9 +1598,7 @@ pub fn vinix_socket_new(@type i32, protocol i32) &Vinix_socket {
 				return nil
 			}
 			socket.udp.flags |= 8
-			C.vinix_lwip_udp_recv(socket.udp, fn (__c2v_cb_arg_0 voidptr, __c2v_cb_arg_1 &C.udp_pcb, __c2v_cb_arg_2 &C.pbuf, __c2v_cb_arg_3 &C.ip_addr, __c2v_cb_arg_4 U16_t) {
-				udp_received(__c2v_cb_arg_0, __c2v_cb_arg_1, __c2v_cb_arg_2, __c2v_cb_arg_3, u16(__c2v_cb_arg_4))
-			}, voidptr(socket))
+			C.vinix_lwip_udp_recv(socket.udp, udp_received_native, voidptr(socket))
 		} else {
 			C.mem_free(voidptr(socket))
 			return nil
@@ -1602,6 +1613,9 @@ pub fn vinix_socket_free(socket &Vinix_socket) {
 		if uint(socket) == 0 {
 			return
 		}
+		// raw_remove unlinks and frees synchronously. The network lock excludes
+		// receive callbacks before any queued copies or socket storage are freed.
+		if socket.raw != nil { C.raw_remove(socket.raw); socket.raw = nil }
 		release_memberships(socket)
 		free_packets(socket)
 		for socket.accept_head {
@@ -1708,13 +1722,19 @@ pub fn bind_ephemeral(socket &Vinix_socket, address &C.ip_addr) i32 {
 
 pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 	unsafe {
-		ip := C.ip_addr{}
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
 		error_ := Err_t(0)
 		if uint(socket) == 0 {
 			return 88
 		}
 		if socket.bound {
 			return 22
+		}
+		if socket.raw != nil {
+			error_ = C.raw_bind(socket.raw, address)
+			if i32(error_) == Err_enum_t.err_ok { socket.bound = 1 }
+			return linux_error(error_)
 		}
 		for {
 			for {
@@ -1752,7 +1772,7 @@ pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 			&C.ip_pcb(voidptr(socket.udp))
 		}
 		if ip_pcb {
-			ip_pcb.ttl = u8((if (uint((&ip)) != uint((voidptr(0)))) && (i32((*(&ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
+			ip_pcb.ttl = u8((if (uint((ip)) != uint((voidptr(0)))) && (i32((*(ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
 				socket.hops6
 			} else {
 				socket.hops4
@@ -1762,16 +1782,16 @@ pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 			return if socket.error { socket.error } else { 107 }
 		}
 		if i32(port) == 0 {
-			result := bind_ephemeral(socket, &ip)
+			result := bind_ephemeral(socket, ip)
 			if !result {
 				socket.bound = 1
 			}
 			return result
 		}
 		if socket.@type == vinix_net_stream {
-			error_ = C.tcp_bind(socket.tcp, &ip, C.lwip_htons(port))
+			error_ = C.tcp_bind(socket.tcp, ip, C.lwip_htons(port))
 		} else {
-			error_ = C.udp_bind(socket.udp, &ip, C.lwip_htons(port))
+			error_ = C.udp_bind(socket.udp, ip, C.lwip_htons(port))
 		}
 		if i32(error_) == Err_enum_t.err_ok {
 			socket.bound = 1
@@ -1786,7 +1806,7 @@ pub fn bind_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 // semantics and an explicit sendto can still select another outgoing route.
 fn udp_connect_source(socket &Vinix_socket, destination &C.ip_addr, source &C.ip_addr) i32 {
 	unsafe {
-		local := &socket.udp.local_ip
+		local := &socket_ip_pcb(socket).local_ip
 		if destination.@type == u8(Lwip_ip_addr_type.ipaddr_type_v6) {
 			netif := C.ip6_route(&local.u_addr.ip6, &destination.u_addr.ip6)
 			if netif == nil { return 101 }
@@ -1807,7 +1827,8 @@ fn udp_connect_source(socket &Vinix_socket, destination &C.ip_addr, source &C.ip
 
 pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 	unsafe {
-		ip := C.ip_addr{}
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
 		error_ := Err_t(0)
 		if uint(socket) == 0 {
 			return 88
@@ -1844,7 +1865,7 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 		}
 		ip_pcb := socket_ip_pcb(socket)
 		if ip_pcb {
-			ip_pcb.ttl = u8((if (uint((&ip)) != uint((voidptr(0)))) && (i32((*(&ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
+			ip_pcb.ttl = u8((if (uint((ip)) != uint((voidptr(0)))) && (i32((*(ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
 				socket.hops6
 			} else {
 				socket.hops4
@@ -1867,7 +1888,7 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 				}
 			}
 			socket.connecting = 1
-			error_ = C.tcp_connect(socket.tcp, &ip, C.lwip_htons(port), tcp_connected)
+			error_ = C.tcp_connect(socket.tcp, ip, C.lwip_htons(port), tcp_connected)
 			if i32(error_) != Err_enum_t.err_ok {
 				socket.connecting = 0
 				return linux_error(error_)
@@ -1916,8 +1937,20 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 			}
 			return 115
 		}
+		if socket.raw != nil {
+			source := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+			C.memset(source, 0, sizeof(C.ip_addr))
+			route_error := udp_connect_source(socket, ip, source)
+			if route_error != 0 { return route_error }
+			error_ = C.raw_connect(socket.raw, ip)
+			if i32(error_) == Err_enum_t.err_ok {
+				socket.connected = 1
+				C.memcpy(&socket.last_local_address, source, sizeof(C.ip_addr))
+			}
+			return linux_error(error_)
+		}
 		source := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
-		route_error := udp_connect_source(socket, &ip, source)
+		route_error := udp_connect_source(socket, ip, source)
 		if route_error != 0 { return route_error }
 		if i32(socket.udp.local_port) == 0 {
 			bound := bind_ephemeral(socket, &socket.udp.local_ip)
@@ -1925,7 +1958,7 @@ pub fn connect_ip(socket &Vinix_socket, address &C.ip_addr, port u16) i32 {
 				return bound
 			}
 		}
-		error_ = C.udp_connect(socket.udp, &ip, C.lwip_htons(port))
+		error_ = C.udp_connect(socket.udp, ip, C.lwip_htons(port))
 		if i32(error_) == Err_enum_t.err_ok {
 			socket.connected = 1
 			C.memcpy(&socket.last_local_address, source, sizeof(C.ip_addr))
@@ -1980,7 +2013,9 @@ pub fn vinix_socket_accept(socket &Vinix_socket) &Vinix_socket {
 			socket.accept_tail = nil
 		}
 		child.accept_next = nil
-		C.tcp_backlog_accepted(socket.tcp)
+		// Backlog credit belongs to the accepted connection. A listening PCB
+		// is smaller and has no connection flags/listener fields to inspect.
+		if child.tcp != nil { C.tcp_backlog_accepted(child.tcp) }
 		return child
 	}
 }
@@ -1994,6 +2029,7 @@ pub fn send_ip(socket &Vinix_socket, data voidptr, length uint, address &C.ip_ad
 		if socket.write_shutdown {
 			return -32
 		}
+		if socket.raw != nil { return send_icmp(socket, data, length, address, has_address) }
 		if socket.@type == vinix_net_stream {
 			amount := u16(0)
 			if uint(socket.tcp) == 0 {
@@ -2169,7 +2205,7 @@ pub fn recv_ip_flags(socket &Vinix_socket, data voidptr, length uint, address &C
 			*port = C.lwip_htons(packet.port)
 		}
 		if flags & 2 != 0 {
-			if socket.@type == vinix_net_dgram { return i32(if flags & 0x20 != 0 { available } else { amount }) }
+			if socket.@type != vinix_net_stream { return i32(if flags & 0x20 != 0 { available } else { amount }) }
 			// TCP may queue separate packets for a single requested prefix.
 			mut copied := uint(amount)
 			packet = packet.next
@@ -2205,7 +2241,7 @@ pub fn recv_ip_flags(socket &Vinix_socket, data voidptr, length uint, address &C
 			}
 			free_packet(packet)
 		}
-		return i32(if socket.@type == vinix_net_dgram && flags & 0x20 != 0 { available } else { amount })
+		return i32(if socket.@type != vinix_net_stream && flags & 0x20 != 0 { available } else { amount })
 	}
 }
 
@@ -2249,6 +2285,10 @@ pub fn vinix_socket_shutdown(socket &Vinix_socket, how i32) i32 {
 			error_ = C.tcp_shutdown(socket.tcp, how == 0 || how == 2, how == 1 || how == 2)
 			return linux_error(error_)
 		}
+		if socket.raw != nil {
+			if how == 1 || how == 2 { C.raw_disconnect(socket.raw); socket.connected = 0 }
+			return 0
+		}
 		if how == 1 || how == 2 {
 			C.udp_disconnect(socket.udp)
 			socket.connected = 0
@@ -2262,6 +2302,11 @@ pub fn vinix_socket_local(socket &Vinix_socket, address &u32, port &u16) i32 {
 	unsafe {
 		if uint(socket) == 0 {
 			return 88
+		}
+		if socket.raw != nil {
+			if address { *address = if socket.connected { socket.last_local_address.u_addr.ip4.addr } else { socket_ip_pcb(socket).local_ip.u_addr.ip4.addr } }
+			if port { *port = 0 }
+			return 0
 		}
 		if socket.@type == vinix_net_stream {
 			if address {
@@ -2295,6 +2340,11 @@ pub fn vinix_socket_peer(socket &Vinix_socket, address &u32, port &u16) i32 {
 	unsafe {
 		if (uint(socket) == 0) || !socket.connected {
 			return 107
+		}
+		if socket.raw != nil {
+			if address { *address = socket_ip_pcb(socket).remote_ip.u_addr.ip4.addr }
+			if port { *port = 0 }
+			return 0
 		}
 		if socket.@type == vinix_net_stream {
 			if address {
@@ -2337,7 +2387,7 @@ pub fn vinix_socket_ready(socket &Vinix_socket) i32 {
 		} {
 			ready |= vinix_net_readable
 		}
-		if !socket.write_shutdown && ((!(uint(socket.tcp) == 0) && socket.connected && i32(socket.tcp.snd_buf) > 0 && socket.send_queued < socket.send_limit) || !(uint(socket.udp) == 0)) {
+		if !socket.write_shutdown && ((!(uint(socket.tcp) == 0) && socket.connected && i32(socket.tcp.snd_buf) > 0 && socket.send_queued < socket.send_limit) || !(uint(socket.udp) == 0) || socket.raw != nil) {
 			ready |= vinix_net_writable
 		}
 		if socket.error {
@@ -2375,7 +2425,7 @@ pub fn vinix_socket_available(socket &Vinix_socket) i32 {
 		}
 		for packet = socket.rx_head; packet; packet = packet.next {
 			total += u32(i32(packet.p.tot_len) - i32(packet.offset))
-			if socket.udp {
+			if socket.@type != vinix_net_stream {
 				break
 			}
 		}
@@ -2385,6 +2435,7 @@ pub fn vinix_socket_available(socket &Vinix_socket) i32 {
 
 pub fn socket_ip_pcb(socket &Vinix_socket) &C.ip_pcb {
 	unsafe {
+		if socket.raw != nil { return &C.ip_pcb(voidptr(socket.raw)) }
 		if socket.tcp {
 			return &C.ip_pcb(voidptr(socket.tcp))
 		}
@@ -2399,6 +2450,7 @@ pub fn vinix_socket_set_option(socket &Vinix_socket, level i32, option i32, valu
 		if uint(socket) == 0 {
 			return 88
 		}
+		if level == 255 && option == 1 && socket.raw != nil { socket.icmp_filter = u32(value); return 0 }
 		pcb = socket_ip_pcb(socket)
 		if level == 41 || (level == 0 && (option == 2 || option == 33 || option == 34)) {
 			return family_set_option(socket, level, option, value)
@@ -2660,6 +2712,7 @@ pub fn vinix_socket_get_option(socket &Vinix_socket, level i32, option i32, valu
 		if (uint(socket) == 0) || (uint(value) == 0) {
 			return 22
 		}
+		if level == 255 && option == 1 && socket.raw != nil { *value = i32(socket.icmp_filter); return 0 }
 		pcb = socket_ip_pcb(socket)
 		if level == 41 || (level == 0 && (option == 2 || option == 33 || option == 34 || option == 32)) {
 			return family_get_option(socket, level, option, value)
@@ -2945,6 +2998,7 @@ pub fn vinix_socket_new_family(@type i32, protocol i32, family i32) &Vinix_socke
 		if family != 2 && family != 10 {
 			return nil
 		}
+		if @type == vinix_net_raw && family != 2 { return nil }
 		socket := vinix_socket_new(@type, protocol)
 		if uint(socket) == 0 {
 			return nil
@@ -2970,14 +3024,15 @@ pub fn vinix_socket_new_family(@type i32, protocol i32, family i32) &Vinix_socke
 @[export: 'vinix_socket_bind_endpoint']
 pub fn vinix_socket_bind_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_endpoint) i32 {
 	unsafe {
-		ip := C.ip_addr{}
-		error_ := endpoint_ip(socket, endpoint, &ip)
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
+		error_ := endpoint_ip(socket, endpoint, ip)
 		if error_ {
 			return error_
 		}
 		mut __c2v_condition_5 := false
 		mut __c2v_condition_6 := false
-		__c2v_condition_6 = ((uint((&ip)) != uint((voidptr(0)))) && (i32((*(&ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6))
+		__c2v_condition_6 = ((uint((ip)) != uint((voidptr(0)))) && (i32((*(ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6))
 		if __c2v_condition_6 {
 			__c2v_condition_6 = !((uint((&ip.u_addr.ip6)) == uint((voidptr(0)))) || (((&ip.u_addr.ip6).addr[0] == U32_t(0)) && ((&ip.u_addr.ip6).addr[1] == U32_t(0)) && ((&ip.u_addr.ip6).addr[2] == U32_t(0)) && ((&ip.u_addr.ip6).addr[3] == U32_t(0))))
 		}
@@ -3016,7 +3071,7 @@ pub fn vinix_socket_bind_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_en
 			__c2v_condition_10 = !socket.v6only
 		}
 		if __c2v_condition_10 {
-			__c2v_condition_10 = ((uint((&ip)) != uint((voidptr(0)))) && (i32((*(&ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6))
+			__c2v_condition_10 = ((uint((ip)) != uint((voidptr(0)))) && (i32((*(ip)).@type) == Lwip_ip_addr_type.ipaddr_type_v6))
 		}
 		if __c2v_condition_10 {
 			__c2v_condition_10 = ((uint((&ip.u_addr.ip6)) == uint((voidptr(0)))) || (((&ip.u_addr.ip6).addr[0] == U32_t(0)) && ((&ip.u_addr.ip6).addr[1] == U32_t(0)) && ((&ip.u_addr.ip6).addr[2] == U32_t(0)) && ((&ip.u_addr.ip6).addr[3] == U32_t(0))))
@@ -3029,34 +3084,36 @@ pub fn vinix_socket_bind_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_en
 				break
 			}
 		}
-		return bind_ip(socket, &ip, endpoint.port)
+		return bind_ip(socket, ip, endpoint.port)
 	}
 }
 
 @[export: 'vinix_socket_connect_endpoint']
 pub fn vinix_socket_connect_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_endpoint) i32 {
 	unsafe {
-		ip := C.ip_addr{}
-		error_ := endpoint_ip(socket, endpoint, &ip)
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
+		error_ := endpoint_ip(socket, endpoint, ip)
 		if error_ {
 			return error_
 		}
-		return connect_ip(socket, &ip, endpoint.port)
+		return connect_ip(socket, ip, endpoint.port)
 	}
 }
 
 @[export: 'vinix_socket_send_endpoint']
 pub fn vinix_socket_send_endpoint(socket &Vinix_socket, data voidptr, length uint, endpoint &C.vinix_net_endpoint, has_address i32) i32 {
 	unsafe {
-		ip := C.ip_addr{}
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
 		if has_address {
-			error_ := endpoint_ip(socket, endpoint, &ip)
+			error_ := endpoint_ip(socket, endpoint, ip)
 			if error_ {
 				return -error_
 			}
 		}
 		return send_ip(socket, voidptr(data), length, if has_address {
-			&ip
+			ip
 		} else {
 			&C.ip_addr(nil)
 		}, u16(if has_address { i32(endpoint.port) } else { 0 }), has_address)
@@ -3071,12 +3128,13 @@ pub fn vinix_socket_recv_endpoint(socket &Vinix_socket, data voidptr, length uin
 @[export: 'vinix_socket_recv_endpoint_flags']
 pub fn vinix_socket_recv_endpoint_flags(socket &Vinix_socket, data voidptr, length uint, endpoint &C.vinix_net_endpoint, flags i32) i32 {
 	unsafe {
-		ip := C.ip_addr{}
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
 		port := u16(0)
-		C.memset(voidptr(&ip), 0, sizeof(ip))
-		result := recv_ip_flags(socket, voidptr(data), length, &ip, &port, flags)
+		C.memset(voidptr(ip), 0, sizeof(C.ip_addr))
+		result := recv_ip_flags(socket, voidptr(data), length, ip, &port, flags)
 		if result >= 0 && !(uint(endpoint) == 0) {
-			endpoint_from_ip(socket.family, &ip, port, endpoint)
+			endpoint_from_ip(socket.family, ip, port, endpoint)
 		}
 		return result
 	}
@@ -3093,6 +3151,12 @@ pub fn vinix_socket_name_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_en
 		}
 		ip := &C.ip_addr(0)
 		port := u16(0)
+		if socket.raw != nil {
+			pcb := socket_ip_pcb(socket)
+			ip = if peer { &pcb.remote_ip } else if socket.connected { &socket.last_local_address } else { &pcb.local_ip }
+			endpoint_from_ip(socket.family, ip, 0, endpoint)
+			return 0
+		}
 		if socket.@type == vinix_net_stream {
 			ip = if socket.tcp {
 				(if peer { &socket.tcp.remote_ip } else { &socket.tcp.local_ip })
@@ -3128,33 +3192,43 @@ pub fn vinix_socket_name_endpoint(socket &Vinix_socket, endpoint &C.vinix_net_en
 @[export: 'vinix_socket_bind']
 pub fn vinix_socket_bind(socket &Vinix_socket, address u32, port u16) i32 {
 	unsafe {
-		ip := ipv4(address)
-		return bind_ip(socket, &ip, port)
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
+		ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v4)
+		ip.u_addr.ip4.addr = address
+		return bind_ip(socket, ip, port)
 	}
 }
 
 @[export: 'vinix_socket_connect']
 pub fn vinix_socket_connect(socket &Vinix_socket, address u32, port u16) i32 {
 	unsafe {
-		ip := ipv4(address)
-		return connect_ip(socket, &ip, port)
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
+		ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v4)
+		ip.u_addr.ip4.addr = address
+		return connect_ip(socket, ip, port)
 	}
 }
 
 @[export: 'vinix_socket_send']
 pub fn vinix_socket_send(socket &Vinix_socket, data voidptr, length uint, address u32, port u16, has_address i32) i32 {
 	unsafe {
-		ip := ipv4(address)
-		return send_ip(socket, voidptr(data), length, &ip, port, has_address)
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
+		ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v4)
+		ip.u_addr.ip4.addr = address
+		return send_ip(socket, voidptr(data), length, ip, port, has_address)
 	}
 }
 
 @[export: 'vinix_socket_recv']
 pub fn vinix_socket_recv(socket &Vinix_socket, data voidptr, length uint, address &u32, port &u16) i32 {
 	unsafe {
-		ip := C.ip_addr{}
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
 		result := recv_ip(socket, voidptr(data), length, if address {
-			&ip
+			ip
 		} else {
 			&C.ip_addr(nil)
 		}, port)
@@ -3242,8 +3316,9 @@ pub fn vinix_socket_membership(socket &Vinix_socket, endpoint &C.vinix_net_endpo
 		if i32(endpoint.family) == 10 && socket.family != 10 {
 			return 92
 		}
-		group := C.ip_addr{}
-		C.memset(voidptr(&group), 0, sizeof(group))
+		group := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(group, 0, sizeof(C.ip_addr))
+		C.memset(voidptr(group), 0, sizeof(C.ip_addr))
 		for {
 			group.@type = U8_t((if i32(endpoint.family) == 10 {
 				Lwip_ip_addr_type.ipaddr_type_v6
@@ -3258,8 +3333,8 @@ pub fn vinix_socket_membership(socket &Vinix_socket, endpoint &C.vinix_net_endpo
 		} else {
 			group.u_addr.ip4.addr = endpoint.words[0]
 		}
-		if !(if (uint((&group)) != uint((voidptr(0))))
-			&& (i32((*(&group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
+		if !(if (uint((group)) != uint((voidptr(0))))
+			&& (i32((*(group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
 			((u64(group.u_addr.ip6.addr[0]) & (((u64(4278190080) & u64(U32_t(255))) << 24) | ((u64(4278190080) & u64(U32_t(65280))) << 8) | ((u64(4278190080) & u64(U32_t(16711680))) >> 8) | ((u64(4278190080) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(4278190080) & u64(U32_t(255))) << 24) | ((u64(4278190080) & u64(U32_t(65280))) << 8) | ((u64(4278190080) & u64(U32_t(16711680))) >> 8) | ((u64(4278190080) & u64(U32_t(u64(4278190080)))) >> 24)))
 		} else {
 			((u64(group.u_addr.ip4.addr) & (((u64(4026531840) & u64(U32_t(255))) << 24) | ((u64(4026531840) & u64(U32_t(65280))) << 8) | ((u64(4026531840) & u64(U32_t(16711680))) >> 8) | ((u64(4026531840) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(3758096384) & u64(U32_t(255))) << 24) | ((u64(3758096384) & u64(U32_t(65280))) << 8) | ((u64(3758096384) & u64(U32_t(16711680))) >> 8) | ((u64(3758096384) & u64(U32_t(u64(4278190080)))) >> 24)))
@@ -3319,7 +3394,7 @@ pub fn vinix_socket_membership(socket &Vinix_socket, endpoint &C.vinix_net_endpo
 		}) {
 			return 19
 		}
-		if (uint((&group)) != uint((voidptr(0)))) && (i32((*(&group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
+		if (uint((group)) != uint((voidptr(0)))) && (i32((*(group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
 			group.u_addr.ip6.zone = U8_t((if ((u64(group.u_addr.ip6.addr[0]) & (((u64(4290772992) & u64(U32_t(255))) << 24) | ((u64(4290772992) & u64(U32_t(65280))) << 8) | ((u64(4290772992) & u64(U32_t(16711680))) >> 8) | ((u64(4290772992) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(4269801472) & u64(U32_t(255))) << 24) | ((u64(4269801472) & u64(U32_t(65280))) << 8) | ((u64(4269801472) & u64(U32_t(16711680))) >> 8) | ((u64(4269801472) & u64(U32_t(u64(4278190080)))) >> 24))) || ((Lwip_ipv6_scope_type.ip6_multicast != Lwip_ipv6_scope_type.ip6_unicast) && (((u64(group.u_addr.ip6.addr[0]) & (((u64(4287561728) & u64(U32_t(255))) << 24) | ((u64(4287561728) & u64(U32_t(65280))) << 8) | ((u64(4287561728) & u64(U32_t(16711680))) >> 8) | ((u64(4287561728) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(4278255616) & u64(U32_t(255))) << 24) | ((u64(4278255616) & u64(U32_t(65280))) << 8) | ((u64(4278255616) & u64(U32_t(16711680))) >> 8) | ((u64(4278255616) & u64(U32_t(u64(4278190080)))) >> 24))) || ((u64(group.u_addr.ip6.addr[0]) & (((u64(4287561728) & u64(U32_t(255))) << 24) | ((u64(4287561728) & u64(U32_t(65280))) << 8) | ((u64(4287561728) & u64(U32_t(16711680))) >> 8) | ((u64(4287561728) & u64(U32_t(u64(4278190080)))) >> 24))) == (((u64(4278321152) & u64(U32_t(255))) << 24) | ((u64(4278321152) & u64(U32_t(65280))) << 8) | ((u64(4278321152) & u64(U32_t(16711680))) >> 8) | ((u64(4278321152) & u64(U32_t(u64(4278190080)))) >> 24))))) {
 				i32((U8_t((i32(interface_.num) + 1))))
 			} else {
@@ -3375,25 +3450,25 @@ pub fn vinix_socket_membership(socket &Vinix_socket, endpoint &C.vinix_net_endpo
 		// Native group use is u8_t and also includes other protocol owners.
 		//     *Reject saturation before lwIP increments and wraps the shared count.
 
-		if (uint((&group)) != uint((voidptr(0)))) && (i32((*(&group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
+		if (uint((group)) != uint((voidptr(0)))) && (i32((*(group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
 			existing := C.mld6_lookfor_group(interface_, (&group.u_addr.ip6))
 			if !(uint(existing) == 0) && i32(existing.use) == 255 {
 				return 105
 			}
 		} else {
 			existing := C.igmp_lookfor_group(interface_, (&group.u_addr.ip4))
-			if !automatic_allhosts(&group) && !(uint(existing) == 0) && i32(existing.use) == 255 {
+			if !automatic_allhosts(group) && !(uint(existing) == 0) && i32(existing.use) == 255 {
 				return 105
 			}
 		}
 		error_ := Err_t(0)
-		if automatic_allhosts(&group) {
+		if automatic_allhosts(group) {
 			if is_null(C.igmp_lookfor_group(interface_, (&group.u_addr.ip4))) {
 				return 12
 			}
 			error_ = Err_t(Err_enum_t.err_ok)
 		} else {
-			error_ = Err_t(if (uint((&group)) != uint((voidptr(0)))) && (i32((*(&group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
+			error_ = Err_t(if (uint((group)) != uint((voidptr(0)))) && (i32((*(group)).@type) == Lwip_ip_addr_type.ipaddr_type_v6) {
 				i32(C.mld6_joingroup_netif(interface_, (&group.u_addr.ip6)))
 			} else {
 				i32(C.igmp_joingroup_netif(interface_, (&group.u_addr.ip4)))
@@ -3482,7 +3557,8 @@ pub fn vinix_net_ipv6_address(index u32, slot u32, endpoint &C.vinix_net_endpoin
 		if (uint(interface_) == 0) || slot >= u32(6) {
 			return 0
 		}
-		ip := C.ip_addr{}
+		ip := &C.ip_addr(C.vinix_stack_alloc(sizeof(C.ip_addr)))
+		C.memset(ip, 0, sizeof(C.ip_addr))
 		for {
 			ip.@type = U8_t(Lwip_ip_addr_type.ipaddr_type_v6)
 			// while()
@@ -3497,7 +3573,7 @@ pub fn vinix_net_ipv6_address(index u32, slot u32, endpoint &C.vinix_net_endpoin
 			// while()
 			break
 		}
-		endpoint_from_ip(10, &ip, u16(0), endpoint)
+		endpoint_from_ip(10, ip, u16(0), endpoint)
 		if state {
 			*state = u32(interface_.ip6_addr_state[slot])
 		}

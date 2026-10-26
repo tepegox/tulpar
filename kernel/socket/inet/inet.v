@@ -598,16 +598,38 @@ pub fn create(@type int, protocol int) ?&InetSocket {
 	return create_family(@type, protocol, sock_pub.af_inet)
 }
 
+// Raw packets have no port: the DNS-only port-53 exemption must never admit
+// them. Recheck I/O because an existing descriptor can outlive a new pledge.
+fn (this &InetSocket) check_raw_pledge() ? {
+	if this.socktype != sock_pub.sock_raw { return }
+	refused := proc.pledge_check(proc.pledge_inet)
+	if refused != 0 { errno.set(refused); return none }
+}
+
 pub fn create_family(@type int, protocol int, family int) ?&InetSocket {
 	socktype := @type & sock_pub.sock_type_mask
-	if socktype != sock_pub.sock_stream && socktype != sock_pub.sock_dgram {
+	if socktype != sock_pub.sock_stream && socktype != sock_pub.sock_dgram && socktype != sock_pub.sock_raw {
 		errno.set(errno.esocktnosupport)
 		return none
 	}
 	if (socktype == sock_pub.sock_stream && protocol != 0 && protocol != ipproto_tcp)
-		|| (socktype == sock_pub.sock_dgram && protocol != 0 && protocol != 17) {
+		|| (socktype == sock_pub.sock_dgram && protocol != 0 && protocol != 17)
+		|| (socktype == sock_pub.sock_raw && (family != sock_pub.af_inet || protocol != 1)) {
 		errno.set(errno.eprotonosupport)
 		return none
+	}
+	if socktype == sock_pub.sock_raw {
+		refused := proc.pledge_check(proc.pledge_inet)
+		if refused != 0 { errno.set(refused); return none }
+		process := proc.current_thread().process
+		// The transport belongs to the initial network namespace. A capability
+		// acquired in a child user namespace cannot authorize packets on it.
+		if !proc.current_has_capability(proc.cap_net_raw) || !proc.mac_trusted()
+			|| !proc.is_initial_namespace(process.ns.user) || !proc.is_initial_namespace(process.ns.net) {
+			security.event(security.event_network, true, 1, 'raw-icmp')
+			errno.set(errno.eperm)
+			return none
+		}
 	}
 	actual_protocol := if protocol != 0 {
 		protocol
@@ -701,6 +723,7 @@ pub fn (this &InetSocket) linger() (int, int) {
 }
 
 fn (mut this InetSocket) read(handle voidptr, buf voidptr, _loc u64, count u64) ?i64 {
+	this.check_raw_pledge()?
 	open_handle := unsafe { &file.Handle(handle) }
 	this.l.acquire()
 	defer {
@@ -728,6 +751,7 @@ fn (mut this InetSocket) read(handle voidptr, buf voidptr, _loc u64, count u64) 
 }
 
 fn (mut this InetSocket) write(handle voidptr, buf voidptr, _loc u64, count u64) ?i64 {
+	this.check_raw_pledge()?
 	open_handle := unsafe { &file.Handle(handle) }
 	this.l.acquire()
 	defer {
@@ -755,6 +779,7 @@ fn (mut this InetSocket) write(handle voidptr, buf voidptr, _loc u64, count u64)
 }
 
 pub fn (mut this InetSocket) sendto(handle voidptr, buf voidptr, count u64, _addr voidptr, addrlen u32) ?i64 {
+	this.check_raw_pledge()?
 	open_handle := unsafe { &file.Handle(handle) }
 	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
 	mut has_address := 0
@@ -792,6 +817,7 @@ pub fn (mut this InetSocket) recvfrom(handle voidptr, buf voidptr, count u64, _a
 }
 
 pub fn (mut this InetSocket) recvfrom_flags(handle voidptr, buf voidptr, count u64, _addr voidptr, addrlen &u32, flags int) ?i64 {
+	this.check_raw_pledge()?
 	open_handle := unsafe { &file.Handle(handle) }
 	this.l.acquire()
 	defer { this.l.release() }
@@ -839,7 +865,7 @@ fn (mut this InetSocket) bind(_handle voidptr, _addr voidptr, addrlen u32) ? {
 	// for the machine's own. Only CAP_NET_BIND_SERVICE binds them, as on
 	// Linux; the port is in network byte order.
 	port := (endpoint.port >> 8) | ((endpoint.port & 0xff) << 8)
-	if port != 0 && port < 1024
+	if this.socktype != sock_pub.sock_raw && port != 0 && port < 1024
 		&& !proc.current_has_capability(proc.cap_net_bind_service) {
 		security.event(security.event_network, true, u64(port), 'bind')
 		errno.set(errno.eacces)
@@ -856,6 +882,7 @@ fn (mut this InetSocket) bind(_handle voidptr, _addr voidptr, addrlen u32) ? {
 }
 
 fn (mut this InetSocket) connect(handle voidptr, _addr voidptr, addrlen u32) ? {
+	this.check_raw_pledge()?
 	mut endpoint := unsafe { &C.vinix_net_endpoint(C.vinix_stack_alloc(sizeof(C.vinix_net_endpoint))) }
 	fill_endpoint(_addr, addrlen, this.family, mut endpoint)?
 	open_handle := unsafe { &file.Handle(handle) }

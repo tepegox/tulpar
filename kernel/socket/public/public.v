@@ -41,6 +41,8 @@ pub const sock_stream = 1
 
 pub const sock_dgram = 2
 
+pub const sock_raw = 3
+
 pub const sock_seqpacket = 5
 
 // getsockopt(2)/setsockopt(2).

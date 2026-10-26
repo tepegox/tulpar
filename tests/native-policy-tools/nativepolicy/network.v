@@ -10,6 +10,7 @@ pub fn network_core(destination string) ! {
 	write(work + '/core.v', read(root() + '/kernel/netcore/core.v')!
 		.replace('fn C.printf_panic(&char, ...) i32\n', '').replace('C.printf_panic(', 'C.printf('))!
 	os.cp(root() + '/kernel/netcore/assert_amd64.v', work + '/assert.v')!
+	os.cp(root() + '/kernel/netcore/icmp.v', work + '/icmp.v')!
 	write(work + '/v.mod', "Module {name: 'net_test'}\n")!
 	generate_project(work, destination, '', false, []string{})!
 }

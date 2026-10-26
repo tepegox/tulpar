@@ -17,6 +17,7 @@ struct vinix_socket;
 enum {
     VINIX_NET_STREAM = 1,
     VINIX_NET_DGRAM = 2,
+    VINIX_NET_RAW = 3,
 };
 
 enum {

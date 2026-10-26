@@ -15,10 +15,7 @@ _Static_assert(sizeof(netif_output_fn) == sizeof(void *) &&
                sizeof(netif_output_ip6_fn) == sizeof(void *) &&
                sizeof(udp_recv_fn) == sizeof(void *), "native callback address width");
 void *vinix_lwip_tcp_lists(void);
-void vinix_lwip_set_output4(struct netif *,
-        err_t (*)(struct netif *, struct pbuf *, ip4_addr_t *));
-void vinix_lwip_set_output6(struct netif *,
-        err_t (*)(struct netif *, struct pbuf *, ip6_addr_t *));
-void vinix_lwip_udp_recv(struct udp_pcb *,
-        void (*)(void *, struct udp_pcb *, struct pbuf *, ip_addr_t *, u16_t), void *);
+void vinix_lwip_set_output4(struct netif *, netif_output_fn);
+void vinix_lwip_set_output6(struct netif *, netif_output_ip6_fn);
+void vinix_lwip_udp_recv(struct udp_pcb *, udp_recv_fn, void *);
 #endif

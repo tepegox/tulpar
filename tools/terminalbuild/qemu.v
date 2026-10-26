@@ -114,6 +114,14 @@ pub fn check_guest(arch string, requested string) ! {
 		}
 	}
 	receive(mut connection, mut transcript, 'tulpar# ', 10)!
+	connection.write_string("ping -q -c 2 -W 2 127.0.0.1 && printf 'ICMP_%s\\n' LOOPBACK; for attempt in $(seq 1 30); do test -s /etc/resolv.conf && break; sleep 1; done; cat /etc/resolv.conf; for attempt in 1 2 3; do if ping -q -c 1 -W 2 10.0.2.2; then printf 'ICMP_%s\\n' GATEWAY; break; fi; sleep 1; done; if su -s /bin/sh -c 'ping -q -c 1 -W 1 127.0.0.1' nobody >/tmp/icmp-denied 2>&1; then printf 'ICMP_%s\\n' UNSAFE; elif grep -Ei 'not permitted|permission denied' /tmp/icmp-denied; then printf 'ICMP_%s\\n' DENIED; fi; printf 'ICMP_%s\\n' DONE\n")!
+	receive(mut connection, mut transcript, 'ICMP_DONE', 60)!
+	for expected in ['ICMP_LOOPBACK', 'ICMP_GATEWAY', 'ICMP_DENIED'] {
+		if !transcript.text.contains(expected + '\r\n') && !transcript.text.contains(expected + '\n') {
+			return error('Missing guest verdict: ' + expected)
+		}
+	}
+	receive(mut connection, mut transcript, 'tulpar# ', 10)!
 	connection.write_string('sleep 30\n')!
 	time.sleep(500 * time.millisecond)
 	connection.write_string('\x03')!
@@ -131,6 +139,6 @@ pub fn check_guest(arch string, requested string) ! {
 	guest.wait()
 	if guest.code != 0 { return error('QEMU exited with code ' + guest.code.str()) }
 	if transcript.text.contains('KERNEL PANIC') { return error('Kernel panic in serial transcript') }
-	os.write_file(selected + '/verdict.txt', 'PASS: ' + arch + ' serial input, shell commands, pipes, wait, Ctrl-C, restart, poweroff\n')!
-	println('PASS: ${arch} terminal, pipes, wait, Ctrl-C, shell restart, poweroff; ' + selected)
+	os.write_file(selected + '/verdict.txt', 'PASS: ' + arch + ' serial input, shell commands, pipes, wait, IPv4 ICMP loopback/gateway and permission denial, Ctrl-C, restart, poweroff\n')!
+	println('PASS: ${arch} terminal, IPv4 ICMP, permission denial, pipes, wait, Ctrl-C, shell restart, poweroff; ' + selected)
 }
