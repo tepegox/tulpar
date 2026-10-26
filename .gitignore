@@ -86,3 +86,6 @@ kernel/tmp.v
 # short Markdown reports can remain tracked; new reports belong in docs/.
 /tests/**/results/
 /artifacts/
+
+# Generated host executable; keep its V sources tracked.
+/tools/terminal
