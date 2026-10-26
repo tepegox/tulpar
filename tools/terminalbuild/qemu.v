@@ -53,6 +53,7 @@ struct Transcript {
 mut:
 	text string
 	cursor int
+	path string
 }
 
 fn receive(mut connection unix.StreamConn, mut transcript Transcript, expected string, seconds int) ! {
@@ -63,9 +64,11 @@ fn receive(mut connection unix.StreamConn, mut transcript Transcript, expected s
 			transcript.cursor += position + expected.len
 			return
 		}
+		connection.wait_for_read() or { continue }
 		length := connection.read(mut bytes) or { continue }
 		if length == 0 { break }
 		transcript.text += bytes[..length].bytestr()
+		if transcript.path != '' { os.write_file(transcript.path, transcript.text)! }
 	}
 	return error('Guest timed out waiting for: ' + expected)
 }
@@ -81,6 +84,7 @@ pub fn check_guest(arch string, requested string) ! {
 	os.mkdir_all(selected)!
 	check_inventory(directory(arch) + '/root')!
 	os.write_file(selected + '/source-revision.txt', capture('git', ['-C', root(), 'rev-parse', 'HEAD'])! + '\n')!
+	os.write_file(selected + '/source-changes.patch', capture('git', ['-C', root(), 'diff', '--binary', 'HEAD'])! + '\n')!
 	os.write_file(selected + '/guest-files.txt', capture('tar', ['-tf', directory(arch) + '/initramfs.tar'])! + '\n')!
 	mut hashes := ''
 	for path in [image(arch), directory(arch) + '/kernel/bin/tulpar', directory(arch) + '/initramfs.tar'] {
@@ -103,7 +107,7 @@ pub fn check_guest(arch string, requested string) ! {
 	mut connection := unix.connect_stream(socket)!
 	defer { connection.close() or {} }
 	connection.set_read_timeout(250 * time.millisecond)
-	mut transcript := Transcript{}
+	mut transcript := Transcript{path: selected + '/serial.log'}
 	defer { os.write_file(selected + '/serial.log', transcript.text) or {} }
 	receive(mut connection, mut transcript, 'tulpar# ', 120)!
 	if transcript.text.to_lower().contains('vinix') { return error('Old branding in kernel boot output') }
@@ -116,6 +120,28 @@ pub fn check_guest(arch string, requested string) ! {
 	if arch == 'amd64' && (!transcript.text.contains('vendor=8086 device=100e') || !transcript.text.contains('class=02:00')) {
 		return error('Missing PCI Ethernet device identity')
 	}
+	interactive_start := transcript.text.len
+	// Reproduce the delayed entropy diagnostic while vi owns the screen. The
+	// message must be retained in bootlog without reaching the editor display.
+	connection.write_string('vi /tmp/console-probe\n')!
+	receive(mut connection, mut transcript, '/tmp/console-probe 1/1 100%', 10)!
+	connection.write_string('inasilsin yawa')!
+	time.sleep(40 * time.second)
+	connection.write_string('\x1b')!
+	time.sleep(300 * time.millisecond)
+	connection.write_string(':wq\n')!
+	receive(mut connection, mut transcript, 'tulpar# ', 15)!
+	for unwanted in ['random: reseeded from', 'ELF auxval:'] {
+		if transcript.text[interactive_start..].contains(unwanted) {
+			return error('Kernel log overwrote the interactive console: ' + unwanted)
+		}
+	}
+	connection.write_string("if test \"$(cat /tmp/console-probe)\" = 'nasilsin yawa' && grep -q 'random: reseeded from' /proc/bootlog && ! grep -q 'nasilsin yawa' /proc/bootlog; then printf 'CONSOLE_%s\\n' PASS; fi; printf 'CONSOLE_%s\\n' DONE\n")!
+	receive(mut connection, mut transcript, 'CONSOLE_DONE', 15)!
+	if !transcript.text.contains('CONSOLE_PASS\r\n') && !transcript.text.contains('CONSOLE_PASS\n') {
+		return error('Console handoff, retained kernel log or vi file contents failed')
+	}
+	receive(mut connection, mut transcript, 'tulpar# ', 10)!
 	connection.write_string("uname -a; cat /proc/version; cat /proc/sys/kernel/ostype; cat /proc/sys/kernel/hostname; cat /etc/os-release; if test \"$(uname -s)\" = Tulpar && test \"$(hostname)\" = tulpar && test \"$(cat /proc/sys/kernel/ostype)\" = Tulpar && test \"$(cat /proc/sys/kernel/hostname)\" = tulpar && grep -q '^Tulpar version' /proc/version && grep -q '^NAME=Tulpar' /etc/os-release; then printf 'IDENTITY_%s\\n' PASS; fi; printf 'IDENTITY_%s\\n' DONE\n")!
 	receive(mut connection, mut transcript, 'IDENTITY_DONE', 15)!
 	if !transcript.text.contains('IDENTITY_PASS\r\n') && !transcript.text.contains('IDENTITY_PASS\n') {
@@ -155,6 +181,6 @@ pub fn check_guest(arch string, requested string) ! {
 	guest.wait()
 	if guest.code != 0 { return error('QEMU exited with code ' + guest.code.str()) }
 	if transcript.text.contains('KERNEL PANIC') { return error('Kernel panic in serial transcript') }
-	os.write_file(selected + '/verdict.txt', 'PASS: ' + arch + ' serial input, shell commands, pipes, wait, IPv4 ICMP loopback/gateway and permission denial, Ctrl-C, restart, poweroff\n')!
+	os.write_file(selected + '/verdict.txt', 'PASS: ' + arch + ' boot diagnostics, quiet vi session across entropy reseed, retained bootlog, serial input, shell commands, pipes, wait, IPv4 ICMP loopback/gateway and permission denial, Ctrl-C, restart, poweroff\n')!
 	println('PASS: ${arch} terminal, IPv4 ICMP, permission denial, pipes, wait, Ctrl-C, shell restart, poweroff; ' + selected)
 }

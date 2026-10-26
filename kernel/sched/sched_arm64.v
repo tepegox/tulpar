@@ -1279,13 +1279,8 @@ pub fn new_user_thread(_process &proc.Process, want_elf bool, pc voidptr, arg vo
 			println('exec[gpu]/thread: building initial ELF stack')
 		}
 		if auxval != unsafe { nil } {
-			uart.puts(c'ELF auxval: base=')
-			uart.put_hex(auxval.at_base)
-			uart.puts(c' phdr=')
-			uart.put_hex(auxval.at_phdr)
-			uart.puts(c' entry=')
-			uart.put_hex(auxval.at_entry)
-			uart.putc(`\n`)
+			C.kprintf(c'ELF auxval: base=0x%llx phdr=0x%llx entry=0x%llx\n',
+				auxval.at_base, auxval.at_phdr, auxval.at_entry)
 		}
 		t.gpr_state.sp = build_initial_stack(mut process, stack_vma, stack_bottom_vma, argv, envp,
 			auxval) or { return none }

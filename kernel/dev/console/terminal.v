@@ -25,6 +25,7 @@ import proc
 import usercopy
 import katomic
 import krandom
+import kprint
 
 const console_buffer_size = 1024
 const console_bigbuf_size = 4096
@@ -130,7 +131,7 @@ fn add_to_buf_char(_c u8, echo bool, settings termios.Termios) {
 				console_buffer[console_buffer_i] = c
 				console_buffer_i++
 				if echo && settings.c_lflag & termios.echo != 0 {
-					C.kprintf(c'%c', i32(c))
+					kprint.console_write(unsafe { &char(&c) }, 1)
 				}
 				for i := u64(0); i < console_buffer_i; i++ {
 					if console_res.status & file.pollin == 0 {
@@ -160,7 +161,7 @@ fn add_to_buf_char(_c u8, echo bool, settings termios.Termios) {
 				console_buffer[console_buffer_i] = 0
 				if echo && settings.c_lflag & termios.echo != 0 {
 					for i := 0; i < to_backspace; i++ {
-						print('\b \b')
+						kprint.console_write(c'\b \b', 3)
 					}
 				}
 				return
@@ -187,9 +188,10 @@ fn add_to_buf_char(_c u8, echo bool, settings termios.Termios) {
 
 	if echo && settings.c_lflag & termios.echo != 0 {
 		if is_printable(c) {
-			C.kprintf(c'%c', i32(c))
+			kprint.console_write(unsafe { &char(&c) }, 1)
 		} else if c >= 0x01 && c <= 0x1f {
-			C.kprintf(c'^%c', i32(c + 0x40))
+			characters := [u8(`^`), u8(c + 0x40)]!
+			kprint.console_write(unsafe { &char(&characters[0]) }, 2)
 		}
 	}
 }
@@ -298,6 +300,7 @@ fn (mut this Console) open(flags int) ?&resource.Resource {
 		process := proc.current_thread().process
 		if this.session == 0 && proc.claim_controlling_terminal(this.stat.rdev) {
 			this.set_job_identity_locked(process.sid, process.pgid)
+			kprint.claim_console()
 		}
 		this.l.release()
 	}
@@ -416,8 +419,7 @@ fn (mut this Console) write(_handle voidptr, buf voidptr, _loc u64, count u64) ?
 		unsafe { free(copy) }
 	}
 	unsafe { C.memcpy(copy, buf, count) }
-	mirror_to_serial(copy, count)
-	term.print(copy, count)
+	kprint.console_write(unsafe { &char(copy) }, count)
 	return i64(count)
 }
 

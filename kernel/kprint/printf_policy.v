@@ -16,7 +16,7 @@ mut:
 
 fn policy_putchar(character i32, _ voidptr) {
 	$if !prod {
-		policy_serial(u8(character), false)
+		if !console_claimed() { policy_serial(u8(character), false) }
 	}
 }
 

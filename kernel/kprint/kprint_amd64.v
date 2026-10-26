@@ -6,6 +6,7 @@ import term
 pub fn kwrite(message charptr, msglen u64) {
 	kprint_lock.acquire()
 	bootlog.append(message, msglen)
+	if console_claimed() { kprint_lock.release(); return }
 
 	// The serial terminal is the normal console on headless servers, including
 	// production builds. Keep driver diagnostics visible there as on ARM64.
