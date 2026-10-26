@@ -53,6 +53,8 @@ Set `TULPAR_ACCEL=kvm` on a matching Linux host for hardware acceleration.
 The default is TCG.
 Set `TULPAR_FIRMWARE` if UEFI firmware is outside the standard locations.
 After DHCP completes, `ping -c 3 10.0.2.2` checks the QEMU gateway.
+Boot displays detected devices and attached drivers; `cat /proc/bootlog` reads
+the retained kernel diagnostics.
 
 ## Verify
 
@@ -63,7 +65,8 @@ make ARCH=arm64 test-terminal
 
 Both architectures have passed headless QEMU checks for serial input,
 commands, pipes, jobs, IPv4 ping, socket permissions, Ctrl-C, restart, and poweroff.
-See the [ICMP verification report](docs/icmp-sockets.md).
+See the [ICMP](docs/icmp-sockets.md) and [boot diagnostic](docs/boot-diagnostics.md)
+verification reports.
 
 The commands above rebuild the images and repeat those checks. Logs go under
 `~/.local/state/tulpar/`; use `STATE_DIR=/external/fresh-directory` to choose
