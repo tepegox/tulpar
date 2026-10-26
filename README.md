@@ -63,7 +63,7 @@ make ARCH=arm64 test-terminal
 
 Both architectures have passed headless QEMU checks for serial input,
 commands, pipes, jobs, IPv4 ping, socket permissions, Ctrl-C, restart, and poweroff.
-See the [verification report](docs/apple-platform-removal.md).
+See the [ICMP verification report](docs/icmp-sockets.md).
 
 The commands above rebuild the images and repeat those checks. Logs go under
 `~/.local/state/tulpar/`; use `STATE_DIR=/external/fresh-directory` to choose
