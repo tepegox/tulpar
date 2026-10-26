@@ -34,3 +34,5 @@ make ARCH=arm64 run-no-build
 ```
 
 Images are saved as `tulpar-amd64.iso` and `tulpar-arm64.iso`.
+On first boot, set a root password, then log in. The live image runs from memory,
+so set it again on each boot. Press `Ctrl-]`, then `1`–`4` to switch local terminals.

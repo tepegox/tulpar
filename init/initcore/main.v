@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-// The same allocation-free PID 1 is linked against musl for both targets.
+// The same bounded PID 1 is linked against musl for both targets.
 module initcore
 
 #include <unistd.h>
@@ -27,6 +27,82 @@ fn C.sleep(u32) u32
 fn C.sync()
 fn C.reboot(i32) i32
 fn C._exit(i32)
+
+fn password_ready() bool {
+	fd := C.open(c'/etc/shadow', C.O_RDONLY)
+	if fd < 0 { return false }
+	defer { C.close(fd) }
+	mut matched := 0
+	mut character := u8(0)
+	for C.read(fd, unsafe { &character }, 1) == 1 {
+		if character == 10 {
+			matched = 0
+			continue
+		}
+		if matched < 0 { continue }
+		if matched == 5 {
+			// The first byte after root: must be a real password hash.
+			return character != 58 && character != 33 && character != 42
+		}
+		expected := match matched {
+			0 { u8(114) }
+			1, 2 { u8(111) }
+			3 { u8(116) }
+			else { u8(58) }
+		}
+		if character == expected { matched++ } else { matched = -1 }
+	}
+	return false
+}
+
+fn wait_for(child i32) i32 {
+	mut status := i32(0)
+	for {
+		ended := C.waitpid(child, &status, 0)
+		if ended == child { return status }
+		if ended < 0 { C.sleep(1) }
+	}
+}
+
+// Password provisioning is interactive and never grants a shell. BusyBox
+// owns password hashing; every subsequent session still passes through login.
+fn provision_password() {
+	mut original := C.termios{}
+	for C.tcgetattr(0, unsafe { &original }) != 0 {
+		message(c'init: cannot read password terminal settings\r\n')
+		C.sleep(1)
+	}
+	mut hidden := original
+	hidden.c_lflag &= ~u32(C.ECHO)
+	for C.tcsetattr(0, C.TCSANOW, unsafe { &hidden }) != 0 {
+		message(c'init: cannot protect password input\r\n')
+		C.sleep(1)
+	}
+	for !password_ready() {
+		message(c'\nTulpar: set the root password before logging in.\n')
+		child := C.fork()
+		if child == 0 {
+			C.setpgid(0, 0)
+			C.tcsetpgrp(0, C.getpid())
+			shell_signals(unsafe { nil })
+			arguments := [&char(c'/bin/busybox'), &char(c'passwd'), &char(c'root'),
+				&char(unsafe { nil })]!
+			environment := [&char(c'PATH=/usr/sbin:/usr/bin:/sbin:/bin'), &char(c'TERM=vt100'),
+				&char(unsafe { nil })]!
+			C.execve(arguments[0], unsafe { &&char(&arguments[0]) }, unsafe { &&char(&environment[0]) })
+			C._exit(127)
+		}
+		if child < 0 {
+			C.sleep(1)
+			continue
+		}
+		C.setpgid(child, child)
+		C.tcsetpgrp(0, child)
+		wait_for(child)
+		C.tcsetpgrp(0, C.getpid())
+	}
+	C.tcsetattr(0, C.TCSANOW, unsafe { &original })
+}
 
 fn message(text &char) {
 	mut length := uint(0)
@@ -60,35 +136,6 @@ pub fn start() i32 {
 	shell_signals(voidptr(1)) // SIG_IGN in the supervisor only.
 	C.signal(15, voidptr(stop))
 	message(c'\nTulpar: terminal base ready\n')
-	for {
-		child := C.fork()
-		if child == 0 {
-			C.setpgid(0, 0)
-			C.tcsetpgrp(0, C.getpid())
-			shell_signals(unsafe { nil })
-			C.signal(15, unsafe { nil })
-			arguments := [&char(c'/bin/sh'), &char(c'-l'), &char(unsafe { nil })]!
-			environment := [&char(c'PATH=/usr/sbin:/usr/bin:/sbin:/bin'),
-				&char(c'HOME=/root'), &char(c'USER=root'), &char(c'LOGNAME=root'),
-				&char(c'TERM=vt100'), &char(c'SHELL=/bin/sh'), &char(c'PS1=tulpar# '),
-				&char(unsafe { nil })]!
-			C.execve(arguments[0], unsafe { &&char(&arguments[0]) },
-				unsafe { &&char(&environment[0]) })
-			message(c'init: cannot execute /bin/sh\n')
-			C._exit(127)
-		}
-		if child < 0 { C.sleep(1); continue }
-		C.setpgid(child, child)
-		C.tcsetpgrp(0, child)
-		mut status := i32(0)
-		for {
-			ended := C.waitpid(-1, unsafe { &status }, 0)
-			if ended == child { break }
-			// Interrupted waits are retried; adopted children are reaped too.
-			if ended < 0 { C.sleep(1) }
-		}
-		C.tcsetpgrp(0, C.getpid())
-		message(c'init: restarting shell\n')
-	}
-	return 0
+	provision_password()
+	return manage_terminals()
 }
